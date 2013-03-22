@@ -2,7 +2,7 @@ Welcome to WUIC (Web UI Compressor)
 ====
 
 The library which minifies your scripts (Javascript/CSS), computes your image's sprites and supports aggregation for you.
-=
+=====
 
 The library has been designed to guarantee that good practices around web resources will be always applied when you deploy in production.
 
