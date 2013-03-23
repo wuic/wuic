@@ -51,7 +51,6 @@ License
   author or the editor. The rights granted on the said software components are
   governed by the specific terms and conditions specified by Apache 2.0 and BSD
   licenses."
- /
 
 
 
