@@ -14,6 +14,22 @@ code.
 
 The purpose of WUIC is to help the developer to automate as much as possible these tasks with the maximum of flexibility to guarantee that the device will not be deprecated in the future.
 
+Release
+====
+
+Our current release is the v0.3.0 ! You can integrate the library using this maven dependency :
+
+```xml
+     <dependency>
+         <groupId>com.github.wuic</groupId>
+         <artifactId>wuic-{wuic-module}</artifactId>
+         <version>0.3.0</version>
+      </dependency>
+```
+
+If your webapp is based on JSPs, the easiest way to use WUIC is to add the wuic-tag artifact in your pom.xml.
+Otherwise, you can just depend on the wuic-servlet artifact.
+
 License
 ====
 
