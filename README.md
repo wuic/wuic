@@ -8,7 +8,7 @@ Many websites have poor performances due to the many RTTs (round trip time) perf
 A lot of developers know that it is recommanded to aggregate those files to reduce the number of RTTs. Moreover, some tools like
 YUICompressor can reduce the size of your CSS and Javascript files to speed up the page loading.
 
-However, people do not apply those good practices. The truth is that it is a too expensive task in time in a continuous delivery. People don't the time
+However, people do not apply those good practices. The truth is that it is a too expensive task in time in a continuous delivery. People don't have the time
 to aggregate the files, minify (in case of scripts) or create sprites (in case of images) and change the import statement in there HTML
 code.
 
@@ -32,7 +32,7 @@ You can integrate the library using this maven dependency :
 If your webapp is based on JSPs, the easiest way to use WUIC is to add the wuic-tag artifact in your pom.xml.
 Otherwise, you can just depend on the wuic-servlet artifact.
 
-The next major release is targeted for the end of June. Intermediate releases are already in the roadmap and more documentation is going to be written in the next weeks !
+The next major release is targeted to the end of June. Intermediate releases are already in the roadmap and more documentation is going to be written in the next weeks !
 
 License
 ====
