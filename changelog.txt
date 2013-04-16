@@ -1,0 +1,39 @@
+##### v0.2.0 #####
+
+Enhancements :
+- Provide image aggregation capability
+
+##### v0.2.1 #####
+
+Bug fixes :
+- Escape \t, \r and \n characters when compressing javascript files
+- Include \n between files when aggregating files without compression 
+
+##### v0.2.2 #####
+
+Bug fixes :
+- Provide a WuicEhCacheProvider interface to not have to add an ehcache.xml for
+WUIC and evict memory leaks in tomcat when using multiple webapps with one
+ehcache.xml per application
+
+Enhancements :
+- WuicTag generates URL with pattern /[groupId]/?file=[fileId] to enhance URL
+readability in FF console
+
+##### v0.2.3 #####
+
+Bug fixes :
+- Stream opened to write temporary files were never closed
+
+Enhancements :
+- First bin packing algorithm for image aggregation from Jakes Gordon explanations
+
+##### v0.3.0 #####
+
+Enhancements :
+- #4 : Add a sample application
+- #5 : Split the project in different maven module
+- #6 : Make the project eligible for maven central
+- #8 : Possibility to disable embedded cache
+- InputStreamWuicResource : create a WuicResource based on an InputStream
+- New SourceRootProvider implementations allowing default access to resources exposed through webapp and classpath
