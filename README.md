@@ -17,7 +17,9 @@ The purpose of WUIC is to help the developer to automate as much as possible the
 Release
 ====
 
-Our current release is the v0.3.0 ! You can integrate the library using this maven dependency :
+Our current release is the v0.3.0 ! You can see the changelogs here : https://raw.github.com/gdrouet/wuic/master/changelog.txt
+
+You can integrate the library using this maven dependency :
 
 ```xml
      <dependency>
