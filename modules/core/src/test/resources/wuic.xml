@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
+<wuic>
+	<sourceRootProviders>
+		<sourceRootProvider id="appSourceRootProvider" class="com.github.wuic.test.JUnitSourceRootProvider" />
+	</sourceRootProviders>
+	<groups>
+		<group id="image" configuration="sprite-image-png" sourceRootProvider="appSourceRootProvider">
+            <file>images/ticket.png</file>
+            <file>images/action.png</file>
+            <file>images/a3.png</file>
+            <file>images/escalation-done.png</file>
+            <file>images/escalation-source.png</file>
+            <file>images/escalation-target.png</file>
+            <file>images/problem.png</file>
+            <file>images/btn_capgemini.png</file>
+            <file>images/picto_interrogation.png</file>
+            <file>images/btn_delete.png</file>
+            <file>images/btn_labels.png</file>
+            <file>images/btn_text-edit.png</file>
+            <file>images/btn_toolbox.png</file>
+            <file>images/fond_dock.png</file>
+            <file>images/fond_dock_right.png</file>
+            <file>images/fond_dock_left.png</file>
+            <file>images/hover_dock.png</file>
+            <file>images/picto_2fleches.png</file>
+            <file>images/picto_4fleches.png</file>
+            <file>images/picto_fleche-haut.png</file>
+            <file>images/picto_turn-off.png</file>
+            <file>images/upload-img.png</file>
+            <file>images/link-img.png</file>
+            <file>images/arrow.png</file>
+            <file>images/btn_clf.png</file>
+            <file>images/btn_undo.png</file>
+            <file>images/btn_redo.png</file>
+            <file>images/btn_slideShowPlay.png</file>
+            <file>images/btn_slideShowPause.png</file>
+
+            <file>images/deleteCaption.png</file>
+
+            <file>images/cut.png</file>
+            <file>images/copy.png</file>
+            <file>images/paste.png</file>
+            
+            <file>images/stepper_minus.png</file>
+            <file>images/stepper_more.png</file>
+		</group>
+		<group id="util-js" configuration="yuicompressor-js" sourceRootProvider="appSourceRootProvider">
+            <file>cgsg/utils/util.array.js</file>
+            <file>cgsg/utils/class.class.js</file>
+            <file>cgsg/utils/class.hashmap.js</file>
+            <file>cgsg/utils/util.color.js</file>
+            <file>cgsg/utils/math/class.vector2D.js</file>
+            <file>cgsg/utils/class.region.js</file>
+            <file>cgsg/constants.js</file>
+            <file>cgsg/utils/class.traverser.js</file>
+
+            <file>cgsg/node/collision/enum.collision.method.js</file>
+            <file>cgsg/node/collision/class.collision.tester.region.js</file>
+            <file>cgsg/node/collision/class.collision.tester.ghost.ondemand.js</file>
+            <file>cgsg/node/collision/class.collision.tester.factory.js</file>
+            <file>cgsg/node/collision/class.collision.manager.js</file>
+
+            <file>cgsg/globals.js</file>
+            <file>cgsg/utils/util.global.js</file>
+            <file>cgsg/utils/util.color.js</file>
+            <file>cgsg/utils/math/math.js</file>
+            <file>cgsg/utils/class.handlebox.js</file>
+            <file>cgsg/animation/class.anim.key.js</file>
+            <file>cgsg/animation/class.anim.timeline.js</file>
+            <file>cgsg/node/class.node.js</file>
+
+            <file>cgsg/node/class.node.colorPicker.js</file>
+            <file>cgsg/node/class.node.tabMenu.js</file>
+            <file>cgsg/node/class.node.text.js</file>
+            <file>cgsg/node/class.node.webview.js</file>
+            <file>cgsg/node/class.node.square.js</file>
+            <file>cgsg/node/class.node.circle.js</file>
+            <file>cgsg/node/class.node.ellipse.js</file>
+            <file>cgsg/node/class.node.image.js</file>
+            <file>cgsg/node/class.node.animatedSprite.js</file>
+            <file>cgsg/node/class.node.button.js</file>
+            <file>cgsg/animation/class.particles.js</file>
+
+            <file>cgsg/class.scenegraph.js</file>
+            <file>cgsg/class.scene.js</file>
+		</group>
+		<group id="css" configuration="yuicompressor-css" sourceRootProvider="appSourceRootProvider">
+			<file>chosen.css</file>
+			<file>style.css</file>
+		</group>
+	</groups>
+	<configurations>
+		<configuration id="yuicompressor-css" type="CSS">
+			<aggregate>true</aggregate>
+			<charset>UTF-8</charset>
+			<compress>true</compress>
+			<yuiLineBreakPos>-1</yuiLineBreakPos>
+		</configuration>
+		<configuration id="yuicompressor-js" type="JAVASCRIPT">
+			<aggregate>true</aggregate>
+			<charset>UTF-8</charset>
+			<compress>true</compress>
+			<yuiLineBreakPos>-1</yuiLineBreakPos>
+			<yuiDisableOptimizations>false</yuiDisableOptimizations>
+			<yuiMunge>true</yuiMunge>
+			<yuiPreserveAllSemiColons>false</yuiPreserveAllSemiColons>
+			<yuiVerbose>true</yuiVerbose>
+		</configuration>
+		<configuration id="sprite-image-png" type="SPRITE">
+			<compress>true</compress>
+			<aggregate>true</aggregate>
+			<charset>UTF-8</charset>
+			<sprite-provider>com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider</sprite-provider>
+		</configuration>
+	</configurations>
+</wuic>

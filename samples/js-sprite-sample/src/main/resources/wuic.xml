@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
+<wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
+    <sourceRootProviders>
+        <sourceRootProvider id="imgSourceRootProvider" class="com.github.wuic.helper.configuration.ClasspathSourceRootProvider" />
+        <sourceRootProvider id="appSourceRootProvider" class="com.github.wuic.helper.configuration.WebappSourceRootProvider" />
+    </sourceRootProviders>
+    <groups>
+        <group id="img" configuration="sprite-image-png" sourceRootProvider="imgSourceRootProvider">
+            <file>img/angry.png</file>
+            <file>img/baby.png</file>
+            <file>img/cry.png</file>
+            <file>img/disappointed.png</file>
+            <file>img/fear.png</file>
+            <file>img/happy.png</file>
+            <file>img/love.png</file>
+            <file>img/sad.png</file>
+            <file>img/smile.png</file>
+            <file>img/spaceinvider.png</file>
+            <file>img/star.png</file>
+            <file>img/surprise.png</file>
+            <file>img/wink.png</file>
+        </group>
+        <group id="cgsg-js" configuration="yuicompressor-js" sourceRootProvider="appSourceRootProvider">
+            <file>cgsg/utils/util.array.js</file>
+            <file>cgsg/utils/class.class.js</file>
+            <file>cgsg/utils/class.hashmap.js</file>
+            <file>cgsg/utils/util.color.js</file>
+            <file>cgsg/utils/math/class.vector2D.js</file>
+            <file>cgsg/utils/class.region.js</file>
+            <file>cgsg/constants.js</file>
+            <file>cgsg/utils/class.traverser.js</file>
+
+            <file>cgsg/node/collision/enum.collision.method.js</file>
+            <file>cgsg/node/collision/class.collision.tester.region.js</file>
+            <file>cgsg/node/collision/class.collision.tester.ghost.ondemand.js</file>
+            <file>cgsg/node/collision/class.collision.tester.factory.js</file>
+            <file>cgsg/node/collision/class.collision.manager.js</file>
+
+            <file>cgsg/globals.js</file>
+            <file>cgsg/utils/util.global.js</file>
+            <file>cgsg/utils/util.color.js</file>
+            <file>cgsg/utils/math/math.js</file>
+            <file>cgsg/utils/class.handlebox.js</file>
+            <file>cgsg/animation/class.anim.key.js</file>
+            <file>cgsg/animation/class.anim.timeline.js</file>
+            <file>cgsg/node/class.node.js</file>
+
+            <file>cgsg/node/class.node.colorPicker.js</file>
+            <file>cgsg/node/class.node.tabMenu.js</file>
+            <file>cgsg/node/class.node.text.js</file>
+            <file>cgsg/node/class.node.webview.js</file>
+            <file>cgsg/node/class.node.square.js</file>
+            <file>cgsg/node/class.node.circle.js</file>
+            <file>cgsg/node/class.node.ellipse.js</file>
+            <file>cgsg/node/class.node.image.js</file>
+            <file>cgsg/node/class.node.animatedSprite.js</file>
+            <file>cgsg/node/class.node.button.js</file>
+            <file>cgsg/animation/class.particles.js</file>
+
+            <file>cgsg/class.scenegraph.js</file>
+            <file>cgsg/class.scene.js</file>
+        </group>
+    </groups>
+    <configurations>
+        <configuration id="yuicompressor-js" type="JAVASCRIPT">
+            <cache>true</cache>
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <compress>true</compress>
+            <yuiLineBreakPos>-1</yuiLineBreakPos>
+            <yuiDisableOptimizations>false</yuiDisableOptimizations>
+            <yuiMunge>true</yuiMunge>
+            <yuiPreserveAllSemiColons>false</yuiPreserveAllSemiColons>
+            <yuiVerbose>true</yuiVerbose>
+        </configuration>
+        <configuration id="sprite-image-png" type="SPRITE">
+            <cache>true</cache>
+            <compress>true</compress>
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <sprite-provider>com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider</sprite-provider>
+        </configuration>
+    </configurations>
+</wuic>

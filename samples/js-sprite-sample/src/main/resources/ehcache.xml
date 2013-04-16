@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ehcache>
+	<diskStore path="java.io.tmpdir"/>
+   	        
+   <!-- 
+	   Cache use to store resources generated and exposed by WUIC
+	   Refresh every 86400s (24 hours)
+   -->
+   <cache name="wuicCache"
+   			eternal="false"
+	        timeToIdleSeconds="120"
+     		timeToLiveSeconds="120"
+	        maxElementsInMemory="1000" 
+	        overflowToDisk="true" 
+	        diskPersistent="false"
+	        memoryStoreEvictionPolicy="LRU"
+   />
+        	
+</ehcache>
