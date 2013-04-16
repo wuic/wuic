@@ -32,6 +32,8 @@ You can integrate the library using this maven dependency :
 If your webapp is based on JSPs, the easiest way to use WUIC is to add the wuic-tag artifact in your pom.xml.
 Otherwise, you can just depend on the wuic-servlet artifact.
 
+The next major release is targeted for the end of June. Intermediate releases are already in the roadmap and more documentation is going to be written in the next weeks !
+
 License
 ====
 
