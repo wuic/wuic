@@ -34,7 +34,21 @@ Otherwise, you can just depend on the wuic-servlet artifact.
 
 The next major release is targeted to the end of June. Intermediate releases are already in the roadmap and more documentation is going to be written in the next weeks !
 
+Quick start
+====
+
+The best way to see how WUIC works and how it could help you is to [download](https://github.com/gdrouet/wuic/archive/master.zip) the source code of the project.
+
+Then you can look at our different [samples](https://github.com/gdrouet/wuic/tree/master/samples).
+
+You can see an [example](https://github.com/gdrouet/wuic/tree/master/samples/js-sprite-sample) showing how WUIC aggregates images, computes sprites and minifies Javascript for you !
+
+Just move to the sample's directory run it with :
+
+```
+     mvn jetty:run
+```
 License
 ====
 
-You will find the license [here](https://github.com/gdrouet/wuic/wiki/License).
+You will find everything about the WUIC's license [here](https://github.com/gdrouet/wuic/wiki/License).
