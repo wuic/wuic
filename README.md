@@ -19,7 +19,7 @@ Release
 
 Our current release is the [v0.3.0](https://github.com/gdrouet/wuic/issues?labels=0.3.0&milestone=&page=1&state=closed) !
 
-Prior to v0.3.0, WUIC was not on github. See the old change logs [here](https://raw.github.com/gdrouet/wuic/master/changelog.txt)
+Prior to v0.3.0, WUIC was not on github. See the old change logs [here](https://raw.github.com/gdrouet/wuic/master/changelog.txt).
 
 You can integrate the library using this maven dependency (available on the [maven central repository](http://search.maven.org/#search|ga|1|wuic)) :
 
