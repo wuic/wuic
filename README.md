@@ -19,7 +19,7 @@ Release
 
 Our current release is the [v0.3.0](https://github.com/gdrouet/wuic/issues?labels=0.3.0&milestone=&page=1&state=closed) !
 
-Prior to v0.3.0, WUIC was not on github. See the old change logs [here](https://raw.github.com/gdrouet/wuic/master/changelog.txt).
+Prior to v0.3.0, WUIC was not on github. See the change logs of previous releases [here](https://raw.github.com/gdrouet/wuic/master/changelog.txt).
 
 You can integrate the library using this maven dependency (available on the [maven central repository](http://search.maven.org/#search|ga|1|wuic)) :
 
@@ -33,6 +33,16 @@ You can integrate the library using this maven dependency (available on the [mav
 
 If your webapp is based on JSPs, the easiest way to use WUIC is to add the wuic-tag artifact in your pom.xml.
 Otherwise, you can just depend on the wuic-servlet artifact.
+
+Roadmap
+====
+
+WUIC is production ready and is already used in a Capgemini group application. Just keep in mind that we are young and our solution currently comes with some restrictions :
+* We require the use of EhCache to cache resources
+* We use YUICompressor for CSS & JS compression
+* The files your want to expose through WUIC must be in the webapp or in the classpath
+* Image sprites are provided in javascript constants, CSS class not yet implemebted
+* We aggregate images thanks to the lightmaps bin packing algorithm implemented in the library
 
 The next major release is targeted to the end of June. Intermediate releases are already in the roadmap and more documentation is going to be written in the next weeks !
 
@@ -50,6 +60,7 @@ Just move to the sample's directory run it with :
 ```
 mvn jetty:run
 ```
+
 License
 ====
 
