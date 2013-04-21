@@ -40,7 +40,7 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
-import com.github.wuic.servlet.WuicTagServlet;
+import com.github.wuic.servlet.WuicServlet;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -166,8 +166,8 @@ public class WuicTag extends TagSupport {
     private String getUrl(final WuicResource resource) throws UnsupportedEncodingException {
         final StringBuilder urlBuilder = new StringBuilder();
         
-        urlBuilder.append(WuicTagServlet.servletContext().getContextPath());
-        urlBuilder.append(WuicTagServlet.servletMapping().replace("*", ""));
+        urlBuilder.append(WuicServlet.servletContext().getContextPath());
+        urlBuilder.append(WuicServlet.servletMapping().replace("*", ""));
         urlBuilder.append(pageName);
         urlBuilder.append("/?file=");
         urlBuilder.append(URLEncoder.encode(resource.getName(), "UTF-8"));

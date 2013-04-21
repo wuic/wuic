@@ -39,11 +39,18 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.resource.WuicResource;
+import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * <p>
@@ -52,10 +59,10 @@ import javax.servlet.http.HttpServlet;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.1
  */
-public abstract class WuicServlet extends HttpServlet {
+public class WuicServlet extends HttpServlet {
 
     /**
      * WUIC's facade attribute name.
@@ -99,6 +106,56 @@ public abstract class WuicServlet extends HttpServlet {
         config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
 
         super.init(config);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response)
+            throws ServletException, IOException {
+        final int lastOffset = request.getRequestURI().lastIndexOf('/');
+        final String urlWithoutLast = request.getRequestURI().substring(0, lastOffset);
+        final String pageName = urlWithoutLast.substring(urlWithoutLast.lastIndexOf("/") + 1);
+
+        if (pageName != null) {
+            getPage(pageName, request, response);
+        }
+    }
+
+    /**
+     * <p>
+     * Gets a page.
+     * </p>
+     *
+     * @param pageName the page name
+     * @param request the request
+     * @param response the response
+     * @throws IOException if an I/O error occurs
+     */
+    private void getPage(final String pageName, final HttpServletRequest request,
+                         final HttpServletResponse response) throws IOException {
+        final String fileName = request.getParameter("file");
+
+        // Get the files group
+        final List<WuicResource> files = getWuicFacade().getGroup(pageName);
+        InputStream is = null;
+
+        for (WuicResource resource : files) {
+            response.setContentType(resource.getFileType().getMimeType());
+
+            if (fileName == null || resource.getName().equals(fileName)) {
+                try {
+                    is = resource.openStream();
+                    IOUtils.copy(is, response.getOutputStream());
+                    is = null;
+                } finally {
+                    if (is != null) {
+                        is.close();
+                    }
+                }
+            }
+        }
     }
 
     /**
