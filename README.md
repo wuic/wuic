@@ -1,3 +1,3 @@
 ## Welcome to WUIC (Web UI Compressor) 
 
-You will find documentation [here](https://gdrouet.github.io/wuic/).
+You will find documentation [here](http://gdrouet.github.io/wuic/).
