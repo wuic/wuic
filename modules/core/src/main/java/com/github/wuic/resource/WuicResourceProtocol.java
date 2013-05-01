@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,46 @@
  * licenses."
  */
 
+
+package com.github.wuic.resource;
+
+import com.github.wuic.FileType;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * This interface abstracts the way you can read resources through a particular protocol.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.3.1
  */
-package com.github.wuic.servlet;
+public interface WuicResourceProtocol {
+
+    /**
+     * <p>
+     * Lists all the resources path matching the given pattern.
+     * </p>
+     *
+     * @param pattern the pattern
+     * @throws IOException if any I/O error occurs while reading resources
+     */
+    List<String> listResourcesPaths(Pattern pattern) throws IOException;
+
+    /**
+     * <p>
+     * Creates an access for the given parameters through a {@link WuicResource} implementation.
+     * </p>
+     *
+     * @param realPath the real path to use to access the resource
+     * @param name the name of the resource
+     * @param type the file's type
+     * @return the {@link WuicResource}
+     * @throws IOException if an I/O error occurs while creating access
+     */
+    WuicResource accessFor(String realPath, String name, FileType type) throws IOException;
+}

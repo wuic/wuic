@@ -2,17 +2,17 @@
 
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
-    <sourceRootProviders>
-        <sourceRootProvider id="appSourceRootProvider" class="com.github.wuic.helper.configuration.WebappSourceRootProvider" />
-    </sourceRootProviders>
+    <resource-factory-builders>
+        <resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder" />
+    </resource-factory-builders>
     <groups>
-        <group id="accordion-js" configuration="yuicompressor-js" sourceRootProvider="appSourceRootProvider">
+        <group id="accordion-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
             <file>jquery-ui-1.10.2/jquery-1.9.1.js</file>
             <file>jquery-ui-1.10.2/ui/jquery.ui.core.js</file>
             <file>jquery-ui-1.10.2/ui/jquery.ui.widget.js</file>
             <file>jquery-ui-1.10.2/ui/jquery.ui.accordion.js</file>
         </group>
-        <group id="demo-css" configuration="yuicompressor-css" sourceRootProvider="appSourceRootProvider">
+        <group id="demo-css" configuration="yuicompressor-css" default-builder="appSourceRootProvider">
             <file>jquery-ui-1.10.2/themes/base/jquery.ui.all.css</file>
             <file>jquery-ui-1.10.2/demos/demos.css</file>
         </group>

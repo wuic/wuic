@@ -47,8 +47,8 @@ import com.github.wuic.resource.WuicResource;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.3
+ * @version 1.1
+ * @since 0.3.0
  */
 public abstract class AbstractWuicResource implements WuicResource {
 
@@ -71,6 +71,10 @@ public abstract class AbstractWuicResource implements WuicResource {
      * @param ft the resource's type
      */
     protected AbstractWuicResource(final String name, final FileType ft) {
+        if (ft == null) {
+            throw new IllegalArgumentException("You can't create a resource with a null FileType");
+        }
+
         fileType = ft;
         fileName = name;
     }

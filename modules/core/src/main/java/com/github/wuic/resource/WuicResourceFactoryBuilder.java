@@ -36,52 +36,35 @@
  */
 
 
-package com.github.wuic.helper.configuration;
-
-import com.github.wuic.FileType;
-import com.github.wuic.resource.impl.FileWuicResource;
-import com.github.wuic.resource.WuicResource;
-import com.github.wuic.configuration.SourceRootProvider;
-import com.github.wuic.servlet.WuicServlet;
-
-import java.io.IOException;
+package com.github.wuic.resource;
 
 /**
  * <p>
- * A {@link SourceRootProvider} which takes resources exposed through the servlet context.
+ * Abstraction of a builder producing {@link WuicResourceFactory} objects.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.3.0
+ * @since 0.3.1
  */
-public class WebappSourceRootProvider implements SourceRootProvider {
+public interface WuicResourceFactoryBuilder {
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Decorates this builder with a regular expression support.
+     * </p>
+     *
+     * @return the decorated builder with a regex support
      */
-    @Override
-    public WuicResource getStreamResource(final String groupId, final String file) throws IOException {
-        final String ext = file.substring(file.lastIndexOf('.'));
-        final String realPath = WuicServlet.servletContext().getRealPath(file);
-        final FileType type = FileType.getFileTypeForExtension(ext);
-
-        // Remove the file name in the path
-        int rpIndex = realPath.lastIndexOf(file);
-
-        // Manage case of windows file system
-        if (rpIndex == -1) {
-            rpIndex = realPath.lastIndexOf(file.replace('/', '\\'));
-        }
-
-        return new FileWuicResource(realPath.substring(0, rpIndex), file, type);
-    }
+    WuicResourceFactoryBuilder regex();
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Builds a new {@link WuicResourceFactory} thanks to the current state
+     * of this builder.
+     * </p>
+     *
+     * @return the new {@link WuicResourceFactory}
      */
-    @Override
-    public Boolean hasChanged(final String groupId, final String file, final Long timestamp) {
-        return Boolean.FALSE;
-    }
+    WuicResourceFactory build();
 }

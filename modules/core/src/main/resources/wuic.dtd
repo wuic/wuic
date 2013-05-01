@@ -17,17 +17,18 @@
     </wuic>
 -->
 <!--- Put your DTDDoc comment here. -->
-<!ELEMENT wuic (sourceRootProviders|configurations|groups)*>
+<!ELEMENT wuic (resource-factory-builders|configurations|groups)*>
 <!ATTLIST wuic
     ehcache-provider CDATA #IMPLIED
   >
 
-<!ELEMENT sourceRootProviders (sourceRootProvider)+>
+<!ELEMENT resource-factory-builders (resource-factory-builder)+>
 
-<!ELEMENT sourceRootProvider EMPTY>
-<!ATTLIST sourceRootProvider
+<!ELEMENT resource-factory-builder EMPTY>
+<!ATTLIST resource-factory-builder
     id CDATA #IMPLIED
     class CDATA #IMPLIED
+    regex CDATA "false"
   >
 
 <!--- Put your DTDDoc comment here. -->
@@ -39,7 +40,7 @@
 <!ATTLIST group
     id CDATA #IMPLIED
     configuration CDATA #IMPLIED
-    sourceRootProvider CDATA #IMPLIED
+    default-builder CDATA #IMPLIED
   >
 
 <!--- Put your DTDDoc comment here. -->

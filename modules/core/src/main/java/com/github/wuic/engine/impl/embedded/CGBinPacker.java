@@ -40,6 +40,8 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.DimensionPacker;
 import com.github.wuic.engine.Region;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Dimension;
 import java.util.Comparator;
@@ -60,10 +62,15 @@ import java.util.PriorityQueue;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.3
  */
 public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
+
+    /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * The root node with dimensions computed from the sum of heights and width
@@ -87,6 +94,7 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
          * always in the same order in the priority queue
          */
         dataMap = new LinkedHashMap<T, Dimension>();
+        root = new Node<T>(0, 0, 0, 0, null);
     }
 
     /**
@@ -95,6 +103,15 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
     @Override
     public void addElement(final Dimension dimension, final T data) {
         dataMap.put(data, dimension);
+
+        // Adapt the root dimension according to the dimensions to fit
+        if (root.width < dimension.getWidth()) {
+            root.width = (int) dimension.getWidth();
+        }
+
+        if (root.height < dimension.getHeight()) {
+            root.height = (int) dimension.getHeight();
+        }
     }
     
     /**
@@ -102,6 +119,10 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
      */
     @Override
     public Map<Region, T> getRegions() {
+        if (dataMap.isEmpty()) {
+            log.error("You must add at least one element to pack the dimensions", new IllegalStateException());
+        }
+
         // We order the elements from the biggest dimension to the smallest one
         final PriorityQueue<T> dataQueue = new PriorityQueue<T>(dataMap.size(), this);
         dataQueue.addAll(dataMap.keySet());
@@ -109,10 +130,8 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
         // There is one region for each dimension
         final Map<Region, T> retval = new HashMap<Region, T>(dataMap.size());
         
-        // Builds a root with the dimensions of the biggest element
         Dimension dim = dataMap.get(dataQueue.peek());
-        root = new Node<T>(0, 0, (int) dim.getWidth(), (int) dim.getHeight(), null);
-        
+
         for (T data : dataQueue) {
             dim = dataMap.get(data);
             
@@ -197,7 +216,7 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
         if (this.root.height >= (this.root.width + dim.width)) {
             return this.growRight(dim, data);
         // Grow on the left
-        } {
+        } else {
             return this.growDown(dim, data);
         }
     }

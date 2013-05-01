@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,50 @@
  * licenses."
  */
 
+
+package com.github.wuic.util;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * Utility class built on top of the java collection framework helping WUIC to deal with
+ * collections.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.3.1
  */
-package com.github.wuic.servlet;
+public final class CollectionUtils {
+
+    /**
+     * <p>
+     * Prevent instantiation of this class which provides only static methods.
+     * </p>
+     */
+    private CollectionUtils() {
+
+    }
+
+    /**
+     * <p>
+     * Returns a {@code List} with a initial capacity which equals to the number of
+     * elements given in parameter and with those elements already added.
+     * </p>
+     *
+     * @param elements the elements to add to the list to create
+     * @param <T> the generic of the list
+     * @return the creates {@code List}
+     */
+    public static <T> List<T> newList(T ... elements) {
+        final List<T> retval = new ArrayList<T>(elements.length);
+
+        for (T element : elements) {
+            retval.add(element);
+        }
+
+        return retval;
+    }
+}

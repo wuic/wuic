@@ -112,18 +112,23 @@ public class CoreTest {
             
             try {
                 fis = it.next().openStream();
-                FileUtils.copyInputStreamToFile(fis, new File("C:\\" + i++ + "test.js"));
+                final File file = new File("C:\\" + i++ + "test.js");
+                FileUtils.copyInputStreamToFile(fis, file);
+                final String content = FileUtils.readFileToString(file);
+                final int start = content.indexOf("url\":\"") + 6;
+                final int end = content.indexOf("/?file=aggregation.png");
+                final String imageGroup = content.substring(start, end);
+                group = facade.getGroup(imageGroup);
+
+                FileUtils.copyInputStreamToFile(group.get(0).openStream(), new File("C:\\aggregate.png"));
             } finally {
                 if (fis != null) {
                     fis.close();
                 }
             }
         }
-        
-        //group = facade.getGroup("test");
-        
-        FileUtils.copyInputStreamToFile(group.get(0).openStream(), new File("C:\\aggregate.png"));
-        
+
+
     }
     
     /**

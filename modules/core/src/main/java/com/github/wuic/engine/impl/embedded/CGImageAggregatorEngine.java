@@ -145,7 +145,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ImageIO.write(transparentImage, "png", bos);
             final WuicResource res = new ByteArrayWuicResource(bos.toByteArray(), AGGREGATION_NAME, FileType.PNG);
-            
+
             return Arrays.asList(res);
         }
     }

@@ -39,8 +39,11 @@
 package com.github.wuic;
 
 import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.SourceRootProvider;
+import com.github.wuic.resource.WuicResource;
+import com.github.wuic.resource.WuicResourceFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -50,7 +53,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.2
  * @since 0.1.0
  */
 public class FilesGroup {
@@ -66,9 +69,9 @@ public class FilesGroup {
     private List<String> files;
 
     /**
-     * The source root provider.
+     * The resource factory.
      */
-    private SourceRootProvider sourceRootProvider;
+    private WuicResourceFactory resourceFactory;
     
     /**
      * <p>
@@ -79,15 +82,28 @@ public class FilesGroup {
      * 
      * @param config the {@link Configuration}
      * @param filesList the files
-     * @param theSourceRootProvider the {@link SourceRootProvider}
+     * @param theResourceFactory the {@link WuicResourceFactory}
      */
     public FilesGroup(final Configuration config,
             final List<String> filesList,
-            final SourceRootProvider theSourceRootProvider) {
+            final WuicResourceFactory theResourceFactory) {
         this.configuration = config;
         this.files = filesList;
-        this.sourceRootProvider = theSourceRootProvider;
+        this.resourceFactory = theResourceFactory;
         checkFiles();
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link FilesGroup} by copying an existing one but with a new configuration.
+     * </p>
+     *
+     * @param config the {@link Configuration}
+     * @param other the group to copy
+     */
+    public FilesGroup(final Configuration config,
+                      final FilesGroup other) {
+        this(config, other.files, other.resourceFactory);
     }
 
     /**
@@ -144,19 +160,48 @@ public class FilesGroup {
      * </p>
      * 
      * @return the files
+     * @throws IOException if an error occurs while getting files
      */
-    public List<String> getFiles() {
-        return files;
+    public List<String> getFiles() throws IOException {
+        if (files.isEmpty()) {
+            return files;
+        } else {
+            final List<String> retval = new ArrayList<String>();
+
+            for (String path : files) {
+                retval.addAll(resourceFactory.computeRealPaths(path));
+            }
+
+            return retval;
+        }
     }
 
     /**
      * <p>
-     * Gets the {@link SourceRootProvider}.
+     * Gets the {@link com.github.wuic.resource.WuicResourceFactory}.
      * </p>
      * 
-     * @return the source root provider
+     * @return the resource factory
      */
-    public SourceRootProvider getSourceRootProvider() {
-        return sourceRootProvider;
+    public WuicResourceFactory getResourceFactory() {
+        return resourceFactory;
+    }
+
+    /**
+     * <p>
+     * Gets all the resources of this group.
+     * </p>
+     *
+     * @return the resources
+     * @throws IOException if the resources can't be built
+     */
+    public List<WuicResource> getResources() throws IOException {
+        final List<WuicResource> retval = new ArrayList<WuicResource>();
+
+        for (String path : files) {
+            retval.addAll(resourceFactory.create(path));
+        }
+
+        return retval;
     }
 }

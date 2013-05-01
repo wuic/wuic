@@ -37,9 +37,9 @@
 
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * This package defines required implementation for resource stored in the classpath.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
  */
-package com.github.wuic.servlet;
+package com.github.wuic.resource.impl.classpath;

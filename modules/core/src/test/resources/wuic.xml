@@ -2,51 +2,15 @@
 
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
-	<sourceRootProviders>
-		<sourceRootProvider id="appSourceRootProvider" class="com.github.wuic.test.JUnitSourceRootProvider" />
-	</sourceRootProviders>
+	<resource-factory-builders>
+		<resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.test.JUnitWuicResourceFactoryBuilder" />
+        <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+	</resource-factory-builders>
 	<groups>
-		<group id="image" configuration="sprite-image-png" sourceRootProvider="appSourceRootProvider">
-            <file>images/ticket.png</file>
-            <file>images/action.png</file>
-            <file>images/a3.png</file>
-            <file>images/escalation-done.png</file>
-            <file>images/escalation-source.png</file>
-            <file>images/escalation-target.png</file>
-            <file>images/problem.png</file>
-            <file>images/btn_capgemini.png</file>
-            <file>images/picto_interrogation.png</file>
-            <file>images/btn_delete.png</file>
-            <file>images/btn_labels.png</file>
-            <file>images/btn_text-edit.png</file>
-            <file>images/btn_toolbox.png</file>
-            <file>images/fond_dock.png</file>
-            <file>images/fond_dock_right.png</file>
-            <file>images/fond_dock_left.png</file>
-            <file>images/hover_dock.png</file>
-            <file>images/picto_2fleches.png</file>
-            <file>images/picto_4fleches.png</file>
-            <file>images/picto_fleche-haut.png</file>
-            <file>images/picto_turn-off.png</file>
-            <file>images/upload-img.png</file>
-            <file>images/link-img.png</file>
-            <file>images/arrow.png</file>
-            <file>images/btn_clf.png</file>
-            <file>images/btn_undo.png</file>
-            <file>images/btn_redo.png</file>
-            <file>images/btn_slideShowPlay.png</file>
-            <file>images/btn_slideShowPause.png</file>
-
-            <file>images/deleteCaption.png</file>
-
-            <file>images/cut.png</file>
-            <file>images/copy.png</file>
-            <file>images/paste.png</file>
-            
-            <file>images/stepper_minus.png</file>
-            <file>images/stepper_more.png</file>
+		<group id="image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
+            <file>images/.*.png</file>
 		</group>
-		<group id="util-js" configuration="yuicompressor-js" sourceRootProvider="appSourceRootProvider">
+		<group id="util-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
             <file>cgsg/utils/util.array.js</file>
             <file>cgsg/utils/class.class.js</file>
             <file>cgsg/utils/class.hashmap.js</file>
@@ -86,7 +50,7 @@
             <file>cgsg/class.scenegraph.js</file>
             <file>cgsg/class.scene.js</file>
 		</group>
-		<group id="css" configuration="yuicompressor-css" sourceRootProvider="appSourceRootProvider">
+		<group id="css" configuration="yuicompressor-css" default-builder="appSourceRootProvider">
 			<file>chosen.css</file>
 			<file>style.css</file>
 		</group>

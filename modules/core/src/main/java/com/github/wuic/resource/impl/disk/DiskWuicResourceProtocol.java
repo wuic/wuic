@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,65 @@
  * licenses."
  */
 
+
+package com.github.wuic.resource.impl.disk;
+
+import com.github.wuic.FileType;
+import com.github.wuic.resource.WuicResource;
+import com.github.wuic.resource.WuicResourceProtocol;
+import com.github.wuic.resource.impl.FileWuicResource;
+import com.github.wuic.util.IOUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * A {@link com.github.wuic.resource.WuicResourceProtocol} implementation for classpath accesses.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.3.1
  */
-package com.github.wuic.servlet;
+public class DiskWuicResourceProtocol implements WuicResourceProtocol {
+
+    /**
+     * Base directory where the protocol has to look up.
+     */
+    private File baseDirectory;
+
+    /**
+     * <p>
+     * Builds a new instance with a base directory. Throws an {@code IllegalArgumentException} if
+     * the given {@code String} does not represents a directory.
+     * </p>
+     *
+     * @param base the directory where we have to look up
+     */
+    public DiskWuicResourceProtocol(final String base) {
+        baseDirectory = new File(base);
+
+        if (!baseDirectory.isDirectory()) {
+            throw new IllegalArgumentException(base + " is not a directory");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+        return IOUtils.lookupDirectoryResources(baseDirectory, pattern);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WuicResource accessFor(String realPath, String name, FileType type) throws IOException {
+        return new FileWuicResource(baseDirectory.getAbsolutePath(), name, type);
+    }
+}

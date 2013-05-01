@@ -37,9 +37,10 @@
 
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * Utility package where helper methods are defined. We prefer to define our own utility
+ * class as much as possible instead of increasing the number of dependencies.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
  */
-package com.github.wuic.servlet;
+package com.github.wuic.util;

@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,59 @@
  * licenses."
  */
 
+
+package com.github.wuic.servlet;
+
+import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
+import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import com.github.wuic.resource.impl.disk.DiskWuicResourceProtocol;
+
 /**
  * <p>
- * This package defines the Servlet support provided by WUIC.
+ * Builder for resource access on disk.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
+ * @version 1.1
+ * @since 0.3.0
  */
-package com.github.wuic.servlet;
+public class WebappWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
+
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     */
+    public WebappWuicResourceFactoryBuilder() {
+        this(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(
+                new DiskWuicResourceProtocol(
+                        WuicServlet.servletContext().getRealPath("."))));
+    }
+
+    /**
+     * <p>
+     * Creates a new instance thanks to an already built factory.
+     * </p>
+     *
+     * @param built the already built factory.
+     */
+    public WebappWuicResourceFactoryBuilder(final WuicResourceFactory built) {
+        super(built);
+    }
+
+    /**
+     * <p>
+     * Creates a new factory supporting regex.
+     * </p>
+     *
+     * @return the regex factory
+     */
+    @Override
+    protected WuicResourceFactoryBuilder newRegexFactory() {
+        return new WebappWuicResourceFactoryBuilder(
+                new AbstractWuicResourceFactory.RegexWuicResourceFactory(
+                        new DiskWuicResourceProtocol(WuicServlet.servletContext().getRealPath("."))));
+    }
+}

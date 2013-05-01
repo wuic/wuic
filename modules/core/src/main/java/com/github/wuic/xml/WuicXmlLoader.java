@@ -40,12 +40,10 @@ package com.github.wuic.xml;
 
 import com.github.wuic.FileType;
 import com.github.wuic.FilesGroup;
-import com.github.wuic.resource.WuicResource;
 import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
 import com.github.wuic.configuration.ImageConfiguration;
-import com.github.wuic.configuration.SourceRootProvider;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.configuration.WuicEhcacheProvider;
 import com.github.wuic.configuration.impl.ImageConfigurationImpl;
@@ -64,6 +62,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import net.sf.ehcache.Cache;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -86,7 +85,7 @@ import org.xml.sax.SAXException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
@@ -117,9 +116,9 @@ public final class WuicXmlLoader {
     private Map<String, FilesGroup> filesGroups;
     
     /**
-     * The source root providers associated to their ID.
+     * The resource factory builders associated to their ID.
      */
-    private Map<String, SourceRootProvider> sourceRootProviders;
+    private Map<String, WuicResourceFactoryBuilder> resourceFactoryBuilders;
     
     /**
      * The cache indicated in the configuration.
@@ -140,7 +139,7 @@ public final class WuicXmlLoader {
 
         try {
             // The elements to be read from the file
-            sourceRootProviders = new HashMap<String, SourceRootProvider>();
+            resourceFactoryBuilders = new HashMap<String, WuicResourceFactoryBuilder>();
             builtConfigurations = new HashMap<String, Configuration>();
             filesGroups = new HashMap<String, FilesGroup>();
             
@@ -161,8 +160,8 @@ public final class WuicXmlLoader {
             // Load cache
             readCache(document);
             
-            // Read source root providers
-            readSourceRootProviders(document);
+            // Read resource factory builders
+            readWuicResourceFactoryBuilder(document);
             
             // Read configurations
             readConfigurations(document);
@@ -209,8 +208,9 @@ public final class WuicXmlLoader {
      * 
      * @param group the group the generated ID should be based on
      * @return the generated group ID
+     * @throws IOException if files group can't be loaded
      */
-    private String createGeneratedGroupId(final FilesGroup group) {
+    private String createGeneratedGroupId(final FilesGroup group) throws IOException {
         return createGeneratedGroupId(group.getFiles());
     }
     
@@ -239,43 +239,53 @@ public final class WuicXmlLoader {
 
     /**
      * <p>
-     * Reads the {@link SourceRootProvider} defined in the wuic.xml file. A set
-     * of <sourceRootProvider> tags should be defined and will be read by this
+     * Reads the {@link WuicResourceFactoryBuilder} defined in the wuic.xml file. A set
+     * of <resource-factory-builder> tags should be defined and will be read by this
      * method.
      * </p>
      * 
-     * @param document the document which contains the {@link SourceRootProvider} to read
+     * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
      * @throws BadConfigurationException if the document does not contains the expected structure
      */
-    private void readSourceRootProviders(final Document document) throws BadConfigurationException {
+    private void readWuicResourceFactoryBuilder(final Document document) throws BadConfigurationException {
         // Get the nodes
-        final NodeList sourceRootProviderList = document.getElementsByTagName("sourceRootProvider");
+        final NodeList resourceFactoryBuilderList = document.getElementsByTagName("resource-factory-builder");
 
         // Read each node
-        for (int i = 0; i < sourceRootProviderList.getLength(); i++) {
-            final Node sourceRootProviderNode = sourceRootProviderList.item(i);
+        for (int i = 0; i < resourceFactoryBuilderList.getLength(); i++) {
+            final Node resourceFactoryBuilderNode = resourceFactoryBuilderList.item(i);
             
             // Get the ID that identifies the class instance
-            final Node idAttr = sourceRootProviderNode.getAttributes().getNamedItem("id");
-            
+            final Node idAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("id");
+
             if (idAttr == null) {
-                throw new BadConfigurationException("sourceRootProvider tag must contains an ID attribute");
-            }
-            
-            // Get the class to be instantiated
-            final Node classAttr = sourceRootProviderNode.getAttributes().getNamedItem("class");
-            
-            if (classAttr == null) {
-                throw new BadConfigurationException("sourceRootProvider tag must contains a class attribute");
+                throw new BadConfigurationException("resource-factory-builder tag must contains an ID attribute");
             }
 
-            // Node try to create an instance of a SourceRootProvider
+            // Must we create a factory which supports regex ?
+            final Node regexAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("regex");
+            final Boolean regex = regexAttr != null && Boolean.parseBoolean(regexAttr.getNodeValue());
+
+            // Get the class to be instantiated
+            final Node classAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("class");
+            
+            if (classAttr == null) {
+                throw new BadConfigurationException("resource-factory-builder tag must contains a class attribute");
+            }
+
+            // Node try to create an instance of a WuicResourceFactoryBuilder
             final String className = classAttr.getNodeValue();
             
             try {
                 final Class<?> currentClass = Class.forName(className);
-                final Class<SourceRootProvider> targetClass = SourceRootProvider.class;
-                sourceRootProviders.put(idAttr.getNodeValue(), targetClass.cast(currentClass.newInstance()));
+                final Class<WuicResourceFactoryBuilder> targetClass = WuicResourceFactoryBuilder.class;
+                final WuicResourceFactoryBuilder wrfb = targetClass.cast(currentClass.newInstance());
+
+                if (regex) {
+                    resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb.regex());
+                } else {
+                    resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb);
+                }
             } catch (ClassNotFoundException cnfe) {
                 throw new BadConfigurationException(cnfe);
             } catch (IllegalAccessException iae) {
@@ -296,7 +306,7 @@ public final class WuicXmlLoader {
      * If the cache does not exists, then a default cache will be used.
      * </p>
      * 
-     * @param document the document which contains the {@link SourceRootProvider} to read
+     * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
      * @throws BadConfigurationException if a specified ehcache-provider could not be used
      */
     private void readCache(final Document document) throws BadConfigurationException {
@@ -372,9 +382,10 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the groups to read
-     * @throws BadConfigurationException if the {@link SourceRootProvider} could not be read
+     * @throws BadConfigurationException if the {@link WuicResourceFactoryBuilder} could not be read
+     * @throws IOException if a group can't be loaded
      */
-    private void readGroups(final Document document) throws BadConfigurationException {
+    private void readGroups(final Document document) throws BadConfigurationException, IOException {
         // Get the root element
         final Node groups = document.getElementsByTagName("groups").item(0);
                 
@@ -397,23 +408,23 @@ public final class WuicXmlLoader {
             final Node configAttribute = group.getAttributes().getNamedItem("configuration");
             final Configuration config = builtConfigurations.get(configAttribute.getNodeValue());
             
-            // The source root provider to use is specified with its ID
-            final Node srpAttribute = group.getAttributes().getNamedItem("sourceRootProvider");
+            // The resource factory builder to use is specified with its ID
+            final Node defaultBuilderAttribute = group.getAttributes().getNamedItem("default-builder");
             
-            if (srpAttribute == null || !sourceRootProviders.containsKey(srpAttribute.getNodeValue())) {
+            if (defaultBuilderAttribute == null || !resourceFactoryBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
                 final StringBuilder msg = new StringBuilder("The group does not ");
-                msg.append("contains a sourceRootProvider attribute that ");
-                msg.append("corresponds to an existing sourceRootProvider ID");
+                msg.append("contains a default-builder attribute that ");
+                msg.append("corresponds to an existing resource-factory-builder ID");
                 throw new BadConfigurationException(msg.toString());
             }
 
-            // Get the source root provider and create the files group
-            final SourceRootProvider srp = sourceRootProviders.get(srpAttribute.getNodeValue());
-            final FilesGroup filesGroup = new FilesGroup(config, files, srp);
+            // Get the resource factory builder and create the files group
+            final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
+            final FilesGroup filesGroup = new FilesGroup(config, files, srp.build());
             
             // Particular case : sprite needs an image group
             if (config instanceof SpriteConfiguration) {
-                putImageGroupFor(idAttribute.getNodeValue(), filesGroup);
+                putImageGroupFor(filesGroup);
             }
             
             // Add all the files read from the document and associate them to the ID
@@ -426,10 +437,10 @@ public final class WuicXmlLoader {
      * Creates and puts an image group based of the given sprite group.
      * </p>
      * 
-     * @param groupId the group ID
      * @param filesGroup the sprite group
+     * @throws IOException if the files group can't be loaded
      */
-    private void putImageGroupFor(final String groupId, final FilesGroup filesGroup) {
+    private void putImageGroupFor(final FilesGroup filesGroup) throws IOException {
         // Builds the ID based on the given sprite group
         final String imageId = createGeneratedGroupId(filesGroup);
         
@@ -438,10 +449,8 @@ public final class WuicXmlLoader {
         builtConfigurations.put("image-png", config);
         
         // Creates the image group base on the given group
-        final FilesGroup imageGroup = new FilesGroup(config,
-                filesGroup.getFiles(),
-                new ProxySourceRootProvider(filesGroup.getSourceRootProvider(), imageId, groupId));
-       
+        final FilesGroup imageGroup = new FilesGroup(config, filesGroup);
+
         // Add the new group
         filesGroups.put(imageId, imageGroup);
     }
@@ -490,73 +499,5 @@ public final class WuicXmlLoader {
      */
     public Cache getCache() {
         return cache;
-    }
-
-    /**
-     * <p>
-     * Proxy source root provider that maps an given group to another group. This
-     * another group has to be used when calling the wrapped {@link SourceRootProvider}.
-     * </p>
-     * 
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.2.0
-     */
-    private static class ProxySourceRootProvider implements SourceRootProvider {
-        
-        /**
-         * The wrappes {@link SourceRootProvider}.
-         */
-        private SourceRootProvider sourceRootProvider;
-        
-        /**
-         * The proxy group ID.
-         */
-        private String proxyGroupId;
-        
-        /**
-         * The mapper group to actually use.
-         */
-        private String targetGroupId;
-        
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         * 
-         * @param srp the source root provider
-         * @param pgid the proxy group id
-         * @param tgid the target group id
-         */
-        public ProxySourceRootProvider(final SourceRootProvider srp, final String pgid, final String tgid) {
-            sourceRootProvider = srp;
-            proxyGroupId = pgid;
-            targetGroupId = tgid;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Boolean hasChanged(final String gid, final String file, final Long since) {
-            if (proxyGroupId.equals(gid)) {
-                return sourceRootProvider.hasChanged(targetGroupId, file, since);
-            } else {
-                return sourceRootProvider.hasChanged(gid, file, since);
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public WuicResource getStreamResource(final String gid, final String file)
-                throws IOException {
-            if (proxyGroupId.equals(gid)) {
-                return sourceRootProvider.getStreamResource(targetGroupId, file);
-            } else {
-                return sourceRootProvider.getStreamResource(gid, file);
-            }
-        }
     }
 }

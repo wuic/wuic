@@ -2,27 +2,15 @@
 
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
-    <sourceRootProviders>
-        <sourceRootProvider id="imgSourceRootProvider" class="com.github.wuic.helper.configuration.ClasspathSourceRootProvider" />
-        <sourceRootProvider id="appSourceRootProvider" class="com.github.wuic.helper.configuration.WebappSourceRootProvider" />
-    </sourceRootProviders>
+    <resource-factory-builders>
+        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+        <resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder" />
+    </resource-factory-builders>
     <groups>
-        <group id="img" configuration="sprite-image-png" sourceRootProvider="imgSourceRootProvider">
-            <file>img/angry.png</file>
-            <file>img/baby.png</file>
-            <file>img/cry.png</file>
-            <file>img/disappointed.png</file>
-            <file>img/fear.png</file>
-            <file>img/happy.png</file>
-            <file>img/love.png</file>
-            <file>img/sad.png</file>
-            <file>img/smile.png</file>
-            <file>img/spaceinvider.png</file>
-            <file>img/star.png</file>
-            <file>img/surprise.png</file>
-            <file>img/wink.png</file>
+        <group id="img" configuration="sprite-image-png" default-builder="imgSourceRootProvider">
+            <file>img/.*.png</file>
         </group>
-        <group id="cgsg-js" configuration="yuicompressor-js" sourceRootProvider="appSourceRootProvider">
+        <group id="cgsg-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
             <file>cgsg/utils/util.array.js</file>
             <file>cgsg/utils/class.class.js</file>
             <file>cgsg/utils/class.hashmap.js</file>

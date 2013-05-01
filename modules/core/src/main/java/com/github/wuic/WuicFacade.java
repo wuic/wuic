@@ -40,7 +40,6 @@ package com.github.wuic;
 
 import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.SourceRootProvider;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineOutputManager;
 import com.github.wuic.engine.EngineRequest;
@@ -48,11 +47,8 @@ import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.github.wuic.resource.WuicResource;
 import org.slf4j.Logger;
@@ -65,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public final class WuicFacade {
@@ -79,12 +75,6 @@ public final class WuicFacade {
      * The {@link EngineFactoryBuilder} used in this facade.
      */
     private EngineFactoryBuilder factoryBuilder;
-    
-    /**
-     * This {@code Map} contains the date stored when the file was treated for
-     * the last time. 
-     */
-    private Map<String, Long> lastOperations;
 
     /**
      * The context path where the files will be exposed.
@@ -102,7 +92,6 @@ public final class WuicFacade {
      */
     private WuicFacade(final String cp) throws IOException, BadConfigurationException {
         factoryBuilder = new EngineFactoryBuilderImpl();
-        lastOperations = new HashMap<String, Long>();
         contextPath = cp;
     }
     
@@ -158,31 +147,8 @@ public final class WuicFacade {
             // Get it configuration
             final Configuration configuration = group.getConfiguration();
             
-            // Get the files group
-            final List<String> filesList = group.getFiles();
-
             // Gets an input stream for each file
-            final List<WuicResource> resources = new ArrayList<WuicResource>();
-            final SourceRootProvider srcRootProvider = group.getSourceRootProvider();
-
-            for (String file : filesList) {
-                final Long ts = getLastOperation(id, file);
-                final WuicResource resource = srcRootProvider.getStreamResource(id, file);
-                
-                /*
-                 * If the file has not changed since the last work, then it
-                 * is not necessary to read it once again. The file generated
-                 * the last time could be reused. Setting a null InputStream
-                 * tells the engine to reuse its last work.
-                 */
-                if (ts == null || (ts != null && srcRootProvider.hasChanged(id, file, ts))) {
-                    resources.add(resource);
-                    putLastOperation(id, file);
-                } else {
-                    // TODO : possibility to imagine a mechanism that reuse files that have not changed...
-                    resources.add(resource);
-                }
-            }
+            final List<WuicResource> resources = group.getResources();
 
             // Initialize the working directory for the engines to be executed
             final EngineOutputManager outManager = EngineOutputManager.getInstance();
@@ -201,31 +167,6 @@ public final class WuicFacade {
         } catch (IOException ioe) {
             throw new WuicException(ioe);
         }
-    }
-    
-    /**
-     * <p>
-     * Gets the last operation time.
-     * </p>
-     * 
-     * @param groupId the group
-     * @param file the file
-     * @return the time stamp
-     */
-    private Long getLastOperation(final String groupId, final String file) {
-        return lastOperations.get(getOperationId(groupId, file));
-    }
-    
-    /**
-     * <p>
-     * Put the operation time.
-     * </p>
-     * 
-     * @param groupId the group
-     * @param file the file
-     */
-    private void putLastOperation(final String groupId, final String file) {
-        lastOperations.put(getOperationId(groupId, file), System.currentTimeMillis());
     }
 
     /**

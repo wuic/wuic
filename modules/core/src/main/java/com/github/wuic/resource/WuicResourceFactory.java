@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,43 @@
  * licenses."
  */
 
+
+package com.github.wuic.resource;
+
+import java.io.IOException;
+import java.util.List;
+
 /**
  * <p>
- * This package defines some class helping the configuration step.
+ * Abstraction of a factory producing {@link WuicResource} objects.
  * </p>
  *
  * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.3.1
  */
-package com.github.wuic.helper.configuration;
+public interface WuicResourceFactory {
+
+    /**
+     * <p>
+     * Creates a list of {@link WuicResource resources} thanks to the given path.
+     * </p>
+     *
+     * @param path the path representing the location of the resource(s).
+     * @return the created resource(s)
+     * @throws IOException if an I/O error occurs when creating the resource
+     */
+    List<WuicResource> create(String path) throws IOException;
+
+    /**
+     * <p>
+     * Returns a list of paths depending of the behavior of the factory with the given path.
+     * In fact, the factory could consider the path as a regex, a directory, etc.
+     * </p>
+     *
+     * @param path the path access
+     * @return the resulting real paths
+     * @throws IOException if an I/O error occurs when creating the resource
+     */
+    List<String> computeRealPaths(String path) throws IOException;
+}

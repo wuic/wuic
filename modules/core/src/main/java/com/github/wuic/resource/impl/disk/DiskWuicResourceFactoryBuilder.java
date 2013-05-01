@@ -36,42 +36,55 @@
  */
 
 
-package com.github.wuic.helper.configuration;
+package com.github.wuic.resource.impl.disk;
 
-import com.github.wuic.FileType;
-import com.github.wuic.resource.WuicResource;
-import com.github.wuic.configuration.SourceRootProvider;
-import com.github.wuic.resource.impl.InputStreamWuicResource;
-
-import java.io.IOException;
+import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
+import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
 
 /**
  * <p>
- * A {@link com.github.wuic.configuration.SourceRootProvider} which takes resources exposed through the servlet context.
+ * Builder for resource access on disk.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.0
  */
-public class ClasspathSourceRootProvider implements SourceRootProvider {
+public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Creates a new instance.
+     * </p>
      */
-    @Override
-    public WuicResource getStreamResource(final String groupId, final String file) throws IOException {
-        final String ext = file.substring(file.lastIndexOf('.'));
-        final FileType type = FileType.getFileTypeForExtension(ext);
-
-        return new InputStreamWuicResource(getClass().getResourceAsStream("/" + file), file, type);
+    public DiskWuicResourceFactoryBuilder() {
+        this(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(new DiskWuicResourceProtocol(".")));
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Creates a new instance thanks to an already built factory.
+     * </p>
+     *
+     * @param built the already built factory.
+     */
+    public DiskWuicResourceFactoryBuilder(final WuicResourceFactory built) {
+        super(built);
+    }
+
+    /**
+     * <p>
+     * Creates a new factory supporting regex.
+     * </p>
+     *
+     * @return the regex factory
      */
     @Override
-    public Boolean hasChanged(final String groupId, final String file, final Long timestamp) {
-        return Boolean.FALSE;
+    protected WuicResourceFactoryBuilder newRegexFactory() {
+        return new DiskWuicResourceFactoryBuilder(
+                new AbstractWuicResourceFactory.RegexWuicResourceFactory(
+                        new DiskWuicResourceProtocol(".")));
     }
 }

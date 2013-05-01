@@ -37,9 +37,9 @@
 
 /**
  * <p>
- * This package defines some class helping the configuration step.
+ * This package defines required implementation for resource stored on the disk.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
  */
-package com.github.wuic.helper.configuration;
+package com.github.wuic.resource.impl.disk;
