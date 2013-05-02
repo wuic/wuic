@@ -40,6 +40,9 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public WuicResourceFactory build() {
         return new WuicResourceFactory() {
@@ -56,7 +59,9 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
                     ft = FileType.PNG;
                 }
 
-                final WuicResource res = new FileWuicResource(new File("src/test/resources").getAbsolutePath(), path, ft);
+                final String prefix = System.getProperty("wuic.test.rootDirectoryPrefix");
+                final String resources = prefix == null ? "src/test/resources" : prefix + "/src/test/resources";
+                final WuicResource res = new FileWuicResource(new File(resources).getAbsolutePath(), path, ft);
 
                 return CollectionUtils.newList(res);
             }

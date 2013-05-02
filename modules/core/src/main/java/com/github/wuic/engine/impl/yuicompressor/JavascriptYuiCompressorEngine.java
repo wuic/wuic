@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.impl.yuicompressor;
 
-import com.github.wuic.Util;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiJavascriptConfiguration;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
@@ -65,7 +64,7 @@ import org.apache.commons.io.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
@@ -167,7 +166,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
         
         try {
             streamParser = new FileOutputStream(tempFile);
-            final char[] buffer = new char[Util.WUIC_BUFFER_LEN];
+            final char[] buffer = new char[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
             int offset;
             
             while ((offset = parser.read(buffer)) != -1) {

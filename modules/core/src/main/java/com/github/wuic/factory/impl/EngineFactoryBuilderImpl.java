@@ -54,7 +54,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
@@ -66,7 +66,7 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
     
     /**
      * <p>
-     * Builds a new {@link EngineFactoryBuilderImpl}.
+     * Builds a new {@link EngineFactoryBuilderImpl} thanks to a specified wuic.xml file location in the classpath.
      * </p>
      * 
      * @throws IOException if an I/O error occurs if the 'wuic.xml' could not be loaded
@@ -74,6 +74,19 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
      */
     public EngineFactoryBuilderImpl() throws IOException, BadConfigurationException {
         wuicXml = new WuicXmlLoader();
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link EngineFactoryBuilderImpl}.
+     * </p>
+     *
+     * @param wuicXmlPath the location of the wuic.xml in the classpath
+     * @throws IOException if an I/O error occurs if the 'wuic.xml' could not be loaded
+     * @throws BadConfigurationException in the 'wuic.xml' is not well formed
+     */
+    public EngineFactoryBuilderImpl(final String wuicXmlPath) throws IOException, BadConfigurationException {
+        wuicXml = new WuicXmlLoader(wuicXmlPath);
     }
 
     /**

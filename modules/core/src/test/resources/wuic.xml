@@ -7,7 +7,7 @@
         <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
 	</resource-factory-builders>
 	<groups>
-		<group id="image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
+		<group id="js-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
             <file>images/.*.png</file>
 		</group>
 		<group id="util-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">

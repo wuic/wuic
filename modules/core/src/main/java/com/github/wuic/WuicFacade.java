@@ -94,7 +94,22 @@ public final class WuicFacade {
         factoryBuilder = new EngineFactoryBuilderImpl();
         contextPath = cp;
     }
-    
+
+    /**
+     * <p>
+     * Builds a new {@link WuicFacade} for a particular wuic.xml file .
+     * </p>
+     *
+     * @param wuicXmlPath the wuic.xml location in the classpath
+     * @param cp the context path where the files will be exposed
+     * @throws IOException if an I/O error occurs
+     * @throws BadConfigurationException if the 'wuic.xml' file is not well configured
+     */
+    private WuicFacade(final String wuicXmlPath, final String cp) throws IOException, BadConfigurationException {
+        factoryBuilder = new EngineFactoryBuilderImpl(wuicXmlPath);
+        contextPath = cp;
+    }
+
     /**
      * <p>
      * Gets a new instance. If an error occurs, it will be wrapped in a
@@ -105,8 +120,26 @@ public final class WuicFacade {
      * @return the unique instance
      */
     public static synchronized WuicFacade newInstance(final String contextPath) {
+        return newInstance(contextPath, null);
+    }
+
+    /**
+     * <p>
+     * Gets a new instance. If an error occurs, it will be wrapped in a
+     * {@link WuicException} which will be thrown.
+     * </p>
+     *
+     * @param wuicXmlPath the specific wuic.xml path in classpath (could be {@code null}
+     * @param contextPath the context where the resources will be exposed
+     * @return the unique instance
+     */
+    public static synchronized WuicFacade newInstance(final String contextPath, final String wuicXmlPath) {
         try {
-            return new WuicFacade(contextPath);
+            if (wuicXmlPath != null) {
+                return new WuicFacade(wuicXmlPath, contextPath);
+            } else {
+                return new WuicFacade(contextPath);
+            }
         } catch (BadConfigurationException bce) {
             throw new WuicException(bce);
         } catch (IOException ioe) {
@@ -167,18 +200,5 @@ public final class WuicFacade {
         } catch (IOException ioe) {
             throw new WuicException(ioe);
         }
-    }
-
-    /**
-     * <p>
-     * Generates an ID. Pattern : [groupId]$[file].
-     * </p>
-     * 
-     * @param groupId the group
-     * @param file the file
-     * @return the ID
-     */
-    private String getOperationId(final String groupId, final String file) {
-        return new StringBuilder().append(groupId).append("$").append(file).toString();
     }
 }

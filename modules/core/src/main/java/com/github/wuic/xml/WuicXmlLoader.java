@@ -135,6 +135,20 @@ public final class WuicXmlLoader {
      * @throws BadConfigurationException if the 'wuic.xml' file is not properly defined
      */
     public WuicXmlLoader() throws IOException, BadConfigurationException {
+        this("/wuic.xml");
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code WuicXmlLoader} thanks to the given path of the wuic.xml in the
+     * classpath.
+     * </p>
+     *
+     * @param wuicXmlPath the wuic.xml location in the classpath
+     * @throws IOException if an I/O error occurs while reading the file
+     * @throws BadConfigurationException if the 'wuic.xml' path is not properly defined
+     */
+    public WuicXmlLoader(final String wuicXmlPath) throws IOException, BadConfigurationException {
         final DocumentBuilderFactory factory = getFactory();
 
         try {
@@ -155,7 +169,7 @@ public final class WuicXmlLoader {
             builder.setEntityResolver(new WuicEntityResolver());
             
             // Load the DOM
-            final Document document = builder.parse(getClass().getResourceAsStream("/wuic.xml"));
+            final Document document = builder.parse(getClass().getResourceAsStream(wuicXmlPath));
 
             // Load cache
             readCache(document);

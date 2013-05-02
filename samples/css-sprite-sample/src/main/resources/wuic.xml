@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
+<wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
+    <resource-factory-builders>
+        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+    </resource-factory-builders>
+    <groups>
+        <group id="img" configuration="sprite-image-png" default-builder="imgSourceRootProvider">
+            <file>img/.*.png</file>
+        </group>
+    </groups>
+    <configurations>
+        <configuration id="sprite-image-png" type="SPRITE">
+            <cache>true</cache>
+            <compress>true</compress>
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <sprite-provider>com.github.wuic.engine.impl.embedded.CGCssSpriteProvider</sprite-provider>
+        </configuration>
+    </configurations>
+</wuic>

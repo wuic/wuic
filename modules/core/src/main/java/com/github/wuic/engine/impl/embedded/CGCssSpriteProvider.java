@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -38,95 +38,64 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
-import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
+import com.github.wuic.resource.WuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * <p>
- * This class provides sprite throughout javascript language. The javascript file
- * defines an array which associates each aggregated image name to its region in
- * the final image.
+ * This {@link SpriteProvider} generates CSS code to represent the sprites.
  * </p>
  *
- * <p>
- * In Javascript, an object is declared in variable starting with WUIC_SPRITE_
- * and ending with the group ID. The group ID is treated to be in upper case and
- * with its characters which are invalid in javascript variable names replaced
- * with an underscore.
- * </p>
- * 
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.2.0
+ * @version 1.0
+ * @since 0.3.1
  */
-public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
-
-    /**
-     * The JACKSON MAPPER.
-     */
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
 
     /**
      * {@inheritDoc}
      */
     @Override
     public WuicResource getSprite(final String url, final String groupId) throws IOException {
-        final StringBuilder jsBuilder = new StringBuilder();
-
-        // Inject instantiation
-        final String jsName = createJsName(groupId);
-        jsBuilder.append("var ");
-        jsBuilder.append(jsName);
-        jsBuilder.append(" = {};");
+        final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
-            
+
+            // Class name is based on the name without the directory section and the file extension
+            final int start = name.lastIndexOf('/') + 1;
+            final int last = name.lastIndexOf('.');
+            final String className = name.substring(start, last > start ? last : name.length());
+
             // Define region within the image
-            final Map<String, String> region = new HashMap<String, String>(5);
-            region.put("x", String.valueOf(reg.getxPosition()));
-            region.put("y", String.valueOf(reg.getyPosition()));
-            region.put("w", String.valueOf(reg.getWidth()));
-            region.put("h", String.valueOf(reg.getHeight()));
-            region.put("url", new StringBuilder(url).append("/?file=").append(image).toString());
-        
-            // Instruction that affect the new object to the WUIC_SPRITE constant
-            jsBuilder.append(jsName);
-            jsBuilder.append("['");
-            jsBuilder.append(name.replace("\'", "\\'"));
-            jsBuilder.append("'] = ");
-            jsBuilder.append(MAPPER.writeValueAsString(region));
-            jsBuilder.append(";");
+            cssBuilder.append(".wuic_");
+            cssBuilder.append(className);
+            cssBuilder.append("{display:inline-block;background:url('");
+            cssBuilder.append(new StringBuilder(url).append("/?file=").append(image).toString());
+            cssBuilder.append("') ");
+            cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
+            cssBuilder.append("px ");
+            cssBuilder.append(String.valueOf(reg.getyPosition() * -1));
+            cssBuilder.append("px;width:");
+            cssBuilder.append(String.valueOf((int) reg.getWidth()));
+            cssBuilder.append("px;height:");
+            cssBuilder.append(String.valueOf((int) reg.getHeight()));
+            cssBuilder.append("px;}");
         }
 
         // Make a resource and return it
-        final byte[] bytes = jsBuilder.toString().getBytes();
+        final byte[] bytes = cssBuilder.toString().getBytes();
         final WuicResource spriteFile = new ByteArrayWuicResource(bytes, WuicXmlLoader.createGeneratedGroupId(regions.keySet()),
-                FileType.JAVASCRIPT);
-        
-        return spriteFile;
-    }
+                FileType.CSS);
 
-    /**
-     * <p>
-     * Computes the WUIC javascript constant name for the given ID.
-     * </p>
-     *
-     * @param groupId the group ID
-     * @return the JS name to use
-     */
-    private String createJsName(final String groupId) {
-        return "WUIC_SPRITE_" + groupId.toUpperCase().replace("°=+*/-%€¤£&|[]{}()<>§'#;,@²?:.", "_");
+        return spriteFile;
     }
 }

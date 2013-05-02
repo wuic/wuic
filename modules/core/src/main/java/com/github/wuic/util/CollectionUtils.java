@@ -39,7 +39,9 @@
 package com.github.wuic.util;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -60,6 +62,34 @@ public final class CollectionUtils {
      */
     private CollectionUtils() {
 
+    }
+
+
+    /**
+     * <p>
+     * Returns a {@code Map} that keep the orders of its keys.
+     * </p>
+     *
+     * @param capacity the map capacity
+     * @param <K> the type of the key
+     * @param <V> the type of the value
+     * @return the map
+     */
+    public static <K, V> Map<K, V> indexedKeyMap(final int capacity) {
+        return new LinkedHashMap<K, V>(capacity);
+    }
+
+    /**
+     * <p>
+     * Returns a {@code Map} that keep the orders of its keys.
+     * </p>
+     *
+     * @param <K> the type of the key
+     * @param <V> the type of the value
+     * @return the map
+     */
+    public static <K, V> Map<K, V> orderedKeyMap() {
+        return new LinkedHashMap<K, V>();
     }
 
     /**

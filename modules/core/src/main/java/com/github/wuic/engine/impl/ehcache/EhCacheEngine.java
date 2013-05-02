@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.impl.ehcache;
 
-import com.github.wuic.Util;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.configuration.Configuration;
@@ -51,6 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.util.IOUtils;
 import net.sf.ehcache.Element;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.1
  */
 public class EhCacheEngine extends Engine {
@@ -193,7 +193,7 @@ public class EhCacheEngine extends Engine {
      * @throws IOException if the stream could not be read
      */
     private byte[] load(final InputStream is) throws IOException {
-        final byte[] readBuf = new byte[Util.WUIC_BUFFER_LEN];
+        final byte[] readBuf = new byte[IOUtils.WUIC_BUFFER_LEN];
 
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

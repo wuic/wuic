@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,58 +36,65 @@
  */
 
 
-package com.github.wuic;
+package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.FileType;
+import com.github.wuic.engine.Region;
+import com.github.wuic.engine.SpriteProvider;
+import com.github.wuic.resource.WuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
+import com.github.wuic.xml.WuicXmlLoader;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * <p>
- * This class provides conveniences static methods.
+ * Abstraction of the implementation of what is a {@link SpriteProvider}.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.1.1
+ * @version 1.0
+ * @since 0.3.1
  */
-public final class Util {
+public abstract class CGAbstractSpriteProvider  implements SpriteProvider {
 
     /**
-     * Length of a memory buffer used in WUIC.
+     * Region in the image.
      */
-    public static final int WUIC_BUFFER_LEN = 2048;
+    protected Map<String, Region> regions;
 
     /**
-     * Private constructor because this provides only static methods.
+     * The image name.
      */
-    private Util() {
-        
-    }
-    
+    protected String image;
+
     /**
      * <p>
-     * Returns a {@code Map} that keep the orders of its keys.
+     * Builds a new instance.
      * </p>
-     * 
-     * @param capacity the map capacity
-     * @param <K> the type of the key
-     * @param <V> the type of the value
-     * @return the map
      */
-    public static <K, V> Map<K, V> indexedKeyMap(final int capacity) {
-        return new LinkedHashMap<K, V>(capacity);
+    public CGAbstractSpriteProvider() {
+        regions = new LinkedHashMap<String, Region>();
     }
-    
+
     /**
-     * <p>
-     * Returns a {@code Map} that keep the orders of its keys.
-     * </p>
-     * 
-     * @param <K> the type of the key
-     * @param <V> the type of the value
-     * @return the map
+     * {@inheritDoc}
      */
-    public static <K, V> Map<K, V> orderedKeyMap() {
-        return new LinkedHashMap<K, V>();
+    @Override
+    public void addRegion(final Region region, final String name) {
+        regions.put(name, region);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void init(final String imageName) {
+        regions.clear();
+        image = imageName;
     }
 }

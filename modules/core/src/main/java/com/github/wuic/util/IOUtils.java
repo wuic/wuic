@@ -62,6 +62,11 @@ import java.util.zip.ZipFile;
 public final class IOUtils {
 
     /**
+     * Length of a memory buffer used in WUIC.
+     */
+    public static final int WUIC_BUFFER_LEN = 2048;
+
+    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>

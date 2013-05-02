@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.Util;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
@@ -64,7 +63,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends Engine {
@@ -104,7 +103,7 @@ public class CGTextAggregatorEngine extends Engine {
         // Append each file
         InputStream is = null;
         FileType fileType = null;
-        final byte[] buffer = new byte[Util.WUIC_BUFFER_LEN];
+        final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
         
         // Aggregate each resource
         for (WuicResource resource : request.getResources()) {
