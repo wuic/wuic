@@ -3,16 +3,22 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
     <resource-factory-builders>
-        <resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder" />
+        <resource-factory-builder id="appResourceFactoryBuilder" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder" />
+        <resource-factory-builder id="httpResourceFactoryBuilder" class="com.github.wuic.resource.impl.http.HttpWuicResourceFactoryBuilder">
+            <properties>
+                <property key="c.g.wuic.httpServerPort">8080</property>
+                <property key="c.g.wuic.httpBasePath">jquery-ui-1.10.2</property>
+            </properties>
+        </resource-factory-builder>
     </resource-factory-builders>
     <groups>
-        <group id="accordion-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
-            <file>jquery-ui-1.10.2/jquery-1.9.1.js</file>
-            <file>jquery-ui-1.10.2/ui/jquery.ui.core.js</file>
-            <file>jquery-ui-1.10.2/ui/jquery.ui.widget.js</file>
-            <file>jquery-ui-1.10.2/ui/jquery.ui.accordion.js</file>
+        <group id="accordion-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.accordion.js</file>
         </group>
-        <group id="demo-css" configuration="yuicompressor-css" default-builder="appSourceRootProvider">
+        <group id="demo-css" configuration="yuicompressor-css" default-builder="appResourceFactoryBuilder">
             <file>jquery-ui-1.10.2/themes/base/jquery.ui.all.css</file>
             <file>jquery-ui-1.10.2/demos/demos.css</file>
         </group>

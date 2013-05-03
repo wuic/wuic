@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,75 +35,41 @@
  * licenses."
  */
 
-package com.github.wuic.resource.impl;
 
-import com.github.wuic.FileType;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+package com.github.wuic;
 
 /**
  * <p>
- * Represents a resource on the file system provided or to be managed by the WUIC framework.
+ * All the application configurations supported by WUIC are defined here.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.1.1
+ * @version 1.0
+ * @since 0.3.1
  */
-public class FileWuicResource extends AbstractWuicResource {
+public interface ApplicationConfig {
+
+    /////////////////////////////////////////////////
+    ////// HttpWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
 
     /**
-     * Serial version UID.
+     * The server's domain when accessing resources over HTTP.
      */
-    private static final long serialVersionUID = 1L;
+    String HTTP_SERVER_DOMAIN = "c.g.wuic.httpServerDomain";
 
     /**
-     * The root directory that contains the files of a same group.
+     * Use HTTPS or not accessing resources over HTTP.
      */
-    private String rootDirectory;
+    String HTTP_SECRET_PROTOCOL = "c.g.wuic.httpS";
 
     /**
-     * <p>
-     * Builds a new {@code WuicResource} based on a given file.
-     * </p>
-     * 
-     * @param rootDir the root directory
-     * @param name the source file
-     * @param ft the file type
+     * The server's port when accessing resources over HTTP.
      */
-    public FileWuicResource(final String rootDir, final String name, final FileType ft) {
-        super(name, ft);
-        rootDirectory = rootDir;
-    }
-    
-    /**
-     * <p>
-     * Opens and returns an {@code InputStream} pointing to the resource. 
-     * </p>
-     * 
-     * @return the opened input stream
-     * @throws IOException if an I/O error occurs
-     */
-    public InputStream openStream() throws IOException {
-        if (getName() == null) {
-            return null;
-        }
-        
-        final StringBuilder pathBuilder = new StringBuilder();
-        pathBuilder.append(rootDirectory);
-        pathBuilder.append(System.getProperty("file.separator"));
-        pathBuilder.append(getName());
-        
-        return new FileInputStream(pathBuilder.toString());
-    }
+    String HTTP_SERVER_PORT = "c.g.wuic.httpServerPort";
 
     /**
-     * {@inheritDoc}
+     * The server's base path when accessing resources over HTTP.
      */
-    @Override
-    public String getBaseDirectory() {
-        return rootDirectory;
-    }
+    String HTTP_SERVER_BASE_PATH = "c.g.wuic.httpBasePath";
 }

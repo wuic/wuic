@@ -293,13 +293,24 @@ public final class WuicXmlLoader {
             try {
                 final Class<?> currentClass = Class.forName(className);
                 final Class<WuicResourceFactoryBuilder> targetClass = WuicResourceFactoryBuilder.class;
-                final WuicResourceFactoryBuilder wrfb = targetClass.cast(currentClass.newInstance());
+                WuicResourceFactoryBuilder wrfb = targetClass.cast(currentClass.newInstance());
 
                 if (regex) {
-                    resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb.regex());
-                } else {
-                    resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb);
+                    wrfb = wrfb.regex();
                 }
+
+                // Look for properties
+                final Node propertiesNode = resourceFactoryBuilderNode.getFirstChild();
+
+                if (propertiesNode != null) {
+                    for (int j = 0; j < propertiesNode.getChildNodes().getLength(); j++) {
+                        final Node propertyNode = propertiesNode.getChildNodes().item(j);
+                        final String value = propertyNode.getFirstChild().getNodeValue();
+                        wrfb = wrfb.property(propertyNode.getAttributes().getNamedItem("key").getNodeValue(), value);
+                    }
+                }
+
+                resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb);
             } catch (ClassNotFoundException cnfe) {
                 throw new BadConfigurationException(cnfe);
             } catch (IllegalAccessException iae) {

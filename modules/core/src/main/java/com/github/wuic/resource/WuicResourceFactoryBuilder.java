@@ -60,6 +60,18 @@ public interface WuicResourceFactoryBuilder {
 
     /**
      * <p>
+     * Decorates this builder with a property. Could throws an {@code IllegalArgumentException}
+     * is the property key is not supported or if the value is incorrect.
+     * </p>
+     *
+     * @param key the key
+     * @param value the value
+     * @return a builder taking in consideration the new property
+     */
+    WuicResourceFactoryBuilder property(String key, String value);
+
+    /**
+     * <p>
      * Builds a new {@link WuicResourceFactory} thanks to the current state
      * of this builder.
      * </p>

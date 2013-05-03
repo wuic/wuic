@@ -71,10 +71,9 @@ public interface WuicResourceProtocol {
      * </p>
      *
      * @param realPath the real path to use to access the resource
-     * @param name the name of the resource
      * @param type the file's type
      * @return the {@link WuicResource}
      * @throws IOException if an I/O error occurs while creating access
      */
-    WuicResource accessFor(String realPath, String name, FileType type) throws IOException;
+    WuicResource accessFor(String realPath, FileType type) throws IOException;
 }

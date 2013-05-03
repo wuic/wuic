@@ -15,7 +15,7 @@ package com.github.wuic.test;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
-import com.github.wuic.resource.impl.FileWuicResource;
+import com.github.wuic.resource.impl.disk.FileWuicResource;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.CollectionUtils;
 
@@ -35,8 +35,19 @@ import java.util.List;
  */
 public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public WuicResourceFactoryBuilder regex() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WuicResourceFactoryBuilder property(String key, String value) {
         throw new UnsupportedOperationException();
     }
 
@@ -66,9 +77,20 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
                 return CollectionUtils.newList(res);
             }
 
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public List<String> computeRealPaths(final String path) throws IOException {
                 return Arrays.asList(path);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void setProperty(final String key, final String value) {
+                throw new UnsupportedOperationException();
             }
         };
     }

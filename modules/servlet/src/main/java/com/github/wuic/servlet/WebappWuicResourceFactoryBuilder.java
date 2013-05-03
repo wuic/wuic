@@ -85,7 +85,7 @@ public class WebappWuicResourceFactoryBuilder extends AbstractWuicResourceFactor
      * @return the regex factory
      */
     @Override
-    protected WuicResourceFactoryBuilder newRegexFactory() {
+    protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
         return new WebappWuicResourceFactoryBuilder(
                 new AbstractWuicResourceFactory.RegexWuicResourceFactory(
                         new DiskWuicResourceProtocol(WuicServlet.servletContext().getRealPath("."))));

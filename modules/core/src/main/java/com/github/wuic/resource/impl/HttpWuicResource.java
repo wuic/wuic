@@ -36,55 +36,57 @@
  */
 
 
-package com.github.wuic.resource.impl.classpath;
+package com.github.wuic.resource.impl;
 
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
-import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
-import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import com.github.wuic.FileType;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * <p>
- * Builder for resource access in classpath.
+ * A {@link com.github.wuic.resource.WuicResource} implementation for HTTP accesses.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.3.0
+ * @version 1.0
+ * @since 0.3.1
  */
-public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
+public class HttpWuicResource extends AbstractWuicResource {
+
+    /**
+     * The resource URL.
+     */
+    private URL resourceUrl;
 
     /**
      * <p>
-     * Creates a new instance.
+     * Builds a new instance.
      * </p>
+     *
+     * @param name the name
+     * @param url the URL
+     * @param fileType the file type
      */
-    public ClasspathWuicResourceFactoryBuilder() {
-        this(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(new ClasspathWuicResourceProtocol()));
+    public HttpWuicResource(final String name, final URL url, final FileType fileType) {
+        super(name, fileType);
+        resourceUrl = url;
     }
 
     /**
-     * <p>
-     * Creates a new instance thanks to an already built factory.
-     * </p>
-     *
-     * @param built the already built factory.
-     */
-    public ClasspathWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        super(built);
-    }
-
-    /**
-     * <p>
-     * Creates a new factory supporting regex.
-     * </p>
-     *
-     * @return the regex factory
+     * {@inheritDoc}
      */
     @Override
-    protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
-        return new ClasspathWuicResourceFactoryBuilder(
-                new AbstractWuicResourceFactory.RegexWuicResourceFactory(
-                        new ClasspathWuicResourceProtocol()));
+    public InputStream openStream() throws IOException {
+        return resourceUrl.openStream();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getBaseDirectory() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

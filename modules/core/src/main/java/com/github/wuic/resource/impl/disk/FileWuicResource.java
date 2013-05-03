@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,56 +35,76 @@
  * licenses."
  */
 
+package com.github.wuic.resource.impl.disk;
 
-package com.github.wuic.resource.impl.classpath;
+import com.github.wuic.FileType;
+import com.github.wuic.resource.impl.AbstractWuicResource;
 
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
-import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
-import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>
- * Builder for resource access in classpath.
+ * Represents a resource on the file system provided or to be managed by the WUIC framework.
  * </p>
- *
+ * 
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.3.0
+ * @version 1.2
+ * @since 0.1.1
  */
-public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
+public class FileWuicResource extends AbstractWuicResource {
+
+    /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * The root directory that contains the files of a same group.
+     */
+    private String rootDirectory;
 
     /**
      * <p>
-     * Creates a new instance.
+     * Builds a new {@code WuicResource} based on a given file.
      * </p>
+     * 
+     * @param rootDir the root directory
+     * @param name the source file
+     * @param ft the file type
      */
-    public ClasspathWuicResourceFactoryBuilder() {
-        this(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(new ClasspathWuicResourceProtocol()));
+    public FileWuicResource(final String rootDir, final String name, final FileType ft) {
+        super(name, ft);
+        rootDirectory = rootDir;
+    }
+    
+    /**
+     * <p>
+     * Opens and returns an {@code InputStream} pointing to the resource. 
+     * </p>
+     * 
+     * @return the opened input stream
+     * @throws IOException if an I/O error occurs
+     */
+    public InputStream openStream() throws IOException {
+        if (getName() == null) {
+            return null;
+        }
+        
+        final StringBuilder pathBuilder = new StringBuilder();
+        pathBuilder.append(rootDirectory);
+        pathBuilder.append(System.getProperty("file.separator"));
+        pathBuilder.append(getName());
+        
+        return new FileInputStream(pathBuilder.toString());
     }
 
     /**
-     * <p>
-     * Creates a new instance thanks to an already built factory.
-     * </p>
-     *
-     * @param built the already built factory.
-     */
-    public ClasspathWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        super(built);
-    }
-
-    /**
-     * <p>
-     * Creates a new factory supporting regex.
-     * </p>
-     *
-     * @return the regex factory
+     * {@inheritDoc}
      */
     @Override
-    protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
-        return new ClasspathWuicResourceFactoryBuilder(
-                new AbstractWuicResourceFactory.RegexWuicResourceFactory(
-                        new ClasspathWuicResourceProtocol()));
+    public String getBaseDirectory() {
+        return rootDirectory;
     }
 }

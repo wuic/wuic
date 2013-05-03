@@ -24,12 +24,19 @@
 
 <!ELEMENT resource-factory-builders (resource-factory-builder)+>
 
-<!ELEMENT resource-factory-builder EMPTY>
+<!ELEMENT resource-factory-builder (properties)?>
 <!ATTLIST resource-factory-builder
     id CDATA #IMPLIED
     class CDATA #IMPLIED
     regex CDATA "false"
   >
+
+<!ELEMENT properties (property)*>
+<!ELEMENT property (#PCDATA)>
+<!ATTLIST property
+    key CDATA #IMPLIED
+>
+
 
 <!--- Put your DTDDoc comment here. -->
 <!ELEMENT groups (group)*>

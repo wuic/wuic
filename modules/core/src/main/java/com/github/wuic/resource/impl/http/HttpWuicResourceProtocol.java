@@ -36,48 +36,61 @@
  */
 
 
-package com.github.wuic.resource.impl.disk;
+package com.github.wuic.resource.impl.http;
 
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.util.IOUtils;
+import com.github.wuic.resource.impl.HttpWuicResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * <p>
- * A {@link com.github.wuic.resource.WuicResourceProtocol} implementation for classpath accesses.
+ * A {@link com.github.wuic.resource.WuicResourceProtocol} implementation for HTTP accesses.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.1
  */
-public class DiskWuicResourceProtocol implements WuicResourceProtocol {
+public class HttpWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
-     * Base directory where the protocol has to look up.
+     * Logger.
      */
-    private File baseDirectory;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * The URL (protocol, domain, port, base path) to prefix the resource name.
+     */
+    private String baseUrl;
 
     /**
      * <p>
-     * Builds a new instance with a base directory. Throws an {@code IllegalArgumentException} if
-     * the given {@code String} does not represents a directory.
+     * Builds a new instance thanks to the specified HTTP information.
      * </p>
      *
-     * @param base the directory where we have to look up
+     * @param https use HTTPS protocol instead of HTTP ?
+     * @param domain the HTTP server domain name
+     * @param port the HTTP server port
+     * @param path the base path where resources are provided
      */
-    public DiskWuicResourceProtocol(final String base) {
-        baseDirectory = new File(base);
-
-        if (!baseDirectory.isDirectory()) {
-            throw new IllegalArgumentException(base + " is not a directory");
-        }
+    public HttpWuicResourceProtocol(final Boolean https, final String domain, final int port, final String path) {
+        baseUrl = new StringBuilder()
+                .append(https ? "https://" : "http://")
+                .append(domain)
+                .append(":")
+                .append(port)
+                .append("/")
+                .append(path)
+                .append("/").toString();
     }
 
     /**
@@ -85,7 +98,10 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
-        return IOUtils.lookupDirectoryResources(baseDirectory, pattern);
+        // Finding resources with a regex through HTTP protocol is tricky
+        // Until this feature is implemented, we only expect quoted pattern
+        // So, we unquote it by removing \Q and \E around the string to get the path
+        return Arrays.asList(baseUrl + pattern.pattern().replace("\\Q", "").replace("\\E", ""));
     }
 
     /**
@@ -93,6 +109,6 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
-        return new FileWuicResource(baseDirectory.getAbsolutePath(), realPath, type);
+        return new HttpWuicResource(realPath, new URL(realPath), type);
     }
 }

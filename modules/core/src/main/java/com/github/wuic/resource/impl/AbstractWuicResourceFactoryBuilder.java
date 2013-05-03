@@ -38,6 +38,7 @@
 
 package com.github.wuic.resource.impl;
 
+import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 
@@ -74,7 +75,17 @@ public abstract class AbstractWuicResourceFactoryBuilder implements WuicResource
      */
     @Override
     public WuicResourceFactoryBuilder regex() {
-        return newRegexFactory();
+        return newRegexFactoryBuilder();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WuicResourceFactoryBuilder property(final String key, final String value) {
+        factory.setProperty(key, value);
+
+        return this;
     }
 
     /**
@@ -92,5 +103,5 @@ public abstract class AbstractWuicResourceFactoryBuilder implements WuicResource
      *
      * @return the {@link WuicResourceFactory} which supports regular expressions
      */
-    protected abstract WuicResourceFactoryBuilder newRegexFactory();
+    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
 }

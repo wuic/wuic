@@ -81,7 +81,7 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
         // Note : Application classpath entry is not provided by jetty
         // Workaround consists to get it through getClass().getResource("/")
         // Using a Set to prevent duplicate entries
-        final Set<String> classPathElements = new HashSet();
+        final Set<String> classPathElements = new HashSet<String>();
         classPathElements.addAll(Arrays.asList(classPath.split(isWindows ? ";" : ":")));
         final String appClasspathEntry = getClass().getResource("/").getFile();
         classPathElements.add(isWindows ? appClasspathEntry.substring(1) : appClasspathEntry);
@@ -104,17 +104,18 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final String name, final FileType type) throws IOException {
-        final InputStream is = getClass().getResourceAsStream(realPath);
+    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+        final String cp = realPath.startsWith("/") ? realPath : "/".concat(realPath);
+        final InputStream is = getClass().getResourceAsStream(cp);
 
         if (log.isDebugEnabled()) {
-            log.debug("Looking for " + realPath + " resource in the classpath");
+            log.debug("Looking for " + cp + " resource in the classpath");
         }
 
         if (is == null) {
-            throw new IOException(realPath + " not found in the classpath");
+            throw new IOException(cp + " not found in the classpath");
         }
 
-        return new InputStreamWuicResource(is, name, type);
+        return new InputStreamWuicResource(is, realPath, type);
     }
 }

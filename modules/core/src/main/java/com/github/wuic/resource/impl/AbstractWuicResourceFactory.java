@@ -44,8 +44,7 @@ import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceProtocol;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -86,7 +85,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
         final List<WuicResource> retval = new ArrayList<WuicResource>(pathNames.size());
 
         for (String p : pathNames) {
-            retval.add(wuicProtocol.accessFor(p.startsWith("/") ? p : "/".concat(p), p, type));
+            retval.add(wuicProtocol.accessFor(p, type));
         }
 
         return retval;
@@ -97,6 +96,25 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      */
     public List<String> computeRealPaths(final String pathName) throws IOException {
         return wuicProtocol.listResourcesPaths(getPattern(pathName));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setProperty(final String key, final String value) {
+        throw new UnsupportedOperationException("This factory don't support any property. Given key is " + key + " with value " + value);
+    }
+
+    /**
+     * <p>
+     * Sets the protocol.
+     * </p>
+     *
+     * @param wuicProtocol the new protocol
+     */
+    protected void setWuicProtocol(final WuicResourceProtocol wuicProtocol) {
+        this.wuicProtocol = wuicProtocol;
     }
 
     /**

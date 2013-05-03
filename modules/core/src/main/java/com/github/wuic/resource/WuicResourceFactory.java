@@ -74,4 +74,15 @@ public interface WuicResourceFactory {
      * @throws IOException if an I/O error occurs when creating the resource
      */
     List<String> computeRealPaths(String path) throws IOException;
+
+    /**
+     * <p>
+     * Sets a new property. Could throw an {@code IllegalArgumentException} if the key is not supported
+     * or if the value is not correct.
+     * </p>
+     *
+     * @param key the key
+     * @param value the value
+     */
+    void setProperty(String key, String value);
 }

@@ -82,7 +82,7 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
      * @return the regex factory
      */
     @Override
-    protected WuicResourceFactoryBuilder newRegexFactory() {
+    protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
         return new DiskWuicResourceFactoryBuilder(
                 new AbstractWuicResourceFactory.RegexWuicResourceFactory(
                         new DiskWuicResourceProtocol(".")));
