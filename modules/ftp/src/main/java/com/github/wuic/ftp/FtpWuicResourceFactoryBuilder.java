@@ -36,35 +36,38 @@
  */
 
 
-package com.github.wuic.resource.impl.http;
+package com.github.wuic.ftp;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPSClient;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * <p>
- * Builder for resource access over HTTP.
+ * Builder for resource access on a FTP server.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.3.1
+ * @version 1.1
+ * @since 0.3.0
  */
-public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
+public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
      */
-    public HttpWuicResourceFactoryBuilder() {
-        this(new HttpWuicResourceFactory());
+    public FtpWuicResourceFactoryBuilder() {
+        this(new FtpWuicResourceFactory(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(null)));
     }
 
     /**
@@ -74,7 +77,7 @@ public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
      *
      * @param built the already built factory.
      */
-    public HttpWuicResourceFactoryBuilder(final WuicResourceFactory built) {
+    public FtpWuicResourceFactoryBuilder(final WuicResourceFactory built) {
         super(built);
     }
 
@@ -87,7 +90,9 @@ public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
      */
     @Override
     protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
-        throw new UnsupportedOperationException("regex is not supported yet for HTTP protocol");
+        return new FtpWuicResourceFactoryBuilder(
+                new FtpWuicResourceFactory(
+                        new AbstractWuicResourceFactory.RegexWuicResourceFactory(null)));
     }
 
     /**
@@ -99,7 +104,7 @@ public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
      * @version 1.0
      * @since 0.3.1
      */
-    public static class HttpWuicResourceFactory extends AbstractWuicResourceFactory.DefaultWuicResourceFactory {
+    public static class FtpWuicResourceFactory extends AbstractWuicResourceFactory {
 
         /**
          * Supported properties with their default value.
@@ -107,19 +112,31 @@ public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
         private Map<String, Object> supportedProperties;
 
         /**
+         * Delegate concrete implementation.
+         */
+        private AbstractWuicResourceFactory delegate;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
+         *
+         * @param toDecorate a factory to be decorated
          */
-        public HttpWuicResourceFactory() {
+        public FtpWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
             super(null);
+
+            delegate = toDecorate;
 
             // Init default property
             supportedProperties = new HashMap<String, Object>();
-            supportedProperties.put(ApplicationConfig.HTTP_SERVER_DOMAIN, "localhost");
-            supportedProperties.put(ApplicationConfig.HTTP_SERVER_PORT, null);
-            supportedProperties.put(ApplicationConfig.HTTP_SERVER_BASE_PATH, "");
-            supportedProperties.put(ApplicationConfig.HTTP_SECRET_PROTOCOL, Boolean.FALSE);
+            supportedProperties.put(ApplicationConfig.FTP_SERVER_DOMAIN, "localhost");
+            supportedProperties.put(ApplicationConfig.FTP_SERVER_PORT, FTPClient.DEFAULT_PORT);
+            supportedProperties.put(ApplicationConfig.FTPS_SERVER_PORT, FTPSClient.DEFAULT_PORT);
+            supportedProperties.put(ApplicationConfig.FTP_SERVER_BASE_PATH, "/");
+            supportedProperties.put(ApplicationConfig.FTP_SECRET_PROTOCOL, Boolean.FALSE);
+            supportedProperties.put(ApplicationConfig.FTP_USERNAME, null);
+            supportedProperties.put(ApplicationConfig.FTP_PASSWORD, null);
         }
 
         /**
@@ -130,21 +147,34 @@ public class HttpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
 
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
-                throw new IllegalArgumentException(key + " is not a property which is supported by the HttpWuicResourceFactory");
-            } else if (ApplicationConfig.HTTP_SERVER_PORT.equals(key)) {
+                throw new IllegalArgumentException(key + " is not a property which is supported by the FtpWuicResourceFactory");
+            } else if (ApplicationConfig.FTP_SERVER_PORT.equals(key) || ApplicationConfig.FTPS_SERVER_PORT.equals(key)) {
                 supportedProperties.put(key, Integer.parseInt(value));
-            } else if (ApplicationConfig.HTTP_SECRET_PROTOCOL.equals(key)) {
+            } else if (ApplicationConfig.FTP_SECRET_PROTOCOL.equals(key)) {
                 supportedProperties.put(key, Boolean.parseBoolean(value));
             } else {
                 supportedProperties.put(key, value);
             }
 
+            final Boolean ftps = (Boolean) supportedProperties.get(ApplicationConfig.FTP_SECRET_PROTOCOL);
+
             // Set new protocol with the new property
-            setWuicProtocol(new HttpWuicResourceProtocol(
-                    (Boolean) supportedProperties.get(ApplicationConfig.HTTP_SECRET_PROTOCOL),
-                    (String) supportedProperties.get(ApplicationConfig.HTTP_SERVER_DOMAIN),
-                    (Integer) supportedProperties.get(ApplicationConfig.HTTP_SERVER_PORT),
-                    (String) supportedProperties.get(ApplicationConfig.HTTP_SERVER_BASE_PATH)));
+            setWuicProtocol(new FtpWuicResourceProtocol(
+                    ftps,
+                    (String) supportedProperties.get(ApplicationConfig.FTP_SERVER_DOMAIN),
+                    ftps ?  (Integer) supportedProperties.get(ApplicationConfig.FTP_SERVER_PORT)
+                            : (Integer) supportedProperties.get(ApplicationConfig.FTP_SERVER_PORT),
+                    (String) supportedProperties.get(ApplicationConfig.FTP_SERVER_BASE_PATH),
+                    (String) supportedProperties.get(ApplicationConfig.FTP_USERNAME),
+                    (String) supportedProperties.get(ApplicationConfig.FTP_PASSWORD)));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Pattern getPattern(final String path) {
+            return delegate.getPattern(path);
         }
     }
 }

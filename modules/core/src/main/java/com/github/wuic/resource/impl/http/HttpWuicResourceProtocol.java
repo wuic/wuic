@@ -82,12 +82,11 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      * @param port the HTTP server port
      * @param path the base path where resources are provided
      */
-    public HttpWuicResourceProtocol(final Boolean https, final String domain, final int port, final String path) {
+    public HttpWuicResourceProtocol(final Boolean https, final String domain, final Integer port, final String path) {
         baseUrl = new StringBuilder()
                 .append(https ? "https://" : "http://")
                 .append(domain)
-                .append(":")
-                .append(port)
+                .append(port != null ? ":".concat(port.toString()) : "")
                 .append("/")
                 .append(path)
                 .append("/").toString();
@@ -109,6 +108,10 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+        if (log.isDebugEnabled()) {
+            log.debug("Opening HTTP access for " + realPath);
+        }
+
         return new HttpWuicResource(realPath, new URL(realPath), type);
     }
 }

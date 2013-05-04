@@ -42,12 +42,10 @@ import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Region;
-import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;

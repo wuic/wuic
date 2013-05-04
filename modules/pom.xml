@@ -12,11 +12,12 @@
     <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>wuic-modules</name>
-    <url>https://github.com/gdrouet/wuic</url>
+    <url>http://gdrouet.github.io/wuic/</url>
 
     <modules>
         <module>core</module>
         <module>tag</module>
         <module>servlet</module>
+        <module>ftp</module>
     </modules>
 </project>

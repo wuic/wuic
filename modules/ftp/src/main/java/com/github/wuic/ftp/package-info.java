@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,59 +35,10 @@
  * licenses."
  */
 
-
-package com.github.wuic.engine.impl.embedded;
-
-import com.github.wuic.engine.Region;
-import com.github.wuic.engine.SpriteProvider;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 /**
  * <p>
- * Abstraction of the implementation of what is a {@link SpriteProvider}.
+ * This package defines required implementation for resource stored in a FTP server.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.3.1
  */
-public abstract class CGAbstractSpriteProvider  implements SpriteProvider {
-
-    /**
-     * Region in the image.
-     */
-    protected Map<String, Region> regions;
-
-    /**
-     * The image name.
-     */
-    protected String image;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    public CGAbstractSpriteProvider() {
-        regions = new LinkedHashMap<String, Region>();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addRegion(final Region region, final String name) {
-        regions.put(name, region);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void init(final String imageName) {
-        regions.clear();
-        image = imageName;
-    }
-}

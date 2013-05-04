@@ -72,4 +72,43 @@ public interface ApplicationConfig {
      * The server's base path when accessing resources over HTTP.
      */
     String HTTP_SERVER_BASE_PATH = "c.g.wuic.httpBasePath";
+
+    /////////////////////////////////////////////////
+    ////// FtpWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The server's domain when accessing resources over FTP.
+     */
+    String FTP_SERVER_DOMAIN = "c.g.wuic.ftpServerDomain";
+
+    /**
+     * Use FTPS or not accessing resources over FTP.
+     */
+    String FTP_SECRET_PROTOCOL = "c.g.wuic.ftpS";
+
+    /**
+     * The server's port when accessing resources over FTP.
+     */
+    String FTP_SERVER_PORT = "c.g.wuic.ftpServerPort";
+
+    /**
+     * The server's port when accessing resources over FTP.
+     */
+    String FTPS_SERVER_PORT = "c.g.wuic.ftpsServerPort";
+
+    /**
+     * The server's base path when accessing resources over FTP.
+     */
+    String FTP_SERVER_BASE_PATH = "c.g.wuic.ftpBasePath";
+
+    /**
+     * The user name to use when accessing resources over FTP.
+     */
+    String FTP_USERNAME = "c.g.wuic.ftpUsername";
+
+    /**
+     * The password to use when accessing resources over FTP.
+     */
+    String FTP_PASSWORD = "c.g.wuic.ftpPassword";
 }

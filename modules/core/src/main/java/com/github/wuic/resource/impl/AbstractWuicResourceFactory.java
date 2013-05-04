@@ -44,7 +44,8 @@ import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceProtocol;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -125,7 +126,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      * @param path the path
      * @return the {@code Pattern}
      */
-    protected abstract Pattern getPattern(final String path);
+    public abstract Pattern getPattern(final String path);
 
     /**
      * <p>
@@ -152,7 +153,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
         /**
          * {@inheritDoc}
          */
-        protected Pattern getPattern(final String path) {
+        public Pattern getPattern(final String path) {
             return Pattern.compile(Pattern.quote(path));
         }
     }
@@ -182,7 +183,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
         /**
          * {@inheritDoc}
          */
-        protected Pattern getPattern(final String path)  {
+        public Pattern getPattern(final String path)  {
             return Pattern.compile(path);
         }
     }

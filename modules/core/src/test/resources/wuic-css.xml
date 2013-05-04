@@ -2,20 +2,20 @@
 
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
-	<resource-factory-builders>
+    <resource-factory-builders>
         <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
-	</resource-factory-builders>
-	<groups>
-		<group id="css-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
+    </resource-factory-builders>
+    <groups>
+        <group id="css-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
             <file>images/.*.png</file>
-		</group>
-	</groups>
-	<configurations>
-		<configuration id="sprite-image-png" type="SPRITE">
+        </group>
+    </groups>
+    <configurations>
+        <configuration id="sprite-image-png" type="SPRITE">
             <compress>true</compress>
             <aggregate>true</aggregate>
             <charset>UTF-8</charset>
             <sprite-provider>com.github.wuic.engine.impl.embedded.CGCssSpriteProvider</sprite-provider>
         </configuration>
-	</configurations>
+    </configurations>
 </wuic>

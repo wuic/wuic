@@ -116,7 +116,7 @@ public class WuicServlet extends HttpServlet {
             throws ServletException, IOException {
         final int lastOffset = request.getRequestURI().lastIndexOf('/');
         final String urlWithoutLast = request.getRequestURI().substring(0, lastOffset);
-        final String pageName = urlWithoutLast.substring(urlWithoutLast.lastIndexOf("/") + 1);
+        final String pageName = urlWithoutLast.substring(urlWithoutLast.lastIndexOf('/') + 1);
 
         if (pageName != null) {
             getPage(pageName, request, response);

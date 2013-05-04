@@ -40,6 +40,8 @@ package com.github.wuic.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -75,6 +77,24 @@ public final class IOUtils {
 
     }
 
+    /**
+     * <p>
+     * Copies the data from the given input stream into the given output stream.
+     * </p>
+     *
+     * @param is the {@code InputStream}
+     * @param os the {@code OutputStream}
+     * @throws IOException in an I/O error occurs
+     */
+    public static void copyStream(final InputStream is, final OutputStream os) throws IOException {
+        int offset = -1;
+        final byte[] buffer = new byte[WUIC_BUFFER_LEN];
+
+        while ((offset = is.read(buffer)) != -1) {
+            os.write(buffer, 0, offset);
+        }
+    }
+    
     /**
      * <p>
      * Checks if a given file could be or contains a resource matching the specified pattern.

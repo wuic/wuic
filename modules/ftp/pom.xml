@@ -11,23 +11,25 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.wuic</groupId>
-    <artifactId>wuic-tag</artifactId>
+    <artifactId>wuic-ftp</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.ftpserver</groupId>
+            <artifactId>ftpserver-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.wuic</groupId>
-            <artifactId>wuic-servlet</artifactId>
+            <artifactId>wuic-core</artifactId>
             <version>${pom.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
     </dependencies>
+
 </project>

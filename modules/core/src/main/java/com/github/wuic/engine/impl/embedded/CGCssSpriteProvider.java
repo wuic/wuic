@@ -46,8 +46,6 @@ import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
