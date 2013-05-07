@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
+<wuic>
+	<resource-factory-builders>
+        <resource-factory-builder id="sshFactoryBuilder" class="com.github.wuic.ssh.SshWuicResourceFactoryBuilder" regex="true">
+            <properties>
+                <property key="c.g.wuic.sshUsername">wuic</property>
+                <property key="c.g.wuic.sshPassword">wuic</property>
+                <property key="c.g.wuic.sshBasePath">java.io.tmpdir</property>
+                <property key="c.g.wuic.sshBasePathAsSystemProperty">true</property>
+                <property key="c.g.wuic.sshInterpreter">cmd.exe</property>
+            </properties>
+        </resource-factory-builder>
+	</resource-factory-builders>
+	<groups>
+		<group id="css-image" configuration="yuicompressor-css" default-builder="sshFactoryBuilder">
+            <file>junit*.css</file>
+		</group>
+	</groups>
+	<configurations>
+        <configuration id="yuicompressor-css" type="CSS">
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <compress>true</compress>
+            <yuiLineBreakPos>-1</yuiLineBreakPos>
+        </configuration>
+	</configurations>
+</wuic>

@@ -19,5 +19,6 @@
         <module>tag</module>
         <module>servlet</module>
         <module>ftp</module>
+        <module>ssh</module>
     </modules>
 </project>

@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,71 +36,12 @@
  */
 
 
-package com.github.wuic.resource.impl;
-
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+package com.github.wuic.ssh;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link WuicResourceFactoryBuilder}.
+ * This package defines required implementation for resource stored in a SSH server.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.3.1
  */
-public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
-
-    /**
-     * The currently built factory.
-     */
-    private WuicResourceFactory factory;
-
-    /**
-     * <p>
-     * Builds a new {@link WuicResourceFactoryBuilder} thanks to the already built
-     * {@link WuicResourceFactory}.
-     * </p>
-     *
-     * @param built the already built factory
-     */
-    protected AbstractWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        factory = built;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder regex() {
-        return newRegexFactoryBuilder();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
-        factory.setProperty(key, value);
-
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactory build() {
-        return factory;
-    }
-
-    /**
-     * <p>
-     * Creates a new builder with a factory which supports regular expressions.
-     * </p>
-     *
-     * @return the {@link WuicResourceFactory} which supports regular expressions
-     */
-    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
-}

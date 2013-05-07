@@ -36,71 +36,57 @@
  */
 
 
-package com.github.wuic.resource.impl;
+package com.github.wuic.ssh.test;
 
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import org.apache.sshd.server.Command;
+import org.apache.sshd.server.CommandFactory;
+import org.apache.sshd.server.PasswordAuthenticator;
+import org.apache.sshd.server.PublickeyAuthenticator;
+import org.apache.sshd.server.command.UnknownCommand;
+import org.apache.sshd.server.session.ServerSession;
+
+import java.io.File;
+import java.security.PublicKey;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link WuicResourceFactoryBuilder}.
+ * Class used in unit tests as a mock for {@code PasswordAuthenticator}, {@code PublickeyAuthenticator}
+ * and {@code CommandFactory}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.1
  */
-public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
+public class SShMockConfig implements CommandFactory, PasswordAuthenticator, PublickeyAuthenticator {
 
     /**
-     * The currently built factory.
+     * {@inheritDoc}
      */
-    private WuicResourceFactory factory;
-
-    /**
-     * <p>
-     * Builds a new {@link WuicResourceFactoryBuilder} thanks to the already built
-     * {@link WuicResourceFactory}.
-     * </p>
-     *
-     * @param built the already built factory
-     */
-    protected AbstractWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        factory = built;
+    @Override
+    public boolean authenticate(final String s, final PublicKey publicKey, final ServerSession serverSession) {
+        return Boolean.TRUE;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WuicResourceFactoryBuilder regex() {
-        return newRegexFactoryBuilder();
+    public boolean authenticate(final String s, final String s2, final ServerSession serverSession) {
+        return Boolean.TRUE;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
-        factory.setProperty(key, value);
-
-        return this;
+    public Command createCommand(final String s) {
+        if (s.startsWith("scp")) {
+            return new FileWriterScpCommand(new File(s.replace("scp -r -f", "").replace("\"", "").trim()));
+        } else if (s.indexOf("dir ") != -1) {
+            return new WindowsCommand(s);
+        } else {
+            return new UnknownCommand(s);
+        }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactory build() {
-        return factory;
-    }
-
-    /**
-     * <p>
-     * Creates a new builder with a factory which supports regular expressions.
-     * </p>
-     *
-     * @return the {@link WuicResourceFactory} which supports regular expressions
-     */
-    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
 }

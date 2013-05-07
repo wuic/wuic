@@ -36,71 +36,51 @@
  */
 
 
-package com.github.wuic.resource.impl;
+package com.github.wuic.ssh.test;
 
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import com.github.wuic.util.IOUtils;
+import org.apache.sshd.server.Environment;
+import org.apache.sshd.server.command.ScpCommand;
+import org.apache.sshd.server.command.UnknownCommand;
+
+import java.io.*;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link WuicResourceFactoryBuilder}.
+ * Windows command using the 'cmd.exe' file.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.1
  */
-public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
+public class WindowsCommand extends UnknownCommand {
 
     /**
-     * The currently built factory.
+     * Command to run.
      */
-    private WuicResourceFactory factory;
-
-    /**
-     * <p>
-     * Builds a new {@link WuicResourceFactoryBuilder} thanks to the already built
-     * {@link WuicResourceFactory}.
-     * </p>
-     *
-     * @param built the already built factory
-     */
-    protected AbstractWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        factory = built;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder regex() {
-        return newRegexFactoryBuilder();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
-        factory.setProperty(key, value);
-
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactory build() {
-        return factory;
-    }
+    private String command;
 
     /**
      * <p>
-     * Creates a new builder with a factory which supports regular expressions.
+     * Builds a new instance.
      * </p>
      *
-     * @return the {@link WuicResourceFactory} which supports regular expressions
+     * @param c the command to execute
      */
-    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
+    public WindowsCommand(final String c) {
+        super(c);
+        command = c;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void start(final Environment env) throws IOException {
+        // Execute command as a .bat file
+        final File file = File.createTempFile("sshd-batch", ".bat");
+        IOUtils.copyStream(new ByteArrayInputStream(command.getBytes()), new FileOutputStream(file));
+        Runtime.getRuntime().exec("cmd.exe /k " + file.getAbsolutePath());
+    }
 }

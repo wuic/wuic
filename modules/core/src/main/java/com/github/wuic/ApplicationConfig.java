@@ -111,4 +111,43 @@ public interface ApplicationConfig {
      * The password to use when accessing resources over FTP.
      */
     String FTP_PASSWORD = "c.g.wuic.ftpPassword";
+
+    /////////////////////////////////////////////////
+    ////// SshWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The server's domain when accessing resources over SSH.
+     */
+    String SSH_SERVER_DOMAIN = "c.g.wuic.sshServerDomain";
+
+    /**
+     * The server's port when accessing resources over SSH.
+     */
+    String SSH_SERVER_PORT = "c.g.wuic.sshServerPort";
+
+    /**
+     * The server's base path when accessing resources over SSH.
+     */
+    String SSH_SERVER_BASE_PATH = "c.g.wuic.sshBasePath";
+
+    /**
+     * Consider the base path as a system property associated to actual value.
+     */
+    String SSH_SERVER_BASE_PATH_AS_SYS_PROP = "c.g.wuic.sshBasePathAsSystemProperty";
+
+    /**
+     * The user name to use when accessing resources over SSH.
+     */
+    String SSH_USERNAME = "c.g.wuic.sshUsername";
+
+    /**
+     * The password to use when accessing resources over SSH.
+     */
+    String SSH_PASSWORD = "c.g.wuic.sshPassword";
+
+    /**
+     * The interpreter of the command sent via SSH (cmd, shell, etc).
+     */
+    String SSH_INTERPRETER = "c.g.wuic.sshInterpreter";
 }

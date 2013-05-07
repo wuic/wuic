@@ -159,6 +159,21 @@
                 </exclusions>
             </dependency>
 
+            <!-- SSH support for embedded server -->
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-core</artifactId>
+                <version>${sshd-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- SSH client -->
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jsch-version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -305,6 +320,9 @@
     </profiles>
 
 	<properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jsch-version>0.1.48</jsch-version>
+        <sshd-version>0.8.0</sshd-version>
         <ftpserver.version>1.0.6</ftpserver.version>
         <commons-net.version>3.2</commons-net.version>
 		<jsp-api.version>2.2</jsp-api.version>

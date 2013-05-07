@@ -36,71 +36,30 @@
  */
 
 
-package com.github.wuic.resource.impl;
-
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+package com.github.wuic.ssh;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link WuicResourceFactoryBuilder}.
+ * This interface abstracts the commands to be executed remotely according to the interpreter
+ * on the server side.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.1
  */
-public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
-
-    /**
-     * The currently built factory.
-     */
-    private WuicResourceFactory factory;
+public interface SshCommandManager {
 
     /**
      * <p>
-     * Builds a new {@link WuicResourceFactoryBuilder} thanks to the already built
-     * {@link WuicResourceFactory}.
+     * Returns the commands to be executed remotely to search all the files of a specified
+     * pattern and write into a particular file.
      * </p>
      *
-     * @param built the already built factory
+     * @param workingDir the working directory
+     * @param pattern the file pattern
+     * @param file the file which will contain the result of the search
+     * @return the commands to execute
      */
-    protected AbstractWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        factory = built;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder regex() {
-        return newRegexFactoryBuilder();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
-        factory.setProperty(key, value);
-
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactory build() {
-        return factory;
-    }
-
-    /**
-     * <p>
-     * Creates a new builder with a factory which supports regular expressions.
-     * </p>
-     *
-     * @return the {@link WuicResourceFactory} which supports regular expressions
-     */
-    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
+    String[] searchInto(String workingDir, String pattern, String file);
 }

@@ -36,15 +36,13 @@
  */
 
 
-package com.github.wuic.ftp;
+package com.github.wuic.ssh;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPSClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,15 +57,15 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @since 0.3.1
  */
-public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
+public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
      */
-    public FtpWuicResourceFactoryBuilder() {
-        this(new FtpWuicResourceFactory(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(null)));
+    public SshWuicResourceFactoryBuilder() {
+        this(new SshWuicResourceFactory());
     }
 
     /**
@@ -77,7 +75,7 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
      *
      * @param built the already built factory.
      */
-    public FtpWuicResourceFactoryBuilder(final WuicResourceFactory built) {
+    public SshWuicResourceFactoryBuilder(final WuicResourceFactory built) {
         super(built);
     }
 
@@ -90,9 +88,7 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
      */
     @Override
     protected WuicResourceFactoryBuilder newRegexFactoryBuilder() {
-        return new FtpWuicResourceFactoryBuilder(
-                new FtpWuicResourceFactory(
-                        new AbstractWuicResourceFactory.RegexWuicResourceFactory(null)));
+        return new SshWuicResourceFactoryBuilder(new SshWuicResourceFactory());
     }
 
     /**
@@ -104,7 +100,12 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
      * @version 1.0
      * @since 0.3.1
      */
-    public static class FtpWuicResourceFactory extends AbstractWuicResourceFactory {
+    public static class SshWuicResourceFactory extends AbstractWuicResourceFactory {
+
+        /**
+         * Default SSH port.
+         */
+        private static final int DEFAULT_PORT = 22;
 
         /**
          * Supported properties with their default value.
@@ -112,31 +113,22 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
         private Map<String, Object> supportedProperties;
 
         /**
-         * Delegate concrete implementation.
-         */
-        private AbstractWuicResourceFactory delegate;
-
-        /**
          * <p>
          * Builds a new instance.
          * </p>
-         *
-         * @param toDecorate a factory to be decorated
          */
-        public FtpWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
+        public SshWuicResourceFactory() {
             super(null);
-
-            delegate = toDecorate;
 
             // Init default property
             supportedProperties = new HashMap<String, Object>();
-            supportedProperties.put(ApplicationConfig.FTP_SERVER_DOMAIN, "localhost");
-            supportedProperties.put(ApplicationConfig.FTP_SERVER_PORT, FTPClient.DEFAULT_PORT);
-            supportedProperties.put(ApplicationConfig.FTPS_SERVER_PORT, FTPSClient.DEFAULT_PORT);
-            supportedProperties.put(ApplicationConfig.FTP_SERVER_BASE_PATH, "/");
-            supportedProperties.put(ApplicationConfig.FTP_SECRET_PROTOCOL, Boolean.FALSE);
-            supportedProperties.put(ApplicationConfig.FTP_USERNAME, null);
-            supportedProperties.put(ApplicationConfig.FTP_PASSWORD, null);
+            supportedProperties.put(ApplicationConfig.SSH_SERVER_DOMAIN, "localhost");
+            supportedProperties.put(ApplicationConfig.SSH_SERVER_PORT, DEFAULT_PORT);
+            supportedProperties.put(ApplicationConfig.SSH_SERVER_BASE_PATH, ".");
+            supportedProperties.put(ApplicationConfig.SSH_SERVER_BASE_PATH_AS_SYS_PROP, Boolean.FALSE);
+            supportedProperties.put(ApplicationConfig.SSH_USERNAME, null);
+            supportedProperties.put(ApplicationConfig.SSH_PASSWORD, null);
+            supportedProperties.put(ApplicationConfig.SSH_INTERPRETER, "/bin/sh");
         }
 
         /**
@@ -147,26 +139,36 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
 
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
-                throw new IllegalArgumentException(key + " is not a property which is supported by the FtpWuicResourceFactory");
-            } else if (ApplicationConfig.FTP_SERVER_PORT.equals(key) || ApplicationConfig.FTPS_SERVER_PORT.equals(key)) {
+                throw new IllegalArgumentException(key + " is not a property which is supported by the SshWuicResourceFactory");
+            } else if (ApplicationConfig.SSH_SERVER_PORT.equals(key)) {
                 supportedProperties.put(key, Integer.parseInt(value));
-            } else if (ApplicationConfig.FTP_SECRET_PROTOCOL.equals(key)) {
+            } else if (ApplicationConfig.SSH_SERVER_BASE_PATH_AS_SYS_PROP.equals(key)) {
                 supportedProperties.put(key, Boolean.parseBoolean(value));
             } else {
                 supportedProperties.put(key, value);
             }
 
-            final Boolean ftps = (Boolean) supportedProperties.get(ApplicationConfig.FTP_SECRET_PROTOCOL);
+            final Boolean sysProp = (Boolean) supportedProperties.get(ApplicationConfig.SSH_SERVER_BASE_PATH_AS_SYS_PROP);
+            final String basePathProp = supportedProperties.get(ApplicationConfig.SSH_SERVER_BASE_PATH).toString();
+            final String basePath = sysProp ? System.getProperty(basePathProp) : basePathProp;
+            final SshCommandManager manager;
+
+            if ("/bin/sh".equals(supportedProperties.get(ApplicationConfig.SSH_INTERPRETER))) {
+                manager = new ShellSshCommandManager();
+            } else if ("cmd.exe".equals(supportedProperties.get(ApplicationConfig.SSH_INTERPRETER))) {
+                manager = new CmdSshCommandManager();
+            } else {
+                throw new IllegalArgumentException(supportedProperties.get(ApplicationConfig.SSH_INTERPRETER) + " is not a supported interpreter.");
+            }
 
             // Set new protocol with the new property
-            setWuicProtocol(new FtpWuicResourceProtocol(
-                    ftps,
-                    (String) supportedProperties.get(ApplicationConfig.FTP_SERVER_DOMAIN),
-                    ftps ?  (Integer) supportedProperties.get(ApplicationConfig.FTP_SERVER_PORT)
-                            : (Integer) supportedProperties.get(ApplicationConfig.FTP_SERVER_PORT),
-                    (String) supportedProperties.get(ApplicationConfig.FTP_SERVER_BASE_PATH),
-                    (String) supportedProperties.get(ApplicationConfig.FTP_USERNAME),
-                    (String) supportedProperties.get(ApplicationConfig.FTP_PASSWORD)));
+            setWuicProtocol(new SshWuicResourceProtocol(
+                    (String) supportedProperties.get(ApplicationConfig.SSH_SERVER_DOMAIN),
+                    (Integer) supportedProperties.get(ApplicationConfig.SSH_SERVER_PORT),
+                    basePath,
+                    (String) supportedProperties.get(ApplicationConfig.SSH_USERNAME),
+                    (String) supportedProperties.get(ApplicationConfig.SSH_PASSWORD),
+                    manager));
         }
 
         /**
@@ -174,7 +176,7 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
          */
         @Override
         public Pattern getPattern(final String path) {
-            return delegate.getPattern(path);
+            return Pattern.compile(path);
         }
     }
 }

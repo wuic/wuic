@@ -36,71 +36,34 @@
  */
 
 
-package com.github.wuic.resource.impl;
-
-import com.github.wuic.resource.WuicResourceFactory;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+package com.github.wuic.ssh;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link WuicResourceFactoryBuilder}.
+ * Implementation of the {@link SshCommandManager} for the '/bin/sh' software.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.1
  */
-public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
-
-    /**
-     * The currently built factory.
-     */
-    private WuicResourceFactory factory;
-
-    /**
-     * <p>
-     * Builds a new {@link WuicResourceFactoryBuilder} thanks to the already built
-     * {@link WuicResourceFactory}.
-     * </p>
-     *
-     * @param built the already built factory
-     */
-    protected AbstractWuicResourceFactoryBuilder(final WuicResourceFactory built) {
-        factory = built;
-    }
+public class ShellSshCommandManager implements SshCommandManager {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WuicResourceFactoryBuilder regex() {
-        return newRegexFactoryBuilder();
+    public String[] searchInto(final String workingDirectory, final String pattern, final String file) {
+        return new String[] {
+                new StringBuilder()
+                        .append("find \"")
+                        .append(workingDirectory)
+                        .append("\" -name ")
+                        .append(pattern)
+                        .append(" > \"")
+                        .append(file)
+                        .append("\"")
+                        .toString(),
+        };
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
-        factory.setProperty(key, value);
-
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WuicResourceFactory build() {
-        return factory;
-    }
-
-    /**
-     * <p>
-     * Creates a new builder with a factory which supports regular expressions.
-     * </p>
-     *
-     * @return the {@link WuicResourceFactory} which supports regular expressions
-     */
-    protected abstract WuicResourceFactoryBuilder newRegexFactoryBuilder();
 }
