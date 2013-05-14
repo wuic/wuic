@@ -78,6 +78,21 @@ import java.util.regex.Pattern;
 public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
+     * Stop reading the file when this byte is met.
+     */
+    private static final byte END_OF_FILE_NAME = (byte) 0x0a;
+
+    /**
+     * Reads this after ACK.
+     */
+    private static final String TO_READ_WHEN_ACK_OK = "0644 ";
+
+    /**
+     * Multiply with this value to display human readable file size.
+     */
+    private static final short MULTIPLY = 10;
+
+    /**
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -98,6 +113,11 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
     private SshCommandManager sshCommandManager;
 
     /**
+     * Time the thread should sleep after executed the command.
+     */
+    private long timeToSleepForExec;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -108,15 +128,18 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
      * @param user the user name ({@code null} to skip the the authentication)
      * @param pwd the password (will be ignored if user is {@code null})
      * @param command the command manager
+     * @param timeToSleep the time the thread will sleep after the command is executed
      */
     public SshWuicResourceProtocol(final String host,
                                    final int p,
                                    final String path,
                                    final String user,
                                    final String pwd,
-                                   final SshCommandManager command) {
+                                   final SshCommandManager command,
+                                   final long timeToSleep) {
         basePath = path;
         sshCommandManager = command;
+        timeToSleepForExec = timeToSleep;
 
         final JSch jsch = new JSch();
 
@@ -181,8 +204,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             // Execute command and wait for end of execution
             executeShellCommand(command);
 
-            // TODO : add this value as config variable in wuic.xml
-            Thread.sleep(3000L);
+            Thread.sleep(timeToSleepForExec);
 
             // Now read generate file
             final BufferedReader br = new BufferedReader(new InputStreamReader(loadFile(file)));
@@ -208,6 +230,93 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
      * <p>
+     * Reads the file size from the given input stream.
+     * </p>
+     *
+     * @param buf buffer to use
+     * @param in the stream read
+     * @throws IOException if an I/O error occurs
+     * @return the file size
+     */
+    private long readFileSize(final byte[] buf, final InputStream in) throws IOException {
+        long fileSize = 0L;
+
+        while (in.read(buf, 0, 1) >= 0 && buf[0] != ' ') {
+            fileSize = fileSize * MULTIPLY + (long) (buf[0] - '0');
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("File size : " + fileSize);
+        }
+
+        return fileSize;
+    }
+
+    /**
+     * <p>
+     * Reads the file name from the given input stream.
+     * </p>
+     *
+     * @param buf buffer to use
+     * @param in the stream read
+     * @throws IOException if an I/O error occurs
+     */
+    private void readFileName(final byte[] buf, final InputStream in) throws IOException {
+        for (int i = 0; ; i++) {
+            in.read(buf, i, 1);
+
+            if (buf[i] == END_OF_FILE_NAME) {
+                if (log.isDebugEnabled()) {
+                    log.debug("File : " + new String(buf, 0, i));
+                }
+
+                break;
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Reads the data from the given input stream and perform ACK to the given output stream.
+     * </p>
+     *
+     * @param buf buffer to use
+     * @param in the stream read
+     * @param ackOut the stream to write
+     * @param toStore the stream where read bytes should be store
+     * @throws IOException if an I/O error occurs
+     */
+    private void readFileData(final byte[] buf, final InputStream in, final OutputStream ackOut, final OutputStream toStore)
+            throws IOException {
+        // read '0644 '
+        in.read(buf, 0, TO_READ_WHEN_ACK_OK.length());
+
+        // read file size
+        long fileSize = readFileSize(buf, in);
+
+        // read file name
+        readFileName(buf, in);
+
+        // send '\0'
+        sendZero(buf, ackOut);
+
+        // read a content of file
+        int offset = buf.length < fileSize ? buf.length : (int) fileSize;
+
+        while ((offset = in.read(buf, 0, offset)) >= 0 && fileSize != 0) {
+            toStore.write(buf, 0, offset);
+            fileSize -= offset;
+            offset = buf.length < fileSize ? buf.length : (int) fileSize;
+        }
+
+        checkAck(in);
+
+        // send '\0'
+        sendZero(buf, ackOut);
+    }
+
+    /**
+     * <p>
      * Loads the given file from SSH server into memory byte array.
      * </p>
      *
@@ -224,11 +333,11 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
         final Channel channel = session.openChannel("exec");
         ((ChannelExec) channel).setCommand(command);
 
-        // get I/O streams for remote scp
-        final OutputStream out = channel.getOutputStream();
-        final InputStream in = channel.getInputStream();
-
         try {
+            // get I/O streams for remote scp
+            final OutputStream out = channel.getOutputStream();
+            final InputStream in = channel.getInputStream();
+
             channel.connect();
 
             // Buffer for reading
@@ -241,50 +350,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             final ByteArrayOutputStream inMemory = new ByteArrayOutputStream();
 
             while (checkAck(in) == 'C') {
-
-                // read '0644 '
-                in.read(buf, 0, 5);
-
-                // read file size
-                long fileSize = 0L;
-
-                while (in.read(buf, 0, 1) >= 0 && buf[0] != ' ') {
-                    fileSize = fileSize * 10L + (long) (buf[0] - '0');
-                }
-
-                if (log.isDebugEnabled()) {
-                    log.debug("File size : " + fileSize);
-                }
-
-                // read file
-                for (int i = 0; ; i++) {
-                    in.read(buf, i, 1);
-
-                    if (buf[i] == (byte) 0x0a) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("File : " + new String(buf, 0, i));
-                        }
-
-                        break;
-                    }
-                }
-
-                // send '\0'
-                sendZero(buf, out);
-
-                // read a content of file
-                int offset = buf.length < fileSize ? buf.length : (int) fileSize;
-
-                while ((offset = in.read(buf, 0, offset)) >= 0 && fileSize != 0) {
-                    inMemory.write(buf, 0, offset);
-                    fileSize -= offset;
-                    offset = buf.length < fileSize ? buf.length : (int) fileSize;
-                }
-
-                checkAck(in);
-
-                // send '\0'
-                sendZero(buf, out);
+                readFileData(buf, in, out, inMemory);
             }
 
             return new ByteArrayInputStream(inMemory.toByteArray());
@@ -336,7 +402,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             // Read error and use it as message in exception
             do {
                 c = in.read();
-                sb.append((char)c);
+                sb.append((char) c);
             } while (c != '\n');
 
             throw new IOException(sb.toString());
