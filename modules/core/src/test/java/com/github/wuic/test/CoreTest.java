@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)
-public class CoreTest {
+public class CoreTest extends WuicTest {
 
     /**
      * Logger.
@@ -179,24 +179,6 @@ public class CoreTest {
             Assert.assertTrue(cpt == 2 ? "tata".equals(key) : Boolean.TRUE);
             Assert.assertTrue(cpt == 3 ? "tutu".equals(key) : Boolean.TRUE);
             cpt++;
-        }
-    }
-
-    /**
-     * <p>
-     * Writes on the disk the given resource if the system property 'wuic.test.storeTo' is set.
-     * Useful to check if generated files are correct.
-     * </p>
-     *
-     * @param name the file name on the disk
-     * @param resource the resource
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeToDisk(final WuicResource resource, final String name) throws IOException {
-        final String dir = System.getProperty("wuic.test.storeTo");
-
-        if (dir != null) {
-            FileUtils.copyInputStreamToFile(resource.openStream(), new File(dir, name));
         }
     }
 }

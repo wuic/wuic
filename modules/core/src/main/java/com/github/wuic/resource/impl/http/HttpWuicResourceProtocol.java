@@ -89,7 +89,7 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
                 .append(port != null ? ":".concat(port.toString()) : "")
                 .append("/")
                 .append(path)
-                .append("/").toString();
+                .append(path.isEmpty() ? "" : "/").toString();
     }
 
     /**

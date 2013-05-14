@@ -4,6 +4,8 @@ You will find documentation [here](http://gdrouet.github.io/wuic/).
 
 ## WIP
 
-Working on 0.3.1 ! TODO :
-- Unit test for HTTP resource
-- Test HTTPS resources
+Working on 0.3.1 ! Ready to release :
+- Merge SNAPSHOT branche with MASTER
+- Update documentation
+- Create tag
+- Release on maven central

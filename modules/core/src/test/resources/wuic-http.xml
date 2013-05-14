@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
+<wuic>
+    <resource-factory-builders>
+        <resource-factory-builder id="httpSourceRootProvider" class="com.github.wuic.resource.impl.http.HttpWuicResourceFactoryBuilder">
+            <properties>
+                <property key="c.g.wuic.httpS">false</property>
+                <property key="c.g.wuic.httpServerPort">9876</property>
+            </properties>
+        </resource-factory-builder>
+    </resource-factory-builders>
+    <groups>
+        <group id="css-image" configuration="sprite-image-png" default-builder="httpSourceRootProvider">
+            <file>images/action.png</file>
+            <file>images/a3.png</file>
+            <file>images/arrow.png</file>
+        </group>
+    </groups>
+    <configurations>
+        <configuration id="sprite-image-png" type="SPRITE">
+            <compress>true</compress>
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <sprite-provider>com.github.wuic.engine.impl.embedded.CGCssSpriteProvider</sprite-provider>
+        </configuration>
+    </configurations>
+</wuic>
