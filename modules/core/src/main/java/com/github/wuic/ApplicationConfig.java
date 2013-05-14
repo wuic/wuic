@@ -150,4 +150,9 @@ public interface ApplicationConfig {
      * The interpreter of the command sent via SSH (cmd, shell, etc).
      */
     String SSH_INTERPRETER = "c.g.wuic.sshInterpreter";
+
+    /**
+     * After the command is executed, the thread will sleep a time associated to this property.
+     */
+    String SSH_TIME_TO_SLEEP_AFTER_EXEC = "c.g.wuic.sshTimeToSleepAfterExec";
 }

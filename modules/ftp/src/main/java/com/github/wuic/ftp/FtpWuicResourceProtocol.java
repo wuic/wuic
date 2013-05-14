@@ -45,6 +45,7 @@ import com.github.wuic.resource.impl.InputStreamWuicResource;
 import com.github.wuic.util.IOUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +116,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
      * @param pwd the password (will be ignored if user is {@code null})
      */
     public FtpWuicResourceProtocol(final Boolean ftps, final String host, final int p, final String path, final String user, final String pwd) {
-        ftpClient = ftps ? new FTPSClient(Boolean.FALSE) : new FTPClient();
+        ftpClient = ftps ? new FTPSClient(Boolean.TRUE) : new FTPClient();
         hostName = host;
         userName = user;
         password = pwd;
@@ -137,7 +138,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
      * Opens a connection with the current FtpClient if its not already opened.
      * </p>
      *
-     * @throws IOException if any I/O error occurs or if the credentials are not correct
+     * @throws IOException if any I/O error occurs, the connection is refused or if the credentials are not correct
      */
     private void connect() throws IOException {
         if (!ftpClient.isConnected()) {
@@ -146,6 +147,17 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
             }
 
             ftpClient.connect(hostName, port);
+
+            if (log.isDebugEnabled()) {
+                log.debug(ftpClient.getReplyString());
+            }
+
+            // After connection attempt, you should check the reply code to verify success
+            final int reply = ftpClient.getReplyCode();
+
+            if (!FTPReply.isPositiveCompletion(reply)) {
+                throw new IOException("FTP server refused connection.");
+            }
 
             if (userName != null && !ftpClient.login(userName, password)) {
                 throw new IOException("Bad FTP credentials.");
@@ -180,7 +192,19 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
 
             // Search in each directory
             for (final FTPFile directory : ftpClient.listDirectories()) {
+                final String pwd = ftpClient.printWorkingDirectory();
                 retval.addAll(recursiveSearch(directory.getName(), pattern));
+
+                // Remove quotes around the path
+                if (pwd.startsWith("\"") && pwd.endsWith("\"")) {
+                    ftpClient.changeWorkingDirectory(new StringBuilder()
+                            .append(pwd)
+                            .deleteCharAt(pwd.length() - 1)
+                            .deleteCharAt(0)
+                            .toString());
+                } else {
+                     ftpClient.changeWorkingDirectory(pwd);
+                }
             }
 
             return retval;

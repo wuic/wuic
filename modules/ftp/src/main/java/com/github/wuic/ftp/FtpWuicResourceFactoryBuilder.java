@@ -132,7 +132,7 @@ public class FtpWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
             supportedProperties = new HashMap<String, Object>();
             supportedProperties.put(ApplicationConfig.FTP_SERVER_DOMAIN, "localhost");
             supportedProperties.put(ApplicationConfig.FTP_SERVER_PORT, FTPClient.DEFAULT_PORT);
-            supportedProperties.put(ApplicationConfig.FTPS_SERVER_PORT, FTPSClient.DEFAULT_PORT);
+            supportedProperties.put(ApplicationConfig.FTPS_SERVER_PORT, FTPSClient.DEFAULT_FTPS_PORT);
             supportedProperties.put(ApplicationConfig.FTP_SERVER_BASE_PATH, "/");
             supportedProperties.put(ApplicationConfig.FTP_SECRET_PROTOCOL, Boolean.FALSE);
             supportedProperties.put(ApplicationConfig.FTP_USERNAME, null);

@@ -108,6 +108,11 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
         private static final int DEFAULT_PORT = 22;
 
         /**
+         * Default time to sleep after the thread as executed the command.
+         */
+        private static final long DEFAULT_TIME_TO_SLEEP_AFTER_EXEC = 3000L;
+
+        /**
          * Supported properties with their default value.
          */
         private Map<String, Object> supportedProperties;
@@ -129,6 +134,7 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
             supportedProperties.put(ApplicationConfig.SSH_USERNAME, null);
             supportedProperties.put(ApplicationConfig.SSH_PASSWORD, null);
             supportedProperties.put(ApplicationConfig.SSH_INTERPRETER, "/bin/sh");
+            supportedProperties.put(ApplicationConfig.SSH_TIME_TO_SLEEP_AFTER_EXEC, DEFAULT_TIME_TO_SLEEP_AFTER_EXEC);
         }
 
         /**
@@ -144,6 +150,8 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
                 supportedProperties.put(key, Integer.parseInt(value));
             } else if (ApplicationConfig.SSH_SERVER_BASE_PATH_AS_SYS_PROP.equals(key)) {
                 supportedProperties.put(key, Boolean.parseBoolean(value));
+            } else if (ApplicationConfig.SSH_TIME_TO_SLEEP_AFTER_EXEC.equals(key)) {
+                supportedProperties.put(key, Long.parseLong(value));
             } else {
                 supportedProperties.put(key, value);
             }
@@ -168,7 +176,8 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
                     basePath,
                     (String) supportedProperties.get(ApplicationConfig.SSH_USERNAME),
                     (String) supportedProperties.get(ApplicationConfig.SSH_PASSWORD),
-                    manager));
+                    manager,
+                    (Long) supportedProperties.get(ApplicationConfig.SSH_TIME_TO_SLEEP_AFTER_EXEC)));
         }
 
         /**
