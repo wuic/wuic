@@ -37,3 +37,7 @@ Enhancements :
 - #8 : Possibility to disable embedded cache
 - InputStreamWuicResource : create a WuicResource based on an InputStream
 - New SourceRootProvider implementations allowing default access to resources exposed through webapp and classpath
+
+##### v0.3.1 #####
+
+https://github.com/gdrouet/wuic/issues?labels=0.3.1&page=1&state=closed
