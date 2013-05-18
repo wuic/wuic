@@ -40,12 +40,11 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.SpriteConfiguration;
+import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import org.apache.commons.io.IOUtils;
 
 /**
  * <p>
@@ -54,7 +53,7 @@ import org.apache.commons.io.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.2.0
  */
 public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
@@ -89,7 +88,7 @@ public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
     protected void compress(final InputStream source, final OutputStream target)
             throws IOException {
         // Do not use char set here !
-        IOUtils.copy(source, target);
+        IOUtils.copyStream(source, target);
     }
 
     /**

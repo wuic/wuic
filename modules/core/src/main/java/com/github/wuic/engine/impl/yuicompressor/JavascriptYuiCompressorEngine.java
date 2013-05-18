@@ -41,6 +41,7 @@ package com.github.wuic.engine.impl.yuicompressor;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiJavascriptConfiguration;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
+import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
 import java.io.ByteArrayInputStream;
@@ -56,15 +57,13 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.apache.commons.io.IOUtils;
-
 /**
  * <p>
  * This class can compress Javascript files using the YUI compressor library.
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
@@ -139,11 +138,12 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
             final InputStream bis = new ByteArrayInputStream(out.getBuffer().toString().getBytes());
             final InputStream restore = switchSpecialChars(bis, Boolean.TRUE);
             targetOut = new OutputStreamWriter(target);
-            IOUtils.copy(restore, targetOut, configuration.charset());
+
+            IOUtils.copyStreamToWriter(restore, targetOut, configuration.charset());
         } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
-            IOUtils.closeQuietly(targetOut);
+            IOUtils.close(in);
+            IOUtils.close(out);
+            IOUtils.close(targetOut);
         }
     }
 
@@ -183,7 +183,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
                 streamParser.write(read.getBytes());
             }
         } finally {
-            IOUtils.closeQuietly(streamParser);
+            IOUtils.close(streamParser);
         }
         
         return new FileInputStream(tempFile);

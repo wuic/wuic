@@ -15,18 +15,15 @@ package com.github.wuic.test;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)
@@ -73,7 +70,7 @@ public class CoreTest extends WuicTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
         }
 
@@ -87,7 +84,7 @@ public class CoreTest extends WuicTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
             writeToDisk(res, i++ + "test.js");
         }
@@ -111,7 +108,7 @@ public class CoreTest extends WuicTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
             writeToDisk(res, i++ + "sprite.css");
         }
@@ -143,8 +140,8 @@ public class CoreTest extends WuicTest {
 
                 fis = next.openStream();
                 final File file = File.createTempFile(name, ".js");
-                FileUtils.copyInputStreamToFile(fis, file);
-                final String content = FileUtils.readFileToString(file);
+                IOUtils.copyStream(fis, new FileOutputStream(file));
+                final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
                 final int start = content.indexOf("url\":\"") + 6;
                 final int end = content.indexOf("/?file=aggregation.png");
                 final String imageGroup = content.substring(start, end);

@@ -44,15 +44,13 @@ import com.github.wuic.resource.WuicResource;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 
 /**
  * <p>
@@ -63,7 +61,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends Engine {
@@ -110,16 +108,17 @@ public class CGTextAggregatorEngine extends Engine {
             try {
                 fileType = resource.getFileType();
                 is = resource.openStream();
-                int offset = 0;
+                int offset = -1;
                 
                 // Add all content in the global output stream
-                while ((offset = IOUtils.read(is, buffer)) > 0) {
-                    IOUtils.write(Arrays.copyOfRange(buffer, 0, offset), target);
+                while ((offset = is.read(buffer)) > 0) {
+                    target.write(buffer, 0, offset);
                 }
                 
                 // Begin content file writing on a new line when no compression is configured
                 if (!configuration.compress()) {
-                    IOUtils.write("\n", target);
+                    buffer[0] = '\n';
+                    target.write(buffer, 0, 1);
                 }
             } finally {
                 if (is != null) {

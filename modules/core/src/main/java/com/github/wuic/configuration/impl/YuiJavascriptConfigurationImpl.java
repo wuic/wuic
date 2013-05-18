@@ -42,16 +42,13 @@ import com.github.wuic.FileType;
 import com.github.wuic.configuration.YuiConfiguration;
 import com.github.wuic.configuration.YuiJavascriptConfiguration;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
 /**
  * <p>
  * Implementation as a POJO of the {@link YuiJavascriptConfiguration}.
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.1.0
  */
 public class YuiJavascriptConfigurationImpl extends YuiConfigurationImpl implements YuiJavascriptConfiguration {
@@ -130,77 +127,6 @@ public class YuiJavascriptConfigurationImpl extends YuiConfigurationImpl impleme
         return yuiDisableOptimizations;
     }
 
-    /**
-     * <p>
-     * Calculates the hash code. Hash code is based on the following values :
-     * <ul>
-     * <li> aggregate() </li>
-     * <li> charset() </li>
-     * <li> compress() </li>
-     * <li> yuiLineBreakPos() </li>
-     * <li> yuiDisableOptimizations() </li>
-     * <li> yuiMunge() </li>
-     * <li> yuiPreserveAllSemiColons() </li>
-     * <li> yuiVerbose() </li>
-     * </ul>
-     * </p>
-     * 
-     * @return the hash code
-     */
-    @Override
-    public int hashCode() {
-        final HashCodeBuilder builder = new HashCodeBuilder();
-        
-        builder.append(this.aggregate());
-        builder.append(this.charset());
-        builder.append(this.compress());
-        builder.append(this.yuiLineBreakPos());
-        builder.append(this.yuiDisableOptimizations());
-        builder.append(this.yuiMunge());
-        builder.append(this.yuiPreserveAllSemiColons());
-        builder.append(this.yuiVerbose());
-        
-        return builder.hashCode();
-    }
-    
-    /**
-     * <p>
-     * Tests the equality with another object. Compared values are :
-     * <ul>
-     * <li> aggregate() </li>
-     * <li> charset() </li>
-     * <li> compress() </li>
-     * <li> yuiLineBreakPos() </li>
-     * <li> yuiDisableOptimizations() </li>
-     * <li> yuiMunge() </li>
-     * <li> yuiPreserveAllSemiColons() </li>
-     * <li> yuiVerbose() </li>
-     * </ul>
-     * </p>
-     * 
-     * @param other the object to compare
-     * @return {@code true} if the objects equal, {@code false} otherwise
-     */
-    @Override
-    public boolean equals(final Object other) {
-        if (other instanceof YuiJavascriptConfiguration) {
-            final YuiJavascriptConfiguration config = (YuiJavascriptConfiguration) other;
-            final EqualsBuilder builder = new EqualsBuilder();
-            builder.append(this.aggregate(), config.aggregate());
-            builder.append(this.charset(), config.charset());
-            builder.append(this.compress(), config.compress());
-            builder.append(this.yuiLineBreakPos(), config.yuiLineBreakPos());
-            builder.append(this.yuiDisableOptimizations(), config.yuiDisableOptimizations());
-            builder.append(this.yuiMunge(), config.yuiMunge());
-            builder.append(this.yuiPreserveAllSemiColons(), config.yuiPreserveAllSemiColons());
-            builder.append(this.yuiVerbose(), config.yuiVerbose());
-            
-            return builder.isEquals();
-        } else {
-            return Boolean.FALSE;
-        }
-    }
-    
     /**
      * {@inheritDoc}
      */

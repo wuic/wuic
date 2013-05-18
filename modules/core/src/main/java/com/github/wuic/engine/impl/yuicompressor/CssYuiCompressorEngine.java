@@ -40,6 +40,7 @@ package com.github.wuic.engine.impl.yuicompressor;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiCssConfiguration;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
+import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 
 import java.io.IOException;
@@ -50,15 +51,13 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 
-import org.apache.commons.io.IOUtils;
-
 /**
  * <p>
  * This class can compress CSS files using the YUI compressor library.
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
@@ -119,8 +118,8 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
             // Compress the script into the output target
             compressor.compress(out, configuration.yuiLineBreakPos());
         } finally {
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
+            IOUtils.close(in);
+            IOUtils.close(out);
         }
     }
 }

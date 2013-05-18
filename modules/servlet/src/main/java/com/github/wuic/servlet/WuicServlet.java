@@ -40,7 +40,7 @@ package com.github.wuic.servlet;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
-import org.apache.commons.io.IOUtils;
+import com.github.wuic.util.IOUtils;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -59,7 +59,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
@@ -147,7 +147,7 @@ public class WuicServlet extends HttpServlet {
             if (fileName == null || resource.getName().equals(fileName)) {
                 try {
                     is = resource.openStream();
-                    IOUtils.copy(is, response.getOutputStream());
+                    IOUtils.copyStream(is, response.getOutputStream());
                     is = null;
                 } finally {
                     if (is != null) {

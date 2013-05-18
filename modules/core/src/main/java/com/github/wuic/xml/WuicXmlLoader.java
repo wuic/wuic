@@ -65,8 +65,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import net.sf.ehcache.Cache;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -85,7 +85,7 @@ import org.xml.sax.SAXException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
@@ -98,7 +98,7 @@ public final class WuicXmlLoader {
     /**
      * The logger.
      */
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * All the {@link DomConfigurationBuilder builders} for each supported {@link FileType}.
@@ -203,13 +203,13 @@ public final class WuicXmlLoader {
         imageIdBuilder.append("$");
         
         // Identifier is based on an hash code obtained with the all the files names
-        final HashCodeBuilder builder = new HashCodeBuilder();
+        final StringBuilder builder = new StringBuilder();
         
         for (String res : files) {
             builder.append(res);
         }
         
-        imageIdBuilder.append(builder.toHashCode()); 
+        imageIdBuilder.append(builder.toString().hashCode());
         
         return imageIdBuilder.toString();
     }

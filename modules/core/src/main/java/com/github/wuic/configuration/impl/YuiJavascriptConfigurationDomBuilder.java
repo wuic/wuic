@@ -45,7 +45,6 @@ import com.github.wuic.configuration.YuiConfiguration;
 
 import net.sf.ehcache.Cache;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.w3c.dom.Node;
 
 /**
@@ -54,7 +53,7 @@ import org.w3c.dom.Node;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class YuiJavascriptConfigurationDomBuilder implements DomConfigurationBuilder {
@@ -106,7 +105,7 @@ public class YuiJavascriptConfigurationDomBuilder implements DomConfigurationBui
             		+ "yuiDisableOptimizations, yuiVerbose and yuiLineBreakPos must be defined";
             throw new BadConfigurationException(message);
         // Check number consistency
-        } else if (!NumberUtils.isNumber(lineBreakPos)) {
+        } else if (lineBreakPos.replaceAll("-?\\d+","").length() > 0) {
             throw new BadConfigurationException("lineBreakPos element must be an integer");
         }
         

@@ -53,7 +53,6 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.IOUtils;
 import net.sf.ehcache.Element;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.1
  */
 public class EhCacheEngine extends Engine {
@@ -102,7 +101,9 @@ public class EhCacheEngine extends Engine {
 
         if (configuration.cache()) {
             // calculate the hash code key
-            final HashCodeBuilder builder = new HashCodeBuilder();
+            // use the hash code of the class and make it positive if negative as multiplier
+            final int multiplier = getClass().hashCode() * (getClass().hashCode() < 0 ? -1 : 1);
+            int key = multiplier + 1;
 
             /*
              * Same sets of resources could be found in different groups. Their
@@ -112,14 +113,13 @@ public class EhCacheEngine extends Engine {
             Engine engine = this;
 
             while ((engine = engine.getNext()) != null) {
-                builder.append(getNext().getClass().getName());
+                key *= multiplier + getNext().getClass().hashCode();
             }
 
             for (WuicResource resource : request.getResources()) {
-                builder.append(resource.getName());
+                key *= multiplier + resource.getName().hashCode();
             }
 
-            final int key = builder.hashCode();
             final Element value = getConfiguration().getCache().get(key);
 
             // Resources exist in cache, returns them
