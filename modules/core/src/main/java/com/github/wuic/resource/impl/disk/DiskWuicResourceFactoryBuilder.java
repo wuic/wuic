@@ -38,10 +38,15 @@
 
 package com.github.wuic.resource.impl.disk;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -49,7 +54,7 @@ import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.0
  */
 public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
@@ -86,5 +91,69 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
         return new DiskWuicResourceFactoryBuilder(
                 new AbstractWuicResourceFactory.RegexWuicResourceFactory(
                         new DiskWuicResourceProtocol(".")));
+    }
+
+    /**
+     * <p>
+     * Default disk factory validating particular properties.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.3.2
+     */
+    public static class DiskWuicResourceFactory extends AbstractWuicResourceFactory {
+
+        /**
+         * Supported properties with their default value.
+         */
+        private Map<String, Object> supportedProperties;
+
+        /**
+         * Delegate concrete implementation.
+         */
+        private AbstractWuicResourceFactory delegate;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param toDecorate a factory to be decorated
+         */
+        public DiskWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
+            super(null);
+
+            delegate = toDecorate;
+
+            // Init default property
+            supportedProperties = new HashMap<String, Object>();
+            supportedProperties.put(ApplicationConfig.DISK_BASE_PATH, ".");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setProperty(final String key, final String value) {
+
+            // Try to override an existing property
+            if (!supportedProperties.containsKey(key)) {
+                throw new IllegalArgumentException(key + " is not a property which is supported by the DiskWuicResourceFactory");
+            } else {
+                supportedProperties.put(key, value);
+            }
+
+            // Set new protocol with the new property
+            setWuicProtocol(new DiskWuicResourceProtocol((String) supportedProperties.get(ApplicationConfig.DISK_BASE_PATH)));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Pattern getPattern(final String path) {
+            return delegate.getPattern(path);
+        }
     }
 }

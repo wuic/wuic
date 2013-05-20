@@ -18,7 +18,21 @@
         <dependency>
             <groupId>com.github.wuic</groupId>
             <artifactId>wuic-core</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- JS & CSS compression -->
+        <dependency>
+            <groupId>com.yahoo.platform.yui</groupId>
+            <artifactId>yuicompressor</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Caching -->
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-core</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- SSH client -->

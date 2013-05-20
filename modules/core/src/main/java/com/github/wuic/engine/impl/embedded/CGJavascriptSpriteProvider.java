@@ -116,6 +116,6 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * @return the JS name to use
      */
     private String createJsName(final String groupId) {
-        return "WUIC_SPRITE_" + groupId.toUpperCase().replace("°=+*/-%€¤£&|[]{}()<>§'#;,@²?:.", "_");
+        return "WUIC_SPRITE_" + groupId.toUpperCase().replaceAll("\\W", "_");
     }
 }

@@ -44,10 +44,28 @@ package com.github.wuic;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public interface ApplicationConfig {
+
+    /////////////////////////////////////////////////
+    ////// DiskWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The base path when accessing resources on the file system.
+     */
+    String DISK_BASE_PATH = "c.g.wuic.diskBasePath";
+
+    /////////////////////////////////////////////////
+    ////// WebappWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The base path when accessing resources deployed in the webapp on file system.
+     */
+    String WEBAPP_BASE_PATH = "c.g.wuic.webappBasePath";
 
     /////////////////////////////////////////////////
     ////// HttpWuicResourceFactory properties ///////

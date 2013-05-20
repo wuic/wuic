@@ -142,7 +142,8 @@ public class CoreTest extends WuicTest {
                 final File file = File.createTempFile(name, ".js");
                 IOUtils.copyStream(fis, new FileOutputStream(file));
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
-                final int start = content.indexOf("url\":\"") + 6;
+                log.info(content);
+                final int start = content.indexOf("url : \"") + 7;
                 final int end = content.indexOf("/?file=aggregation.png");
                 final String imageGroup = content.substring(start, end);
                 group = facade.getGroup(imageGroup);

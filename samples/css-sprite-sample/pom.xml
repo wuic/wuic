@@ -21,6 +21,20 @@
             <groupId>com.github.wuic</groupId>
             <artifactId>wuic-tag</artifactId>
         </dependency>
+
+        <!-- JS & CSS compression -->
+        <dependency>
+            <groupId>com.yahoo.platform.yui</groupId>
+            <artifactId>yuicompressor</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Caching -->
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-core</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>

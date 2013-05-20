@@ -52,6 +52,32 @@
 		</developer>
 	</developers>
 
+    <!-- Engines dependencies need to be explicitly imported by the user -->
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- For engine and samples using YUICompressor -->
+            <dependency>
+                <groupId>com.yahoo.platform.yui</groupId>
+                <artifactId>yuicompressor</artifactId>
+                <version>${yuicompressor.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>rhino</groupId>
+                        <artifactId>js</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- For engine and samples using EHCache -->
+            <dependency>
+                <groupId>net.sf.ehcache</groupId>
+                <artifactId>ehcache-core</artifactId>
+                <version>${ehcache-core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- All artifacts of the WUIC project depends of the SLF4J API -->
         <dependency>
@@ -219,6 +245,7 @@
 		<junit.version>4.8.2</junit.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
+
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>
 

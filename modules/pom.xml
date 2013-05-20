@@ -106,34 +106,14 @@
                 <scope>provided</scope>
             </dependency>
 
-            <!-- FTP support -->
+            <!-- FTP protocol support -->
             <dependency>
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
             </dependency>
 
-            <!-- YUI Compressor for JS and CSS minification -->
-            <dependency>
-                <groupId>com.yahoo.platform.yui</groupId>
-                <artifactId>yuicompressor</artifactId>
-                <version>${yuicompressor.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>rhino</groupId>
-                        <artifactId>js</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <!-- Caching -->
-            <dependency>
-                <groupId>net.sf.ehcache</groupId>
-                <artifactId>ehcache-core</artifactId>
-                <version>${ehcache-core.version}</version>
-            </dependency>
-
-            <!-- SSH client -->
+            <!-- SSH protocol support -->
             <dependency>
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
