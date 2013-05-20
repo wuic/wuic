@@ -49,7 +49,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -58,7 +60,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
@@ -69,32 +71,47 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
+     * Classpath entry for the base path.
+     */
+    private URL classPathEntry;
+
+    /**
+     * Relative path to classpath root.
+     */
+    private String relativePath;
+
+    /**
+     * <p>
+     * Builds a new instance
+     * </p>
+     *
+     * @param basePath the base path in classpath
+     */
+    public ClasspathWuicResourceProtocol(final String basePath) {
+        relativePath = basePath;
+        classPathEntry = getClass().getResource(basePath);
+
+        if (classPathEntry == null) {
+            throw new IllegalArgumentException("Unable to find '" + basePath + "' in the classpath");
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
 
-        // Split path according to OS we are running on
-        final Boolean isWindows = System.getProperty("os.name").toLowerCase().indexOf("win") != -1;
-        final String classPath = System.getProperty("java.class.path", ".");
+        final List<String> absolutePaths = IOUtils.lookupFileResources(new File(classPathEntry.getFile()), pattern);
+        final List<String> retval = new ArrayList<String>(absolutePaths.size());
 
-        // Note : Application classpath entry is not provided by jetty
-        // Workaround consists to get it through getClass().getResource("/")
-        // Using a Set to prevent duplicate entries
-        final Set<String> classPathElements = new HashSet<String>();
-        classPathElements.addAll(Arrays.asList(classPath.split(isWindows ? ";" : ":")));
-        final String appClasspathEntry = getClass().getResource("/").getFile();
-        classPathElements.add(isWindows ? appClasspathEntry.substring(1) : appClasspathEntry);
-
-        final List<String> retval = new ArrayList<String>();
-        for (String pathName : classPathElements) {
+        for (String absolutePath : absolutePaths) {
+            if (!absolutePath.startsWith("/")) {
+                absolutePath = "/".concat(absolutePath);
+            }
 
             // Need to remove the absolute part of the path to retrieve the resource with getClass().getResourceAsStream(path)
-            final List<String> absolutePaths = IOUtils.lookupFileResources(new File(pathName), pattern);
-
-            for (String absolutePath : absolutePaths) {
-                retval.add(absolutePath.replace(pathName.replace('\\', '/'), ""));
-            }
+            retval.add(relativePath + absolutePath.replace(classPathEntry.getFile().replace('\\', '/'), ""));
         }
 
         return retval;

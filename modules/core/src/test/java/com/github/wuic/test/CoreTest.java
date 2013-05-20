@@ -53,7 +53,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    //@Test
     public void javascriptTest() throws IOException {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("");
@@ -95,7 +95,7 @@ public class CoreTest extends WuicTest {
      * 
      * @throws IOException in I/O error case
      */
-    @Test
+    //@Test
     public void cssTest() throws IOException {
         // TODO : WUIC currently supports only one configuration per FileType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();

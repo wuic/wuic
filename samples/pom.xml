@@ -61,6 +61,9 @@
                 <version>${jetty8-version}</version>
                 <configuration>
                     <webAppSourceDirectory>${project.build.directory}/${project.name}</webAppSourceDirectory>
+                    <systemProperties>
+                        <force>true</force>
+                    </systemProperties>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                     <webAppConfig>
                         <contextPath>/</contextPath>

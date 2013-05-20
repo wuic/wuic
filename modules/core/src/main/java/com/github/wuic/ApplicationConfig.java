@@ -54,6 +54,16 @@ public interface ApplicationConfig {
     /////////////////////////////////////////////////
 
     /**
+     * The base path when accessing resources on the classpath.
+     */
+    String CLASSPATH_BASE_PATH = "c.g.wuic.classpathBasePath";
+
+
+    /////////////////////////////////////////////////
+    ////// DiskWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
      * The base path when accessing resources on the file system.
      */
     String DISK_BASE_PATH = "c.g.wuic.diskBasePath";

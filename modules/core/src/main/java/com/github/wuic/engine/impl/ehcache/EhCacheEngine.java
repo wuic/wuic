@@ -125,7 +125,7 @@ public class EhCacheEngine extends Engine {
             // Resources exist in cache, returns them
             if (value != null) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Resource with " + key + " found in cache");
+                    log.debug("Resources for group '" + key + "' found in cache");
                 }
 
                 return (List<WuicResource>) value.getObjectValue();

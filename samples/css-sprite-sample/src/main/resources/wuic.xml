@@ -3,11 +3,15 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
     <resource-factory-builders>
-        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true">
+            <properties>
+                <property key="c.g.wuic.classpathBasePath">/img</property>
+            </properties>
+        </resource-factory-builder>
     </resource-factory-builders>
     <groups>
         <group id="img" configuration="sprite-image-png" default-builder="imgSourceRootProvider">
-            <file>img/.*.png</file>
+            <file>.*.png</file>
         </group>
     </groups>
     <configurations>
