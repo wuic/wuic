@@ -11,6 +11,7 @@
                 <property key="c.g.wuic.sshBasePathAsSystemProperty">true</property>
                 <property key="c.g.wuic.sshInterpreter">cmd.exe</property>
                 <property key="c.g.wuic.sshTimeToSleepAfterExec">1500</property>
+                <property key="c.g.wuic.sshServerPort">9876</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

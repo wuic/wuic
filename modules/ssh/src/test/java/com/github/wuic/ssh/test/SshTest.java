@@ -67,7 +67,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
@@ -86,9 +86,9 @@ public class SshTest {
     @BeforeClass
     public static void tearUp() throws IOException {
 
-        // Default server on port 22
+        // Default server on port 9876
         sshdServer = SshServer.setUpDefaultServer();
-        sshdServer.setPort(22);
+        sshdServer.setPort(9876);
 
         // Host key
         final File hostKey = File.createTempFile("hostkey" + System.nanoTime(), ".ser");
