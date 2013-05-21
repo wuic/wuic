@@ -8,18 +8,32 @@
     <parent>
         <groupId>com.github.wuic.samples</groupId>
         <artifactId>wuic-samples</artifactId>
-        <version>0.3.1</version>
+        <version>0.3.2</version>
     </parent>
 
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-sample-js-css</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <packaging>war</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.github.wuic</groupId>
             <artifactId>wuic-servlet</artifactId>
+        </dependency>
+
+        <!-- JS & CSS compression -->
+        <dependency>
+            <groupId>com.yahoo.platform.yui</groupId>
+            <artifactId>yuicompressor</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Caching -->
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-core</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

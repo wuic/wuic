@@ -44,7 +44,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
+import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
@@ -59,7 +59,7 @@ import org.apache.commons.io.FileUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public final class EngineOutputManager {
@@ -90,7 +90,7 @@ public final class EngineOutputManager {
         builder.append(BASE_WORKING_NAME);
         
         // Deletes it from the file system
-        FileUtils.deleteDirectory(new File(builder.toString()));
+        IOUtils.deleteDirectory(new File(builder.toString()));
     }
     
     /**

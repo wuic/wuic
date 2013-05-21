@@ -38,10 +38,11 @@
 
 package com.github.wuic.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -58,7 +59,7 @@ import java.util.zip.ZipFile;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public final class IOUtils {
@@ -67,6 +68,11 @@ public final class IOUtils {
      * Length of a memory buffer used in WUIC.
      */
     public static final int WUIC_BUFFER_LEN = 2048;
+
+    /**
+     * Logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(IOUtils.class);
 
     /**
      * <p>
@@ -79,6 +85,116 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Tries to close the given object and log the {@link IOException} at INFO level
+     * to make the code more readable when we assume that the {@link IOException} won't be managed.
+     * </p>
+     *
+     * <p>
+     * Also ignore {@code null} parameters.
+     * </p>
+     *
+     * @param closeable the object to close
+     */
+    public static void close(final Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException ioe) {
+            LOGGER.info("Can't close the object", ioe);
+        }
+    }
+
+    /**
+     * <p>
+     * Deletes a directory. Begins by delete the files inside the directory recursively.
+     * </p>
+     *
+     * @param directory directory to delete
+     * @throws IOException if a file could not be deleted
+     */
+    public static void deleteDirectory(final File directory) throws IOException {
+        if (directory.exists()) {
+            // Delete all files inside directory
+            for (File file : directory.listFiles()) {
+
+                // Delete directory recursively
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else if (file.isFile() && !file.delete()) {
+                    throw new IOException("Can't delete the file " + file.getAbsolutePath());
+                }
+            }
+
+            if (!directory.delete()) {
+                throw new IOException("Can't delete the file " + directory.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Reads the given reader and returns its content in a {@code String}.
+     * </p>
+     *
+     * @param reader the reader
+     * @return the content
+     * @throws IOException if an I/O error occurs
+     */
+    public static String readString(final InputStreamReader reader) throws IOException {
+        final StringBuilder builder = new StringBuilder();
+        final char[] buff = new char[IOUtils.WUIC_BUFFER_LEN];
+        int offset = -1;
+
+        // read content
+        while ((offset = reader.read(buff)) != -1) {
+            builder.append(buff, 0, offset);
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * <p>
+     * Copies the data from the given reader to the given output stream.
+     * </p>
+     *
+     * @param reader the {@code Reader}
+     * @param output the {@code OutputStream}
+     * @throws IOException in an I/O error occurs
+     */
+    public static void copyReaderToStream(final Reader reader, final OutputStream output)
+            throws IOException {
+        int offset = -1;
+        final char[] buffer = new char[WUIC_BUFFER_LEN];
+
+        while ((offset = reader.read(buffer)) != -1) {
+            output.write(String.copyValueOf(buffer, 0, offset).getBytes());
+        }
+    }
+
+    /**
+     * <p>
+     * Copies the data from the given input stream into the given writer.
+     * </p>
+     *
+     * @param is the {@code InputStream}
+     * @param writer the {@code Writer}
+     * @param cs the charset to use to convert byte array to char array
+     * @throws IOException in an I/O error occurs
+     */
+    public static void copyStreamToWriter(final InputStream is, final Writer writer, final String cs)
+            throws IOException {
+        int offset = -1;
+        final byte[] buffer = new byte[WUIC_BUFFER_LEN];
+
+        while ((offset = is.read(buffer)) != -1) {
+            writer.write(new String(Arrays.copyOf(buffer, offset), cs));
+        }
+    }
+
+    /**
+     * <p>
      * Copies the data from the given input stream into the given output stream.
      * </p>
      *
@@ -86,7 +202,8 @@ public final class IOUtils {
      * @param os the {@code OutputStream}
      * @throws IOException in an I/O error occurs
      */
-    public static void copyStream(final InputStream is, final OutputStream os) throws IOException {
+    public static void copyStream(final InputStream is, final OutputStream os)
+            throws IOException {
         int offset = -1;
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 

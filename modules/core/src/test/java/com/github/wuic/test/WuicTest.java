@@ -13,9 +13,10 @@
 package com.github.wuic.test;
 
 import com.github.wuic.resource.WuicResource;
-import org.apache.commons.io.FileUtils;
+import com.github.wuic.util.IOUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
@@ -24,8 +25,8 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.1.0
+ * @version 1.1
+ * @since 0.3.1
  */
 public class WuicTest {
 
@@ -43,7 +44,7 @@ public class WuicTest {
         final String dir = System.getProperty("wuic.test.storeTo");
 
         if (dir != null) {
-            FileUtils.copyInputStreamToFile(resource.openStream(), new File(dir, name));
+            IOUtils.copyStream(resource.openStream(), new FileOutputStream(new File(dir, name)));
         }
     }
 }

@@ -31,7 +31,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
              JS compression. Cache. CSS (currently disabled).
         </td>
     </tr>
-    </tr>
+    <tr>
         <td>js-sprite-sample</td>
         <td>
             The sample includes the [cgSceneGraph](http://gwennaelbuchet.github.io/cgSceneGraph/) framework. It
@@ -40,6 +40,16 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         </td>
         <td>
              JS compression. Cache. JS sprites. Image aggregation.
+        </td>
+    </tr>
+    <tr>
+        <td>css-sprite-sample</td>
+        <td>
+            Demonstrates how to include a set of images aggregated and loaded with sprite in CSS. The demo
+            just displays a set of different flags loaded from a single image .
+        </td>
+        <td>
+             Cache. CSS sprites. Image aggregation.
         </td>
     </tr>
 </table>

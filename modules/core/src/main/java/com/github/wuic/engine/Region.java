@@ -37,8 +37,6 @@
 
 package com.github.wuic.engine;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
 import java.awt.Dimension;
 
 /**
@@ -47,7 +45,7 @@ import java.awt.Dimension;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.0
  */
 public class Region extends Dimension implements Comparable<Dimension> {
@@ -164,12 +162,15 @@ public class Region extends Dimension implements Comparable<Dimension> {
      * {@inheritDoc}
      */
     public int hashCode() {
-        final HashCodeBuilder builder = new HashCodeBuilder();
-        builder.append(this.getWidth());
-        builder.append(this.getHeight());
-        builder.append(this.xPosition);
-        builder.append(this.yPosition);
+        // Use the hash code of the class and make it positive if negative as multiplier
+        final int multiplier = getClass().hashCode() * (getClass().hashCode() < 0 ? -1 : 1);
 
-        return builder.toHashCode();
+        // formula : current hashcode * multiplier + object hashcode
+        int hashCode = 1 * multiplier + (int) getWidth();
+        hashCode *= multiplier + (int) getHeight();
+        hashCode *= multiplier + this.xPosition;
+        hashCode *= multiplier + this.yPosition;
+
+        return hashCode;
     }
 }

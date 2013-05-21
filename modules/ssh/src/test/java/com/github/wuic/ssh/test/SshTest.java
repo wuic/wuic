@@ -40,9 +40,9 @@ package com.github.wuic.ssh.test;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.util.IOUtils;
 import com.jcraft.jsch.JSchException;
 import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
 import org.apache.sshd.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.shell.ProcessShellFactory;
@@ -52,7 +52,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import java.util.List;
 
 /**
@@ -61,7 +67,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
@@ -89,7 +95,7 @@ public class SshTest {
         sshdServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(hostKey.getAbsolutePath()));
 
         // Use cmd on windows, /bin/sh otherwise
-        if (System.getProperty("os.name").toLowerCase().indexOf("win") != -1) {
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
             sshdServer.setShellFactory(new ProcessShellFactory(new String[]{ "cmd" }));
         } else {
             sshdServer.setShellFactory(new ProcessShellFactory(new String[]{ "/bin/sh", "-i", "-l" }));
@@ -131,7 +137,7 @@ public class SshTest {
      * @throws JSchException if SSH session could not be opened
      */
     @Test
-    public void SshTest() throws JSchException, IOException, InterruptedException {
+    public void sshTest() throws JSchException, IOException, InterruptedException {
         final WuicFacade facade = WuicFacade.newInstance("");
         final List<WuicResource> group = facade.getGroup("css-image");
 
@@ -140,7 +146,7 @@ public class SshTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
         }
     }

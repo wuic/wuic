@@ -14,9 +14,11 @@ package com.github.wuic.test;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.junit.AfterClass;
@@ -35,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -43,7 +46,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
@@ -82,7 +85,7 @@ public class HttpTest extends WuicTest {
                     throws IOException, ServletException {
                 response.setStatus(HttpServletResponse.SC_OK);
                 baseRequest.setHandled(Boolean.TRUE);
-                IOUtils.copy(HttpTest.class.getResourceAsStream(request.getRequestURI()), response.getOutputStream());
+                IOUtils.copyStream(HttpTest.class.getResourceAsStream(request.getRequestURI()), response.getOutputStream());
             }
         });
 
@@ -152,7 +155,7 @@ public class HttpTest extends WuicTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
         }
     }

@@ -3,10 +3,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>web-ui-compressor</artifactId>
         <groupId>com.github.wuic</groupId>
-        <version>0.3.1</version>
-        <relativePath>../../pom.xml</relativePath>
+        <artifactId>wuic-modules</artifactId>
+        <version>0.3.2</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,7 +18,38 @@
         <dependency>
             <groupId>com.github.wuic</groupId>
             <artifactId>wuic-core</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- JS & CSS compression -->
+        <dependency>
+            <groupId>com.yahoo.platform.yui</groupId>
+            <artifactId>yuicompressor</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Caching -->
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- SSH client -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
 
         <dependency>
@@ -26,9 +57,5 @@
             <artifactId>sshd-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-        </dependency>
     </dependencies>
 </project>

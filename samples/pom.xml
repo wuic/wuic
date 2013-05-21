@@ -5,13 +5,13 @@
     <parent>
         <groupId>com.github.wuic</groupId>
         <artifactId>web-ui-compressor</artifactId>
-        <version>0.3.1</version>
+        <version>0.3.2</version>
     </parent>
 
     <groupId>com.github.wuic.samples</groupId>
     <artifactId>wuic-samples</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
 
     <modules>
         <module>js-css-sample</module>
@@ -24,15 +24,25 @@
             <dependency>
                 <groupId>com.github.wuic</groupId>
                 <artifactId>wuic-servlet</artifactId>
-                <version>${pom.version}</version>
+                <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.github.wuic</groupId>
                 <artifactId>wuic-tag</artifactId>
-                <version>${pom.version}</version>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <!-- Use the slf4j-simple artifact to log in samples -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -51,6 +61,9 @@
                 <version>${jetty8-version}</version>
                 <configuration>
                     <webAppSourceDirectory>${project.build.directory}/${project.name}</webAppSourceDirectory>
+                    <systemProperties>
+                        <force>true</force>
+                    </systemProperties>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                     <webAppConfig>
                         <contextPath>/</contextPath>

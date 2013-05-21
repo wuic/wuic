@@ -40,19 +40,16 @@ package com.github.wuic.ftp.test;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.usermanager.ClearTextPasswordEncryptor;
 import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.SaltedPasswordEncryptor;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
-import org.apache.ftpserver.usermanager.impl.PropertiesUserManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,7 +59,7 @@ import org.junit.runners.JUnit4;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -71,7 +68,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
@@ -144,7 +141,7 @@ public class FtpTest {
 
         for (WuicResource res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readLines(is).size() > 0);
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
         }
 

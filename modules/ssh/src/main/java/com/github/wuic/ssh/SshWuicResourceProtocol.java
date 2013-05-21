@@ -50,7 +50,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +71,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class SshWuicResourceProtocol implements WuicResourceProtocol {
@@ -199,10 +198,16 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             // Create a file containing all the files
             final List<String> retval = new ArrayList<String>();
             String file = basePath + "wuic-list-resources-" + System.nanoTime();
-            final String command = StringUtils.join(sshCommandManager.searchInto(basePath, pattern.pattern(), file), "\n");
+
+            final String[] toMerge = sshCommandManager.searchInto(basePath, pattern.pattern(), file);
+            final StringBuilder commands = new StringBuilder();
+
+            for (String command : toMerge) {
+                commands.append(command).append("\n");
+            }
 
             // Execute command and wait for end of execution
-            executeShellCommand(command);
+            executeShellCommand(commands.toString());
 
             Thread.sleep(timeToSleepForExec);
 

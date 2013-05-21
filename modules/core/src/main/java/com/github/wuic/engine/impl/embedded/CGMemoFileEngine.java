@@ -44,12 +44,14 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineOutputManager;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
-import org.apache.commons.io.FileUtils;
+import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
@@ -91,17 +93,18 @@ public class CGMemoFileEngine extends Engine {
         // Create a file "memo.txt" in the working directory
         final EngineOutputManager outputManager = EngineOutputManager.getInstance();
         final String directory = outputManager.getWorkingDirectory(configuration);
-        final File target = new File(directory, "memo.txt");
+        final FileOutputStream target = new FileOutputStream(new File(directory, "memo.txt"));
         final List<String> lines = new ArrayList<String>(request.getResources().size());
         
-        // Store each file absolute path
+        // Store each file absolute path and write all lines (overriding existing file
         for (WuicResource resource : request.getResources()) {
             lines.add(resource.getName());
+            final StringReader reader = new StringReader(resource.getName());
+            IOUtils.copyReaderToStream(reader, target);
         }
-        
-        // Write all lines (overriding existing file)
-        FileUtils.writeLines(target, configuration.charset(), lines, Boolean.FALSE);
-        
+
+        target.close();
+
         return request.getResources();
     }
 

@@ -45,10 +45,6 @@ import com.github.wuic.engine.Region;
 import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * <p>
@@ -65,15 +61,10 @@ import org.codehaus.jackson.map.ObjectMapper;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
-
-    /**
-     * The JACKSON MAPPER.
-     */
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
      * {@inheritDoc}
@@ -91,29 +82,29 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
             
-            // Define region within the image
-            final Map<String, String> region = new HashMap<String, String>(5);
-            region.put("x", String.valueOf(reg.getxPosition()));
-            region.put("y", String.valueOf(reg.getyPosition()));
-            region.put("w", String.valueOf(reg.getWidth()));
-            region.put("h", String.valueOf(reg.getHeight()));
-            region.put("url", new StringBuilder(url).append("/?file=").append(image).toString());
-        
             // Instruction that affect the new object to the WUIC_SPRITE constant
             jsBuilder.append(jsName);
             jsBuilder.append("['");
             jsBuilder.append(name.replace("\'", "\\'"));
-            jsBuilder.append("'] = ");
-            jsBuilder.append(MAPPER.writeValueAsString(region));
-            jsBuilder.append(";");
+            jsBuilder.append("'] = {x : \"");
+            jsBuilder.append(reg.getxPosition());
+            jsBuilder.append("\", y : \"");
+            jsBuilder.append(reg.getyPosition());
+            jsBuilder.append("\", w : \"");
+            jsBuilder.append(reg.getWidth());
+            jsBuilder.append("\", h : \"");
+            jsBuilder.append(reg.getHeight());
+            jsBuilder.append("\", url : \"");
+            jsBuilder.append(url);
+            jsBuilder.append("/?file=");
+            jsBuilder.append(image);
+            jsBuilder.append("\"};");
         }
 
         // Make a resource and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        final WuicResource spriteFile = new ByteArrayWuicResource(bytes, WuicXmlLoader.createGeneratedGroupId(regions.keySet()),
+        return new ByteArrayWuicResource(bytes, WuicXmlLoader.createGeneratedGroupId(regions.keySet()),
                 FileType.JAVASCRIPT);
-        
-        return spriteFile;
     }
 
     /**
@@ -125,6 +116,6 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * @return the JS name to use
      */
     private String createJsName(final String groupId) {
-        return "WUIC_SPRITE_" + groupId.toUpperCase().replace("°=+*/-%€¤£&|[]{}()<>§'#;,@²?:.", "_");
+        return "WUIC_SPRITE_" + groupId.toUpperCase().replaceAll("\\W", "_");
     }
 }
