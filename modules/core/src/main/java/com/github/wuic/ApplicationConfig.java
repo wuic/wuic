@@ -183,4 +183,29 @@ public interface ApplicationConfig {
      * After the command is executed, the thread will sleep a time associated to this property.
      */
     String SSH_TIME_TO_SLEEP_AFTER_EXEC = "c.g.wuic.sshTimeToSleepAfterExec";
+
+    /////////////////////////////////////////////////
+    ////// S3WuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The S3 AWS Bucket storage name.
+     */
+    String S3_BUCKET = "c.g.wuic.s3Bucket";
+
+    /**
+     * S3 access key.
+     */
+    String S3_KEY_ACCESS = "c.g.wuic.s3Key";
+
+    /**
+     * S3 secret key.
+     */
+    String S3_KEY_SECRET = "c.g.wuic.s3Secret";
+
+    /**
+     * S3 path for resources.
+     */
+    String S3_PATH = "c.g.wuic.s3Path";
+
 }
