@@ -305,7 +305,7 @@ public final class WuicXmlLoader {
                 if (propertiesNode != null) {
                     for (int j = 0; j < propertiesNode.getChildNodes().getLength(); j++) {
                         final Node propertyNode = propertiesNode.getChildNodes().item(j);
-                        final String value = propertyNode.getFirstChild().getNodeValue();
+                        final String value = propertyNode.getTextContent();
                         wrfb = wrfb.property(propertyNode.getAttributes().getNamedItem("key").getNodeValue(), value);
                     }
                 }
