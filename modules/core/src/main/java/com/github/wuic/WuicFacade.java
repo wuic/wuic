@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,7 +186,7 @@ public final class WuicFacade {
             // Parse the files
             final List<WuicResource> retval = engine.parse(new EngineRequest(resources, contextPath, id));
 
-            log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / 1000F);
+            log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
             return retval;
         } catch (BadConfigurationException bce) {

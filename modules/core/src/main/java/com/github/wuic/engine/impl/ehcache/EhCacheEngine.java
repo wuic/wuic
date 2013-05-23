@@ -51,6 +51,7 @@ import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 import net.sf.ehcache.Element;
 
 import org.slf4j.Logger;
@@ -142,7 +143,7 @@ public class EhCacheEngine extends Engine {
             retval = getNext().parse(request);
         }
 
-        log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / 1000F);
+        log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }

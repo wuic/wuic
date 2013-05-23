@@ -43,6 +43,7 @@ import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
 import com.github.wuic.configuration.YuiConfiguration;
 
+import com.github.wuic.util.NumberUtils;
 import net.sf.ehcache.Cache;
 
 import org.w3c.dom.Node;
@@ -53,7 +54,7 @@ import org.w3c.dom.Node;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class YuiCssConfigurationDomBuilder implements DomConfigurationBuilder {
@@ -93,7 +94,7 @@ public class YuiCssConfigurationDomBuilder implements DomConfigurationBuilder {
             final String message = "Elements compress, aggregate, charset and yuiLineBreakPos must be defined";
             throw new BadConfigurationException(message);
         // Check number consistency
-        } else if (lineBreakPos.replaceAll("-?\\d+","").length() > 0) {
+        } else if (!NumberUtils.isNumber(lineBreakPos)) {
             throw new BadConfigurationException("lineBreakPos element must be an integer");
         }
 
