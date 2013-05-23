@@ -39,9 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.configuration.BadConfigurationException;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineOutputManager;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
@@ -61,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public final class WuicFacade {
@@ -170,30 +168,25 @@ public final class WuicFacade {
      */
     public synchronized List<WuicResource> getGroup(final String id) {
         try {
-            if (log.isInfoEnabled()) {
-                log.info("Getting files for group : " + id);
-            }
-            
+            final long start = System.currentTimeMillis();
+
+            log.info("Getting files for group : {}", id);
+
             // Get the group
             final FilesGroup group = factoryBuilder.getLoader().getFilesGroup(id);
-            
-            // Get it configuration
-            final Configuration configuration = group.getConfiguration();
-            
+
             // Gets an input stream for each file
             final List<WuicResource> resources = group.getResources();
 
-            // Initialize the working directory for the engines to be executed
-            final EngineOutputManager outManager = EngineOutputManager.getInstance();
-            outManager.initWorkingDirectory(configuration, null);
-            
             // Build the engine that generates the files
             final FileType fileType = group.getConfiguration().getFileType();
             final Engine engine = factoryBuilder.build().create(fileType);
          
             // Parse the files
             final List<WuicResource> retval = engine.parse(new EngineRequest(resources, contextPath, id));
-            
+
+            log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / 1000F);
+
             return retval;
         } catch (BadConfigurationException bce) {
             throw new WuicException(bce);
