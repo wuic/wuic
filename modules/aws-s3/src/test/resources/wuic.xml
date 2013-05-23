@@ -12,11 +12,11 @@
                 <!--    Key : c.g.wuic.s3Key
                         The AWS auth access key, you can generate a new auth access key in your account :
                         https://portal.aws.amazon.com/gp/aws/securityCredentials -->
-                <property key="c.g.wuic.s3Key">AKIAIJEHPHWRIGAQJ4ZQ</property>
+                <property key="c.g.wuic.s3Key"></property>
                 <!--    Key : c.g.wuic.s3Secret
                         The AWS secret auth access key, you can generate a new secret auth access key in your account :
                         https://portal.aws.amazon.com/gp/aws/securityCredentials -->
-                <property key="c.g.wuic.s3Secret">LLGpZhcsJQXdSuyCpM8uCb8oJiWSPc7/Xf7oAjs/</property>
+                <property key="c.g.wuic.s3Secret"></property>
                 <!--    Key : c.g.wuic.s3Path
                         The s3 path for search resources without bucket name, example :
                         empty : search in root and sub directories

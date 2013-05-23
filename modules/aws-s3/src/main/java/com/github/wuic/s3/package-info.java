@@ -42,3 +42,4 @@
  *
  * @author Corentin AZELART
  */
+package com.github.wuic.s3;

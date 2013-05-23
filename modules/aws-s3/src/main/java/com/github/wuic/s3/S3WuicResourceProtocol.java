@@ -141,7 +141,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
         final List<String> retval = new ArrayList<String>();
         for (final S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
             // Ignore directories, all resources are in the listing
-            if(!s3ObjectSummary.getKey().endsWith("/")) {
+            if (!s3ObjectSummary.getKey().endsWith("/")) {
                 final Matcher matcher = pattern.matcher(s3ObjectSummary.getKey());
 
                 if (matcher.find()) {
@@ -199,9 +199,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Disconnecting from S3 AWS Cloud...");
-            }
+            log.debug("Disconnecting from S3 AWS Cloud...");
 
             // This object if not referenced and is going to be garbage collected.
             // Do not keep the client connected.

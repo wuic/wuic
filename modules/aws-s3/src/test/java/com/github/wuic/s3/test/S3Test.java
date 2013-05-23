@@ -70,16 +70,18 @@ public class S3Test {
      */
     @Test
     public void s3Test() throws IOException {
-        final WuicFacade facade = WuicFacade.newInstance("");
-        final List<WuicResource> group = facade.getGroup("css-image");
+        if (System.getProperty("wuic.test.trust-aws-s3-credentials") != null) {
+            final WuicFacade facade = WuicFacade.newInstance("");
+            final List<WuicResource> group = facade.getGroup("css-image");
 
-        Assert.assertFalse(group.isEmpty());
-        InputStream is;
+            Assert.assertFalse(group.isEmpty());
+            InputStream is;
 
-        for (WuicResource res : group) {
-            is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
+            for (WuicResource res : group) {
+                is = res.openStream();
+                Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
+                is.close();
+            }
         }
     }
 }
