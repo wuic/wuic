@@ -20,10 +20,18 @@
         <module>servlet</module>
         <module>ftp</module>
         <module>ssh</module>
+        <module>aws-s3</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <!-- AWS SDK -->
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk</artifactId>
+                <version>${aws-java-sdk.version}</version>
+            </dependency>
+
             <!-- Tests -->
             <dependency>
                 <groupId>junit</groupId>

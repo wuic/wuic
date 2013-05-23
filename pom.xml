@@ -52,6 +52,18 @@
 		</developer>
 	</developers>
 
+    <contributors>
+        <contributor>
+            <name>Corentin AZELART</name>
+            <organization>Capgemini</organization>
+            <email>corentin.azelart@gmail.com</email>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </contributor>
+    </contributors>
+
     <!-- Engines dependencies need to be explicitly imported by the user -->
     <dependencyManagement>
         <dependencies>
@@ -236,6 +248,7 @@
         <sonar.version>3.1</sonar.version>
 
         <!-- dependencies libraries -->
+        <aws-java-sdk.version>1.4.3</aws-java-sdk.version>
         <jsch-version>0.1.48</jsch-version>
         <sshd-version>0.8.0</sshd-version>
         <ftpserver.version>1.0.6</ftpserver.version>
