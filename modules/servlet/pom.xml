@@ -13,6 +13,8 @@
 
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-servlet</artifactId>
+    <packaging>jar</packaging>
+    <version>0.3.3-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

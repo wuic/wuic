@@ -8,11 +8,13 @@
         <version>0.3.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-ssh</artifactId>
     <packaging>jar</packaging>
+    <version>0.3.3-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
