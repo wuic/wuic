@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.1
  */
 public class EhCacheEngine extends Engine {
@@ -98,37 +98,18 @@ public class EhCacheEngine extends Engine {
     @SuppressWarnings("unchecked")
     public List<WuicResource> parse(final EngineRequest request)
             throws IOException {
+        // Log duration
+        final Long start = System.currentTimeMillis();
+        List<WuicResource> retval = null;
 
         if (configuration.cache()) {
-            // calculate the hash code key
-            // use the hash code of the class and make it positive if negative as multiplier
-            final int multiplier = getClass().hashCode() * (getClass().hashCode() < 0 ? -1 : 1);
-            int key = multiplier + 1;
-
-            /*
-             * Same sets of resources could be found in different groups. Their
-             * difference is in the engines that parse it so get different hash
-             * by appending the next engine in the builder
-             */
-            Engine engine = this;
-
-            while ((engine = engine.getNext()) != null) {
-                key *= multiplier + getNext().getClass().hashCode();
-            }
-
-            for (WuicResource resource : request.getResources()) {
-                key *= multiplier + resource.getName().hashCode();
-            }
-
+            final String key = request.getGroupId();
             final Element value = getConfiguration().getCache().get(key);
 
             // Resources exist in cache, returns them
             if (value != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Resources for group '" + key + "' found in cache");
-                }
-
-                return (List<WuicResource>) value.getObjectValue();
+                log.info("Resources for group '{}' found in cache", key);
+                retval = (List<WuicResource>) value.getObjectValue();
             } else if (getNext() != null) {
                 final List<WuicResource> resources = getNext().parse(request);
                 final List<WuicResource> toCache = new ArrayList<WuicResource>(resources.size());
@@ -138,7 +119,9 @@ public class EhCacheEngine extends Engine {
                 for (WuicResource resource : resources) {
                     try {
                         is = resource.openStream();
-                        final byte[] bytes = load(is);
+                        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        IOUtils.copyStream(is, os);
+                        final byte[] bytes = os.toByteArray();
                         toCache.add(new ByteArrayWuicResource(bytes, resource.getName(),
                                 resource.getFileType()));
                     } finally {
@@ -148,22 +131,20 @@ public class EhCacheEngine extends Engine {
                     }
                 }
 
-                if (log.isDebugEnabled()) {
-                    log.debug("Caching resource with " + key);
-                }
+                log.debug("Caching resource with {}", key);
 
                 getConfiguration().getCache().put(new Element(key, toCache));
 
-                return toCache;
-            } else {
-                return null;
+                retval = toCache;
             }
         // we don't cache so just call the next engine if exists
         } else if (getNext() != null) {
-            return getNext().parse(request);
-        } else {
-            return null;
+            retval = getNext().parse(request);
         }
+
+        log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / 1000F);
+
+        return retval;
     }
 
     /**
@@ -181,31 +162,5 @@ public class EhCacheEngine extends Engine {
     public Boolean works() {
         // WUIC framework ALWAYS uses cache
         return Boolean.TRUE;
-    }
-
-    /**
-     * <p>
-     * Loads the given stream into a byte array.
-     * </p>
-     * 
-     * @param is the input stream
-     * @return the byte array
-     * @throws IOException if the stream could not be read
-     */
-    private byte[] load(final InputStream is) throws IOException {
-        final byte[] readBuf = new byte[IOUtils.WUIC_BUFFER_LEN];
-
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        int count = is.read(readBuf);
-
-        while (count > 0) {
-            baos.write(readBuf, 0, count);
-            count = is.read(readBuf);
-        }
-
-        is.close();
-
-        return baos.toByteArray();
     }
 }
