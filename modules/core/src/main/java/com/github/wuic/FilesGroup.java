@@ -53,7 +53,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class FilesGroup {
@@ -72,7 +72,12 @@ public class FilesGroup {
      * The resource factory.
      */
     private WuicResourceFactory resourceFactory;
-    
+
+    /**
+     * The resources corresponding to the paths.
+     */
+    private List<WuicResource> resources;
+
     /**
      * <p>
      * Builds a new {@link FilesGroup}. All the files must be named with an
@@ -83,14 +88,22 @@ public class FilesGroup {
      * @param config the {@link Configuration}
      * @param filesList the files
      * @param theResourceFactory the {@link WuicResourceFactory}
+     * @throws IOException if the resources can be retrieved
      */
     public FilesGroup(final Configuration config,
             final List<String> filesList,
-            final WuicResourceFactory theResourceFactory) {
+            final WuicResourceFactory theResourceFactory)
+            throws IOException {
         this.configuration = config;
         this.files = filesList;
         this.resourceFactory = theResourceFactory;
         checkFiles();
+
+        this.resources = new ArrayList<WuicResource>();
+
+        for (String path : files) {
+            resources.addAll(resourceFactory.create(path));
+        }
     }
 
     /**
@@ -100,9 +113,10 @@ public class FilesGroup {
      *
      * @param config the {@link Configuration}
      * @param other the group to copy
+     * @throws IOException if the resources can't be retrieved
      */
     public FilesGroup(final Configuration config,
-                      final FilesGroup other) {
+                      final FilesGroup other) throws IOException {
         this(config, other.files, other.resourceFactory);
     }
 
@@ -196,12 +210,6 @@ public class FilesGroup {
      * @throws IOException if the resources can't be built
      */
     public List<WuicResource> getResources() throws IOException {
-        final List<WuicResource> retval = new ArrayList<WuicResource>();
-
-        for (String path : files) {
-            retval.addAll(resourceFactory.create(path));
-        }
-
-        return retval;
+        return resources;
     }
 }
