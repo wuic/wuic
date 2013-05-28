@@ -56,7 +56,7 @@ import javax.servlet.jsp.tagext.TagSupport;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.1.0
  */
 public class WuicTag extends TagSupport {
@@ -169,7 +169,7 @@ public class WuicTag extends TagSupport {
         urlBuilder.append(WuicServlet.servletContext().getContextPath());
         urlBuilder.append(WuicServlet.servletMapping().replace("*", ""));
         urlBuilder.append(pageName);
-        urlBuilder.append("/?file=");
+        urlBuilder.append("/");
         urlBuilder.append(URLEncoder.encode(resource.getName(), "UTF-8"));
         
         return urlBuilder.toString();

@@ -39,32 +39,23 @@
 package com.github.wuic.resource;
 
 import com.github.wuic.FileType;
+import com.github.wuic.util.InputStreamOpener;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 
 /**
  * <p>
  * Represents a resource provided or to be managed by the WUIC framework.
  * </p>
+ *
+ * TODO : refactor Configuration and WuicResource interfaces to manage from Configuration the cache, aggregation and compressions boolean.
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.1
  */
-public interface WuicResource extends Serializable {
-    
-    /**
-     * <p>
-     * Opens and returns an {@code InputStream} pointing to the resource. 
-     * </p>
-     * 
-     * @return the opened input stream
-     * @throws IOException if an I/O error occurs
-     */
-    InputStream openStream() throws IOException;
-    
+public interface WuicResource extends Serializable, InputStreamOpener {
+
     /**
      * <p>
      * Returns the file type of this resource.
@@ -92,4 +83,76 @@ public interface WuicResource extends Serializable {
      * @return the root directory
      */
     String getBaseDirectory();
+
+    /**
+     * <p>
+     * Indicates if this resource could be binary compressible.
+     * </p>
+     *
+     * @return {@code true} if compressible, {@code false} otherwise
+     */
+    Boolean isBinaryCompressible();
+
+    /**
+     * <p>
+     * Indicates if this resource is text compressible.
+     * </p>
+     *
+     * @return {@code true} if compressible, {@code false} otherwise
+     */
+    Boolean isTextCompressible();
+
+    /**
+     * <p>
+     * Indicates if this resource is cacheable.
+     * </p>
+     *
+     * @return {@code true} if cacheable, {@code false} otherwise
+     */
+    Boolean isCacheable();
+
+    /**
+     * <p>
+     * Indicates if the resource is aggregatable with other resources.
+     * </p>
+     *
+     * @return {@code true} if aggregatable, {@code false} otherwise
+     */
+    Boolean isAggregatable();
+
+    /**
+     * <p>
+     * Sets if this resource is binary compressible.
+     * </p>
+     *
+     * @param tc {@code true} if compressible, {@code false} otherwise
+     */
+    void setBinaryCompressible(Boolean tc);
+
+    /**
+     * <p>
+     * Sets if this resource is text compressible.
+     * </p>
+     *
+     * @param tc {@code true} if compressible, {@code false} otherwise
+     */
+    void setTextCompressible(Boolean tc);
+
+    /**
+     * <p>
+     * Sets if this resource is cacheable.
+     * </p>
+     *
+     * @param c {@code true} if cacheable, {@code false} otherwise
+     */
+    void setCacheable(Boolean c);
+
+    /**
+     * <p>
+     * Sets if the resource is aggregatable with other resources.
+     * </p>
+     *
+     * @param a {@code true} if aggregatable, {@code false} otherwise
+     */
+    void setAggregatable(Boolean a);
 }

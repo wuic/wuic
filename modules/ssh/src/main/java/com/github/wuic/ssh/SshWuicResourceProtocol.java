@@ -41,7 +41,7 @@ package com.github.wuic.ssh;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.resource.impl.InputStreamWuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
 
 import com.jcraft.jsch.Channel;
@@ -71,7 +71,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public class SshWuicResourceProtocol implements WuicResourceProtocol {
@@ -179,11 +179,6 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
         // Open channel
         final Channel channel = session.openChannel("exec");
         ((ChannelExec) channel).setCommand(command);
-
-        // get I/O streams for remote scp
-        final OutputStream out = channel.getOutputStream();
-        final InputStream in = channel.getInputStream();
-
         channel.connect();
     }
 
@@ -212,7 +207,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             Thread.sleep(timeToSleepForExec);
 
             // Now read generate file
-            final BufferedReader br = new BufferedReader(new InputStreamReader(loadFile(file)));
+            final BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(loadFile(file))));
 
             // Each line is a candidate resource
             String line;
@@ -271,9 +266,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             in.read(buf, i, 1);
 
             if (buf[i] == END_OF_FILE_NAME) {
-                if (log.isDebugEnabled()) {
-                    log.debug("File : " + new String(buf, 0, i));
-                }
+                log.debug("File : {}", new String(buf, 0, i));
 
                 break;
             }
@@ -326,13 +319,13 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
      * </p>
      *
      * @param path the path
-     * @return a stream pointing to the memory byte array
+     * @return the memory byte array
      * @throws JSchException if we can't open the channel
      * @throws IOException if we can't read the file
      */
-    private InputStream loadFile(final String path) throws JSchException, IOException {
+    private byte[] loadFile(final String path) throws JSchException, IOException {
         // exec 'scp -f rfile' remotely
-        final String command = new StringBuilder("scp -r -f \"").append(path).append("\"").toString();
+        final String command = new StringBuilder().append("scp -r -f \"").append(path).append("\"").toString();
 
         // Open channel and create command
         final Channel channel = session.openChannel("exec");
@@ -358,7 +351,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
                 readFileData(buf, in, out, inMemory);
             }
 
-            return new ByteArrayInputStream(inMemory.toByteArray());
+            return inMemory.toByteArray();
         } finally {
             channel.disconnect();
         }
@@ -423,7 +416,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
         try {
             connect();
-            return new InputStreamWuicResource(loadFile(realPath), realPath, type);
+            return new ByteArrayWuicResource(loadFile(realPath), realPath, type);
         } catch (JSchException je) {
             throw new IOException("Can't load the file remotely with SCP", je);
         }

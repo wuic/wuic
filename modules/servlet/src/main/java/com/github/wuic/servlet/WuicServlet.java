@@ -41,6 +41,7 @@ package com.github.wuic.servlet;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -51,6 +52,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -90,6 +93,11 @@ public class WuicServlet extends HttpServlet {
     private static String servletMapping;
 
     /**
+     * The expected pattern in request URI's.
+     */
+    private Pattern urlPattern;
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -105,6 +113,21 @@ public class WuicServlet extends HttpServlet {
         final WuicFacade facade = WuicFacade.newInstance(wuicCp.toString());
         config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
 
+        // Build expected URL pattern
+        final StringBuilder patternBuilder = new StringBuilder();
+
+        // Starts with servlet mapping
+        patternBuilder.append(Pattern.quote(servletMapping()));
+
+        if (!servletMapping().endsWith("/")) {
+            patternBuilder.append("/");
+        }
+
+        // Followed by the group ID a slash and finally the page name
+        patternBuilder.append("([^/]*)/(.*)");
+
+        urlPattern = Pattern.compile(patternBuilder.toString());
+
         super.init(config);
     }
 
@@ -114,37 +137,37 @@ public class WuicServlet extends HttpServlet {
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        final int lastOffset = request.getRequestURI().lastIndexOf('/');
-        final String urlWithoutLast = request.getRequestURI().substring(0, lastOffset);
-        final String pageName = urlWithoutLast.substring(urlWithoutLast.lastIndexOf('/') + 1);
+        final Matcher matcher = urlPattern.matcher(request.getRequestURI());
 
-        if (pageName != null) {
-            getPage(pageName, request, response);
+        if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
+            throw new ServletException("URL pattern. Expected [groupId]/[resourceName]");
+        } else {
+            getResource(matcher.group(1), matcher.group(NumberUtils.TWO), response);
         }
     }
 
     /**
      * <p>
-     * Gets a page.
+     * Gets a resource.
      * </p>
      *
-     * @param pageName the page name
-     * @param request the request
+     * @param groupId the group ID
+     * @param resourceName the resource name
      * @param response the response
      * @throws IOException if an I/O error occurs
      */
-    private void getPage(final String pageName, final HttpServletRequest request,
-                         final HttpServletResponse response) throws IOException {
-        final String fileName = request.getParameter("file");
-
+    private void getResource(final String groupId, final String resourceName, final HttpServletResponse response)
+            throws IOException {
         // Get the files group
-        final List<WuicResource> files = getWuicFacade().getGroup(pageName);
+        final List<WuicResource> files = getWuicFacade().getGroup(groupId);
         InputStream is = null;
 
+        // Iterates the resources to find the requested element
         for (WuicResource resource : files) {
             response.setContentType(resource.getFileType().getMimeType());
 
-            if (fileName == null || resource.getName().equals(fileName)) {
+            // Resource found : write the stream and return
+            if (resource.getName().equals(resourceName)) {
                 try {
                     is = resource.openStream();
                     IOUtils.copyStream(is, response.getOutputStream());
@@ -154,8 +177,12 @@ public class WuicServlet extends HttpServlet {
                         is.close();
                     }
                 }
+
+                return;
             }
         }
+
+        throw new IOException("Resource '" + resourceName + "' not found for group '" + groupId + "'");
     }
 
     /**

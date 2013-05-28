@@ -63,20 +63,48 @@ public abstract class AbstractWuicResource implements WuicResource {
     private String fileName;
 
     /**
+     * Text compressible or not.
+     */
+    private Boolean textCompressible;
+
+    /**
+     * Binary compressible or not.
+     */
+    private Boolean binaryCompressible;
+
+    /**
+     * Cacheable or not.
+     */
+    private Boolean cacheable;
+
+    /**
+     * Aggregatable or not.
+     */
+    private Boolean aggregatable;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
      *
      * @param name the resource's name
      * @param ft the resource's type
+     * @param bc binary compressible or not
+     * @param tc text compressible or not
+     * @param c cacheable or not
+     * @param a aggregatable or not
      */
-    protected AbstractWuicResource(final String name, final FileType ft) {
+    protected AbstractWuicResource(final String name, final FileType ft, final Boolean bc, final Boolean tc, final Boolean c, final Boolean a) {
         if (ft == null) {
             throw new IllegalArgumentException("You can't create a resource with a null FileType");
         }
 
         fileType = ft;
         fileName = name;
+        binaryCompressible = bc;
+        textCompressible = tc;
+        cacheable = c;
+        aggregatable = a;
     }
 
     /**
@@ -95,11 +123,93 @@ public abstract class AbstractWuicResource implements WuicResource {
         return fileName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isBinaryCompressible() {
+        return binaryCompressible;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isTextCompressible() {
+        return textCompressible;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isCacheable() {
+        return cacheable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isAggregatable() {
+        return aggregatable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setBinaryCompressible(final Boolean bc) {
+        binaryCompressible = bc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTextCompressible(final Boolean tc) {
+        textCompressible = tc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setCacheable(final Boolean c) {
+        cacheable = c;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setAggregatable(final Boolean a) {
+        aggregatable = a;
+    }
+
 
     /**
      * {@inheritDoc}
      */
     public String toString() {
         return getClass().getSimpleName() + "[" + fileName + "]";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(final Object other) {
+        if (other instanceof AbstractWuicResource) {
+            return ((AbstractWuicResource) other).fileName.equals(fileName);
+        } else {
+            return Boolean.FALSE;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return fileName.hashCode();
     }
 }

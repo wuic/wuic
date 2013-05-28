@@ -45,12 +45,11 @@ import com.amazonaws.services.s3.model.*;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.resource.impl.InputStreamWuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class S3WuicResourceProtocol implements WuicResourceProtocol {
@@ -128,7 +127,8 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
      */
     private List<String> recursiveSearch(final String path, final Pattern pattern) throws IOException {
 
-        ObjectListing objectListing = null;
+        ObjectListing objectListing;
+
         try {
             final String finalSuffix =  path.equals("") ? "" : "/";
             objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(path + finalSuffix).withDelimiter("/"));
@@ -164,7 +164,8 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
         // Try to get S3 object
-        S3Object s3Object = null;
+        S3Object s3Object;
+
         try {
             s3Object = amazonS3Client.getObject(bucketName, realPath);
         } catch (AmazonServiceException ase) {
@@ -183,8 +184,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
             IOUtils.copyStream(s3ObjectInputStream, baos);
 
             // Create resource
-            final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-            return new InputStreamWuicResource(bais, realPath, type);
+            return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
         } finally {
             // Close S3Object stream
             if(s3ObjectInputStream != null) {

@@ -129,6 +129,9 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
             // Init default property
             supportedProperties = new HashMap<String, Object>();
             supportedProperties.put(ApplicationConfig.CLASSPATH_BASE_PATH, "/");
+
+            setWuicProtocol(new ClasspathWuicResourceProtocol(
+                    (String) supportedProperties.get(ApplicationConfig.CLASSPATH_BASE_PATH)));
         }
 
         /**

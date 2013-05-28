@@ -85,7 +85,7 @@ import org.xml.sax.SAXException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
@@ -225,7 +225,7 @@ public final class WuicXmlLoader {
      * @throws IOException if files group can't be loaded
      */
     private String createGeneratedGroupId(final FilesGroup group) throws IOException {
-        return createGeneratedGroupId(group.getFiles());
+        return createGeneratedGroupId(group.getPaths());
     }
     
     /**
@@ -445,7 +445,7 @@ public final class WuicXmlLoader {
 
             // Get the resource factory builder and create the files group
             final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
-            final FilesGroup filesGroup = new FilesGroup(config, files, srp.build());
+            final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
             
             // Particular case : sprite needs an image group
             if (config instanceof SpriteConfiguration) {

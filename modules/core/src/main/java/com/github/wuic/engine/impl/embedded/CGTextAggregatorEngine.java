@@ -61,7 +61,7 @@ import com.github.wuic.engine.EngineRequest;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends Engine {
@@ -94,7 +94,7 @@ public class CGTextAggregatorEngine extends Engine {
             return request.getResources();
         }
         
-        // Determine the directory where to generate the file
+        // In memory buffer for the aggregated resources
         final String fileName = "aggregate" + configuration.getFileType().getExtensions()[0];
         final ByteArrayOutputStream target = new ByteArrayOutputStream();
         
@@ -102,37 +102,42 @@ public class CGTextAggregatorEngine extends Engine {
         InputStream is = null;
         FileType fileType = null;
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
-        
+
+        final List<WuicResource> retval = new ArrayList<WuicResource>();
+
         // Aggregate each resource
         for (WuicResource resource : request.getResources()) {
-            try {
-                fileType = resource.getFileType();
-                is = resource.openStream();
-                int offset = -1;
-                
-                // Add all content in the global output stream
-                while ((offset = is.read(buffer)) > 0) {
-                    target.write(buffer, 0, offset);
+            // Resource must be aggregatable
+            if (resource.isAggregatable()) {
+                try {
+                    fileType = resource.getFileType();
+                    is = resource.openStream();
+                    int offset = -1;
+
+                    // Add all content in the global output stream
+                    while ((offset = is.read(buffer)) > 0) {
+                        target.write(buffer, 0, offset);
+                    }
+
+                    // Begin content file writing on a new line when no compression is configured
+                    if (!configuration.compress()) {
+                        buffer[0] = '\n';
+                        target.write(buffer, 0, 1);
+                    }
+                } finally {
+                    if (is != null) {
+                        is.close();
+                    }
                 }
-                
-                // Begin content file writing on a new line when no compression is configured
-                if (!configuration.compress()) {
-                    buffer[0] = '\n';
-                    target.write(buffer, 0, 1);
-                }
-            } finally {
-                if (is != null) {
-                    is.close();
-                }
+            } else {
+                retval.add(resource);
             }
         }
 
-        // Return a map with only one item
-        final List<WuicResource> retval = new ArrayList<WuicResource>(1);
         retval.add(new ByteArrayWuicResource(target.toByteArray(), fileName, fileType));
 
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroupId()));
+            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
         } else {
             return retval;
         }

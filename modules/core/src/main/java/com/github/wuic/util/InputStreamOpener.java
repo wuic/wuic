@@ -35,48 +35,29 @@
  * licenses."
  */
 
-
 package com.github.wuic.util;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>
- * Utility class providing helper constants and static methods around numbers.
+ * Represents an object which can open an {@link InputStream}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.3
  */
-public final class NumberUtils {
-
-    /**
-     * Two. Use this constant to evict checkstyle issue.
-     */
-    public static final int TWO = 2;
-
-    /**
-     * One thousand. Use this constant to evict checkstyle issue.
-     */
-    public static final int ONE_THOUSAND = 1000;
+public interface InputStreamOpener {
 
     /**
      * <p>
-     * Prevent instantiation of this class which provides only static methods.
-     * </p>
-     */
-    private NumberUtils() {
-
-    }
-
-    /**
-     * <p>
-     * Checks if the given {@code String} if a number (i.e eventually begins with '-' symbol and followed by digits).
+     * Opens and returns an {@code InputStream} pointing to the resource.
      * </p>
      *
-     * @param candidate the {@code String} to test
-     * @return {@code true} if the {@code String} is a number, {@code false} otherwise
+     * @return the opened input stream
+     * @throws IOException if an I/O error occurs
      */
-    public static Boolean isNumber(final String candidate) {
-        return candidate.replaceAll("-?\\d+","").length() == 0;
-    }
+    InputStream openStream() throws IOException;
 }

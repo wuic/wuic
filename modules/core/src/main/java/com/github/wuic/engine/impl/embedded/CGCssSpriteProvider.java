@@ -76,7 +76,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append(".wuic_");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(new StringBuilder(url).append("/?file=").append(image).toString());
+            cssBuilder.append(new StringBuilder(url).append("/").append(image).toString());
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");

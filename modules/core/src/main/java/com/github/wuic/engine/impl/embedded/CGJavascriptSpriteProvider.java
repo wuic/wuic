@@ -96,7 +96,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\", url : \"");
             jsBuilder.append(url);
-            jsBuilder.append("/?file=");
+            jsBuilder.append("/");
             jsBuilder.append(image);
             jsBuilder.append("\"};");
         }

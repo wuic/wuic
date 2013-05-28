@@ -184,7 +184,7 @@ public final class WuicFacade {
             final Engine engine = factoryBuilder.build().create(fileType);
          
             // Parse the files
-            final List<WuicResource> retval = engine.parse(new EngineRequest(resources, contextPath, id));
+            final List<WuicResource> retval = engine.parse(new EngineRequest(resources, contextPath, group));
 
             log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

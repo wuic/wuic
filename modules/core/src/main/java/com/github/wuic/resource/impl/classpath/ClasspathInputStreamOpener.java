@@ -36,47 +36,60 @@
  */
 
 
-package com.github.wuic.util;
+package com.github.wuic.resource.impl.classpath;
+
+import com.github.wuic.util.InputStreamOpener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>
- * Utility class providing helper constants and static methods around numbers.
+ * An {@link InputStreamOpener} which created stream access to the classpath.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.3
  */
-public final class NumberUtils {
+public class ClasspathInputStreamOpener implements InputStreamOpener {
 
     /**
-     * Two. Use this constant to evict checkstyle issue.
+     * Logger.
      */
-    public static final int TWO = 2;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * One thousand. Use this constant to evict checkstyle issue.
+     * Path of the classpath entry.
      */
-    public static final int ONE_THOUSAND = 1000;
+    private String path;
 
     /**
      * <p>
-     * Prevent instantiation of this class which provides only static methods.
+     * Creates a new instance.
      * </p>
+     *
+     * @param p the classpath entry.
      */
-    private NumberUtils() {
-
+    public ClasspathInputStreamOpener(final String p) {
+        path = p;
     }
 
     /**
-     * <p>
-     * Checks if the given {@code String} if a number (i.e eventually begins with '-' symbol and followed by digits).
-     * </p>
-     *
-     * @param candidate the {@code String} to test
-     * @return {@code true} if the {@code String} is a number, {@code false} otherwise
+     * {@inheritDoc}
      */
-    public static Boolean isNumber(final String candidate) {
-        return candidate.replaceAll("-?\\d+","").length() == 0;
+    @Override
+    public InputStream openStream() throws IOException {
+        final InputStream is = getClass().getResourceAsStream(path);
+
+        log.debug("Looking for {} resource in the classpath", path);
+
+        if (is == null) {
+            throw new IOException(path + " not found in the classpath");
+        }
+
+        return is;
     }
 }

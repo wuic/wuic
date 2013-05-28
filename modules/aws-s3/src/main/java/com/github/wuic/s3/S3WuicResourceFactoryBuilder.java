@@ -54,20 +54,10 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class S3WuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
-
-    /**
-     * Supported properties with their default value.
-     */
-    private Map<String, Object> supportedProperties;
-
-    /**
-     * Delegate concrete implementation.
-     */
-    private AbstractWuicResourceFactory delegate;
 
     /**
      * <p>

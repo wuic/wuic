@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,19 +75,19 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
     private URL classPathEntry;
 
     /**
-     * Relative path to classpath root.
+     * Base path to classpath root.
      */
-    private String relativePath;
+    private String basePath;
 
     /**
      * <p>
      * Builds a new instance
      * </p>
      *
-     * @param basePath the base path in classpath
+     * @param bp the base path in classpath
      */
-    public ClasspathWuicResourceProtocol(final String basePath) {
-        relativePath = basePath;
+    public ClasspathWuicResourceProtocol(final String bp) {
+        this.basePath = bp;
         classPathEntry = getClass().getResource(basePath);
 
         if (classPathEntry == null) {
@@ -105,13 +104,15 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
         final List<String> absolutePaths = IOUtils.lookupFileResources(new File(classPathEntry.getFile()), pattern);
         final List<String> retval = new ArrayList<String>(absolutePaths.size());
 
+        log.debug("Listing resources paths matching the pattern : {}", pattern.pattern());
+
         for (String absolutePath : absolutePaths) {
-            if (!absolutePath.startsWith("/")) {
+            if (!absolutePath.startsWith("/") && !"/".equals(basePath)) {
                 absolutePath = "/".concat(absolutePath);
             }
 
             // Need to remove the absolute part of the path to retrieve the resource with getClass().getResourceAsStream(path)
-            retval.add(relativePath + absolutePath.replace(classPathEntry.getFile().replace('\\', '/'), ""));
+            retval.add(absolutePath.replace(classPathEntry.getFile().replace('\\', '/'), ""));
         }
 
         return retval;
@@ -122,17 +123,17 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
-        final String cp = realPath.startsWith("/") ? realPath : "/".concat(realPath);
-        final InputStream is = getClass().getResourceAsStream(cp);
+        final StringBuilder cp = new StringBuilder();
+        cp.append(basePath);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Looking for " + cp + " resource in the classpath");
+        if (!"/".endsWith(basePath) && !realPath.startsWith("/")) {
+            cp.append("/");
+        } else if ("/".endsWith(basePath) && realPath.startsWith("/")) {
+            cp.deleteCharAt(basePath.length() - 1);
         }
 
-        if (is == null) {
-            throw new IOException(cp + " not found in the classpath");
-        }
+        cp.append(realPath);
 
-        return new InputStreamWuicResource(is, realPath, type);
+        return new InputStreamWuicResource(new ClasspathInputStreamOpener(cp.toString()), realPath, type);
     }
 }

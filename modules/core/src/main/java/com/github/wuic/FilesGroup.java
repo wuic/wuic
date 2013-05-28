@@ -48,8 +48,15 @@ import java.util.List;
 
 /**
  * <p>
- * This class represents a set a files associated to their {@link Configuration}.
- * All the files should be in the same type.
+ * This class represents a set of paths associated to their {@link Configuration}.
+ * </p>
+ *
+ * <p>
+ * A path is a relative and abstract location of one to many resources because it could be a regular expression.
+ * </p>
+ *
+ * <p>
+ * All the paths must refer to the same type fo file (CSS, JS, etc).
  * </p>
  * 
  * @author Guillaume DROUET
@@ -64,9 +71,9 @@ public class FilesGroup {
     private Configuration configuration;
     
     /**
-     * The files list.
+     * The paths list.
      */
-    private List<String> files;
+    private List<String> paths;
 
     /**
      * The resource factory.
@@ -79,29 +86,37 @@ public class FilesGroup {
     private List<WuicResource> resources;
 
     /**
+     * The ID identifying this group.
+     */
+    private String id;
+
+    /**
      * <p>
-     * Builds a new {@link FilesGroup}. All the files must be named with an
+     * Builds a new {@link FilesGroup}. All the paths must be named with an
      * extension that matches the {@link FileType}. If it is not the case, then
      * an {@link IllegalArgumentException} will be thrown.
      * </p>
      * 
      * @param config the {@link Configuration}
-     * @param filesList the files
+     * @param pathsList the paths
      * @param theResourceFactory the {@link WuicResourceFactory}
+     * @param groupId the group ID
      * @throws IOException if the resources can be retrieved
      */
     public FilesGroup(final Configuration config,
-            final List<String> filesList,
-            final WuicResourceFactory theResourceFactory)
+            final List<String> pathsList,
+            final WuicResourceFactory theResourceFactory,
+            final String groupId)
             throws IOException {
+        this.id = groupId;
         this.configuration = config;
-        this.files = filesList;
+        this.paths = pathsList;
         this.resourceFactory = theResourceFactory;
         checkFiles();
 
         this.resources = new ArrayList<WuicResource>();
 
-        for (String path : files) {
+        for (String path : paths) {
             resources.addAll(resourceFactory.create(path));
         }
     }
@@ -117,12 +132,12 @@ public class FilesGroup {
      */
     public FilesGroup(final Configuration config,
                       final FilesGroup other) throws IOException {
-        this(config, other.files, other.resourceFactory);
+        this(config, other.paths, other.resourceFactory, other.id);
     }
 
     /**
      * <p>
-     * Checks that the {@link FileType} and the files list of this group are not
+     * Checks that the {@link FileType} and the paths list of this group are not
      * null. If they are, this methods will throw an {@link IllegalArgumentException}.
      * This exception could also be thrown if one file of the list does have a name
      * which ends with one of the possible {@link FileType#extensions extensions}.
@@ -131,12 +146,12 @@ public class FilesGroup {
     private void checkFiles() {
         
         // Non null assertion
-        if (files == null || configuration == null) {
-            throw new IllegalArgumentException("A group must have a non-null files list and a non-null file type");
+        if (paths == null || configuration == null) {
+            throw new IllegalArgumentException("A group must have a non-null paths list and a non-null file type");
         }
         
         // Check the extension of each file
-        for (String file : files) {
+        for (String file : paths) {
             Boolean valid = Boolean.FALSE;
             final FileType type = configuration.getFileType();
             
@@ -152,11 +167,22 @@ public class FilesGroup {
             
             // The file has not one of the possible extension : throw an IAE
             if (!valid) {
-                throw new IllegalArgumentException("Bad extensions for files associated to the FileType " + type);
+                throw new IllegalArgumentException("Bad extensions for paths associated to the FileType " + type);
             }
         }
     }
-    
+
+    /**
+     * <p>
+     * Gets the group's ID.
+     * </p>
+     *
+     * @return the ID
+     */
+    public String getId() {
+        return id;
+    }
+
     /**
      * <p>
      * Gets the {@link Configuration}.
@@ -170,19 +196,19 @@ public class FilesGroup {
 
     /**
      * <p>
-     * Gets the files list.
+     * Gets the paths list.
      * </p>
      * 
-     * @return the files
-     * @throws IOException if an error occurs while getting files
+     * @return the paths
+     * @throws IOException if an error occurs while getting paths
      */
-    public List<String> getFiles() throws IOException {
-        if (files.isEmpty()) {
-            return files;
+    public List<String> getPaths() throws IOException {
+        if (paths.isEmpty()) {
+            return paths;
         } else {
             final List<String> retval = new ArrayList<String>();
 
-            for (String path : files) {
+            for (String path : paths) {
                 retval.addAll(resourceFactory.computeRealPaths(path));
             }
 

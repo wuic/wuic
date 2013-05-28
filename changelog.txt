@@ -52,3 +52,8 @@ Not tracked issues :
 
 Breaking changes :
 - You need to explicitly import YUICompressor and EHCache in your pom.xml
+
+##### v0.3.3 #####
+
+Breaking changes :
+- 'file' parameter not supported anymore in URL pattern, use this one instead : /[groupId]/[fileName]

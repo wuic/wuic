@@ -41,7 +41,7 @@ package com.github.wuic.ftp;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.resource.impl.InputStreamWuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -50,10 +50,10 @@ import org.apache.commons.net.ftp.FTPSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class FtpWuicResourceProtocol implements WuicResourceProtocol {
@@ -231,8 +231,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
         }
 
         // Create resource
-        final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        return new InputStreamWuicResource(bais, realPath, type);
+        return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
     }
 
     /**

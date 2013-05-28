@@ -70,7 +70,7 @@ public class HttpWuicResource extends AbstractWuicResource {
      * @param fileType the file type
      */
     public HttpWuicResource(final String name, final URL url, final FileType fileType) {
-        super(name, fileType);
+        super(name, fileType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         resourceUrl = url;
     }
 

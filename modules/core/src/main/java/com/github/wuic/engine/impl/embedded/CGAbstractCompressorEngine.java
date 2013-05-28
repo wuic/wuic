@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public abstract class CGAbstractCompressorEngine extends Engine {
@@ -102,31 +102,41 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             
             // Compress each file
             for (WuicResource resource : request.getResources()) {
-                
-                // Compression has to be implemented by sub-classes
-                InputStream is = null;
-                
-                try {
-                    log.debug("Compressing " + resource.getName());
-                    
-                    // Source
-                    is = resource.openStream();
-                    
-                    // Where compression result will be written
-                    final ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    
-                    // Do compression
-                    compress(is, os);
-                    
-                    // Now create resource
-                    final byte[] bytes = os.toByteArray();
-                    final String name = resource.getName();
-                    final FileType fileType = resource.getFileType();
-                    retval.add(new ByteArrayWuicResource(bytes, name, fileType));
-                } finally {
-                    if (is != null) {
-                        is.close();
+
+                if (resource.isTextCompressible()) {
+                    // Compression has to be implemented by sub-classes
+                    InputStream is = null;
+
+                    try {
+                        log.debug("Compressing {}", resource.getName());
+
+                        // Source
+                        is = resource.openStream();
+
+                        // Where compression result will be written
+                        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+                        // Do compression
+                        compress(is, os);
+
+                        // Now create resource
+                        final byte[] bytes = os.toByteArray();
+                        final String name = resource.getName();
+                        final FileType fileType = resource.getFileType();
+                        final WuicResource res = new ByteArrayWuicResource(bytes, name, fileType);
+                        res.setAggregatable(resource.isAggregatable());
+                        res.setBinaryCompressible(resource.isBinaryCompressible());
+                        res.setTextCompressible(resource.isTextCompressible());
+                        res.setCacheable(resource.isCacheable());
+
+                        retval.add(res);
+                    } finally {
+                        if (is != null) {
+                            is.close();
+                        }
                     }
+                } else {
+                    retval.add(resource);
                 }
             }
         } else {
@@ -134,7 +144,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
         }
         
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroupId()));
+            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
         } else {
             return retval;
         }

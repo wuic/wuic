@@ -53,7 +53,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    //@Test
+    @Test
     public void javascriptTest() throws IOException {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("");
@@ -95,7 +95,7 @@ public class CoreTest extends WuicTest {
      * 
      * @throws IOException in I/O error case
      */
-    //@Test
+    @Test
     public void cssTest() throws IOException {
         // TODO : WUIC currently supports only one configuration per FileType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
@@ -103,7 +103,7 @@ public class CoreTest extends WuicTest {
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        final List<WuicResource> group = facade.getGroup("css-image");
+        List<WuicResource> group = facade.getGroup("css-image");
         int i = 0;
 
         for (WuicResource res : group) {
@@ -112,6 +112,16 @@ public class CoreTest extends WuicTest {
             is.close();
             writeToDisk(res, i++ + "sprite.css");
         }
+
+        group = facade.getGroup("css-scripts");
+        i = 0;
+
+        for (WuicResource res : group) {
+            is = res.openStream();
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
+            is.close();
+            writeToDisk(res, i++ + "css-script.css");
+        }
     }
 
     /**
@@ -119,7 +129,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    //@Test
     public void jsSpriteTest() throws IOException {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("");
@@ -144,7 +154,7 @@ public class CoreTest extends WuicTest {
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
                 log.info(content);
                 final int start = content.indexOf("url : \"") + 7;
-                final int end = content.indexOf("/?file=aggregation.png");
+                final int end = content.indexOf("/aggregation.png");
                 final String imageGroup = content.substring(start, end);
                 group = facade.getGroup(imageGroup);
 
@@ -160,7 +170,7 @@ public class CoreTest extends WuicTest {
     /**
      * Be sure that the {@code Map} used internally keep the order of the keys.
      */
-    @Test
+    //@Test
     public void orderingKeyMap() {
         final Map<String, String> map = CollectionUtils.orderedKeyMap();
         

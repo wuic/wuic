@@ -38,17 +38,18 @@
 package com.github.wuic.resource.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.util.InputStreamOpener;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
  * <p>
- * Represents a resource on the file system provided or to be managed by the WUIC framework.
+ * Represents a resource based on an {@link InputStreamOpener} provided or to be managed by the WUIC framework.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3
  */
 public class InputStreamWuicResource extends AbstractWuicResource {
@@ -59,22 +60,22 @@ public class InputStreamWuicResource extends AbstractWuicResource {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The input stream.
+     * The input stream opener.
      */
-    private InputStream inputStream;
+    private InputStreamOpener inputStreamOpener;
 
     /**
      * <p>
      * Creates a new {@link InputStreamWuicResource} based on the given {@code InputStream} object.
      * </p>
      *
-     * @param is the input stream (should ne opened)
+     * @param opener the input stream opener
      * @param name the name of the associated resource
      * @param ft the resource's type
      */
-    public InputStreamWuicResource(final InputStream is, final String name, final FileType ft) {
-        super(name, ft);
-        inputStream = is;
+    public InputStreamWuicResource(final InputStreamOpener opener, final String name, final FileType ft) {
+        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        inputStreamOpener = opener;
     }
 
     /**
@@ -82,7 +83,7 @@ public class InputStreamWuicResource extends AbstractWuicResource {
      */
     @Override
     public InputStream openStream() throws IOException {
-        return inputStream;
+        return inputStreamOpener.openStream();
     }
 
     /**

@@ -74,7 +74,7 @@ public class ByteArrayWuicResource extends AbstractWuicResource {
      * @param bytes the byte array
      */
     public ByteArrayWuicResource(final byte[] bytes, final String name, final FileType ft) {
-        super(name, ft);
+        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
     

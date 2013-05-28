@@ -38,8 +38,10 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.FilesGroup;
 import com.github.wuic.resource.WuicResource;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -54,7 +56,7 @@ import java.util.List;
  *
  * @author Guillaume DROUET
  * @since 0.3.0
- * @version 1.0
+ * @version 1.1
  */
 public class EngineRequest {
 
@@ -69,23 +71,38 @@ public class EngineRequest {
     private String contextPath;
 
     /**
-     * The group ID the resources belong to.
+     * The group.
      */
-    private String groupId;
+    private FilesGroup group;
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some resources specific and a specified context path to be used.
+     * </p>
+     *
+     * @param res the resources to be parsed
+     * @param cp the context root where the generated resources should be exposed
+     * @param g the group
+     */
+    public EngineRequest(final List<WuicResource> res, final String cp, final FilesGroup g) {
+        resources = res;
+        contextPath = cp;
+        group = g;
+    }
 
     /**
      * <p>
      * Builds a new {@code EngineRequest} with some resources and a specified context path to be used.
      * </p>
      *
-     * @param res the resources to be parsed
      * @param cp the context root where the generated resources should be exposed
-     * @param gId the group ID
+     * @param g the group
+     * @throws IOException if an I/O error occurs while getting the resources from the group
      */
-    public EngineRequest(final List<WuicResource> res, final String cp, final String gId) {
-        resources = res;
+    public EngineRequest(final String cp, final FilesGroup g) throws IOException {
+        resources = g.getResources();
         contextPath = cp;
-        groupId = gId;
+        group = g;
     }
 
     /**
@@ -112,12 +129,12 @@ public class EngineRequest {
 
     /**
      * <p>
-     * Returns the group ID.
+     * Returns the group.
      * </p>
      *
-     * @return the group ID
+     * @return the group
      */
-    public final String getGroupId() {
-        return groupId;
+    public final FilesGroup getGroup() {
+        return group;
     }
 }

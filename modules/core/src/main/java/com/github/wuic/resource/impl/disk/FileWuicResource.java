@@ -75,7 +75,7 @@ public class FileWuicResource extends AbstractWuicResource {
      * @param ft the file type
      */
     public FileWuicResource(final String rootDir, final String name, final FileType ft) {
-        super(name, ft);
+        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         rootDirectory = rootDir;
     }
     

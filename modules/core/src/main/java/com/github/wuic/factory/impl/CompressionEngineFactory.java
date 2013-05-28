@@ -42,6 +42,8 @@ import com.github.wuic.FileType;
 import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.impl.embedded.CGCompositeEngine;
+import com.github.wuic.engine.impl.embedded.CGCssImportInspectorEngine;
 import com.github.wuic.engine.impl.embedded.CGImageCompressorEngine;
 import com.github.wuic.engine.impl.embedded.CGSpriteCompressorEngine;
 import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
@@ -54,7 +56,7 @@ import com.github.wuic.factory.EngineFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class CompressionEngineFactory implements EngineFactory {
@@ -81,7 +83,7 @@ public class CompressionEngineFactory implements EngineFactory {
     public Engine create(final FileType fileType) throws BadConfigurationException {
         switch (fileType) {
             case CSS :
-                return new CssYuiCompressorEngine(configuration);
+                return new CGCompositeEngine(new CGCssImportInspectorEngine(configuration), new CssYuiCompressorEngine(configuration));
                 
             case JAVASCRIPT :
                 return new JavascriptYuiCompressorEngine(configuration);

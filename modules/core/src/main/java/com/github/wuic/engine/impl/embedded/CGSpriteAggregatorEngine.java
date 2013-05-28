@@ -67,7 +67,7 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public class CGSpriteAggregatorEngine extends PackerEngine {
@@ -110,11 +110,6 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
 
         // Generate the sprite file with the URL of the final image
         final StringBuilder url = new StringBuilder(request.getContextPath());
-        //url.append(WuicServlet.servletContext() != null
-        //        ? WuicServlet.servletContext().getContextPath() : "");
-        //url.append(WuicServlet.servletMapping() != null
-        //        ? WuicServlet.servletMapping() : "");
-
         final List<String> names = new ArrayList<String>(request.getResources().size());
         
         for (WuicResource res : request.getResources()) {
@@ -143,7 +138,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                     final BufferedImage buff = ImageIO.read(is);
                     spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
                     
-                    final WuicResource resource = spriteProvider.getSprite(url.toString(), request.getGroupId());
+                    final WuicResource resource = spriteProvider.getSprite(url.toString(), request.getGroup().getId());
                     retval.add(resource);
                 } finally {
                     if (is != null) {
@@ -162,27 +157,8 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
             for (Entry<Region, WuicResource> result : packed.entrySet()) {
                 spriteProvider.addRegion(result.getKey(), result.getValue().getName());
             }
-            
-//            int offset = 0;
-//            
-//            // Merge each image into the final image
-//            for (WuicResource file : files) {
-//                InputStream is = null;
-//                
-//                try {
-//                    is = file.openStream();
-//                    final BufferedImage buff = ImageIO.read(is);
-//                    spriteProvider.addRegion(new Region(offset, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
-//                    
-//                    offset += buff.getWidth();
-//                } finally {
-//                    if (is != null) {
-//                        is.close();
-//                    }
-//                }
-//            }
 
-            return Arrays.asList(spriteProvider.getSprite(url.toString(), request.getGroupId()));
+            return Arrays.asList(spriteProvider.getSprite(url.toString(), request.getGroup().getId()));
         }
     }
 

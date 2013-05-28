@@ -104,7 +104,7 @@ public class EhCacheEngine extends Engine {
         List<WuicResource> retval = null;
 
         if (configuration.cache()) {
-            final String key = request.getGroupId();
+            final String key = request.getGroup().getId();
             final Element value = getConfiguration().getCache().get(key);
 
             // Resources exist in cache, returns them
@@ -118,16 +118,18 @@ public class EhCacheEngine extends Engine {
                 InputStream is = null;
 
                 for (WuicResource resource : resources) {
-                    try {
-                        is = resource.openStream();
-                        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-                        IOUtils.copyStream(is, os);
-                        final byte[] bytes = os.toByteArray();
-                        toCache.add(new ByteArrayWuicResource(bytes, resource.getName(),
-                                resource.getFileType()));
-                    } finally {
-                        if (is != null) {
-                            is.close();
+                    if (resource.isCacheable()) {
+                        try {
+                            is = resource.openStream();
+                            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                            IOUtils.copyStream(is, os);
+                            final byte[] bytes = os.toByteArray();
+                            toCache.add(new ByteArrayWuicResource(bytes, resource.getName(),
+                                    resource.getFileType()));
+                        } finally {
+                            if (is != null) {
+                                is.close();
+                            }
                         }
                     }
                 }

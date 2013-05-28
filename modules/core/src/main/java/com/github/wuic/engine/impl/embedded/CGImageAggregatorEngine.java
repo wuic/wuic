@@ -73,7 +73,7 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public class CGImageAggregatorEngine extends PackerEngine {
@@ -116,7 +116,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
         /*
          * Do nothing if the configuration says that no aggregation should be done
          */
-        if (!works()) {
+        if (!works() || request.getResources().size() <= 1) {
             return request.getResources();
         } else {
             final Map<Region, WuicResource> packed = pack(request.getResources());

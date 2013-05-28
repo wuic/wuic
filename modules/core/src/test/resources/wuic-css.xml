@@ -3,11 +3,19 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
     <resource-factory-builders>
-        <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+        <resource-factory-builder id="cssSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder">
+            <properties>
+                <property key="c.g.wuic.classpathBasePath">/css</property>
+            </properties>
+        </resource-factory-builder>
     </resource-factory-builders>
     <groups>
-        <group id="css-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
+        <group id="css-image" configuration="sprite-image-png" default-builder="imgSourceRootProvider">
             <file>images/.*.png</file>
+        </group>
+        <group id="css-scripts" configuration="yuicompressor-css" default-builder="cssSourceRootProvider">
+            <file>jquery.ui.all.css</file>
         </group>
     </groups>
     <configurations>
@@ -16,6 +24,12 @@
             <aggregate>true</aggregate>
             <charset>UTF-8</charset>
             <sprite-provider>com.github.wuic.engine.impl.embedded.CGCssSpriteProvider</sprite-provider>
+        </configuration>
+        <configuration id="yuicompressor-css" type="CSS">
+            <aggregate>true</aggregate>
+            <charset>UTF-8</charset>
+            <compress>true</compress>
+            <yuiLineBreakPos>-1</yuiLineBreakPos>
         </configuration>
     </configurations>
 </wuic>

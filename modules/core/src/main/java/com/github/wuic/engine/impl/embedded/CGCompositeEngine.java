@@ -36,47 +36,78 @@
  */
 
 
-package com.github.wuic.util;
+package com.github.wuic.engine.impl.embedded;
+
+import com.github.wuic.configuration.Configuration;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.resource.WuicResource;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * <p>
- * Utility class providing helper constants and static methods around numbers.
+ * Simple composition of engines.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.3
  */
-public final class NumberUtils {
+public class CGCompositeEngine extends Engine {
 
     /**
-     * Two. Use this constant to evict checkstyle issue.
+     * The engines of this composition.
      */
-    public static final int TWO = 2;
-
-    /**
-     * One thousand. Use this constant to evict checkstyle issue.
-     */
-    public static final int ONE_THOUSAND = 1000;
+    private Engine[] engines;
 
     /**
      * <p>
-     * Prevent instantiation of this class which provides only static methods.
+     * Creates a new instance.
      * </p>
+     *
+     * @param e the non-null and non-empty array of engines (should share the same configuration)
      */
-    private NumberUtils() {
+    public CGCompositeEngine(final Engine... e) {
+        if (e == null || e.length == 0) {
+            throw new IllegalArgumentException("A composite engine must be built with a non-null and non-empty array of engines");
+        }
 
+        engines = e;
     }
 
     /**
-     * <p>
-     * Checks if the given {@code String} if a number (i.e eventually begins with '-' symbol and followed by digits).
-     * </p>
-     *
-     * @param candidate the {@code String} to test
-     * @return {@code true} if the {@code String} is a number, {@code false} otherwise
+     * {@inheritDoc}
      */
-    public static Boolean isNumber(final String candidate) {
-        return candidate.replaceAll("-?\\d+","").length() == 0;
+    @Override
+    public List<WuicResource> parse(final EngineRequest request) throws IOException {
+         List<WuicResource> retval = request.getResources();
+
+        for (Engine engine : engines) {
+            retval = engine.parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+        }
+
+        if (getNext() != null) {
+            retval = getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+        }
+
+        return retval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Configuration getConfiguration() {
+        return engines[0].getConfiguration();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return engines[0].works();
     }
 }
