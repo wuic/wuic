@@ -248,6 +248,10 @@
         <sonar.version>3.1</sonar.version>
 
         <!-- dependencies libraries -->
+        <google-api-services-storage.version>v1beta2-rev3-1.15.0-rc</google-api-services-storage.version>
+        <google-http-client.version>1.15.0-rc</google-http-client.version>
+        <google-http-client-jackson2.version>1.13.1-beta</google-http-client-jackson2.version>
+        <google-collections.version>1.0-rc5</google-collections.version>
         <aws-java-sdk.version>1.4.3</aws-java-sdk.version>
         <jsch-version>0.1.48</jsch-version>
         <sshd-version>0.8.0</sshd-version>

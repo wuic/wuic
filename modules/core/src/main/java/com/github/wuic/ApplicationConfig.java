@@ -208,4 +208,48 @@ public interface ApplicationConfig {
      */
     String S3_PATH = "c.g.wuic.s3Path";
 
+    /////////////////////////////////////////////////
+    ////// GStorageWuicResourceFactory properties ///////
+    /////////////////////////////////////////////////
+
+    /**
+     * The Google Storage Bucket name.
+     * <p>
+     * You can set in your Google Cloud Console
+     * https://cloud.google.com/console AWS Bucket storage name.
+     * </p>
+     */
+    String GS_BUCKET = "c.g.wuic.gStorageBucket";
+
+    /**
+     * The Google Client ID.
+     * <p>
+     * The Google Cloud API client id, you can generate a new key on this page :
+     * https://code.google.com/apis/console/
+     * - Go on : API Access > "Create another client ID..."
+     * - Installed application type : select "Service account"
+     * - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com
+     * </p>
+     */
+    String GS_CLIENT_ID = "c.g.wuic.gStorageClientId";
+
+    /**
+     * The Google Storage path.
+     * <p>
+     * The Google Storage path for search resources without bucket name, example :
+     * empty : search in root and sub directories
+     * wuic : search in "wuic/*"
+     * wuic/test : search in "wuic/test/*"
+     * </p>
+     */
+    String GS_PATH = "c.g.wuic.gStoragePath";
+
+    /**
+     * Key : c.g.wuic.gPrivateKeyPath
+     * You can generate a new key file on this page : https://code.google.com/apis/console/
+     * - Go on : API Access > "Create another client ID..."
+     * - Installed application type : select "Service account"
+     * - Download key file or Generate new key
+     */
+    final String GS_PRIVATE_KEY_PATH = "c.g.wuic.gPrivateKeyPath";
 }
