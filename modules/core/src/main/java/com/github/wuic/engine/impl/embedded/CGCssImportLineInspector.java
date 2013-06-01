@@ -38,8 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.YuiCssConfiguration;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,15 +48,15 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * This engine inspects CSS files to extract resources referenced with @import statement. Then it adds those resources
- * into the engine's response to keep their availability.
+ * This class inspects CSS files to extract resources referenced with @import statement to process it. Then it adapts
+ * the path of those processed resources to be accessible when exposed to the browser through WUIC uri
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.3
  */
-public class CGCssImportInspectorEngine extends CGAbstractTextInspectorEngine {
+public class CGCssImportLineInspector implements LineInspector {
 
     /**
      * Finds the URL within CSS script. The pattern describes a string :
@@ -78,86 +77,10 @@ public class CGCssImportInspectorEngine extends CGAbstractTextInspectorEngine {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * <p>
-     * Builds a new instance. Throws an {@code IllegalArgumentException} if the given parameter is not a {@link YuiCssConfiguration}.
-     * </p>
-     *
-     * @param config the configuration
-     */
-    public CGCssImportInspectorEngine(final Configuration config) {
-        super(config);
-
-        if (!(config instanceof YuiCssConfiguration)) {
-            final String message = config + " must be an instance of " + YuiCssConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-    @Override
-    protected String inspectLine(final String line,
-                                 final String resourceLocation,
-                                 final WuicResource resource,
-                                 final EngineRequest request,
-                                 final List<WuicResource> extracted,
-                                 final int depth)
-        throws IOException {
-
-        // Use a builder to transform the line
-        final StringBuffer retval = new StringBuffer();
-
-        // Looking for import statements
-        final Matcher matcher = CSS_IMPORT_PATTERN.matcher(line);
-
-        while (matcher.find()) {
-            final String referencedPath = matcher.group(NumberUtils.TWO);
-            log.info("@import statement found for resource {}", referencedPath);
-
-            // Extract the resource
-            final String resourceName = resourceLocation + referencedPath;
-            List<WuicResource> res = request.getGroup().getResourceFactory().create(resourceName);
-
-            // Replace with the resource name
-            final StringBuilder sb = new StringBuilder();
-            sb.append("@import url('");
-
-            // Resolve relative path
-            for (int i = 0; i < depth; i++) {
-                sb.append("../");
-            }
-
-            sb.append(resourceName);
-            sb.append("');");
-
-            matcher.appendReplacement(retval, sb.toString());
-
-            // Process resource
-            if (getNext() != null) {
-                res = getNext().parse(new EngineRequest(res, request.getContextPath(), request.getGroup()));
-            }
-
-            // Add the resource and inspect it recursively
-            for (WuicResource r : res) {
-                // Evict aggregation for extracted values
-                final WuicResource inspected = inspect(r, request, extracted, depth + resourceName.split("/").length - 1);
-                inspected.setAggregatable(Boolean.FALSE);
-                extracted.remove(inspected);
-                extracted.add(inspected);
-            }
-        }
-
-        matcher.appendTail(retval);
-
-        return retval.toString();
-    */
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    protected Pattern getPattern() {
+    public Pattern getPattern() {
         return CSS_IMPORT_PATTERN;
     }
 
@@ -165,10 +88,10 @@ public class CGCssImportInspectorEngine extends CGAbstractTextInspectorEngine {
      * {@inheritDoc}
      */
     @Override
-    protected String appendTransformation(final Matcher matcher,
-                                          final StringBuilder replacement,
-                                          final int depth,
-                                          final String resourceLocation) {
+    public String appendTransformation(final Matcher matcher,
+                                       final StringBuilder replacement,
+                                       final int depth,
+                                       final String resourceLocation) {
 
         final String referencedPath = matcher.group(NumberUtils.TWO);
         log.info("@import statement found for resource {}", referencedPath);

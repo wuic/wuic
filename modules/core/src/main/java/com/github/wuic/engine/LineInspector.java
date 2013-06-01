@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,64 +36,46 @@
  */
 
 
-package com.github.wuic.factory.impl;
+package com.github.wuic.engine;
 
-import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.impl.embedded.*;
-import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
-import com.github.wuic.engine.impl.yuicompressor.JavascriptYuiCompressorEngine;
-import com.github.wuic.factory.EngineFactory;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
- * This engine class is a factory helping to create compression instances.
+ * Represents an object providing replacement functionality inside a line for a group of character matching a particular
+ * pattern.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.1.0
+ * @version 1.0
+ * @since 0.3.3
  */
-public class CompressionEngineFactory implements EngineFactory {
+public interface LineInspector {
 
     /**
-     * The configuration.
+     * <p>
+     * Gets the pattern to find text to be replaced inside the lines.
+     * </p>
+     *
+     * @return the pattern to use
      */
-    private Configuration configuration;
-    
+    Pattern getPattern();
+
     /**
      * <p>
-     * Builds an {@link CompressionEngineFactory}.
+     * Computes the replacement to be made inside the text for the given {@code Matcher} which its {@code find()}
+     * method as just been called.
      * </p>
-     * 
-     * @param config the {@link Configuration} to use
+     *
+     * @param matcher the matcher which provides found text thanks to its {@code group()} method.
+     * @param replacement the text which will replace the matching text
+     * @param depth of the path starting at the context path to the path the resource will be loaded
+     * @param resourceLocation the location of the current resource
+     * @return the resource name that was referenced in the macthing text
      */
-    public CompressionEngineFactory(final Configuration config) {
-        configuration = config;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Engine create(final FileType fileType) throws BadConfigurationException {
-        switch (fileType) {
-            case CSS :
-                return new CGCompositeEngine(new CGCssInspectorEngine(configuration), new CssYuiCompressorEngine(configuration));
-                
-            case JAVASCRIPT :
-                return new JavascriptYuiCompressorEngine(configuration);
-                
-            case PNG :
-                return new CGImageCompressorEngine(configuration);
-                
-            case SPRITE :
-                return new CGSpriteCompressorEngine(configuration);
-            
-            default :
-                final String message = fileType.toString() + " has no aggregator";
-                throw new IllegalArgumentException(message);
-        }
-    }
+    String appendTransformation(Matcher matcher,
+                                StringBuilder replacement,
+                                int depth,
+                                String resourceLocation);
 }

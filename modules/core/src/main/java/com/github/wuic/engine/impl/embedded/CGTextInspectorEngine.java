@@ -38,9 +38,11 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.FileType;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
@@ -52,19 +54,19 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * <p>
- * Abstraction of an inspector engine for text resources. This kind of engine inspects each resource of a request
- * to eventually alter their content or to extract other referenced resources.
+ * Basic inspector engine for text resources processing text line per line. This kind of engine inspects
+ * each resource of a request to eventually alter their content or to extract other referenced resources
+ * thanks to a set of {@link LineInspector inspectors}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.3
  */
-public abstract class CGAbstractTextInspectorEngine extends Engine {
+public class CGTextInspectorEngine extends Engine {
 
     /**
      * Configuration based on CSS.
@@ -72,14 +74,21 @@ public abstract class CGAbstractTextInspectorEngine extends Engine {
     private Configuration configuration;
 
     /**
+     * The inspectors of each line
+     */
+    private LineInspector[] lineInspectors;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
      * @param config the configuration
+     * @param inspectors the line inspectors to use
      */
-    public CGAbstractTextInspectorEngine(final Configuration config) {
+    public CGTextInspectorEngine(final Configuration config, final LineInspector... inspectors) {
         configuration = config;
+        lineInspectors = inspectors;
     }
 
     /**
@@ -137,15 +146,19 @@ public abstract class CGAbstractTextInspectorEngine extends Engine {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
             while ((line = br.readLine()) != null) {
-                os.write((inspectLine(line, resourceLocation, request, inspectedList, depth) + "\n").getBytes());
+                for (LineInspector inspector : lineInspectors) {
+                    line = inspectLine(line, resourceLocation, request, inspectedList, depth, inspector);
+                }
+
+                os.write((line + "\n").getBytes());
             }
 
             // Create and add the inspected resource with its transformations
             final WuicResource inspected = new ByteArrayWuicResource(os.toByteArray(), resource.getName(), resource.getFileType());
-            inspected.setCacheable(inspected.isCacheable());
-            inspected.setAggregatable(inspected.isAggregatable());
-            inspected.setTextCompressible(inspected.isTextCompressible());
-            inspected.setBinaryCompressible(inspected.isBinaryCompressible());
+            inspected.setCacheable(resource.isCacheable());
+            inspected.setAggregatable(resource.isAggregatable());
+            inspected.setTextCompressible(resource.isTextCompressible());
+            inspected.setBinaryCompressible(resource.isBinaryCompressible());
 
             inspectedList.add(inspected);
 
@@ -169,25 +182,27 @@ public abstract class CGAbstractTextInspectorEngine extends Engine {
      * @param request the initial request
      * @param extracted the list where extracted resources should be added
      * @param depth of the path starting at the context path to the path the resource will be loaded
+     * @param inspector the inspector to use
      * @throws IOException if an I/O error occurs while reading
      * return the given line eventually transformed
      */
-    protected String inspectLine(String line,
-                                 String resourceLocation,
-                                 EngineRequest request,
-                                 List<WuicResource> extracted,
-                                 int depth)
+    protected String inspectLine(final String line,
+                                 final String resourceLocation,
+                                 final EngineRequest request,
+                                 final List<WuicResource> extracted,
+                                 final int depth,
+                                 final LineInspector inspector)
             throws IOException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
 
         // Looking for import statements
-        final Matcher matcher = getPattern().matcher(line);
+        final Matcher matcher = inspector.getPattern().matcher(line);
 
         while (matcher.find()) {
             // Compute replacement, extract resource name and referenced resources
             final StringBuilder replacement = new StringBuilder();
-            final String resourceName = appendTransformation(matcher, replacement, depth, resourceLocation);
+            final String resourceName = inspector.appendTransformation(matcher, replacement, depth, resourceLocation);
             matcher.appendReplacement(retval, replacement.toString());
 
             List<WuicResource> res = request.getGroup().getResourceFactory().create(resourceName);
@@ -197,11 +212,16 @@ public abstract class CGAbstractTextInspectorEngine extends Engine {
                 res = getNext().parse(new EngineRequest(res, request.getContextPath(), request.getGroup()));
             }
 
-            // Add the resource and inspect it recursively
+            // Add the resource and inspect it recursively if it's a CSS file
             for (WuicResource r : res) {
-                // Evict aggregation for extracted values
-                final WuicResource inspected = inspect(r, request, extracted, depth + resourceName.split("/").length - 1);
-                inspected.setAggregatable(Boolean.FALSE);
+                WuicResource inspected = r;
+
+                if (r.getFileType().equals(FileType.CSS)) {
+                    // Evict aggregation for extracted values
+                    inspected = inspect(r, request, extracted, depth + resourceName.split("/").length - 1);
+                }
+
+                configureExtracted(inspected);
                 extracted.remove(inspected);
                 extracted.add(inspected);
             }
@@ -214,29 +234,16 @@ public abstract class CGAbstractTextInspectorEngine extends Engine {
 
     /**
      * <p>
-     * Gets the pattern to find text to be replaced inside the lines.
+     * Configures the given extracted resources to know if it should be aggregated, compressed, cached, etc.
      * </p>
      *
-     * @return the pattern to use
+     * @param resource the resource to configure
      */
-    protected abstract Pattern getPattern();
-
-    /**
-     * <p>
-     * Computes the replacement to be made inside the text for the given {@code Matcher} which its {@code find()}
-     * method as just been called.
-     * </p>
-     *
-     * @param matcher the matcher which provides found text thanks to its {@code group()} method.
-     * @param replacement the text which will replace the matching text
-     * @param depth of the path starting at the context path to the path the resource will be loaded
-     * @param resourceLocation the location of the current resource
-     * @return the resource name that was referenced in the macthing text
-     */
-    protected abstract String appendTransformation(Matcher matcher,
-                                                   StringBuilder replacement,
-                                                   int depth,
-                                                   String resourceLocation);
+    private void configureExtracted(final WuicResource resource) {
+        resource.setAggregatable(Boolean.FALSE);
+        resource.setTextCompressible(resource.getFileType().isText());
+        resource.setBinaryCompressible(!resource.getFileType().isText());
+    }
 
     /**
      * {@inheritDoc}

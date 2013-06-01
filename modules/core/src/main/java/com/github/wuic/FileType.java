@@ -54,22 +54,27 @@ public enum FileType {
     /**
      * Sprite file support.
      */
-    SPRITE(new String[] {".png", ".PNG"}, null),
+    SPRITE(new String[] {".png", ".PNG"}, null, Boolean.TRUE),
     
     /**
      * PNG file support.
      */
-    PNG(new String[] {".png", ".PNG"}, "image/png"),
-    
+    PNG(new String[] {".png", ".PNG"}, "image/png", Boolean.TRUE),
+
+    /**
+     * GIF file support.
+     */
+    GIF(new String[] {".gif", ".GIF"}, "image/gif", Boolean.TRUE),
+
     /**
      * Javascript files support.
      */
-    JAVASCRIPT(new String[] { ".js" }, "text/javascript"),
+    JAVASCRIPT(new String[] { ".js" }, "text/javascript", Boolean.FALSE),
     
     /**
      * CSS files support.
      */
-    CSS(new String[] { ".css" }, "text/css");
+    CSS(new String[] { ".css" }, "text/css", Boolean.FALSE);
 
     /**
      * Possible extensions.
@@ -80,7 +85,12 @@ public enum FileType {
      * MIME type.
      */
     private String mimeType;
-    
+
+    /**
+     * Text or binary.
+     */
+    private Boolean isText;
+
     /**
      * <p>
      * Builds a new {@link FileType} according to the given extensions and the
@@ -89,10 +99,12 @@ public enum FileType {
      * 
      * @param exts the extensions
      * @param mime the MIME type
+     * @param isBinary if the file type is binary or not
      */
-    FileType(final String[] exts, final String mime) {
+    FileType(final String[] exts, final String mime, final Boolean isBinary) {
         extensions = Arrays.copyOf(exts, exts.length);
         mimeType = mime;
+        isText = !isBinary;
     }
     
     /**
@@ -116,7 +128,18 @@ public enum FileType {
     public String getMimeType() {
         return mimeType;
     }
-    
+
+    /**
+     * <p>
+     * Indicates if this resource is in a text format.
+     * </p>
+     *
+     * @return
+     */
+    public Boolean isText() {
+        return isText;
+    }
+
     /**
      * <p>
      * Parse the given {@code String} object into a {@link FileType}. If the

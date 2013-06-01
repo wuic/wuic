@@ -30,18 +30,15 @@ body {
     top: 0px;
     height: 60px;
     width: 100%;
-    background: url("images/header/header_bkg.png") repeat-x;
     z-index: 1000;
 }
 
 .menu {
     height: 132px;
-    background: url("images/header/menu/menu_popup.png") no-repeat;
 }
 
 .separator {
     width: 2px;
-    background: url("images/header/separator.png") no-repeat;
     float: left;
 }
 

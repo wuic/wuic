@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,64 +36,35 @@
  */
 
 
-package com.github.wuic.factory.impl;
+package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.impl.embedded.*;
-import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
-import com.github.wuic.engine.impl.yuicompressor.JavascriptYuiCompressorEngine;
-import com.github.wuic.factory.EngineFactory;
+import com.github.wuic.configuration.YuiCssConfiguration;
 
 /**
  * <p>
- * This engine class is a factory helping to create compression instances.
+ * This engines parses CSS files thanks to a {@link CGCssImportLineInspector} and a {@link CGCssBackgroundUrlLineInspector}.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.1.0
+ * @version 1.0
+ * @since 0.3.3
  */
-public class CompressionEngineFactory implements EngineFactory {
+public class CGCssInspectorEngine extends CGTextInspectorEngine {
 
     /**
-     * The configuration.
-     */
-    private Configuration configuration;
-    
-    /**
      * <p>
-     * Builds an {@link CompressionEngineFactory}.
+     * Builds a new instance.
      * </p>
-     * 
-     * @param config the {@link Configuration} to use
+     *
+     * @param config the configuration
      */
-    public CompressionEngineFactory(final Configuration config) {
-        configuration = config;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Engine create(final FileType fileType) throws BadConfigurationException {
-        switch (fileType) {
-            case CSS :
-                return new CGCompositeEngine(new CGCssInspectorEngine(configuration), new CssYuiCompressorEngine(configuration));
-                
-            case JAVASCRIPT :
-                return new JavascriptYuiCompressorEngine(configuration);
-                
-            case PNG :
-                return new CGImageCompressorEngine(configuration);
-                
-            case SPRITE :
-                return new CGSpriteCompressorEngine(configuration);
-            
-            default :
-                final String message = fileType.toString() + " has no aggregator";
-                throw new IllegalArgumentException(message);
+    public CGCssInspectorEngine(final Configuration config) {
+        super(config, new CGCssImportLineInspector(), new CGCssBackgroundUrlLineInspector());
+
+        if (!(config instanceof YuiCssConfiguration)) {
+            final String message = config + " must be an instance of " + YuiCssConfiguration.class.getName();
+            throw new IllegalArgumentException(message);
         }
     }
 }
