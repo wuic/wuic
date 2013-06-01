@@ -21,6 +21,7 @@
         <module>ftp</module>
         <module>ssh</module>
         <module>aws-s3</module>
+        <module>google-storage</module>
     </modules>
 
     <dependencyManagement>
@@ -128,6 +129,29 @@
                 <artifactId>aws-java-sdk</artifactId>
                 <version>${aws-java-sdk.version}</version>
             </dependency>
+
+            <!-- Google OAuth and Storage support -->
+            <dependency>
+                <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-storage</artifactId>
+                <version>${google-api-services-storage.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.http-client</groupId>
+                <artifactId>google-http-client</artifactId>
+                <version>${google-http-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.http-client</groupId>
+                <artifactId>google-http-client-jackson2</artifactId>
+                <version>${google-http-client-jackson2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.collections</groupId>
+                <artifactId>google-collections</artifactId>
+                <version>${google-collections.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
