@@ -60,16 +60,6 @@ import java.util.regex.Pattern;
 public class GStorageWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
 
     /**
-     * Supported properties with their default value.
-     */
-    private Map<String, Object> supportedProperties;
-
-    /**
-     * Delegate concrete implementation.
-     */
-    private AbstractWuicResourceFactory delegate;
-
-    /**
      * <p>
      * Creates a new instance.
      * </p>

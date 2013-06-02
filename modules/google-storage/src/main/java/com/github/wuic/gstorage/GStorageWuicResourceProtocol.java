@@ -41,7 +41,7 @@ package com.github.wuic.gstorage;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.resource.impl.InputStreamWuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -54,7 +54,6 @@ import com.google.api.services.storage.model.StorageObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -168,12 +167,10 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             storage = new Storage.Builder(netHttpTransport, jsonFactory, googleCredential).setApplicationName("Wuic").build();
         } catch (GeneralSecurityException gse) {
             // Security exception (local check)
-            final StringBuilder gseMessageBuilder = new StringBuilder("Can't build Google credential on bucket ").append(bucketName).append(" for resource key : ").append(basePath);
-            throw new IOException(gseMessageBuilder.toString(), gse);
+            throw new IOException("Can't build Google credential on bucket " + bucketName + " for resource key : " + basePath, gse);
         } catch (IOException ioe) {
             // Private key file not found
-            final StringBuilder ioeMessageBuilder = new StringBuilder("Can't build Google credential on bucket ").append(bucketName).append(" for resource key : ").append(basePath).append(" check your private key file");
-            throw new IOException(ioe.toString(), ioe);
+            throw new IOException("Can't build Google credential on bucket " + bucketName + " for resource key : " + basePath + " check your private key file", ioe);
         }
     }
 
@@ -204,9 +201,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
         try {
             objectListing = storage.objects().list(bucketName).execute();
         } catch (IOException ioe) {
-            final StringBuilder aseMessageBuilder = new StringBuilder("Can't get Google Storage Object on bucket ")
-                    .append(bucketName).append(" for resource key : ").append(path);
-            throw new IOException(aseMessageBuilder.toString(), ioe);
+            throw new IOException("Can't get Google Storage Object on bucket " + bucketName + " for resource key : " + path, ioe);
         }
 
         final List<String> retval = new ArrayList<String>();
@@ -237,8 +232,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
         storageObject.executeMediaAndDownloadTo(baos);
 
         // Create resource
-        final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        return new InputStreamWuicResource(bais, realPath, type);
+        return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
     }
 
     /**
