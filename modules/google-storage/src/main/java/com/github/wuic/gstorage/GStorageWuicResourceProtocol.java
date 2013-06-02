@@ -157,6 +157,8 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             builder.setTransport(netHttpTransport);
             builder.setJsonFactory(jsonFactory);
             builder.setServiceAccountId(serviceAccountId);
+
+            // TODO : raise exception if private key not found
             builder.setServiceAccountPrivateKeyFromP12File(new File(this.getClass().getResource("/" + privateKeyFile).getFile()));
             builder.setServiceAccountScopes(Arrays.asList(StorageScopes.DEVSTORAGE_FULL_CONTROL));
 

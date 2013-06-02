@@ -26,11 +26,11 @@
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>
-	<groups>
+	<!--groups>
 		<group id="css-image" configuration="yuicompressor-css" default-builder="s3FactoryBuilder">
             <file>.*.css</file>
 		</group>
-	</groups>
+	</groups-->
 	<configurations>
         <configuration id="yuicompressor-css" type="CSS">
             <aggregate>true</aggregate>

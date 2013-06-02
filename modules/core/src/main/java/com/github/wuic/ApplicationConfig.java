@@ -251,5 +251,5 @@ public interface ApplicationConfig {
      * - Installed application type : select "Service account"
      * - Download key file or Generate new key
      */
-    final String GS_PRIVATE_KEY_PATH = "c.g.wuic.gPrivateKeyPath";
+    String GS_PRIVATE_KEY_PATH = "c.g.wuic.gPrivateKeyPath";
 }

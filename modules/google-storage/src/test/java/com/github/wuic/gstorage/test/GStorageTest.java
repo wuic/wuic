@@ -38,18 +38,33 @@
 
 package com.github.wuic.gstorage.test;
 
-import com.github.wuic.WuicFacade;
+import com.github.wuic.FileType;
+import com.github.wuic.FilesGroup;
+import com.github.wuic.configuration.Configuration;
+import com.github.wuic.configuration.impl.YuiConfigurationImpl;
+import com.github.wuic.configuration.impl.YuiCssConfigurationImpl;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
+import com.github.wuic.factory.EngineFactoryBuilder;
+import com.github.wuic.factory.impl.AggregationEngineFactory;
+import com.github.wuic.factory.impl.CompressionEngineFactory;
+import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * <p>
@@ -69,19 +84,28 @@ public class GStorageTest {
      * </p>
      */
     @Test
-    public void gStorageTest() throws IOException {
-        if (System.getProperty("wuic.test.trust-google-storage-credentials") != null) {
-            final WuicFacade facade = WuicFacade.newInstance("");
-            final List<WuicResource> group = facade.getGroup("css-image");
+    public void gStorageTest() throws Exception {
+        final EngineFactoryBuilder factoryBuilder = new EngineFactoryBuilderImpl("/wuic.xml");
+        final FilesGroup filesGroup = mock(FilesGroup.class);
+        final byte[] array = ".cloud { text-align : justify;}".getBytes();
+        when(filesGroup.getResources()).thenReturn(Arrays.asList((WuicResource) new ByteArrayWuicResource(array, "cloud.css", FileType.CSS)));
 
-            Assert.assertFalse(group.isEmpty());
-            InputStream is;
+        final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
+        final Engine compressor = new CompressionEngineFactory(config).create(FileType.CSS);
+        final Engine cacheEngine = new EhCacheEngine(config);
+        final Engine aggregator = new AggregationEngineFactory(config).create(FileType.CSS);
+        cacheEngine.setNext(compressor);
+        compressor.setNext(aggregator);
 
-            for (WuicResource res : group) {
-                is = res.openStream();
-                Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-                is.close();
-            }
+        final List<WuicResource> group = cacheEngine.parse(new EngineRequest(filesGroup.getResources(), "", filesGroup));
+
+        Assert.assertFalse(group.isEmpty());
+        InputStream is;
+
+        for (WuicResource res : group) {
+            is = res.openStream();
+            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
+            is.close();
         }
     }
 }

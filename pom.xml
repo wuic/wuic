@@ -260,6 +260,7 @@
 		<jsp-api.version>2.2</jsp-api.version>
 		<servlet-api.version>2.5</servlet-api.version>
 		<junit.version>4.8.2</junit.version>
+        <mockito.version>1.9.5</mockito.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
 

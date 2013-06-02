@@ -413,47 +413,49 @@ public final class WuicXmlLoader {
     private void readGroups(final Document document) throws BadConfigurationException, IOException {
         // Get the root element
         final Node groups = document.getElementsByTagName("groups").item(0);
-                
-        // Read each group
-        for (int i = 0; i < groups.getChildNodes().getLength(); i++) {
-            final Node group = groups.getChildNodes().item(i);
-            
-            final List<String> files = new ArrayList<String>(group.getChildNodes().getLength());
-            
-            // Read each child representing a file of the group
-            for (int j = 0; j < group.getChildNodes().getLength(); j++) {
-                final Node file = group.getChildNodes().item(j);
-                files.add(file.getFirstChild().getTextContent());
-            }
-            
-            // The group is identified by the 'id' attribute
-            final Node idAttribute = group.getAttributes().getNamedItem("id");
-            
-            // The group points to a configuration id
-            final Node configAttribute = group.getAttributes().getNamedItem("configuration");
-            final Configuration config = builtConfigurations.get(configAttribute.getNodeValue());
-            
-            // The resource factory builder to use is specified with its ID
-            final Node defaultBuilderAttribute = group.getAttributes().getNamedItem("default-builder");
-            
-            if (defaultBuilderAttribute == null || !resourceFactoryBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
-                final StringBuilder msg = new StringBuilder("The group does not ");
-                msg.append("contains a default-builder attribute that ");
-                msg.append("corresponds to an existing resource-factory-builder ID");
-                throw new BadConfigurationException(msg.toString());
-            }
 
-            // Get the resource factory builder and create the files group
-            final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
-            final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
-            
-            // Particular case : sprite needs an image group
-            if (config instanceof SpriteConfiguration) {
-                putImageGroupFor(filesGroup);
+        // Read each group
+        if (groups != null) {
+            for (int i = 0; i < groups.getChildNodes().getLength(); i++) {
+                final Node group = groups.getChildNodes().item(i);
+
+                final List<String> files = new ArrayList<String>(group.getChildNodes().getLength());
+
+                // Read each child representing a file of the group
+                for (int j = 0; j < group.getChildNodes().getLength(); j++) {
+                    final Node file = group.getChildNodes().item(j);
+                    files.add(file.getFirstChild().getTextContent());
+                }
+
+                // The group is identified by the 'id' attribute
+                final Node idAttribute = group.getAttributes().getNamedItem("id");
+
+                // The group points to a configuration id
+                final Node configAttribute = group.getAttributes().getNamedItem("configuration");
+                final Configuration config = builtConfigurations.get(configAttribute.getNodeValue());
+
+                // The resource factory builder to use is specified with its ID
+                final Node defaultBuilderAttribute = group.getAttributes().getNamedItem("default-builder");
+
+                if (defaultBuilderAttribute == null || !resourceFactoryBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
+                    final StringBuilder msg = new StringBuilder("The group does not ");
+                    msg.append("contains a default-builder attribute that ");
+                    msg.append("corresponds to an existing resource-factory-builder ID");
+                    throw new BadConfigurationException(msg.toString());
+                }
+
+                // Get the resource factory builder and create the files group
+                final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
+                final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
+
+                // Particular case : sprite needs an image group
+                if (config instanceof SpriteConfiguration) {
+                    putImageGroupFor(filesGroup);
+                }
+
+                // Add all the files read from the document and associate them to the ID
+                filesGroups.put(idAttribute.getNodeValue(), filesGroup);
             }
-            
-            // Add all the files read from the document and associate them to the ID
-            filesGroups.put(idAttribute.getNodeValue(), filesGroup);
         }
     }
     
