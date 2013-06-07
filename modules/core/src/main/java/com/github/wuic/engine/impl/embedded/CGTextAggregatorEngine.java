@@ -137,7 +137,7 @@ public class CGTextAggregatorEngine extends Engine {
         retval.add(new ByteArrayWuicResource(target.toByteArray(), fileName, fileType));
 
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+            return getNext().parse(new EngineRequest(retval, request));
         } else {
             return retval;
         }

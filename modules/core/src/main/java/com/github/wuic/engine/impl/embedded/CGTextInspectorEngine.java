@@ -101,12 +101,16 @@ public class CGTextInspectorEngine extends Engine {
 
         if (works()) {
             for (WuicResource resource : request.getResources()) {
-                inspect(resource, request, retval, 0);
+                if (resource.isAggregatable() && request.getGroup().getConfiguration().aggregate()) {
+                    inspect(resource, request, retval);
+                } else {
+                    inspect(resource, request, retval);
+                }
             }
         }
 
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+            return getNext().parse(new EngineRequest(retval, request));
         } else {
             return retval;
         }
@@ -124,11 +128,10 @@ public class CGTextInspectorEngine extends Engine {
      * @param inspectedList the list where the inspected resources should be stored
      * @param resource the resource
      * @param request the initial request
-     * @param depth of the path starting at the context path to the path the resource will be loaded
      * @return the resource corresponding the inspected resource specified in parameter
      * @throws IOException if an I/O error occurs while reading
      */
-    protected WuicResource inspect(final WuicResource resource, final EngineRequest request, final List<WuicResource> inspectedList, final int depth)
+    protected WuicResource inspect(final WuicResource resource, final EngineRequest request, final List<WuicResource> inspectedList)
             throws IOException {
         // Extracts the location where resource is listed in order to compute the location of the extracted imported resources
         final int lastIndexOfSlash = resource.getName().lastIndexOf("/") + 1;
@@ -147,7 +150,7 @@ public class CGTextInspectorEngine extends Engine {
 
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
-                    line = inspectLine(line, resourceLocation, request, inspectedList, depth, inspector);
+                    line = inspectLine(line, resourceLocation, request, inspectedList, inspector);
                 }
 
                 os.write((line + "\n").getBytes());
@@ -181,7 +184,6 @@ public class CGTextInspectorEngine extends Engine {
      * @param resourceLocation the location of the resource
      * @param request the initial request
      * @param extracted the list where extracted resources should be added
-     * @param depth of the path starting at the context path to the path the resource will be loaded
      * @param inspector the inspector to use
      * @throws IOException if an I/O error occurs while reading
      * return the given line eventually transformed
@@ -190,7 +192,6 @@ public class CGTextInspectorEngine extends Engine {
                                  final String resourceLocation,
                                  final EngineRequest request,
                                  final List<WuicResource> extracted,
-                                 final int depth,
                                  final LineInspector inspector)
             throws IOException {
         // Use a builder to transform the line
@@ -202,14 +203,15 @@ public class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract resource name and referenced resources
             final StringBuilder replacement = new StringBuilder();
-            final String resourceName = inspector.appendTransformation(matcher, replacement, depth, resourceLocation);
+            final String resourceName = inspector.appendTransformation(matcher, replacement, request.getRequestPath() + "/" + request.getGroup().getId(),
+                    resourceLocation, request.getGroup().getResourceFactory());
             matcher.appendReplacement(retval, replacement.toString());
 
             List<WuicResource> res = request.getGroup().getResourceFactory().create(resourceName);
 
             // Process resource
             if (getNext() != null) {
-                res = getNext().parse(new EngineRequest(res, request.getContextPath(), request.getGroup()));
+                res = getNext().parse(new EngineRequest(res, request));
             }
 
             // Add the resource and inspect it recursively if it's a CSS file
@@ -217,8 +219,8 @@ public class CGTextInspectorEngine extends Engine {
                 WuicResource inspected = r;
 
                 if (r.getFileType().equals(FileType.CSS)) {
-                    // Evict aggregation for extracted values
-                    inspected = inspect(r, request, extracted, depth + resourceName.split("/").length - 1);
+                    // Depth should take care or current value and relative position of the original resource
+                    inspected = inspect(r, request, extracted);
                 }
 
                 configureExtracted(inspected);

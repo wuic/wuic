@@ -85,11 +85,11 @@ public class CGCompositeEngine extends Engine {
          List<WuicResource> retval = request.getResources();
 
         for (Engine engine : engines) {
-            retval = engine.parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+            retval = engine.parse(new EngineRequest(retval, request));
         }
 
         if (getNext() != null) {
-            retval = getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+            retval = getNext().parse(new EngineRequest(retval, request));
         }
 
         return retval;

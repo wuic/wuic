@@ -3,7 +3,7 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
     <resource-factory-builders>
-        <resource-factory-builder id="appResourceFactoryBuilder" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder" />
+        <resource-factory-builder id="appResourceFactoryBuilder" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder"></resource-factory-builder>
         <resource-factory-builder id="httpResourceFactoryBuilder" class="com.github.wuic.resource.impl.http.HttpWuicResourceFactoryBuilder">
             <properties>
                 <property key="c.g.wuic.httpServerPort">8080</property>
@@ -12,12 +12,101 @@
         </resource-factory-builder>
     </resource-factory-builders>
     <groups>
-        <group id="accordion-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+        <group id="collapsible-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
             <file>jquery-1.9.1.js</file>
             <file>ui/jquery.ui.core.js</file>
             <file>ui/jquery.ui.widget.js</file>
             <file>ui/jquery.ui.accordion.js</file>
         </group>
+        <group id="custom-icons-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.accordion.js</file>
+            <file>ui/jquery.ui.button.js</file>
+        </group>
+        <group id="fillspace-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.accordion.js</file>
+            <file>ui/jquery.ui.mouse.js</file>
+            <file>ui/jquery.ui.resizable.js</file>
+        </group>
+        <group id="sortable-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.accordion.js</file>
+            <file>ui/jquery.ui.mouse.js</file>
+            <file>ui/jquery.ui.sortable.js</file>
+        </group>
+        <group id="effect-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.effect.js</file>
+        </group>
+        <group id="autocomplete-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.position.js</file>
+            <file>ui/jquery.ui.menu.js</file>
+            <file>ui/jquery.ui.autocomplete.js</file>
+        </group>
+        <group id="tooltip-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.button.js</file>
+            <file>ui/jquery.ui.position.js</file>
+            <file>ui/jquery.ui.menu.js</file>
+            <file>ui/jquery.ui.autocomplete.js</file>
+            <file>ui/jquery.ui.tooltip.js</file>
+        </group>
+        <group id="button-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.button.js</file>
+        </group>
+        <group id="splitbutton-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.button.js</file>
+            <file>ui/jquery.ui.position.js</file>
+            <file>ui/jquery.ui.menu.js</file>
+        </group>
+        <group id="datepicker-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.datepicker.js</file>
+        </group>
+        <group id="effect-datepicker-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.effect.js</file>
+            <file>ui/jquery.ui.effect-blind.js</file>
+            <file>ui/jquery.ui.effect-bounce.js</file>
+            <file>ui/jquery.ui.effect-clip.js</file>
+            <file>ui/jquery.ui.effect-drop.js</file>
+            <file>ui/jquery.ui.effect-fold.js</file>
+            <file>ui/jquery.ui.effect-slide.js</file>
+            <file>ui/jquery.ui.datepicker.js</file>
+        </group>
+        <group id="datepicker-loc-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
+            <file>jquery-1.9.1.js</file>
+            <file>ui/jquery.ui.core.js</file>
+            <file>ui/jquery.ui.widget.js</file>
+            <file>ui/jquery.ui.datepicker.js</file>
+            <file>demos/datepicker/jquery.ui.datepicker-ar.js</file>
+            <file>demos/datepicker/jquery.ui.datepicker-fr.js</file>
+            <file>demos/datepicker/jquery.ui.datepicker-he.js</file>
+            <file>demos/datepicker/jquery.ui.datepicker-zh-TW.js</file>
+        </group>
+
         <group id="demo-css" configuration="yuicompressor-css" default-builder="appResourceFactoryBuilder">
             <file>jquery-ui-1.10.2/themes/base/jquery.ui.all.css</file>
             <file>jquery-ui-1.10.2/demos/demos.css</file>

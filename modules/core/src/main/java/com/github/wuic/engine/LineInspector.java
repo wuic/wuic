@@ -38,6 +38,8 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.resource.WuicResourceFactory;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,12 +72,14 @@ public interface LineInspector {
      *
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
-     * @param depth of the path starting at the context path to the path the resource will be loaded
+     * @param groupPath the absolute path to the group
      * @param resourceLocation the location of the current resource
-     * @return the resource name that was referenced in the macthing text
+     * @param factory the factory to use when we need to create resource
+     * @return the resource name that was referenced in the matching text
      */
     String appendTransformation(Matcher matcher,
                                 StringBuilder replacement,
-                                int depth,
-                                String resourceLocation);
+                                String groupPath,
+                                String resourceLocation,
+                                WuicResourceFactory factory);
 }

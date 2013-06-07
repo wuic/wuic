@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class HttpWuicResourceProtocol implements WuicResourceProtocol {
@@ -83,13 +83,15 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      * @param path the base path where resources are provided
      */
     public HttpWuicResourceProtocol(final Boolean https, final String domain, final Integer port, final String path) {
-        baseUrl = new StringBuilder()
-                .append(https ? "https://" : "http://")
-                .append(domain)
-                .append(port != null ? ":".concat(port.toString()) : "")
-                .append("/")
-                .append(path)
-                .append(path.isEmpty() ? "" : "/").toString();
+        final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
+
+        if (port != null) {
+            builder.append(":").append(port);
+        }
+
+        builder.append("/").append(path).append(path.isEmpty() ? "" : "/");
+
+        baseUrl = builder.toString();
     }
 
     /**
@@ -100,7 +102,7 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
         // Finding resources with a regex through HTTP protocol is tricky
         // Until this feature is implemented, we only expect quoted pattern
         // So, we unquote it by removing \Q and \E around the string to get the path
-        return Arrays.asList(baseUrl + pattern.pattern().replace("\\Q", "").replace("\\E", ""));
+        return Arrays.asList(pattern.pattern().replace("\\Q", "").replace("\\E", ""));
     }
 
     /**
@@ -108,10 +110,9 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("Opening HTTP access for " + realPath);
-        }
+        final String url = baseUrl + realPath;
+        log.debug("Opening HTTP access for {}", url);
 
-        return new HttpWuicResource(realPath, new URL(realPath), type);
+        return new HttpWuicResource(realPath, new URL(url), type);
     }
 }

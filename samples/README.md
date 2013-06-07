@@ -21,10 +21,9 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             All the demos have been copied into the '/using-wuic' path to show how to integrate them with WUIC.
             This way, you can see how you can embed uncompressed framework resources and configure a 'production' mode
             using WUIC. Think how it would be useful to disable compression to debug when your application raises an
-            error in a compressed script !
+            error in a compressed script!
             <b>
-                NOTE : work in progress ! Already integrated the 'collapsible accordion' demo. Moreover, only JS could
-                be imported because of the use of @import statement inside CSS files. [Imports will be supported later](https://github.com/gdrouet/wuic/issues/30).
+                NOTE : work in progress! Already integrated the different 'accordion', 'addClass', 'animate', 'autocomplete', 'button', 'datepicker' demos.
             </b>
         </td>
         <td>

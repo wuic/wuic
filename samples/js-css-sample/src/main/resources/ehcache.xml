@@ -9,8 +9,8 @@
    -->
    <cache name="wuicCache"
    			eternal="false"
-	        timeToIdleSeconds="120"
-     		timeToLiveSeconds="120"
+	        timeToIdleSeconds="86400"
+     		timeToLiveSeconds="86400"
 	        maxElementsInMemory="1000" 
 	        overflowToDisk="true" 
 	        diskPersistent="false"

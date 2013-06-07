@@ -88,16 +88,17 @@ public class GStorageTest {
         final EngineFactoryBuilder factoryBuilder = new EngineFactoryBuilderImpl("/wuic.xml");
         final FilesGroup filesGroup = mock(FilesGroup.class);
         final byte[] array = ".cloud { text-align : justify;}".getBytes();
+        final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
+        when(filesGroup.getConfiguration()).thenReturn(config);
         when(filesGroup.getResources()).thenReturn(Arrays.asList((WuicResource) new ByteArrayWuicResource(array, "cloud.css", FileType.CSS)));
 
-        final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
         final Engine compressor = new CompressionEngineFactory(config).create(FileType.CSS);
         final Engine cacheEngine = new EhCacheEngine(config);
         final Engine aggregator = new AggregationEngineFactory(config).create(FileType.CSS);
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 
-        final List<WuicResource> group = cacheEngine.parse(new EngineRequest(filesGroup.getResources(), "", filesGroup));
+        final List<WuicResource> group = cacheEngine.parse(new EngineRequest("", "", filesGroup));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

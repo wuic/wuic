@@ -88,7 +88,7 @@ public class WuicTag extends TagSupport {
         try {
             // Get the files group
             final WuicFacade facade = ((WuicFacade) super.pageContext.getServletContext().getAttribute("WUIC_FACADE"));
-            final List<WuicResource> files = facade.getGroup(pageName);
+            final List<WuicResource> files = facade.getGroup(pageName, "");
 
             for (WuicResource resource : files) {
                 switch (resource.getFileType()) {

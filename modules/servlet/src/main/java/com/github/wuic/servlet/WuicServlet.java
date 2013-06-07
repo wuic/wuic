@@ -142,7 +142,7 @@ public class WuicServlet extends HttpServlet {
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
             throw new ServletException("URL pattern. Expected [groupId]/[resourceName]");
         } else {
-            getResource(matcher.group(1), matcher.group(NumberUtils.TWO), response);
+            getResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
         }
     }
 
@@ -153,22 +153,22 @@ public class WuicServlet extends HttpServlet {
      *
      * @param groupId the group ID
      * @param resourceName the resource name
+     * @param request the request
      * @param response the response
      * @throws IOException if an I/O error occurs
      */
-    private void getResource(final String groupId, final String resourceName, final HttpServletResponse response)
+    private void getResource(final String groupId, final String resourceName, final HttpServletRequest request, final HttpServletResponse response)
             throws IOException {
         // Get the files group
-        final List<WuicResource> files = getWuicFacade().getGroup(groupId);
+        final List<WuicResource> files = getWuicFacade().getGroup(groupId, request.getServletPath());
         InputStream is = null;
 
         // Iterates the resources to find the requested element
         for (WuicResource resource : files) {
-            response.setContentType(resource.getFileType().getMimeType());
-
             // Resource found : write the stream and return
             if (resource.getName().equals(resourceName)) {
                 try {
+                    response.setContentType(resource.getFileType().getMimeType());
                     is = resource.openStream();
                     IOUtils.copyStream(is, response.getOutputStream());
                     is = null;

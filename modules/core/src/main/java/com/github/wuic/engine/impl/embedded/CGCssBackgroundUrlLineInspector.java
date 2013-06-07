@@ -39,6 +39,7 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,8 +90,9 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
     @Override
     public String appendTransformation(final Matcher matcher,
                                        final StringBuilder replacement,
-                                       final int depth,
-                                       final String resourceLocation) {
+                                       final String groupPath,
+                                       final String resourceLocation,
+                                       final WuicResourceFactory factory) {
 
         final String referencedPath = matcher.group(NumberUtils.TWO);
 
@@ -101,13 +103,11 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
 
         // Rewrite the statement from its beginning to the beginning of the resource name
         replacement.append(matcher.group().substring(0, matcher.start(1) - 1));
+
+        // Write path to resource
         replacement.append("\"");
-
-        // Resolve relative path
-        for (int i = 0; i < depth; i++) {
-            replacement.append("../");
-        }
-
+        replacement.append(groupPath);
+        replacement.append("/");
         replacement.append(resourceName);
         replacement.append("\")");
 

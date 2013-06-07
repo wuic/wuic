@@ -39,6 +39,7 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,17 +60,25 @@ import java.util.regex.Pattern;
 public class CGCssImportLineInspector implements LineInspector {
 
     /**
-     * Finds the URL within CSS script. The pattern describes a string :
+     * Finds the @import statement within CSS script. The pattern describes a string :
      * <ul>
      * <li>starting with @import</li>
-     * <li>followed by a space and eventually by 'url', a space and ('</li>
-     * <li>followed by a double quote</li>
-     * <li>followed by everything which does not contain a double quote (the file name)</li>
-     * <li>followed by a double quote and eventually a space and a ')'</li>
-     * <li>ending with a comma</li>
+     * <li>followed any set of characters</li>
+     * <li>followed by either a double quote or single quote</li>
+     * <li>followed by any set of character until a repetition of the previously viewed quote is found</li>
+     * </ul>
+     *
+     * OR
+     *
+     * <ul>
+     * <li>stating with @import</li>
+     * <li>followed by a set of characters with the term 'url' inside them</li>
+     * <li>followed by a '('</li>
+     * <li>followed by a set of characters</li>
+     * <li>followed by a set of characters with ')' at the beginning and a ';' at the end</li>
      * </ul>
      */
-    private static final Pattern CSS_IMPORT_PATTERN = Pattern.compile("@import\\s(\\s?url\\s?\\()?\"([^\"]*)\"\\s?\\)?\\s?;");
+    private static final Pattern CSS_IMPORT_PATTERN = Pattern.compile("@import.*(['\"])(.+?)\\1|@import.*url.*\\((.*)\\).*;");
 
     /**
      * Logger.
@@ -90,25 +99,41 @@ public class CGCssImportLineInspector implements LineInspector {
     @Override
     public String appendTransformation(final Matcher matcher,
                                        final StringBuilder replacement,
-                                       final int depth,
-                                       final String resourceLocation) {
+                                       final String groupPath,
+                                       final String resourceLocation,
+                                       final WuicResourceFactory factory) {
 
-        final String referencedPath = matcher.group(NumberUtils.TWO);
+        // Two groups could contain the name, test the second one if first returns null
+        int groupIndex = NumberUtils.TWO;
+        String referencedPath = matcher.group(groupIndex);
+
+        if (referencedPath == null) {
+            referencedPath = matcher.group(++groupIndex);
+        }
+
         log.info("@import statement found for resource {}", referencedPath);
 
         // Extract the resource
-        final String resourceName = resourceLocation + referencedPath;
+        final String resourceName = resourceLocation + referencedPath.trim();
 
-        // Replace with the resource name
-        replacement.append("@import url('");
+        // Rewrite the statement from its beginning to the beginning of the resource name
+        replacement.append(matcher.group().substring(0, matcher.start(groupIndex == NumberUtils.TWO ? 1 : groupIndex)));
 
-        // Resolve relative path
-        for (int i = 0; i < depth; i++) {
-            replacement.append("../");
+        // Write path to resource
+        replacement.append("\"");
+        replacement.append(groupPath);
+        replacement.append("/");
+        replacement.append(resourceName);
+        replacement.append("\"");
+
+        // Rewrite the statement from the end of the resource name to the end of the entire statement
+        int end = matcher.end(groupIndex);
+
+        if (NumberUtils.TWO == groupIndex) {
+            end++;
         }
 
-        replacement.append(resourceName);
-        replacement.append("');");
+        replacement.append(matcher.group().substring(end));
 
         return resourceName;
     }

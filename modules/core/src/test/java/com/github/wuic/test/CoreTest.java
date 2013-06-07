@@ -61,7 +61,7 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<WuicResource> group = facade.getGroup("util-js");
+        List<WuicResource> group = facade.getGroup("util-js", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -75,7 +75,7 @@ public class CoreTest extends WuicTest {
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.getGroup("util-js");
+        group = facade.getGroup("util-js", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -103,7 +103,7 @@ public class CoreTest extends WuicTest {
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        List<WuicResource> group = facade.getGroup("css-image");
+        List<WuicResource> group = facade.getGroup("css-image", "");
         int i = 0;
 
         for (WuicResource res : group) {
@@ -113,7 +113,7 @@ public class CoreTest extends WuicTest {
             writeToDisk(res, i++ + "sprite.css");
         }
 
-        group = facade.getGroup("css-scripts");
+        group = facade.getGroup("css-scripts", "");
         i = 0;
 
         for (WuicResource res : group) {
@@ -135,7 +135,7 @@ public class CoreTest extends WuicTest {
         final WuicFacade facade = WuicFacade.newInstance("");
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<WuicResource> group = facade.getGroup("js-image");
+        List<WuicResource> group = facade.getGroup("js-image", "");
 
         final Iterator<WuicResource> it = group.iterator();
         int i = 0;
@@ -156,7 +156,7 @@ public class CoreTest extends WuicTest {
                 final int start = content.indexOf("url : \"") + 7;
                 final int end = content.indexOf("/aggregation.png");
                 final String imageGroup = content.substring(start, end);
-                group = facade.getGroup(imageGroup);
+                group = facade.getGroup(imageGroup, "");
 
                 writeToDisk(group.get(0), "aggregation.png");
             } finally {

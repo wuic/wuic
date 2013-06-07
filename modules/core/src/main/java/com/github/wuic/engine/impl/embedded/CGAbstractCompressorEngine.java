@@ -144,7 +144,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
         }
         
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request.getContextPath(), request.getGroup()));
+            return getNext().parse(new EngineRequest(retval, request));
         } else {
             return retval;
         }
