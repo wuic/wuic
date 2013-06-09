@@ -8,13 +8,13 @@
     <parent>
         <groupId>com.github.wuic.samples</groupId>
         <artifactId>wuic-samples</artifactId>
-        <version>0.3.3-SNAPSHOT</version>
+        <version>0.3.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-sample-js-sprite</artifactId>
-    <version>0.3.3-SNAPSHOT</version>
+    <version>0.3.3</version>
     <packaging>war</packaging>
 
     <dependencies>
