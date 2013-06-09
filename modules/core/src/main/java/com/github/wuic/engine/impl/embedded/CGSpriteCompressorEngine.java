@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.util.IOUtils;
@@ -53,7 +54,7 @@ import java.io.OutputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.0
  */
 public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
@@ -62,7 +63,7 @@ public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
      * The configuration.
      */
     private SpriteConfiguration configuration;
-    
+
     /**
      * <p>
      * Creates a new {@link com.github.wuic.engine.Engine}. An
@@ -71,13 +72,15 @@ public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
      * </p>
      * 
      * @param config the {@link Configuration}
+     * @throws BadConfigurationException if a bad configuration is detected
      */
-    public CGSpriteCompressorEngine(final Configuration config) {
+    public CGSpriteCompressorEngine(final Configuration config)
+            throws BadConfigurationException {
         if (config instanceof SpriteConfiguration) {
             configuration = (SpriteConfiguration) config;
         } else {
             final String message = config + " must be an instance of " + SpriteConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            throw new BadConfigurationException(message);
         }
     }
     

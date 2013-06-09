@@ -50,7 +50,7 @@ import java.net.URL;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class HttpWuicResource extends AbstractWuicResource {
@@ -87,6 +87,6 @@ public class HttpWuicResource extends AbstractWuicResource {
      */
     @Override
     public String getBaseDirectory() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 }

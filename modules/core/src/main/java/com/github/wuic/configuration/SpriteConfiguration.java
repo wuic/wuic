@@ -46,10 +46,10 @@ import com.github.wuic.engine.SpriteProvider;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.0
  */
-public interface SpriteConfiguration extends Configuration, PackingConfiguration {
+public interface SpriteConfiguration extends ImageConfiguration, PackingConfiguration {
 
     /**
      * <p>

@@ -46,8 +46,6 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.PackerEngine;
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
-//import com.github.wuic.servlet.WuicServlet;
-import com.github.wuic.xml.WuicXmlLoader;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -81,6 +79,11 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
      * The configuration.
      */
     private SpriteConfiguration configuration;
+
+    /**
+     * The aggregator which merges the images.
+     */
+    private CGImageAggregatorEngine aggregatorEngine;
     
     /**
      * <p>
@@ -95,10 +98,11 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
         if (config instanceof SpriteConfiguration) {
             configuration = (SpriteConfiguration) config;
             spriteProvider = configuration.createSpriteProvider();
+            aggregatorEngine = new CGImageAggregatorEngine(config);
             setDimensionPacker(configuration.createDimensionPacker());
         } else {
             final String message = config + " must be an instance of " + SpriteConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            throw new BadConfigurationException(message);
         }
     }
     
@@ -110,13 +114,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
 
         // Generate the sprite file with the URL of the final image
         final StringBuilder url = new StringBuilder(request.getContextPath());
-        final List<String> names = new ArrayList<String>(request.getResources().size());
-        
-        for (WuicResource res : request.getResources()) {
-            names.add(res.getName());
-        }
-        
-        url.append(WuicXmlLoader.createGeneratedGroupId(names));
+        url.append(request.getGroup().getId());
         
         /*
          * Create a resource for each image if the configuration says that no
@@ -139,6 +137,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                     spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
                     
                     final WuicResource resource = spriteProvider.getSprite(url.toString(), request.getGroup().getId());
+                    resource.addReferencedResource(file);
                     retval.add(resource);
                 } finally {
                     if (is != null) {
@@ -158,7 +157,17 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                 spriteProvider.addRegion(result.getKey(), result.getValue().getName());
             }
 
-            return Arrays.asList(spriteProvider.getSprite(url.toString(), request.getGroup().getId()));
+
+            final WuicResource retval = spriteProvider.getSprite(url.toString(), request.getGroup().getId());
+            final List<WuicResource> image = aggregatorEngine.parse(request);
+
+            if (image.size() != 1) {
+                throw new IllegalStateException("One aggregated image is expected when aggregator engine is called. Actual : " + image.size());
+            }
+
+            retval.addReferencedResource(image.get(0));
+
+            return Arrays.asList(retval);
         }
     }
 

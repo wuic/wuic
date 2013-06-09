@@ -42,6 +42,7 @@ import com.github.wuic.FileType;
 import com.github.wuic.util.InputStreamOpener;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>
@@ -155,4 +156,22 @@ public interface WuicResource extends Serializable, InputStreamOpener {
      * @param a {@code true} if aggregatable, {@code false} otherwise
      */
     void setAggregatable(Boolean a);
+
+    /**
+     * <p>
+     * Adds a new resource referenced by this resource.
+     * </p>
+     *
+     * @param referenced the referenced resource
+     */
+    void addReferencedResource(WuicResource referenced);
+
+    /**
+     * <p>
+     * Gets the resources referenced by this resource.
+     * </p>
+     *
+     * @return the referenced resource, {@code null} if no resource is referenced
+     */
+    List<WuicResource> getReferencedResources();
 }

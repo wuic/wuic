@@ -43,20 +43,13 @@ import com.github.wuic.FilesGroup;
 import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
-import com.github.wuic.configuration.ImageConfiguration;
-import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.configuration.WuicEhcacheProvider;
-import com.github.wuic.configuration.impl.ImageConfigurationImpl;
 import com.github.wuic.configuration.impl.SpriteConfiguratonDomBuilder;
 import com.github.wuic.configuration.impl.YuiCssConfigurationDomBuilder;
 import com.github.wuic.configuration.impl.YuiJavascriptConfigurationDomBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -89,11 +82,6 @@ import org.xml.sax.SAXException;
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
-
-    /**
-     * Time stamp which is used as unique identified for generated groups.
-     */
-    private static final long INSTANCE_TIMESTAMP = System.nanoTime();
 
     /**
      * The logger.
@@ -187,45 +175,6 @@ public final class WuicXmlLoader {
         } catch (SAXException se) {
             throw new BadConfigurationException(se);
         }
-    }
-
-    /**
-     * <p>
-     * Generates a group ID based on the files.
-     * </p>
-     * 
-     * @param files the files
-     * @return the generated group ID
-     */
-    public static String createGeneratedGroupId(final Collection<String> files) {
-        final StringBuilder imageIdBuilder = new StringBuilder();
-        imageIdBuilder.append(INSTANCE_TIMESTAMP);
-        imageIdBuilder.append("$");
-        
-        // Identifier is based on an hash code obtained with the all the files names
-        final StringBuilder builder = new StringBuilder();
-        
-        for (String res : files) {
-            builder.append(res);
-        }
-        
-        imageIdBuilder.append(builder.toString().hashCode());
-        
-        return imageIdBuilder.toString();
-    }
-
-    /**
-     * <p>
-     * Generates a group ID based on the given group. The ID is not generated to
-     * identify the given group but another group which refers to it.
-     * </p>
-     * 
-     * @param group the group the generated ID should be based on
-     * @return the generated group ID
-     * @throws IOException if files group can't be loaded
-     */
-    private String createGeneratedGroupId(final FilesGroup group) throws IOException {
-        return createGeneratedGroupId(group.getPaths());
     }
     
     /**
@@ -448,40 +397,12 @@ public final class WuicXmlLoader {
                 final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
                 final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
 
-                // Particular case : sprite needs an image group
-                if (config instanceof SpriteConfiguration) {
-                    putImageGroupFor(filesGroup);
-                }
-
                 // Add all the files read from the document and associate them to the ID
                 filesGroups.put(idAttribute.getNodeValue(), filesGroup);
             }
         }
     }
-    
-    /**
-     * <p>
-     * Creates and puts an image group based of the given sprite group.
-     * </p>
-     * 
-     * @param filesGroup the sprite group
-     * @throws IOException if the files group can't be loaded
-     */
-    private void putImageGroupFor(final FilesGroup filesGroup) throws IOException {
-        // Builds the ID based on the given sprite group
-        final String imageId = createGeneratedGroupId(filesGroup);
-        
-        // Register configuration
-        final ImageConfiguration config = new ImageConfigurationImpl(filesGroup.getConfiguration());
-        builtConfigurations.put("image-png", config);
-        
-        // Creates the image group base on the given group
-        final FilesGroup imageGroup = new FilesGroup(config, filesGroup);
 
-        // Add the new group
-        filesGroups.put(imageId, imageGroup);
-    }
-    
     /**
      * <p>
      * Gets a configuration identified by the given ID.
@@ -515,16 +436,5 @@ public final class WuicXmlLoader {
      */
     public Collection<String> filesGroupIdList() {
         return filesGroups.keySet();
-    }
-    
-    /**
-     * <p>
-     * Gets the cache.
-     * </p>
-     * 
-     * @return the cache
-     */
-    public Cache getCache() {
-        return cache;
     }
 }

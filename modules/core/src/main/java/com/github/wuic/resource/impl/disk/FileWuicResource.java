@@ -50,7 +50,7 @@ import java.io.InputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.1
  */
 public class FileWuicResource extends AbstractWuicResource {

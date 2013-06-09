@@ -101,11 +101,7 @@ public class CGTextInspectorEngine extends Engine {
 
         if (works()) {
             for (WuicResource resource : request.getResources()) {
-                if (resource.isAggregatable() && request.getGroup().getConfiguration().aggregate()) {
-                    inspect(resource, request, retval);
-                } else {
-                    inspect(resource, request, retval);
-                }
+                retval.add(inspect(resource, request));
             }
         }
 
@@ -125,13 +121,12 @@ public class CGTextInspectorEngine extends Engine {
      * This method is recursive.
      * </p>
      *
-     * @param inspectedList the list where the inspected resources should be stored
      * @param resource the resource
      * @param request the initial request
      * @return the resource corresponding the inspected resource specified in parameter
      * @throws IOException if an I/O error occurs while reading
      */
-    protected WuicResource inspect(final WuicResource resource, final EngineRequest request, final List<WuicResource> inspectedList)
+    protected WuicResource inspect(final WuicResource resource, final EngineRequest request)
             throws IOException {
         // Extracts the location where resource is listed in order to compute the location of the extracted imported resources
         final int lastIndexOfSlash = resource.getName().lastIndexOf("/") + 1;
@@ -147,10 +142,11 @@ public class CGTextInspectorEngine extends Engine {
 
             // Reads each line and keep the transformations in memory
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            final List<WuicResource> referencedResources = new ArrayList<WuicResource>();
 
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
-                    line = inspectLine(line, resourceLocation, request, inspectedList, inspector);
+                    line = inspectLine(line, resourceLocation, request, inspector, referencedResources);
                 }
 
                 os.write((line + "\n").getBytes());
@@ -163,7 +159,10 @@ public class CGTextInspectorEngine extends Engine {
             inspected.setTextCompressible(resource.isTextCompressible());
             inspected.setBinaryCompressible(resource.isBinaryCompressible());
 
-            inspectedList.add(inspected);
+            // Also add all the referenced resources
+            for (WuicResource ref : referencedResources) {
+                inspected.addReferencedResource(ref);
+            }
 
             return inspected;
         } finally {
@@ -173,7 +172,7 @@ public class CGTextInspectorEngine extends Engine {
 
     /**
      * <p>
-     * Inspects the given line and eventually returns some extracted resources.
+     * Inspects the given line and eventually adds some extracted resources to the resource referencing it.
      * </p>
      *
      * <p>
@@ -183,16 +182,16 @@ public class CGTextInspectorEngine extends Engine {
      * @param line the line to be inspected
      * @param resourceLocation the location of the resource
      * @param request the initial request
-     * @param extracted the list where extracted resources should be added
      * @param inspector the inspector to use
+     * @param referencedResources the collection where any referenced resource identified by the method will be added
      * @throws IOException if an I/O error occurs while reading
      * return the given line eventually transformed
      */
     protected String inspectLine(final String line,
                                  final String resourceLocation,
                                  final EngineRequest request,
-                                 final List<WuicResource> extracted,
-                                 final LineInspector inspector)
+                                 final LineInspector inspector,
+                                 final List<WuicResource> referencedResources)
             throws IOException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
@@ -219,13 +218,11 @@ public class CGTextInspectorEngine extends Engine {
                 WuicResource inspected = r;
 
                 if (r.getFileType().equals(FileType.CSS)) {
-                    // Depth should take care or current value and relative position of the original resource
-                    inspected = inspect(r, request, extracted);
+                    inspected = inspect(r, request);
                 }
 
                 configureExtracted(inspected);
-                extracted.remove(inspected);
-                extracted.add(inspected);
+                referencedResources.add(inspected);
             }
         }
 

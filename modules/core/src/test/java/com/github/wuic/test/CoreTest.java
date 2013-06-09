@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)
@@ -154,11 +154,11 @@ public class CoreTest extends WuicTest {
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
                 log.info(content);
                 final int start = content.indexOf("url : \"") + 7;
-                final int end = content.indexOf("/aggregation.png");
+                final int end = content.indexOf("/aggregate.png");
                 final String imageGroup = content.substring(start, end);
                 group = facade.getGroup(imageGroup, "");
 
-                writeToDisk(group.get(0), "aggregation.png");
+                writeToDisk(group.get(0), "aggregate.png");
             } finally {
                 if (fis != null) {
                     fis.close();

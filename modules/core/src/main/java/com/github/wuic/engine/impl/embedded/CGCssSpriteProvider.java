@@ -42,7 +42,6 @@ import com.github.wuic.FileType;
 import com.github.wuic.engine.Region;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
-import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
 
@@ -52,7 +51,7 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
@@ -90,8 +89,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
 
         // Make a resource and return it
         final byte[] bytes = cssBuilder.toString().getBytes();
-        final WuicResource spriteFile = new ByteArrayWuicResource(bytes, WuicXmlLoader.createGeneratedGroupId(regions.keySet()),
-                FileType.CSS);
+        final WuicResource spriteFile = new ByteArrayWuicResource(bytes, "sprites.css",FileType.CSS);
 
         return spriteFile;
     }

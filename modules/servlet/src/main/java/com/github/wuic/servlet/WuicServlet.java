@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
@@ -142,13 +142,13 @@ public class WuicServlet extends HttpServlet {
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
             throw new ServletException("URL pattern. Expected [groupId]/[resourceName]");
         } else {
-            getResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
+            writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
         }
     }
 
     /**
      * <p>
-     * Gets a resource.
+     * Writes a resource in the HTTP response.
      * </p>
      *
      * @param groupId the group ID
@@ -157,32 +157,57 @@ public class WuicServlet extends HttpServlet {
      * @param response the response
      * @throws IOException if an I/O error occurs
      */
-    private void getResource(final String groupId, final String resourceName, final HttpServletRequest request, final HttpServletResponse response)
+    private void writeResource(final String groupId, final String resourceName, final HttpServletRequest request, final HttpServletResponse response)
             throws IOException {
+
         // Get the files group
         final List<WuicResource> files = getWuicFacade().getGroup(groupId, request.getServletPath());
+        final WuicResource resource = getResource(files, resourceName);
         InputStream is = null;
 
+        // Resource found
+        if (resource != null) {
+            try {
+                response.setContentType(resource.getFileType().getMimeType());
+                is = resource.openStream();
+                IOUtils.copyStream(is, response.getOutputStream());
+                is = null;
+            } finally {
+                if (is != null) {
+                    is.close();
+                }
+            }
+        } else {
+            throw new IOException("Resource '" + resourceName + "' not found for group '" + groupId + "'");
+        }
+    }
+
+    /**
+     * <p>
+     * Gets the resource with the specified name
+     * </p>
+     *
+     * @param resources the resources where the research
+     * @param resourceName the name of the resource
+     * @return the resource corresponding to the name, {@code null} if nothing match
+     */
+    private WuicResource getResource(final List<WuicResource> resources, final String resourceName) {
         // Iterates the resources to find the requested element
-        for (WuicResource resource : files) {
+        for (WuicResource resource : resources) {
             // Resource found : write the stream and return
             if (resource.getName().equals(resourceName)) {
-                try {
-                    response.setContentType(resource.getFileType().getMimeType());
-                    is = resource.openStream();
-                    IOUtils.copyStream(is, response.getOutputStream());
-                    is = null;
-                } finally {
-                    if (is != null) {
-                        is.close();
-                    }
-                }
+                return resource;
+            } else if (resource.getReferencedResources() != null) {
+                // Find in referenced resources
+                final WuicResource ref = getResource(resource.getReferencedResources(), resourceName);
 
-                return;
+                if (ref != null) {
+                    return ref;
+                }
             }
         }
 
-        throw new IOException("Resource '" + resourceName + "' not found for group '" + groupId + "'");
+        return null;
     }
 
     /**

@@ -39,7 +39,6 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
-import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Engine;
 
@@ -99,45 +98,9 @@ public abstract class CGAbstractCompressorEngine extends Engine {
         
         // Compress only if needed
         if (works()) {
-            
             // Compress each file
             for (WuicResource resource : request.getResources()) {
-
-                if (resource.isTextCompressible()) {
-                    // Compression has to be implemented by sub-classes
-                    InputStream is = null;
-
-                    try {
-                        log.debug("Compressing {}", resource.getName());
-
-                        // Source
-                        is = resource.openStream();
-
-                        // Where compression result will be written
-                        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-                        // Do compression
-                        compress(is, os);
-
-                        // Now create resource
-                        final byte[] bytes = os.toByteArray();
-                        final String name = resource.getName();
-                        final FileType fileType = resource.getFileType();
-                        final WuicResource res = new ByteArrayWuicResource(bytes, name, fileType);
-                        res.setAggregatable(resource.isAggregatable());
-                        res.setBinaryCompressible(resource.isBinaryCompressible());
-                        res.setTextCompressible(resource.isTextCompressible());
-                        res.setCacheable(resource.isCacheable());
-
-                        retval.add(res);
-                    } finally {
-                        if (is != null) {
-                            is.close();
-                        }
-                    }
-                } else {
-                    retval.add(resource);
-                }
+                retval.add(compress(resource));
             }
         } else {
             retval.addAll(request.getResources());
@@ -147,6 +110,57 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             return getNext().parse(new EngineRequest(retval, request));
         } else {
             return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Compresses the given resource.
+     * </p>
+     *
+     * @param resource the resource to be compressed
+     * @return the compressed resource
+     * @throws IOException if an I/O error occurs
+     */
+    private WuicResource compress(final WuicResource resource) throws IOException {
+        if (!resource.isTextCompressible()) {
+            return resource;
+        }
+
+        // Compression has to be implemented by sub-classes
+        InputStream is = null;
+
+        try {
+            log.debug("Compressing {}", resource.getName());
+
+            // Source
+            is = resource.openStream();
+
+            // Where compression result will be written
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+            // Do compression
+            compress(is, os);
+
+            // Now create resource
+            final WuicResource res = new ByteArrayWuicResource(os.toByteArray(), resource.getName(), resource.getFileType());
+            res.setAggregatable(resource.isAggregatable());
+            res.setBinaryCompressible(resource.isBinaryCompressible());
+            res.setTextCompressible(resource.isTextCompressible());
+            res.setCacheable(resource.isCacheable());
+
+            // Also compress referenced resources
+            if (resource.getReferencedResources() != null) {
+                for (WuicResource ref : resource.getReferencedResources()) {
+                    res.addReferencedResource(compress(ref));
+                }
+            }
+
+            return res;
+        } finally {
+            if (is != null) {
+                is.close();
+            }
         }
     }
     

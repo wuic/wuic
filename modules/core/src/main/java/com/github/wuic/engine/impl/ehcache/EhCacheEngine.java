@@ -115,22 +115,9 @@ public class EhCacheEngine extends Engine {
                 final List<WuicResource> resources = getNext().parse(request);
                 final List<WuicResource> toCache = new ArrayList<WuicResource>(resources.size());
 
-                InputStream is = null;
-
                 for (WuicResource resource : resources) {
                     if (resource.isCacheable()) {
-                        try {
-                            is = resource.openStream();
-                            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-                            IOUtils.copyStream(is, os);
-                            final byte[] bytes = os.toByteArray();
-                            toCache.add(new ByteArrayWuicResource(bytes, resource.getName(),
-                                    resource.getFileType()));
-                        } finally {
-                            if (is != null) {
-                                is.close();
-                            }
-                        }
+                        toCache.add(toByteArrayResource(resource));
                     }
                 }
 
@@ -148,6 +135,38 @@ public class EhCacheEngine extends Engine {
         log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
+    }
+
+    /**
+     * <p>
+     * Converts the given resource and its referenced resources into resources wrapping an in memory byte array.
+     * </p>
+     *
+     * @param resource the resource to convert
+     * @return the byte array resource
+     * @throws IOException if an I/O error occurs
+     */
+    private WuicResource toByteArrayResource(final WuicResource resource) throws IOException {
+        InputStream is = null;
+
+        try {
+            is = resource.openStream();
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            IOUtils.copyStream(is, os);
+            final WuicResource bytes = new ByteArrayWuicResource(os.toByteArray(), resource.getName(), resource.getFileType());
+
+            if (resource.getReferencedResources() != null) {
+                for (WuicResource ref : resource.getReferencedResources()) {
+                    bytes.addReferencedResource(toByteArrayResource(ref));
+                }
+            }
+
+            return bytes;
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
     }
 
     /**

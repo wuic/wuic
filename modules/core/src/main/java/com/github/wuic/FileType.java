@@ -46,7 +46,7 @@ import java.util.Arrays;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public enum FileType {
@@ -134,7 +134,7 @@ public enum FileType {
      * Indicates if this resource is in a text format.
      * </p>
      *
-     * @return
+     * @return {@code true} if the resource is a text, {@code false} otherwise
      */
     public Boolean isText() {
         return isText;

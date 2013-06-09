@@ -40,6 +40,9 @@ package com.github.wuic.resource.impl;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * <p>
  * Base implementation of the {@link WuicResource} interface. A WuicResource is often represented by a name and a
@@ -47,7 +50,7 @@ import com.github.wuic.resource.WuicResource;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.0
  */
 public abstract class AbstractWuicResource implements WuicResource {
@@ -83,6 +86,11 @@ public abstract class AbstractWuicResource implements WuicResource {
     private Boolean aggregatable;
 
     /**
+     * Returns all the referenced resources.
+     */
+    private List<WuicResource> referencedResources;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
@@ -105,6 +113,7 @@ public abstract class AbstractWuicResource implements WuicResource {
         textCompressible = tc;
         cacheable = c;
         aggregatable = a;
+        referencedResources = null;
     }
 
     /**
@@ -187,6 +196,30 @@ public abstract class AbstractWuicResource implements WuicResource {
         aggregatable = a;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addReferencedResource(final WuicResource referenced) {
+        if (referencedResources == null) {
+            referencedResources = new ArrayList<WuicResource>();
+        }
+
+        // Do not allow duplicate resources (many resources with same name)
+        if (referencedResources.contains(referenced)) {
+            referencedResources.remove(referenced);
+        }
+
+        referencedResources.add(referenced);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<WuicResource> getReferencedResources() {
+        return referencedResources;
+    }
 
     /**
      * {@inheritDoc}

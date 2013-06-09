@@ -42,7 +42,6 @@ import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Region;
-import com.github.wuic.xml.WuicXmlLoader;
 
 import java.io.IOException;
 
@@ -61,7 +60,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
@@ -103,8 +102,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
 
         // Make a resource and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayWuicResource(bytes, WuicXmlLoader.createGeneratedGroupId(regions.keySet()),
-                FileType.JAVASCRIPT);
+        return new ByteArrayWuicResource(bytes, "sprites.js", FileType.JAVASCRIPT);
     }
 
     /**

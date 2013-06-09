@@ -81,7 +81,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
     /**
      * The file name when images are aggregated.
      */
-    public static final String AGGREGATION_NAME = "aggregation.png";
+    public static final String AGGREGATION_NAME = "aggregate.png";
     
     /**
      * The configuration.
@@ -103,7 +103,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
             setDimensionPacker(configuration.createDimensionPacker());
         } else {
             final String message = config + " must be an instance of " + ImageConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            throw new BadConfigurationException(message);
         }
     }
     

@@ -44,7 +44,6 @@ import com.github.wuic.servlet.WuicServlet;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.List;
 
 import javax.servlet.jsp.JspException;
@@ -103,7 +102,7 @@ public class WuicTag extends TagSupport {
                     default :
                     final StringBuilder msg = new StringBuilder();
                     msg.append(resource.getName());
-                    msg.append(" could not be imported. WuicTag currently uspports .js and .css extensions only");
+                    msg.append(" could not be imported. WuicTag currently supports .js and .css extensions only");
                     
                     throw new JspException(msg.toString());
                 }
@@ -167,10 +166,10 @@ public class WuicTag extends TagSupport {
         final StringBuilder urlBuilder = new StringBuilder();
         
         urlBuilder.append(WuicServlet.servletContext().getContextPath());
-        urlBuilder.append(WuicServlet.servletMapping().replace("*", ""));
+        urlBuilder.append(WuicServlet.servletMapping());
         urlBuilder.append(pageName);
         urlBuilder.append("/");
-        urlBuilder.append(URLEncoder.encode(resource.getName(), "UTF-8"));
+        urlBuilder.append(resource.getName());
         
         return urlBuilder.toString();
     }

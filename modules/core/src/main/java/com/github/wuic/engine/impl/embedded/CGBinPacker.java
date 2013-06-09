@@ -62,7 +62,7 @@ import java.util.PriorityQueue;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.3
  */
 public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
@@ -130,7 +130,7 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
         // There is one region for each dimension
         final Map<Region, T> retval = new HashMap<Region, T>(dataMap.size());
         
-        Dimension dim = dataMap.get(dataQueue.peek());
+        Dimension dim;
 
         for (T data : dataQueue) {
             dim = dataMap.get(data);
@@ -327,18 +327,6 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
          * The data associated to the region.
          */
         private D data;
-        
-        /**
-         * <p>
-         * Builds a new node.
-         * </p>
-         * 
-         * @param dimension the node's dimension
-         * @param d the associated data
-         */
-        private Node(final Dimension dimension, final D d) {
-            this(0, 0, (int) dimension.getWidth(), (int) dimension.getHeight(), d);
-        }
 
         /**
          * <p>

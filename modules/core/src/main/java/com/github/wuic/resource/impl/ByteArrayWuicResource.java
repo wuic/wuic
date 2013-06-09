@@ -51,7 +51,7 @@ import java.util.Arrays;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.0
  */
 public class ByteArrayWuicResource extends AbstractWuicResource {

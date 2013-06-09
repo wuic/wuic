@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
@@ -104,6 +105,7 @@ public class CGTextAggregatorEngine extends Engine {
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
 
         final List<WuicResource> retval = new ArrayList<WuicResource>();
+        final List<WuicResource> referencedResources = new ArrayList<WuicResource>();
 
         // Aggregate each resource
         for (WuicResource resource : request.getResources()) {
@@ -112,17 +114,16 @@ public class CGTextAggregatorEngine extends Engine {
                 try {
                     fileType = resource.getFileType();
                     is = resource.openStream();
-                    int offset = -1;
-
-                    // Add all content in the global output stream
-                    while ((offset = is.read(buffer)) > 0) {
-                        target.write(buffer, 0, offset);
-                    }
+                    IOUtils.copyStream(is, target);
 
                     // Begin content file writing on a new line when no compression is configured
                     if (!configuration.compress()) {
                         buffer[0] = '\n';
                         target.write(buffer, 0, 1);
+                    }
+
+                    if (resource.getReferencedResources() != null) {
+                        referencedResources.addAll(resource.getReferencedResources());
                     }
                 } finally {
                     if (is != null) {
@@ -134,7 +135,17 @@ public class CGTextAggregatorEngine extends Engine {
             }
         }
 
-        retval.add(new ByteArrayWuicResource(target.toByteArray(), fileName, fileType));
+        // Create the a resource containing all the aggregated resources
+        final WuicResource aggregate = new ByteArrayWuicResource(target.toByteArray(), fileName, fileType);
+
+        // Eventually add some extracted referenced resources
+        if (!referencedResources.isEmpty()) {
+            for (WuicResource ref : referencedResources) {
+                aggregate.addReferencedResource(ref);
+            }
+        }
+
+        retval.add(aggregate);
 
         if (getNext() != null) {
             return getNext().parse(new EngineRequest(retval, request));
