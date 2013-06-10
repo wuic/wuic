@@ -71,7 +71,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public class SshWuicResourceProtocol implements WuicResourceProtocol {
@@ -245,9 +245,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
             fileSize = fileSize * MULTIPLY + (long) (buf[0] - '0');
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("File size : " + fileSize);
-        }
+        log.debug("File size : {} ", fileSize);
 
         return fileSize;
     }

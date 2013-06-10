@@ -57,7 +57,12 @@ Breaking changes :
 
 Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
 
+Not tracked issues :
+- Each time a steam's resource is retrieved, we look up for it, which increase the overhead. This look up is now done only one time when the resource is created.
+
 Breaking changes :
 - 'file' parameter not supported anymore in URL pattern, use this one instead : /[groupId]/[fileName]
 
 ##### v0.3.4 #####
+
+Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed

@@ -63,7 +63,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public class FtpWuicResourceProtocol implements WuicResourceProtocol {
@@ -142,15 +142,11 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
      */
     private void connect() throws IOException {
         if (!ftpClient.isConnected()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Connecting to FTP server.");
-            }
+            log.debug("Connecting to FTP server.");
 
             ftpClient.connect(hostName, port);
 
-            if (log.isDebugEnabled()) {
-                log.debug(ftpClient.getReplyString());
-            }
+            log.debug(ftpClient.getReplyString());
 
             // After connection attempt, you should check the reply code to verify success
             final int reply = ftpClient.getReplyCode();
@@ -240,9 +236,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Disconnecting from FTP server...");
-            }
+            log.debug("Disconnecting from FTP server...");
 
             // This object if not referenced and is going to be garbage collected.
             // Do not keep the client connected.

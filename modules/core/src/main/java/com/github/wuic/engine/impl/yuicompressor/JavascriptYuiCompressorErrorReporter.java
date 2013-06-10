@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.1.0
  */
 public class JavascriptYuiCompressorErrorReporter implements ErrorReporter {
@@ -69,12 +69,10 @@ public class JavascriptYuiCompressorErrorReporter implements ErrorReporter {
             final int line,
             final String lineSource,
             final int lineOffset) {
-        if (log.isDebugEnabled()) {
-            if (line < 0) {
-                log.debug(message);
-            } else {
-                log.debug(line + ':' + lineOffset + ':' + message);
-            }
+        if (line < 0) {
+            log.debug("Source name : {} - Message : {} ", sourceName, message);
+        } else {
+            log.debug("Source name : {} - Line Number : {} - Column : {} - Message : {} ", sourceName, line, lineOffset, message);
         }
     }
  
@@ -88,9 +86,9 @@ public class JavascriptYuiCompressorErrorReporter implements ErrorReporter {
             lineSource,
             final int lineOffset) {
         if (line < 0) {
-            log.error(message);
+            log.error("Source name : {} - Message : {} ", sourceName, message);
         } else {
-            log.error(line + ':' + lineOffset + ':' + message);
+            log.error("Source name : {} - Line Number : {} - Column : {} - Message : {} ", sourceName, line, lineOffset, message);
         }
     }
  
