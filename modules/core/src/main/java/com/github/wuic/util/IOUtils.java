@@ -38,10 +38,22 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.exception.WuicResourceNotFoundException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +71,7 @@ import java.util.zip.ZipFile;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public final class IOUtils {
@@ -144,7 +156,7 @@ public final class IOUtils {
     public static String readString(final InputStreamReader reader) throws IOException {
         final StringBuilder builder = new StringBuilder();
         final char[] buff = new char[IOUtils.WUIC_BUFFER_LEN];
-        int offset = -1;
+        int offset;
 
         // read content
         while ((offset = reader.read(buff)) != -1) {
@@ -156,20 +168,41 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Builds a new stream pointing to a file represented by the given path.
+     * </p>
+     *
+     * @param path the path
+     * @return the stream
+     * @throws WuicResourceNotFoundException if the file is not found
+     */
+    public static InputStream newFileInputStream(final String path) throws WuicResourceNotFoundException {
+        try {
+            return new FileInputStream(path);
+        } catch (FileNotFoundException fne) {
+            throw new WuicResourceNotFoundException(fne);
+        }
+    }
+
+    /**
+     * <p>
      * Copies the data from the given reader to the given output stream.
      * </p>
      *
      * @param reader the {@code Reader}
      * @param output the {@code OutputStream}
-     * @throws IOException in an I/O error occurs
+     * @throws StreamException in an I/O error occurs
      */
     public static void copyReaderToStream(final Reader reader, final OutputStream output)
-            throws IOException {
-        int offset = -1;
+            throws StreamException {
+        int offset;
         final char[] buffer = new char[WUIC_BUFFER_LEN];
 
-        while ((offset = reader.read(buffer)) != -1) {
-            output.write(String.copyValueOf(buffer, 0, offset).getBytes());
+        try {
+            while ((offset = reader.read(buffer)) != -1) {
+                output.write(String.copyValueOf(buffer, 0, offset).getBytes());
+            }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
 
@@ -181,15 +214,19 @@ public final class IOUtils {
      * @param is the {@code InputStream}
      * @param writer the {@code Writer}
      * @param cs the charset to use to convert byte array to char array
-     * @throws IOException in an I/O error occurs
+     * @throws com.github.wuic.exception.wrapper.StreamException in an I/O error occurs
      */
     public static void copyStreamToWriter(final InputStream is, final Writer writer, final String cs)
-            throws IOException {
-        int offset = -1;
+            throws StreamException {
+        int offset;
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
-        while ((offset = is.read(buffer)) != -1) {
-            writer.write(new String(Arrays.copyOf(buffer, offset), cs));
+        try {
+            while ((offset = is.read(buffer)) != -1) {
+                writer.write(new String(Arrays.copyOf(buffer, offset), cs));
+            }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
 
@@ -200,15 +237,19 @@ public final class IOUtils {
      *
      * @param is the {@code InputStream}
      * @param os the {@code OutputStream}
-     * @throws IOException in an I/O error occurs
+     * @throws com.github.wuic.exception.wrapper.StreamException in an I/O error occurs
      */
     public static void copyStream(final InputStream is, final OutputStream os)
-            throws IOException {
-        int offset = -1;
+            throws StreamException {
+        int offset;
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
-        while ((offset = is.read(buffer)) != -1) {
-            os.write(buffer, 0, offset);
+        try {
+            while ((offset = is.read(buffer)) != -1) {
+                os.write(buffer, 0, offset);
+            }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
     
@@ -224,9 +265,9 @@ public final class IOUtils {
      * @param file the file to check
      * @param pattern the pattern to match
      * @return the matching paths
-     * @throws IOException if any I/O error occurs while reading file
+     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading file
      */
-    public static List<String> lookupFileResources(final File file, final Pattern pattern) throws IOException {
+    public static List<String> lookupFileResources(final File file, final Pattern pattern) throws StreamException {
         final String pathName = file.getAbsolutePath().replace('\\', '/');
 
         if (file.isFile()) {
@@ -235,7 +276,11 @@ public final class IOUtils {
             if (matcher.find()) {
                 return Arrays.asList(matcher.group());
             } else if (pathName.endsWith(".jar") || pathName.endsWith(".zip")) {
-                return lookupArchiveResources(new ZipFile(file), pattern);
+                try {
+                    return lookupArchiveResources(new ZipFile(file), pattern);
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                }
             } else {
                 return Arrays.asList();
             }
@@ -252,9 +297,8 @@ public final class IOUtils {
      * @param zipFile the zip file to read
      * @param pattern the pattern to match
      * @return the matching paths
-     * @throws IOException if any I/O error occurs while reading the archive
      */
-    public static List<String> lookupArchiveResources(final ZipFile zipFile, final Pattern pattern) throws IOException {
+    public static List<String> lookupArchiveResources(final ZipFile zipFile, final Pattern pattern) {
         final Enumeration<? extends ZipEntry> entries = zipFile.entries();
         final List<String> retval = new ArrayList<String>();
 
@@ -277,11 +321,10 @@ public final class IOUtils {
      * @param directory the directory
      * @param pattern the pattern
      * @return the matching paths
-     * @throws IOException if the given file is not a directory
      */
-    public static List<String> lookupDirectoryResources(final File directory, final Pattern pattern) throws IOException {
+    public static List<String> lookupDirectoryResources(final File directory, final Pattern pattern) throws StreamException {
         if (!directory.isDirectory()) {
-            throw new IOException(new IllegalArgumentException(directory.getAbsolutePath() + " must be a directory."));
+            throw new BadArgumentException(new IllegalArgumentException(directory.getAbsolutePath() + " must be a directory."));
         } else {
             final List<String> retval = new ArrayList<String>();
 

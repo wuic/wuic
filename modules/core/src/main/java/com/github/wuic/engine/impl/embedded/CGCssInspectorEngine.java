@@ -40,6 +40,7 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiCssConfiguration;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 
 /**
  * <p>
@@ -47,7 +48,7 @@ import com.github.wuic.configuration.YuiCssConfiguration;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class CGCssInspectorEngine extends CGTextInspectorEngine {
@@ -63,8 +64,8 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
         super(config, new CGCssImportLineInspector(), new CGCssBackgroundUrlLineInspector());
 
         if (!(config instanceof YuiCssConfiguration)) {
-            final String message = config + " must be an instance of " + YuiCssConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            final String message = String.format("%s must be an instance of %s", config, YuiCssConfiguration.class.getName());
+            throw new BadArgumentException(new IllegalArgumentException(message));
         }
     }
 }

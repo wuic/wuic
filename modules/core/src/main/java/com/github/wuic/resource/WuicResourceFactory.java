@@ -38,7 +38,9 @@
 
 package com.github.wuic.resource;
 
-import java.io.IOException;
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.wrapper.StreamException;
+
 import java.util.List;
 
 /**
@@ -47,7 +49,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public interface WuicResourceFactory {
@@ -59,9 +61,9 @@ public interface WuicResourceFactory {
      *
      * @param path the path representing the location of the resource(s).
      * @return the created resource(s)
-     * @throws IOException if an I/O error occurs when creating the resource
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the resource
      */
-    List<WuicResource> create(String path) throws IOException;
+    List<WuicResource> create(String path) throws StreamException;
 
     /**
      * <p>
@@ -71,18 +73,18 @@ public interface WuicResourceFactory {
      *
      * @param path the path access
      * @return the resulting real paths
-     * @throws IOException if an I/O error occurs when creating the resource
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the resource
      */
-    List<String> computeRealPaths(String path) throws IOException;
+    List<String> computeRealPaths(String path) throws StreamException;
 
     /**
      * <p>
-     * Sets a new property. Could throw an {@code IllegalArgumentException} if the key is not supported
-     * or if the value is not correct.
+     * Sets a new property.
      * </p>
      *
      * @param key the key
      * @param value the value
+     * @throws WuicRfPropertyNotSupportedException if the key is not supported or if the value is not correct
      */
-    void setProperty(String key, String value);
+    void setProperty(String key, String value) throws WuicRfPropertyNotSupportedException;
 }

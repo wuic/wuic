@@ -38,22 +38,25 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.UnableToInstantiateException;
+import com.github.wuic.exception.xml.WuicXmlException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
-import com.github.wuic.configuration.SpriteConfiguration;
 
+import com.github.wuic.exception.xml.WuicXmlMissingConfigurationElementException;
+import com.github.wuic.exception.xml.WuicXmlNoConfigurationIdAttributeException;
+import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
 import net.sf.ehcache.Cache;
 
 import org.w3c.dom.Node;
 
 /**
  * <p>
- * This builder produces {@link SpriteConfiguration} instances.
+ * This builder produces {@link com.github.wuic.configuration.SpriteConfiguration} instances.
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class SpriteConfiguratonDomBuilder implements DomConfigurationBuilder {
@@ -63,7 +66,7 @@ public class SpriteConfiguratonDomBuilder implements DomConfigurationBuilder {
      */
     @Override
     public Configuration build(final Node nodeConfiguration, final Cache cache)
-            throws BadConfigurationException {
+            throws WuicXmlException {
         // Expected elements
         String doCache = null;
         String compress = null;
@@ -90,28 +93,29 @@ public class SpriteConfiguratonDomBuilder implements DomConfigurationBuilder {
         
         // If one element is null, then throw an exception
         if (compress == null || aggregate == null || spriteClassName == null || charset == null) {
-            final String message = "Elements compress, aggregate, charset and sprite-provider must be defined";
-            throw new BadConfigurationException(message);
+            throw new WuicXmlMissingConfigurationElementException("compress", "aggregate", "charset", "sprite-provider");
         } 
 
         // Check if the ID exists to get it
         final Node idAttribute = nodeConfiguration.getAttributes().getNamedItem("id");
         
         if (idAttribute == null) {
-            throw new BadConfigurationException("id has not been found");
+            throw new WuicXmlNoConfigurationIdAttributeException();
         }
         
         final String id = idAttribute.getNodeValue();
-        
-        // Create and return the configuration
-        final SpriteConfiguration base = new SpriteConfigurationImpl(id,
-                Boolean.parseBoolean(doCache),
-                Boolean.parseBoolean(compress),
-                Boolean.parseBoolean(aggregate),
-                charset,
-                cache,
-                spriteClassName);
 
-        return base;
+        try {
+            // Create and return the configuration
+            return new SpriteConfigurationImpl(id,
+                    Boolean.parseBoolean(doCache),
+                    Boolean.parseBoolean(compress),
+                    Boolean.parseBoolean(aggregate),
+                    charset,
+                    cache,
+                    spriteClassName);
+        } catch (UnableToInstantiateException utie) {
+            throw new WuicXmlUnableToInstantiateException(utie);
+        }
     }
 }

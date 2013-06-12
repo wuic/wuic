@@ -39,9 +39,15 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.exception.ErrorCode;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -51,7 +57,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,7 +71,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
@@ -93,9 +102,31 @@ public class WuicServlet extends HttpServlet {
     private static String servletMapping;
 
     /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
      * The expected pattern in request URI's.
      */
     private Pattern urlPattern;
+
+    /**
+     * Mapping error code to their HTTP code.
+     */
+    private Map<Long, Integer> errorCodeToHttpCode;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     */
+    public WuicServlet() {
+        errorCodeToHttpCode = new HashMap<Long, Integer>();
+
+        errorCodeToHttpCode.put(ErrorCode.RESOURCE_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
+        errorCodeToHttpCode.put(ErrorCode.GROUP_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
+    }
 
     /**
      * {@inheritDoc}
@@ -110,8 +141,12 @@ public class WuicServlet extends HttpServlet {
         wuicCp.append(wuicCp.length() == 0 ? "" : "/");
         wuicCp.append(servletMapping());
 
-        final WuicFacade facade = WuicFacade.newInstance(wuicCp.toString());
-        config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
+        try {
+            final WuicFacade facade = WuicFacade.newInstance(wuicCp.toString());
+            config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
+        } catch (WuicException we) {
+            throw new ServletException("Unable to initialize WuicServlet", we);
+        }
 
         // Build expected URL pattern
         final StringBuilder patternBuilder = new StringBuilder();
@@ -140,9 +175,21 @@ public class WuicServlet extends HttpServlet {
         final Matcher matcher = urlPattern.matcher(request.getRequestURI());
 
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
-            throw new ServletException("URL pattern. Expected [groupId]/[resourceName]");
+            response.getWriter().println("URL pattern. Expected [groupId]/[resourceName]");
+            response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
-            writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
+            try {
+                writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
+            } catch (WuicException we) {
+                log.error("Unable to retrieve resource", we);
+
+                // Use 500 has default status code
+                final Integer httpCode = errorCodeToHttpCode.containsKey(we.getErrorCode()) ?
+                        errorCodeToHttpCode.get(we.getErrorCode()) : HttpURLConnection.HTTP_INTERNAL_ERROR;
+
+                response.getWriter().println(we.getMessage());
+                response.setStatus(httpCode);
+            }
         }
     }
 
@@ -155,10 +202,10 @@ public class WuicServlet extends HttpServlet {
      * @param resourceName the resource name
      * @param request the request
      * @param response the response
-     * @throws IOException if an I/O error occurs
+     * @throws WuicException if an I/O error occurs or resource not found
      */
     private void writeResource(final String groupId, final String resourceName, final HttpServletRequest request, final HttpServletResponse response)
-            throws IOException {
+            throws WuicException {
 
         // Get the files group
         final List<WuicResource> files = getWuicFacade().getGroup(groupId, request.getServletPath());
@@ -172,13 +219,13 @@ public class WuicServlet extends HttpServlet {
                 is = resource.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
                 is = null;
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
             } finally {
-                if (is != null) {
-                    is.close();
-                }
+                IOUtils.close(is);
             }
         } else {
-            throw new IOException("Resource '" + resourceName + "' not found for group '" + groupId + "'");
+            throw new WuicResourceNotFoundException(resourceName, groupId);
         }
     }
 

@@ -38,6 +38,7 @@
 
 package com.github.wuic.configuration;
 
+import com.github.wuic.exception.xml.WuicXmlException;
 import net.sf.ehcache.Cache;
 
 import org.w3c.dom.Node;
@@ -49,7 +50,7 @@ import org.w3c.dom.Node;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.1.0
  */
 public interface DomConfigurationBuilder {
@@ -62,7 +63,7 @@ public interface DomConfigurationBuilder {
      * @param nodeConfiguration the DOM element
      * @param cache the cache
      * @return the built configuration
-     * @throws BadConfigurationException if the node does not represents the expected configuration
+     * @throws WuicXmlException if the node does not represents the expected configuration
      */
-    Configuration build(Node nodeConfiguration, Cache cache) throws BadConfigurationException;
+    Configuration build(Node nodeConfiguration, Cache cache) throws WuicXmlException;
 }

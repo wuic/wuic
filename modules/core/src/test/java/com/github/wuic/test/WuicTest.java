@@ -17,7 +17,6 @@ import com.github.wuic.util.IOUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * <p>
@@ -25,7 +24,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public class WuicTest {
@@ -38,9 +37,9 @@ public class WuicTest {
      *
      * @param name the file name on the disk
      * @param resource the resource
-     * @throws java.io.IOException if an I/O error occurs
+     * @throws Exception if an I/O error occurs
      */
-    protected void writeToDisk(final WuicResource resource, final String name) throws IOException {
+    protected void writeToDisk(final WuicResource resource, final String name) throws Exception {
         final String dir = System.getProperty("wuic.test.storeTo");
 
         if (dir != null) {

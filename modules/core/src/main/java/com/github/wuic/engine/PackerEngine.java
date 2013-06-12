@@ -37,7 +37,10 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
+import com.github.wuic.util.IOUtils;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -55,7 +58,7 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.0
  */
 public abstract class PackerEngine extends Engine {
@@ -83,9 +86,9 @@ public abstract class PackerEngine extends Engine {
      * 
      * @param files the images to pack
      * @return a map which associates each packed image to its allocated region
-     * @throws IOException if one image could not be read
+     * @throws WuicException if one image could not be read
      */
-    public Map<Region, WuicResource> pack(final List<WuicResource> files) throws IOException {
+    public Map<Region, WuicResource> pack(final List<WuicResource> files) throws WuicException {
 
         // Clear previous work
         dimensionPacker.clearElements();
@@ -99,10 +102,10 @@ public abstract class PackerEngine extends Engine {
                 final BufferedImage buff = ImageIO.read(is);
                 
                 dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), file);
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
             } finally {
-                if (is != null) {
-                    is.close();
-                }
+                IOUtils.close(is);
             }
         }
         

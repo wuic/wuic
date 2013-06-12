@@ -41,9 +41,10 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.resource.WuicResource;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -52,7 +53,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class CGCompositeEngine extends Engine {
@@ -71,7 +72,7 @@ public class CGCompositeEngine extends Engine {
      */
     public CGCompositeEngine(final Engine... e) {
         if (e == null || e.length == 0) {
-            throw new IllegalArgumentException("A composite engine must be built with a non-null and non-empty array of engines");
+            throw new BadArgumentException(new IllegalArgumentException("A composite engine must be built with a non-null and non-empty array of engines"));
         }
 
         engines = e;
@@ -81,7 +82,7 @@ public class CGCompositeEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
          List<WuicResource> retval = request.getResources();
 
         for (Engine engine : engines) {

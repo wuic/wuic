@@ -38,13 +38,15 @@
 
 package com.github.wuic.resource;
 
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+
 /**
  * <p>
  * Abstraction of a builder producing {@link WuicResourceFactory} objects.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public interface WuicResourceFactoryBuilder {
@@ -60,15 +62,15 @@ public interface WuicResourceFactoryBuilder {
 
     /**
      * <p>
-     * Decorates this builder with a property. Could throws an {@code IllegalArgumentException}
-     * is the property key is not supported or if the value is incorrect.
+     * Decorates this builder with a property.
      * </p>
      *
      * @param key the key
      * @param value the value
      * @return a builder taking in consideration the new property
+     * @throws com.github.wuic.exception.WuicRfPropertyNotSupportedException if the property key is not supported or if the value is incorrect
      */
-    WuicResourceFactoryBuilder property(String key, String value);
+    WuicResourceFactoryBuilder property(String key, String value) throws WuicRfPropertyNotSupportedException;
 
     /**
      * <p>

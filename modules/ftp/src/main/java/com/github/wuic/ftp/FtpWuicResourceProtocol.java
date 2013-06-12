@@ -39,6 +39,7 @@
 package com.github.wuic.ftp;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
@@ -128,9 +129,13 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
-        connect();
-        return recursiveSearch(basePath, pattern);
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
+        try {
+            connect();
+            return recursiveSearch(basePath, pattern);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**
@@ -211,23 +216,27 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
-        // Connect if necessary
-        connect();
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
+        try {
+            // Connect if necessary
+            connect();
 
-        ftpClient.changeWorkingDirectory(basePath);
+            ftpClient.changeWorkingDirectory(basePath);
 
-        // Download file into memory
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
-        IOUtils.copyStream(ftpClient.retrieveFileStream(realPath), baos);
+            // Download file into memory
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
+            IOUtils.copyStream(ftpClient.retrieveFileStream(realPath), baos);
 
-        // Check if download is OK
-        if (!ftpClient.completePendingCommand()) {
-            throw new IOException("FTP command not completed correctly.");
+            // Check if download is OK
+            if (!ftpClient.completePendingCommand()) {
+                throw new IOException("FTP command not completed correctly.");
+            }
+
+            // Create resource
+            return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
-
-        // Create resource
-        return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
     }
 
     /**

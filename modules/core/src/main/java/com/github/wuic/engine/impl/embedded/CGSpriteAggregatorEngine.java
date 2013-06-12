@@ -38,14 +38,23 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.exception.UnableToInstantiateException;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
 import com.github.wuic.resource.WuicResource;
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.PackerEngine;
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -65,10 +74,15 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.0
  */
 public class CGSpriteAggregatorEngine extends PackerEngine {
+
+    /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Sprite provider.
@@ -91,18 +105,21 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
      * </p>
      * 
      * @param config the configuration
-     * @throws BadConfigurationException if a bad configuration is detected
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a bad configuration is detected
      */
     public CGSpriteAggregatorEngine(final Configuration config)
-            throws BadConfigurationException {
+            throws WuicXmlReadException {
         if (config instanceof SpriteConfiguration) {
-            configuration = (SpriteConfiguration) config;
-            spriteProvider = configuration.createSpriteProvider();
-            aggregatorEngine = new CGImageAggregatorEngine(config);
-            setDimensionPacker(configuration.createDimensionPacker());
+            try {
+                configuration = (SpriteConfiguration) config;
+                spriteProvider = configuration.createSpriteProvider();
+                aggregatorEngine = new CGImageAggregatorEngine(config);
+                setDimensionPacker(configuration.createDimensionPacker());
+            } catch (UnableToInstantiateException utie) {
+                throw new WuicXmlUnableToInstantiateException(utie);
+            }
         } else {
-            final String message = config + " must be an instance of " + SpriteConfiguration.class.getName();
-            throw new BadConfigurationException(message);
+            throw new BadClassException(config, SpriteConfiguration.class);
         }
     }
     
@@ -110,12 +127,11 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
 
         // Generate the sprite file with the URL of the final image
-        final StringBuilder url = new StringBuilder(request.getContextPath());
-        url.append(request.getGroup().getId());
-        
+        final String url = StringUtils.merge(new String[] { request.getContextPath(), request.getGroup().getId(), }, "/");
+
         /*
          * Create a resource for each image if the configuration says that no
          * aggregation should be done
@@ -136,13 +152,13 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                     final BufferedImage buff = ImageIO.read(is);
                     spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
                     
-                    final WuicResource resource = spriteProvider.getSprite(url.toString(), request.getGroup().getId());
+                    final WuicResource resource = spriteProvider.getSprite(url, request.getGroup().getId());
                     resource.addReferencedResource(file);
                     retval.add(resource);
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
                 } finally {
-                    if (is != null) {
-                        is.close();
-                    }
+                    IOUtils.close(is);
                 }
             }
             
@@ -157,15 +173,14 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                 spriteProvider.addRegion(result.getKey(), result.getValue().getName());
             }
 
-
-            final WuicResource retval = spriteProvider.getSprite(url.toString(), request.getGroup().getId());
+            final WuicResource retval = spriteProvider.getSprite(url, request.getGroup().getId());
             final List<WuicResource> image = aggregatorEngine.parse(request);
 
-            if (image.size() != 1) {
-                throw new IllegalStateException("One aggregated image is expected when aggregator engine is called. Actual : " + image.size());
+            if (image.size() == 1) {
+                retval.addReferencedResource(image.get(0));
+            } else {
+                log.error(String.format("Expected only one aggregated image but found %d", image.size()), new IllegalStateException());
             }
-
-            retval.addReferencedResource(image.get(0));
 
             return Arrays.asList(retval);
         }

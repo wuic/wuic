@@ -39,10 +39,12 @@
 package com.github.wuic.gstorage;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.StringUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -70,7 +72,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
@@ -159,7 +161,8 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             builder.setServiceAccountId(serviceAccountId);
 
             // TODO : raise exception if private key not found
-            builder.setServiceAccountPrivateKeyFromP12File(new File(this.getClass().getResource("/" + privateKeyFile).getFile()));
+            final String keyPath = StringUtils.merge(new String[] { "/", privateKeyFile, }, "/");
+            builder.setServiceAccountPrivateKeyFromP12File(new File(getClass().getResource(keyPath).getFile()));
             builder.setServiceAccountScopes(Arrays.asList(StorageScopes.DEVSTORAGE_FULL_CONTROL));
 
             // Build Google credential
@@ -180,11 +183,16 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
-        // Check if we are ready to read on Google Storage
-        this.checkGoogleOAuth2();
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
 
-        return recursiveSearch(basePath, pattern);
+        try {
+            // Check if we are ready to read on Google Storage
+            this.checkGoogleOAuth2();
+
+            return recursiveSearch(basePath, pattern);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**
@@ -195,15 +203,15 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
      * @param path the path
      * @param pattern the pattern to match
      * @return the list of matching files
-     * @throws java.io.IOException if the client can't move to a directory or any I/O error occurs
+     * @throws StreamException if the client can't move to a directory or any I/O error occurs
      */
-    private List<String> recursiveSearch(final String path, final Pattern pattern) throws IOException {
+    private List<String> recursiveSearch(final String path, final Pattern pattern) throws StreamException {
+        Objects objectListing;
 
-        Objects objectListing = null;
         try {
             objectListing = storage.objects().list(bucketName).execute();
         } catch (IOException ioe) {
-            throw new IOException("Can't get Google Storage Object on bucket " + bucketName + " for resource key : " + path, ioe);
+            throw new StreamException(new IOException(String.format("Can't get Google Storage Object on bucket %s for resource key : %s", bucketName, path), ioe));
         }
 
         final List<String> retval = new ArrayList<String>();
@@ -225,16 +233,20 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
-        // Try to get a Storage object
-        final Storage.Objects.Get storageObject = storage.objects().get(bucketName, realPath);
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
+        try {
+            // Try to get a Storage object
+            final Storage.Objects.Get storageObject = storage.objects().get(bucketName, realPath);
 
-        // Download file
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
-        storageObject.executeMediaAndDownloadTo(baos);
+            // Download file
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
+            storageObject.executeMediaAndDownloadTo(baos);
 
-        // Create resource
-        return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
+            // Create resource
+            return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**

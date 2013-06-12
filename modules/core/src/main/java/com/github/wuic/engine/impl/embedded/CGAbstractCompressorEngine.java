@@ -38,18 +38,20 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public abstract class CGAbstractCompressorEngine extends Engine {
@@ -84,15 +86,15 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * 
      * @param source the source
      * @param target the file where to compressed content should be written
-     * @throws IOException if an I/O error occurs during compression
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs during compression
      */
-    protected abstract void compress(InputStream source, OutputStream target) throws IOException;
+    protected abstract void compress(InputStream source, OutputStream target) throws StreamException;
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
         // Return the same number of files
         final List<WuicResource> retval = new ArrayList<WuicResource>(request.getResources().size());
         
@@ -120,9 +122,9 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      *
      * @param resource the resource to be compressed
      * @return the compressed resource
-     * @throws IOException if an I/O error occurs
+     * @throws WuicException if an I/O error occurs
      */
-    private WuicResource compress(final WuicResource resource) throws IOException {
+    private WuicResource compress(final WuicResource resource) throws WuicException {
         if (!resource.isTextCompressible()) {
             return resource;
         }
@@ -158,9 +160,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
 
             return res;
         } finally {
-            if (is != null) {
-                is.close();
-            }
+            IOUtils.close(is);
         }
     }
     

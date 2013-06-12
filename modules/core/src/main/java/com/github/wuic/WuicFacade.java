@@ -38,13 +38,12 @@
 
 package com.github.wuic;
 
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public final class WuicFacade {
@@ -86,10 +85,9 @@ public final class WuicFacade {
      * </p>
      *
      * @param cp the context path where the files will be exposed
-     * @throws IOException if an I/O error occurs
-     * @throws BadConfigurationException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    private WuicFacade(final String cp) throws IOException, BadConfigurationException {
+    private WuicFacade(final String cp) throws WuicException {
         factoryBuilder = new EngineFactoryBuilderImpl();
         contextPath = cp;
     }
@@ -101,10 +99,9 @@ public final class WuicFacade {
      *
      * @param wuicXmlPath the wuic.xml location in the classpath
      * @param cp the context path where the files will be exposed
-     * @throws IOException if an I/O error occurs
-     * @throws BadConfigurationException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    private WuicFacade(final String wuicXmlPath, final String cp) throws IOException, BadConfigurationException {
+    private WuicFacade(final String wuicXmlPath, final String cp) throws WuicException {
         factoryBuilder = new EngineFactoryBuilderImpl(wuicXmlPath);
         contextPath = cp;
     }
@@ -112,37 +109,33 @@ public final class WuicFacade {
     /**
      * <p>
      * Gets a new instance. If an error occurs, it will be wrapped in a
-     * {@link WuicException} which will be thrown.
+     * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
      * </p>
      *
      * @param contextPath the context where the resources will be exposed
      * @return the unique instance
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    public static synchronized WuicFacade newInstance(final String contextPath) {
+    public static synchronized WuicFacade newInstance(final String contextPath) throws WuicException {
         return newInstance(contextPath, null);
     }
 
     /**
      * <p>
      * Gets a new instance. If an error occurs, it will be wrapped in a
-     * {@link WuicException} which will be thrown.
+     * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
      * </p>
      *
      * @param wuicXmlPath the specific wuic.xml path in classpath (could be {@code null}
      * @param contextPath the context where the resources will be exposed
      * @return the unique instance
+     *
      */
-    public static synchronized WuicFacade newInstance(final String contextPath, final String wuicXmlPath) {
-        try {
-            if (wuicXmlPath != null) {
-                return new WuicFacade(wuicXmlPath, contextPath);
-            } else {
-                return new WuicFacade(contextPath);
-            }
-        } catch (BadConfigurationException bce) {
-            throw new WuicException(bce);
-        } catch (IOException ioe) {
-            throw new WuicException(ioe);
+    public static synchronized WuicFacade newInstance(final String contextPath, final String wuicXmlPath) throws WuicException {
+        if (wuicXmlPath != null) {
+            return new WuicFacade(wuicXmlPath, contextPath);
+        } else {
+            return new WuicFacade(contextPath);
         }
     }
 
@@ -159,38 +152,31 @@ public final class WuicFacade {
     
     /**
      * <p>
-     * Gets the files representing group identified by the given ID. If any error
-     * occurs, then they will be wrapped in a {@link WuicException} which will be
-     * thrown.
+     * Gets the files representing group identified by the given ID.
      * </p>
      * 
      * @param id the group ID
      * @param requestPath the path from the requester location
      * @return the files
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    public synchronized List<WuicResource> getGroup(final String id, final String requestPath) {
-        try {
-            final long start = System.currentTimeMillis();
+    public synchronized List<WuicResource> getGroup(final String id, final String requestPath) throws WuicException {
+        final long start = System.currentTimeMillis();
 
-            log.info("Getting files for group : {}", id);
+        log.info("Getting files for group : {}", id);
 
-            // Get the group
-            final FilesGroup group = factoryBuilder.getLoader().getFilesGroup(id);
+        // Get the group
+        final FilesGroup group = factoryBuilder.getLoader().getFilesGroup(id);
 
-            // Build the engine that generates the files
-            final FileType fileType = group.getConfiguration().getFileType();
-            final Engine engine = factoryBuilder.build().create(fileType);
-         
-            // Parse the files
-            final List<WuicResource> retval = engine.parse(new EngineRequest(contextPath, requestPath, group));
+        // Build the engine that generates the files
+        final FileType fileType = group.getConfiguration().getFileType();
+        final Engine engine = factoryBuilder.build().create(fileType);
 
-            log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+        // Parse the files
+        final List<WuicResource> retval = engine.parse(new EngineRequest(contextPath, requestPath, group));
 
-            return retval;
-        } catch (BadConfigurationException bce) {
-            throw new WuicException(bce);
-        } catch (IOException ioe) {
-            throw new WuicException(ioe);
-        }
+        log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+
+        return retval;
     }
 }

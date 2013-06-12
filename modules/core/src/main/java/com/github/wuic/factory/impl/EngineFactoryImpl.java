@@ -39,7 +39,8 @@
 package com.github.wuic.factory.impl;
 
 import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
@@ -57,7 +58,7 @@ import java.util.Map;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class EngineFactoryImpl implements EngineFactory {
@@ -91,10 +92,10 @@ public class EngineFactoryImpl implements EngineFactory {
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws BadConfigurationException {
+    public Engine create(final FileType fileType) throws WuicXmlReadException {
         
         if (!configurationForFileType.containsKey(fileType)) {
-            throw new IllegalArgumentException(fileType + " has no supported configuration associated");
+            throw new BadArgumentException(new IllegalArgumentException(String.format("%s has no supported configuration associated", fileType)));
         }
         
         // Chose the factory according to the type

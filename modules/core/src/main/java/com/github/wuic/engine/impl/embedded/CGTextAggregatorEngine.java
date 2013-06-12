@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
@@ -45,7 +46,6 @@ import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends Engine {
@@ -88,7 +88,7 @@ public class CGTextAggregatorEngine extends Engine {
      */
     @Override
     public List<WuicResource> parse(final EngineRequest request)
-            throws IOException {
+            throws WuicException {
 
         // Do nothing if the configuration says that no aggregation should be done
         if (!works()) {
@@ -126,9 +126,7 @@ public class CGTextAggregatorEngine extends Engine {
                         referencedResources.addAll(resource.getReferencedResources());
                     }
                 } finally {
-                    if (is != null) {
-                        is.close();
-                    }
+                    IOUtils.close(is);
                 }
             } else {
                 retval.add(resource);

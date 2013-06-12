@@ -39,6 +39,7 @@
 package com.github.wuic.resource.impl.classpath;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
@@ -54,7 +55,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.0
  */
 public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
@@ -138,11 +139,11 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
          * {@inheritDoc}
          */
         @Override
-        public void setProperty(final String key, final String value) {
+        public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
 
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
-                throw new IllegalArgumentException(key + " is not a property which is supported by the ClasspathWuicResourceFactory");
+                throw new WuicRfPropertyNotSupportedException(key, this.getClass());
             } else {
                 supportedProperties.put(key, value);
             }

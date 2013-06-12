@@ -39,6 +39,7 @@
 package com.github.wuic.configuration;
 
 import com.github.wuic.engine.SpriteProvider;
+import com.github.wuic.exception.UnableToInstantiateException;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ import com.github.wuic.engine.SpriteProvider;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public interface SpriteConfiguration extends ImageConfiguration, PackingConfiguration {
@@ -57,7 +58,7 @@ public interface SpriteConfiguration extends ImageConfiguration, PackingConfigur
      * </p>
      * 
      * @return the sprite provider
-     * @throws BadConfigurationException if the sprite provider could not be created
+     * @throws UnableToInstantiateException if the sprite provider could not be created
      */
-    SpriteProvider createSpriteProvider() throws BadConfigurationException;
+    SpriteProvider createSpriteProvider() throws UnableToInstantiateException;
 }

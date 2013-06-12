@@ -38,12 +38,13 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.util.IOUtils;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -54,7 +55,7 @@ import java.io.OutputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
@@ -67,20 +68,19 @@ public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
     /**
      * <p>
      * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link IllegalArgumentException} will be thrown if the configuration
+     * {@link BadClassException} will be thrown if the configuration
      * is not a {@link SpriteConfiguration}.
      * </p>
      * 
      * @param config the {@link Configuration}
-     * @throws BadConfigurationException if a bad configuration is detected
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a bad configuration is detected
      */
     public CGSpriteCompressorEngine(final Configuration config)
-            throws BadConfigurationException {
+            throws WuicXmlReadException {
         if (config instanceof SpriteConfiguration) {
             configuration = (SpriteConfiguration) config;
         } else {
-            final String message = config + " must be an instance of " + SpriteConfiguration.class.getName();
-            throw new BadConfigurationException(message);
+            throw new BadClassException(config, SpriteConfiguration.class);
         }
     }
     
@@ -89,7 +89,7 @@ public class CGSpriteCompressorEngine extends CGAbstractCompressorEngine {
      */
     @Override
     protected void compress(final InputStream source, final OutputStream target)
-            throws IOException {
+            throws StreamException {
         // Do not use char set here !
         IOUtils.copyStream(source, target);
     }

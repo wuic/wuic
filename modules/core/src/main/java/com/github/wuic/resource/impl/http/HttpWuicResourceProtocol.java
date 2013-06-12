@@ -39,6 +39,7 @@
 package com.github.wuic.resource.impl.http;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.HttpWuicResource;
@@ -57,7 +58,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public class HttpWuicResourceProtocol implements WuicResourceProtocol {
@@ -98,7 +99,7 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
         // Finding resources with a regex through HTTP protocol is tricky
         // Until this feature is implemented, we only expect quoted pattern
         // So, we unquote it by removing \Q and \E around the string to get the path
@@ -109,10 +110,14 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         final String url = baseUrl + realPath;
         log.debug("Opening HTTP access for {}", url);
 
-        return new HttpWuicResource(realPath, new URL(url), type);
+        try {
+            return new HttpWuicResource(realPath, new URL(url), type);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 }

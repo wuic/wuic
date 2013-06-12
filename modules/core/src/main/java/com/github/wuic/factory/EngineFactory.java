@@ -39,7 +39,7 @@
 package com.github.wuic.factory;
 
 import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.engine.Engine;
 
 /**
@@ -48,7 +48,7 @@ import com.github.wuic.engine.Engine;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.1.0
  */
 public interface EngineFactory {
@@ -56,14 +56,14 @@ public interface EngineFactory {
     /**
      * <p>
      * Creates an {@link Engine} according to a {@link FileType}. If the factory
-     * is not configured properly, then a {@link BadConfigurationException} should
+     * is not configured properly, then a {@link com.github.wuic.exception.xml.WuicXmlReadException} should
      * be thrown.
      * </p>
      * 
      * @param fileType the file type to be supported by the {@link Engine}
      * @return an {@link Engine}
-     * @throws BadConfigurationException if the current configuration does not allow
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if the current configuration does not allow
      * to produce an {@link Engine} that supports the given {@link FileType}
      */
-    Engine create(FileType fileType) throws BadConfigurationException;
+    Engine create(FileType fileType) throws WuicXmlReadException;
 }

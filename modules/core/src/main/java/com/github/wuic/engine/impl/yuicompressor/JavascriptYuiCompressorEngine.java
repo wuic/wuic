@@ -41,6 +41,8 @@ package com.github.wuic.engine.impl.yuicompressor;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiJavascriptConfiguration;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
+import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
@@ -63,7 +65,7 @@ import java.io.Writer;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.0
  */
 public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
@@ -86,7 +88,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
     /**
      * <p>
      * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link IllegalArgumentException} will be thrown if the configuration
+     * {@link BadClassException} will be thrown if the configuration
      * is not a {@link JavascriptYuiCompressorEngine}.
      * </p>
      * 
@@ -96,8 +98,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
         if (config instanceof YuiJavascriptConfiguration) {
             configuration = (YuiJavascriptConfiguration) config;
         } else {
-            final String message = config + " must be an instance of " + YuiJavascriptConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            throw new BadClassException(config, YuiJavascriptConfiguration.class);
         }
     }
     
@@ -105,8 +106,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    protected void compress(final InputStream source, final OutputStream target)
-            throws IOException {
+    protected void compress(final InputStream source, final OutputStream target) throws StreamException {
         Reader in = null;
         StringWriter out = null;
         Writer targetOut = null;
@@ -140,6 +140,8 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
             targetOut = new OutputStreamWriter(target);
 
             IOUtils.copyStreamToWriter(restore, targetOut, configuration.charset());
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         } finally {
             IOUtils.close(in);
             IOUtils.close(out);

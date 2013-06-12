@@ -66,3 +66,6 @@ Breaking changes :
 ##### v0.3.4 #####
 
 Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
+
+Not tracked issues :
+- More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"

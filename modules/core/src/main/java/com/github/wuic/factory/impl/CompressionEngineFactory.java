@@ -39,7 +39,8 @@
 package com.github.wuic.factory.impl;
 
 import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGCompositeEngine;
@@ -56,7 +57,7 @@ import com.github.wuic.factory.EngineFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class CompressionEngineFactory implements EngineFactory {
@@ -80,7 +81,7 @@ public class CompressionEngineFactory implements EngineFactory {
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws BadConfigurationException {
+    public Engine create(final FileType fileType) throws WuicXmlReadException {
         switch (fileType) {
             case CSS :
                 return new CGCompositeEngine(new CGCssInspectorEngine(configuration), new CssYuiCompressorEngine(configuration));
@@ -95,8 +96,8 @@ public class CompressionEngineFactory implements EngineFactory {
                 return new CGSpriteCompressorEngine(configuration);
             
             default :
-                final String message = fileType.toString() + " has no aggregator";
-                throw new IllegalArgumentException(message);
+                final String message = String.format("%s has no aggregator", fileType.toString());
+                throw new BadArgumentException(new IllegalArgumentException(message));
         }
     }
 }

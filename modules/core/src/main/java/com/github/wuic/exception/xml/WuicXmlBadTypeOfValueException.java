@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,34 +36,39 @@
  */
 
 
-package com.github.wuic;
+package com.github.wuic.exception.xml;
+
+import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * This exception is an unchecked exception used for convenience reasons in the
- * {@link WuicFacade}. It principally provides the possibility to wraps checked
- * {@code Exception} not to declare them in the methods signatures.
+ * Thrown when a value of an element is not a type of an expected class in wuic.xml file.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.1.0
+ * @since 0.3.4
  */
-public class WuicException extends RuntimeException {
-
-    /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = -8457851407298538536L;
+public class WuicXmlBadTypeOfValueException extends WuicXmlException {
 
     /**
      * <p>
-     * Builds a new {@link WuicException} with an {@code Exception} to be wrapped.
+     * Builds a new exception.
      * </p>
-     * 
-     * @param exception the wrapped {@code Exception}.
+     *
+     * @param value the value
+     * @param elementName the element name
+     * @param target the expected class
+     * @param ex the original error
      */
-    public WuicException(final Exception exception) {
-        super(exception);
+    public WuicXmlBadTypeOfValueException(final String value, final String elementName, final Class<?> target, final Exception ex) {
+        super(String.format("Value %s for element %s must be a type of %s", value, elementName, target.getName()), ex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getErrorCode() {
+        return ErrorCode.XML_BAD_TYPE_OF_VALUE;
     }
 }

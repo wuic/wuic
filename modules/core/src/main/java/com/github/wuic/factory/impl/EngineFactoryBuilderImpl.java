@@ -39,13 +39,11 @@
 package com.github.wuic.factory.impl;
 
 import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.factory.EngineFactory;
 import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.xml.WuicXmlLoader;
-
-import java.io.IOException;
 
 /**
  * <p>
@@ -54,7 +52,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
@@ -69,10 +67,9 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
      * Builds a new {@link EngineFactoryBuilderImpl} thanks to a specified wuic.xml file location in the classpath.
      * </p>
      * 
-     * @throws IOException if an I/O error occurs if the 'wuic.xml' could not be loaded
-     * @throws BadConfigurationException in the 'wuic.xml' is not well formed
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    public EngineFactoryBuilderImpl() throws IOException, BadConfigurationException {
+    public EngineFactoryBuilderImpl() throws WuicException {
         wuicXml = new WuicXmlLoader();
     }
 
@@ -82,10 +79,9 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
      * </p>
      *
      * @param wuicXmlPath the location of the wuic.xml in the classpath
-     * @throws IOException if an I/O error occurs if the 'wuic.xml' could not be loaded
-     * @throws BadConfigurationException in the 'wuic.xml' is not well formed
+     * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    public EngineFactoryBuilderImpl(final String wuicXmlPath) throws IOException, BadConfigurationException {
+    public EngineFactoryBuilderImpl(final String wuicXmlPath) throws WuicException {
         wuicXml = new WuicXmlLoader(wuicXmlPath);
     }
 

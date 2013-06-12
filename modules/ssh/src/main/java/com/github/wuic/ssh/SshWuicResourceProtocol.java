@@ -39,6 +39,7 @@
 package com.github.wuic.ssh;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
@@ -186,7 +187,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
         try {
             connect();
 
@@ -222,9 +223,11 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
             return retval;
         } catch (JSchException je) {
-            throw new IOException(je);
+            throw new StreamException(new IOException(je));
         } catch (InterruptedException ie) {
-            throw new IOException("Interrupted before reading the file", ie);
+            throw new StreamException(new IOException("Interrupted before reading the file", ie));
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
 
@@ -411,12 +414,14 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         try {
             connect();
             return new ByteArrayWuicResource(loadFile(realPath), realPath, type);
         } catch (JSchException je) {
-            throw new IOException("Can't load the file remotely with SCP", je);
+            throw new StreamException(new IOException("Can't load the file remotely with SCP", je));
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
 

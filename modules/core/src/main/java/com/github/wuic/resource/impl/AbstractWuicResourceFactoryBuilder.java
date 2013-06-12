@@ -38,6 +38,7 @@
 
 package com.github.wuic.resource.impl;
 
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 
@@ -47,7 +48,7 @@ import com.github.wuic.resource.WuicResourceFactoryBuilder;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public abstract class AbstractWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
@@ -81,7 +82,7 @@ public abstract class AbstractWuicResourceFactoryBuilder implements WuicResource
      * {@inheritDoc}
      */
     @Override
-    public WuicResourceFactoryBuilder property(final String key, final String value) {
+    public WuicResourceFactoryBuilder property(final String key, final String value) throws WuicRfPropertyNotSupportedException {
         factory.setProperty(key, value);
 
         return this;

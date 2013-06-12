@@ -39,11 +39,13 @@
 package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.servlet.WuicServlet;
+import com.github.wuic.util.StringUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.jsp.JspException;
@@ -55,7 +57,7 @@ import javax.servlet.jsp.tagext.TagSupport;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class WuicTag extends TagSupport {
@@ -108,7 +110,9 @@ public class WuicTag extends TagSupport {
                 }
             }
         } catch (IOException ioe) {
-            throw new JspException("I/O Error", ioe);
+            throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
+        } catch (WuicException we) {
+            throw new JspException(we);
         }
         
         return SKIP_BODY;
@@ -121,9 +125,8 @@ public class WuicTag extends TagSupport {
      * 
      * @param resource the CSS resource
      * @return the import
-     * @throws UnsupportedEncodingException if the URL could not be encoded
      */
-    private String cssImport(final WuicResource resource) throws UnsupportedEncodingException {
+    private String cssImport(final WuicResource resource) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
@@ -140,9 +143,8 @@ public class WuicTag extends TagSupport {
      * 
      * @param resource the Javascript resource
      * @return the import
-     * @throws UnsupportedEncodingException if the URL could not be encoded
      */
-    private String javascriptImport(final WuicResource resource) throws UnsupportedEncodingException {
+    private String javascriptImport(final WuicResource resource) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<script type=\"text/javascript");
@@ -160,18 +162,13 @@ public class WuicTag extends TagSupport {
      * 
      * @param resource the resource
      * @return the url
-     * @throws UnsupportedEncodingException if the URL could not be encoded
      */
-    private String getUrl(final WuicResource resource) throws UnsupportedEncodingException {
-        final StringBuilder urlBuilder = new StringBuilder();
-        
-        urlBuilder.append(WuicServlet.servletContext().getContextPath());
-        urlBuilder.append(WuicServlet.servletMapping());
-        urlBuilder.append(pageName);
-        urlBuilder.append("/");
-        urlBuilder.append(resource.getName());
-        
-        return urlBuilder.toString();
+    private String getUrl(final WuicResource resource) {
+        return StringUtils.merge(new String[] {
+                WuicServlet.servletContext().getContextPath(),
+                WuicServlet.servletMapping(),
+                pageName,
+                resource.getName(), }, "/");
     }
 
     /**

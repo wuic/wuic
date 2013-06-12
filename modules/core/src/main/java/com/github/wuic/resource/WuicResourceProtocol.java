@@ -39,8 +39,8 @@
 package com.github.wuic.resource;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public interface WuicResourceProtocol {
@@ -61,9 +61,9 @@ public interface WuicResourceProtocol {
      * </p>
      *
      * @param pattern the pattern
-     * @throws IOException if any I/O error occurs while reading resources
+     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading resources
      */
-    List<String> listResourcesPaths(Pattern pattern) throws IOException;
+    List<String> listResourcesPaths(Pattern pattern) throws StreamException;
 
     /**
      * <p>
@@ -73,7 +73,7 @@ public interface WuicResourceProtocol {
      * @param realPath the real path to use to access the resource
      * @param type the file's type
      * @return the {@link WuicResource}
-     * @throws IOException if an I/O error occurs while creating access
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while creating access
      */
-    WuicResource accessFor(String realPath, FileType type) throws IOException;
+    WuicResource accessFor(String realPath, FileType type) throws StreamException;
 }

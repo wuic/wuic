@@ -38,10 +38,10 @@
 package com.github.wuic.resource.impl.disk;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.resource.impl.AbstractWuicResource;
+import com.github.wuic.util.IOUtils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -50,7 +50,7 @@ import java.io.InputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.1
  */
 public class FileWuicResource extends AbstractWuicResource {
@@ -78,26 +78,18 @@ public class FileWuicResource extends AbstractWuicResource {
         super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         rootDirectory = rootDir;
     }
-    
+
     /**
-     * <p>
-     * Opens and returns an {@code InputStream} pointing to the resource. 
-     * </p>
-     * 
-     * @return the opened input stream
-     * @throws IOException if an I/O error occurs
+     * {@inheritDoc}
      */
-    public InputStream openStream() throws IOException {
-        if (getName() == null) {
-            return null;
-        }
-        
+    @Override
+    public InputStream openStream() throws WuicResourceNotFoundException {
         final StringBuilder pathBuilder = new StringBuilder();
         pathBuilder.append(rootDirectory);
         pathBuilder.append(System.getProperty("file.separator"));
         pathBuilder.append(getName());
         
-        return new FileInputStream(pathBuilder.toString());
+        return IOUtils.newFileInputStream(pathBuilder.toString());
     }
 
     /**

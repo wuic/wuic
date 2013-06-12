@@ -38,13 +38,13 @@
 
 package com.github.wuic.engine.impl.ehcache;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.1
  */
 public class EhCacheEngine extends Engine {
@@ -97,8 +97,7 @@ public class EhCacheEngine extends Engine {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<WuicResource> parse(final EngineRequest request)
-            throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
         List<WuicResource> retval = null;
@@ -144,9 +143,9 @@ public class EhCacheEngine extends Engine {
      *
      * @param resource the resource to convert
      * @return the byte array resource
-     * @throws IOException if an I/O error occurs
+     * @throws WuicException if an I/O error occurs
      */
-    private WuicResource toByteArrayResource(final WuicResource resource) throws IOException {
+    private WuicResource toByteArrayResource(final WuicResource resource) throws WuicException {
         InputStream is = null;
 
         try {
@@ -163,9 +162,7 @@ public class EhCacheEngine extends Engine {
 
             return bytes;
         } finally {
-            if (is != null) {
-                is.close();
-            }
+            IOUtils.close(is);
         }
     }
 

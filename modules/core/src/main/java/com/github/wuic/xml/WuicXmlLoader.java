@@ -40,7 +40,6 @@ package com.github.wuic.xml;
 
 import com.github.wuic.FileType;
 import com.github.wuic.FilesGroup;
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
 import com.github.wuic.configuration.WuicEhcacheProvider;
@@ -49,11 +48,27 @@ import com.github.wuic.configuration.impl.YuiCssConfigurationDomBuilder;
 import com.github.wuic.configuration.impl.YuiJavascriptConfigurationDomBuilder;
 
 import java.io.IOException;
-import java.util.*;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicGroupNotFoundException;
+import com.github.wuic.exception.xml.WuicXmlException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.exception.xml.WuicXmlWrappedErrorCodeException;
+import com.github.wuic.exception.xml.WuicXmlNoResourceFactoryBuilderClassAttributeException;
+import com.github.wuic.exception.xml.WuicXmlNoResourceFactoryBuilderIdAttributeException;
+import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
+import com.github.wuic.exception.xml.WuicXmlBadReferenceToFactoryBuilderException;
 
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import net.sf.ehcache.Cache;
@@ -78,10 +93,20 @@ import org.xml.sax.SAXException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
+
+    /**
+     * Resource factory builder tag name.
+     */
+    private static final String RESOURCE_FACTORY_BUILDER_TAG = "resource-factory-builder";
+
+    /**
+     * Class attribute name
+     */
+    private static final String CLASS_ATTRIBUTE = "class";
 
     /**
      * The logger.
@@ -119,10 +144,9 @@ public final class WuicXmlLoader {
      * the DOM API and read the configurations and the files groups.
      * </p>
      * 
-     * @throws IOException if an I/O error occurs while reading the file
-     * @throws BadConfigurationException if the 'wuic.xml' file is not properly defined
+     * @throws com.github.wuic.exception.xml.WuicXmlException if the 'wuic.xml' file is not properly defined
      */
-    public WuicXmlLoader() throws IOException, BadConfigurationException {
+    public WuicXmlLoader() throws WuicXmlException {
         this("/wuic.xml");
     }
 
@@ -133,10 +157,9 @@ public final class WuicXmlLoader {
      * </p>
      *
      * @param wuicXmlPath the wuic.xml location in the classpath
-     * @throws IOException if an I/O error occurs while reading the file
-     * @throws BadConfigurationException if the 'wuic.xml' path is not properly defined
+     * @throws com.github.wuic.exception.xml.WuicXmlException if the 'wuic.xml' path is not properly defined or if it could not be read
      */
-    public WuicXmlLoader(final String wuicXmlPath) throws IOException, BadConfigurationException {
+    public WuicXmlLoader(final String wuicXmlPath) throws WuicXmlException {
         final DocumentBuilderFactory factory = getFactory();
 
         try {
@@ -171,9 +194,11 @@ public final class WuicXmlLoader {
             // Read files groups
             readGroups(document);
         } catch (ParserConfigurationException pce) {
-            throw new BadConfigurationException(pce);
+            throw new WuicXmlReadException(pce);
         } catch (SAXException se) {
-            throw new BadConfigurationException(se);
+            throw new WuicXmlReadException(se);
+        } catch (IOException ioe) {
+            throw new WuicXmlReadException(ioe);
         }
     }
     
@@ -208,11 +233,11 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
-     * @throws BadConfigurationException if the document does not contains the expected structure
+     * @throws com.github.wuic.exception.xml.WuicXmlException if the document does not contains the expected structure
      */
-    private void readWuicResourceFactoryBuilder(final Document document) throws BadConfigurationException {
+    private void readWuicResourceFactoryBuilder(final Document document) throws WuicXmlException {
         // Get the nodes
-        final NodeList resourceFactoryBuilderList = document.getElementsByTagName("resource-factory-builder");
+        final NodeList resourceFactoryBuilderList = document.getElementsByTagName(RESOURCE_FACTORY_BUILDER_TAG);
 
         // Read each node
         for (int i = 0; i < resourceFactoryBuilderList.getLength(); i++) {
@@ -222,7 +247,7 @@ public final class WuicXmlLoader {
             final Node idAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("id");
 
             if (idAttr == null) {
-                throw new BadConfigurationException("resource-factory-builder tag must contains an ID attribute");
+                throw new WuicXmlNoResourceFactoryBuilderIdAttributeException();
             }
 
             // Must we create a factory which supports regex ?
@@ -230,18 +255,18 @@ public final class WuicXmlLoader {
             final Boolean regex = regexAttr != null && Boolean.parseBoolean(regexAttr.getNodeValue());
 
             // Get the class to be instantiated
-            final Node classAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("class");
+            final Node classAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem(CLASS_ATTRIBUTE);
             
             if (classAttr == null) {
-                throw new BadConfigurationException("resource-factory-builder tag must contains a class attribute");
+                throw new WuicXmlNoResourceFactoryBuilderClassAttributeException();
             }
 
             // Node try to create an instance of a WuicResourceFactoryBuilder
             final String className = classAttr.getNodeValue();
+            final Class<WuicResourceFactoryBuilder> targetClass = WuicResourceFactoryBuilder.class;
             
             try {
                 final Class<?> currentClass = Class.forName(className);
-                final Class<WuicResourceFactoryBuilder> targetClass = WuicResourceFactoryBuilder.class;
                 WuicResourceFactoryBuilder wrfb = targetClass.cast(currentClass.newInstance());
 
                 if (regex) {
@@ -261,11 +286,13 @@ public final class WuicXmlLoader {
 
                 resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb);
             } catch (ClassNotFoundException cnfe) {
-                throw new BadConfigurationException(cnfe);
+                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, cnfe);
             } catch (IllegalAccessException iae) {
-                throw new BadConfigurationException(iae);
+                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, iae);
             } catch (InstantiationException ie) {
-                throw new BadConfigurationException(ie);
+                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, ie);
+            } catch (WuicRfPropertyNotSupportedException wrnse) {
+                throw new WuicXmlWrappedErrorCodeException(wrnse);
             }
         }
     }
@@ -281,9 +308,9 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
-     * @throws BadConfigurationException if a specified ehcache-provider could not be used
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a specified ehcache-provider could not be used
      */
-    private void readCache(final Document document) throws BadConfigurationException {
+    private void readCache(final Document document) throws WuicXmlReadException {
         final String cacheProviderClass = document.getDocumentElement().getAttribute("ehcache-provider");
         final WuicEhcacheProvider cacheProvider;
         
@@ -294,14 +321,11 @@ public final class WuicXmlLoader {
                 cacheProvider = WuicEhcacheProvider.class.cast(Class.forName(cacheProviderClass).newInstance());
                 cache = cacheProvider.getCache();
             } catch (InstantiationException ie) {
-                final String message = "Cannot create a WuicEhcacheProvider for class : " + cacheProviderClass;
-                throw new BadConfigurationException(message, ie);
+                throw new WuicXmlUnableToInstantiateException(cacheProviderClass, "wuic", "ehcache-provider", WuicEhcacheProvider.class, ie);
             } catch (IllegalAccessException iae) {
-                final String message = "Cannot create a WuicEhcacheProvider for class : " + cacheProviderClass;
-                throw new BadConfigurationException(message, iae);
+                throw new WuicXmlUnableToInstantiateException(cacheProviderClass, "wuic", "ehcache-provider", WuicEhcacheProvider.class,iae);
             } catch (ClassNotFoundException cnfe) {
-                final String message = "Cannot create a WuicEhcacheProvider for class : " + cacheProviderClass;
-                throw new BadConfigurationException(message, cnfe);
+                throw new WuicXmlUnableToInstantiateException(cacheProviderClass, "wuic", "ehcache-provider", WuicEhcacheProvider.class, cnfe);
             }
         }
     }
@@ -315,9 +339,9 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the configurations to read
-     * @throws BadConfigurationException if the document does not contains the expected structure
+     * @throws com.github.wuic.exception.xml.WuicXmlException if the document does not contains the expected structure
      */
-    private void readConfigurations(final Document document) throws BadConfigurationException {
+    private void readConfigurations(final Document document) throws WuicXmlException {
         // Get the root element
         final Node configurations = document.getElementsByTagName("configurations").item(0);
         
@@ -356,10 +380,9 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the groups to read
-     * @throws BadConfigurationException if the {@link WuicResourceFactoryBuilder} could not be read
-     * @throws IOException if a group can't be loaded
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if the {@link WuicResourceFactoryBuilder} could not be read
      */
-    private void readGroups(final Document document) throws BadConfigurationException, IOException {
+    private void readGroups(final Document document) throws WuicXmlException {
         // Get the root element
         final Node groups = document.getElementsByTagName("groups").item(0);
 
@@ -387,18 +410,20 @@ public final class WuicXmlLoader {
                 final Node defaultBuilderAttribute = group.getAttributes().getNamedItem("default-builder");
 
                 if (defaultBuilderAttribute == null || !resourceFactoryBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
-                    final StringBuilder msg = new StringBuilder("The group does not ");
-                    msg.append("contains a default-builder attribute that ");
-                    msg.append("corresponds to an existing resource-factory-builder ID");
-                    throw new BadConfigurationException(msg.toString());
+                    throw new WuicXmlBadReferenceToFactoryBuilderException("group", "default-builder");
                 }
 
                 // Get the resource factory builder and create the files group
                 final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
-                final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
 
-                // Add all the files read from the document and associate them to the ID
-                filesGroups.put(idAttribute.getNodeValue(), filesGroup);
+                try {
+                    final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
+
+                    // Add all the files read from the document and associate them to the ID
+                    filesGroups.put(idAttribute.getNodeValue(), filesGroup);
+                } catch (StreamException ioe) {
+                    throw new WuicXmlReadException(ioe);
+                }
             }
         }
     }
@@ -421,10 +446,17 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param id the id
-     * @return the {@code List<String>}, {@code null} if not item exists
+     * @return the {@code FilesGroup} is exists
+     * @throws WuicGroupNotFoundException if the group does not exists
      */
-    public FilesGroup getFilesGroup(final String id) {
-        return filesGroups.get(id);
+    public FilesGroup getFilesGroup(final String id) throws WuicGroupNotFoundException {
+        final FilesGroup retval = filesGroups.get(id);
+
+        if (retval == null) {
+            throw new WuicGroupNotFoundException(id);
+        }
+
+        return retval;
     }
     
     /**

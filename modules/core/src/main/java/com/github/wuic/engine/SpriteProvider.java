@@ -37,9 +37,8 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
-
-import java.io.IOException;
 
 /**
  * <p>
@@ -56,7 +55,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.0
  */
 public interface SpriteProvider {
@@ -86,9 +85,9 @@ public interface SpriteProvider {
      * @param url of the final image
      * @param groupId the group ID
      * @return a resource representing the sprite file
-     * @throws IOException if an I/O error occurs while aggregating images 
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    WuicResource getSprite(String url, String groupId) throws IOException;
+    WuicResource getSprite(String url, String groupId) throws StreamException;
 
     /**
      * <p>

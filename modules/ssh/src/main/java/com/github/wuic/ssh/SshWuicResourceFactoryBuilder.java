@@ -39,6 +39,8 @@
 package com.github.wuic.ssh;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
@@ -54,7 +56,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
@@ -141,11 +143,11 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
          * {@inheritDoc}
          */
         @Override
-        public void setProperty(final String key, final String value) {
+        public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
 
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
-                throw new IllegalArgumentException(key + " is not a property which is supported by the SshWuicResourceFactory");
+                throw new WuicRfPropertyNotSupportedException(key, this.getClass());
             } else if (ApplicationConfig.SSH_SERVER_PORT.equals(key)) {
                 supportedProperties.put(key, Integer.parseInt(value));
             } else if (ApplicationConfig.SSH_SERVER_BASE_PATH_AS_SYS_PROP.equals(key)) {
@@ -166,7 +168,7 @@ public class SshWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBu
             } else if ("cmd.exe".equals(supportedProperties.get(ApplicationConfig.SSH_INTERPRETER))) {
                 manager = new CmdSshCommandManager();
             } else {
-                throw new IllegalArgumentException(supportedProperties.get(ApplicationConfig.SSH_INTERPRETER) + " is not a supported interpreter.");
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a supported interpreter.", supportedProperties.get(ApplicationConfig.SSH_INTERPRETER))));
             }
 
             // Set new protocol with the new property

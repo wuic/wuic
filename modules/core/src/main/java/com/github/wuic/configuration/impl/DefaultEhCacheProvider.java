@@ -68,6 +68,7 @@ public class DefaultEhCacheProvider implements WuicEhcacheProvider {
         final Cache cache = manager.getCache("wuicCache");
 
         if (cache == null) {
+            // TODO : review this exception and wrap it in a WuicException when refactoring cache management
             throw new IllegalStateException("'wuicCache' not found in CacheManager created from /ehcache.xml");
         }
 

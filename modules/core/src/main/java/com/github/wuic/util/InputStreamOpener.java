@@ -37,7 +37,8 @@
 
 package com.github.wuic.util;
 
-import java.io.IOException;
+import com.github.wuic.exception.WuicResourceNotFoundException;
+
 import java.io.InputStream;
 
 /**
@@ -46,7 +47,7 @@ import java.io.InputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public interface InputStreamOpener {
@@ -57,7 +58,7 @@ public interface InputStreamOpener {
      * </p>
      *
      * @return the opened input stream
-     * @throws IOException if an I/O error occurs
+     * @throws WuicResourceNotFoundException if an I/O error occurs
      */
-    InputStream openStream() throws IOException;
+    InputStream openStream() throws WuicResourceNotFoundException;
 }

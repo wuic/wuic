@@ -43,6 +43,8 @@ import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
@@ -63,7 +65,7 @@ import java.util.regex.Matcher;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class CGTextInspectorEngine extends Engine {
@@ -95,7 +97,7 @@ public class CGTextInspectorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
         // Will contains both group's resources eventually modified or extracted resources.
         final List<WuicResource> retval = new ArrayList<WuicResource>();
 
@@ -124,10 +126,10 @@ public class CGTextInspectorEngine extends Engine {
      * @param resource the resource
      * @param request the initial request
      * @return the resource corresponding the inspected resource specified in parameter
-     * @throws IOException if an I/O error occurs while reading
+     * @throws WuicException if an I/O error occurs while reading
      */
     protected WuicResource inspect(final WuicResource resource, final EngineRequest request)
-            throws IOException {
+            throws WuicException {
         // Extracts the location where resource is listed in order to compute the location of the extracted imported resources
         final int lastIndexOfSlash = resource.getName().lastIndexOf("/") + 1;
         final String name = resource.getName();
@@ -165,6 +167,8 @@ public class CGTextInspectorEngine extends Engine {
             }
 
             return inspected;
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         } finally {
             IOUtils.close(br);
         }
@@ -184,7 +188,7 @@ public class CGTextInspectorEngine extends Engine {
      * @param request the initial request
      * @param inspector the inspector to use
      * @param referencedResources the collection where any referenced resource identified by the method will be added
-     * @throws IOException if an I/O error occurs while reading
+     * @throws WuicException if an I/O error occurs while reading
      * return the given line eventually transformed
      */
     protected String inspectLine(final String line,
@@ -192,7 +196,7 @@ public class CGTextInspectorEngine extends Engine {
                                  final EngineRequest request,
                                  final LineInspector inspector,
                                  final List<WuicResource> referencedResources)
-            throws IOException {
+            throws WuicException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
 

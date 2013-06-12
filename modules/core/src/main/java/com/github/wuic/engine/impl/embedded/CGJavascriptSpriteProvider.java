@@ -38,12 +38,12 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Region;
-
-import java.io.IOException;
+import com.github.wuic.util.StringUtils;
 
 /**
  * <p>
@@ -60,7 +60,7 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
@@ -69,7 +69,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource getSprite(final String url, final String groupId) throws IOException {
+    public WuicResource getSprite(final String url, final String groupId) throws StreamException {
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
@@ -94,9 +94,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append("\", h : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\", url : \"");
-            jsBuilder.append(url);
-            jsBuilder.append("/");
-            jsBuilder.append(image);
+            jsBuilder.append(StringUtils.merge(new String[] { url, image, }, "/"));
             jsBuilder.append("\"};");
         }
 

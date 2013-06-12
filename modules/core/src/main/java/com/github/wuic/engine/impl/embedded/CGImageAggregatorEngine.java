@@ -38,15 +38,19 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.ImageConfiguration;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.PackerEngine;
 import com.github.wuic.engine.Region;
+import com.github.wuic.util.IOUtils;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -73,7 +77,7 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.0
  */
 public class CGImageAggregatorEngine extends PackerEngine {
@@ -94,16 +98,15 @@ public class CGImageAggregatorEngine extends PackerEngine {
      * </p>
      * 
      * @param config the configuration
-     * @throws BadConfigurationException if a bad configuration is detected
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a bad configuration is detected
      */
     public CGImageAggregatorEngine(final Configuration config)
-            throws BadConfigurationException {
+            throws WuicXmlReadException {
         if (config instanceof ImageConfiguration) {
             configuration = (ImageConfiguration) config;
             setDimensionPacker(configuration.createDimensionPacker());
         } else {
-            final String message = config + " must be an instance of " + ImageConfiguration.class.getName();
-            throw new BadConfigurationException(message);
+            throw new BadClassException(config, ImageConfiguration.class);
         }
     }
     
@@ -111,8 +114,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request)
-            throws IOException {
+    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
         /*
          * Do nothing if the configuration says that no aggregation should be done
          */
@@ -134,16 +136,22 @@ public class CGImageAggregatorEngine extends PackerEngine {
                     final BufferedImage buff = ImageIO.read(is);
                     final Region r = entry.getKey();
                     transparentImage.createGraphics().drawImage(buff, r.getxPosition(), r.getyPosition(), null);
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
                 } finally {
-                    if (is != null) {
-                        is.close();
-                    }
+                    IOUtils.close(is);
                 }
             }
             
             // Write the generated image as a WUIC resource to return it
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ImageIO.write(transparentImage, "png", bos);
+
+            try {
+                ImageIO.write(transparentImage, "png", bos);
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
+            }
+
             final WuicResource res = new ByteArrayWuicResource(bos.toByteArray(), AGGREGATION_NAME, FileType.PNG);
 
             return Arrays.asList(res);

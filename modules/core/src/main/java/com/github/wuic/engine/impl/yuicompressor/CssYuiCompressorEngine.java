@@ -40,6 +40,8 @@ package com.github.wuic.engine.impl.yuicompressor;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.YuiCssConfiguration;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
+import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 
@@ -57,7 +59,7 @@ import java.io.Writer;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
@@ -70,7 +72,7 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
     /**
      * <p>
      * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link IllegalArgumentException} will be thrown if the configuration
+     * {@link com.github.wuic.exception.wrapper.BadClassException} will be thrown if the configuration
      * is not a {@link CssYuiCompressorEngine}.
      * </p>
      * 
@@ -80,8 +82,7 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
         if (config instanceof YuiCssConfiguration) {
             configuration = (YuiCssConfiguration) config;
         } else {
-            final String message = config + " must be an instance of " + YuiCssConfiguration.class.getName();
-            throw new IllegalArgumentException(message);
+            throw new BadClassException(config, YuiCssConfiguration.class);
         }
     }
     
@@ -97,7 +98,7 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
      */
     @Override
     protected void compress(final InputStream source, final OutputStream target)
-            throws IOException {
+            throws StreamException {
         Reader in = null;
         Writer out = null;
         
@@ -117,6 +118,8 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
             
             // Compress the script into the output target
             compressor.compress(out, configuration.yuiLineBreakPos());
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         } finally {
             IOUtils.close(in);
             IOUtils.close(out);

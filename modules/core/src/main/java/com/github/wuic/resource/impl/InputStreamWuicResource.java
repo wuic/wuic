@@ -38,9 +38,9 @@
 package com.github.wuic.resource.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.util.InputStreamOpener;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -49,7 +49,7 @@ import java.io.InputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3
  */
 public class InputStreamWuicResource extends AbstractWuicResource {
@@ -82,7 +82,7 @@ public class InputStreamWuicResource extends AbstractWuicResource {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public InputStream openStream() throws WuicResourceNotFoundException {
         return inputStreamOpener.openStream();
     }
 

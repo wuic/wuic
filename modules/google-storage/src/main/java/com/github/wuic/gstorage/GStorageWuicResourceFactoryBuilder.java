@@ -39,6 +39,7 @@
 package com.github.wuic.gstorage;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
@@ -54,7 +55,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class GStorageWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryBuilder {
@@ -138,11 +139,11 @@ public class GStorageWuicResourceFactoryBuilder extends AbstractWuicResourceFact
          * {@inheritDoc}
          */
         @Override
-        public void setProperty(final String key, final String value) {
+        public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
 
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
-                throw new IllegalArgumentException(key + " is not a property which is supported by the GStorageWuicResourceFactory");
+                throw new WuicRfPropertyNotSupportedException(key, this.getClass());
             } else {
                 supportedProperties.put(key, value);
             }

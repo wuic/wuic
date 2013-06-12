@@ -38,6 +38,8 @@
 
 package com.github.wuic;
 
+import com.github.wuic.exception.wrapper.BadArgumentException;
+
 import java.util.Arrays;
 
 /**
@@ -46,7 +48,7 @@ import java.util.Arrays;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public enum FileType {
@@ -144,7 +146,7 @@ public enum FileType {
      * <p>
      * Parse the given {@code String} object into a {@link FileType}. If the
      * value does not equal to any exiting {@link FileType#name()}, then an
-     * {@link IllegalArgumentException} will be thrown.
+     * {@link BadArgumentException} will be thrown.
      * </p>
      * 
      * @param strValue the value to parse
@@ -157,7 +159,7 @@ public enum FileType {
             }
         }
         
-        throw new IllegalArgumentException(strValue + " has not been recognized as a FileType");
+        throw new BadArgumentException(new IllegalArgumentException(strValue + " has not been recognized as a FileType"));
     }
 
     /**
@@ -166,7 +168,7 @@ public enum FileType {
      * </p>
      *
      * <p>
-     * Throws an {@code IllegalArgumentException} if the extension does not belongs to any file type
+     * Throws an {@code BadArgumentException} if the extension does not belongs to any file type
      * </p>
      *
      * @param ext the extension
@@ -181,6 +183,6 @@ public enum FileType {
             }
         }
 
-        throw new IllegalArgumentException(ext + " is not associated to any FileType");
+        throw new BadArgumentException(new IllegalArgumentException(ext + " is not associated to any FileType"));
     }
 }

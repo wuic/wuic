@@ -39,12 +39,13 @@
 package com.github.wuic.resource.impl.disk;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.util.IOUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -54,7 +55,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public class DiskWuicResourceProtocol implements WuicResourceProtocol {
@@ -66,7 +67,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
      * <p>
-     * Builds a new instance with a base directory. Throws an {@code IllegalArgumentException} if
+     * Builds a new instance with a base directory. Throws an {@code BadArgumentException} if
      * the given {@code String} does not represents a directory.
      * </p>
      *
@@ -76,7 +77,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
         baseDirectory = new File(base);
 
         if (!baseDirectory.isDirectory()) {
-            throw new IllegalArgumentException(base + " is not a directory");
+            throw new BadArgumentException(new IllegalArgumentException(base + " is not a directory"));
         }
     }
 
@@ -84,7 +85,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
         return IOUtils.lookupDirectoryResources(baseDirectory, pattern);
     }
 
@@ -92,7 +93,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         return new FileWuicResource(baseDirectory.getAbsolutePath(), realPath, type);
     }
 }

@@ -43,6 +43,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
@@ -63,7 +64,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.1
+ * @version 1.2
  * @since 0.3.3
  */
 public class S3WuicResourceProtocol implements WuicResourceProtocol {
@@ -111,7 +112,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
         return recursiveSearch(basePath, pattern);
     }
 
@@ -123,9 +124,9 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
      * @param path the path
      * @param pattern the pattern to match
      * @return the list of matching files
-     * @throws java.io.IOException if the client can't move to a directory or any I/O error occurs
+     * @throws StreamException if the client can't move to a directory or any I/O error occurs
      */
-    private List<String> recursiveSearch(final String path, final Pattern pattern) throws IOException {
+    private List<String> recursiveSearch(final String path, final Pattern pattern) throws StreamException {
 
         ObjectListing objectListing;
 
@@ -133,9 +134,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
             final String finalSuffix =  path.equals("") ? "" : "/";
             objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(path + finalSuffix).withDelimiter("/"));
         } catch (AmazonServiceException ase) {
-            final StringBuilder aseMessageBuilder = new StringBuilder("Can't get S3Object on bucket ")
-                    .append(bucketName).append(" for resource key : ").append(path);
-            throw new IOException(aseMessageBuilder.toString(), ase);
+            throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s for resource key : %s", bucketName, path), ase));
         }
 
         final List<String> retval = new ArrayList<String>();
@@ -162,16 +161,14 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         // Try to get S3 object
         S3Object s3Object;
 
         try {
             s3Object = amazonS3Client.getObject(bucketName, realPath);
         } catch (AmazonServiceException ase) {
-            final StringBuilder aseMessageBuilder = new StringBuilder("Can't get S3Object on bucket ")
-                    .append(bucketName).append(" for resource key : ").append(realPath);
-            throw new IOException(aseMessageBuilder.toString(), ase);
+            throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s  for resource key : %s", bucketName, realPath), ase));
         }
 
         S3ObjectInputStream s3ObjectInputStream = null;
@@ -187,9 +184,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
             return new ByteArrayWuicResource(baos.toByteArray(), realPath, type);
         } finally {
             // Close S3Object stream
-            if(s3ObjectInputStream != null) {
-                s3ObjectInputStream.close();
-            }
+            IOUtils.close(s3ObjectInputStream);
         }
     }
 

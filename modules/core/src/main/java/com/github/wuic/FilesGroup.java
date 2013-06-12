@@ -39,10 +39,11 @@
 package com.github.wuic;
 
 import com.github.wuic.configuration.Configuration;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,7 +61,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public class FilesGroup {
@@ -94,20 +95,20 @@ public class FilesGroup {
      * <p>
      * Builds a new {@link FilesGroup}. All the paths must be named with an
      * extension that matches the {@link FileType}. If it is not the case, then
-     * an {@link IllegalArgumentException} will be thrown.
+     * an {@link BadArgumentException} will be thrown.
      * </p>
      * 
      * @param config the {@link Configuration}
      * @param pathsList the paths
      * @param theResourceFactory the {@link WuicResourceFactory}
      * @param groupId the group ID
-     * @throws IOException if the resources can be retrieved
+     * @throws com.github.wuic.exception.wrapper.StreamException if the resources can be retrieved
      */
     public FilesGroup(final Configuration config,
             final List<String> pathsList,
             final WuicResourceFactory theResourceFactory,
             final String groupId)
-            throws IOException {
+            throws StreamException {
         this.id = groupId;
         this.configuration = config;
         this.paths = pathsList;
@@ -128,17 +129,17 @@ public class FilesGroup {
      *
      * @param config the {@link Configuration}
      * @param other the group to copy
-     * @throws IOException if the resources can't be retrieved
+     * @throws com.github.wuic.exception.wrapper.StreamException if the resources can't be retrieved
      */
     public FilesGroup(final Configuration config,
-                      final FilesGroup other) throws IOException {
+                      final FilesGroup other) throws StreamException {
         this(config, other.paths, other.resourceFactory, other.id);
     }
 
     /**
      * <p>
      * Checks that the {@link FileType} and the paths list of this group are not
-     * null. If they are, this methods will throw an {@link IllegalArgumentException}.
+     * null. If they are, this methods will throw an {@link BadArgumentException}.
      * This exception could also be thrown if one file of the list does have a name
      * which ends with one of the possible {@link FileType#extensions extensions}.
      * </p>
@@ -147,7 +148,7 @@ public class FilesGroup {
         
         // Non null assertion
         if (paths == null || configuration == null) {
-            throw new IllegalArgumentException("A group must have a non-null paths list and a non-null file type");
+            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list and a non-null file type"));
         }
         
         // Check the extension of each file
@@ -167,7 +168,7 @@ public class FilesGroup {
             
             // The file has not one of the possible extension : throw an IAE
             if (!valid) {
-                throw new IllegalArgumentException("Bad extensions for paths associated to the FileType " + type);
+                throw new BadArgumentException(new IllegalArgumentException("Bad extensions for paths associated to the FileType " + type));
             }
         }
     }
@@ -200,9 +201,9 @@ public class FilesGroup {
      * </p>
      * 
      * @return the paths
-     * @throws IOException if an error occurs while getting paths
+     * @throws com.github.wuic.exception.wrapper.StreamException if an error occurs while getting paths
      */
-    public List<String> getPaths() throws IOException {
+    public List<String> getPaths() throws StreamException {
         if (paths.isEmpty()) {
             return paths;
         } else {
@@ -233,9 +234,8 @@ public class FilesGroup {
      * </p>
      *
      * @return the resources
-     * @throws IOException if the resources can't be built
      */
-    public List<WuicResource> getResources() throws IOException {
+    public List<WuicResource> getResources() {
         return resources;
     }
 }

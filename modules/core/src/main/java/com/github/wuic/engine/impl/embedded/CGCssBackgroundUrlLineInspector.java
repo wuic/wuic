@@ -41,6 +41,7 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class CGCssBackgroundUrlLineInspector implements LineInspector {
@@ -99,16 +100,14 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
         log.info("Background with an URL statement found for resource {}", referencedPath);
 
         // Extract the resource
-        final String resourceName = resourceLocation + referencedPath;
+        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath.trim(), }, "/");
 
         // Rewrite the statement from its beginning to the beginning of the resource name
         replacement.append(matcher.group().substring(0, matcher.start(1) - 1));
 
         // Write path to resource
         replacement.append("\"");
-        replacement.append(groupPath);
-        replacement.append("/");
-        replacement.append(resourceName);
+        replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
         replacement.append("\")");
 
         for (int i = NumberUtils.TWO + 1; i < matcher.groupCount(); i++) {

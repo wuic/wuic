@@ -37,10 +37,10 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.configuration.Configuration;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -57,7 +57,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public abstract class Engine {
@@ -73,16 +73,16 @@ public abstract class Engine {
      * </p>
      * 
      * <p>
-     * Should throw an {@link IllegalArgumentException} the files type is not
+     * Should throw an {@link com.github.wuic.exception.wrapper.BadArgumentException} the files type is not
      * supported by this {@link Engine}.
      * </p>
      * 
+     *
      * @param request the request with files to parse
      * @return the parsed files
-     * @throws IOException if any kind of I/O error occurs
+     * @throws com.github.wuic.exception.wrapper.StreamException if any kind of I/O error occurs
      */
-    public abstract List<WuicResource> parse(EngineRequest request)
-            throws IOException;
+    public abstract List<WuicResource> parse(EngineRequest request) throws WuicException;
 
     /**
      * <p>

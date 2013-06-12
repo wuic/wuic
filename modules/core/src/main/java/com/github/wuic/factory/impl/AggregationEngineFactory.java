@@ -39,7 +39,8 @@
 package com.github.wuic.factory.impl;
 
 import com.github.wuic.FileType;
-import com.github.wuic.configuration.BadConfigurationException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine;
@@ -53,7 +54,7 @@ import com.github.wuic.factory.EngineFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class AggregationEngineFactory implements EngineFactory {
@@ -77,7 +78,7 @@ public class AggregationEngineFactory implements EngineFactory {
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws BadConfigurationException {
+    public Engine create(final FileType fileType) throws WuicXmlReadException {
         switch (fileType) {
             case CSS :
             case JAVASCRIPT :
@@ -91,7 +92,7 @@ public class AggregationEngineFactory implements EngineFactory {
             
             default :
                 final String message = fileType.toString() + " has no aggregator";
-                throw new IllegalArgumentException(message);
+                throw new BadArgumentException(new IllegalArgumentException(message));
         }
     }
 }

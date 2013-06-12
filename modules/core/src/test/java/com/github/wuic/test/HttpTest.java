@@ -13,6 +13,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
@@ -46,7 +47,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
@@ -85,7 +86,11 @@ public class HttpTest extends WuicTest {
                     throws IOException, ServletException {
                 response.setStatus(HttpServletResponse.SC_OK);
                 baseRequest.setHandled(Boolean.TRUE);
-                IOUtils.copyStream(HttpTest.class.getResourceAsStream(request.getRequestURI()), response.getOutputStream());
+                try {
+                    IOUtils.copyStream(HttpTest.class.getResourceAsStream(request.getRequestURI()), response.getOutputStream());
+                } catch (StreamException wse) {
+                    throw new IOException(wse);
+                }
             }
         });
 
@@ -136,10 +141,10 @@ public class HttpTest extends WuicTest {
     /**
      * Test HTTP resources.
      *
-     * @throws java.io.IOException if test fails
+     * @throws Exception if test fails
      */
     @Test
-    public void httpResourceTest() throws IOException {
+    public void httpResourceTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("", "/wuic-http.xml");
         Long loadTime = System.currentTimeMillis() - startTime;

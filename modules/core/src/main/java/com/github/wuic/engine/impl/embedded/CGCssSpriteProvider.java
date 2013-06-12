@@ -40,10 +40,10 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.FileType;
 import com.github.wuic.engine.Region;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
-
-import java.io.IOException;
+import com.github.wuic.util.StringUtils;
 
 /**
  * <p>
@@ -51,7 +51,7 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
@@ -60,7 +60,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource getSprite(final String url, final String groupId) throws IOException {
+    public WuicResource getSprite(final String url, final String groupId) throws StreamException {
         final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {
@@ -75,7 +75,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append(".wuic_");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(new StringBuilder(url).append("/").append(image).toString());
+            cssBuilder.append(StringUtils.merge(new String[] { "/", url, image, }, "/"));
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
@@ -88,9 +88,6 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
         }
 
         // Make a resource and return it
-        final byte[] bytes = cssBuilder.toString().getBytes();
-        final WuicResource spriteFile = new ByteArrayWuicResource(bytes, "sprites.css",FileType.CSS);
-
-        return spriteFile;
+        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "sprites.css", FileType.CSS);
     }
 }

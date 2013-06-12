@@ -39,11 +39,12 @@
 package com.github.wuic.resource.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceProtocol;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -54,7 +55,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public abstract class AbstractWuicResourceFactory implements WuicResourceFactory {
@@ -79,7 +80,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> create(final String pathName) throws IOException {
+    public List<WuicResource> create(final String pathName) throws StreamException {
         final String ext = pathName.substring(pathName.lastIndexOf('.'));
         final FileType type = FileType.getFileTypeForExtension(ext);
         final List<String> pathNames = computeRealPaths(pathName);
@@ -95,7 +96,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
     /**
      * {@inheritDoc}
      */
-    public List<String> computeRealPaths(final String pathName) throws IOException {
+    public List<String> computeRealPaths(final String pathName) throws StreamException {
         return wuicProtocol.listResourcesPaths(getPattern(pathName));
     }
 
@@ -103,8 +104,8 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      * {@inheritDoc}
      */
     @Override
-    public void setProperty(final String key, final String value) {
-        throw new UnsupportedOperationException("This factory don't support any property. Given key is " + key + " with value " + value);
+    public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
+        throw new UnsupportedOperationException(String.format("This factory don't support any property. Given key is %s with value %s", key, value));
     }
 
     /**

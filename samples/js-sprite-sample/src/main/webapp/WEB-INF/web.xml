@@ -11,7 +11,7 @@
         <servlet-class>com.github.wuic.servlet.WuicServlet</servlet-class>
         <init-param>
             <param-name>c.g.w.wuicContextPath</param-name>
-            <param-value>/wuic/</param-value>
+            <param-value>/wuic</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

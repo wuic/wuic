@@ -41,7 +41,6 @@ package com.github.wuic.engine;
 import com.github.wuic.FilesGroup;
 import com.github.wuic.resource.WuicResource;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -56,7 +55,7 @@ import java.util.List;
  *
  * @author Guillaume DROUET
  * @since 0.3.0
- * @version 1.1
+ * @version 1.2
  */
 public class EngineRequest {
 
@@ -103,9 +102,8 @@ public class EngineRequest {
      * @param cp the context root where the generated resources should be exposed
      * @param rp the path from the location the request is executed
      * @param g the group
-     * @throws IOException if an I/O error occurs while getting the resources from the group
      */
-    public EngineRequest(final String cp, final String rp, final FilesGroup g) throws IOException {
+    public EngineRequest(final String cp, final String rp, final FilesGroup g) {
         resources = g.getResources();
         contextPath = cp;
         requestPath = rp;

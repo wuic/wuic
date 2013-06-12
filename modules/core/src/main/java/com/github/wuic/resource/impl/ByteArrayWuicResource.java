@@ -39,9 +39,9 @@
 package com.github.wuic.resource.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.WuicResourceNotFoundException;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -51,7 +51,7 @@ import java.util.Arrays;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.2.0
  */
 public class ByteArrayWuicResource extends AbstractWuicResource {
@@ -79,18 +79,10 @@ public class ByteArrayWuicResource extends AbstractWuicResource {
     }
     
     /**
-     * <p>
-     * Opens and returns an {@code InputStream} pointing to the resource. 
-     * </p>
-     * 
-     * @return the opened input stream
-     * @throws IOException if an I/O error occurs
+     * {@inheritDoc}
      */
-    public InputStream openStream() throws IOException {
-        if (getName() == null) {
-            return null;
-        }
-        
+    @Override
+    public InputStream openStream() throws WuicResourceNotFoundException {
         return new ByteArrayInputStream(byteArray);
     }
 

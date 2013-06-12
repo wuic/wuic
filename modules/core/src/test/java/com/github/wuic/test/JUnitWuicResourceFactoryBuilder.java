@@ -13,6 +13,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.disk.FileWuicResource;
@@ -20,7 +21,6 @@ import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.CollectionUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,7 +30,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.1.0
  */
 public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuilder {
@@ -58,7 +58,7 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
     public WuicResourceFactory build() {
         return new WuicResourceFactory() {
             @Override
-            public List<WuicResource> create(String path) throws IOException {
+            public List<WuicResource> create(String path) throws StreamException {
 
                 FileType ft = null;
 
@@ -81,7 +81,7 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
              * {@inheritDoc}
              */
             @Override
-            public List<String> computeRealPaths(final String path) throws IOException {
+            public List<String> computeRealPaths(final String path) throws StreamException {
                 return Arrays.asList(path);
             }
 

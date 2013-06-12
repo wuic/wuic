@@ -15,12 +15,14 @@ package com.github.wuic.test;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.resource.WuicResource;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 
@@ -37,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)
@@ -51,10 +53,10 @@ public class CoreTest extends WuicTest {
     /**
      * Test javascript compression.
      *
-     * @throws IOException if test fails
+     * @throws Exception if test fails
      */
     @Test
-    public void javascriptTest() throws IOException {
+    public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("");
         Long loadTime = System.currentTimeMillis() - startTime;
@@ -93,10 +95,10 @@ public class CoreTest extends WuicTest {
     /**
      * CSS compression test.
      * 
-     * @throws IOException in I/O error case
+     * @throws Exception in I/O error case
      */
     @Test
-    public void cssTest() throws IOException {
+    public void cssTest() throws Exception {
         // TODO : WUIC currently supports only one configuration per FileType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("", "/wuic-css.xml");
@@ -127,10 +129,10 @@ public class CoreTest extends WuicTest {
     /**
      * Javascript sprite test.
      *
-     * @throws IOException if test fails
+     * @throws Exception if test fails
      */
-    //@Test
-    public void jsSpriteTest() throws IOException {
+    @Test
+    public void jsSpriteTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = WuicFacade.newInstance("");
         Long loadTime = System.currentTimeMillis() - startTime;
@@ -164,29 +166,6 @@ public class CoreTest extends WuicTest {
                     fis.close();
                 }
             }
-        }
-    }
-
-    /**
-     * Be sure that the {@code Map} used internally keep the order of the keys.
-     */
-    //@Test
-    public void orderingKeyMap() {
-        final Map<String, String> map = CollectionUtils.orderedKeyMap();
-        
-        map.put("toto", "");
-        map.put("titi", "");
-        map.put("tata", "");
-        map.put("tutu", "");
-        
-        int cpt = 0;
-        
-        for (String key : map.keySet()) {
-            Assert.assertTrue(cpt == 0 ? "toto".equals(key) : Boolean.TRUE);
-            Assert.assertTrue(cpt == 1 ? "titi".equals(key) : Boolean.TRUE);
-            Assert.assertTrue(cpt == 2 ? "tata".equals(key) : Boolean.TRUE);
-            Assert.assertTrue(cpt == 3 ? "tutu".equals(key) : Boolean.TRUE);
-            cpt++;
         }
     }
 }

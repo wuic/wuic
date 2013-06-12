@@ -38,10 +38,14 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
 import com.github.wuic.configuration.YuiConfiguration;
+
+import com.github.wuic.exception.xml.WuicXmlBadTypeOfValueException;
+import com.github.wuic.exception.xml.WuicXmlException;
+import com.github.wuic.exception.xml.WuicXmlMissingConfigurationElementException;
+import com.github.wuic.exception.xml.WuicXmlNoConfigurationIdAttributeException;
 
 import com.github.wuic.util.NumberUtils;
 import net.sf.ehcache.Cache;
@@ -54,7 +58,7 @@ import org.w3c.dom.Node;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public class YuiCssConfigurationDomBuilder implements DomConfigurationBuilder {
@@ -62,8 +66,7 @@ public class YuiCssConfigurationDomBuilder implements DomConfigurationBuilder {
     /**
      * {@inheritDoc}
      */
-    public Configuration build(final Node nodeConfiguration, final Cache cache)
-            throws BadConfigurationException {
+    public Configuration build(final Node nodeConfiguration, final Cache cache) throws WuicXmlException {
         
         // Expected elements
         String doCache = null;
@@ -91,18 +94,17 @@ public class YuiCssConfigurationDomBuilder implements DomConfigurationBuilder {
         
         // If one element is null, then throw an exception
         if (compress == null || aggregate == null || lineBreakPos == null || charset == null) {
-            final String message = "Elements compress, aggregate, charset and yuiLineBreakPos must be defined";
-            throw new BadConfigurationException(message);
+            throw new WuicXmlMissingConfigurationElementException("compress", "aggregate", "charset", "yuiLineBreakPos");
         // Check number consistency
         } else if (!NumberUtils.isNumber(lineBreakPos)) {
-            throw new BadConfigurationException("lineBreakPos element must be an integer");
+            throw new WuicXmlBadTypeOfValueException(lineBreakPos, "lineBreakPos", Integer.class, new NumberFormatException());
         }
 
         // Check if the ID exists to get it
         final Node idAttribute = nodeConfiguration.getAttributes().getNamedItem("id");
         
         if (idAttribute == null) {
-            throw new BadConfigurationException("id has not been found");
+            throw new WuicXmlNoConfigurationIdAttributeException();
         }
         
         final String id = idAttribute.getNodeValue();

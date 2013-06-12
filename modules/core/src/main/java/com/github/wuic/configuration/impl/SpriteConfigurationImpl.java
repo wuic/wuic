@@ -39,8 +39,8 @@
 package com.github.wuic.configuration.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.resource.WuicResource;
-import com.github.wuic.configuration.BadConfigurationException;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.engine.DimensionPacker;
 import com.github.wuic.engine.SpriteProvider;
@@ -56,7 +56,7 @@ import net.sf.ehcache.Cache;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.2.0
  */
 public class SpriteConfigurationImpl extends ConfigurationImpl implements SpriteConfiguration {
@@ -64,7 +64,7 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
     /**
      * The sprite provider class to instantiate.
      */
-    private Class<? extends SpriteProvider> spriteProviderClass;
+    private Class<? extends SpriteProvider> spc;
     
     /**
      * <p>
@@ -78,7 +78,7 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
      * @param cs the char set of the files
      * @param ehCache the cache
      * @param spriteProviderClassName the class name of the {@link SpriteProvider} to use
-     * @throws BadConfigurationException if the given sprite provider class does not exists
+     * @throws UnableToInstantiateException if the given sprite provider class does not exists
      */
     @SuppressWarnings("unchecked")
     public SpriteConfigurationImpl(final String configId,
@@ -87,13 +87,13 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
             final Boolean aggregate,
             final String cs,
             final Cache ehCache,
-            final String spriteProviderClassName) throws BadConfigurationException {
+            final String spriteProviderClassName) throws UnableToInstantiateException {
         super(configId, doCache, compress, aggregate, cs, ehCache);
 
         try {
-            spriteProviderClass = (Class<? extends SpriteProvider>) Class.forName(spriteProviderClassName);
+            spc = (Class<? extends SpriteProvider>) Class.forName(spriteProviderClassName);
         } catch (ClassNotFoundException cnfe) {
-            throw new BadConfigurationException(cnfe);
+            throw new UnableToInstantiateException(cnfe);
         }
     }
         
@@ -108,22 +108,17 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
      * {@inheritDoc}
      */
     @Override
-    public SpriteProvider createSpriteProvider()
-            throws BadConfigurationException {
+    public SpriteProvider createSpriteProvider() throws UnableToInstantiateException {
         try {
-            return spriteProviderClass.getConstructor().newInstance();
-        } catch (IllegalArgumentException iae) {
-            throw new BadConfigurationException(iae);
-        } catch (SecurityException se) {
-            throw new BadConfigurationException(se);
+            return spc.getConstructor().newInstance();
         } catch (InstantiationException ie) {
-            throw new BadConfigurationException(ie);
+            throw new UnableToInstantiateException(ie);
         } catch (IllegalAccessException iae) {
-            throw new BadConfigurationException(iae);
+            throw new UnableToInstantiateException(iae);
         } catch (InvocationTargetException ite) {
-            throw new BadConfigurationException(ite);
+            throw new UnableToInstantiateException(ite);
         } catch (NoSuchMethodException nsme) {
-            throw new BadConfigurationException(nsme);
+            throw new UnableToInstantiateException(nsme);
         }
     }
 

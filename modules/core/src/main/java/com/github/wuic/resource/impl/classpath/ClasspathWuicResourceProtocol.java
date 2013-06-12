@@ -39,6 +39,8 @@
 package com.github.wuic.resource.impl.classpath;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.InputStreamWuicResource;
@@ -47,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
@@ -91,7 +92,7 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
         classPathEntry = getClass().getResource(basePath);
 
         if (classPathEntry == null) {
-            throw new IllegalArgumentException("Unable to find '" + basePath + "' in the classpath");
+            throw new BadArgumentException(new IllegalArgumentException("Unable to find '" + basePath + "' in the classpath"));
         }
     }
 
@@ -99,7 +100,7 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final Pattern pattern) throws IOException {
+    public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
 
         final List<String> absolutePaths = IOUtils.lookupFileResources(new File(classPathEntry.getFile()), pattern);
         final List<String> retval = new ArrayList<String>(absolutePaths.size());
@@ -122,7 +123,7 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource accessFor(final String realPath, final FileType type) throws IOException {
+    public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         final StringBuilder cp = new StringBuilder();
         cp.append(basePath);
 

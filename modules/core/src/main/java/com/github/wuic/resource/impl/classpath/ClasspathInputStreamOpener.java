@@ -38,6 +38,7 @@
 
 package com.github.wuic.resource.impl.classpath;
 
+import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.util.InputStreamOpener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ import java.io.InputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public class ClasspathInputStreamOpener implements InputStreamOpener {
@@ -81,13 +82,13 @@ public class ClasspathInputStreamOpener implements InputStreamOpener {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public InputStream openStream() throws WuicResourceNotFoundException {
         final InputStream is = getClass().getResourceAsStream(path);
 
         log.debug("Looking for {} resource in the classpath", path);
 
         if (is == null) {
-            throw new IOException(path + " not found in the classpath");
+            throw new WuicResourceNotFoundException(new IOException(String.format("%s not found in the classpath", path)));
         }
 
         return is;

@@ -38,6 +38,7 @@
 package com.github.wuic.resource.impl;
 
 import com.github.wuic.FileType;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.resource.WuicResource;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.0
  */
 public abstract class AbstractWuicResource implements WuicResource {
@@ -104,7 +105,11 @@ public abstract class AbstractWuicResource implements WuicResource {
      */
     protected AbstractWuicResource(final String name, final FileType ft, final Boolean bc, final Boolean tc, final Boolean c, final Boolean a) {
         if (ft == null) {
-            throw new IllegalArgumentException("You can't create a resource with a null FileType");
+            throw new BadArgumentException(new IllegalArgumentException("You can't create a resource with a null FileType"));
+        }
+
+        if (name == null) {
+            throw new BadArgumentException(new IllegalArgumentException("You can't create a resource with a null name"));
         }
 
         fileType = ft;
