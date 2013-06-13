@@ -38,9 +38,9 @@
 
 package com.github.wuic.ssh.test;
 
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import org.apache.sshd.server.Environment;
-import org.apache.sshd.server.command.ScpCommand;
 import org.apache.sshd.server.command.UnknownCommand;
 
 import java.io.*;
@@ -78,9 +78,13 @@ public class WindowsCommand extends UnknownCommand {
      */
     @Override
     public void start(final Environment env) throws IOException {
-        // Execute command as a .bat file
-        final File file = File.createTempFile("sshd-batch", ".bat");
-        IOUtils.copyStream(new ByteArrayInputStream(command.getBytes()), new FileOutputStream(file));
-        Runtime.getRuntime().exec("cmd.exe /k " + file.getAbsolutePath());
+        try {
+            // Execute command as a .bat file
+            final File file = File.createTempFile("sshd-batch", ".bat");
+            IOUtils.copyStream(new ByteArrayInputStream(command.getBytes()), new FileOutputStream(file));
+            Runtime.getRuntime().exec("cmd.exe /k " + file.getAbsolutePath());
+        } catch (StreamException se) {
+            throw new IOException(se);
+        }
     }
 }

@@ -39,6 +39,8 @@
 package com.github.wuic.ssh.test;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
 import com.jcraft.jsch.JSchException;
@@ -84,7 +86,7 @@ public class SshTest {
      * </p>
      */
     @BeforeClass
-    public static void tearUp() throws IOException {
+    public static void tearUp() throws StreamException, IOException {
 
         // Default server on port 9876
         sshdServer = SshServer.setUpDefaultServer();
@@ -135,9 +137,12 @@ public class SshTest {
      * </p>
      *
      * @throws JSchException if SSH session could not be opened
+     * @throws WuicException if WUIC request fails
+     * @throws InterruptedException if the SSH server does not respond in time
+     * @throws IOException if any I/O error occurs
      */
     @Test
-    public void sshTest() throws JSchException, IOException, InterruptedException {
+    public void sshTest() throws JSchException, IOException, InterruptedException, WuicException {
         final WuicFacade facade = WuicFacade.newInstance("");
         final List<WuicResource> group = facade.getGroup("css-image", "");
 
