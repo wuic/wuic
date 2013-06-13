@@ -118,7 +118,7 @@ public class CGCssImportLineInspector implements LineInspector {
         final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath.trim(), }, "/");
 
         // Rewrite the statement from its beginning to the beginning of the resource name
-        replacement.append(matcher.group().substring(0, matcher.start(groupIndex == NumberUtils.TWO ? 1 : groupIndex)));
+        replacement.append(matcher.group().substring(0, (matcher.start(groupIndex == NumberUtils.TWO ? 1 : groupIndex)) - matcher.start()));
 
         // Write path to resource
         replacement.append("\"");
