@@ -38,6 +38,7 @@
 
 package com.github.wuic.ssh.test;
 
+import com.github.wuic.exception.wrapper.StreamException;
 import org.apache.sshd.server.command.ScpCommand;
 
 import java.io.File;
@@ -82,9 +83,9 @@ public class FileWriterScpCommand extends ScpCommand {
      * Reads the file and write it into the output stream.
      * </p>
      *
-     * @throws IOException if any I/O error occurs
+     * @throws Exception if any I/O error occurs
      */
-    private void readFile() throws IOException {
+    private void readFile() throws Exception {
 
         // Header
         final StringBuilder buf = new StringBuilder();
@@ -146,7 +147,7 @@ public class FileWriterScpCommand extends ScpCommand {
             } else {
                 throw new IOException(file.getAbsolutePath() + ": not a file");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
 
             // Write error
             try {

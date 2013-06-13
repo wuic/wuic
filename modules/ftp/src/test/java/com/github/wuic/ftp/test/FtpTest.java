@@ -132,7 +132,7 @@ public class FtpTest {
      * </p>
      */
     @Test
-    public void ftpTest() throws IOException {
+    public void ftpTest() throws Exception {
         final WuicFacade facade = WuicFacade.newInstance("");
         final List<WuicResource> group = facade.getGroup("css-image", "");
 

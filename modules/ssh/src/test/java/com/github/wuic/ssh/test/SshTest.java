@@ -84,7 +84,7 @@ public class SshTest {
      * </p>
      */
     @BeforeClass
-    public static void tearUp() throws IOException {
+    public static void tearUp() throws Exception {
 
         // Default server on port 9876
         sshdServer = SshServer.setUpDefaultServer();
@@ -134,10 +134,10 @@ public class SshTest {
      * Tests the SSH access resources with an embedded server.
      * </p>
      *
-     * @throws JSchException if SSH session could not be opened
+     * @throws Exception if SSH session could not be opened
      */
     @Test
-    public void sshTest() throws JSchException, IOException, InterruptedException {
+    public void sshTest() throws Exception {
         final WuicFacade facade = WuicFacade.newInstance("");
         final List<WuicResource> group = facade.getGroup("css-image", "");
 
