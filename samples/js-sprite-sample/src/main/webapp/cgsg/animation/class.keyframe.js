@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -26,52 +26,53 @@
 "use strict";
 
 /**
- * @module Collision
- * @class CGSGCollisionManager
+ * @module Animation
+ * @class CGSGKeyFrame
  * @extends {Object}
  * @constructor
- * @type {CGSGCollisionManager}
- * @author Vincent Vanghelle (vincent.vanghelle@capgemini.com)
+ * @param {Number} frame number for this key. Must be an integer value.
+ * @param {object} value for this key. For example : {x:10, y:30}; {x:10}
+ * @type {CGSGKeyFrame}
+ * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
  */
-var CGSGCollisionManager = CGSGObject.extend(
+var CGSGKeyFrame = CGSGObject.extend(
 	{
-		initialize : function () {
-		},
+		initialize : function (frame, value) {
+			/**
+			 * @property frame
+			 * @type {Number}
+			 */
+			this.frame = frame;
+			/**
+			 * @property value
+			 * @type {*}
+             * @example {x:10, y:30}; {x:10}
+			 */
+			this.value = value;
 
-        /**
-         * Indicate if two nodes are colliding
-         * @method isColliding
-         * @param currentNode
-         * @param testedNode
-         * @param threshold
-         * @return {boolean} true if nodes are colliding
-         */
-        isColliding : function(currentNode, testedNode, threshold){
-            if (currentNode.isCollisionManaged && testedNode.isCollisionManaged){
-                if (cgsgExist(cgsgPerformanceKeys)){
-                    return cgsgPerformanceKeys.collisionTester.isColliding(currentNode,testedNode,threshold);
-                }
-            }
-            return false;
-        },
+            /**
+             * Incoming tangent for this key
+             * @property inTangent
+             * @default (0, 0)
+             * @type {CGSGVector2D}
+             */
+            this.inTangent = new CGSGVector2D(0, 0);
 
-        /**
-         * Defines a node as managed by the collision manager
-         * @method manageNode
-         * @param node
-         */
-        manageNode : function(node){
-            node.isCollisionManaged = true;
-        },
+            /**
+             * Outgoing tangent for this key
+             * @property outTangent
+             * @default (0, 0)
+             * @type {CGSGVector2D}
+             */
+            this.outTangent = new CGSGVector2D(0, 0);
 
-        /**
-         * Defines a node as not managed by the collision manager
-         * @method unManageNode
-         * @param node
-         */
-        unManageNode : function(node){
-            node.isCollisionManaged = false;
-        }
+            /**
+             * can be fulfilled by the developer to put in whatever he needs
+             * @property userData
+             * @default null
+             * @type {*}
+             */
+            this.userData = null;
+		}
 	}
 );
-

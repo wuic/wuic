@@ -281,7 +281,7 @@ public final class IOUtils {
             // For instance, /.*.js should returns /js/file.js since /oof is the base path
             // After, that /oof + /js/file.js will result in the exact classpath entry to retrieve
             if (matcher.find()) {
-                return Arrays.asList(pathName);
+                return Arrays.asList(matcher.group());
             } else if (pathName.endsWith(".jar") || pathName.endsWith(".zip")) {
                 try {
                     return lookupArchiveResources(new ZipFile(file), pattern);

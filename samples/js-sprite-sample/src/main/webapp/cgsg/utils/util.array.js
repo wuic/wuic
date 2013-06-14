@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -39,7 +39,7 @@
  * @param {Object} value
  * @return {Boolean}
  */
-function cgsgIsArray(value) {
+function cgsgIsArray (value) {
 	return (Object.prototype.toString.call(value) === '[object Array]');
 }
 
@@ -58,11 +58,28 @@ Array.prototype.without = function (item) {
 };
 
 /**
- * Empties the array
+ * Remove the item at the end of this array
+ * @method Array.prototype.pop
+ */
+Array.prototype.pop = function() {
+    this.splice(this.length-1, 1);
+};
+
+/**
+ * Empty the array
  * @method Array.prototype.clear
  */
 Array.prototype.clear = function () {
 	this.length = 0;
+};
+
+/**
+ * Check if the array is empty
+ * @method Array.prototype.isEmpty
+ * @return {Boolean} true if the array is empty
+ */
+Array.prototype.isEmpty = function () {
+    return this.length === 0;
 };
 
 /**

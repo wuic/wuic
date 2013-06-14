@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -26,28 +26,33 @@
 "use strict";
 
 /**
- * @module Animation
- * @class CGSGAnimationKey
+ * @module Collision
+ * @class CGSGCollisionTesterFactory
  * @extends {Object}
  * @constructor
- * @param {Number} frame number for this key. Must be an integer value.
- * @param {Number} value for this key. Can be a Float value
- * @type {CGSGAnimationKey}
- * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
+ * @type {CGSGCollisionTesterFactory}
+ * @author Vincent Vanghelle (vincent.vanghelle@capgemini.com)
  */
-var CGSGAnimationKey = CGSGObject.extend(
-	{
-		initialize: function (frame, value) {
-			/**
-			 * @property frame
-			 * @type {Number}
-			 */
-			this.frame = frame;
-			/**
-			 * @property value
-			 * @type {Number}
-			 */
-			this.value = value;
-		}
-	}
+var CGSGCollisionTesterFactory = CGSGObject.extend(
+    {
+        initialize: function () {
+
+            this.collisionTesters = new CGSGMap();
+
+            // initialize collision testers
+            this.collisionTesters.addOrReplace(CGSGCollisionMethod.REGION, new CGSGCollisionRegionTester());
+            this.collisionTesters.addOrReplace(CGSGCollisionMethod.GHOSTONDEMAND, new CGSGCollisionGhostOnDemandTester());
+        },
+
+        /**
+         * Return a collision tester depending on the collision method
+         * @method getCollisionTester
+         * @param collisionMethod
+         * @return {Object}
+         */
+        getCollisionTester: function (collisionMethod) {
+            return this.collisionTesters.getValue(collisionMethod);
+        }
+    }
 );
+

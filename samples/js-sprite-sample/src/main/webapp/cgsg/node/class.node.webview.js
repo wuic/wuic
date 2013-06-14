@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -30,14 +30,14 @@
  * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
  */
 var CGSGWEBVIEWMODE = {
-	/**
-	 * @property LIVE
-	 */
-	LIVE   : 0,
-	/**
-	 * @property PREVIEW
-	 */
-	PREVIEW: 1
+    /**
+     * @property LIVE
+     */
+    LIVE    : 0,
+    /**
+     * @property PREVIEW
+     */
+    PREVIEW : 1
 };
 
 /*
@@ -54,287 +54,281 @@ var CGSGWEBVIEWMODE = {
  * @extends CGSGNode
  * @constructor
  * @param {Number} x Relative position on X
- * @param {Number} y Relative position on X
+ * @param {Number} y Relative position on Y
  * @param {Number} width Relative dimension
  * @param {Number} height Relative Dimension
  * @param {String} url URL of the webpage
  * @type {CGSGNodeWebview}
  */
 var CGSGNodeWebview = CGSGNode.extend(
-	{
-		initialize: function (x, y, width, height, url) {
-			this._super(x, y, CGSGMath.fixedPoint(width), CGSGMath.fixedPoint(height));
+    {
+        initialize : function (x, y, width, height, url) {
+            this._super(x, y);
 
-			/**
-			 * Size of the area around the webview in LIVE mode
-			 * @property threshold
-			 * @default 20
-			 * @type {Number}
-			 */
-			this.threshold = 20;
-			/**
-			 * Color of the area around the webview in LIVE mode
-			 * @property color
-			 * @default "lightGray"
-			 * @type {String}
-			 */
-			this.color = "lightGray";
-			/**
-			 * Color of line around the webview in LIVE mode
-			 * @property color
-			 * @default "Gray"
-			 * @type {String}
-			 */
-			this.lineColor = "Gray";
+            this.resizeTo(CGSGMath.fixedPoint(width), CGSGMath.fixedPoint(height));
 
-			/**
-			 * @property classType
-			 * @type {String}
-			 */
-			this.classType = "CGSGNodeWebview";
+            /**
+             * Size of the area around the webview in LIVE mode
+             * @property threshold
+             * @default 20
+             * @type {Number}
+             */
+            this.threshold = 20;
+            /**
+             * Color of the area around the webview in LIVE mode
+             * @property color
+             * @default "lightGray"
+             * @type {String}
+             */
+            this.color = "lightGray";
+            /**
+             * Color of line around the webview in LIVE mode
+             * @property color
+             * @default "Gray"
+             * @type {String}
+             */
+            this.lineColor = "Gray";
 
-			/**
-			 * A HTML tag that contains the web view : an iframe
-			 * @property _liveContainer
-			 * @type {HTMLElement}
-			 * @private
-			 */
-			this._liveContainer = null;
+            /**
+             * @property classType
+             * @type {String}
+             */
+            this.classType = "CGSGNodeWebview";
 
-			/**
-			 * A CGSGNodeImage rendering the preview of the webpage
-			 * @property _previewContainer
-			 * @type {CGSGNodeImage}
-			 * @private
-			 */
-			this._previewContainer = null;
+            /**
+             * A HTML tag that contains the web view : an iframe
+             * @property _liveContainer
+             * @type {HTMLElement}
+             * @private
+             */
+            this._liveContainer = null;
 
-			/**
-			 * URL of the web page
-			 * @property _url
-			 * @type {String}
-			 * @private
-			 */
-			this._url = url;
+            /**
+             * A CGSGNodeImage rendering the preview of the webpage
+             * @property _previewContainer
+             * @type {CGSGNodeImage}
+             * @private
+             */
+            this._previewContainer = null;
 
-			/**
-			 * URL for the preview mode
-			 * @property _previewURL
-			 * @private
-			 * @type {String}
-			 */
-			this._previewURL = null;
+            /**
+             * URL of the web page
+             * @property _url
+             * @type {String}
+             * @private
+             */
+            this._url = url;
 
-			this._createLiveContainer();
-			this._createPreviewContainer();
+            /**
+             * URL for the preview mode
+             * @property _previewURL
+             * @private
+             * @type {String}
+             */
+            this._previewURL = null;
 
-			this.switchMode(CGSGWEBVIEWMODE.LIVE);
-		},
+            this._createLiveContainer();
+            this._createPreviewContainer();
 
-		/**
-		 * Initialize and add the live container to the HTML body
-		 * @method _initLiveContainer
-		 * @private
-		 */
-		_initLiveContainer: function () {
-			if (!cgsgExist(this._liveContainer)) {
-				this._createLiveContainer();
-			}
+            this.switchMode(CGSGWEBVIEWMODE.LIVE);
+        },
 
-			document.body.appendChild(this._liveContainer);
-		},
+        /**
+         * Initialize and add the live container to the HTML body
+         * @method _initLiveContainer
+         * @private
+         */
+        _initLiveContainer : function () {
+            if (!cgsgExist(this._liveContainer)) {
+                this._createLiveContainer();
+            }
 
-		/**
-		 * Initialize and add the CGSGNodeImage
-		 * @method _initPreviewContainer
-		 * @private
-		 */
-		_initPreviewContainer: function () {
-			if (!cgsgExist(this._previewContainer)) {
-				this._createPreviewContainer();
-			}
+            document.body.appendChild(this._liveContainer);
+        },
 
-			this.addChild(this._previewContainer);
+        /**
+         * Initialize and add the CGSGNodeImage
+         * @method _initPreviewContainer
+         * @private
+         */
+        _initPreviewContainer : function () {
+            if (!cgsgExist(this._previewContainer)) {
+                this._createPreviewContainer();
+            }
 
-			//load the webcontent via Ajax
-			//this._loadPageAsync();
-		},
+            this.addChild(this._previewContainer);
 
-		/**
-		 * Create an IFRAME tag in the _liveContainer property
-		 * @method _createLiveContainer
-		 * @private
-		 */
-		_createLiveContainer: function () {
-			var uri = "";
-			if (cgsgExist(this._url)) {
-				uri = this._url;
-			}
+            //load the webcontent via Ajax
+            //this._loadPageAsync();
+        },
 
-			this._liveContainer = document.createElement("IFRAME");
+        /**
+         * Create an IFRAME tag in the _liveContainer property
+         * @method _createLiveContainer
+         * @private
+         */
+        _createLiveContainer : function () {
+            var uri = "";
+            if (cgsgExist(this._url)) {
+                uri = this._url;
+            }
 
-			this._liveContainer.style.position = "absolute";
-			this._liveContainer.setAttribute("src", uri);
-		},
+            this._liveContainer = document.createElement("IFRAME");
 
-		/**
-		 * Create the CGSGNodeImage to contain the preview
-		 * @method _createPreviewContainer
-		 * @private
-		 */
-		_createPreviewContainer: function () {
-			this._previewContainer =
-			new CGSGNodeImage(0, 0, this._previewURL);
+            this._liveContainer.style.position = "absolute";
+            this._liveContainer.setAttribute("src", uri);
+        },
 
-			this._previewContainer.isTraversable = false;
-		},
+        /**
+         * Create the CGSGNodeImage to contain the preview
+         * @method _createPreviewContainer
+         * @private
+         */
+        _createPreviewContainer : function () {
+            this._previewContainer =
+                new CGSGNodeImage(0, 0, this._previewURL);
 
-		/*
-		 *
-		 * @private
-		 * @method _loadPageAsync
-		 */
-		/*_loadPageAsync : function () {
+            this._previewContainer.isTraversable = false;
+        },
 
-		 },*/
+        /*
+         *
+         * @private
+         * @method _loadPageAsync
+         */
+        /*_loadPageAsync : function () {
 
-		/**
-		 * @method setURL
-		 * @param {String} url
-		 */
-		setURL: function (url) {
-			this._url = url;
+         },*/
 
-			if (cgsgExist(this._liveContainer)) {
-				this._liveContainer.setAttribute("src", this._url);
-			}
-		},
+        /**
+         * @method setURL
+         * @param {String} url
+         */
+        setURL : function (url) {
+            this._url = url;
 
-		/**
-		 * Get a String representing the URL
-		 * @method getURL
-		 * @return {string}
-		 */
-		getURL: function () {
-			return this._url;
-		},
+            if (cgsgExist(this._liveContainer)) {
+                this._liveContainer.setAttribute("src", this._url);
+            }
+        },
 
-		/**
-		 * Set the URL of the image for the preview mode (CGSGWEBVIEWMODE.PREVIEW)
-		 * @method setPreviewURL
-		 * @param {String} imageURL
-		 */
-		setPreviewURL: function (imageURL) {
-			this._previewURL = imageURL;
-			this._previewContainer.setURL(this._previewURL);
-		},
+        /**
+         * Get a String representing the URL
+         * @method getURL
+         * @return {string}
+         */
+        getURL : function () {
+            return this._url;
+        },
 
-		/**
-		 * Switch between rendering mode
-		 * @method switchMode
-		 * @param {Number} mode a CGSGWEBVIEWMODE enum : LIVE or PREVIEW
-		 */
-		switchMode: function (mode) {
-			if (mode === CGSGWEBVIEWMODE.LIVE) {
-				this.detachChild(this._previewContainer);
-				this._initLiveContainer();
-			}
-			else {
-				//Initially, there is no mode, so we cannot remove the child from the Body
-				if (this._mode === CGSGWEBVIEWMODE.LIVE) {
-					document.body.removeChild(this._liveContainer);
-				}
-				this._initPreviewContainer();
-			}
+        /**
+         * Set the URL of the image for the preview mode (CGSGWEBVIEWMODE.PREVIEW)
+         * @method setPreviewURL
+         * @param {String} imageURL
+         */
+        setPreviewURL : function (imageURL) {
+            this._previewURL = imageURL;
+            this._previewContainer.setURL(this._previewURL);
+        },
 
-			this._mode = mode;
-		},
+        /**
+         * Switch between rendering mode
+         * @method switchMode
+         * @param {Number} mode a CGSGWEBVIEWMODE enum : LIVE or PREVIEW
+         */
+        switchMode : function (mode) {
+            if (mode === CGSGWEBVIEWMODE.LIVE) {
+                this.detachChild(this._previewContainer);
+                this._initLiveContainer();
+            }
+            else {
+                //Initially, there is no mode, so we cannot remove the child from the Body
+                if (this._mode === CGSGWEBVIEWMODE.LIVE) {
+                    document.body.removeChild(this._liveContainer);
+                }
+                this._initPreviewContainer();
+            }
 
-		/**
-		 * @method getCurrentMode
-		 * @return {CGSGWEBVIEWMODE} the current mode
-		 */
-		getCurrentMode: function () {
-			return this._mode;
-		},
+            this._mode = mode;
+        },
 
-		/**
-		 * @protected
-		 * @method render
-		 * Custom rendering
-		 * */
-		render: function (context) {
-			//save current state
-			this.beforeRender(context);
+        /**
+         * @method getCurrentMode
+         * @return {CGSGWEBVIEWMODE} the current mode
+         */
+        getCurrentMode : function () {
+            return this._mode;
+        },
 
-			context.globalAlpha = this.globalAlpha;
+        /**
+         * @protected
+         * @method render
+         * Custom rendering
+         * */
+        render : function (context) {
+            if (this._mode === CGSGWEBVIEWMODE.LIVE) {
+                context.fillStyle = this.color;
+                context.strokeStyle = this.lineColor;
+                context.lineWidth = this.lineWidth;
 
-			if (this._mode === CGSGWEBVIEWMODE.LIVE) {
-				context.fillStyle = this.color;
-				context.strokeStyle = this.lineColor;
-				context.lineWidth = this.lineWidth;
+                //we draw the rect at (0,0) because we have already translated the context to the correct position
+                context.fillRect(0, 0, this.dimension.width, this.dimension.height);
 
-				//we draw the rect at (0,0) because we have already translated the context to the correct position
-				context.fillRect(0, 0, this.dimension.width, this.dimension.height);
+                context.strokeRect(0, 0, this.dimension.width, this.dimension.height);
 
-				context.strokeRect(0, 0, this.dimension.width, this.dimension.height);
+                context.strokeRect(this.threshold - 2, this.threshold - 2,
+                    8 + this.dimension.width - this.threshold * 2,
+                    8 + this.dimension.height - this.threshold * 2);
 
-				context.strokeRect(this.threshold - 2, this.threshold - 2,
-								   8 + this.dimension.width - this.threshold * 2,
-								   8 + this.dimension.height - this.threshold * 2);
+                if (cgsgExist(this._liveContainer)) {
+                    this._liveContainer.style.left = (this.getAbsoluteLeft() + this.threshold) + "px";
+                    this._liveContainer.style.top = (this.getAbsoluteTop() + this.threshold) + "px";
+                    this._liveContainer.style.width = (this.getAbsoluteWidth() - this.threshold * 2) + "px";
+                    this._liveContainer.style.height = (this.getAbsoluteHeight() - this.threshold * 2) + "px";
+                }
+            }
+            else {
+                this._previewContainer.resizeTo(this.getWidth(), this.getHeight());
 
-				if (cgsgExist(this._liveContainer)) {
-					this._liveContainer.style.left = (this.getAbsoluteLeft() + this.threshold) + "px";
-					this._liveContainer.style.top = (this.getAbsoluteTop() + this.threshold) + "px";
-					this._liveContainer.style.width = (this.getAbsoluteWidth() - this.threshold * 2) + "px";
-					this._liveContainer.style.height = (this.getAbsoluteHeight() - this.threshold * 2) + "px";
-				}
-			}
-			else {
-				this._previewContainer.resizeTo(this.getWidth(), this.getHeight());
+                //draw this zone
+                context.fillStyle = this.color;
 
-				//draw this zone
-				context.fillStyle = this.color;
+                //we draw the rect at (0,0) because we have already translated the context to the correct position
+                context.fillRect(0, 0, this.getWidth(), this.getHeight());
+            }
+        },
 
-				//we draw the rect at (0,0) because we have already translated the context to the correct position
-				context.fillRect(0, 0, this.getWidth(), this.getHeight());
-			}
+        /**
+         * Free the memory taken by this node
+         * @method free
+         */
+        free : function () {
+            if (cgsgExist(this._liveContainer)) {
+                CGSG.canvas.removeChild(this._liveContainer);
+                delete (this._liveContainer);
+            }
 
-			//restore state
-			this.afterRender(context);
-		},
+            this._super();
+        },
 
-		/**
-		 * Free the memory taken by this node
-		 * @method free
-		 */
-		free: function () {
-			if (cgsgExist(this._liveContainer)) {
-				cgsgCanvas.removeChild(this._liveContainer);
-				delete (this._liveContainer);
-			}
+        /**
+         * Return the copy of this node
+         * @method copy
+         * @return {CGSGNodeWebview}
+         */
+        copy : function () {
+            var node = new CGSGNodeWebview(this.position.x, this.position.y, this.dimension.width,
+                this.dimension.height, this.url);
+            //call the super method
+            node = this._super(node);
 
-			this._super();
-		},
+            node.threshold = this.threshold;
+            node.color = this.color;
+            node.lineColor = this.lineColor;
 
-		/**
-		 * Return the copy of this node
-		 * @method copy
-		 * @return {CGSGNodeWebview}
-		 */
-		copy: function () {
-			var node = new CGSGNodeWebview(this.position.x, this.position.y, this.dimension.width,
-										   this.dimension.height, this.url);
-			//call the super method
-			node = this._super(node);
+            node.switchMode(this.mode);
 
-			node.threshold = this.threshold;
-			node.color = this.color;
-			node.lineColor = this.lineColor;
-
-			node.switchMode(this.mode);
-
-			return node;
-		}
-	}
+            return node;
+        }
+    }
 );
