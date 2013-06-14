@@ -273,8 +273,15 @@ public final class IOUtils {
         if (file.isFile()) {
             final Matcher matcher = pattern.matcher(pathName);
 
+            // TODO : be clear about expected behavior of regex
+            // Actually if you have this directory : /foo/oof/js/file.js
+            // You have a classpath where root is /foo i.e file.js is retrieved thanks to /oof/js/file.js
+            // Your classpath protocol has base directory /oof
+            // We need to be very clear about the path evaluated by the regex
+            // For instance, /.*.js should returns /js/file.js since /oof is the base path
+            // After, that /oof + /js/file.js will result in the exact classpath entry to retrieve
             if (matcher.find()) {
-                return Arrays.asList(matcher.group());
+                return Arrays.asList(pathName);
             } else if (pathName.endsWith(".jar") || pathName.endsWith(".zip")) {
                 try {
                     return lookupArchiveResources(new ZipFile(file), pattern);
