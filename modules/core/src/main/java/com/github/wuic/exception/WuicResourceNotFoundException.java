@@ -76,7 +76,7 @@ public class WuicResourceNotFoundException extends WuicException implements Erro
      * @param ioe IOException the existing exception
      */
     public WuicResourceNotFoundException(final IOException ioe) {
-        super("Unable to find a reosurce", ioe);
+        super("Unable to find a resource", ioe);
     }
 
 
