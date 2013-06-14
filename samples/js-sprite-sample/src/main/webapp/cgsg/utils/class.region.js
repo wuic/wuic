@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -37,8 +37,19 @@
  */
 var CGSGPosition = CGSGVector2D.extend(
 	{
-		initialize: function (x, y) {
+		initialize : function (x, y) {
 			this._super(x, y);
+		},
+
+		/**
+		 * Indicates if this position meaningfully equals to the given position.
+		 * @public
+		 * @method equalsTo
+		 * @param position {CGSGPosition} the position to compare to this position
+		 * @return {Boolean} true if given position exists and has same coordinates as this position, false otherwise
+		 */
+		equalsTo : function(position) {
+			return cgsgExist(position) && position.x === this.x && position.y === this.y;
 		},
 
 		/**
@@ -47,7 +58,7 @@ var CGSGPosition = CGSGVector2D.extend(
 		 * @method copy
 		 * @return {CGSGPosition}
 		 */
-		copy: function () {
+		copy : function () {
 			return new CGSGPosition(this.x, this.y);
 		},
 
@@ -57,7 +68,7 @@ var CGSGPosition = CGSGVector2D.extend(
 		 * @param {Number} newX
 		 * @param {Number} newY
 		 */
-		translateTo: function (newX, newY) {
+		translateTo : function (newX, newY) {
 			this.x = newX;
 			this.y = newY;
 		},
@@ -69,7 +80,7 @@ var CGSGPosition = CGSGVector2D.extend(
 		 * @param {Number} x
 		 * @param {Number} y
 		 */
-		translateWith: function (x, y) {
+		translateWith : function (x, y) {
 			this.x += x;
 			this.y += y;
 		},
@@ -81,7 +92,7 @@ var CGSGPosition = CGSGVector2D.extend(
 		 * @param {Number} x
 		 * @param {Number} y
 		 */
-		translateBy: function (x, y) {
+		translateBy : function (x, y) {
 			this.x *= x;
 			this.y *= y;
 		}
@@ -100,7 +111,7 @@ var CGSGPosition = CGSGVector2D.extend(
  */
 var CGSGScale = CGSGPosition.extend(
 	{
-		initialize: function (x, y) {
+		initialize : function (x, y) {
 			this._super(x, y);
 		}
 	}
@@ -117,7 +128,7 @@ var CGSGScale = CGSGPosition.extend(
  */
 var CGSGRotation = CGSGObject.extend(
 	{
-		initialize: function (angle) {
+		initialize : function (angle) {
 			this.angle = angle;
 		},
 
@@ -127,7 +138,7 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method copy
 		 * @return {CGSGRotation}
 		 */
-		copy: function () {
+		copy : function () {
 			return new CGSGRotation(this.angle);
 		},
 
@@ -137,7 +148,7 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method rotateTo
 		 * @param {Number} newAngle
 		 */
-		rotateTo: function (newAngle) {
+		rotateTo : function (newAngle) {
 			this.angle = newAngle;
 		},
 
@@ -147,8 +158,8 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method rotateBy
 		 * @param {Number} rotateFactor
 		 */
-		rotateBy: function (rotateFactor) {
-			this.multiply(rotateFactor);
+		rotateBy : function (rotateFactor) {
+			this.multiplyEquals(rotateFactor);
 		},
 
 		/**
@@ -157,8 +168,8 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method rotateWith
 		 * @param {Number} angle
 		 */
-		rotateWith: function (angle) {
-			this.add(angle);
+		rotateWith : function (angle) {
+			this.addEquals(angle);
 		},
 
 		/**
@@ -167,17 +178,17 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method add
 		 * @param {Number} angle
 		 */
-		add: function (angle) {
+        addEquals : function (angle) {
 			this.angle += angle;
 		},
 
 		/**
-		 * Substract this angle to the current one
+		 * Subtract this angle to the current one
 		 * @public
 		 * @method substract
 		 * @param {Number} angle
 		 */
-		substract: function (angle) {
+        subtractEquals : function (angle) {
 			this.angle -= angle;
 		},
 
@@ -187,7 +198,7 @@ var CGSGRotation = CGSGObject.extend(
 		 * @method multiply
 		 * @param {Number} angle
 		 */
-		multiply: function (angle) {
+        multiplyEquals : function (angle) {
 			this.angle *= angle;
 		}
 	}
@@ -205,7 +216,7 @@ var CGSGRotation = CGSGObject.extend(
  */
 var CGSGDimension = CGSGVector2D.extend(
 	{
-		initialize: function (width, height) {
+		initialize : function (width, height) {
 
 			this._super(width, height);
 
@@ -228,7 +239,7 @@ var CGSGDimension = CGSGVector2D.extend(
 		 * @method copy
 		 * @return {CGSGDimension}
 		 */
-		copy: function () {
+		copy : function () {
 			return new CGSGDimension(this.width, this.height);
 		},
 
@@ -238,7 +249,7 @@ var CGSGDimension = CGSGVector2D.extend(
 		 * @param {Number} newWidth
 		 * @param {Number} newHeight
 		 * */
-		resizeTo: function (newWidth, newHeight) {
+		resizeTo : function (newWidth, newHeight) {
 			if (newWidth >= 0) {
 				this.width = newWidth;
 			}
@@ -253,7 +264,7 @@ var CGSGDimension = CGSGVector2D.extend(
 		 * @param {Number} widthFactor
 		 * @param {Number} heightFactor
 		 * */
-		resizeBy: function (widthFactor, heightFactor) {
+		resizeBy : function (widthFactor, heightFactor) {
 			if (widthFactor >= 0) {
 				this.width *= widthFactor;
 			}
@@ -268,14 +279,23 @@ var CGSGDimension = CGSGVector2D.extend(
 		 * @param {Number} width
 		 * @param {Number} height
 		 * */
-		resizeWith: function (width, height) {
+		resizeWith : function (width, height) {
 			if (this.width + width >= 0) {
 				this.width += width;
 			}
 			if (this.height + height >= 0) {
 				this.height += height;
 			}
-		}
+        },
+
+        /**
+         * Return true if no pixels are inside the dimension
+         * @method isEmpty
+         * @return {boolean}
+         */
+        isEmpty : function() {
+            return (this.width == 0 || this.height == 0);
+        }
 	}
 );
 
@@ -293,7 +313,7 @@ var CGSGDimension = CGSGVector2D.extend(
  */
 var CGSGRegion = CGSGObject.extend(
 	{
-		initialize: function (x, y, width, height) {
+		initialize : function (x, y, width, height) {
 			/**
 			 * @property position
 			 * @type {CGSGPosition}
@@ -310,7 +330,7 @@ var CGSGRegion = CGSGObject.extend(
 		 * @method copy
 		 * @return {CGSGRegion}
 		 */
-		copy: function () {
+		copy : function () {
 			return new CGSGRegion(this.position.x, this.position.y, this.dimension.width, this.dimension.height);
 		},
 
@@ -318,19 +338,28 @@ var CGSGRegion = CGSGObject.extend(
 		 * @method add
 		 * @param region {CGSGRegion}
 		 */
-		add: function (region) {
+        addEquals : function (region) {
 			this.position.translateWith(region.position.x, region.position.y);
 			this.dimension.resizeWith(region.dimension.width, region.dimension.height);
 		},
 
 		/**
-		 * @method substract
+		 * @method subtract
 		 * @param {CGSGRegion} region
 		 */
-		substract: function (region) {
+        subtractEquals : function (region) {
 			this.position.translateWith(-region.position.x, -region.position.y);
 			this.dimension.resizeWith(-region.dimension.width, -region.dimension.height);
-		}
+        },
+
+        /**
+         * Return true if no pixels are inside the region
+         * @method isEmpty
+         * @return {boolean}
+         */
+        isEmpty : function() {
+            return this.dimension.isEmpty();
+        }
 	}
 );
 

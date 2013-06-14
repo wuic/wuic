@@ -26,65 +26,25 @@
  *  These Terms of Use are subject to French law.
  */
 
+
+
 /**
- * Static class that encapsulates some useful methods.
- * @module Math
- * @main Math
- * @static
- * @class CGSGMath
- * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
+ * @module
+ * @class CGSGInterpolator
+ * @extends {CGSGObject}
+ * @constructor
+ * @author Gwennael Buchet (gwennael.buchet@gmail.com)
  */
-var CGSGMath = {
-	/**
-	 * PI x 2
-	 * @static
-	 * @property PI2
-	 */
-	PI2 : 6.28318530718, //Math.PI * 2.0,
+var CGSGInterpolator = CGSGObject.extend(
+    {
+        initialize: function () {},
 
-	/**
-	 * Convert degree to radian
-	 * @method deg2rad
-	 * @static
-	 * @param {Number} angle
-	 * @return {Number} The radian value
-	 */
-	deg2rad : function (angle) {
-		return (angle / 180.0) * Math.PI;
-	},
-
-	/**
-	 * Convert radian to degree
-	 * @method rad2deg
-	 * @static
-	 * @param {Number} angle
-	 * @return {Number} The degree value
-	 */
-	rad2deg : function (angle) {
-		return angle * 57.29577951308232;
-	},
-
-	/**
-	 * Compute the rounded integer of n
-	 * @method fixedPoint
-	 * @static
-	 * @param {Number} n
-	 * @return {Number} The integer value
-	 */
-	fixedPoint : function (n) {
-		return (0.5 + n) << 0;
-	},
-
-	/**
-	 * Linear interpolation between 'from' and 'to'
-	 * @method lerp
-	 * @static
-	 * @param {Number} from
-	 * @param {Number} to
-	 * @param {Number} weight Percentage to apply to the first value
-	 * @return {Number} The interpolated value
-	 */
-	lerp : function (from, to, weight) {
-		return from + (to - from) * weight;
-	}
-};
+        /**
+         * @method computeInterpolations
+         * @param keys {Array} Array of all the animation keys
+         * @param steps {Array} Array of steps between 2 keys. steps.length = keys.length - 1.
+         * @return {Array} Array of {x, y} object corresponding to all the points in the curve
+         */
+        compute: function (keys, steps) {}
+    }
+);

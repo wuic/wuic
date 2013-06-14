@@ -26,23 +26,21 @@
 /**
  * A CGSGNodeSquare represent a basic square
  *
- * @class CGSGNodeSquare
+ * @class CGSGNodeCurveTCB
  * @module Node
  * @extends CGSGNode
  * @constructor
  * @param {Number} x Relative position on X
  * @param {Number} y Relative position on Y
- * @param {Number} width Relative dimension
- * @param {Number} height Relative Dimension
- * @type {CGSGNodeSquare}
+ * @type {CGSGNodeCurveTCB}
  * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
  */
-var CGSGNodeSquare = CGSGNode.extend(
+var CGSGNodeCurveTCB = CGSGNode.extend(
     {
-        initialize:function (x, y, width, height) {
+        initialize: function (x, y) {
             this._super(x, y);
 
-            this.resizeTo(width, height);
+            this.resizeTo(300, 300);
 
             /**
              * Color  to fill the square
@@ -65,14 +63,52 @@ var CGSGNodeSquare = CGSGNode.extend(
              * @default 0
              * @type {Number}
              */
-            this.lineWidth = 0;
+            this.lineWidth = 2;
+
+            this._interpolator = new CGSGInterpolatorTCB();
+            this._keys = [];
+            this._nbKeys = 0;
+            this._values = [];
+            this._nbValues = 0;
+            this._steps = [];
 
             /**
              * @property classType
              * @readonly
              * @type {String}
              */
-            this.classType = "CGSGNodeSquare";
+            this.classType = "CGSGNodeCurveTCB";
+        },
+
+        /**
+         * @method addKey
+         * @param x
+         * @param y
+         * @param t
+         * @param c
+         * @param b
+         * @return {CGSGKeyFrame}
+         */
+        addKey: function (x, y, t, c, b) {
+            var k = new CGSGKeyFrame(this._nbKeys, {x: x, y: y});
+            k.userData = {t: t, c: c, b: b};
+            this._keys.push(k);
+            this._nbKeys++;
+
+            if (this._nbKeys > 1)
+                this._steps.push(20);
+
+            var s = new CGSGNodeSquare(x - 2, y - 2, 4, 4);
+            s.color = "#4488AF";
+            this.addChild(s);
+
+            return k;
+        },
+
+        compute: function () {
+            var v = this._interpolator.compute(this._keys, this._steps);
+            this._values = v.copy();
+            this._nbValues = this._values.length;
         },
 
         /**
@@ -81,29 +117,42 @@ var CGSGNodeSquare = CGSGNode.extend(
          * @protected
          * @param {CanvasRenderingContext2D} context the context into render the node
          * */
-        render:function (context) {
-            //draw this zone
-            context.fillStyle = this.color;
+        render: function (context) {
+            if (this._nbValues > 0) {
+                context.fillStyle = this.color;
 
-            //we draw the rect at (0,0) because we have already translated the context to the correct position
-            context.fillRect(0, 0, this.dimension.width, this.dimension.height);
+                context.beginPath();
+                context.globalAlpha = this.globalAlpha;
 
-            if (this.lineWidth > 0) {
-                context.strokeStyle = this.lineColor;
-                context.lineWidth = this.lineWidth;
-                context.strokeRect(0, 0, this.dimension.width, this.dimension.height);
+                context.moveTo(this._values[0].x, this._values[0].y);
+
+                for (var i = 1; i < this._nbValues; i++) {
+                    context.lineTo(this._values[i].x, this._values[i].y);
+                }
+
+                if (this.lineWidth > 0) {
+                    context.lineWidth = this.lineWidth;
+                    context.strokeStyle = this.lineColor;
+                    context.stroke();
+                }
             }
         },
 
         /**
          * @method copy
-         * @return {CGSGNodeSquare} a copy of this node
+         * @return {CGSGNodeCurveTCB} a copy of this node
          */
-        copy:function () {
-            var node = new CGSGNodeSquare(this.position.x, this.position.y, this.dimension.width,
-                this.dimension.height);
+        copy: function () {
+            var node = new CGSGNodeCurveTCB(this.position.x, this.position.y);
             //call the super method
             node = this._super(node);
+            
+            var k;
+            for (var i= 0; i<this._nbKeys; i++) {
+                k = this._keys[i];
+                node.addKey(k.value.x, k.value.y, k.userData.t, k.userData.c, k.userData.b);
+            }
+            node.compute();
 
             node.color = this.color;
             node.lineColor = this.lineColor;

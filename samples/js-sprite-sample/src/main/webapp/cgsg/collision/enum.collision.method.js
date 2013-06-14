@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -26,46 +26,23 @@
 "use strict";
 
 /**
+ * List the methods to check the collision on two nodes
  * @module Collision
- * @class CGSGCollisionRegionTester
+ * @class CGSGCollisionMethod
  * @extends {Object}
  * @constructor
- * @type {CGSGCollisionRegionTester}
+ * @type {Object}
  * @author Vincent Vanghelle (vincent.vanghelle@capgemini.com)
  */
-var CGSGCollisionRegionTester = CGSGObject.extend(
-    {
-        initialize : function () {
-            this.classType="CGSGCollisionRegionTester";
-        },
+var CGSGCollisionMethod = {
+    /**
+     * @property GHOSTONDEMAND
+     */
+    GHOSTONDEMAND: "ghostOnDemand",
 
-        /**
-         * Indicate if two nodes are colliding
-         * @method isColliding
-         * @param currentNode
-         * @param testedNode
-         * @param threshold
-         * @return {boolean} true if nodes are colliding
-         */
-        isColliding : function(currentNode, testedNode,threshold){
-            if (threshold === null) {
-                threshold = 0;
-            }
-            var nodeRight = testedNode.getAbsoluteRight();
-            var nodeBottom = testedNode.getAbsoluteBottom();
+    /**
+     * @property REGION
+     */
+    REGION: "region"
+};
 
-            if ((currentNode.getAbsoluteLeft() <= nodeRight + threshold &&
-                currentNode.getAbsoluteRight() >= testedNode.getAbsoluteLeft() - threshold) ||
-                (currentNode.getAbsoluteRight() >= testedNode.getAbsoluteLeft() - threshold &&
-                    currentNode.getAbsoluteLeft() <= nodeRight + threshold)) {
-
-                if (currentNode.getAbsoluteTop() <= nodeBottom + threshold &&
-                    currentNode.getAbsoluteBottom() >= testedNode.getAbsoluteTop() - threshold) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-);

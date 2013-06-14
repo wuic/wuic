@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -65,16 +65,16 @@ var cgsgGlobalRenderingTimer = null;
  * Represent the scene of the application.
  * It encapsulates the scene graph itself and several methods to track mouse and touch events, ...
  *
- * @class CGSGScene
+ * @class CGSGView
  * @constructor
  * @module Scene
  * @main Scene
  * @extends {Object}
  * @param {HTMLElement} canvas a handler to the canvas HTML element
- * @type {CGSGScene}
+ * @type {CGSGView}
  * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
  */
-var CGSGScene = CGSGObject.extend(
+var CGSGView = CGSGObject.extend(
     {
         initialize: function (canvas) {
 
@@ -87,12 +87,9 @@ var CGSGScene = CGSGObject.extend(
             }
 
             //noinspection JSUndeclaredVariable
-            cgsgCanvas = canvas;
-            /**
-             * @property context
-             * @type {CanvasRenderingContext2D}
-             */
-            this.context = cgsgCanvas.getContext("2d");
+            CGSG.canvas = canvas;
+            //noinspection JSUndeclaredVariable
+            CGSG.context = CGSG.canvas.getContext("2d");
 
             /**
              * Multiselection boolean.
@@ -126,26 +123,8 @@ var CGSGScene = CGSGObject.extend(
              */
             this.dragSelectAlpha = CGSG_DEFAULT_DRAG_SELECT_ALPHA;
 
-            /**
-             * The scene graph itself
-             * @property sceneGraph
-             * @type {CGSGSceneGraph}
-             */
-            this.sceneGraph = new CGSGSceneGraph(cgsgCanvas, this.context);
-
-            /**
-             * List of the current selected nodes in the scenegraph.
-             * @property selectedNodes
-             * @type {Array}
-             */
-            this.selectedNodes = this.sceneGraph.selectedNodes;
-
-            /**
-             * Current framerate of the application
-             * @property fps
-             * @type {Number}
-             */
-            this.fps = 0;
+            //noinspection JSUndeclaredVariable
+            CGSG.sceneGraph = new CGSGSceneGraph(CGSG.canvas, CGSG.context);
 
             /*
              * If true, framework will take care of multi-touch : NOT EFFECTIVE YET
@@ -214,6 +193,12 @@ var CGSGScene = CGSGObject.extend(
             this._isResizeDrag = false;
             this._isDragSelect = false;
             this._resizingDirection = -1;
+            this._isDblClick = false;
+            this._mouseUpCount = 0; // counter used to identify dbl click action
+            this._timeoutDblClick = null;
+            this._isPressing = false;
+            this._frameRatio = 0;
+
             /**
              * @property _listCursors List of the names for the cursor when overring a handlebox
              * @type {Array}
@@ -231,20 +216,28 @@ var CGSGScene = CGSGObject.extend(
              */
             this._selectedNode = null;
 
+            //Experimental : double-buffer for the temporary rendering
+            /*this._dblCanvas = document.createElement('canvas');
+             this._dblContext = null;*/
+
             ////// INITIALIZATION /////////
 
             //use an external variable to define the scope of the processes
             var scope = this;
-            cgsgCanvas.onmousedown = function (event) {
+            CGSG.canvas.onmouseout = function(event) {
+                scope.onMouseOutHandler(event);
+            };
+
+            CGSG.canvas.onmousedown = function (event) {
                 scope.onMouseDown(event);
             };
-            cgsgCanvas.onmouseup = function (event) {
+            CGSG.canvas.onmouseup = function (event) {
                 scope.onMouseUp(event);
             };
-            cgsgCanvas.ondblclick = function (event) {
+            CGSG.canvas.ondblclick = function (event) {
                 scope.onMouseDblClick(event);
             };
-            cgsgCanvas.onmousemove = function (event) {
+            CGSG.canvas.onmousemove = function (event) {
                 scope.onMouseMove(event);
             };
             document.onkeydown = function (event) {
@@ -253,23 +246,23 @@ var CGSGScene = CGSGObject.extend(
             document.onkeyup = function (event) {
                 scope.onKeyUpHandler(event);
             };
-            cgsgCanvas.addEventListener('touchstart', function (event) {
+            CGSG.canvas.addEventListener('touchstart', function (event) {
                 scope.onTouchStart(event);
             }, false);
-            cgsgCanvas.addEventListener('touchmove', function (event) {
+            CGSG.canvas.addEventListener('touchmove', function (event) {
                 scope.onTouchMove(event);
             }, false);
-            cgsgCanvas.addEventListener('touchend', function (event) {
+            CGSG.canvas.addEventListener('touchend', function (event) {
                 scope.onTouchEnd(event);
             }, false);
 
-            cgsgCanvas.addEventListener('MSPointerDown', function (event) {
+            CGSG.canvas.addEventListener('MSPointerDown', function (event) {
                 scope.onTouchStart(event);
             }, false);
-            cgsgCanvas.addEventListener("MSPointerMove", function (event) {
+            CGSG.canvas.addEventListener("MSPointerMove", function (event) {
                 scope.onTouchMove(event);
             }, false);
-            cgsgCanvas.addEventListener('MSPointerUp', function (event) {
+            CGSG.canvas.addEventListener('MSPointerUp', function (event) {
                 scope.onTouchEnd(event);
             }, false);
 
@@ -347,6 +340,10 @@ var CGSGScene = CGSGObject.extend(
 			 *  }
              */
             this.onRenderEnd = null;
+
+            //initialize the current frame to 0
+            //noinspection JSUndeclaredVariable
+            CGSG.currentFrame = 0;
         },
 
         /**
@@ -357,9 +354,9 @@ var CGSGScene = CGSGObject.extend(
          * @param {CGSGDimension} newDimension
          * */
         setCanvasDimension: function (newDimension) {
-            cgsgCanvas.width = newDimension.width;
-            cgsgCanvas.height = newDimension.height;
-            this.sceneGraph.setCanvasDimension(newDimension);
+            CGSG.canvas.width = newDimension.width;
+            CGSG.canvas.height = newDimension.height;
+            CGSG.sceneGraph.setCanvasDimension(newDimension);
 
             //Experimental
             /*this._dblCanvas.width = newDimension.x;
@@ -372,11 +369,12 @@ var CGSGScene = CGSGObject.extend(
          * @method deleteSelected
          */
         deleteSelected: function () {
-            if (this.sceneGraph.selectedNodes.length > 0) {
-                for (var i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                    this._selectedNode = this.sceneGraph.selectedNodes[i];
-                    this.sceneGraph.removeNode(this._selectedNode, true);
-                }
+            if (CGSG.selectedNodes.length > 0) {
+                //for (var i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                cgsgIterateReverse(CGSG.selectedNodes, (function(i, node) {
+                    this._selectedNode = CGSG.selectedNodes[i];
+                    CGSG.sceneGraph.removeNode(this._selectedNode, true);
+                }).bind(this));
             }
         },
 
@@ -390,9 +388,8 @@ var CGSGScene = CGSGObject.extend(
             this._isDrag = false;
             this._isResizeDrag = false;
             this._resizingDirection = -1;
-
-            this.sceneGraph.deselectAll(excludedArray);
-
+            //CGSG.canvas.style.cursor = 'auto';
+            CGSG.sceneGraph.deselectAll(excludedArray);
             this.invalidate();
         },
 
@@ -404,10 +401,12 @@ var CGSGScene = CGSGObject.extend(
         render: function () {
             if (this._isRunning && this._needRedraw) {
                 if (this.onRenderStart !== null) {
-                    this.onRenderStart();
+                    var evt = new CGSGEvent(this, null);
+                    CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_RENDER_START, evt);
+                    //this.onRenderStart();
                 }
 
-                this.sceneGraph.render();
+                CGSG.sceneGraph.render();
 
                 //render the drag selection box directly onto the scene graph ontop of everything else
                 if (this._dragSelectStartMousePosition.length > 0 && this._dragSelectEndMousePosition.length > 0) {
@@ -417,25 +416,25 @@ var CGSGScene = CGSGObject.extend(
 
                     var dx = p2.x - p1.x, dy = p2.y - p1.y;
 
-                    this.sceneGraph.context.save();
+                    CGSG.sceneGraph.context.save();
 
-                    this.sceneGraph.context.scale(cgsgDisplayRatio.x, cgsgDisplayRatio.y);
-                    this.sceneGraph.context.strokeStyle = this.dragSelectStrokeColor;
-                    this.sceneGraph.context.fillStyle = this.dragSelectFillColor;
-                    this.sceneGraph.context.globalAlpha = this.dragSelectAlpha;
-                    this.sceneGraph.context.fillRect(p1.x, p1.y, dx, dy);
-                    this.sceneGraph.context.strokeRect(p1.x, p1.y, dx, dy);
-
-                    this.sceneGraph.context.restore();
+                    CGSG.sceneGraph.context.scale(CGSG.displayRatio.x, CGSG.displayRatio.y);
+                    CGSG.sceneGraph.context.strokeStyle = this.dragSelectStrokeColor;
+                    CGSG.sceneGraph.context.fillStyle = this.dragSelectFillColor;
+                    CGSG.sceneGraph.context.globalAlpha = this.dragSelectAlpha;
+                    CGSG.sceneGraph.context.fillRect(p1.x, p1.y, dx, dy);
+                    CGSG.sceneGraph.context.strokeRect(p1.x, p1.y, dx, dy);
+                    CGSG.sceneGraph.context.restore();
                 }
 
                 if (this.onRenderEnd !== null) {
-                    this.onRenderEnd();
+                    CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_RENDER_END, new CGSGEvent(this, null));
+                    //this.onRenderEnd();
                 }
 
             }
 
-            //if (!this.sceneGraph.stillHaveAnimation()) {
+            //if (!CGSG.sceneGraph.stillHaveAnimation()) {
             //	this._needRedraw = false;
             //}
 
@@ -455,7 +454,6 @@ var CGSGScene = CGSGObject.extend(
             var bindStartPlaying = this.startPlaying.bind(this);
             window.requestAnimationFrame(bindStartPlaying);
             this._isRunning = true;
-
             this.render();
         },
 
@@ -492,8 +490,8 @@ var CGSGScene = CGSGObject.extend(
             var now = new Date().getTime();
             var delta = (now - this._lastUpdate);
 
-            if (!isNaN(cgsgMaxFramerate)) {
-                while ((1000.0 / delta) > cgsgMaxFramerate) {
+            if (!isNaN(CGSG.maxFramerate)) {
+                while ((1000.0 / delta) > CGSG.maxFramerate) {
                     now = new Date().getTime();
                     delta = (now - this._lastUpdate);
                 }
@@ -501,10 +499,16 @@ var CGSGScene = CGSGObject.extend(
 
             this._fpss[this.currentFps++] = 1000.0 / delta;
 
-            if (this.currentFps == cgsgFramerateDelay) {
+            if (this.currentFps == CGSG.framerateDelay) {
                 this.currentFps = 0;
-                this.fps = this._fpss.average();
+                CGSG.fps = this._fpss.average();
             }
+
+            /*if (this._frameRatio === 0) {
+                this._frameRatio = CGSG.fps;
+            } else {
+                this._frameRatio = ((this._frameRatio * (CGSG.currentFrame - 1)) + CGSG.fps) / CGSG.currentFrame;
+            }*/
 
             this._lastUpdate = now;
         },
@@ -516,7 +520,7 @@ var CGSGScene = CGSGObject.extend(
          */
         _updateFramerateContainer: function () {
             if (this._frameContainer !== null) {
-                this._frameContainer.innerHTML = Math.round(this.fps).toString();
+                this._frameContainer.innerHTML = Math.round(CGSG.fps)/*.toString() + " | ~" + (this._frameRatio)*/;
             }
         },
 
@@ -540,18 +544,18 @@ var CGSGScene = CGSGObject.extend(
          */
         setDisplayRatio: function (newRatio) {
             //noinspection JSUndeclaredVariable
-            cgsgDisplayRatio = newRatio;
-            this.sceneGraph.initializeGhost(cgsgCanvas.width / cgsgDisplayRatio.x,
-                cgsgCanvas.height / cgsgDisplayRatio.y);
+            CGSG.displayRatio = newRatio;
+            CGSG.sceneGraph.initializeGhost(CGSG.canvas.width / CGSG.displayRatio.x,
+                CGSG.canvas.height / CGSG.displayRatio.y);
         },
 
         /**
-         * @public
-         * @method getDisplayRatio
-         * @return {CGSGScale} the current display ratio
+         * Detects when the mouse leaves the canvas.
+         * @method onMouseOutHandler
+         * @param event {MouseEvent} the event
          */
-        getDisplayRatio: function () {
-            return cgsgDisplayRatio;
+        onMouseOutHandler : function(event) {
+            this._isPressing = false;
         },
 
         /**
@@ -561,7 +565,6 @@ var CGSGScene = CGSGObject.extend(
          * @param {MouseEvent} event
          */
         onMouseDown: function (event) {
-            //this._clickOnScene(event, true);
             this.onTouchStart(event);
         },
 
@@ -572,90 +575,41 @@ var CGSGScene = CGSGObject.extend(
          * @param {Event} event
          */
         onTouchStart: function (event) {
-            if (event.preventManipulation)
-                event.preventManipulation();
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (!cgsgExist(this._timerDblTouch)) {
-                this._mousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
-                this._selectedNode = this.sceneGraph.pickNode(this._mousePosition[0], function (node) {
-                    return cgsgExist(node.onDblClick);
-                });
-                this._tmpSelectedNode = this._selectedNode;
-            }
-            else {
-                this._selectedNode = this._tmpSelectedNode;
+            this._isPressing = true;
+            if (cgsgExist(this._mousePosition)) {
+                this._mouseOldPosition = this._mousePosition.copy();
             }
 
-            //if the touch was over a node with the onDblClick method defined, check whether it's a dbl touch or not
-            if (cgsgExist(this._selectedNode)) {
-                //if the timer exists, then it's a dbl touch
-                if (cgsgExist(this._timerDblTouch)) {
-                    clearTimeout(this._timerDblTouch);
-                    this._timerDblTouch = null;
-                    this._dblClickOnScene(event);
-                }
-                else {
-                    var that = this;
-                    var evt = event;
-                    this._timerDblTouch = setTimeout(function () {
-                        clearTimeout(that._timerDblTouch);
-                        that._timerDblTouch = null;
-                        that._clickOnScene(evt, true);
-                    }, this.dblTouchDelay);
-                }
+            this._mousePosition = cgsgGetCursorPositions(event, CGSG.canvas);
+            this._selectedNode = CGSG.sceneGraph.pickNode(this._mousePosition[0], null);
+            if (cgsgExist(this._selectedNode) && this._selectedNode.onClickStart) {
+                CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_CLICK_START, new CGSGEvent(this, {nativeEvent : event, position : this._mousePosition}));
             }
-            else {
-                //not a touch on a node with the onDblClick event defined,
-                // so it's a single touch, just call the _clickOnScene method usually
-                this._clickOnScene(event, true);
-            }
+
+            this._updateSelection(event);
         },
 
         /**
+         * Updates the current selection according to the given event.
+         *
+         * @method _updateSelection
+         * @param {Event} event the event
          * @private
-         * @method _clickOnScene
-         * @param {Event} event MouseEvent or TouchEvent
-         * @param {Boolean} mustPickNode
          */
-        _clickOnScene: function (event, mustPickNode) {
-            this._mousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
+        _updateSelection : function(event) {
+            //if a node is under the cursor, select it if it is (clickable || resizable || draggable)
+            var selectable = cgsgExist(this._selectedNode) &&
+                (this._selectedNode.isClickable || this._selectedNode.isDraggable || this._selectedNode.isResizable);
 
-            if (this.onSceneClickStart !== null) {
-                this.onSceneClickStart({position: this._mousePosition.copy(), event: event});
-            }
-
-            //if the mouse cursor is over a handle box (ie: a resize marker)
-            if (this._resizingDirection !== -1) {
-                this._mouseOldPosition = this._mousePosition.copy();
-                this._isResizeDrag = true;
-                if (this.onSceneClickEnd !== null) {
-                    this.onSceneClickEnd({position: this._mousePosition.copy(), event: event});
-                }
-                return;
-            }
-
-            //try to pick up the nodes under the cursor
-            if (mustPickNode) {
-                this._selectedNode = this.sceneGraph.pickNode(this._mousePosition[0], function (node) {
-                    return (node.isTraversable === true && (node.isClickable === true || node.isDraggable === true
-                        || node.isResizable === true));
-                });
-            }
-            //if a node is under the cursor, select it if it is (clickable || reiszable || draggable)
-            if (this._selectedNode !== null && this._selectedNode !== undefined &&
-                (this._selectedNode.isClickable || this._selectedNode.isDraggable
-                    || this._selectedNode.isResizable)) {
+            if (selectable) {
                 if (this._selectedNode.isDraggable || this._selectedNode.isResizable) {
-
                     //if multiselection is activated
                     if (this.allowMultiSelect && this._keyDownedCtrl) {
                         if (!this._selectedNode.isSelected) {
-                            this.sceneGraph.selectNode(this._selectedNode);
+                            CGSG.sceneGraph.selectNode(this._selectedNode);
                         }
                         else {
-                            this.sceneGraph.deselectNode(this._selectedNode);
+                            CGSG.sceneGraph.deselectNode(this._selectedNode);
                         }
                     }
                     //no multiselection
@@ -663,47 +617,107 @@ var CGSGScene = CGSGObject.extend(
                         //if node not already selected
                         if (!this._selectedNode.isSelected) {
                             this.deselectAll(null);
-                            this.sceneGraph.selectNode(this._selectedNode);
+                            CGSG.sceneGraph.selectNode(this._selectedNode);
                         }
                     }
 
-                    this._isDrag = true;
-                    this._isResizeDrag = false;
+                    this._isDrag = !this._detectResizeMode(this._mousePosition[0]);
 
                     //ask for redraw
                     this.invalidate();
                 }
-
-                //execute the action bound with the click event
-                if (this._selectedNode.isClickable) {
-                    if (cgsgExist(this._selectedNode.onClick)) {
-                        this._selectedNode.onClick({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
-                    }
-                    //deselect all node except the new _selectedNode
-                    if (this._selectedNode.isDraggable === false && this._selectedNode.isResizable === false) {
-                        this.deselectAll([this._selectedNode]);
-                    }
-                }
-
-            }
-            //if no nodes were hit (that were clickable,reizeable or draggable) lets start a drag selection if we are allowed
-            else if (this.allowMultiSelect) {
-
-                this._isDragSelect = true;
-                this._dragSelectStartMousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
-                this._dragSelectEndMousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
-                this.deselectAll(null);
             }
             //else if no nodes was clicked
             else {
                 this.deselectAll(null);
             }
 
-            if (this.onSceneClickEnd !== null) {
-                this.onSceneClickEnd({position: this._mousePosition.copy(), event: event});
+            // Check if we can start drag selection
+            var canStartDragSelection = this._canStartDragSelection(event);
+
+            // if the _canStartDragSelection has not been sub classed : apply this rule :
+            // if no nodes were hit (that were clickable,resizeable or draggable) lets start a drag selection if we are allowed
+            if (!cgsgExist(canStartDragSelection)) {
+                canStartDragSelection = !selectable;
             }
 
-            this._mouseOldPosition = this._mousePosition.copy();
+            if (this.allowMultiSelect && canStartDragSelection) {
+                this._isDragSelect = true;
+                this._dragSelectStartMousePosition = cgsgGetCursorPositions(event, CGSG.canvas);
+                this._dragSelectEndMousePosition = cgsgGetCursorPositions(event, CGSG.canvas);
+                this.deselectAll(null);
+            }
+        },
+
+        /**
+         * This method indicates if, according to the current state of the scene, a drag selection could starts. Called
+         * when a touchStart event triggered. Could be overridden to specify different behaviour.
+         *
+         * @method _canStartDragSelection
+         * @protected
+         * @param {Event} event the event
+         * @return {Boolean} true if drag selection could starts, false otherwise
+         */
+        _canStartDragSelection : function(event) {
+            // tells the caller to use default behaviour by returning nothing (undefined)
+        },
+
+        /**
+         * Dispatch a 'click' event and for any selected node which is clickable and and only if 'this._isDblClick' == false.
+         *
+         * @method _dispatchClick
+         * @param event {CGSGEvent} the event to dispatch
+         * @private
+         */
+        _dispatchClick : function(event) {
+            //execute the action bound with the click event
+            if (cgsgExist(this._selectedNode) && this._selectedNode.isClickable) {
+                if (!this._isDblClick && cgsgExist(this._selectedNode.onClick)) {
+                    event.data.node = this._selectedNode;
+                    event.data.positions = this._mousePosition.copy();
+                    CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_CLICK, event);
+                    //this._selectedNode.onClick({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
+                }
+                //deselect all node except the new _selectedNode
+                if (this._selectedNode.isDraggable === false && this._selectedNode.isResizable === false) {
+                    this.deselectAll([this._selectedNode]);
+                }
+            }
+        },
+
+        /**
+         * Click on the scene
+         *
+         * @private
+         * @method _clickOnScene
+         * @param {CGSGEvent} event wrapper of MouseEvent or TouchEvent
+         * @param {Boolean} mustPickNode
+         */
+        _clickOnScene: function (event, mustPickNode) {
+            this._mousePosition = cgsgGetCursorPositions(event.data.nativeEvent, CGSG.canvas);
+
+            if (this.onSceneClickStart !== null) {
+                CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_SCENE_CLICK_START, event);
+                //this.onSceneClickStart({positions: this._mousePosition.copy(), event: event});
+            }
+
+            //try to pick up the nodes under the cursor
+            if (mustPickNode) {
+                this._selectedNode = CGSG.sceneGraph.pickNode(this._mousePosition[0], function (node) {
+                    return (node.isTraversable === true && (node.isClickable === true || node.isDraggable === true
+                        || node.isResizable === true));
+                });
+            }
+
+            //this._updateSelection(event);
+            this._dispatchClick(event);
+
+            if (this.onSceneClickEnd !== null) {
+                CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_SCENE_CLICK_END, event);
+                //this.onSceneClickEnd({positions: this._mousePosition.copy(), event: event});
+            }
+
+            //this._mouseOldPosition = this._mousePosition.copy();
         },
 
         /**
@@ -736,17 +750,23 @@ var CGSGScene = CGSGObject.extend(
          * @param {Event} event MouseEvent or TouchEvent
          */
         _moveOnScene: function (event) {
+            var mousePosition = cgsgGetCursorPositions(event, CGSG.canvas);
+            var currentPosition = mousePosition[0];
+
             var i, nodeOffsetX, nodeOffsetY;
-            this._mousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
+            this._mousePosition = mousePosition;
+            var selectedNode = this._selectedNode;
             this._selectedNode = null;
 
-            if (this._isDrag) {
-                if (this.sceneGraph.selectedNodes.length > 0) {
-                    this._offsetX = this._mousePosition[0].x - this._mouseOldPosition[0].x;
-                    this._offsetY = this._mousePosition[0].y - this._mouseOldPosition[0].y;
+            if (this._isPressing && this._isDrag) {
+                if (CGSG.selectedNodes.length > 0) {
+                    var mp = this._mousePosition[0];
+                    var mop = this._mouseOldPosition[0];
+                    this._offsetX = mp.x - mop.x;
+                    this._offsetY = mp.y - mop.y;
                     var canMove = true;
-                    for (i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                        this._selectedNode = this.sceneGraph.selectedNodes[i];
+                    for (i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                        this._selectedNode = CGSG.selectedNodes[i];
                         if (this._selectedNode !== null && this._selectedNode.isDraggable) {
                             this._selectedNode.isMoving = true;
                             //TODO : appliquer aussi l'opposée de la rotation
@@ -765,10 +785,11 @@ var CGSGScene = CGSGObject.extend(
                             }
 
                             if (canMove) {
-                                this._selectedNode.translateWith(nodeOffsetX, nodeOffsetY, true);
-                                //this._selectedNode.computeAbsoluteMatrix(true);
+                                this._selectedNode.translateWith(nodeOffsetX, nodeOffsetY);
                                 if (this._selectedNode.onDrag !== null) {
-                                    this._selectedNode.onDrag({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                                    var evt = new CGSGEvent(this, {node: this._selectedNode, positions: this._mousePosition.copy(), nativeEvent: event});
+                                    CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_DRAG, evt);
+                                    //this._selectedNode.onDrag({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
                                 }
                             }
                         }
@@ -780,12 +801,17 @@ var CGSGScene = CGSGObject.extend(
                     this.invalidate();
                 }
             }
-            else if (this._isResizeDrag) {
-                if (this.sceneGraph.selectedNodes.length > 0) {
-                    this._offsetX = this._mousePosition[0].x - this._mouseOldPosition[0].x;
-                    this._offsetY = this._mousePosition[0].y - this._mouseOldPosition[0].y;
-                    for (i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                        this._selectedNode = this.sceneGraph.selectedNodes[i];
+            else if (this._isPressing && this._isResizeDrag) {
+                if (CGSG.selectedNodes.length > 0) {
+                    var mp = this._mousePosition[0];
+                    var mop = this._mouseOldPosition[0];
+                    this._offsetX = mp.x - mop.x;
+                    this._offsetY = mp.y - mop.y;
+
+                    //for (i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                    cgsgIterateReverse(CGSG.selectedNodes, (function(i, node) {
+                        this._selectedNode = node;//CGSG.selectedNodes[i];
+
                         if (this._selectedNode.isResizable) {
                             this._selectedNode.isResizing = true;
                             //TODO : appliquer aussi l'opposée de la rotation
@@ -834,8 +860,7 @@ var CGSGScene = CGSGObject.extend(
                                         this._selectedNode.resizeWith(d.dW, d.dH, false);
                                     }
                                     else {
-                                        this._selectedNode.translateWith(0,
-                                            nodeOffsetY * this._selectedNode.scale.y,
+                                        this._selectedNode.translateWith(0, nodeOffsetY * this._selectedNode.scale.y,
                                             false);
                                         this._selectedNode.resizeWith(nodeOffsetX, -nodeOffsetY, false);
                                     }
@@ -857,8 +882,7 @@ var CGSGScene = CGSGObject.extend(
                                         this._selectedNode.resizeWith(-d.dW, -d.dH, false);
                                     }
                                     else {
-                                        this._selectedNode.translateWith(nodeOffsetX * this._selectedNode.scale.x,
-                                            0,
+                                        this._selectedNode.translateWith(nodeOffsetX * this._selectedNode.scale.x, 0,
                                             false);
                                         this._selectedNode.resizeWith(-nodeOffsetX, nodeOffsetY, false);
                                     }
@@ -878,47 +902,32 @@ var CGSGScene = CGSGObject.extend(
                                     }
                                     break;
                             }
-                            this._selectedNode.computeAbsoluteMatrix(true);
+                            this._selectedNode.computeAbsoluteMatrix(false);
                             if (this._selectedNode.onResize !== null) {
-                                this._selectedNode.onResize({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                                var evt = new CGSGEvent(this, {node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
+                                CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_RESIZE, evt);
+                                //this._selectedNode.onResize({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
                             }
                         }
-                    }
+                    }).bind(this));
                 }
                 this._mouseOldPosition = this._mousePosition.copy();
 
                 this.invalidate();
             }
             // if there's a selection, see if we grabbed one of the resize handles
-            else if (this.sceneGraph.selectedNodes.length > 0 && this._isResizeDrag == false) {
-                for (i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                    this._selectedNode = this.sceneGraph.selectedNodes[i];
-                    if (this._selectedNode.isResizable) {
-                        for (var h = 0; h < 8; h++) {
-                            var selectionHandle = this._selectedNode.resizeHandles[h];
+            else if (CGSG.selectedNodes.length > 0/* && this._isResizeDrag == false*/) {
+                if (this._detectResizeMode(this._mousePosition[0])) {
+                    return;
+                } else {
+                    // not over a selection box, return to normal
+                    //this._isResizeDrag = false;
+                    this._resizingDirection = -1;
+                    CGSG.canvas.style.cursor = 'auto';
 
-                            // resize handles will always be rectangles
-                            if (selectionHandle.checkIfSelected(this._mousePosition[0],
-                                cgsgResizeHandleThreshold)) {
-                                // we found one!
-                                this._resizingDirection = h;
-
-                                //draw the correct cursor
-                                cgsgCanvas.style.cursor = this._listCursors[h];
-
-                                return;
-                            }
-                        }
-                    }
+                    //ask for redraw
+                    this.invalidate();
                 }
-
-                // not over a selection box, return to normal
-                this._isResizeDrag = false;
-                this._resizingDirection = -1;
-                cgsgCanvas.style.cursor = 'auto';
-
-                //ask for redraw
-                this.invalidate();
             }
             //if we are drag selecting
             else if (this._isDragSelect) {
@@ -933,37 +942,86 @@ var CGSGScene = CGSGObject.extend(
                 var n = null;
                 //first test the mouse over the current _nodeMouseOver. If it's ok, no need to traverse other
                 if (cgsgExist(this._nodeMouseOver)) {
-                    n = this._nodeMouseOver.pickNode(this._mousePosition[0], null, cgsgGhostContext, false, null);
+                    n = this._nodeMouseOver.pickNode(this._mousePosition[0], null, CGSG.ghostContext, false, null);
 
                     if (n === null) {
                         this._nodeMouseOver.isMouseOver = false;
                         if (cgsgExist(this._nodeMouseOver.onMouseOut)) {
-                            this._nodeMouseOver.onMouseOut({node: this._nodeMouseOver, position: this._mousePosition.copy(), event: event});
+                            var evt = new CGSGEvent(this, {node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event});
+                            CGSG.eventManager.dispatch(this._nodeMouseOver, cgsgEventTypes.ON_MOUSE_OUT, evt);
+                            //this._nodeMouseOver.onMouseOut({node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event});
                         }
                         this._nodeMouseOver = null;
                     }
                     else if (n === this._nodeMouseOver) {
                         if (cgsgExist(this._nodeMouseOver.onMouseOver)) {
-                            this._nodeMouseOver.onMouseOver({node: this._nodeMouseOver, position: this._mousePosition.copy(), event: event});
+                            var evt = new CGSGEvent(this, {node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event});
+                            CGSG.eventManager.dispatch(this._nodeMouseOver, cgsgEventTypes.ON_MOUSE_OVER, evt);
+                            //this._nodeMouseOver.onMouseOver({node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event});
                         }
                     }
                 }
 
                 //if the previous node under the mouse is no more under the mouse, test the other nodes
                 if (n === null) {
-                    if ((n = this.sceneGraph.pickNode(this._mousePosition[0], function (node) {
+                    if ((n = CGSG.sceneGraph.pickNode(this._mousePosition[0], function (node) {
                         return (node.onMouseEnter !== null || node.onMouseOver !== null)
                     })) !== null) {
                         n.isMouseOver = true;
                         this._nodeMouseOver = n;
                         this._nodeMouseOver.isMouseOver = true;
                         if (cgsgExist(this._nodeMouseOver.onMouseEnter)) {
-                            this._nodeMouseOver.onMouseEnter({node: this._nodeMouseOver, position: this._mousePosition.copy(), event: event})
+                            var evt = new CGSGEvent(this, {node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event});
+                            CGSG.eventManager.dispatch(this._nodeMouseOver, cgsgEventTypes.ON_MOUSE_ENTER, evt);
+                            //this._nodeMouseOver.onMouseEnter({node: this._nodeMouseOver, positions: this._mousePosition.copy(), event: event})
                         }
                     }
                 }
-
             }
+
+            this._selectedNode = selectedNode;
+        },
+
+        /**
+         * Detects if the mouse if over the handle box of a selected node.
+         *
+         * @method _detectResizeMode
+         * @param mousePosition {CGSGPosition} the cursor position
+         * @return {Boolean} true if we resize, false otherwise
+         * @private
+         */
+        _detectResizeMode : function(mousePosition) {
+            var selectedNode = this._selectedNode;
+
+            cgsgIterateReverse(CGSG.selectedNodes, (function(i, node) {
+                //for (i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                this._selectedNode = node;//CGSG.selectedNodes[i];
+                if (this._selectedNode.isResizable) {
+                    for (var h = 0; h < 8; h++) {
+                        var selectionHandle = this._selectedNode.resizeHandles[h];
+                        this._isResizeDrag = selectionHandle.checkIfSelected(mousePosition, CGSG.resizeHandleThreshold);
+
+                        // resize handles will always be rectangles
+                        if (this._isResizeDrag) {
+                            // we found one!
+                            this._resizingDirection = h;
+
+                            //draw the correct cursor
+                            CGSG.canvas.style.cursor = this._listCursors[h];
+
+                            //if the mouse cursor is over a handle box (ie: a resize marker)
+                            // if (this._resizingDirection !== -1) {
+                            //     this._isResizeDrag = true;
+                            //}
+
+                            return false;
+                        }
+                    }
+                }
+            }).bind(this));
+
+            this._selectedNode = selectedNode;
+            return this._isResizeDrag;
         },
 
         /**
@@ -1002,7 +1060,7 @@ var CGSGScene = CGSGObject.extend(
          * @param {MouseEvent} event
          */
         onMouseUp: function (event) {
-            this._upOnScene(event);
+            this.onTouchEnd(event);
         },
 
         /**
@@ -1016,44 +1074,117 @@ var CGSGScene = CGSGObject.extend(
                 event.preventManipulation();
             event.preventDefault();
             event.stopPropagation();
-            this._upOnScene(event);
+
+            this._isPressing = false;
+            this._mouseUpCount++;
+
+            //if the touch was over a node with the onDblClick method defined, check whether it's a dbl touch or not
+            if (cgsgExist(this._selectedNode) && cgsgExist(this._selectedNode.onDblClick)) {
+
+                //if the timer exists, then it's a dbl touch
+                if (this._mouseUpCount > 1) {
+                    clearTimeout(this._timeoutDblClick);
+                    this._upAndDblClick(event);
+                } else {
+                    this._timeoutDblClick = setTimeout((function() {
+                        this._upAndClick(event);
+                    }).bind(this), this.dblTouchDelay);
+                }
+            }
+            else {
+                // not a touch on a node with the onDblClick event defined,
+                // so it's a single touch, just call the _clickOnScene method usually
+                this._upAndClick(event);
+            }
+        },
+
+        /**
+         * Creates the custom event by calling _upOnScene and then call _clickOnScene.
+         *
+         * @method _upAndClick
+         * @param {Event} event the event
+         * @private
+         */
+        _upAndClick : function(event) {
+            this._mouseUpCount = 0;
+            var eventData = this._upOnScene(event);
+            eventData.nativeEvent = event;
+            this._clickOnScene(new CGSGEvent(this, eventData), false);
+        },
+
+        /**
+         * Creates the custom event by calling _upOnScene and then call _dblClickOnScene.
+         *
+         * @method _upAndDblClick
+         * @param {Event} event the event
+         * @private
+         */
+        _upAndDblClick : function(event) {
+            this._mouseUpCount = 0;
+            var eventData = this._upOnScene(event);
+            eventData.nativeEvent = event;
+            this._dblClickOnScene(new CGSGEvent(this, eventData), false);
         },
 
         /**
          * @method _upOnScene
          * @param {Event} event MouseEvent or TouchEvent
+         * @return {Object} a structure indicating is the node has been moved or resize
          * @private
          */
         _upOnScene: function (event) {
+            var selectedNode = this._selectedNode;
             var i = 0;
+            var retval = {};
+            retval.nativeEvent = event;
+
+            var exist = cgsgExist(selectedNode);
+            retval.hasMoved = exist && selectedNode.isMoving;
+            retval.hasResize = exist && selectedNode.isResizing;
 
             //if current action was to drag nodes
             if (this._isDrag) {
-                for (i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                    this._selectedNode = this.sceneGraph.selectedNodes[i];
+                cgsgIterateReverse(CGSG.selectedNodes, (function(i, node) {
+                    //for (i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                    //    this._selectedNode = CGSG.selectedNodes[i];
+                    this._selectedNode = node;
+
                     if (this._selectedNode.isMoving) {
                         this._selectedNode.isMoving = false;
                         this._selectedNode.computeAbsoluteMatrix(true);
+
                         if (this._selectedNode.onDragEnd !== null) {
-                            this._selectedNode.onDragEnd({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                            var evt = new CGSGEvent(this, {node: this._selectedNode, positions: this._mousePosition.copy(), nativeEvent: event});
+                            CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_DRAG_END, evt);
+                            //    this._selectedNode.onDragEnd({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
                         }
                     }
-                }
+                    //}
+                }).bind(this));
+
                 this._isDrag = false;
             }
 
             //else if current action was to resize nodes
             else if (this._isResizeDrag) {
-                for (i = this.sceneGraph.selectedNodes.length - 1; i >= 0; i--) {
-                    this._selectedNode = this.sceneGraph.selectedNodes[i];
+                cgsgIterateReverse(CGSG.selectedNodes, (function(i, node) {
+                    //for (i = CGSG.selectedNodes.length - 1; i >= 0; i--) {
+                    //this._selectedNode = CGSG.selectedNodes[i];
+                    this._selectedNode = node;
+
                     if (this._selectedNode.isResizing) {
                         this._selectedNode.isResizing = false;
                         this._selectedNode.computeAbsoluteMatrix(true);
+
                         if (this._selectedNode.onResizeEnd !== null) {
-                            this._selectedNode.onResizeEnd({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                            var evt = new CGSGEvent(this, {node: this._selectedNode, positions: this._mousePosition.copy(), nativeEvent: event});
+                            CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_RESIZE_END, evt);
+                            //this._selectedNode.onResizeEnd({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
                         }
                     }
-                }
+                    //}
+                }).bind(this));
+
                 this._isResizeDrag = false;
             }
             //else if this is a drag select
@@ -1067,15 +1198,19 @@ var CGSGScene = CGSGObject.extend(
                 this.invalidate();
             }
 
-            //else if jst up the mice of nodes
+            //else if just up the mice of nodes
             else {
-                this._selectedNode = this.sceneGraph.selectedNodes[this.sceneGraph.selectedNodes.length - 1];
+                this._selectedNode = CGSG.selectedNodes[CGSG.selectedNodes.length - 1];
                 if (cgsgExist(this._selectedNode) && this._selectedNode.onMouseUp !== null) {
-                    this._selectedNode.onMouseUp({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                    var evt = new CGSGEvent(this, {node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
+                    CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_MOUSE_UP, evt);
+                    //this._selectedNode.onMouseUp({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
                 }
             }
 
             this._resizingDirection = -1;
+            this._selectedNode = selectedNode;
+            return retval;
         },
 
         /**
@@ -1083,7 +1218,7 @@ var CGSGScene = CGSGObject.extend(
          * @protected
          * @method _doDragSelect
          */
-        _doDragSelect: function () {
+        _doDragSelect  : function () {
 
             var p1 = this._dragSelectStartMousePosition[0];
             var p2 = this._dragSelectEndMousePosition[0];
@@ -1101,13 +1236,13 @@ var CGSGScene = CGSGObject.extend(
             }
 
             var region = new CGSGRegion(p1.x, p1.y, dx, dy);
-            var newSelections = this.sceneGraph.pickNodes(region, function (node) {
+            var newSelections = CGSG.sceneGraph.pickNodes(region, function (node) {
                 return (node.isTraversable === true && (/*node.isClickable === true ||*/ node.isDraggable === true
                     || node.isResizable === true))
             });
 
             for (var i = 0, len = newSelections.length; i < len; ++i) {
-                this.sceneGraph.selectNode(newSelections[i]);
+                CGSG.sceneGraph.selectNode(newSelections[i]);
             }
         },
         /**
@@ -1125,23 +1260,35 @@ var CGSGScene = CGSGObject.extend(
         /**
          * @protected
          * @method _dblClickOnScene
-         * @param {Event} event
+         * @param {CGSGEvent} event wrapping the native event
+         * @param {Boolean} mustPickNode
          * @return {CGSGNode} the node that was double-clicked
          * @private
          */
-        _dblClickOnScene: function (event) {
+        _dblClickOnScene: function (event, mustPickNode) {
+            //this._updateSelection(event);
+
             if (this.onSceneDblClickStart !== null) {
-                this.onSceneDblClickStart(event);
+                CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_SCENE_DBL_CLICK_START, event);
+                //this.onSceneDblClickStart(event);
             }
-            this._mousePosition = cgsgGetCursorPositions(event, cgsgCanvas);
-            this._selectedNode = this.sceneGraph.pickNode(this._mousePosition[0], function (node) {
-                return true;
-            });
+
+            if (mustPickNode) {
+                //this._mousePosition = cgsgGetCursorPositions(event, CGSG.canvas);
+                this._selectedNode = CGSG.sceneGraph.pickNode(this._mousePosition[0], function (node) {
+                    return true;
+                });
+            }
+
             if (cgsgExist(this._selectedNode) && this._selectedNode.onDblClick !== null) {
-                this._selectedNode.onDblClick({node: this._selectedNode, position: this._mousePosition.copy(), event: event});
+                event.data.node = this._selectedNode;
+                event.data.positions = this._mousePosition.copy();
+                CGSG.eventManager.dispatch(this._selectedNode, cgsgEventTypes.ON_DBL_CLICK, event);
+                //this._selectedNode.onDblClick({node: this._selectedNode, positions: this._mousePosition.copy(), event: event});
             }
             else if (this.onSceneDblClickEnd !== null) {
-                this.onSceneDblClickEnd({position: this._mousePosition.copy(), event: event});
+                CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_SCENE_DBL_CLICK_END, event);
+                //this.onSceneDblClickEnd({positions: this._mousePosition.copy(), event: event});
             }
             return this._selectedNode;
         },

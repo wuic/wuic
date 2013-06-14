@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -33,148 +33,100 @@
  * @extends CGSGNode
  * @constructor
  * @param {Number} x Relative position on X
- * @param {Number} y Relative position on X
+ * @param {Number} y Relative position on Y
  * @param {Number} width Relative dimension
  * @param {Number} height Relative Dimension
  * @type {CGSGNodeEllipse}
  * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
  */
 var CGSGNodeEllipse = CGSGNode.extend(
-	{
-		initialize: function (x, y, width, height) {
-			this._super(x, y, width, height);
+    {
+        initialize : function (x, y, width, height) {
+            this._super(x, y)
+            this.resizeTo(width, height);
 
-			/**
-			 * Color  to fill the ellipse
-			 * @property color
-			 * @default "#444444"
-			 * @type {String}
-			 */
-			this.color = "#444444";
-			/**
-			 * Color to stroke the ellipse
-			 * @property lineColor
-			 * @default "#222222"
-			 * @type {String}
-			 */
-			this.lineColor = "#222222";
-			/**
-			 * Width of the line that stroke the ellipse.
-			 * Let 0 if you don't want to stroke the ellipse.
-			 * @property lineWidth
-			 * @default 0
-			 * @type {Number}
-			 */
-			this.lineWidth = 0;
+            /**
+             * Color  to fill the ellipse
+             * @property color
+             * @default "#444444"
+             * @type {String}
+             */
+            this.color = "#444444";
+            /**
+             * Color to stroke the ellipse
+             * @property lineColor
+             * @default "#222222"
+             * @type {String}
+             */
+            this.lineColor = "#222222";
+            /**
+             * Width of the line that stroke the ellipse.
+             * Let 0 if you don't want to stroke the ellipse.
+             * @property lineWidth
+             * @default 0
+             * @type {Number}
+             */
+            this.lineWidth = 0;
 
-			/**
-			 * @property classType
-			 * @readonly
-			 * @type {String}
-			 */
-			this.classType = "CGSGNodeEllipse";
+            /**
+             * @property classType
+             * @readonly
+             * @type {String}
+             */
+            this.classType = "CGSGNodeEllipse";
 
-			this.pickNodeMethod = CGSGPickNodeMethod.GHOST;
-		},
+            this.pickNodeMethod = CGSGPickNodeMethod.GHOST;
+        },
 
-		/**
-		 * Custom rendering
-		 * @method render
-		 * @protected
-		 * @param {CanvasRenderingContext2D} context the context into render the node
-		 * */
-		render: function (context) {
-			//save current state
-			this.beforeRender(context);
+        /**
+         * Custom rendering
+         * @method render
+         * @protected
+         * @param {CanvasRenderingContext2D} context the context into render the node
+         * */
+        render : function (context) {
+            var centerX = this.dimension.width / 2;
+            var centerY = this.dimension.height / 2;
 
-			context.globalAlpha = this.globalAlpha;
+            context.beginPath();
 
-			var centerX = this.dimension.width / 2;
-			var centerY = this.dimension.height / 2;
+            context.moveTo(centerX, 0);
 
-			context.beginPath();
+            context.bezierCurveTo(
+                this.dimension.width, 0,
+                this.dimension.width, this.dimension.height,
+                centerX, this.dimension.height);
 
-			context.moveTo(centerX, 0);
+            context.bezierCurveTo(
+                0, this.dimension.height,
+                0, 0,
+                centerX, 0);
 
-			context.bezierCurveTo(
-				this.dimension.width, 0,
-				this.dimension.width, this.dimension.height,
-				centerX, this.dimension.height);
+            context.fillStyle = this.color;
+            context.fill();
+            if (this.lineWidth > 0) {
+                context.lineWidth = this.lineWidth;
+                context.strokeStyle = this.lineColor;
+                context.stroke();
+            }
 
-			context.bezierCurveTo(
-				0, this.dimension.height,
-				0, 0,
-				centerX, 0);
+            context.closePath();
+        },
 
-			context.fillStyle = this.color;
-			context.fill();
-			if (this.lineWidth > 0) {
-				context.lineWidth = this.lineWidth;
-				context.strokeStyle = this.lineColor;
-				context.stroke();
-			}
+        /**
+         * @method copy
+         * @return {CGSGNodeEllipse} a copy of this node
+         */
+        copy : function () {
+            var node = new CGSGNodeEllipse(this.position.x, this.position.y, this.dimension.width,
+                this.dimension.height);
+            //call the super method
+            node = this._super(node);
 
-			context.closePath();
-
-			//restore state
-			this.afterRender(context);
-		},
-
-		/**
-		 * @method renderGhost
-		 * @param {CanvasRenderingContext2D} ghostContext the context into render the node
-		 */
-		renderGhost: function (ghostContext) {
-			//save current state
-			this.beforeRenderGhost(ghostContext);
-
-			if (this.globalAlpha > 0) {
-				var centerX = this.dimension.width / 2;
-				var centerY = this.dimension.height / 2;
-
-				ghostContext.beginPath();
-
-				ghostContext.moveTo(centerX, 0);
-
-				ghostContext.bezierCurveTo(
-					this.dimension.width, 0,
-					this.dimension.width, this.dimension.height,
-					centerX, this.dimension.height);
-
-				ghostContext.bezierCurveTo(
-					0, this.dimension.height,
-					0, 0,
-					centerX, 0);
-
-				ghostContext.fillStyle = this.color;
-				ghostContext.fill();
-				if (this.lineWidth > 0) {
-					ghostContext.lineWidth = this.lineWidth;
-					ghostContext.strokeStyle = this.lineColor;
-					ghostContext.stroke();
-				}
-
-				ghostContext.closePath();
-			}
-
-			//restore state
-			this.afterRenderGhost(ghostContext);
-		},
-
-		/**
-		 * @method copy
-		 * @return {CGSGNodeEllipse} a copy of this node
-		 */
-		copy: function () {
-			var node = new CGSGNodeEllipse(this.position.x, this.position.y, this.dimension.width,
-										   this.dimension.height);
-			//call the super method
-			node = this._super(node);
-
-			node.color = this.color;
-			node.lineColor = this.lineColor;
-			node.lineWidth = this.lineWidth;
-			return node;
-		}
-	}
+            node.color = this.color;
+            node.lineColor = this.lineColor;
+            node.lineWidth = this.lineWidth;
+            return node;
+        }
+    }
 );

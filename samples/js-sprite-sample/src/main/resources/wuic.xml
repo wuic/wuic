@@ -17,42 +17,57 @@
         <group id="cgsg-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
             <file>cgsg/utils/util.array.js</file>
             <file>cgsg/utils/class.class.js</file>
-            <file>cgsg/utils/class.hashmap.js</file>
+            <file>cgsg/utils/class.map.js</file>
             <file>cgsg/utils/util.color.js</file>
             <file>cgsg/utils/math/class.vector2D.js</file>
             <file>cgsg/utils/class.region.js</file>
             <file>cgsg/constants.js</file>
             <file>cgsg/utils/class.traverser.js</file>
 
-            <file>cgsg/node/collision/enum.collision.method.js</file>
-            <file>cgsg/node/collision/class.collision.tester.region.js</file>
-            <file>cgsg/node/collision/class.collision.tester.ghost.ondemand.js</file>
-            <file>cgsg/node/collision/class.collision.tester.factory.js</file>
-            <file>cgsg/node/collision/class.collision.manager.js</file>
+            <file>cgsg/event/class.event.js</file>
+            <file>cgsg/event/class.eventmanager.js</file>
+
+            <file>cgsg/animation/class.keyframe.js</file>
+            <file>cgsg/interpolator/class.interpolator.js</file>
+            <file>cgsg/interpolator/class.interpolator.linear.js</file>
+            <file>cgsg/interpolator/class.interpolator.TCB.js</file>
+            <file>cgsg/animation/class.anim.timeline.js</file>
+            <file>cgsg/animation/class.animmanager.js</file>
+
+            <file>cgsg/collision/enum.collision.method.js</file>
+            <file>cgsg/collision/class.collision.tester.region.js</file>
+            <file>cgsg/collision/class.collision.tester.ghost.ondemand.js</file>
+            <file>cgsg/collision/class.collision.tester.factory.js</file>
+            <file>cgsg/collision/class.collision.manager.js</file>
 
             <file>cgsg/globals.js</file>
             <file>cgsg/utils/util.global.js</file>
             <file>cgsg/utils/util.color.js</file>
+
+            <file>cgsg/mask/class.mask.js</file>
+            <file>cgsg/mask/class.mask.clip.js</file>
+
             <file>cgsg/utils/math/math.js</file>
             <file>cgsg/utils/class.handlebox.js</file>
-            <file>cgsg/animation/class.anim.key.js</file>
-            <file>cgsg/animation/class.anim.timeline.js</file>
             <file>cgsg/node/class.node.js</file>
 
+            <file>cgsg/node/class.node.curveTCB.js</file>
             <file>cgsg/node/class.node.colorPicker.js</file>
             <file>cgsg/node/class.node.tabMenu.js</file>
             <file>cgsg/node/class.node.text.js</file>
             <file>cgsg/node/class.node.webview.js</file>
             <file>cgsg/node/class.node.square.js</file>
+            <file>cgsg/node/class.node.slider.js</file>
             <file>cgsg/node/class.node.circle.js</file>
             <file>cgsg/node/class.node.ellipse.js</file>
             <file>cgsg/node/class.node.image.js</file>
             <file>cgsg/node/class.node.animatedSprite.js</file>
             <file>cgsg/node/class.node.button.js</file>
-            <file>cgsg/animation/class.particles.js</file>
+            <file>cgsg/node/class.particles.js</file>
 
             <file>cgsg/class.scenegraph.js</file>
-            <file>cgsg/class.scene.js</file>
+            <file>cgsg/class.view.js</file>
+            <file>cgsg/ext/WUICCGSGNodeImageFactory.js</file>
         </group>
     </groups>
     <configurations>

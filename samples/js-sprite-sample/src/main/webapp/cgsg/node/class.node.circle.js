@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -36,200 +36,87 @@
  * @param {Number} centerY Relative position
  * @param {Number} radius Radius
  * @type {CGSGNodeCircle}
- * @author Gwennael Buchet (gwennael.buchet@capgemini.com)
+ * @author xymostech (Emily Eisenberg)
  */
 var CGSGNodeCircle = CGSGNode.extend(
-	{
-		initialize: function (centerX, centerY, radius) {
+    {
+        initialize: function (centerX, centerY, radius) {
 
-			/**
-			 * @property radius
-			 * @type {Number}
-			 * @private
-			 */
-			this._radius = radius;
-			/**
-			 * @property center
-			 * @type {CGSGPosition}
-			 * @private
-			 */
-			this._center = new CGSGPosition(centerX, centerY);
+            this.radius = radius;
+            this._center = new CGSGPosition(centerX, centerY);
 
-			this._super(0, 0, radius * 2.0, radius * 2.0);
-			this.translateTo(centerX - radius, centerY - radius);
+            this._super(0, 0);
+            this.resizeTo(radius * 2.0, radius * 2.0);
 
-			/**
-			 * Color  to fill the circle
-			 * @property color
-			 * @default "#444444"
-			 * @type {String}
-			 */
-			this.color = "#444444";
-			/**
-			 * Color to stroke the circle
-			 * @property lineColor
-			 * @default "#222222"
-			 * @type {String}
-			 */
-			this.lineColor = "#222222";
-			/**
-			 * Width of the line that stroke the circle.
-			 * Let 0 if you don't want to stroke the circle.
-			 * @property lineWidth
-			 * @default 0
-			 * @type {Number}
-			 */
-			this.lineWidth = 0;
+            this.isProportionalResizeOnly = true;
 
-			this.pickNodeMethod = CGSGPickNodeMethod.GHOST;
-			this.isProportionalResize = true;
+            this.translateTo(centerX - radius, centerY - radius);
 
-			/**
-			 * @property classType
-			 * @readonly
-			 * @type {String}
-			 */
-			this.classType = "CGSGNodeCircle";
-		},
+            this.color = "#444444";
+            this.lineColor = "#222222";
+            this.lineWidth = 0;
+        },
 
-		/**
-		 * Set the new radius and compute new dimension of the circle
-		 * @method setRadius
-		 * @param {Number} radius
-		 */
-		setRadius: function (radius) {
-			this._radius = radius;
-			this.dimension.width = this._radius * 2.0;
-			//noinspection JSSuspiciousNameCombination
-			this.dimension.height = this.dimension.width;
-		},
+        render: function (context) {
+            context.beginPath();
+            context.arc(this.radius, this.radius, this.radius, 0, 2 * Math.PI, false);
+            context.fillStyle = this.color;
+            context.fill();
+            if (this.lineWidth > 0) {
+                context.lineWidth = this.lineWidth;
+                context.strokeStyle = this.lineColor;
+                context.stroke();
+            }
+        },
 
-		/**
-		 * Set the new center and compute new position of the circle
-		 * @method setCenter
-		 * @param {CGSGPosition} center
-		 */
-		setCenter: function (center) {
-			this._center = center;
-			this.position.x = this._center.x - this._radius;
-			this.position.y = this._center.y - this._radius;
-		},
+        /**
+         * @method _resize
+         * @private
+         */
+        _resize: function () {
+            this.radius = CGSGMath.fixedPoint(this.dimension.width / 2);
+            this._isDimensionChanged = true;
+            this.invalidate();
+            if (cgsgExist(this.onResize)) {
+                CGSG.eventManager.dispatch(this, cgsgEventTypes.ON_RESIZE, new CGSGEvent(this, {node: this}));
+            }
+        },
 
-		/**
-		 * Custom rendering
-		 * @method render
-		 * @protected
-		 * @param {CanvasRenderingContext2D} context the context into render the node
-		 * */
-		render: function (context) {
-			//save current state
-			this.beforeRender(context);
+        resizeTo: function (w, h) {
+            var r = Math.min(w, h);
+            this.dimension.resizeTo(r, r);
+            this._resize();
+        },
 
-			context.globalAlpha = this.globalAlpha;
+        resizeBy: function (w, h) {
+            var mw = w * this.dimension.width;
+            var mh = h * this.dimension.height;
+            var r = (mw < mh) ? w : h;
+            this.dimension.resizeBy(r, r);
+            this._resize();
+        },
 
-			context.beginPath();
-			context.arc(this._center.x - this._radius, this._center.y - this._radius, this._radius, 0, 2 * Math.PI,
-						false);
-			context.fillStyle = this.color;
-			context.fill();
-			if (this.lineWidth > 0) {
-				context.lineWidth = this.lineWidth;
-				context.strokeStyle = this.lineColor;
-				context.stroke();
-			}
+        resizeWith: function (w, h) {
+            var mw = w + this.dimension.width;
+            var mh = h + this.dimension.height;
+            var r = (mw < mh) ? w : h;
+            this.dimension.resizeWith(r, r);
+            this._resize();
+        },
 
-			//restore state
-			this.afterRender(context);
-		},
+        /**
+         * @method copy
+         * @return {CGSGNodeCircle} a copy of this node
+         */
+        copy: function () {
+            var node = new CGSGNodeCircle(this.position.x, this.position.y, this.radius);
+            //call the super method
+            node = this._super(node);
 
-		/**
-		 * Replace current dimension by these new ones and compute new radius
-		 * @method resizeTo
-		 * @param {Number} newWidth
-		 * @param {Number} newHeight
-		 * */
-		resizeTo: function (newWidth, newHeight) {
-			this.dimension.resizeTo(newWidth, newHeight);
-
-			this._computeResizedRadius();
-		},
-
-		/**
-		 * Multiply current dimension by these new ones
-		 * @method resizeTBy
-		 * @param {Number} widthFactor
-		 * @param {Number} heightFactor
-		 * */
-		resizeBy: function (widthFactor, heightFactor) {
-			this.dimension.resizeBy(widthFactor, heightFactor);
-
-			this._computeResizedRadius();
-		},
-
-		/**
-		 * Increase/decrease current dimension with adding values
-		 * @method resizeWith
-		 * @param {Number} width
-		 * @param {Number} height
-		 * */
-		resizeWith: function (width, height) {
-			this.dimension.resizeWith(width, height);
-
-			this._computeResizedRadius();
-		},
-
-		/**
-		 * @method _computeResizedRadius
-		 * @private
-		 */
-		_computeResizedRadius: function () {
-			var r = this._radius;
-			this._radius = Math.min(this.dimension.width, this.dimension.height) / 2.0;
-			r = -2.0 * (r - this._radius);
-			this._center.x += r;
-			this._center.y += r;
-		},
-
-		/**
-		 * @method renderGhost
-		 * @param {CanvasRenderingContext2D} ghostContext the context into render the node
-		 */
-		renderGhost: function (ghostContext) {
-			//save current state
-			this.beforeRenderGhost(ghostContext);
-
-			if (this.globalAlpha > 0) {
-				ghostContext.beginPath();
-				ghostContext.arc(this._center.x - this._radius, this._center.y - this._radius, this._radius, 0,
-								 2 * Math.PI,
-								 false);
-				ghostContext.fillStyle = this.color;
-				ghostContext.fill();
-				if (this.lineWidth > 0) {
-					ghostContext.lineWidth = this.lineWidth;
-					ghostContext.strokeStyle = this.lineColor;
-					ghostContext.stroke();
-				}
-			}
-
-			//restore state
-			this.afterRenderGhost(ghostContext);
-		},
-
-		/**
-		 * @method copy
-		 * @return {CGSGNodeCircle} a copy of this node
-		 */
-		copy: function () {
-			var node = new CGSGNodeCircle(this.position.x, this.position.y, this.dimension.width,
-										  this.dimension.height);
-			//call the super method
-			node = this._super(node);
-
-			node.color = this.color;
-			node.lineColor = this.lineColor;
-			node.lineWidth = this.lineWidth;
-			return node;
-		}
-	}
+            node.color = this.color;
+            node.lineColor = this.lineColor;
+            node.lineWidth = this.lineWidth;
+            return node;
+        }
+    }
 );

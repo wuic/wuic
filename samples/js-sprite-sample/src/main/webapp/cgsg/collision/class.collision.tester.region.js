@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012  Capgemini Technology Services (hereinafter “Capgemini”)
+ * Copyright (c) 2013  Capgemini Technology Services (hereinafter “Capgemini”)
  *
  * License/Terms of Use
  *
@@ -27,32 +27,49 @@
 
 /**
  * @module Collision
- * @class CGSGCollisionTesterFactory
+ * @class CGSGCollisionRegionTester
  * @extends {Object}
  * @constructor
- * @type {CGSGCollisionTesterFactory}
+ * @type {CGSGCollisionRegionTester}
  * @author Vincent Vanghelle (vincent.vanghelle@capgemini.com)
  */
-var CGSGCollisionTesterFactory = CGSGObject.extend(
-	{
-		initialize : function () {
-
-            this.collisionTesters = new CGSGHashmap();
-
-            // initialize collision testers
-            this.collisionTesters.addOrReplace(CGSGCollisionMethod.REGION,new CGSGCollisionRegionTester());
-            this.collisionTesters.addOrReplace(CGSGCollisionMethod.GHOSTONDEMAND,new CGSGCollisionGhostOnDemandTester());
-		},
+var CGSGCollisionRegionTester = CGSGObject.extend(
+    {
+        initialize: function () {
+            this.classType = "CGSGCollisionRegionTester";
+        },
 
         /**
-         * Return a collision tester depending on the collision method
-         * @method getCollisionTester
-         * @param collisionMethod
-         * @return {Object}
+         * Indicate if two nodes are colliding
+         * @method isColliding
+         * @param currentNode
+         * @param testedNode
+         * @param threshold
+         * @return {boolean} true if nodes are colliding
          */
-        getCollisionTester : function(collisionMethod){
-            return this.collisionTesters.getValue(collisionMethod);
-        }
-	}
-);
+        isColliding: function (currentNode, testedNode, threshold) {
+            if (threshold === null) {
+                threshold = 0;
+            }
+            var curNodeLeft = currentNode.getAbsoluteLeft();
+            var curNodeRight = currentNode.getAbsoluteRight();
+            var curNodeBottom = currentNode.getAbsoluteBottom();
+            var testedNodeLeft = testedNode.getAbsoluteLeft();
+            var testedNodeRight = testedNode.getAbsoluteRight();
+            var testedNodeBottom = testedNode.getAbsoluteBottom();
 
+            if ((curNodeLeft <= testedNodeRight + threshold &&
+                curNodeRight >= testedNodeLeft - threshold) ||
+                (curNodeRight >= testedNodeLeft - threshold &&
+                    curNodeLeft <= testedNodeRight + threshold)) {
+
+                if (currentNode.getAbsoluteTop() <= testedNodeBottom + threshold &&
+                    curNodeBottom >= testedNode.getAbsoluteTop() - threshold) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+);
