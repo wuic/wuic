@@ -43,6 +43,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,11 @@ import java.util.List;
  * @since 0.1.0
  */
 public class FilesGroup {
+
+    /**
+     * Message's template displayed when no resource has been found.
+     */
+    private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic resources";
 
     /**
      * The configuration.
@@ -119,6 +125,12 @@ public class FilesGroup {
 
         for (String path : paths) {
             resources.addAll(resourceFactory.create(path));
+        }
+
+        // Do not allow empty groups
+        if (resources.isEmpty()) {
+            final String merge = StringUtils.merge(pathsList.toArray(new String[pathsList.size()]), ", ");
+            throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, resourceFactory.toString())));
         }
     }
 

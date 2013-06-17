@@ -55,6 +55,8 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -77,6 +79,11 @@ import java.util.zip.ZipFile;
 public final class IOUtils {
 
     /**
+     * The slash character is the standard separator used internally, even on windows platform.
+     */
+    public static final String STD_SEPARATOR = "/";
+
+    /**
      * Length of a memory buffer used in WUIC.
      */
     public static final int WUIC_BUFFER_LEN = 2048;
@@ -93,6 +100,18 @@ public final class IOUtils {
      */
     private IOUtils() {
 
+    }
+
+    /**
+     * <p>
+     * Makes sure a given path uses the slash character has path separator by replacing all backslashes.
+     * </p>
+     *
+     * @param path the path to normalize
+     * @return the normalized path
+     */
+    public static String normalizePathSeparator(final String path) {
+        return path.replace("\\", STD_SEPARATOR);
     }
 
     /**
@@ -252,39 +271,159 @@ public final class IOUtils {
             throw new StreamException(ioe);
         }
     }
-    
+
     /**
      * <p>
-     * Checks if a given file could be or contains a resource matching the specified pattern.
+     * Indicates if the given {@code File} is a file on the file system. In addition to the {@code File#isFile()} method,
+     * this method is able to scan ZIP archives like .jar and .zip files to determine if any entry inside it is a file or
+     * not. The expected annotation is a '!' at the end of the archive file as it is represented when retrieving a resource
+     * path from the classpath.
      * </p>
      *
      * <p>
-     * Supports research through directory and ZIP archives.
+     * For instance, if you have a file 'file.js' as an entry of a jar 'archive.jar', then
+     * <pre>IOUtils.isFile(new File("/foo/archive.jar!/file.js"));</pre> will return {@code true}.
      * </p>
      *
-     * @param file the file to check
+     * @param file the file to analyze
+     * @return {@code true} if the file is a file, even if it is an entry of an archive
+     * @throws StreamException if an I/O error occurs while reading an arcgive
+     */
+    public static Boolean isFile(final File file) throws StreamException {
+        // Always use '/' separator, even on windows
+        final String absolutePath = normalizePathSeparator(file.getPath()).replace("file:/", "");
+        final String[] tree = absolutePath.split(STD_SEPARATOR);
+
+        // Iterate through the tree to check that parent paths are directories or archive file
+        final StringBuilder sb = new StringBuilder();
+
+        // Be careful, we don't test the last path in this loop
+        for (int i = 0; i < tree.length - 1; i++) {
+            sb.append(tree[i]);
+
+            // Archive : check if the rest of the path of a file entry or not
+            if (sb.toString().endsWith(".jar!") || sb.toString().endsWith(".zip!")) {
+                try {
+                    final String entryName = absolutePath.substring(sb.length() + 1);
+                    return !new ZipFile(sb.substring(0, sb.length() - 1)).getEntry(entryName).isDirectory();
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                }
+            // Parent is not an archive and not a directory : last path of not a file
+            } else if (new File(sb.toString()).isFile()) {
+                return Boolean.FALSE;
+            } else {
+                sb.append(STD_SEPARATOR);
+            }
+        }
+
+        return new File(absolutePath).isFile();
+    }
+
+    /**
+     * <p>
+     * Returns all the files path which belong as children to the given path file. If the file is a directory, then
+     * the result is obvious but the method also supports archive files. If the file name ends with .zip, .zip!, .jar or
+     * .jar!, the file is read as ZIP archive and all its root path are returned.
+     * </p>
+     *
+     * @param path the file
+     * @return the children paths
+     * @throws StreamException if any I/O error occurs while reading ZIP archive
+     */
+    public static String[] listPath(final File path) throws StreamException {
+        if (path.isDirectory()) {
+            return path.list();
+        } else {
+            // Always work with slash as path separator, even on windows
+            final String absolutePath = normalizePathSeparator(path.getPath());
+            int index;
+
+            if ((index = absolutePath.indexOf(".jar")) != -1
+                    || (index = absolutePath.indexOf(".jar!")) != -1
+                    || (index = absolutePath.indexOf(".zip")) != -1
+                    || (index = absolutePath.indexOf(".zip!")) != -1) {
+                try {
+                    // We need to read archive entries
+                    final int end = absolutePath.indexOf(STD_SEPARATOR, index);
+                    String zipPath = absolutePath.substring(0, end);
+
+                    if (zipPath.endsWith("!")) {
+                        zipPath = zipPath.substring(0, zipPath.length() - 1);
+                    }
+
+                    ZipFile archive = null;
+
+                    try {
+                        archive = new ZipFile(new File(new URI(zipPath)));
+                        final Enumeration<? extends ZipEntry> entries = archive.entries();
+                        final List<String> retval = new ArrayList<String>();
+                        final String rootEntry = absolutePath.substring(end + 1).concat(STD_SEPARATOR);
+
+                        // Make sure we are going to list the entries of directory inside the archive
+                        if (!archive.getEntry(rootEntry).isDirectory()) {
+                            final String message = String.format("%s is not a ZIP directory entry", rootEntry);
+                            throw new BadArgumentException(new IllegalArgumentException(message));
+                        }
+
+                        // Read entries
+                        while (entries.hasMoreElements()) {
+                            final ZipEntry entry = entries.nextElement();
+                            final String entryName = entry.getName();
+
+                            // We only add the entries at the root level
+                            final String relativeEntry = entryName.replace(rootEntry, "");
+
+                            if (entryName.startsWith(rootEntry) && !relativeEntry.isEmpty() && relativeEntry.split(STD_SEPARATOR).length == 1) {
+                                retval.add(relativeEntry);
+                            }
+                        }
+
+                        return retval.toArray(new String[retval.size()]);
+                    } finally {
+                        if (archive != null) {
+                            archive.close();
+                        }
+                    }
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                } catch (URISyntaxException use) {
+                    // Should never occur since we get the URI name with File#getPath() method
+                    throw new BadArgumentException(new IllegalArgumentException(use));
+                }
+            } else {
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory or a ZIP archive", path.getAbsolutePath())));
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if a given file which is relative to the specified start path is a resource matching the specified pattern.
+     * </p>
+     *
+     * <p>
+     * Supports research through directories and ZIP archives.
+     * </p>
+     *
+     * @param startPath the path where research starts
+     * @param relativeFile the file to test
      * @param pattern the pattern to match
      * @return the matching paths
      * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading file
      */
-    public static List<String> lookupFileResources(final File file, final Pattern pattern) throws StreamException {
-        final String pathName = file.getAbsolutePath().replace('\\', '/');
+    public static List<String> lookupFileResources(final String startPath, final String relativeFile, final Pattern pattern) throws StreamException {
+        final String pathName = relativeFile.replace('\\', '/');
+        final File absoluteFile = new File(startPath, relativeFile);
 
-        if (file.isFile()) {
+        if (isFile(absoluteFile)) {
             final Matcher matcher = pattern.matcher(pathName);
 
-            // TODO : be clear about expected behavior of regex
-            // Actually if you have this directory : /foo/oof/js/file.js
-            // You have a classpath where root is /foo i.e file.js is retrieved thanks to /oof/js/file.js
-            // Your classpath protocol has base directory /oof
-            // We need to be very clear about the path evaluated by the regex
-            // For instance, /.*.js should returns /js/file.js since /oof is the base path
-            // After, that /oof + /js/file.js will result in the exact classpath entry to retrieve
             if (matcher.find()) {
-                return Arrays.asList(matcher.group());
+                return Arrays.asList(pathName);
             } else if (pathName.endsWith(".jar") || pathName.endsWith(".zip")) {
                 try {
-                    return lookupArchiveResources(new ZipFile(file), pattern);
+                    return lookupArchiveResources(new ZipFile(absoluteFile), pattern);
                 } catch (IOException ioe) {
                     throw new StreamException(ioe);
                 }
@@ -292,7 +431,7 @@ public final class IOUtils {
                 return Arrays.asList();
             }
         } else {
-            return lookupDirectoryResources(file, pattern);
+            return lookupDirectoryResources(startPath, relativeFile, pattern);
         }
     }
 
@@ -322,21 +461,27 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Looks up a file with a name matching the given pattern if the specified directory.
+     * Looks for a file with a name matching the given pattern if the specified directory.
      * </p>
      *
-     * @param directory the directory
+     * @param startPath the path where research starts
+     * @param relativeDirectory the directory to test
      * @param pattern the pattern
      * @return the matching paths
      */
-    public static List<String> lookupDirectoryResources(final File directory, final Pattern pattern) throws StreamException {
-        if (!directory.isDirectory()) {
-            throw new BadArgumentException(new IllegalArgumentException(directory.getAbsolutePath() + " must be a directory."));
-        } else {
-            final List<String> retval = new ArrayList<String>();
+    public static List<String> lookupDirectoryResources(final String startPath, final String relativeDirectory, final Pattern pattern)
+            throws StreamException {
+        final File absoluteDirectory = new File(startPath, relativeDirectory);
 
-            for (String pathName : directory.list()) {
-                retval.addAll(lookupFileResources(new File(directory, pathName), pattern));
+        if (isFile(absoluteDirectory)) {
+            throw new BadArgumentException(new IllegalArgumentException(String.format("%s must be a directory.", absoluteDirectory.getAbsolutePath())));
+        } else {
+            // The directory could also be an archive file
+            final List<String> retval = new ArrayList<String>();
+            final String[] paths = listPath(absoluteDirectory);
+
+            for (String pathName : paths) {
+                retval.addAll(lookupFileResources(startPath, StringUtils.merge(new String[] { relativeDirectory, pathName, }, "/"), pattern));
             }
 
             return retval;

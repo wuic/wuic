@@ -263,4 +263,11 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             super.finalize();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base path %s", getClass().getName(), basePath);
+    }
 }

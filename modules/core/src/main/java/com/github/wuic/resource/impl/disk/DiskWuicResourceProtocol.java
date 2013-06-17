@@ -77,7 +77,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
         baseDirectory = new File(base);
 
         if (!baseDirectory.isDirectory()) {
-            throw new BadArgumentException(new IllegalArgumentException(base + " is not a directory"));
+            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", base)));
         }
     }
 
@@ -86,7 +86,7 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
-        return IOUtils.lookupDirectoryResources(baseDirectory, pattern);
+        return IOUtils.lookupDirectoryResources(baseDirectory.getAbsolutePath(), "", pattern);
     }
 
     /**
@@ -95,5 +95,12 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
         return new FileWuicResource(baseDirectory.getAbsolutePath(), realPath, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base directory %s", getClass().getName(), baseDirectory);
     }
 }

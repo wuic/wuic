@@ -254,4 +254,11 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
             super.finalize();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base path %s", getClass().getName(), basePath);
+    }
 }

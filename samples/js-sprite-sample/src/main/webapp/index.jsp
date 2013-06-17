@@ -9,8 +9,8 @@
   </head>
   <body>
 
-  <canvas id="scene" width="1920" height="1080">
-          Your browser does not support the canvas element.
+      <canvas id="scene" width="1920" height="1080">
+            Your browser does not support the canvas element.
       </canvas>
 
       <script type="text/javascript">
@@ -68,7 +68,6 @@
           var imgAggregate = imageFactory.buildNode({x : aggregateText.position.x, y : 40}, imgMap.getAt(0).value);
           root.addChild(aggregateText);
           root.addChild(imgAggregate);
-
       </script>
   </body>
 </html>

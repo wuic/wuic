@@ -48,7 +48,6 @@ import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +101,7 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
 
-        final List<String> absolutePaths = IOUtils.lookupFileResources(new File(classPathEntry.getFile()), pattern);
+        final List<String> absolutePaths = IOUtils.lookupFileResources(classPathEntry.getFile(), "", pattern);
         final List<String> retval = new ArrayList<String>(absolutePaths.size());
 
         log.debug("Listing resources paths matching the pattern : {}", pattern.pattern());
@@ -136,5 +135,12 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
         cp.append(realPath);
 
         return new InputStreamWuicResource(new ClasspathInputStreamOpener(cp.toString()), realPath, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base path %s", getClass().getName(), basePath);
     }
 }

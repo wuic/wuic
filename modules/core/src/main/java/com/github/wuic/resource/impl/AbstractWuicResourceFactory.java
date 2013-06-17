@@ -130,6 +130,14 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
     public abstract Pattern getPattern(final String path);
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("%s based on protocol %s", getClass().getName(), wuicProtocol);
+    }
+
+    /**
      * <p>
      * Factory that produces resource with a path which matches or contains one occurrence of the given path.
      * </p>

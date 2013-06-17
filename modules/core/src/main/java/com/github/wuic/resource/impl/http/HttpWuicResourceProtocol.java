@@ -120,4 +120,11 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
             throw new StreamException(ioe);
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base URL %s", getClass().getName(), baseUrl);
+    }
 }
