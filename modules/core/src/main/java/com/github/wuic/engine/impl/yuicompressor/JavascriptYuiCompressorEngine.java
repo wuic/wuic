@@ -46,18 +46,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 
 /**
  * <p>
@@ -163,11 +152,10 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
      */
     private InputStream switchSpecialChars(final InputStream source, final Boolean restore) throws IOException {
         final Reader parser = new InputStreamReader(source, configuration.charset());
-        final File tempFile = File.createTempFile(String.valueOf(System.nanoTime()), ".wuic");
-        OutputStream streamParser = null;
+        ByteArrayOutputStream streamParser = null;
         
         try {
-            streamParser = new FileOutputStream(tempFile);
+            streamParser = new ByteArrayOutputStream();
             final char[] buffer = new char[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
             int offset;
             
@@ -188,7 +176,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
             IOUtils.close(streamParser);
         }
         
-        return new FileInputStream(tempFile);
+        return new ByteArrayInputStream(streamParser.toByteArray());
     }
 
     /**
