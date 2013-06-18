@@ -81,12 +81,12 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      */
     @Override
     public List<WuicResource> create(final String pathName) throws StreamException {
-        final String ext = pathName.substring(pathName.lastIndexOf('.'));
-        final FileType type = FileType.getFileTypeForExtension(ext);
         final List<String> pathNames = computeRealPaths(pathName);
         final List<WuicResource> retval = new ArrayList<WuicResource>(pathNames.size());
 
         for (String p : pathNames) {
+            final String ext = p.substring(p.lastIndexOf('.'));
+            final FileType type = FileType.getFileTypeForExtension(ext);
             retval.add(wuicProtocol.accessFor(p, type));
         }
 

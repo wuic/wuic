@@ -73,6 +73,11 @@ public class FilesGroup {
     private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic resources";
 
     /**
+     * Message's template displayed when the extensions of resources path is not correct.
+     */
+    private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for resource %s associated to the FileType %s";
+
+    /**
      * The configuration.
      */
     private Configuration configuration;
@@ -119,19 +124,13 @@ public class FilesGroup {
         this.configuration = config;
         this.paths = pathsList;
         this.resourceFactory = theResourceFactory;
-        checkFiles();
-
         this.resources = new ArrayList<WuicResource>();
 
         for (String path : paths) {
             resources.addAll(resourceFactory.create(path));
         }
 
-        // Do not allow empty groups
-        if (resources.isEmpty()) {
-            final String merge = StringUtils.merge(pathsList.toArray(new String[pathsList.size()]), ", ");
-            throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, resourceFactory.toString())));
-        }
+        checkFiles();
     }
 
     /**
@@ -161,10 +160,18 @@ public class FilesGroup {
         // Non null assertion
         if (paths == null || configuration == null) {
             throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list and a non-null file type"));
+        // Do not allow empty groups
+        }  else if (resources.isEmpty()) {
+            final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
+            throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, resourceFactory.toString())));
         }
-        
+
         // Check the extension of each file
-        for (String file : paths) {
+        for (WuicResource res : resources) {
+
+            // Extract name to be test
+            final String file = res.getName();
+
             Boolean valid = Boolean.FALSE;
             final FileType type = configuration.getFileType();
             
@@ -180,7 +187,8 @@ public class FilesGroup {
             
             // The file has not one of the possible extension : throw an IAE
             if (!valid) {
-                throw new BadArgumentException(new IllegalArgumentException("Bad extensions for paths associated to the FileType " + type));
+                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, type);
+                throw new BadArgumentException(new IllegalArgumentException(message));
             }
         }
     }

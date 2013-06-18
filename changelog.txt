@@ -69,3 +69,5 @@ Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state
 
 Not tracked issues :
 - More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"
+- When YUICompressor is used, temporary file was created. Now everything is done in memory for better performances
+- Resource path needed to ends with a supported file extension even if it was a regex. Test is now performed on physical resources and allows to indicates path like .*

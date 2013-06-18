@@ -39,6 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.util.StringUtils;
 
 import java.util.Arrays;
 
@@ -143,6 +144,13 @@ public enum FileType {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with extension %s", name(), StringUtils.merge(extensions, ", "));
+    }
+
+    /**
      * <p>
      * Parse the given {@code String} object into a {@link FileType}. If the
      * value does not equal to any exiting {@link FileType#name()}, then an
@@ -183,6 +191,6 @@ public enum FileType {
             }
         }
 
-        throw new BadArgumentException(new IllegalArgumentException(ext + " is not associated to any FileType"));
+        throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any FileType", ext)));
     }
 }
