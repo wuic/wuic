@@ -46,6 +46,7 @@ import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,12 +138,12 @@ public class WuicServlet extends HttpServlet {
         servletMapping = config.getInitParameter(WUIC_SERVLET_CONTEXT_PARAM);
 
         // Context where resources will be exposed
-        final StringBuilder wuicCp = new StringBuilder(servletContext().getContextPath());
-        wuicCp.append(wuicCp.length() == 0 ? "" : "/");
-        wuicCp.append(servletMapping());
+        final String wuicCp = StringUtils.merge(new String[] { "/", servletContext().getContextPath(), servletMapping(), }, "/");
+
+        log.info("WUIC's full context path is {}", wuicCp);
 
         try {
-            final WuicFacade facade = WuicFacade.newInstance(wuicCp.toString());
+            final WuicFacade facade = WuicFacade.newInstance(wuicCp);
             config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
         } catch (WuicException we) {
             throw new ServletException("Unable to initialize WuicServlet", we);
@@ -159,7 +160,7 @@ public class WuicServlet extends HttpServlet {
         }
 
         // Followed by the group ID a slash and finally the page name
-        patternBuilder.append("([^/]*)/(.*)");
+        patternBuilder.append("([^/]*)(/.*)");
 
         urlPattern = Pattern.compile(patternBuilder.toString());
 
@@ -208,7 +209,8 @@ public class WuicServlet extends HttpServlet {
             throws WuicException {
 
         // Get the files group
-        final List<WuicResource> files = getWuicFacade().getGroup(groupId, request.getServletPath());
+        final String uri = request.getRequestURI();
+        final List<WuicResource> files = getWuicFacade().getGroup(groupId, uri.substring(0, uri.lastIndexOf('/')));
         final WuicResource resource = getResource(files, resourceName);
         InputStream is = null;
 

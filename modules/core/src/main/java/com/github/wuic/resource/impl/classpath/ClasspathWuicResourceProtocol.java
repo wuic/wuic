@@ -45,11 +45,11 @@ import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.InputStreamWuicResource;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -100,22 +100,8 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
-
-        final List<String> absolutePaths = IOUtils.lookupFileResources(classPathEntry.getFile(), "", pattern);
-        final List<String> retval = new ArrayList<String>(absolutePaths.size());
-
         log.debug("Listing resources paths matching the pattern : {}", pattern.pattern());
-
-        for (String absolutePath : absolutePaths) {
-            if (!absolutePath.startsWith("/") && !"/".equals(basePath)) {
-                absolutePath = "/".concat(absolutePath);
-            }
-
-            // Need to remove the absolute part of the path to retrieve the resource with getClass().getResourceAsStream(path)
-            retval.add(absolutePath.replace(classPathEntry.getFile().replace('\\', '/'), ""));
-        }
-
-        return retval;
+        return IOUtils.lookupFileResources(classPathEntry.getFile(), "", pattern);
     }
 
     /**
@@ -123,18 +109,8 @@ public class ClasspathWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
-        final StringBuilder cp = new StringBuilder();
-        cp.append(basePath);
-
-        if (!"/".endsWith(basePath) && !realPath.startsWith("/")) {
-            cp.append("/");
-        } else if ("/".endsWith(basePath) && realPath.startsWith("/")) {
-            cp.deleteCharAt(basePath.length() - 1);
-        }
-
-        cp.append(realPath);
-
-        return new InputStreamWuicResource(new ClasspathInputStreamOpener(cp.toString()), realPath, type);
+        final String path = StringUtils.merge(new String[] { "/", basePath, realPath, }, "/");
+        return new InputStreamWuicResource(new ClasspathInputStreamOpener(path), realPath, type);
     }
 
     /**

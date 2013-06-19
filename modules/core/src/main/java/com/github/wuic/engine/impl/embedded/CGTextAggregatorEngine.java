@@ -96,7 +96,7 @@ public class CGTextAggregatorEngine extends Engine {
         }
         
         // In memory buffer for the aggregated resources
-        final String fileName = "aggregate" + configuration.getFileType().getExtensions()[0];
+        final String fileName = "/aggregate" + configuration.getFileType().getExtensions()[0];
         final ByteArrayOutputStream target = new ByteArrayOutputStream();
         
         // Append each file

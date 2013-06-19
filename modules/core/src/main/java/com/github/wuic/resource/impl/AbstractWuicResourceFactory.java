@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceProtocol;
+import com.github.wuic.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,7 +98,15 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      * {@inheritDoc}
      */
     public List<String> computeRealPaths(final String pathName) throws StreamException {
-        return wuicProtocol.listResourcesPaths(getPattern(pathName));
+        final List<String> paths = wuicProtocol.listResourcesPaths(getPattern(pathName));
+        final List<String> retval = new ArrayList<String>(paths.size());
+
+        // Convention : we guarantee that all path begin with the slash character to ease research
+        for (String p : paths) {
+            retval.add(StringUtils.merge(new String[] { "/", p, }, "/"));
+        }
+
+        return retval;
     }
 
     /**

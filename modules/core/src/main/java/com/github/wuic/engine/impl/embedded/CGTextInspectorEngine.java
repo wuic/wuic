@@ -48,6 +48,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -189,7 +190,7 @@ public class CGTextInspectorEngine extends Engine {
      * @param inspector the inspector to use
      * @param referencedResources the collection where any referenced resource identified by the method will be added
      * @throws WuicException if an I/O error occurs while reading
-     * return the given line eventually transformed
+     * @return the given line eventually transformed
      */
     protected String inspectLine(final String line,
                                  final String resourceLocation,
@@ -206,7 +207,8 @@ public class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract resource name and referenced resources
             final StringBuilder replacement = new StringBuilder();
-            final String resourceName = inspector.appendTransformation(matcher, replacement, request.getRequestPath() + "/" + request.getGroup().getId(),
+            final String resourceName = inspector.appendTransformation(matcher, replacement,
+                    StringUtils.merge(new String[]{ request.getContextPath(), request.getGroup().getId(), }, "/"),
                     resourceLocation, request.getGroup().getResourceFactory());
             matcher.appendReplacement(retval, replacement.toString());
 

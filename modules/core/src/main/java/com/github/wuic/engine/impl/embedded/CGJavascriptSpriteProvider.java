@@ -94,13 +94,13 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append("\", h : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\", url : \"");
-            jsBuilder.append(StringUtils.merge(new String[] { url, image, }, "/"));
+            jsBuilder.append(StringUtils.merge(new String[] { "/", url, image, }, "/"));
             jsBuilder.append("\"};");
         }
 
         // Make a resource and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayWuicResource(bytes, "sprites.js", FileType.JAVASCRIPT);
+        return new ByteArrayWuicResource(bytes, "/sprites.js", FileType.JAVASCRIPT);
     }
 
     /**

@@ -48,8 +48,10 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(StringUtils.merge(new String[] {"foo:", "oof", }, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[] {"foo:", ":oof", }, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", }, ":"), "foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo" }, ":"), "foo:oof:foo");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo" }, null), "foo:ooffoo");
+        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo", }, ":"), "foo:oof:foo");
+        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo", }, null), "foo:ooffoo");
+        Assert.assertEquals(StringUtils.merge(new String[] {":", "oof", }, ":"), ":oof");
+        Assert.assertEquals(StringUtils.merge(new String[] {":", ":foo:", ":oof", }, ":"), ":foo:oof");
     }
 
     /**

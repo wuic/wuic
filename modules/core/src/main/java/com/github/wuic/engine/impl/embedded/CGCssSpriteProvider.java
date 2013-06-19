@@ -88,6 +88,6 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
         }
 
         // Make a resource and return it
-        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "sprites.css", FileType.CSS);
+        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "/sprites.css", FileType.CSS);
     }
 }

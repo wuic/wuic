@@ -155,12 +155,12 @@ public class CoreTest extends WuicTest {
                 IOUtils.copyStream(fis, new FileOutputStream(file));
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
                 log.info(content);
-                final int start = content.indexOf("url : \"") + 7;
+                final int start = content.indexOf("url : \"") + 8;
                 final int end = content.indexOf("/aggregate.png");
                 final String imageGroup = content.substring(start, end);
                 group = facade.getGroup(imageGroup, "");
 
-                writeToDisk(group.get(0), "aggregate.png");
+                writeToDisk(group.get(0).getReferencedResources().get(0), "aggregate.png");
             } finally {
                 if (fis != null) {
                     fis.close();

@@ -40,6 +40,7 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.servlet.WuicServlet;
@@ -88,7 +89,12 @@ public class WuicTag extends TagSupport {
     public int doStartTag() throws JspException {
         try {
             // Get the files group
-            final WuicFacade facade = ((WuicFacade) super.pageContext.getServletContext().getAttribute("WUIC_FACADE"));
+            final WuicFacade facade = ((WuicFacade) pageContext.getServletContext().getAttribute("WUIC_FACADE"));
+
+            if (facade == null) {
+                throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
+            }
+
             final List<WuicResource> files = facade.getGroup(pageName, "");
 
             for (WuicResource resource : files) {
@@ -165,6 +171,7 @@ public class WuicTag extends TagSupport {
      */
     private String getUrl(final WuicResource resource) {
         return StringUtils.merge(new String[] {
+                "/",
                 WuicServlet.servletContext().getContextPath(),
                 WuicServlet.servletMapping(),
                 pageName,

@@ -103,10 +103,19 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
         final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath.trim(), }, "/");
 
         // Rewrite the statement from its beginning to the beginning of the resource name
-        replacement.append(matcher.group().substring(0, matcher.start(NumberUtils.TWO) - matcher.start()));
+        final String start = matcher.group().substring(0, matcher.start(NumberUtils.TWO) - matcher.start());
+
+        if (start.endsWith("'")) {
+            replacement.append(start.substring(0, start.length() - 1));
+        } else {
+            replacement.append(start);
+        }
 
         // Write path to resource
-        replacement.append("\"");
+        if (!start.endsWith("\"")) {
+            replacement.append("\"");
+        }
+
         replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
         replacement.append("\")");
 

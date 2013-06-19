@@ -43,6 +43,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.HttpWuicResource;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +112,7 @@ public class HttpWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
-        final String url = baseUrl + realPath;
+        final String url = StringUtils.merge(new String[] { baseUrl, realPath, }, "/");
         log.debug("Opening HTTP access for {}", url);
 
         try {

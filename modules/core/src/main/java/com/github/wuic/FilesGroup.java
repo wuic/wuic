@@ -158,10 +158,12 @@ public class FilesGroup {
     private void checkFiles() {
         
         // Non null assertion
-        if (paths == null || configuration == null) {
-            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list and a non-null file type"));
+        if (paths == null) {
+            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list"));
         // Do not allow empty groups
-        }  else if (resources.isEmpty()) {
+        } else if (configuration == null) {
+            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null configuration"));
+        } else if (resources.isEmpty()) {
             final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
             throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, resourceFactory.toString())));
         }
