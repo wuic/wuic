@@ -75,11 +75,6 @@ public class EngineRequest {
     private FilesGroup group;
 
     /**
-     * Request path.
-     */
-    private String requestPath;
-
-    /**
      * <p>
      * Builds a new {@code EngineRequest} with some resources specific and a specified context path to be used.
      * </p>
@@ -90,7 +85,6 @@ public class EngineRequest {
     public EngineRequest(final List<WuicResource> res, final EngineRequest other) {
         resources = res;
         contextPath = other.getContextPath();
-        requestPath = other.getRequestPath();
         group = other.getGroup();
     }
 
@@ -100,13 +94,11 @@ public class EngineRequest {
      * </p>
      *
      * @param cp the context root where the generated resources should be exposed
-     * @param rp the path from the location the request is executed
      * @param g the group
      */
-    public EngineRequest(final String cp, final String rp, final FilesGroup g) {
+    public EngineRequest(final String cp, final FilesGroup g) {
         resources = g.getResources();
         contextPath = cp;
-        requestPath = rp;
         group = g;
     }
 
@@ -130,17 +122,6 @@ public class EngineRequest {
      */
     public final String getContextPath() {
         return contextPath;
-    }
-
-    /**
-     * <p>
-     * Gets the request path.
-     * </p>
-     *
-     * @return the request path
-     */
-    public final String getRequestPath() {
-        return requestPath;
     }
 
     /**

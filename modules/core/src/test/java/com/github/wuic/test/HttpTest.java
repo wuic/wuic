@@ -151,7 +151,7 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final List<WuicResource> group = facade.getGroup("css-image", "");
+        final List<WuicResource> group = facade.getGroup("css-image");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

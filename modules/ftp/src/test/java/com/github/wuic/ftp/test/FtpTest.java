@@ -134,7 +134,7 @@ public class FtpTest {
     @Test
     public void ftpTest() throws Exception {
         final WuicFacade facade = WuicFacade.newInstance("");
-        final List<WuicResource> group = facade.getGroup("css-image", "");
+        final List<WuicResource> group = facade.getGroup("css-image");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

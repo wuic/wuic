@@ -180,7 +180,7 @@ public class WuicServlet extends HttpServlet {
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
-                writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), request, response);
+                writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), response);
             } catch (WuicException we) {
                 log.error("Unable to retrieve resource", we);
 
@@ -201,16 +201,14 @@ public class WuicServlet extends HttpServlet {
      *
      * @param groupId the group ID
      * @param resourceName the resource name
-     * @param request the request
      * @param response the response
      * @throws WuicException if an I/O error occurs or resource not found
      */
-    private void writeResource(final String groupId, final String resourceName, final HttpServletRequest request, final HttpServletResponse response)
+    private void writeResource(final String groupId, final String resourceName, final HttpServletResponse response)
             throws WuicException {
 
         // Get the files group
-        final String uri = request.getRequestURI();
-        final List<WuicResource> files = getWuicFacade().getGroup(groupId, uri.substring(0, uri.lastIndexOf('/')));
+        final List<WuicResource> files = getWuicFacade().getGroup(groupId);
         final WuicResource resource = getResource(files, resourceName);
         InputStream is = null;
 

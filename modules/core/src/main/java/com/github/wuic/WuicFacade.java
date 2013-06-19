@@ -156,11 +156,10 @@ public final class WuicFacade {
      * </p>
      * 
      * @param id the group ID
-     * @param requestPath the path from the requester location
      * @return the files
      * @throws WuicException if the 'wuic.xml' file is not well configured
      */
-    public synchronized List<WuicResource> getGroup(final String id, final String requestPath) throws WuicException {
+    public synchronized List<WuicResource> getGroup(final String id) throws WuicException {
         final long start = System.currentTimeMillis();
 
         log.info("Getting files for group : {}", id);
@@ -173,7 +172,7 @@ public final class WuicFacade {
         final Engine engine = factoryBuilder.build().create(fileType);
 
         // Parse the files
-        final List<WuicResource> retval = engine.parse(new EngineRequest(contextPath, requestPath, group));
+        final List<WuicResource> retval = engine.parse(new EngineRequest(contextPath, group));
 
         log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

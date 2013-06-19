@@ -95,7 +95,7 @@ public class WuicTag extends TagSupport {
                 throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
             }
 
-            final List<WuicResource> files = facade.getGroup(pageName, "");
+            final List<WuicResource> files = facade.getGroup(pageName);
 
             for (WuicResource resource : files) {
                 switch (resource.getFileType()) {

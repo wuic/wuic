@@ -98,7 +98,7 @@ public class GStorageTest {
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 
-        final List<WuicResource> group = cacheEngine.parse(new EngineRequest("", "", filesGroup));
+        final List<WuicResource> group = cacheEngine.parse(new EngineRequest("", filesGroup));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
