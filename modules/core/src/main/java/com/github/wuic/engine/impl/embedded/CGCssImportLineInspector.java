@@ -112,17 +112,28 @@ public class CGCssImportLineInspector implements LineInspector {
             referencedPath = matcher.group(++groupIndex);
         }
 
+        referencedPath = referencedPath.trim();
+        final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
+
         log.info("@import statement found for resource {}", referencedPath);
 
         // Extract the resource
-        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath.trim(), }, "/");
+        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath, }, "/");
 
         // Rewrite the statement from its beginning to the beginning of the resource name
         replacement.append(matcher.group().substring(0, (matcher.start(groupIndex == NumberUtils.TWO ? 1 : groupIndex)) - matcher.start()));
 
         // Write path to resource
         replacement.append("\"");
-        replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
+
+        // Don't change resource if absolute
+        if (isAbsolute) {
+            log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by resource factory.", referencedPath);
+            replacement.append(referencedPath);
+        } else {
+            replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
+        }
+
         replacement.append("\"");
 
         // Rewrite the statement from the end of the resource name to the end of the entire statement
@@ -134,6 +145,7 @@ public class CGCssImportLineInspector implements LineInspector {
 
         replacement.append(matcher.group().substring(end));
 
-        return resourceName;
+        // Return null means we don't change the original resource
+        return isAbsolute ? null : resourceName;
     }
 }

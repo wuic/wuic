@@ -95,12 +95,13 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
                                        final String resourceLocation,
                                        final WuicResourceFactory factory) {
 
-        final String referencedPath = matcher.group(NumberUtils.TWO);
+        final String referencedPath = matcher.group(NumberUtils.TWO).trim();
+        final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
 
         log.info("Background with an URL statement found for resource {}", referencedPath);
 
         // Extract the resource
-        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath.trim(), }, "/");
+        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath, }, "/");
 
         // Rewrite the statement from its beginning to the beginning of the resource name
         final String start = matcher.group().substring(0, matcher.start(NumberUtils.TWO) - matcher.start());
@@ -116,7 +117,14 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
             replacement.append("\"");
         }
 
-        replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
+        // Don't change resource if absolute
+        if (isAbsolute) {
+            log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by resource factory.", referencedPath);
+            replacement.append(referencedPath);
+        } else {
+            replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
+        }
+
         replacement.append("\")");
 
         for (int i = NumberUtils.TWO + 1; i < matcher.groupCount(); i++) {
@@ -127,6 +135,7 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
             }
         }
 
-        return resourceName;
+        // Return null means we don't change the original resource
+        return isAbsolute ? null : resourceName;
     }
 }

@@ -212,23 +212,26 @@ public class CGTextInspectorEngine extends Engine {
                     resourceLocation, request.getGroup().getResourceFactory());
             matcher.appendReplacement(retval, replacement.toString());
 
-            List<WuicResource> res = request.getGroup().getResourceFactory().create(resourceName);
+            // If resource name is null, it means that nothing has been changed by the inspector
+            if (resourceName != null) {
+                List<WuicResource> res = request.getGroup().getResourceFactory().create(resourceName);
 
-            // Process resource
-            if (getNext() != null) {
-                res = getNext().parse(new EngineRequest(res, request));
-            }
-
-            // Add the resource and inspect it recursively if it's a CSS file
-            for (WuicResource r : res) {
-                WuicResource inspected = r;
-
-                if (r.getFileType().equals(FileType.CSS)) {
-                    inspected = inspect(r, request);
+                // Process resource
+                if (getNext() != null) {
+                    res = getNext().parse(new EngineRequest(res, request));
                 }
 
-                configureExtracted(inspected);
-                referencedResources.add(inspected);
+                // Add the resource and inspect it recursively if it's a CSS file
+                for (WuicResource r : res) {
+                    WuicResource inspected = r;
+
+                    if (r.getFileType().equals(FileType.CSS)) {
+                        inspected = inspect(r, request);
+                    }
+
+                    configureExtracted(inspected);
+                    referencedResources.add(inspected);
+                }
             }
         }
 

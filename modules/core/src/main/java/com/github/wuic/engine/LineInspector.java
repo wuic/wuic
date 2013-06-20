@@ -75,7 +75,7 @@ public interface LineInspector {
      * @param groupPath the absolute path to the group
      * @param resourceLocation the location of the current resource
      * @param factory the factory to use when we need to create resource
-     * @return the resource name that was referenced in the matching text
+     * @return the resource name that was referenced in the matching text, {@code null} if the inspector did not perform any change
      */
     String appendTransformation(Matcher matcher,
                                 StringBuilder replacement,
