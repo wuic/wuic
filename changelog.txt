@@ -71,3 +71,6 @@ Not tracked issues :
 - More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"
 - When YUICompressor is used, temporary file was created. Now everything is done in memory for better performances
 - Resource path needed to ends with a supported file extension even if it was a regex. Test is now performed on physical resources and allows to indicates path like .*
+
+Breaking changes :
+- Disk resource (including webapp and classpath) completely reviewed including regex support. See wiki to see clear explanations about how it now works.

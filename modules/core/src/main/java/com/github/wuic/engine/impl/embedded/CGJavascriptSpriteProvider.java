@@ -43,11 +43,11 @@ import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.FileType;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.engine.Region;
-import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
- * This class provides sprite throughout javascript language. The javascript file
+ * This class provides sprite throughout javascript language. The javascript path
  * defines an array which associates each aggregated image name to its region in
  * the final image.
  * </p>
@@ -69,14 +69,19 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource getSprite(final String url, final String groupId) throws StreamException {
+    public WuicResource getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
+            throws StreamException {
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
         final String jsName = createJsName(groupId);
+        jsBuilder.append("if (!");
+        jsBuilder.append(jsName);
+        jsBuilder.append(") {");
         jsBuilder.append("var ");
         jsBuilder.append(jsName);
         jsBuilder.append(" = {};");
+        jsBuilder.append("}");
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
@@ -94,13 +99,13 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append("\", h : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\", url : \"");
-            jsBuilder.append(StringUtils.merge(new String[] { "/", url, image, }, "/"));
+            jsBuilder.append(IOUtils.mergePath("/", url, image));
             jsBuilder.append("\"};");
         }
 
         // Make a resource and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayWuicResource(bytes, "/sprites.js", FileType.JAVASCRIPT);
+        return new ByteArrayWuicResource(bytes, "sprites" + spriteResourceNameSuffix + ".js", FileType.JAVASCRIPT);
     }
 
     /**

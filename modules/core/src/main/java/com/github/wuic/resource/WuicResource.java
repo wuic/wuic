@@ -39,8 +39,9 @@
 package com.github.wuic.resource;
 
 import com.github.wuic.FileType;
-import com.github.wuic.util.InputStreamOpener;
+import com.github.wuic.exception.WuicResourceNotFoundException;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
 
@@ -55,35 +56,35 @@ import java.util.List;
  * @version 1.2
  * @since 0.1.1
  */
-public interface WuicResource extends Serializable, InputStreamOpener {
+public interface WuicResource extends Serializable {
 
     /**
      * <p>
-     * Returns the file type of this resource.
+     * Opens and returns an {@code InputStream} pointing to the resource.
+     * </p>
+     *
+     * @return the opened input stream
+     * @throws WuicResourceNotFoundException if an I/O error occurs
+     */
+    InputStream openStream() throws WuicResourceNotFoundException;
+
+    /**
+     * <p>
+     * Returns the path type of this resource.
      * </p>
      * 
-     * @return the file type
+     * @return the path type
      */
     FileType getFileType();
     
     /**
      * <p>
-     * Returns the name of the resource. The name is a location relative to
-     * the root directory returned by {@link WuicResource#getBaseDirectory()}.
+     * Returns the name of the resource. This is not a path consequently it should not contains any paths.
      * </p>
      * 
      * @return the resource name
      */
     String getName();
-    
-    /**
-     * <p>
-     * Gets the root directory that contains all the files.
-     * </p>
-     * 
-     * @return the root directory
-     */
-    String getBaseDirectory();
 
     /**
      * <p>

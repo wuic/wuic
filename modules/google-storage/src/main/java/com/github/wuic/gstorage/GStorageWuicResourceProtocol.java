@@ -44,7 +44,6 @@ import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.StringUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -103,7 +102,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
     private GoogleCredential googleCredential;
 
     /**
-     * Private key file location.
+     * Private key path location.
      */
     private String privateKeyFile;
 
@@ -120,7 +119,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
      * @param bucket the bucket name
      * @param accountId the Google user access ID
      * @param path the root path
-     * @param keyFile the private key file location
+     * @param keyFile the private key path location
      */
     public GStorageWuicResourceProtocol(final String bucket, final String accountId, final String path, String keyFile) {
         bucketName = bucket;
@@ -161,7 +160,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             builder.setServiceAccountId(serviceAccountId);
 
             // TODO : raise exception if private key not found
-            final String keyPath = StringUtils.merge(new String[] { "/", privateKeyFile, }, "/");
+            final String keyPath = IOUtils.mergePath("/", privateKeyFile);
             builder.setServiceAccountPrivateKeyFromP12File(new File(getClass().getResource(keyPath).getFile()));
             builder.setServiceAccountScopes(Arrays.asList(StorageScopes.DEVSTORAGE_FULL_CONTROL));
 
@@ -174,7 +173,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             // Security exception (local check)
             throw new IOException("Can't build Google credential on bucket " + bucketName + " for resource key : " + basePath, gse);
         } catch (IOException ioe) {
-            // Private key file not found
+            // Private key path not found
             throw new IOException("Can't build Google credential on bucket " + bucketName + " for resource key : " + basePath + " check your private key file", ioe);
         }
     }
@@ -238,7 +237,7 @@ public class GStorageWuicResourceProtocol implements WuicResourceProtocol {
             // Try to get a Storage object
             final Storage.Objects.Get storageObject = storage.objects().get(bucketName, realPath);
 
-            // Download file
+            // Download path
             final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             storageObject.executeMediaAndDownloadTo(baos);
 

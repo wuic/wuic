@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.FilesGroup;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 
 import java.util.List;
@@ -95,8 +96,9 @@ public class EngineRequest {
      *
      * @param cp the context root where the generated resources should be exposed
      * @param g the group
+     * @throws StreamException if an I/O error occurs while getting resources
      */
-    public EngineRequest(final String cp, final FilesGroup g) {
+    public EngineRequest(final String cp, final FilesGroup g) throws StreamException {
         resources = g.getResources();
         contextPath = cp;
         group = g;

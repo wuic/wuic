@@ -182,7 +182,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
         } else {
             final List<String> retval = new ArrayList<String>();
 
-            // Test each file
+            // Test each path
             for (final FTPFile file : ftpClient.listFiles()) {
                 final Matcher matcher = pattern.matcher(file.getName());
 
@@ -223,7 +223,7 @@ public class FtpWuicResourceProtocol implements WuicResourceProtocol {
 
             ftpClient.changeWorkingDirectory(basePath);
 
-            // Download file into memory
+            // Download path into memory
             final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             IOUtils.copyStream(ftpClient.retrieveFileStream(realPath), baos);
 

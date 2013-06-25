@@ -53,12 +53,12 @@ public interface SshCommandManager {
     /**
      * <p>
      * Returns the commands to be executed remotely to search all the files of a specified
-     * pattern and write into a particular file.
+     * pattern and write into a particular path.
      * </p>
      *
      * @param workingDir the working directory
-     * @param pattern the file pattern
-     * @param file the file which will contain the result of the search
+     * @param pattern the path pattern
+     * @param file the path which will contain the result of the search
      * @return the commands to execute
      */
     String[] searchInto(String workingDir, String pattern, String file);

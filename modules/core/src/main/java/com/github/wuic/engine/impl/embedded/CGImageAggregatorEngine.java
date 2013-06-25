@@ -83,9 +83,9 @@ import javax.imageio.ImageIO;
 public class CGImageAggregatorEngine extends PackerEngine {
 
     /**
-     * The file name when images are aggregated.
+     * The path name when images are aggregated.
      */
-    public static final String AGGREGATION_NAME = "/aggregate.png";
+    public static final String AGGREGATION_NAME = "aggregate.png";
     
     /**
      * The configuration.

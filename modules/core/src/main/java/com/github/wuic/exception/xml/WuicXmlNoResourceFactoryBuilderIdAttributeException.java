@@ -42,7 +42,7 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * Thrown when an ID is not properly defined for a resource factory builder in wuic.xml file.
+ * Thrown when an ID is not properly defined for a resource factory builder in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

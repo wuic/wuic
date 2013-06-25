@@ -47,7 +47,7 @@ import java.io.*;
 
 /**
  * <p>
- * Windows command using the 'cmd.exe' file.
+ * Windows command using the 'cmd.exe' path.
  * </p>
  *
  * @author Guillaume DROUET
@@ -79,7 +79,7 @@ public class WindowsCommand extends UnknownCommand {
     @Override
     public void start(final Environment env) throws IOException {
         try {
-            // Execute command as a .bat file
+            // Execute command as a .bat path
             final File file = File.createTempFile("sshd-batch", ".bat");
             IOUtils.copyStream(new ByteArrayInputStream(command.getBytes()), new FileOutputStream(file));
             Runtime.getRuntime().exec("cmd.exe /k " + file.getAbsolutePath());

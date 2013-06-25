@@ -44,7 +44,6 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceProtocol;
-import com.github.wuic.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,9 +100,8 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
         final List<String> paths = wuicProtocol.listResourcesPaths(getPattern(pathName));
         final List<String> retval = new ArrayList<String>(paths.size());
 
-        // Convention : we guarantee that all path begin with the slash character to ease research
         for (String p : paths) {
-            retval.add(StringUtils.merge(new String[] { "/", p, }, "/"));
+            retval.add(p);
         }
 
         return retval;
@@ -114,7 +112,7 @@ public abstract class AbstractWuicResourceFactory implements WuicResourceFactory
      */
     @Override
     public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
-        throw new UnsupportedOperationException(String.format("This factory don't support any property. Given key is %s with value %s", key, value));
+        throw new UnsupportedOperationException(String.format("This factory doesn't support any property. Given key is %s with value %s", key, value));
     }
 
     /**

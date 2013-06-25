@@ -60,6 +60,33 @@ public final class StringUtils {
 
     /**
      * <p>
+     * Removes all trailing {@code String} at the beginning and at the end of the specified {@code String}.
+     * </p>
+     *
+     * @param str the string to be treated
+     * @param trailing the trailing string to remove
+     * @return the str without trailing string
+     */
+    public static String removeTrailing(final String str, final String trailing) {
+        if (trailing == null || trailing.isEmpty()) {
+            return str;
+        } else {
+            String retval = str;
+
+            while (retval.startsWith(trailing)) {
+                retval = retval.substring(trailing.length());
+            }
+
+            while (retval.endsWith(trailing)) {
+                retval = retval.substring(0, retval.length() - trailing.length());
+            }
+
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
      * Merges all the given {@code String} into one {@code String} separated with the separator.
      * </p>
      *

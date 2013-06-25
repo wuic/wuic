@@ -50,7 +50,7 @@ package com.github.wuic;
 public interface ApplicationConfig {
 
     /////////////////////////////////////////////////
-    ////// DiskWuicResourceFactory properties ///////
+    ////// ClasspathWuicResourceFactory properties ///////
     /////////////////////////////////////////////////
 
     /**
@@ -246,10 +246,10 @@ public interface ApplicationConfig {
 
     /**
      * Key : c.g.wuic.gPrivateKeyPath
-     * You can generate a new key file on this page : https://code.google.com/apis/console/
+     * You can generate a new key path on this page : https://code.google.com/apis/console/
      * - Go on : API Access > "Create another client ID..."
      * - Installed application type : select "Service account"
-     * - Download key file or Generate new key
+     * - Download key path or Generate new key
      */
     String GS_PRIVATE_KEY_PATH = "c.g.wuic.gPrivateKeyPath";
 }

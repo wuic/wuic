@@ -16,7 +16,7 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * A 'WuicXmlReadException' is a default exception thrown when a wuic.xml file could not be read properly.
+ * A 'WuicXmlReadException' is a default exception thrown when a wuic.xml path could not be read properly.
  * </p>
  * 
  * @author Guillaume DROUET

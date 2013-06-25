@@ -49,7 +49,6 @@ import com.github.wuic.configuration.impl.YuiJavascriptConfigurationDomBuilder;
 
 import java.io.IOException;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +59,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicGroupNotFoundException;
 import com.github.wuic.exception.xml.WuicXmlException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
@@ -82,12 +80,12 @@ import org.xml.sax.SAXException;
 
 /**
  * <p>
- * This class is in charge to load the WUIC XML file which contains all the
- * grouped files and the configurations to apply for the different file types.
+ * This class is in charge to load the WUIC XML path which contains all the
+ * grouped files and the configurations to apply for the different path types.
  * </p>
  * 
  * <p>
- * When you create a new {@code WuicXmlLoader}, then the file 'wuic.xml' located
+ * When you create a new {@code WuicXmlLoader}, then the path 'wuic.xml' located
  * at the root classpath is read using DOM API. Try create an instance of this
  * class only once in a production environment.
  * </p>
@@ -140,11 +138,11 @@ public final class WuicXmlLoader {
     
     /**
      * <p>
-     * Builds a new {@code WuicXmlLoader}. Try to load the 'wuic.xml' file using
+     * Builds a new {@code WuicXmlLoader}. Try to load the 'wuic.xml' path using
      * the DOM API and read the configurations and the files groups.
      * </p>
      * 
-     * @throws com.github.wuic.exception.xml.WuicXmlException if the 'wuic.xml' file is not properly defined
+     * @throws com.github.wuic.exception.xml.WuicXmlException if the 'wuic.xml' path is not properly defined
      */
     public WuicXmlLoader() throws WuicXmlException {
         this("/wuic.xml");
@@ -163,7 +161,7 @@ public final class WuicXmlLoader {
         final DocumentBuilderFactory factory = getFactory();
 
         try {
-            // The elements to be read from the file
+            // The elements to be read from the path
             resourceFactoryBuilders = new HashMap<String, WuicResourceFactoryBuilder>();
             builtConfigurations = new HashMap<String, Configuration>();
             filesGroups = new HashMap<String, FilesGroup>();
@@ -227,7 +225,7 @@ public final class WuicXmlLoader {
 
     /**
      * <p>
-     * Reads the {@link WuicResourceFactoryBuilder} defined in the wuic.xml file. A set
+     * Reads the {@link WuicResourceFactoryBuilder} defined in the wuic.xml path. A set
      * of <resource-factory-builder> tags should be defined and will be read by this
      * method.
      * </p>
@@ -375,7 +373,7 @@ public final class WuicXmlLoader {
      * <p>
      * Reads the files groups.  All the groups are located in a <groups>
      * tag which must exists. Each group is represented by a <group> tag
-     * as a child of the <groups> tag. The group itself has a list of <file>
+     * as a child of the <groups> tag. The group itself has a list of <path>
      * tags which represent all the files composing it.
      * </p>
      * 
@@ -393,7 +391,7 @@ public final class WuicXmlLoader {
 
                 final List<String> files = new ArrayList<String>(group.getChildNodes().getLength());
 
-                // Read each child representing a file of the group
+                // Read each child representing a path of the group
                 for (int j = 0; j < group.getChildNodes().getLength(); j++) {
                     final Node file = group.getChildNodes().item(j);
                     files.add(file.getFirstChild().getTextContent());
@@ -415,15 +413,10 @@ public final class WuicXmlLoader {
 
                 // Get the resource factory builder and create the files group
                 final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
+                final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
 
-                try {
-                    final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
-
-                    // Add all the files read from the document and associate them to the ID
-                    filesGroups.put(idAttribute.getNodeValue(), filesGroup);
-                } catch (StreamException ioe) {
-                    throw new WuicXmlReadException(ioe);
-                }
+                // Add all the files read from the document and associate them to the ID
+                filesGroups.put(idAttribute.getNodeValue(), filesGroup);
             }
         }
     }
@@ -457,16 +450,5 @@ public final class WuicXmlLoader {
         }
 
         return retval;
-    }
-    
-    /**
-     * <p>
-     * Gets all the registered group identifiers. 
-     * </p>
-     * 
-     * @return the collection of IDs
-     */
-    public Collection<String> filesGroupIdList() {
-        return filesGroups.keySet();
     }
 }

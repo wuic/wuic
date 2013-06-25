@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * <p>
  * An engine is in charge to parse a set of files. They are generally able to
- * parse an unique kind of file {@link com.github.wuic.FileType type}.
+ * parse an unique kind of path {@link com.github.wuic.FileType type}.
  * </p>
  * 
  * <p>

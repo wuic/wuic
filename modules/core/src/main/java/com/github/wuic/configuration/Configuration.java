@@ -83,7 +83,7 @@ public interface Configuration {
     
     /**
      * <p>
-     * Indicates if scripts will be aggregated in one file or not.
+     * Indicates if scripts will be aggregated in one path or not.
      * </p>
      * 
      * @return {@code true} if scripts are aggregated, {@code false} otherwise

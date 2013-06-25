@@ -71,7 +71,7 @@ public interface WuicResourceProtocol {
      * </p>
      *
      * @param realPath the real path to use to access the resource
-     * @param type the file's type
+     * @param type the path's type
      * @return the {@link WuicResource}
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while creating access
      */

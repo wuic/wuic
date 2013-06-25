@@ -38,33 +38,29 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.exception.WuicResourceNotFoundException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.path.DirectoryPath;
+import com.github.wuic.util.path.FsDirectoryPath;
+import com.github.wuic.util.path.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.io.Closeable;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.Writer;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * <p>
@@ -89,6 +85,11 @@ public final class IOUtils {
     public static final int WUIC_BUFFER_LEN = 2048;
 
     /**
+     * All ZIP files begins with this magic number.
+     */
+    public static final int ZIP_MAGIC_NUMBER = 0x504b0304;
+
+    /**
      * Logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(IOUtils.class);
@@ -100,6 +101,18 @@ public final class IOUtils {
      */
     private IOUtils() {
 
+    }
+
+    /**
+     * <p>
+     * Merges the given {@code String} array with the standard {@link IOUtils#STD_SEPARATOR separator}.
+     * </p>
+     *
+     * @param paths the paths to be merged
+     * @return the merged paths
+     */
+    public static String mergePath(String ... paths) {
+        return StringUtils.merge(paths, STD_SEPARATOR);
     }
 
     /**
@@ -116,7 +129,7 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Tries to close the given object and log the {@link IOException} at INFO level
+     * Tries to close the given objects and log the {@link IOException} at INFO level
      * to make the code more readable when we assume that the {@link IOException} won't be managed.
      * </p>
      *
@@ -124,41 +137,16 @@ public final class IOUtils {
      * Also ignore {@code null} parameters.
      * </p>
      *
-     * @param closeable the object to close
+     * @param closeableArray the objects to close
      */
-    public static void close(final Closeable closeable) {
-        try {
-            if (closeable != null) {
-                closeable.close();
-            }
-        } catch (IOException ioe) {
-            LOGGER.info("Can't close the object", ioe);
-        }
-    }
-
-    /**
-     * <p>
-     * Deletes a directory. Begins by delete the files inside the directory recursively.
-     * </p>
-     *
-     * @param directory directory to delete
-     * @throws IOException if a file could not be deleted
-     */
-    public static void deleteDirectory(final File directory) throws IOException {
-        if (directory.exists()) {
-            // Delete all files inside directory
-            for (File file : directory.listFiles()) {
-
-                // Delete directory recursively
-                if (file.isDirectory()) {
-                    deleteDirectory(file);
-                } else if (file.isFile() && !file.delete()) {
-                    throw new IOException("Can't delete the file " + file.getAbsolutePath());
+    public static void close(final Closeable ... closeableArray) {
+        for (Closeable closeable : closeableArray) {
+            try {
+                if (closeable != null) {
+                    closeable.close();
                 }
-            }
-
-            if (!directory.delete()) {
-                throw new IOException("Can't delete the file " + directory.getAbsolutePath());
+            } catch (IOException ioe) {
+                LOGGER.info("Can't close the object", ioe);
             }
         }
     }
@@ -183,46 +171,6 @@ public final class IOUtils {
         }
 
         return builder.toString();
-    }
-
-    /**
-     * <p>
-     * Builds a new stream pointing to a file represented by the given path.
-     * </p>
-     *
-     * @param path the path
-     * @return the stream
-     * @throws WuicResourceNotFoundException if the file is not found
-     */
-    public static InputStream newFileInputStream(final String path) throws WuicResourceNotFoundException {
-        try {
-            return new FileInputStream(path);
-        } catch (FileNotFoundException fne) {
-            throw new WuicResourceNotFoundException(fne);
-        }
-    }
-
-    /**
-     * <p>
-     * Copies the data from the given reader to the given output stream.
-     * </p>
-     *
-     * @param reader the {@code Reader}
-     * @param output the {@code OutputStream}
-     * @throws StreamException in an I/O error occurs
-     */
-    public static void copyReaderToStream(final Reader reader, final OutputStream output)
-            throws StreamException {
-        int offset;
-        final char[] buffer = new char[WUIC_BUFFER_LEN];
-
-        try {
-            while ((offset = reader.read(buffer)) != -1) {
-                output.write(String.copyValueOf(buffer, 0, offset).getBytes());
-            }
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
     }
 
     /**
@@ -260,13 +208,8 @@ public final class IOUtils {
      */
     public static void copyStream(final InputStream is, final OutputStream os)
             throws StreamException {
-        int offset;
-        final byte[] buffer = new byte[WUIC_BUFFER_LEN];
-
         try {
-            while ((offset = is.read(buffer)) != -1) {
-                os.write(buffer, 0, offset);
-            }
+            copyStreamIoe(is, os);
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -274,216 +217,140 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Indicates if the given {@code File} is a file on the file system. In addition to the {@code File#isFile()} method,
-     * this method is able to scan ZIP archives like .jar and .zip files to determine if any entry inside it is a file or
-     * not. The expected annotation is a '!' at the end of the archive file as it is represented when retrieving a resource
-     * path from the classpath.
+     * Copies the data from the given input stream into the given output stream and doesn't wrap any {@code IOException}.
      * </p>
      *
-     * <p>
-     * For instance, if you have a file 'file.js' as an entry of a jar 'archive.jar', then
-     * <pre>IOUtils.isFile(new File("/foo/archive.jar!/file.js"));</pre> will return {@code true}.
-     * </p>
-     *
-     * @param file the file to analyze
-     * @return {@code true} if the file is a file, even if it is an entry of an archive
-     * @throws StreamException if an I/O error occurs while reading an arcgive
+     * @param is the {@code InputStream}
+     * @param os the {@code OutputStream}
+     * @throws IOException in an I/O error occurs
      */
-    public static Boolean isFile(final File file) throws StreamException {
-        // Always use '/' separator, even on windows
-        final String absolutePath = normalizePathSeparator(file.getPath()).replace("file:/", "");
-        final String[] tree = absolutePath.split(STD_SEPARATOR);
+    public static void copyStreamIoe(final InputStream is, final OutputStream os)
+            throws IOException {
+        int offset;
+        final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
-        // Iterate through the tree to check that parent paths are directories or archive file
-        final StringBuilder sb = new StringBuilder();
-
-        // Be careful, we don't test the last path in this loop
-        for (int i = 0; i < tree.length - 1; i++) {
-            sb.append(tree[i]);
-
-            // Archive : check if the rest of the path of a file entry or not
-            if (sb.toString().endsWith(".jar!") || sb.toString().endsWith(".zip!")) {
-                try {
-                    final String entryName = absolutePath.substring(sb.length() + 1);
-                    return !new ZipFile(sb.substring(0, sb.length() - 1)).getEntry(entryName).isDirectory();
-                } catch (IOException ioe) {
-                    throw new StreamException(ioe);
-                }
-            // Parent is not an archive and not a directory : last path of not a file
-            } else if (new File(sb.toString()).isFile()) {
-                return Boolean.FALSE;
-            } else {
-                sb.append(STD_SEPARATOR);
-            }
+        while ((offset = is.read(buffer)) != -1) {
+            os.write(buffer, 0, offset);
         }
-
-        return new File(absolutePath).isFile();
     }
 
     /**
      * <p>
-     * Returns all the files path which belong as children to the given path file. If the file is a directory, then
-     * the result is obvious but the method also supports archive files. If the file name ends with .zip, .zip!, .jar or
-     * .jar!, the file is read as ZIP archive and all its root path are returned.
+     * Checks if the path path points to a a valid ZIP archive.
      * </p>
      *
-     * @param path the file
-     * @return the children paths
-     * @throws StreamException if any I/O error occurs while reading ZIP archive
+     * @param file the path to check
+     * @return {@code true} if path is an archive, {@code false} otherwise
      */
-    public static String[] listPath(final File path) throws StreamException {
-        if (path.isDirectory()) {
-            return path.list();
+    public static Boolean isArchive(final File file) throws IOException {
+        // File must exist, reachable and with a sufficient size to contain magic number
+        if (file == null || !file.isFile() || !file.canRead() || file.length() < NumberUtils.TWO * NumberUtils.TWO) {
+            return Boolean.FALSE;
         } else {
-            // Always work with slash as path separator, even on windows
-            final String absolutePath = normalizePathSeparator(path.getPath());
-            int index;
-
-            if ((index = absolutePath.indexOf(".jar")) != -1
-                    || (index = absolutePath.indexOf(".jar!")) != -1
-                    || (index = absolutePath.indexOf(".zip")) != -1
-                    || (index = absolutePath.indexOf(".zip!")) != -1) {
-                try {
-                    // We need to read archive entries
-                    final int end = absolutePath.indexOf(STD_SEPARATOR, index);
-                    String zipPath = absolutePath.substring(0, end);
-
-                    if (zipPath.endsWith("!")) {
-                        zipPath = zipPath.substring(0, zipPath.length() - 1);
-                    }
-
-                    ZipFile archive = null;
-
-                    try {
-                        archive = new ZipFile(new File(new URI(zipPath)));
-                        final Enumeration<? extends ZipEntry> entries = archive.entries();
-                        final List<String> retval = new ArrayList<String>();
-                        final String rootEntry = absolutePath.substring(end + 1).concat(STD_SEPARATOR);
-
-                        // Make sure we are going to list the entries of directory inside the archive
-                        if (!archive.getEntry(rootEntry).isDirectory()) {
-                            final String message = String.format("%s is not a ZIP directory entry", rootEntry);
-                            throw new BadArgumentException(new IllegalArgumentException(message));
-                        }
-
-                        // Read entries
-                        while (entries.hasMoreElements()) {
-                            final ZipEntry entry = entries.nextElement();
-                            final String entryName = entry.getName();
-
-                            // We only add the entries at the root level
-                            final String relativeEntry = entryName.replace(rootEntry, "");
-
-                            if (entryName.startsWith(rootEntry) && !relativeEntry.isEmpty() && relativeEntry.split(STD_SEPARATOR).length == 1) {
-                                retval.add(relativeEntry);
-                            }
-                        }
-
-                        return retval.toArray(new String[retval.size()]);
-                    } finally {
-                        if (archive != null) {
-                            archive.close();
-                        }
-                    }
-                } catch (IOException ioe) {
-                    throw new StreamException(ioe);
-                } catch (URISyntaxException use) {
-                    // Should never occur since we get the URI name with File#getPath() method
-                    throw new BadArgumentException(new IllegalArgumentException(use));
-                }
-            } else {
-                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory or a ZIP archive", path.getAbsolutePath())));
-            }
+            return isArchive(new BufferedInputStream(new FileInputStream(file)));
         }
     }
 
     /**
      * <p>
-     * Checks if a given file which is relative to the specified start path is a resource matching the specified pattern.
+     * Checks if the given stream points represents a valid ZIP archive.
      * </p>
      *
-     * <p>
-     * Supports research through directories and ZIP archives.
-     * </p>
-     *
-     * @param startPath the path where research starts
-     * @param relativeFile the file to test
-     * @param pattern the pattern to match
-     * @return the matching paths
-     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading file
+     * @param inputStream the stream to check
+     * @return {@code true} if the stream should be an archive, {@code false} otherwise
      */
-    public static List<String> lookupFileResources(final String startPath, final String relativeFile, final Pattern pattern) throws StreamException {
-        final String pathName = relativeFile.replace('\\', '/');
-        final File absoluteFile = new File(startPath, relativeFile);
+    public static Boolean isArchive(final InputStream inputStream) throws IOException {
+        DataInputStream in = null;
 
-        if (isFile(absoluteFile)) {
-            final Matcher matcher = pattern.matcher(pathName);
-
-            if (matcher.find()) {
-                return Arrays.asList(pathName);
-            } else if (pathName.endsWith(".jar") || pathName.endsWith(".zip")) {
-                try {
-                    return lookupArchiveResources(new ZipFile(absoluteFile), pattern);
-                } catch (IOException ioe) {
-                    throw new StreamException(ioe);
-                }
-            } else {
-                return Arrays.asList();
-            }
-        } else {
-            return lookupDirectoryResources(startPath, relativeFile, pattern);
+        try {
+            // Check that the path begins with magic number
+            in = new DataInputStream(inputStream);
+            return in.readInt() == ZIP_MAGIC_NUMBER;
+        } finally {
+            close(in);
         }
     }
 
     /**
      * <p>
-     * Looks up for an entry matching the given pattern in the specified zip file.
+     * Lists all the files from the given directory matching the given pattern.
      * </p>
      *
-     * @param zipFile the zip file to read
-     * @param pattern the pattern to match
-     * @return the matching paths
+     * <p>
+     * For instance, if a directory /foo contains a path in foo/oof/path.js, calling this method with an {@link Pattern}
+     * .* will result in an array containing the {@code String} {@code oof/path.js}.
+     * </p>
+     *
+     * @param parent the directory
+     * @param pattern the pattern to filter files
+     * @return the matching files
+     * @throws StreamException if any I/O error occurs
      */
-    public static List<String> lookupArchiveResources(final ZipFile zipFile, final Pattern pattern) {
-        final Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        final List<String> retval = new ArrayList<String>();
-
-        while (entries.hasMoreElements()) {
-            final ZipEntry entry = entries.nextElement();
-
-            if (pattern.matcher(entry.getName()).matches()) {
-                retval.add(entry.getName());
-            }
-        }
-
-        return retval;
+    public static List<String> listFile(final DirectoryPath parent, final Pattern pattern) throws StreamException {
+        return listFile(parent, "", pattern);
     }
 
     /**
      * <p>
-     * Looks for a file with a name matching the given pattern if the specified directory.
+     * Lists the files matching the given pattern in the directory path and its subdirectory represented by
+     * a specified {@code relativePath}.
      * </p>
      *
-     * @param startPath the path where research starts
-     * @param relativeDirectory the directory to test
-     * @param pattern the pattern
-     * @return the matching paths
+     * @param parent the parent
+     * @param relativePath the directory path relative to the parent
+     * @param pattern the pattern which filters files
+     * @return the matching files
+     * @throws StreamException if any I/O error occurs
      */
-    public static List<String> lookupDirectoryResources(final String startPath, final String relativeDirectory, final Pattern pattern)
-            throws StreamException {
-        final File absoluteDirectory = new File(startPath, relativeDirectory);
-
-        if (isFile(absoluteDirectory)) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s must be a directory.", absoluteDirectory.getAbsolutePath())));
-        } else {
-            // The directory could also be an archive file
+    public static List<String> listFile(final DirectoryPath parent, final String relativePath, final Pattern pattern) throws StreamException {
+        try {
+            final String[] children = parent.list();
             final List<String> retval = new ArrayList<String>();
-            final String[] paths = listPath(absoluteDirectory);
 
-            for (String pathName : paths) {
-                retval.addAll(lookupFileResources(startPath, StringUtils.merge(new String[] { relativeDirectory, pathName, }, "/"), pattern));
+            // Check each child path
+            for (String child : children) {
+                final Path path = parent.getChild(child);
+                final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
+
+                // Child is a directory, search recursively
+                if (path instanceof DirectoryPath) {
+                    retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, pattern));
+                // Files matches, return
+                } else if (pattern.matcher(childRelativePath).matches()) {
+                    retval.add(childRelativePath);
+                }
             }
 
+            return retval;
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * <p>
+     * Returns a hierarchy of {@link Path paths} represented by the given {@code String}.
+     * </p>
+     *
+     * @param path the path hierarchy
+     * @return the last {@link Path} of the hierarchy with its parent
+     * @throws IOException if any I/O error occurs
+     */
+    public static Path buildPath(final String path) throws IOException {
+        // Always use '/' separator, even on windows
+        final String absolutePath = IOUtils.normalizePathSeparator(path);
+        final String[] tree = absolutePath.split(IOUtils.STD_SEPARATOR);
+
+        // Build the root => force the path to / if its empty
+        final String root = tree[0];
+        DirectoryPath retval = new FsDirectoryPath(root.isEmpty() && path.startsWith(IOUtils.STD_SEPARATOR) ?
+                IOUtils.STD_SEPARATOR : root, null);
+
+        // Build child path
+        if (tree.length > 1) {
+            return retval.getChild(IOUtils.mergePath(Arrays.copyOfRange(tree, 1, tree.length)));
+        // No parent
+        } else {
             return retval;
         }
     }

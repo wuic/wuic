@@ -43,7 +43,7 @@ import com.github.wuic.util.StringUtils;
 
 /**
  * <p>
- * Thrown when an element is not properly defined for a configuration in wuic.xml file.
+ * Thrown when an element is not properly defined for a configuration in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

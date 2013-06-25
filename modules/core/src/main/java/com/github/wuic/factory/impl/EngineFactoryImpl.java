@@ -82,7 +82,7 @@ public class EngineFactoryImpl implements EngineFactory {
      * Adds a configuration for a defined {@link FileType}.
      * </p>
      * 
-     * @param fileType the file type
+     * @param fileType the path type
      * @param conf the configuration
      */
     public void addConfigurationForFileType(final FileType fileType, final Configuration conf) {

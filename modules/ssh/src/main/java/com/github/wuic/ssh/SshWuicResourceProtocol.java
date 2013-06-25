@@ -78,7 +78,7 @@ import java.util.regex.Pattern;
 public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
-     * Stop reading the file when this byte is met.
+     * Stop reading the path when this byte is met.
      */
     private static final byte END_OF_FILE_NAME = (byte) 0x0a;
 
@@ -88,7 +88,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
     private static final String TO_READ_WHEN_ACK_OK = "0644 ";
 
     /**
-     * Multiply with this value to display human readable file size.
+     * Multiply with this value to display human readable path size.
      */
     private static final short MULTIPLY = 10;
 
@@ -191,7 +191,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
         try {
             connect();
 
-            // Create a file containing all the files
+            // Create a path containing all the files
             final List<String> retval = new ArrayList<String>();
             String file = basePath + "wuic-list-resources-" + System.nanoTime();
 
@@ -207,7 +207,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
             Thread.sleep(timeToSleepForExec);
 
-            // Now read generate file
+            // Now read generate path
             final BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(loadFile(file))));
 
             // Each line is a candidate resource
@@ -233,18 +233,18 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
      * <p>
-     * Reads the file size from the given input stream.
+     * Reads the path size from the given input stream.
      * </p>
      *
      * @param buf buffer to use
      * @param in the stream read
      * @throws IOException if an I/O error occurs
-     * @return the file size
+     * @return the path size
      */
     private long readFileSize(final byte[] buf, final InputStream in) throws IOException {
         long fileSize = 0L;
 
-        while (in.read(buf, 0, 1) >= 0 && buf[0] != ' ') {
+        for (int c = in.read(buf, 0, 1); c != 0 && c >= 0 && buf[0] != ' '; c = in.read(buf, 0, 1)) {
             fileSize = fileSize * MULTIPLY + (long) (buf[0] - '0');
         }
 
@@ -255,7 +255,7 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
      * <p>
-     * Reads the file name from the given input stream.
+     * Reads the path name from the given input stream.
      * </p>
      *
      * @param buf buffer to use
@@ -290,16 +290,16 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
         // read '0644 '
         in.read(buf, 0, TO_READ_WHEN_ACK_OK.length());
 
-        // read file size
+        // read path size
         long fileSize = readFileSize(buf, in);
 
-        // read file name
+        // read path name
         readFileName(buf, in);
 
         // send '\0'
         sendZero(buf, ackOut);
 
-        // read a content of file
+        // read a content of path
         int offset = buf.length < fileSize ? buf.length : (int) fileSize;
 
         while ((offset = in.read(buf, 0, offset)) >= 0 && fileSize != 0) {
@@ -316,17 +316,17 @@ public class SshWuicResourceProtocol implements WuicResourceProtocol {
 
     /**
      * <p>
-     * Loads the given file from SSH server into memory byte array.
+     * Loads the given path from SSH server into memory byte array.
      * </p>
      *
      * @param path the path
      * @return the memory byte array
      * @throws JSchException if we can't open the channel
-     * @throws IOException if we can't read the file
+     * @throws IOException if we can't read the path
      */
     private byte[] loadFile(final String path) throws JSchException, IOException {
         // exec 'scp -f rfile' remotely
-        final String command = new StringBuilder().append("scp -r -f \"").append(path).append("\"").toString();
+        final String command = String.format("scp -r -f \"%s\"", path);
 
         // Open channel and create command
         final Channel channel = session.openChannel("exec");

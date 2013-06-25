@@ -42,7 +42,7 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * Thrown when an ID is not properly defined for a configuration in wuic.xml file.
+ * Thrown when an ID is not properly defined for a configuration in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

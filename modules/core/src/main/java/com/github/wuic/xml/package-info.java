@@ -37,7 +37,7 @@
 
 /**
  * <p>
- * This package provides the classes which read the 'wuic.xml' file.
+ * This package provides the classes which read the 'wuic.xml' path.
  * </p>
  * 
  * @author Guillaume DROUET

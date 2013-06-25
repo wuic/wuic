@@ -16,11 +16,14 @@ import com.github.wuic.FileType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
-import com.github.wuic.resource.impl.disk.FileWuicResource;
+import com.github.wuic.resource.impl.disk.FilePathWuicResource;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.path.FilePath;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,9 +75,15 @@ public class JUnitWuicResourceFactoryBuilder implements WuicResourceFactoryBuild
 
                 final String prefix = System.getProperty("wuic.test.rootDirectoryPrefix");
                 final String resources = prefix == null ? "src/test/resources" : prefix + "/src/test/resources";
-                final WuicResource res = new FileWuicResource(new File(resources).getAbsolutePath(), path, ft);
+                final String file = IOUtils.mergePath(new File(resources).getAbsolutePath(), path);
 
-                return CollectionUtils.newList(res);
+                try {
+                    final WuicResource res = new FilePathWuicResource(FilePath.class.cast(IOUtils.buildPath(file)), path, ft);
+
+                    return CollectionUtils.newList(res);
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                }
             }
 
             /**

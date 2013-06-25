@@ -35,7 +35,7 @@ public class WuicTest {
      * Useful to check if generated files are correct.
      * </p>
      *
-     * @param name the file name on the disk
+     * @param name the path name on the disk
      * @param resource the resource
      * @throws Exception if an I/O error occurs
      */

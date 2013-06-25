@@ -39,15 +39,14 @@
 package com.github.wuic.resource.impl.classpath;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import com.github.wuic.resource.impl.disk.DiskWuicResourceFactoryBuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
+import java.net.URL;
 
 /**
  * <p>
@@ -62,15 +61,6 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
 
     /**
      * <p>
-     * Creates a new instance.
-     * </p>
-     */
-    public ClasspathWuicResourceFactoryBuilder() {
-        this(new ClasspathWuicResourceFactory(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(null)));
-    }
-
-    /**
-     * <p>
      * Creates a new instance thanks to an already built factory.
      * </p>
      *
@@ -78,6 +68,15 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
      */
     public ClasspathWuicResourceFactoryBuilder(final WuicResourceFactory built) {
         super(built);
+    }
+
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     */
+    public ClasspathWuicResourceFactoryBuilder() {
+        this(new ClasspathWuicResourceFactory(new AbstractWuicResourceFactory.DefaultWuicResourceFactory(null)));
     }
 
     /**
@@ -100,20 +99,10 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.3.1
      */
-    public static class ClasspathWuicResourceFactory extends AbstractWuicResourceFactory {
-
-        /**
-         * Supported properties with their default value.
-         */
-        private Map<String, Object> supportedProperties;
-
-        /**
-         * Delegate concrete implementation.
-         */
-        private AbstractWuicResourceFactory delegate;
+    public static class ClasspathWuicResourceFactory extends DiskWuicResourceFactoryBuilder.DiskWuicResourceFactory {
 
         /**
          * <p>
@@ -123,42 +112,33 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
          * @param toDecorate a factory to be decorated
          */
         public ClasspathWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
-            super(null);
-
-            delegate = toDecorate;
-
-            // Init default property
-            supportedProperties = new HashMap<String, Object>();
-            supportedProperties.put(ApplicationConfig.CLASSPATH_BASE_PATH, "/");
-
-            setWuicProtocol(new ClasspathWuicResourceProtocol(
-                    (String) supportedProperties.get(ApplicationConfig.CLASSPATH_BASE_PATH)));
+            super(toDecorate, ApplicationConfig.CLASSPATH_BASE_PATH, staticProcessBasePath("/"));
         }
 
         /**
-         * {@inheritDoc}
+         * <p>
+         * Implementation of the process algorithm in a static method to be called in constructor.
+         * </p>
+         *
+         * @param value the value to process
+         * @return the processed value
          */
-        @Override
-        public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
+        private static String staticProcessBasePath(final String value) {
+            final URL classPathEntry = ClasspathWuicResourceFactoryBuilder.class.getResource(value);
 
-            // Try to override an existing property
-            if (!supportedProperties.containsKey(key)) {
-                throw new WuicRfPropertyNotSupportedException(key, this.getClass());
-            } else {
-                supportedProperties.put(key, value);
+            if (classPathEntry == null) {
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s not found in classpath", value)));
             }
 
-            // Set new protocol with the new property
-            setWuicProtocol(new ClasspathWuicResourceProtocol(
-                    (String) supportedProperties.get(ApplicationConfig.CLASSPATH_BASE_PATH)));
+            return classPathEntry.toString().replace("file:/", "");
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public Pattern getPattern(final String path) {
-            return delegate.getPattern(path);
+        protected String processBasePath(final String value) {
+            return staticProcessBasePath(value);
         }
     }
 }

@@ -58,7 +58,7 @@ import java.util.List;
  * </p>
  *
  * <p>
- * All the paths must refer to the same type fo file (CSS, JS, etc).
+ * All the paths must refer to the same type fo path (CSS, JS, etc).
  * </p>
  * 
  * @author Guillaume DROUET
@@ -113,45 +113,22 @@ public class FilesGroup {
      * @param pathsList the paths
      * @param theResourceFactory the {@link WuicResourceFactory}
      * @param groupId the group ID
-     * @throws com.github.wuic.exception.wrapper.StreamException if the resources can be retrieved
      */
     public FilesGroup(final Configuration config,
             final List<String> pathsList,
             final WuicResourceFactory theResourceFactory,
-            final String groupId)
-            throws StreamException {
+            final String groupId) {
         this.id = groupId;
         this.configuration = config;
         this.paths = pathsList;
         this.resourceFactory = theResourceFactory;
-        this.resources = new ArrayList<WuicResource>();
-
-        for (String path : paths) {
-            resources.addAll(resourceFactory.create(path));
-        }
-
-        checkFiles();
-    }
-
-    /**
-     * <p>
-     * Builds a new {@link FilesGroup} by copying an existing one but with a new configuration.
-     * </p>
-     *
-     * @param config the {@link Configuration}
-     * @param other the group to copy
-     * @throws com.github.wuic.exception.wrapper.StreamException if the resources can't be retrieved
-     */
-    public FilesGroup(final Configuration config,
-                      final FilesGroup other) throws StreamException {
-        this(config, other.paths, other.resourceFactory, other.id);
     }
 
     /**
      * <p>
      * Checks that the {@link FileType} and the paths list of this group are not
      * null. If they are, this methods will throw an {@link BadArgumentException}.
-     * This exception could also be thrown if one file of the list does have a name
+     * This exception could also be thrown if one path of the list does have a name
      * which ends with one of the possible {@link FileType#extensions extensions}.
      * </p>
      */
@@ -168,7 +145,7 @@ public class FilesGroup {
             throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, resourceFactory.toString())));
         }
 
-        // Check the extension of each file
+        // Check the extension of each path
         for (WuicResource res : resources) {
 
             // Extract name to be test
@@ -187,7 +164,7 @@ public class FilesGroup {
                 }
             }
             
-            // The file has not one of the possible extension : throw an IAE
+            // The path has not one of the possible extension : throw an IAE
             if (!valid) {
                 final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, type);
                 throw new BadArgumentException(new IllegalArgumentException(message));
@@ -219,28 +196,6 @@ public class FilesGroup {
 
     /**
      * <p>
-     * Gets the paths list.
-     * </p>
-     * 
-     * @return the paths
-     * @throws com.github.wuic.exception.wrapper.StreamException if an error occurs while getting paths
-     */
-    public List<String> getPaths() throws StreamException {
-        if (paths.isEmpty()) {
-            return paths;
-        } else {
-            final List<String> retval = new ArrayList<String>();
-
-            for (String path : paths) {
-                retval.addAll(resourceFactory.computeRealPaths(path));
-            }
-
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
      * Gets the {@link com.github.wuic.resource.WuicResourceFactory}.
      * </p>
      * 
@@ -256,8 +211,19 @@ public class FilesGroup {
      * </p>
      *
      * @return the resources
+     * @throws StreamException if an I/O error occurs while building resources
      */
-    public List<WuicResource> getResources() {
+    public List<WuicResource> getResources() throws StreamException {
+        if (resources == null) {
+            this.resources = new ArrayList<WuicResource>();
+
+            for (String path : paths) {
+                resources.addAll(resourceFactory.create(path));
+            }
+
+            checkFiles();
+        }
+
         return resources;
     }
 }

@@ -23,11 +23,11 @@
                         wuic/test : search in "wuic/test/*" -->
                 <property key="c.g.wuic.gStoragePath"></property>
                 <!--    Key : c.g.wuic.gPrivateKeyPath
-                        You can generate a new key file on this page :
+                        You can generate a new key path on this page :
                         https://code.google.com/apis/console/
                         - Go on : API Access > "Create another client ID..."
                         - Installed application type : select "Service account"
-                        - Download key file or Generate new key
+                        - Download key path or Generate new key
                  -->
                 <property key="c.g.wuic.gPrivateKeyPath">privatekey.p12</property>
             </properties>
@@ -35,7 +35,7 @@
 	</resource-factory-builders>
 	<!--groups>
 		<group id="css-image" configuration="yuicompressor-css" default-builder="gStorageFactoryBuilder">
-            <file>.*.css</file>
+            <path>.*.css</path>
 		</group>
 	</groups-->
 	<configurations>

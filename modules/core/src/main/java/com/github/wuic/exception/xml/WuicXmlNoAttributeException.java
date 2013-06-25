@@ -40,7 +40,7 @@ package com.github.wuic.exception.xml;
 
 /**
  * <p>
- * Thrown when an attribute is not properly defined for an element in wuic.xml file.
+ * Thrown when an attribute is not properly defined for an element in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

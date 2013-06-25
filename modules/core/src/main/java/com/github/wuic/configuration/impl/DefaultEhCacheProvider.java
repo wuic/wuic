@@ -48,7 +48,7 @@ import net.sf.ehcache.CacheManager;
  * <p>
  * This class is used by default to retrieve the cache for WUIC from
  * EHCache framework. To perform it, a new {@code CacheManager} is created
- * with the ehcache.xml file located at the root of the 'classpath'.
+ * with the ehcache.xml path located at the root of the 'classpath'.
  * When the {@code CacheManager} is created, a cache named 'wuiCache' is
  * returned.
  * </p>

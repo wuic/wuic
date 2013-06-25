@@ -55,7 +55,7 @@ import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
- * This {@link Engine engine} can aggregate all the specified files in one file.
+ * This {@link Engine engine} can aggregate all the specified files in one path.
  * Files are aggregated in the order of apparition in the given list. Note that
  * nothing will be done is {@link Configuration#aggregate()} returns {@code false}
  * in the given {@link Configuration}.
@@ -96,10 +96,10 @@ public class CGTextAggregatorEngine extends Engine {
         }
         
         // In memory buffer for the aggregated resources
-        final String fileName = "/aggregate" + configuration.getFileType().getExtensions()[0];
+        final String fileName = "aggregate" + configuration.getFileType().getExtensions()[0];
         final ByteArrayOutputStream target = new ByteArrayOutputStream();
         
-        // Append each file
+        // Append each path
         InputStream is = null;
         FileType fileType = null;
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
@@ -116,7 +116,7 @@ public class CGTextAggregatorEngine extends Engine {
                     is = resource.openStream();
                     IOUtils.copyStream(is, target);
 
-                    // Begin content file writing on a new line when no compression is configured
+                    // Begin content path writing on a new line when no compression is configured
                     if (!configuration.compress()) {
                         buffer[0] = '\n';
                         target.write(buffer, 0, 1);

@@ -53,7 +53,7 @@ import java.util.Map;
  * @version 1.0
  * @since 0.3.1
  */
-public abstract class CGAbstractSpriteProvider  implements SpriteProvider {
+public abstract class CGAbstractSpriteProvider implements SpriteProvider {
 
     /**
      * Region in the image.

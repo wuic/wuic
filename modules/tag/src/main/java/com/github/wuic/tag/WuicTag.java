@@ -44,7 +44,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.servlet.WuicServlet;
-import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -170,12 +170,11 @@ public class WuicTag extends TagSupport {
      * @return the url
      */
     private String getUrl(final WuicResource resource) {
-        return StringUtils.merge(new String[] {
-                "/",
+        return IOUtils.mergePath("/",
                 WuicServlet.servletContext().getContextPath(),
                 WuicServlet.servletMapping(),
                 pageName,
-                resource.getName(), }, "/");
+                resource.getName());
     }
 
     /**

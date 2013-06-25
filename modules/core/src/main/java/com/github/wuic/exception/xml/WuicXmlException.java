@@ -16,7 +16,7 @@ import com.github.wuic.exception.WuicException;
 
 /**
  * <p>
- * Thrown when an error related the the wuic.xml file occurs.
+ * Thrown when an error related the the wuic.xml path occurs.
  * </p>
  * 
  * @author Guillaume DROUET

@@ -77,17 +77,18 @@ public interface SpriteProvider {
      * </p>
      * 
      * <p>
-     * Each sprite is in a file associated to a supported
+     * Each sprite is in a path associated to a supported
      * {@link com.github.wuic.FileType} which helps
      * to determinate the language used to represent them. 
      * </p>
      * 
      * @param url of the final image
      * @param groupId the group ID
-     * @return a resource representing the sprite file
+     * @param resourceNameSuffix the suffix to append to the sprite resource name
+     * @return a resource representing the sprite path
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    WuicResource getSprite(String url, String groupId) throws StreamException;
+    WuicResource getSprite(String url, String groupId, String resourceNameSuffix) throws StreamException;
 
     /**
      * <p>

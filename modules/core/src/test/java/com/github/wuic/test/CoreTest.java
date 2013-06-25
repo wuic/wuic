@@ -139,6 +139,9 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
         List<WuicResource> group = facade.getGroup("js-image");
 
+        Assert.assertEquals(1, group.size());
+        Assert.assertEquals(1, group.get(0).getReferencedResources().size());
+
         final Iterator<WuicResource> it = group.iterator();
         int i = 0;
 

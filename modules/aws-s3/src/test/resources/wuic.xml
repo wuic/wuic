@@ -28,7 +28,7 @@
 	</resource-factory-builders>
 	<!--groups>
 		<group id="css-image" configuration="yuicompressor-css" default-builder="s3FactoryBuilder">
-            <file>.*.css</file>
+            <path>.*.css</path>
 		</group>
 	</groups-->
 	<configurations>

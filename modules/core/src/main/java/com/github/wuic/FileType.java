@@ -55,17 +55,17 @@ import java.util.Arrays;
 public enum FileType {
 
     /**
-     * Sprite file support.
+     * Sprite path support.
      */
     SPRITE(new String[] {".png", ".PNG"}, null, Boolean.TRUE),
     
     /**
-     * PNG file support.
+     * PNG path support.
      */
     PNG(new String[] {".png", ".PNG"}, "image/png", Boolean.TRUE),
 
     /**
-     * GIF file support.
+     * GIF path support.
      */
     GIF(new String[] {".gif", ".GIF"}, "image/gif", Boolean.TRUE),
 
@@ -102,7 +102,7 @@ public enum FileType {
      * 
      * @param exts the extensions
      * @param mime the MIME type
-     * @param isBinary if the file type is binary or not
+     * @param isBinary if the path type is binary or not
      */
     FileType(final String[] exts, final String mime, final Boolean isBinary) {
         extensions = Arrays.copyOf(exts, exts.length);
@@ -176,11 +176,11 @@ public enum FileType {
      * </p>
      *
      * <p>
-     * Throws an {@code BadArgumentException} if the extension does not belongs to any file type
+     * Throws an {@code BadArgumentException} if the extension does not belongs to any path type
      * </p>
      *
      * @param ext the extension
-     * @return the file type
+     * @return the path type
      */
     public static FileType getFileTypeForExtension(final String ext) {
         for (FileType fileType : FileType.values()) {

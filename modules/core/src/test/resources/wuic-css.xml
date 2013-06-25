@@ -3,7 +3,11 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
     <resource-factory-builders>
-        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true" />
+        <resource-factory-builder id="imgSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true">
+            <properties>
+                <property key="c.g.wuic.classpathBasePath">/</property>
+            </properties>
+        </resource-factory-builder>
         <resource-factory-builder id="cssSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder">
             <properties>
                 <property key="c.g.wuic.classpathBasePath">/css</property>
@@ -15,6 +19,7 @@
             <file>images/.*.png</file>
         </group>
         <group id="css-scripts" configuration="yuicompressor-css" default-builder="cssSourceRootProvider">
+            <file>jquery-ui.css</file>
             <file>jquery.ui.all.css</file>
         </group>
     </groups>

@@ -48,7 +48,6 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -140,7 +139,7 @@ public class CGTextInspectorEngine extends Engine {
         String line;
 
         try {
-            // Read the file line per line
+            // Read the path line per line
             br = new BufferedReader(new InputStreamReader(resource.openStream(), configuration.charset()));
 
             // Reads each line and keep the transformations in memory
@@ -208,7 +207,7 @@ public class CGTextInspectorEngine extends Engine {
             // Compute replacement, extract resource name and referenced resources
             final StringBuilder replacement = new StringBuilder();
             final String resourceName = inspector.appendTransformation(matcher, replacement,
-                    StringUtils.merge(new String[]{ request.getContextPath(), request.getGroup().getId(), }, "/"),
+                    IOUtils.mergePath(request.getContextPath(), request.getGroup().getId()),
                     resourceLocation, request.getGroup().getResourceFactory());
             matcher.appendReplacement(retval, replacement.toString());
 
@@ -221,7 +220,7 @@ public class CGTextInspectorEngine extends Engine {
                     res = getNext().parse(new EngineRequest(res, request));
                 }
 
-                // Add the resource and inspect it recursively if it's a CSS file
+                // Add the resource and inspect it recursively if it's a CSS path
                 for (WuicResource r : res) {
                     WuicResource inspected = r;
 

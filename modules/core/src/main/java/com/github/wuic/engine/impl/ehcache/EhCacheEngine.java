@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * This {@link Engine engine} reads from a cache specified in the WUIC XML file
+ * This {@link Engine engine} reads from a cache specified in the WUIC XML path
  * the given set of elements. If they exists, then they are returned and no more
  * engine is executed. Otherwise, the chain is executed and the result is put in
  * cache.

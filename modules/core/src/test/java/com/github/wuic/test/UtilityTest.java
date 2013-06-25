@@ -16,6 +16,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.path.DirectoryPath;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,27 +81,42 @@ public class UtilityTest extends WuicTest {
     /**
      * Makes sure the research is correctly performed.
      * 
-     * Actually if you have this directory : /foo/oof/js/file.js
-     * You have a classpath where root is /foo i.e file.js is retrieved thanks to /oof/js/file.js
+     * Actually if you have this directory : /foo/oof/js/path.js
+     * You have a classpath where root is /foo i.e path.js is retrieved thanks to /oof/js/path.js
      * Your classpath protocol has base directory /oof
      * We need to be very clear about the path evaluated by the regex
-     * For instance, /.*.js should returns /js/file.js since /oof is the base path
-     * After, that /oof + /js/file.js will result in the exact classpath entry to retrieve
+     * For instance, /.*.js should returns /js/path.js since /oof is the base path
+     * After, that /oof + /js/path.js will result in the exact classpath entry to retrieve
      *
      * @throws IOException if any I/O error occurs
      * @throws StreamException if error occurs during research
      */
     @Test
     public void fileSearchTest() throws IOException, StreamException {
+
+        // Part 1
         final String nanoTime = String.valueOf(System.nanoTime());
-        final File basePath = new File(StringUtils.merge(new String[]{ System.getProperty("java.io.tmpdir"), nanoTime, }, "/"));
-        basePath.mkdirs();
+        final String tmp = System.getProperty("java.io.tmpdir");
+        final String path = IOUtils.mergePath(tmp, nanoTime, "foo");
+        final File basePath = new File(path);
+        Assert.assertTrue(basePath.mkdirs());
 
         final File file = File.createTempFile("file", ".js", basePath);
 
-        List<String> list = IOUtils.lookupFileResources(System.getProperty("java.io.tmpdir"), nanoTime, Pattern.compile("/.*js"));
+        final DirectoryPath parent = DirectoryPath.class.cast(IOUtils.buildPath(IOUtils.mergePath(tmp, nanoTime)));
+        List<String> list = IOUtils.listFile(parent, Pattern.compile(".*js"));
 
         Assert.assertEquals(list.size(), 1);
-        Assert.assertEquals(list.get(0), nanoTime + "/" + file.getName());
+        Assert.assertEquals(list.get(0), IOUtils.mergePath("foo", file.getName()));
+
+        // Part 2
+        final String baseDir = getClass().getResource("/images").getFile().replace("file:/", "");
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final List<String> listFiles = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
+        Assert.assertEquals(40, listFiles.size());
+
+        for (String f : listFiles) {
+            Assert.assertEquals(directoryPath.getChild(f).getAbsolutePath(), IOUtils.mergePath(directoryPath.getAbsolutePath(), f));
+        }
     }
 }

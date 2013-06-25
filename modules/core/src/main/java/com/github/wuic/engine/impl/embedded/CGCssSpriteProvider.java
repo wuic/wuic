@@ -43,7 +43,7 @@ import com.github.wuic.engine.Region;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.impl.ByteArrayWuicResource;
-import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
@@ -60,13 +60,14 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource getSprite(final String url, final String groupId) throws StreamException {
+    public WuicResource getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
+            throws StreamException {
         final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
 
-            // Class name is based on the name without the directory section and the file extension
+            // Class name is based on the name without the directory section and the path extension
             final int start = name.lastIndexOf('/') + 1;
             final int last = name.lastIndexOf('.');
             final String className = name.substring(start, last > start ? last : name.length());
@@ -75,7 +76,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append(".wuic_");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(StringUtils.merge(new String[] { "/", url, image, }, "/"));
+            cssBuilder.append(IOUtils.mergePath("/", url, image));
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
@@ -88,6 +89,6 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
         }
 
         // Make a resource and return it
-        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "/sprites.css", FileType.CSS);
+        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", FileType.CSS);
     }
 }

@@ -44,7 +44,7 @@ import com.github.wuic.engine.Engine;
 
 /**
  * <p>
- * This factory creates {@link Engine engines} according to a file {@link FileType type}.
+ * This factory creates {@link Engine engines} according to a path {@link FileType type}.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -60,7 +60,7 @@ public interface EngineFactory {
      * be thrown.
      * </p>
      * 
-     * @param fileType the file type to be supported by the {@link Engine}
+     * @param fileType the path type to be supported by the {@link Engine}
      * @return an {@link Engine}
      * @throws com.github.wuic.exception.xml.WuicXmlReadException if the current configuration does not allow
      * to produce an {@link Engine} that supports the given {@link FileType}

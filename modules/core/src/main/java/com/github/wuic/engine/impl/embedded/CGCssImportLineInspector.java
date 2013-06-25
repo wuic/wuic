@@ -40,8 +40,8 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
-import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class CGCssImportLineInspector implements LineInspector {
         log.info("@import statement found for resource {}", referencedPath);
 
         // Extract the resource
-        final String resourceName = StringUtils.merge(new String[] { resourceLocation, referencedPath, }, "/");
+        final String resourceName = resourceLocation.isEmpty() ? referencedPath : IOUtils.mergePath(resourceLocation, referencedPath);
 
         // Rewrite the statement from its beginning to the beginning of the resource name
         replacement.append(matcher.group().substring(0, (matcher.start(groupIndex == NumberUtils.TWO ? 1 : groupIndex)) - matcher.start()));
@@ -131,7 +131,7 @@ public class CGCssImportLineInspector implements LineInspector {
             log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by resource factory.", referencedPath);
             replacement.append(referencedPath);
         } else {
-            replacement.append(StringUtils.merge(new String[] { "/", groupPath, resourceName, }, "/"));
+            replacement.append(IOUtils.mergePath("/", groupPath, resourceName));
         }
 
         replacement.append("\"");

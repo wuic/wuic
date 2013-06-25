@@ -64,10 +64,10 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
     
     /**
      * <p>
-     * Builds a new {@link EngineFactoryBuilderImpl} thanks to a specified wuic.xml file location in the classpath.
+     * Builds a new {@link EngineFactoryBuilderImpl} thanks to a specified wuic.xml path location in the classpath.
      * </p>
      * 
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     public EngineFactoryBuilderImpl() throws WuicException {
         wuicXml = new WuicXmlLoader();
@@ -79,7 +79,7 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
      * </p>
      *
      * @param wuicXmlPath the location of the wuic.xml in the classpath
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     public EngineFactoryBuilderImpl(final String wuicXmlPath) throws WuicException {
         wuicXml = new WuicXmlLoader(wuicXmlPath);

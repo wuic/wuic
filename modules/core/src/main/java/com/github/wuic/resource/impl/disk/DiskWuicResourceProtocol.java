@@ -44,8 +44,11 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.resource.WuicResourceProtocol;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.path.DirectoryPath;
+import com.github.wuic.util.path.FilePath;
+import com.github.wuic.util.path.Path;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -63,21 +66,45 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
     /**
      * Base directory where the protocol has to look up.
      */
-    private File baseDirectory;
+    private DirectoryPath baseDirectory;
+
+    /**
+     * The path which represents the directory location.
+     */
+    private String path;
 
     /**
      * <p>
-     * Builds a new instance with a base directory. Throws an {@code BadArgumentException} if
-     * the given {@code String} does not represents a directory.
+     * Builds a new instance with a base directory.
      * </p>
      *
      * @param base the directory where we have to look up
      */
     public DiskWuicResourceProtocol(final String base) {
-        baseDirectory = new File(base);
+        path = base;
+    }
 
-        if (!baseDirectory.isDirectory()) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", base)));
+    /**
+     * <p>
+     * Initializes the {@link DirectoryPath} if {@code null}. Throws an {@code BadArgumentException} if
+     * the given {@code String} does not represents a directory.
+     * </p>
+     *
+     * @throws StreamException if any I/O error occurs
+     */
+    private void init() throws StreamException {
+        if (baseDirectory == null) {
+            try {
+                final Path file = IOUtils.buildPath(path);
+
+                if (file instanceof DirectoryPath) {
+                    baseDirectory = DirectoryPath.class.cast(file);
+                } else {
+                    throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", path)));
+                }
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
+            }
         }
     }
 
@@ -86,7 +113,8 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public List<String> listResourcesPaths(final Pattern pattern) throws StreamException {
-        return IOUtils.lookupDirectoryResources(baseDirectory.getAbsolutePath(), "", pattern);
+        init();
+        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), pattern);
     }
 
     /**
@@ -94,7 +122,19 @@ public class DiskWuicResourceProtocol implements WuicResourceProtocol {
      */
     @Override
     public WuicResource accessFor(final String realPath, final FileType type) throws StreamException {
-        return new FileWuicResource(baseDirectory.getAbsolutePath(), realPath, type);
+        init();
+
+        try {
+            final Path p = baseDirectory.getChild(realPath);
+
+            if (p instanceof FilePath) {
+                return new FilePathWuicResource(FilePath.class.cast(p), realPath, type);
+            } else {
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
+            }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**

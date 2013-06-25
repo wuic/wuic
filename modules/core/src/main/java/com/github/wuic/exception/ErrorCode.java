@@ -66,27 +66,27 @@ public interface ErrorCode {
     long BAD_ARGUMENT_EXCEPTION = 19860606003L;
 
     /**
-     * Default code when the wuic.xml file can't be read.
+     * Default code when the wuic.xml path can't be read.
      */
     long XML_CANNOT_READ = 19860606100L;
 
     /**
-     * No configuration ID has been defined for a configuration in the wuic.xml file.
+     * No configuration ID has been defined for a configuration in the wuic.xml path.
      */
     long XML_NO_CONFIGURATION_ID = 19860606101L;
 
     /**
-     * No id has been defined for a resource factory builder in the wuic.xml file.
+     * No id has been defined for a resource factory builder in the wuic.xml path.
      */
     long XML_NO_RESOURCE_FACTORY_BUILDER_ID = 19860606101L;
 
     /**
-     * Not all required elements have been defined for a configuration in the wuic.xml file.
+     * Not all required elements have been defined for a configuration in the wuic.xml path.
      */
     long XML_MISSING_CONFIGURATION_ELEMENT = 19860606103L;
 
     /**
-     * No class has been defined for a resource factory builder in the wuic.xml file.
+     * No class has been defined for a resource factory builder in the wuic.xml path.
      */
     long XML_NO_RESOURCE_FACTORY_BUILDER_CLASS = 19860606104L;
 

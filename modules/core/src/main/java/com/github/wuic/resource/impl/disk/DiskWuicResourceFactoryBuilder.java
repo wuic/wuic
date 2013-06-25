@@ -100,7 +100,7 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.3.2
      */
     public static class DiskWuicResourceFactory extends AbstractWuicResourceFactory {
@@ -116,6 +116,33 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
         private AbstractWuicResourceFactory delegate;
 
         /**
+         * The base path key.
+         */
+        private String basePathKey;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param toDecorate a factory to be decorated
+         * @param bpk the key corresponding to the base path
+         * @param defaultValue the already processed default value associated to the base path key
+         */
+        public DiskWuicResourceFactory(final AbstractWuicResourceFactory toDecorate, final String bpk, final String defaultValue) {
+            super(null);
+
+            delegate = toDecorate;
+            basePathKey = bpk;
+
+            // Init default property
+            supportedProperties = new HashMap<String, Object>();
+            supportedProperties.put(basePathKey, defaultValue);
+
+            setWuicProtocol(new DiskWuicResourceProtocol(String.class.cast(supportedProperties.get(basePathKey))));
+        }
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -123,13 +150,7 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
          * @param toDecorate a factory to be decorated
          */
         public DiskWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
-            super(null);
-
-            delegate = toDecorate;
-
-            // Init default property
-            supportedProperties = new HashMap<String, Object>();
-            supportedProperties.put(ApplicationConfig.DISK_BASE_PATH, ".");
+            this(toDecorate, ApplicationConfig.DISK_BASE_PATH, ".");
         }
 
         /**
@@ -141,12 +162,14 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
             // Try to override an existing property
             if (!supportedProperties.containsKey(key)) {
                 throw new WuicRfPropertyNotSupportedException(key, this.getClass());
+            } else if (basePathKey.equals(key)) {
+                supportedProperties.put(key, processBasePath(value));
             } else {
                 supportedProperties.put(key, value);
             }
 
             // Set new protocol with the new property
-            setWuicProtocol(new DiskWuicResourceProtocol((String) supportedProperties.get(ApplicationConfig.DISK_BASE_PATH)));
+            setWuicProtocol(new DiskWuicResourceProtocol((String) supportedProperties.get(basePathKey)));
         }
 
         /**
@@ -155,6 +178,19 @@ public class DiskWuicResourceFactoryBuilder extends AbstractWuicResourceFactoryB
         @Override
         public Pattern getPattern(final String path) {
             return delegate.getPattern(path);
+        }
+
+        /**
+         * <p>
+         * Called when a value is going to be set for property {@link ApplicationConfig#DISK_BASE_PATH}. Could be overridden
+         * by subclasses.
+         * </p>
+         *
+         * @param value the property value
+         * @return the processed value tu actually set
+         */
+        protected String processBasePath(final String value) {
+            return value;
         }
     }
 }

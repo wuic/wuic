@@ -85,7 +85,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * </p>
      * 
      * @param source the source
-     * @param target the file where to compressed content should be written
+     * @param target the path where to compressed content should be written
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs during compression
      */
     protected abstract void compress(InputStream source, OutputStream target) throws StreamException;
@@ -100,7 +100,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
         
         // Compress only if needed
         if (works()) {
-            // Compress each file
+            // Compress each path
             for (WuicResource resource : request.getResources()) {
                 retval.add(compress(resource));
             }

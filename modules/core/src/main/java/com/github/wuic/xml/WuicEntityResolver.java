@@ -46,7 +46,7 @@ import org.xml.sax.SAXException;
 
 /**
  * <p>
- * This {@code EntityResolver} read from the class path root the 'wuic.dtd' file
+ * This {@code EntityResolver} read from the class path root the 'wuic.dtd' path
  * when the system ID equals to 'http://capgemini.com/wuic/wuic.dtd'. Otherwise,
  * it returns {@code null}.
  * </p>

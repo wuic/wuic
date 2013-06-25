@@ -46,7 +46,7 @@ import org.w3c.dom.Node;
 /**
  * <p>
  * This interface represents a builder that can produce a {@link Configuration}
- * using a configuration {@code Node} read from the 'wuic.xml' file.
+ * using a configuration {@code Node} read from the 'wuic.xml' path.
  * </p>
  * 
  * @author Guillaume DROUET

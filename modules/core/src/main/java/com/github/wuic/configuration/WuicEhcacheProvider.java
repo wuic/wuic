@@ -44,12 +44,12 @@ import net.sf.ehcache.Cache;
  * <p>
  * This interface defines an object which provides a {@code Cache} from EHCache
  * framework. Applications based on WUIC can defines through their wuic.xml
- * configuration file their own implementation of this interface. 
+ * configuration path their own implementation of this interface.
  * </p>
  * 
  * <p>
  * This interface as been designed to allow WUIC framework to not systematically
- * the ehcache.xml file to retrieve a cache.
+ * the ehcache.xml path to retrieve a cache.
  * </p>
  * 
  * @author Guillaume DROUET

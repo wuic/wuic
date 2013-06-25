@@ -121,7 +121,7 @@ public class HttpTest extends WuicTest {
         connector.setPort(9876); //or here .it's up to you
         connector.setPassword("nonguestablepassword"); //password which you set during creation of certificate
         connector.setKeyPassword("nonguestablepassword"); //password which you set during creation of certificate
-        connector.setKeystore(HttpTest.class.getResource("/nonguestablepassword.keystore").getFile()); // path to your keystroke file (depend what you've done in step 4(or 3 )
+        connector.setKeystore(HttpTest.class.getResource("/nonguestablepassword.keystore").getFile()); // path to your keystroke path (depend what you've done in step 4(or 3 )
         connector.setTrustPassword("nonguestablepassword");
         SERVER.setConnectors(new Connector[] { connector });
     }

@@ -39,16 +39,12 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
 import com.github.wuic.resource.WuicResourceFactory;
 import com.github.wuic.resource.WuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactory;
 import com.github.wuic.resource.impl.AbstractWuicResourceFactoryBuilder;
+import com.github.wuic.resource.impl.disk.DiskWuicResourceFactoryBuilder;
 import com.github.wuic.resource.impl.disk.DiskWuicResourceProtocol;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -104,20 +100,10 @@ public class WebappWuicResourceFactoryBuilder extends AbstractWuicResourceFactor
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.3.2
      */
-    public static class WebappWuicResourceFactory extends AbstractWuicResourceFactory {
-
-        /**
-         * Supported properties with their default value.
-         */
-        private Map<String, Object> supportedProperties;
-
-        /**
-         * Delegate concrete implementation.
-         */
-        private AbstractWuicResourceFactory delegate;
+    public static class WebappWuicResourceFactory extends DiskWuicResourceFactoryBuilder.DiskWuicResourceFactory {
 
         /**
          * <p>
@@ -127,42 +113,15 @@ public class WebappWuicResourceFactoryBuilder extends AbstractWuicResourceFactor
          * @param toDecorate a factory to be decorated
          */
         public WebappWuicResourceFactory(final AbstractWuicResourceFactory toDecorate) {
-            super(null);
-
-            delegate = toDecorate;
-
-            // Init default property
-            final String path = WuicServlet.servletContext().getRealPath(".");
-            supportedProperties = new HashMap<String, Object>();
-            supportedProperties.put(ApplicationConfig.WEBAPP_BASE_PATH, path);
-
-            // Set default protocol
-            setWuicProtocol(new DiskWuicResourceProtocol(path));
+            super(toDecorate, ApplicationConfig.WEBAPP_BASE_PATH, WuicServlet.servletContext().getRealPath("."));
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void setProperty(final String key, final String value) throws WuicRfPropertyNotSupportedException {
-
-            // Try to override an existing property
-            if (!supportedProperties.containsKey(key)) {
-                throw new WuicRfPropertyNotSupportedException(key, this.getClass());
-            } else {
-                supportedProperties.put(key, WuicServlet.servletContext().getRealPath(value));
-            }
-
-            // Set new protocol with the new property
-            setWuicProtocol(new DiskWuicResourceProtocol((String) supportedProperties.get(ApplicationConfig.WEBAPP_BASE_PATH)));
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Pattern getPattern(final String path) {
-            return delegate.getPattern(path);
+        protected String processBasePath(final String value) {
+            return WuicServlet.servletContext().getRealPath(value);
         }
     }
 }

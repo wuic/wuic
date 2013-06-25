@@ -176,7 +176,7 @@ public class S3WuicResourceProtocol implements WuicResourceProtocol {
             // Get S3Object content
             s3ObjectInputStream = s3Object.getObjectContent();
 
-            // Download file into memory
+            // Download path into memory
             final ByteArrayOutputStream baos = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             IOUtils.copyStream(s3ObjectInputStream, baos);
 

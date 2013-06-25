@@ -43,7 +43,7 @@ import com.github.wuic.exception.UnableToInstantiateException;
 
 /**
  * <p>
- * Thrown when a class could not be instantiated in the wuic.xml file.
+ * Thrown when a class could not be instantiated in the wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

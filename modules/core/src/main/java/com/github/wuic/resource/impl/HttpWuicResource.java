@@ -68,7 +68,7 @@ public class HttpWuicResource extends AbstractWuicResource {
      *
      * @param name the name
      * @param url the URL
-     * @param fileType the file type
+     * @param fileType the path type
      */
     public HttpWuicResource(final String name, final URL url, final FileType fileType) {
         super(name, fileType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
@@ -85,13 +85,5 @@ public class HttpWuicResource extends AbstractWuicResource {
         } catch (IOException ioe) {
             throw new WuicResourceNotFoundException(ioe);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getBaseDirectory() {
-        return null;
     }
 }

@@ -42,7 +42,7 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * Thrown when a value of an element is not a type of an expected class in wuic.xml file.
+ * Thrown when a value of an element is not a type of an expected class in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET

@@ -57,12 +57,12 @@ import java.util.List;
 public abstract class AbstractWuicResource implements WuicResource {
 
     /**
-     * The file type.
+     * The path type.
      */
     private FileType fileType;
 
     /**
-     * The file name.
+     * The path name.
      */
     private String fileName;
 

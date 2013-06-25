@@ -12,9 +12,9 @@
     </resource-factory-builders>
     <groups>
         <group id="css-image" configuration="sprite-image-png" default-builder="httpSourceRootProvider">
-            <file>images/action.png</file>
-            <file>images/a3.png</file>
-            <file>images/arrow.png</file>
+            <file>images/reject-block.png</file>
+            <file>images/reject-major.png</file>
+            <file>images/reject-warn.png</file>
         </group>
     </groups>
     <configurations>

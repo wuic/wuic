@@ -3,7 +3,11 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
     <resource-factory-builders>
-        <resource-factory-builder id="appResourceFactoryBuilder" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder"></resource-factory-builder>
+        <resource-factory-builder id="appResourceFactoryBuilder" class="com.github.wuic.servlet.WebappWuicResourceFactoryBuilder">
+            <properties>
+                <property key="c.g.wuic.webappBasePath">jquery-ui-1.10.2</property>
+            </properties>
+        </resource-factory-builder>
         <resource-factory-builder id="httpResourceFactoryBuilder" class="com.github.wuic.resource.impl.http.HttpWuicResourceFactoryBuilder">
             <properties>
                 <property key="c.g.wuic.httpServerPort">8080</property>
@@ -108,8 +112,8 @@
         </group>
 
         <group id="demo-css" configuration="yuicompressor-css" default-builder="appResourceFactoryBuilder">
-            <file>jquery-ui-1.10.2/themes/base/jquery.ui.all.css</file>
-            <file>jquery-ui-1.10.2/demos/demos.css</file>
+            <file>themes/base/jquery.ui.all.css</file>
+            <file>demos/demos.css</file>
         </group>
     </groups>
     <configurations>

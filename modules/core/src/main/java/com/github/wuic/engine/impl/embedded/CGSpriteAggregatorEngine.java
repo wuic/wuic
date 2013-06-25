@@ -52,7 +52,6 @@ import com.github.wuic.engine.PackerEngine;
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,8 +128,9 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
     @Override
     public List<WuicResource> parse(final EngineRequest request) throws WuicException {
 
-        // Generate the sprite file with the URL of the final image
-        final String url = StringUtils.merge(new String[] { request.getContextPath(), request.getGroup().getId(), }, "/");
+        // Generate the sprite path with the URL of the final image
+        final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
+        int spriteCpt = 0;
 
         /*
          * Create a resource for each image if the configuration says that no
@@ -152,7 +152,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                     final BufferedImage buff = ImageIO.read(is);
                     spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
                     
-                    final WuicResource resource = spriteProvider.getSprite(url, request.getGroup().getId());
+                    final WuicResource resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
                     resource.addReferencedResource(file);
                     retval.add(resource);
                 } catch (IOException ioe) {
@@ -173,7 +173,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                 spriteProvider.addRegion(result.getKey(), result.getValue().getName());
             }
 
-            final WuicResource retval = spriteProvider.getSprite(url, request.getGroup().getId());
+            final WuicResource retval = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
             final List<WuicResource> image = aggregatorEngine.parse(request);
 
             if (image.size() == 1) {

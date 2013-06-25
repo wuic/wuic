@@ -85,12 +85,4 @@ public class ByteArrayWuicResource extends AbstractWuicResource {
     public InputStream openStream() throws WuicResourceNotFoundException {
         return new ByteArrayInputStream(byteArray);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getBaseDirectory() {
-        return null;
-    }
 }

@@ -46,7 +46,6 @@ import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.resource.WuicResource;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
-import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +137,7 @@ public class WuicServlet extends HttpServlet {
         servletMapping = config.getInitParameter(WUIC_SERVLET_CONTEXT_PARAM);
 
         // Context where resources will be exposed
-        final String wuicCp = StringUtils.merge(new String[] { "/", servletContext().getContextPath(), servletMapping(), }, "/");
+        final String wuicCp = IOUtils.mergePath("/", servletContext().getContextPath(), servletMapping());
 
         log.info("WUIC's full context path is {}", wuicCp);
 
@@ -160,7 +159,7 @@ public class WuicServlet extends HttpServlet {
         }
 
         // Followed by the group ID a slash and finally the page name
-        patternBuilder.append("([^/]*)(/.*)");
+        patternBuilder.append("([^/]*)/(.*)");
 
         urlPattern = Pattern.compile(patternBuilder.toString());
 
@@ -242,7 +241,7 @@ public class WuicServlet extends HttpServlet {
         // Iterates the resources to find the requested element
         for (WuicResource resource : resources) {
             // Resource found : write the stream and return
-            if (resource.getName().equals(resourceName)) {
+            if (resource.getName().equals(resourceName) || ("/" + resource.getName()).equals(resourceName)) {
                 return resource;
             } else if (resource.getReferencedResources() != null) {
                 // Find in referenced resources

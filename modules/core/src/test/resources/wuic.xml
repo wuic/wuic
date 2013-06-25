@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
-<wuic>
+<wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
 	<resource-factory-builders>
 		<resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.test.JUnitWuicResourceFactoryBuilder" />
         <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true">
             <properties>
-                <property key="c.g.wuic.classpathBasePath">/</property>
+                <property key="c.g.wuic.classpathBasePath">/images</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>
 	<groups>
 		<group id="js-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
-            <file>^images/[^/]*.png</file>
+            <file>images/.*.png</file>
 		</group>
 		<group id="util-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
             <file>cgsg/utils/util.array.js</file>
@@ -54,19 +54,10 @@
             <file>cgsg/class.scenegraph.js</file>
             <file>cgsg/class.scene.js</file>
 		</group>
-		<group id="css" configuration="yuicompressor-css" default-builder="appSourceRootProvider">
-			<file>chosen.css</file>
-			<file>style.css</file>
-		</group>
 	</groups>
 	<configurations>
-		<configuration id="yuicompressor-css" type="CSS">
-			<aggregate>true</aggregate>
-			<charset>UTF-8</charset>
-			<compress>true</compress>
-			<yuiLineBreakPos>-1</yuiLineBreakPos>
-		</configuration>
 		<configuration id="yuicompressor-js" type="JAVASCRIPT">
+            <cache>true</cache>
 			<aggregate>true</aggregate>
 			<charset>UTF-8</charset>
 			<compress>true</compress>

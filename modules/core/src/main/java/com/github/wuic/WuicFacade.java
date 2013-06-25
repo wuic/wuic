@@ -44,7 +44,6 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 
-import java.util.Collection;
 import java.util.List;
 
 import com.github.wuic.resource.WuicResource;
@@ -85,7 +84,7 @@ public final class WuicFacade {
      * </p>
      *
      * @param cp the context path where the files will be exposed
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String cp) throws WuicException {
         factoryBuilder = new EngineFactoryBuilderImpl();
@@ -94,12 +93,12 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * Builds a new {@link WuicFacade} for a particular wuic.xml file .
+     * Builds a new {@link WuicFacade} for a particular wuic.xml path .
      * </p>
      *
      * @param wuicXmlPath the wuic.xml location in the classpath
      * @param cp the context path where the files will be exposed
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String wuicXmlPath, final String cp) throws WuicException {
         factoryBuilder = new EngineFactoryBuilderImpl(wuicXmlPath);
@@ -114,7 +113,7 @@ public final class WuicFacade {
      *
      * @param contextPath the context where the resources will be exposed
      * @return the unique instance
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     public static synchronized WuicFacade newInstance(final String contextPath) throws WuicException {
         return newInstance(contextPath, null);
@@ -138,17 +137,6 @@ public final class WuicFacade {
             return new WuicFacade(contextPath);
         }
     }
-
-    /**
-     * <p>
-     * Gets all the registered group identifiers. 
-     * </p>
-     * 
-     * @return the collection of IDs
-     */
-    public synchronized Collection<String> allGroups() {
-        return factoryBuilder.getLoader().filesGroupIdList();
-    }
     
     /**
      * <p>
@@ -157,7 +145,7 @@ public final class WuicFacade {
      * 
      * @param id the group ID
      * @return the files
-     * @throws WuicException if the 'wuic.xml' file is not well configured
+     * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     public synchronized List<WuicResource> getGroup(final String id) throws WuicException {
         final long start = System.currentTimeMillis();

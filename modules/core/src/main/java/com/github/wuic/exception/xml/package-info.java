@@ -38,7 +38,7 @@
 
 /**
  * <p>
- * This package contains all exceptions related to wuic.xml file.
+ * This package contains all exceptions related to wuic.xml path.
  * </p>
  * 
  * @author Guillaume DROUET

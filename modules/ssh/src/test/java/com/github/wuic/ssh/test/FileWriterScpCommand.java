@@ -49,7 +49,7 @@ import java.io.InputStream;
 /**
  * <p>
  * SCP command for tests. A part of the source code has been picked from the {@code ScpCommand} itself
- * and adapted for the specific purpose of writing file from the disk to the client.
+ * and adapted for the specific purpose of writing path from the disk to the client.
  * </p>
  *
  * @author Guillaume DROUET
@@ -59,16 +59,16 @@ import java.io.InputStream;
 public class FileWriterScpCommand extends ScpCommand {
 
     /**
-     * The file to be written.
+     * The path to be written.
      */
     private File file;
 
     /**
      * <p>
-     * Builds a new {@code Command} in charge of sending the given file.
+     * Builds a new {@code Command} in charge of sending the given path.
      * </p>
      *
-     * @param f the file
+     * @param f the path
      */
     public FileWriterScpCommand(final File f) {
 
@@ -80,7 +80,7 @@ public class FileWriterScpCommand extends ScpCommand {
 
     /**
      * <p>
-     * Reads the file and write it into the output stream.
+     * Reads the path and write it into the output stream.
      * </p>
      *
      * @throws IOException if any I/O error occurs
@@ -103,7 +103,7 @@ public class FileWriterScpCommand extends ScpCommand {
         // Ack
         readAck();
 
-        // Read the file and write it into output
+        // Read the path and write it into output
         final InputStream is = new FileInputStream(file);
         com.github.wuic.util.IOUtils.copyStream(is, out);
         is.close();
