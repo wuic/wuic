@@ -130,7 +130,9 @@ public class ClasspathWuicResourceFactoryBuilder extends AbstractWuicResourceFac
                 throw new BadArgumentException(new IllegalArgumentException(String.format("%s not found in classpath", value)));
             }
 
-            return classPathEntry.toString().replace("file:/", "");
+            final String path = classPathEntry.toString();
+
+            return path.substring(path.indexOf(":/") + 1);
         }
 
         /**

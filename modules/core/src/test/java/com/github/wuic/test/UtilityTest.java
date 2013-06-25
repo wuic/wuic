@@ -110,7 +110,8 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(list.get(0), IOUtils.mergePath("foo", file.getName()));
 
         // Part 2
-        final String baseDir = getClass().getResource("/images").getFile().replace("file:/", "");
+        final String str = getClass().getResource("/images").toString();
+        final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
         final List<String> listFiles = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
         Assert.assertEquals(40, listFiles.size());
