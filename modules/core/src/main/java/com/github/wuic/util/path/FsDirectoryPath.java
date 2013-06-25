@@ -97,7 +97,12 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
      */
     @Override
     protected Path buildChild(String child) throws IOException {
-        final File file = new File(IOUtils.mergePath(directory.getPath(), child));
+        File file = new File(IOUtils.mergePath(directory.getPath(), child));
+
+        // In classpath notation, JAR ends with a "!"
+        if (!file.exists() && file.getName().endsWith("!")) {
+            file = new File(file.getName().substring(0, file.getName().length() - 1));
+        }
 
         if (!file.exists()) {
             throw new FileNotFoundException(String.format("%s is not an existing file", file.getAbsolutePath()));
