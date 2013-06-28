@@ -118,7 +118,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
         /*
          * Do nothing if the configuration says that no aggregation should be done
          */
-        if (!works() || request.getResources().size() <= 1) {
+        if (!works()) {
             return request.getResources();
         } else {
             final Map<Region, WuicResource> packed = pack(request.getResources());
