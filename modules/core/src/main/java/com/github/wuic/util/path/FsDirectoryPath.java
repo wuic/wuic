@@ -101,7 +101,7 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
 
         // In classpath notation, JAR ends with a "!"
         if (!file.exists() && file.getName().endsWith("!")) {
-            file = new File(file.getName().substring(0, file.getName().length() - 1));
+            file = new File(file.getParent(), file.getName().substring(0, file.getName().length() - 1));
         }
 
         if (!file.exists()) {
