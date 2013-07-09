@@ -40,6 +40,8 @@ package com.github.wuic.util.path;
 
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,6 +59,11 @@ import java.util.Arrays;
 public abstract class AbstractDirectoryPath extends SimplePath implements DirectoryPath {
 
     /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -72,7 +79,9 @@ public abstract class AbstractDirectoryPath extends SimplePath implements Direct
      * {@inheritDoc}
      */
     @Override
-    public Path getChild(String path) throws IOException {
+    public Path getChild(final String path) throws IOException {
+        log.debug("Create path child for path '{}'", path);
+
         String normalized = StringUtils.removeTrailing(IOUtils.normalizePathSeparator(path), IOUtils.STD_SEPARATOR);
         final String[] children = normalized.split(IOUtils.STD_SEPARATOR);
 

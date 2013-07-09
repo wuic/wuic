@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.wuic</groupId>
         <artifactId>wuic-modules</artifactId>
-        <version>0.3.4-SNAPSHOT</version>
+        <version>0.3.4</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -14,7 +14,7 @@
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-google-storage</artifactId>
     <packaging>jar</packaging>
-    <version>0.3.4-SNAPSHOT</version>
+    <version>0.3.4</version>
 
     <dependencies>
         <dependency>

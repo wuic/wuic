@@ -75,6 +75,11 @@ import java.util.regex.Pattern;
 public final class IOUtils {
 
     /**
+     * Logger.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(IOUtils.class);
+
+    /**
      * The slash character is the standard separator used internally, even on windows platform.
      */
     public static final String STD_SEPARATOR = "/";
@@ -337,6 +342,8 @@ public final class IOUtils {
      * @throws IOException if any I/O error occurs
      */
     public static Path buildPath(final String path) throws IOException {
+        LOG.debug("Build path for '{}'", path);
+
         // Always use '/' separator, even on windows
         final String absolutePath = IOUtils.normalizePathSeparator(path);
         final String[] tree = absolutePath.split(IOUtils.STD_SEPARATOR);
