@@ -44,7 +44,7 @@ package com.github.wuic.util;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.4
  */
 public final class StringUtils {
@@ -123,7 +123,7 @@ public final class StringUtils {
                     final String value = merge[i];
 
                     // Do not append the separator if present at the beginning of the string
-                    if (separator != null && value.startsWith(separator)) {
+                    if (separator != null && i != 0 && value.startsWith(separator)) {
                         retval.append(value.substring(separator.length()));
                     } else {
                         retval.append(value);

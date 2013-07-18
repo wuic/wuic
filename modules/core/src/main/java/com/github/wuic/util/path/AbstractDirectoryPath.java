@@ -53,7 +53,7 @@ import java.util.Arrays;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.4
  */
 public abstract class AbstractDirectoryPath extends SimplePath implements DirectoryPath {
@@ -87,6 +87,8 @@ public abstract class AbstractDirectoryPath extends SimplePath implements Direct
 
         // Build direct child
         String child = children[0];
+        log.debug("Current directory path is {}", getAbsolutePath());
+        log.debug("Going to build child {}", child);
         Path retval = buildChild(child);
 
         if (children.length > 1) {
