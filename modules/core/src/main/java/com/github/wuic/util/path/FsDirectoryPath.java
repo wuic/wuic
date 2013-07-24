@@ -39,6 +39,8 @@
 package com.github.wuic.util.path;
 
 import com.github.wuic.util.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,10 +52,15 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.4
  */
 public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryPath {
+
+    /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The directory path represented by this path.
@@ -96,8 +103,10 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
      * {@inheritDoc}
      */
     @Override
-    protected Path buildChild(String child) throws IOException {
-        File file = new File(IOUtils.mergePath(directory.getPath(), child));
+    protected Path buildChild(final String child) throws IOException {
+        final String absolutePath = IOUtils.mergePath(getAbsolutePath(), child);
+        log.debug("Build child with absolute path {}", absolutePath);
+        File file = new File(absolutePath);
 
         // In classpath notation, JAR ends with a "!"
         if (!file.exists() && file.getName().endsWith("!")) {

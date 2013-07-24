@@ -40,12 +40,12 @@ Enhancements :
 
 ##### v0.3.1 #####
 
-Tacked issues :
+Tracked issues :
 - https://github.com/gdrouet/wuic/issues?labels=0.3.1&page=1&state=closed
 
 ##### v0.3.2 #####
 
-Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.2&page=1&state=closed
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.2&page=1&state=closed
 
 Not tracked issues :
 - ClasspathWuicResource not use java.class.path system's property anymore due to its limitations, use a new base path property instead.
@@ -55,7 +55,7 @@ Breaking changes :
 
 ##### v0.3.3 #####
 
-Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
 
 Not tracked issues :
 - Each time a steam's resource is retrieved, we look up for it, which increase the overhead. This look up is now done only one time when the resource is created.
@@ -65,7 +65,7 @@ Breaking changes :
 
 ##### v0.3.4 #####
 
-Tacked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
 
 Not tracked issues :
 - More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"
@@ -74,3 +74,7 @@ Not tracked issues :
 
 Breaking changes :
 - Disk resource (including webapp and classpath) completely reviewed including regex support. See wiki to see clear explanations about how it now works.
+
+##### v0.3.5 #####
+
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.5&page=1&state=open
