@@ -40,8 +40,8 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
@@ -94,14 +94,14 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
         // Return the same number of files
-        final List<WuicResource> retval = new ArrayList<WuicResource>(request.getResources().size());
+        final List<Nut> retval = new ArrayList<Nut>(request.getResources().size());
         
         // Compress only if needed
         if (works()) {
             // Compress each path
-            for (WuicResource resource : request.getResources()) {
+            for (Nut resource : request.getResources()) {
                 retval.add(compress(resource));
             }
         } else {
@@ -117,14 +117,14 @@ public abstract class CGAbstractCompressorEngine extends Engine {
 
     /**
      * <p>
-     * Compresses the given resource.
+     * Compresses the given nut.
      * </p>
      *
-     * @param resource the resource to be compressed
-     * @return the compressed resource
+     * @param resource the nut to be compressed
+     * @return the compressed nut
      * @throws WuicException if an I/O error occurs
      */
-    private WuicResource compress(final WuicResource resource) throws WuicException {
+    private Nut compress(final Nut resource) throws WuicException {
         if (!resource.isTextCompressible()) {
             return resource;
         }
@@ -144,16 +144,16 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             // Do compression
             compress(is, os);
 
-            // Now create resource
-            final WuicResource res = new ByteArrayWuicResource(os.toByteArray(), resource.getName(), resource.getFileType());
+            // Now create nut
+            final Nut res = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getFileType());
             res.setAggregatable(resource.isAggregatable());
             res.setBinaryCompressible(resource.isBinaryCompressible());
             res.setTextCompressible(resource.isTextCompressible());
             res.setCacheable(resource.isCacheable());
 
             // Also compress referenced resources
-            if (resource.getReferencedResources() != null) {
-                for (WuicResource ref : resource.getReferencedResources()) {
+            if (resource.getReferencedNuts() != null) {
+                for (Nut ref : resource.getReferencedNuts()) {
                     res.addReferencedResource(compress(ref));
                 }
             }

@@ -38,7 +38,7 @@
 
 package com.github.wuic.engine;
 
-import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.nut.NutDao;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 public interface LineInspector {
@@ -73,13 +73,13 @@ public interface LineInspector {
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
      * @param groupPath the absolute path to the group
-     * @param resourceLocation the location of the current resource
-     * @param factory the factory to use when we need to create resource
-     * @return the resource name that was referenced in the matching text, {@code null} if the inspector did not perform any change
+     * @param resourceLocation the location of the current nut
+     * @param dao the DAO to use when we need to create nut
+     * @return the nut name that was referenced in the matching text, {@code null} if the inspector did not perform any change
      */
     String appendTransformation(Matcher matcher,
                                 StringBuilder replacement,
                                 String groupPath,
                                 String resourceLocation,
-                                WuicResourceFactory factory);
+                                NutDao dao);
 }

@@ -3,26 +3,26 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
 	<resource-factory-builders>
-        <resource-factory-builder id="s3FactoryBuilder" class="com.github.wuic.s3.S3WuicResourceFactoryBuilder" regex="true">
+        <resource-factory-builder id="s3FactoryBuilder" class="S3NutDaoBuilder">
             <properties>
-                <!--    Key : c.g.wuic.s3Bucket
+                <!--    Key : c.g.wuic.cloudBucket
                         The bucket name, you can create a new bucket in your console :
-                        https://console.aws.amazon.com/s3/ -->
-                <property key="c.g.wuic.s3Bucket">bucket-wuic-test</property>
-                <!--    Key : c.g.wuic.s3Key
+                        https://console.aws.amazon.com/nut/ -->
+                <property key="c.g.wuic.cloudBucket">bucket-wuic-test</property>
+                <!--    Key : c.g.wuic.login
                         The AWS auth access key, you can generate a new auth access key in your account :
                         https://portal.aws.amazon.com/gp/aws/securityCredentials -->
-                <property key="c.g.wuic.s3Key"></property>
-                <!--    Key : c.g.wuic.s3Secret
+                <property key="c.g.wuic.login"></property>
+                <!--    Key : c.g.wuic.password
                         The AWS secret auth access key, you can generate a new secret auth access key in your account :
                         https://portal.aws.amazon.com/gp/aws/securityCredentials -->
-                <property key="c.g.wuic.s3Secret"></property>
-                <!--    Key : c.g.wuic.s3Path
-                        The s3 path for search resources without bucket name, example :
+                <property key="c.g.wuic.password"></property>
+                <!--    Key : c.g.wuic.basePath
+                        The nut path for search resources without bucket name, example :
                         empty : search in root and sub directories
                         wuic : search in "wuic/*"
                         wuic/test : search in "wuic/test/*" -->
-                <property key="c.g.wuic.s3Path">wuic/test</property>
+                <property key="c.g.wuic.basePath">wuic/test</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

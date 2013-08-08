@@ -42,6 +42,7 @@ import org.apache.sshd.server.Command;
 import org.apache.sshd.server.CommandFactory;
 import org.apache.sshd.server.PasswordAuthenticator;
 import org.apache.sshd.server.PublickeyAuthenticator;
+import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.command.UnknownCommand;
 import org.apache.sshd.server.session.ServerSession;
 
@@ -81,12 +82,6 @@ public class SShMockConfig implements CommandFactory, PasswordAuthenticator, Pub
      */
     @Override
     public Command createCommand(final String s) {
-        if (s.startsWith("scp")) {
-            return new FileWriterScpCommand(new File(s.replace("scp -r -f", "").replace("\"", "").trim()));
-        } else if (s.indexOf("dir ") != -1) {
-            return new WindowsCommand(s);
-        } else {
-            return new UnknownCommand(s);
-        }
+        return new ScpCommandFactory().createCommand(s);
     }
 }

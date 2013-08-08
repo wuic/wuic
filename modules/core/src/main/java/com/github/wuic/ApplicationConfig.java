@@ -49,207 +49,86 @@ package com.github.wuic;
  */
 public interface ApplicationConfig {
 
-    /////////////////////////////////////////////////
-    ////// ClasspathWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
     /**
-     * The base path when accessing resources on the classpath.
+     * <p>
+     * The base path when accessing resources.
+     * </p>
+     *
+     * <p>
+     * For the Google Storage path for search resources without bucket name, example :
+     * empty : search in root and sub directories
+     * wuic : search in "wuic/*"
+     * wuic/test : search in "wuic/test/*"
+     * </p>
      */
-    String CLASSPATH_BASE_PATH = "c.g.wuic.classpathBasePath";
-
-
-    /////////////////////////////////////////////////
-    ////// DiskWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The base path when accessing resources on the file system.
-     */
-    String DISK_BASE_PATH = "c.g.wuic.diskBasePath";
-
-    /////////////////////////////////////////////////
-    ////// WebappWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The base path when accessing resources deployed in the webapp on file system.
-     */
-    String WEBAPP_BASE_PATH = "c.g.wuic.webappBasePath";
-
-    /////////////////////////////////////////////////
-    ////// HttpWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The server's domain when accessing resources over HTTP.
-     */
-    String HTTP_SERVER_DOMAIN = "c.g.wuic.httpServerDomain";
-
-    /**
-     * Use HTTPS or not accessing resources over HTTP.
-     */
-    String HTTP_SECRET_PROTOCOL = "c.g.wuic.httpS";
-
-    /**
-     * The server's port when accessing resources over HTTP.
-     */
-    String HTTP_SERVER_PORT = "c.g.wuic.httpServerPort";
-
-    /**
-     * The server's base path when accessing resources over HTTP.
-     */
-    String HTTP_SERVER_BASE_PATH = "c.g.wuic.httpBasePath";
-
-    /////////////////////////////////////////////////
-    ////// FtpWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The server's domain when accessing resources over FTP.
-     */
-    String FTP_SERVER_DOMAIN = "c.g.wuic.ftpServerDomain";
-
-    /**
-     * Use FTPS or not accessing resources over FTP.
-     */
-    String FTP_SECRET_PROTOCOL = "c.g.wuic.ftpS";
-
-    /**
-     * The server's port when accessing resources over FTP.
-     */
-    String FTP_SERVER_PORT = "c.g.wuic.ftpServerPort";
-
-    /**
-     * The server's port when accessing resources over FTP.
-     */
-    String FTPS_SERVER_PORT = "c.g.wuic.ftpsServerPort";
-
-    /**
-     * The server's base path when accessing resources over FTP.
-     */
-    String FTP_SERVER_BASE_PATH = "c.g.wuic.ftpBasePath";
-
-    /**
-     * The user name to use when accessing resources over FTP.
-     */
-    String FTP_USERNAME = "c.g.wuic.ftpUsername";
-
-    /**
-     * The password to use when accessing resources over FTP.
-     */
-    String FTP_PASSWORD = "c.g.wuic.ftpPassword";
-
-    /////////////////////////////////////////////////
-    ////// SshWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The server's domain when accessing resources over SSH.
-     */
-    String SSH_SERVER_DOMAIN = "c.g.wuic.sshServerDomain";
-
-    /**
-     * The server's port when accessing resources over SSH.
-     */
-    String SSH_SERVER_PORT = "c.g.wuic.sshServerPort";
-
-    /**
-     * The server's base path when accessing resources over SSH.
-     */
-    String SSH_SERVER_BASE_PATH = "c.g.wuic.sshBasePath";
+    String BASE_PATH = "c.g.wuic.basePath";
 
     /**
      * Consider the base path as a system property associated to actual value.
      */
-    String SSH_SERVER_BASE_PATH_AS_SYS_PROP = "c.g.wuic.sshBasePathAsSystemProperty";
+    String BASE_PATH_AS_SYS_PROP = "c.g.wuic.basePathAsSystemProperty";
 
     /**
-     * The user name to use when accessing resources over SSH.
+     * Polling interleave for resources refresher.
      */
-    String SSH_USERNAME = "c.g.wuic.sshUsername";
+    String POLLING_INTERLEAVE = "c.g.wuic.pollingInterleave";
 
     /**
-     * The password to use when accessing resources over SSH.
+     * Boolean which indicates if path are evaluated as regex or not.
      */
-    String SSH_PASSWORD = "c.g.wuic.sshPassword";
+    String REGEX = "c.g.wuic.regex";
 
     /**
-     * The interpreter of the command sent via SSH (cmd, shell, etc).
+     * Proxies that can be use to access the resources.
      */
-    String SSH_INTERPRETER = "c.g.wuic.sshInterpreter";
+    String PROXIES_URIS = "c.g.wuic.diskBasePath";
 
     /**
-     * After the command is executed, the thread will sleep a time associated to this property.
+     * The server's domain when accessing resources remotely.
      */
-    String SSH_TIME_TO_SLEEP_AFTER_EXEC = "c.g.wuic.sshTimeToSleepAfterExec";
-
-    /////////////////////////////////////////////////
-    ////// S3WuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
+    String SERVER_DOMAIN = "c.g.wuic.serverDomain";
 
     /**
-     * The S3 AWS Bucket storage name.
+     * The server's port when accessing resources remotely.
      */
-    String S3_BUCKET = "c.g.wuic.s3Bucket";
+    String SERVER_PORT = "c.g.wuic.serverPort";
 
     /**
-     * S3 access key.
+     * The bucket usually defined in cloud storage services.
      */
-    String S3_KEY_ACCESS = "c.g.wuic.s3Key";
+    String CLOUD_BUCKET = "c.g.wuic.cloudBucket";
 
     /**
-     * S3 secret key.
+     * Use the secured version of the protocol.
      */
-    String S3_KEY_SECRET = "c.g.wuic.s3Secret";
+    String SECRET_PROTOCOL = "c.g.wuic.secret";
 
     /**
-     * S3 path for resources.
-     */
-    String S3_PATH = "c.g.wuic.s3Path";
-
-    /////////////////////////////////////////////////
-    ////// GStorageWuicResourceFactory properties ///////
-    /////////////////////////////////////////////////
-
-    /**
-     * The Google Storage Bucket name.
      * <p>
-     * You can set in your Google Cloud Console
-     * https://cloud.google.com/console AWS Bucket storage name.
+     * The login to use when accessing resources protected by authentication.
      * </p>
-     */
-    String GS_BUCKET = "c.g.wuic.gStorageBucket";
-
-    /**
-     * The Google Client ID.
+     *
      * <p>
-     * The Google Cloud API client id, you can generate a new key on this page :
+     * For Google Cloud API client id, you can generate a new key on this page :
      * https://code.google.com/apis/console/
      * - Go on : API Access > "Create another client ID..."
      * - Installed application type : select "Service account"
      * - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com
      * </p>
      */
-    String GS_CLIENT_ID = "c.g.wuic.gStorageClientId";
+    String LOGIN = "c.g.wuic.login";
 
     /**
-     * The Google Storage path.
      * <p>
-     * The Google Storage path for search resources without bucket name, example :
-     * empty : search in root and sub directories
-     * wuic : search in "wuic/*"
-     * wuic/test : search in "wuic/test/*"
+     * The password to use when accessing resources protected by authentication.
      * </p>
-     */
-    String GS_PATH = "c.g.wuic.gStoragePath";
-
-    /**
-     * Key : c.g.wuic.gPrivateKeyPath
+     *
+     * <p>
      * You can generate a new key path on this page : https://code.google.com/apis/console/
      * - Go on : API Access > "Create another client ID..."
      * - Installed application type : select "Service account"
      * - Download key path or Generate new key
+     * </p>
      */
-    String GS_PRIVATE_KEY_PATH = "c.g.wuic.gPrivateKeyPath";
+    String PASSWORD = "c.g.wuic.password";
 }

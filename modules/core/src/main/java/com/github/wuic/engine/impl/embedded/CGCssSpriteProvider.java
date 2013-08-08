@@ -41,8 +41,8 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.FileType;
 import com.github.wuic.engine.Region;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
+import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 
 /**
@@ -60,7 +60,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public WuicResource getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
+    public Nut getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
             throws StreamException {
         final StringBuilder cssBuilder = new StringBuilder();
 
@@ -88,7 +88,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append("px;}");
         }
 
-        // Make a resource and return it
-        return new ByteArrayWuicResource(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", FileType.CSS);
+        // Make a nut and return it
+        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", FileType.CSS);
     }
 }

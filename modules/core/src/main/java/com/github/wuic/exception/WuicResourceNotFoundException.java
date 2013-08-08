@@ -42,7 +42,7 @@ import java.io.IOException;
 
 /**
  * <p>
- * Indicates that a a resource for a particular group has not been found.
+ * Indicates that a a nut for a particular group has not been found.
  * </p>
  *
  * @author Guillaume DROUET
@@ -61,11 +61,11 @@ public class WuicResourceNotFoundException extends WuicException implements Erro
      * Builds a new exception.
      * </p>
      *
-     * @param  resourceName the resource name
+     * @param  resourceName the nut name
      * @param groupId the group ID
      */
     public WuicResourceNotFoundException(final String resourceName, final String groupId) {
-        super(String.format("The resource with name '%s' has not been found in the group identified with '%s'", resourceName, groupId));
+        super(String.format("The nut with name '%s' has not been found in the group identified with '%s'", resourceName, groupId));
     }
 
     /**
@@ -76,7 +76,7 @@ public class WuicResourceNotFoundException extends WuicException implements Erro
      * @param ioe IOException the existing exception
      */
     public WuicResourceNotFoundException(final IOException ioe) {
-        super("Unable to find a resource", ioe);
+        super("Unable to find a nut", ioe);
     }
 
 

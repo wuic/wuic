@@ -40,7 +40,7 @@ package com.github.wuic.configuration.impl;
 
 import com.github.wuic.FileType;
 import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.engine.DimensionPacker;
 import com.github.wuic.engine.SpriteProvider;
@@ -126,9 +126,9 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
      * {@inheritDoc}
      */
     @Override
-    public DimensionPacker<WuicResource> createDimensionPacker() {
+    public DimensionPacker<Nut> createDimensionPacker() {
         
         // Should we provide the choice between different packing algorithms -
-        return new CGBinPacker<WuicResource>();
+        return new CGBinPacker<Nut>();
     }
 }

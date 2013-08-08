@@ -39,9 +39,9 @@
 package com.github.wuic.util;
 
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.path.DirectoryPath;
-import com.github.wuic.util.path.FsDirectoryPath;
-import com.github.wuic.util.path.Path;
+import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.core.FsDirectoryPath;
+import com.github.wuic.path.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -38,7 +38,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 
 /**
  * <p>
@@ -73,7 +73,7 @@ public interface SpriteProvider {
     /**
      * <p>
      * Get the sprite of all the added images in a map associating
-     * a {@link com.github.wuic.FileType} as key a {@link WuicResource} as value.
+     * a {@link com.github.wuic.FileType} as key a {@link com.github.wuic.nut.Nut} as value.
      * </p>
      * 
      * <p>
@@ -84,11 +84,11 @@ public interface SpriteProvider {
      * 
      * @param url of the final image
      * @param groupId the group ID
-     * @param resourceNameSuffix the suffix to append to the sprite resource name
-     * @return a resource representing the sprite path
+     * @param resourceNameSuffix the suffix to append to the sprite nut name
+     * @return a nut representing the sprite path
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    WuicResource getSprite(String url, String groupId, String resourceNameSuffix) throws StreamException;
+    Nut getSprite(String url, String groupId, String resourceNameSuffix) throws StreamException;
 
     /**
      * <p>

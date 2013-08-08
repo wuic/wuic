@@ -42,7 +42,7 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.util.IOUtils;
 
@@ -95,9 +95,9 @@ public class WuicTag extends TagSupport {
                 throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
             }
 
-            final List<WuicResource> files = facade.getGroup(pageName);
+            final List<Nut> files = facade.getGroup(pageName);
 
-            for (WuicResource resource : files) {
+            for (Nut resource : files) {
                 switch (resource.getFileType()) {
                     case CSS :
                         pageContext.getOut().println(cssImport(resource));
@@ -129,10 +129,10 @@ public class WuicTag extends TagSupport {
      * Generates import for CSS script.
      * </p>
      * 
-     * @param resource the CSS resource
+     * @param resource the CSS nut
      * @return the import
      */
-    private String cssImport(final WuicResource resource) {
+    private String cssImport(final Nut resource) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
@@ -147,10 +147,10 @@ public class WuicTag extends TagSupport {
      * Generates import for Javascript script.
      * </p>
      * 
-     * @param resource the Javascript resource
+     * @param resource the Javascript nut
      * @return the import
      */
-    private String javascriptImport(final WuicResource resource) {
+    private String javascriptImport(final Nut resource) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<script type=\"text/javascript");
@@ -163,13 +163,13 @@ public class WuicTag extends TagSupport {
     
     /**
      * <p>
-     * Generates the URL to use to access to the given resource.
+     * Generates the URL to use to access to the given nut.
      * </p>
      * 
-     * @param resource the resource
+     * @param resource the nut
      * @return the url
      */
-    private String getUrl(final WuicResource resource) {
+    private String getUrl(final Nut resource) {
         return IOUtils.mergePath("/",
                 WuicServlet.servletContext().getContextPath(),
                 WuicServlet.servletMapping(),

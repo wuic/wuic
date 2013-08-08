@@ -38,7 +38,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 
 import java.util.List;
@@ -82,7 +82,7 @@ public abstract class Engine {
      * @return the parsed files
      * @throws com.github.wuic.exception.wrapper.StreamException if any kind of I/O error occurs
      */
-    public abstract List<WuicResource> parse(EngineRequest request) throws WuicException;
+    public abstract List<Nut> parse(EngineRequest request) throws WuicException;
 
     /**
      * <p>

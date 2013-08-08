@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration;
 
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.DimensionPacker;
 
 /**
@@ -59,5 +59,5 @@ public interface PackingConfiguration {
      * 
      * @return the dimension packer
      */
-    DimensionPacker<WuicResource> createDimensionPacker();
+    DimensionPacker<Nut> createDimensionPacker();
 }

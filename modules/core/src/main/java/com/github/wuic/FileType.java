@@ -134,10 +134,10 @@ public enum FileType {
 
     /**
      * <p>
-     * Indicates if this resource is in a text format.
+     * Indicates if this nut is in a text format.
      * </p>
      *
-     * @return {@code true} if the resource is a text, {@code false} otherwise
+     * @return {@code true} if the nut is a text, {@code false} otherwise
      */
     public Boolean isText() {
         return isText;

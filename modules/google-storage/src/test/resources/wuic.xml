@@ -3,33 +3,33 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
 	<resource-factory-builders>
-        <resource-factory-builder id="gStorageFactoryBuilder" class="com.github.wuic.gstorage.GStorageWuicResourceFactoryBuilder" regex="true">
+        <resource-factory-builder id="gStorageFactoryBuilder" class="GStorageNutDaoBuilder">
             <properties>
-                <!--    Key : c.g.wuic.gStorageBucket
+                <!--    Key : c.g.wuic.cloudBucket
                         You can set in your Google Cloud Console
                         https://cloud.google.com/console -->
-                <property key="c.g.wuic.gStorageBucket">bucket-wuic-test</property>
-                <!--    Key : c.g.wuic.gStorageClientId
+                <property key="c.g.wuic.cloudBucket">bucket-wuic-test</property>
+                <!--    Key : c.g.wuic.login
                         The Google Cloud API client id, you can generate a new client ID on this page :
                         https://code.google.com/apis/console/
                         - Go on : API Access > "Create another client ID..."
                         - Installed application type : select "Service account"
                         - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com -->
-                <property key="c.g.wuic.gStorageClientId">xxxxx-yyyyy@developer.gserviceaccount.com</property>
-                <!--    Key : c.g.wuic.gPath
+                <property key="c.g.wuic.login">xxxxx-yyyyy@developer.gserviceaccount.com</property>
+                <!--    Key : c.g.wuic.basePath
                         The Google Storage path for search resources without bucket name, example :
                         empty : search in root and sub directories
                         wuic : search in "wuic/*"
                         wuic/test : search in "wuic/test/*" -->
-                <property key="c.g.wuic.gStoragePath"></property>
-                <!--    Key : c.g.wuic.gPrivateKeyPath
+                <property key="c.g.wuic.basePath"></property>
+                <!--    Key : c.g.wuic.password
                         You can generate a new key path on this page :
                         https://code.google.com/apis/console/
                         - Go on : API Access > "Create another client ID..."
                         - Installed application type : select "Service account"
                         - Download key path or Generate new key
                  -->
-                <property key="c.g.wuic.gPrivateKeyPath">privatekey.p12</property>
+                <property key="c.g.wuic.password">privatekey.p12</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

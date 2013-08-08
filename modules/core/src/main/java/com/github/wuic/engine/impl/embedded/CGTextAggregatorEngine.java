@@ -39,9 +39,9 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
+import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.FileType;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
@@ -87,7 +87,7 @@ public class CGTextAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request)
+    public List<Nut> parse(final EngineRequest request)
             throws WuicException {
 
         // Do nothing if the configuration says that no aggregation should be done
@@ -104,11 +104,11 @@ public class CGTextAggregatorEngine extends Engine {
         FileType fileType = null;
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
 
-        final List<WuicResource> retval = new ArrayList<WuicResource>();
-        final List<WuicResource> referencedResources = new ArrayList<WuicResource>();
+        final List<Nut> retval = new ArrayList<Nut>();
+        final List<Nut> referencedResources = new ArrayList<Nut>();
 
-        // Aggregate each resource
-        for (WuicResource resource : request.getResources()) {
+        // Aggregate each nut
+        for (Nut resource : request.getResources()) {
             // Resource must be aggregatable
             if (resource.isAggregatable()) {
                 try {
@@ -122,8 +122,8 @@ public class CGTextAggregatorEngine extends Engine {
                         target.write(buffer, 0, 1);
                     }
 
-                    if (resource.getReferencedResources() != null) {
-                        referencedResources.addAll(resource.getReferencedResources());
+                    if (resource.getReferencedNuts() != null) {
+                        referencedResources.addAll(resource.getReferencedNuts());
                     }
                 } finally {
                     IOUtils.close(is);
@@ -133,12 +133,12 @@ public class CGTextAggregatorEngine extends Engine {
             }
         }
 
-        // Create the a resource containing all the aggregated resources
-        final WuicResource aggregate = new ByteArrayWuicResource(target.toByteArray(), fileName, fileType);
+        // Create the a nut containing all the aggregated resources
+        final Nut aggregate = new ByteArrayNut(target.toByteArray(), fileName, fileType);
 
         // Eventually add some extracted referenced resources
         if (!referencedResources.isEmpty()) {
-            for (WuicResource ref : referencedResources) {
+            for (Nut ref : referencedResources) {
                 aggregate.addReferencedResource(ref);
             }
         }

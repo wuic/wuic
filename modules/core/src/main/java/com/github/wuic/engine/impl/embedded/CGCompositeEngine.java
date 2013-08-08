@@ -43,7 +43,7 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 
 import java.util.List;
 
@@ -82,8 +82,8 @@ public class CGCompositeEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
-         List<WuicResource> retval = request.getResources();
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
+         List<Nut> retval = request.getResources();
 
         for (Engine engine : engines) {
             retval = engine.parse(new EngineRequest(retval, request));

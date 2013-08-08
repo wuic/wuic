@@ -13,7 +13,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.WuicFacade;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,14 +63,14 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<WuicResource> group = facade.getGroup("util-js");
+        List<Nut> group = facade.getGroup("util-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
@@ -84,7 +84,7 @@ public class CoreTest extends WuicTest {
         Assert.assertFalse(group.isEmpty());
         int i = 0;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
@@ -105,10 +105,10 @@ public class CoreTest extends WuicTest {
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        List<WuicResource> group = facade.getGroup("css-image");
+        List<Nut> group = facade.getGroup("css-image");
         int i = 0;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
@@ -118,7 +118,7 @@ public class CoreTest extends WuicTest {
         group = facade.getGroup("css-scripts");
         i = 0;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
@@ -137,12 +137,12 @@ public class CoreTest extends WuicTest {
         final WuicFacade facade = WuicFacade.newInstance("");
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<WuicResource> group = facade.getGroup("js-image");
+        List<Nut> group = facade.getGroup("js-image");
 
         Assert.assertEquals(1, group.size());
-        Assert.assertEquals(1, group.get(0).getReferencedResources().size());
+        Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
 
-        final Iterator<WuicResource> it = group.iterator();
+        final Iterator<Nut> it = group.iterator();
         int i = 0;
 
         while (it.hasNext()) {
@@ -150,7 +150,7 @@ public class CoreTest extends WuicTest {
 
             try {
                 final String name = i++ + "sprite";
-                WuicResource next = it.next();
+                Nut next = it.next();
                 writeToDisk(next, name + ".js");
 
                 fis = next.openStream();
@@ -163,7 +163,7 @@ public class CoreTest extends WuicTest {
                 final String imageGroup = content.substring(start, end);
                 group = facade.getGroup(imageGroup);
 
-                writeToDisk(group.get(0).getReferencedResources().get(0), "aggregate.png");
+                writeToDisk(group.get(0).getReferencedNuts().get(0), "aggregate.png");
             } finally {
                 if (fis != null) {
                     fis.close();

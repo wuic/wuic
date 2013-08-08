@@ -39,7 +39,8 @@
 package com.github.wuic.xml;
 
 import com.github.wuic.FileType;
-import com.github.wuic.FilesGroup;
+import com.github.wuic.nut.NutDaoBuilder;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.DomConfigurationBuilder;
 import com.github.wuic.configuration.WuicEhcacheProvider;
@@ -58,7 +59,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.github.wuic.exception.WuicRfPropertyNotSupportedException;
+import com.github.wuic.exception.UnableToInstantiateException;
+import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
 import com.github.wuic.exception.WuicGroupNotFoundException;
 import com.github.wuic.exception.xml.WuicXmlException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
@@ -68,7 +70,7 @@ import com.github.wuic.exception.xml.WuicXmlNoResourceFactoryBuilderIdAttributeE
 import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
 import com.github.wuic.exception.xml.WuicXmlBadReferenceToFactoryBuilderException;
 
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import com.github.wuic.nut.builder.NutDaoBuilderFactory;
 import net.sf.ehcache.Cache;
 
 import org.slf4j.Logger;
@@ -91,7 +93,7 @@ import org.xml.sax.SAXException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.0
  */
 public final class WuicXmlLoader {
@@ -124,12 +126,12 @@ public final class WuicXmlLoader {
     /**
      * All the loaded files groups associated to their ID.
      */
-    private Map<String, FilesGroup> filesGroups;
+    private Map<String, NutsHeap> filesGroups;
     
     /**
-     * The resource factory builders associated to their ID.
+     * The nut factory builders associated to their ID.
      */
-    private Map<String, WuicResourceFactoryBuilder> resourceFactoryBuilders;
+    private Map<String, NutDaoBuilder> resourceDaoBuilders;
     
     /**
      * The cache indicated in the configuration.
@@ -162,9 +164,9 @@ public final class WuicXmlLoader {
 
         try {
             // The elements to be read from the path
-            resourceFactoryBuilders = new HashMap<String, WuicResourceFactoryBuilder>();
+            resourceDaoBuilders = new HashMap<String, NutDaoBuilder>();
             builtConfigurations = new HashMap<String, Configuration>();
-            filesGroups = new HashMap<String, FilesGroup>();
+            filesGroups = new HashMap<String, NutsHeap>();
             
             // All possible builders for each supported FileType
             confBuildersForFileType = new HashMap<FileType, DomConfigurationBuilder>();
@@ -183,8 +185,8 @@ public final class WuicXmlLoader {
             // Load cache
             readCache(document);
             
-            // Read resource factory builders
-            readWuicResourceFactoryBuilder(document);
+            // Read nut factory builders
+            readNutDaoBuilder(document);
             
             // Read configurations
             readConfigurations(document);
@@ -225,71 +227,57 @@ public final class WuicXmlLoader {
 
     /**
      * <p>
-     * Reads the {@link WuicResourceFactoryBuilder} defined in the wuic.xml path. A set
+     * Reads the {@link com.github.wuic.nut.NutDaoBuilder} defined in the wuic.xml path. A set
      * of <resource-factory-builder> tags should be defined and will be read by this
      * method.
      * </p>
      * 
-     * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
+     * @param document the document which contains the {@link com.github.wuic.nut.NutDaoBuilder} to read
      * @throws com.github.wuic.exception.xml.WuicXmlException if the document does not contains the expected structure
      */
-    private void readWuicResourceFactoryBuilder(final Document document) throws WuicXmlException {
+    private void readNutDaoBuilder(final Document document) throws WuicXmlException {
         // Get the nodes
         final NodeList resourceFactoryBuilderList = document.getElementsByTagName(RESOURCE_FACTORY_BUILDER_TAG);
 
         // Read each node
         for (int i = 0; i < resourceFactoryBuilderList.getLength(); i++) {
-            final Node resourceFactoryBuilderNode = resourceFactoryBuilderList.item(i);
+            final Node resourceDaoBuilderNode = resourceFactoryBuilderList.item(i);
             
             // Get the ID that identifies the class instance
-            final Node idAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("id");
+            final Node idAttr = resourceDaoBuilderNode.getAttributes().getNamedItem("id");
 
             if (idAttr == null) {
                 throw new WuicXmlNoResourceFactoryBuilderIdAttributeException();
             }
 
-            // Must we create a factory which supports regex ?
-            final Node regexAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem("regex");
-            final Boolean regex = regexAttr != null && Boolean.parseBoolean(regexAttr.getNodeValue());
-
             // Get the class to be instantiated
-            final Node classAttr = resourceFactoryBuilderNode.getAttributes().getNamedItem(CLASS_ATTRIBUTE);
+            final Node classAttr = resourceDaoBuilderNode.getAttributes().getNamedItem(CLASS_ATTRIBUTE);
             
             if (classAttr == null) {
                 throw new WuicXmlNoResourceFactoryBuilderClassAttributeException();
             }
 
-            // Node try to create an instance of a WuicResourceFactoryBuilder
+            // Node try to create an instance of a NutDaoBuilder
             final String className = classAttr.getNodeValue();
-            final Class<WuicResourceFactoryBuilder> targetClass = WuicResourceFactoryBuilder.class;
-            
-            try {
-                final Class<?> currentClass = Class.forName(className);
-                WuicResourceFactoryBuilder wrfb = targetClass.cast(currentClass.newInstance());
 
-                if (regex) {
-                    wrfb = wrfb.regex();
-                }
+            try {
+                NutDaoBuilder wrdb = NutDaoBuilderFactory.getInstance().create(className);
 
                 // Look for properties
-                final Node propertiesNode = resourceFactoryBuilderNode.getFirstChild();
+                final Node propertiesNode = resourceDaoBuilderNode.getFirstChild();
 
                 if (propertiesNode != null) {
                     for (int j = 0; j < propertiesNode.getChildNodes().getLength(); j++) {
                         final Node propertyNode = propertiesNode.getChildNodes().item(j);
                         final String value = propertyNode.getTextContent();
-                        wrfb = wrfb.property(propertyNode.getAttributes().getNamedItem("key").getNodeValue(), value);
+                        wrdb = wrdb.property(propertyNode.getAttributes().getNamedItem("key").getNodeValue(), value);
                     }
                 }
 
-                resourceFactoryBuilders.put(idAttr.getNodeValue(), wrfb);
-            } catch (ClassNotFoundException cnfe) {
-                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, cnfe);
-            } catch (IllegalAccessException iae) {
-                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, iae);
-            } catch (InstantiationException ie) {
-                throw new WuicXmlUnableToInstantiateException(className, RESOURCE_FACTORY_BUILDER_TAG, CLASS_ATTRIBUTE, targetClass, ie);
-            } catch (WuicRfPropertyNotSupportedException wrnse) {
+                resourceDaoBuilders.put(idAttr.getNodeValue(), wrdb);
+            } catch (UnableToInstantiateException utie) {
+                throw new WuicXmlUnableToInstantiateException(utie);
+            } catch (WuicRdbPropertyNotSupportedException wrnse) {
                 throw new WuicXmlWrappedErrorCodeException(wrnse);
             }
         }
@@ -305,7 +293,7 @@ public final class WuicXmlLoader {
      * If the cache does not exists, then a default cache will be used.
      * </p>
      * 
-     * @param document the document which contains the {@link WuicResourceFactoryBuilder} to read
+     * @param document the document which contains the {@link com.github.wuic.nut.NutDaoBuilder} to read
      * @throws com.github.wuic.exception.xml.WuicXmlReadException if a specified ehcache-provider could not be used
      */
     private void readCache(final Document document) throws WuicXmlReadException {
@@ -378,7 +366,7 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param document the document which contains the groups to read
-     * @throws com.github.wuic.exception.xml.WuicXmlReadException if the {@link WuicResourceFactoryBuilder} could not be read
+     * @throws com.github.wuic.exception.xml.WuicXmlReadException if the {@link com.github.wuic.nut.NutDaoBuilder} could not be read
      */
     private void readGroups(final Document document) throws WuicXmlException {
         // Get the root element
@@ -404,19 +392,19 @@ public final class WuicXmlLoader {
                 final Node configAttribute = group.getAttributes().getNamedItem("configuration");
                 final Configuration config = builtConfigurations.get(configAttribute.getNodeValue());
 
-                // The resource factory builder to use is specified with its ID
+                // The nut factory builder to use is specified with its ID
                 final Node defaultBuilderAttribute = group.getAttributes().getNamedItem("default-builder");
 
-                if (defaultBuilderAttribute == null || !resourceFactoryBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
+                if (defaultBuilderAttribute == null || !resourceDaoBuilders.containsKey(defaultBuilderAttribute.getNodeValue())) {
                     throw new WuicXmlBadReferenceToFactoryBuilderException("group", "default-builder");
                 }
 
-                // Get the resource factory builder and create the files group
-                final WuicResourceFactoryBuilder srp = resourceFactoryBuilders.get(defaultBuilderAttribute.getNodeValue());
-                final FilesGroup filesGroup = new FilesGroup(config, files, srp.build(), idAttribute.getNodeValue());
+                // Get the nut factory builder and create the files group
+                final NutDaoBuilder srp = resourceDaoBuilders.get(defaultBuilderAttribute.getNodeValue());
+                final NutsHeap nutsHeap = new NutsHeap(config, files, srp.build(), idAttribute.getNodeValue());
 
                 // Add all the files read from the document and associate them to the ID
-                filesGroups.put(idAttribute.getNodeValue(), filesGroup);
+                filesGroups.put(idAttribute.getNodeValue(), nutsHeap);
             }
         }
     }
@@ -439,11 +427,11 @@ public final class WuicXmlLoader {
      * </p>
      * 
      * @param id the id
-     * @return the {@code FilesGroup} is exists
+     * @return the {@code NutsHeap} is exists
      * @throws WuicGroupNotFoundException if the group does not exists
      */
-    public FilesGroup getFilesGroup(final String id) throws WuicGroupNotFoundException {
-        final FilesGroup retval = filesGroups.get(id);
+    public NutsHeap getFilesGroup(final String id) throws WuicGroupNotFoundException {
+        final NutsHeap retval = filesGroups.get(id);
 
         if (retval == null) {
             throw new WuicGroupNotFoundException(id);

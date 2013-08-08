@@ -14,7 +14,7 @@ package com.github.wuic.test;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 import org.eclipse.jetty.server.Connector;
@@ -151,14 +151,14 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final List<WuicResource> group = facade.getGroup("css-image");
+        final List<Nut> group = facade.getGroup("css-image");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();

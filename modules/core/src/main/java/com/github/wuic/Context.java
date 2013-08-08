@@ -38,9 +38,11 @@
 
 package com.github.wuic;
 
+import com.github.wuic.nut.NutsHeap;
+
 /**
  * <p>
- * The context is the core element of WUIC which allows to process resources.
+ * The context is the nut element of WUIC which allows to process resources.
  * </p>
  *
  * <p>
@@ -60,9 +62,9 @@ public interface Context {
      * </p>
      *
      * @param workflowId the workflow ID
-     * @return the resources group
+     * @return the nuts heap
      */
-    FilesGroup process(String workflowId);
+    NutsHeap process(String workflowId);
 
     /**
      * <p>

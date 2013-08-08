@@ -41,12 +41,16 @@ package com.github.wuic.ssh.test;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.jcraft.jsch.JSchException;
 import junit.framework.Assert;
 import org.apache.sshd.SshServer;
+import org.apache.sshd.common.NamedFactory;
+import org.apache.sshd.server.Command;
+import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
+import org.apache.sshd.server.sftp.SftpSubsystem;
 import org.apache.sshd.server.shell.ProcessShellFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -61,6 +65,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -97,17 +102,30 @@ public class SshTest {
         sshdServer.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(hostKey.getAbsolutePath()));
 
         // Use cmd on windows, /bin/sh otherwise
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+/*        if (System.getProperty("os.name").toLowerCase().contains("win")) {
             sshdServer.setShellFactory(new ProcessShellFactory(new String[]{ "cmd" }));
         } else {
             sshdServer.setShellFactory(new ProcessShellFactory(new String[]{ "/bin/sh", "-i", "-l" }));
         }
-
+  */
         // Mock several additional configurations
         final SShMockConfig mock = new SShMockConfig();
         sshdServer.setCommandFactory(mock);
         sshdServer.setPasswordAuthenticator(mock);
         sshdServer.setPublickeyAuthenticator(mock);
+
+        /*List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
+        userAuthFactories.add(new UserAuthNone.Factory());
+        sshd.setUserAuthFactories(userAuthFactories);
+        sshd.setPublickeyAuthenticator(new PublickeyAuthenticator());
+
+
+        sshdServer.setCommandFactory(new ScpCommandFactory());
+         */
+        List<NamedFactory<Command>> namedFactoryList = new ArrayList<NamedFactory<Command>>();
+        namedFactoryList.add(new SftpSubsystem.Factory());
+        sshdServer.setSubsystemFactories(namedFactoryList);
+
 
         // Run server
         sshdServer.start();
@@ -144,12 +162,12 @@ public class SshTest {
     @Test
     public void sshTest() throws JSchException, IOException, InterruptedException, WuicException {
         final WuicFacade facade = WuicFacade.newInstance("");
-        final List<WuicResource> group = facade.getGroup("css-image");
+        final List<Nut> group = facade.getGroup("css-image");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
 
-        for (WuicResource res : group) {
+        for (Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();

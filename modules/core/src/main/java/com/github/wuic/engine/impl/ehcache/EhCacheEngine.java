@@ -39,8 +39,8 @@
 package com.github.wuic.engine.impl.ehcache;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
@@ -97,10 +97,10 @@ public class EhCacheEngine extends Engine {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
-        List<WuicResource> retval = null;
+        List<Nut> retval = null;
 
         if (configuration.cache()) {
             final String key = request.getGroup().getId();
@@ -109,18 +109,18 @@ public class EhCacheEngine extends Engine {
             // Resources exist in cache, returns them
             if (value != null) {
                 log.info("Resources for group '{}' found in cache", key);
-                retval = (List<WuicResource>) value.getObjectValue();
+                retval = (List<Nut>) value.getObjectValue();
             } else if (getNext() != null) {
-                final List<WuicResource> resources = getNext().parse(request);
-                final List<WuicResource> toCache = new ArrayList<WuicResource>(resources.size());
+                final List<Nut> resources = getNext().parse(request);
+                final List<Nut> toCache = new ArrayList<Nut>(resources.size());
 
-                for (WuicResource resource : resources) {
+                for (Nut resource : resources) {
                     if (resource.isCacheable()) {
                         toCache.add(toByteArrayResource(resource));
                     }
                 }
 
-                log.debug("Caching resource with {}", key);
+                log.debug("Caching nut with {}", key);
 
                 getConfiguration().getCache().put(new Element(key, toCache));
 
@@ -138,24 +138,24 @@ public class EhCacheEngine extends Engine {
 
     /**
      * <p>
-     * Converts the given resource and its referenced resources into resources wrapping an in memory byte array.
+     * Converts the given nut and its referenced resources into resources wrapping an in memory byte array.
      * </p>
      *
-     * @param resource the resource to convert
-     * @return the byte array resource
+     * @param resource the nut to convert
+     * @return the byte array nut
      * @throws WuicException if an I/O error occurs
      */
-    private WuicResource toByteArrayResource(final WuicResource resource) throws WuicException {
+    private Nut toByteArrayResource(final Nut resource) throws WuicException {
         InputStream is = null;
 
         try {
             is = resource.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
-            final WuicResource bytes = new ByteArrayWuicResource(os.toByteArray(), resource.getName(), resource.getFileType());
+            final Nut bytes = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getFileType());
 
-            if (resource.getReferencedResources() != null) {
-                for (WuicResource ref : resource.getReferencedResources()) {
+            if (resource.getReferencedNuts() != null) {
+                for (Nut ref : resource.getReferencedNuts()) {
                     bytes.addReferencedResource(toByteArrayResource(ref));
                 }
             }

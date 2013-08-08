@@ -38,9 +38,9 @@
 
 package com.github.wuic.engine;
 
-import com.github.wuic.FilesGroup;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class EngineRequest {
     /**
      * The resources.
      */
-    private List<WuicResource> resources;
+    private List<Nut> resources;
 
     /**
      * The context path.
@@ -73,7 +73,7 @@ public class EngineRequest {
     /**
      * The group.
      */
-    private FilesGroup group;
+    private NutsHeap group;
 
     /**
      * <p>
@@ -83,7 +83,7 @@ public class EngineRequest {
      * @param res the resources to be parsed
      * @param other the request to copy
      */
-    public EngineRequest(final List<WuicResource> res, final EngineRequest other) {
+    public EngineRequest(final List<Nut> res, final EngineRequest other) {
         resources = res;
         contextPath = other.getContextPath();
         group = other.getGroup();
@@ -98,8 +98,8 @@ public class EngineRequest {
      * @param g the group
      * @throws StreamException if an I/O error occurs while getting resources
      */
-    public EngineRequest(final String cp, final FilesGroup g) throws StreamException {
-        resources = g.getResources();
+    public EngineRequest(final String cp, final NutsHeap g) throws StreamException {
+        resources = g.getNuts();
         contextPath = cp;
         group = g;
     }
@@ -111,7 +111,7 @@ public class EngineRequest {
      *
      * @return the resources
      */
-    public final List<WuicResource> getResources() {
+    public final List<Nut> getResources() {
         return resources;
     }
 
@@ -133,7 +133,7 @@ public class EngineRequest {
      *
      * @return the group
      */
-    public final FilesGroup getGroup() {
+    public final NutsHeap getGroup() {
         return group;
     }
 }

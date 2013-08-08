@@ -17,6 +17,7 @@
     <version>0.4.0-SNAPSHOT</version>
 
     <dependencies>
+
         <!-- JS & CSS compression -->
         <dependency>
             <groupId>com.yahoo.platform.yui</groupId>

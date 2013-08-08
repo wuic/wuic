@@ -12,7 +12,7 @@
 
 package com.github.wuic.test;
 
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 
 import java.io.File;
@@ -31,15 +31,15 @@ public class WuicTest {
 
     /**
      * <p>
-     * Writes on the disk the given resource if the system property 'wuic.test.storeTo' is set.
+     * Writes on the disk the given nut if the system property 'wuic.test.storeTo' is set.
      * Useful to check if generated files are correct.
      * </p>
      *
      * @param name the path name on the disk
-     * @param resource the resource
+     * @param resource the nut
      * @throws Exception if an I/O error occurs
      */
-    protected void writeToDisk(final WuicResource resource, final String name) throws Exception {
+    protected void writeToDisk(final Nut resource, final String name) throws Exception {
         final String dir = System.getProperty("wuic.test.storeTo");
 
         if (dir != null) {

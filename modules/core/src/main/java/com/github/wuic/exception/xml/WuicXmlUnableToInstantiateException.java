@@ -81,7 +81,7 @@ public class WuicXmlUnableToInstantiateException extends WuicXmlReadException {
      * @param utie the original exception
      */
     public WuicXmlUnableToInstantiateException(final UnableToInstantiateException utie) {
-        super("A class read from wuic.file could not be instantiated", utie);
+        super("A class read from wuic.xml file could not be instantiated", utie);
     }
 
     /**

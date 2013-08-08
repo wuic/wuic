@@ -16,7 +16,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
-import com.github.wuic.util.path.DirectoryPath;
+import com.github.wuic.path.DirectoryPath;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

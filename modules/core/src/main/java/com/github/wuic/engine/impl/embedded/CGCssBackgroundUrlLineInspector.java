@@ -39,7 +39,7 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.LineInspector;
-import com.github.wuic.resource.WuicResourceFactory;
+import com.github.wuic.nut.NutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
@@ -93,17 +93,17 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
                                        final StringBuilder replacement,
                                        final String groupPath,
                                        final String resourceLocation,
-                                       final WuicResourceFactory factory) {
+                                       final NutDao dao) {
 
         final String referencedPath = matcher.group(NumberUtils.TWO).trim();
         final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
 
-        log.info("Background with an URL statement found for resource {}", referencedPath);
+        log.info("Background with an URL statement found for nut {}", referencedPath);
 
-        // Extract the resource
+        // Extract the nut
         final String resourceName = resourceLocation.isEmpty() ? referencedPath : IOUtils.mergePath(resourceLocation, referencedPath);
 
-        // Rewrite the statement from its beginning to the beginning of the resource name
+        // Rewrite the statement from its beginning to the beginning of the nut name
         final String start = matcher.group().substring(0, matcher.start(NumberUtils.TWO) - matcher.start());
 
         if (start.endsWith("'")) {
@@ -112,14 +112,14 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
             replacement.append(start);
         }
 
-        // Write path to resource
+        // Write path to nut
         if (!start.endsWith("\"")) {
             replacement.append("\"");
         }
 
-        // Don't change resource if absolute
+        // Don't change nut if absolute
         if (isAbsolute) {
-            log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by resource factory.", referencedPath);
+            log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut factory.", referencedPath);
             replacement.append(referencedPath);
         } else {
             replacement.append(IOUtils.mergePath("/", groupPath, resourceName));
@@ -135,7 +135,7 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
             }
         }
 
-        // Return null means we don't change the original resource
+        // Return null means we don't change the original nut
         return isAbsolute ? null : resourceName;
     }
 }

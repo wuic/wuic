@@ -50,7 +50,7 @@ package com.github.wuic.exception;
 public interface ErrorCode {
 
     /**
-     * An IO error has occurred. It is raised typically when a resource could not be read of written.
+     * An IO error has occurred. It is raised typically when a nut could not be read of written.
      */
     long IO_ERROR = 19860606001L;
 
@@ -66,6 +66,16 @@ public interface ErrorCode {
     long BAD_ARGUMENT_EXCEPTION = 19860606003L;
 
     /**
+     * {@link com.github.wuic.nut.NutDao#save(com.github.wuic.nut.Nut)} is not supported.
+     */
+    long SAVE_NOT_SUPPORTED_EXCEPTION = 19860606004L;
+
+    /**
+     * {@link com.github.wuic.nut.NutDao} polling feature is not supported.
+     */
+    long POLLING_NOT_SUPPORTED_EXCEPTION = 19860606005L;
+
+    /**
      * Default code when the wuic.xml path can't be read.
      */
     long XML_CANNOT_READ = 19860606100L;
@@ -76,7 +86,7 @@ public interface ErrorCode {
     long XML_NO_CONFIGURATION_ID = 19860606101L;
 
     /**
-     * No id has been defined for a resource factory builder in the wuic.xml path.
+     * No id has been defined for a nut factory builder in the wuic.xml path.
      */
     long XML_NO_RESOURCE_FACTORY_BUILDER_ID = 19860606101L;
 
@@ -86,7 +96,7 @@ public interface ErrorCode {
     long XML_MISSING_CONFIGURATION_ELEMENT = 19860606103L;
 
     /**
-     * No class has been defined for a resource factory builder in the wuic.xml path.
+     * No class has been defined for a nut factory builder in the wuic.xml path.
      */
     long XML_NO_RESOURCE_FACTORY_BUILDER_CLASS = 19860606104L;
 
@@ -107,7 +117,7 @@ public interface ErrorCode {
     long XML_BAD_REF_TO_FACTORY_BUILDER = 19860606107L;
 
     /**
-     * Indicates that a resource has not been found.
+     * Indicates that a nut has not been found.
      */
     long RESOURCE_NOT_FOUND = 19860606200L;
 

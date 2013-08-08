@@ -3,13 +3,18 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
 	<resource-factory-builders>
-		<resource-factory-builder id="appSourceRootProvider" class="com.github.wuic.test.JUnitWuicResourceFactoryBuilder" />
-        <resource-factory-builder id="cpSourceRootProvider" class="com.github.wuic.resource.impl.classpath.ClasspathWuicResourceFactoryBuilder" regex="true">
+        <resource-factory-builder id="cpSourceRootProvider" class="ClasspathNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.classpathBasePath">/images</property>
+                <property key="c.g.wuic.basePath">/images</property>
+                <property key="c.g.wuic.regex">true</property>
             </properties>
         </resource-factory-builder>
-	</resource-factory-builders>
+        <resource-factory-builder id="appSourceRootProvider" class="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.regex">true</property>
+            </properties>
+        </resource-factory-builder>
+    </resource-factory-builders>
 	<groups>
 		<group id="js-image" configuration="sprite-image-png" default-builder="cpSourceRootProvider">
             <file>images/.*.png</file>

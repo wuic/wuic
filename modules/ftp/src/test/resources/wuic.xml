@@ -3,11 +3,12 @@
 <!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
 	<resource-factory-builders>
-        <resource-factory-builder id="ftpFactoryBuilder" class="com.github.wuic.ftp.FtpWuicResourceFactoryBuilder" regex="true">
+        <resource-factory-builder id="ftpFactoryBuilder" class="FtpNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.ftpServerPort">2221</property>
-                <property key="c.g.wuic.ftpUsername">wuicuser</property>
-                <property key="c.g.wuic.ftpPassword">wuicpassword</property>
+                <property key="c.g.wuic.regex">true</property>
+                <property key="c.g.wuic.serverPort">2221</property>
+                <property key="c.g.wuic.login">wuicuser</property>
+                <property key="c.g.wuic.password">wuicpassword</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

@@ -46,7 +46,8 @@ import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 
 import java.util.List;
 
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,20 +148,20 @@ public final class WuicFacade {
      * @return the files
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
-    public synchronized List<WuicResource> getGroup(final String id) throws WuicException {
+    public synchronized List<Nut> getGroup(final String id) throws WuicException {
         final long start = System.currentTimeMillis();
 
         log.info("Getting files for group : {}", id);
 
         // Get the group
-        final FilesGroup group = factoryBuilder.getLoader().getFilesGroup(id);
+        final NutsHeap group = factoryBuilder.getLoader().getFilesGroup(id);
 
         // Build the engine that generates the files
         final FileType fileType = group.getConfiguration().getFileType();
         final Engine engine = factoryBuilder.build().create(fileType);
 
         // Parse the files
-        final List<WuicResource> retval = engine.parse(new EngineRequest(contextPath, group));
+        final List<Nut> retval = engine.parse(new EngineRequest(contextPath, group));
 
         log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

@@ -28,7 +28,6 @@
 <!ATTLIST resource-factory-builder
     id CDATA #IMPLIED
     class CDATA #IMPLIED
-    regex CDATA "false"
   >
 
 <!ELEMENT properties (property)*>

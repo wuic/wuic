@@ -44,7 +44,7 @@ import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.SpriteConfiguration;
 import com.github.wuic.engine.EngineRequest;
@@ -126,21 +126,21 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
 
         // Generate the sprite path with the URL of the final image
         final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
         int spriteCpt = 0;
 
         /*
-         * Create a resource for each image if the configuration says that no
+         * Create a nut for each image if the configuration says that no
          * aggregation should be done
          */
         if (!works()) {
-            final List<WuicResource> retval = new ArrayList<WuicResource>();
+            final List<Nut> retval = new ArrayList<Nut>();
             
             // Calculate type and dimensions of the final image
-            for (WuicResource file : request.getResources()) {
+            for (Nut file : request.getResources()) {
                 // Clear previous work
                 spriteProvider.init(file.getName());
                 
@@ -152,7 +152,7 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
                     final BufferedImage buff = ImageIO.read(is);
                     spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
                     
-                    final WuicResource resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
+                    final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
                     resource.addReferencedResource(file);
                     retval.add(resource);
                 } catch (IOException ioe) {
@@ -167,14 +167,14 @@ public class CGSpriteAggregatorEngine extends PackerEngine {
             // Clear previous work
             spriteProvider.init(CGImageAggregatorEngine.AGGREGATION_NAME);
     
-            final Map<Region, WuicResource> packed = pack(request.getResources());
+            final Map<Region, Nut> packed = pack(request.getResources());
             
-            for (Entry<Region, WuicResource> result : packed.entrySet()) {
+            for (Entry<Region, Nut> result : packed.entrySet()) {
                 spriteProvider.addRegion(result.getKey(), result.getValue().getName());
             }
 
-            final WuicResource retval = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
-            final List<WuicResource> image = aggregatorEngine.parse(request);
+            final Nut retval = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
+            final List<Nut> image = aggregatorEngine.parse(request);
 
             if (image.size() == 1) {
                 retval.addReferencedResource(image.get(0));

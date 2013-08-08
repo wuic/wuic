@@ -42,7 +42,7 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * Thrown when a class is not properly defined for a resource factory builder in wuic.xml path.
+ * Thrown when a class is not properly defined for a nut factory builder in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET
@@ -57,7 +57,7 @@ public class WuicXmlNoResourceFactoryBuilderClassAttributeException extends Wuic
      * </p>
      */
     public WuicXmlNoResourceFactoryBuilderClassAttributeException() {
-        super("resource-factory-builder");
+        super("nut-factory-builder");
     }
 
     /**

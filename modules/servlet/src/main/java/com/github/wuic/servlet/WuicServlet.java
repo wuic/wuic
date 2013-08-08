@@ -43,7 +43,7 @@ import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.WuicResourceNotFoundException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
@@ -181,7 +181,7 @@ public class WuicServlet extends HttpServlet {
             try {
                 writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), response);
             } catch (WuicException we) {
-                log.error("Unable to retrieve resource", we);
+                log.error("Unable to retrieve nut", we);
 
                 // Use 500 has default status code
                 final Integer httpCode = errorCodeToHttpCode.containsKey(we.getErrorCode()) ?
@@ -195,20 +195,20 @@ public class WuicServlet extends HttpServlet {
 
     /**
      * <p>
-     * Writes a resource in the HTTP response.
+     * Writes a nut in the HTTP response.
      * </p>
      *
      * @param groupId the group ID
-     * @param resourceName the resource name
+     * @param resourceName the nut name
      * @param response the response
-     * @throws WuicException if an I/O error occurs or resource not found
+     * @throws WuicException if an I/O error occurs or nut not found
      */
     private void writeResource(final String groupId, final String resourceName, final HttpServletResponse response)
             throws WuicException {
 
         // Get the files group
-        final List<WuicResource> files = getWuicFacade().getGroup(groupId);
-        final WuicResource resource = getResource(files, resourceName);
+        final List<Nut> files = getWuicFacade().getGroup(groupId);
+        final Nut resource = getResource(files, resourceName);
         InputStream is = null;
 
         // Resource found
@@ -230,22 +230,22 @@ public class WuicServlet extends HttpServlet {
 
     /**
      * <p>
-     * Gets the resource with the specified name
+     * Gets the nut with the specified name
      * </p>
      *
      * @param resources the resources where the research
-     * @param resourceName the name of the resource
-     * @return the resource corresponding to the name, {@code null} if nothing match
+     * @param resourceName the name of the nut
+     * @return the nut corresponding to the name, {@code null} if nothing match
      */
-    private WuicResource getResource(final List<WuicResource> resources, final String resourceName) {
+    private Nut getResource(final List<Nut> resources, final String resourceName) {
         // Iterates the resources to find the requested element
-        for (WuicResource resource : resources) {
+        for (Nut resource : resources) {
             // Resource found : write the stream and return
             if (resource.getName().equals(resourceName) || ("/" + resource.getName()).equals(resourceName)) {
                 return resource;
-            } else if (resource.getReferencedResources() != null) {
+            } else if (resource.getReferencedNuts() != null) {
                 // Find in referenced resources
-                final WuicResource ref = getResource(resource.getReferencedResources(), resourceName);
+                final Nut ref = getResource(resource.getReferencedNuts(), resourceName);
 
                 if (ref != null) {
                     return ref;

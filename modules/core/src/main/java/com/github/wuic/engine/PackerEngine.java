@@ -39,7 +39,7 @@ package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 
 import java.awt.Dimension;
@@ -66,7 +66,7 @@ public abstract class PackerEngine extends Engine {
     /**
      * Dimension packer.
      */
-    private DimensionPacker<WuicResource> dimensionPacker;
+    private DimensionPacker<Nut> dimensionPacker;
 
     /**
      * <p>
@@ -75,7 +75,7 @@ public abstract class PackerEngine extends Engine {
      * 
      * @param packer the packer
      */
-    public void setDimensionPacker(final DimensionPacker<WuicResource> packer) {
+    public void setDimensionPacker(final DimensionPacker<Nut> packer) {
         dimensionPacker = packer;
     }
     
@@ -88,13 +88,13 @@ public abstract class PackerEngine extends Engine {
      * @return a map which associates each packed image to its allocated region
      * @throws WuicException if one image could not be read
      */
-    public Map<Region, WuicResource> pack(final List<WuicResource> files) throws WuicException {
+    public Map<Region, Nut> pack(final List<Nut> files) throws WuicException {
 
         // Clear previous work
         dimensionPacker.clearElements();
         
         // Load each image, read its dimension and add it to the packer with the ile as data
-        for (WuicResource file : files) {
+        for (Nut file : files) {
             InputStream is = null;
             
             try {

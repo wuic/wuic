@@ -39,7 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.factory.EngineFactoryBuilder;
-import com.github.wuic.resource.WuicResourceFactoryBuilder;
+import com.github.wuic.nut.NutDaoBuilder;
 
 import java.util.Map;
 
@@ -95,12 +95,12 @@ public interface ContextBuilder {
 
     /**
      * <p>
-     * Add a new {@link WuicResourceFactoryBuilder} identified by the specified ID and based on a given {@link Map} of
+     * Add a new {@link com.github.wuic.nut.NutDaoBuilder} identified by the specified ID and based on a given {@link Map} of
      * properties.
      * </p>
      *
      * <p>
-     * The {@link WuicResourceFactoryBuilder} class is expected to be found in the classpath, otherwise an exception
+     * The {@link com.github.wuic.nut.NutDaoBuilder} class is expected to be found in the classpath, otherwise an exception
      * will be thrown when the {@link com.github.wuic.ContextBuilder#build()} method is called.
      * </p>
      *
@@ -109,23 +109,24 @@ public interface ContextBuilder {
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
      */
-    ContextBuilder resourceFactoryBuilder(String id,
-                                          Class<? extends WuicResourceFactoryBuilder> clazz,
-                                          Map<String, String> properties);
+    ContextBuilder nutDaoBuilder(String id,
+                                 Class<? extends NutDaoBuilder> clazz,
+                                 Map<String, String> properties);
 
     /**
      * <p>
-     * Defines a new group in this context. A group is always identified by an ID and is associated to
-     * {@link WuicResourceFactoryBuilder} to use to convert paths into {@link com.github.wuic.resource.WuicResource}.
-     * A list of paths needs also to be specified to know which underlying resources compose the group.
+     * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A group is always identified
+     * by an ID and is associated to {@link com.github.wuic.nut.NutDaoBuilder} to use to convert paths into
+     * {@link com.github.wuic.nut.Nut}. A list of paths needs also to be specified to know which underlying
+     * resources compose the group.
      * </p>
      *
      * @param id the group ID
-     * @param rfbId the {@link WuicResourceFactoryBuilder} the group is based on
+     * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
      */
-    ContextBuilder group(String id, String rfbId, String ... path);
+    ContextBuilder heap(String id, String ndbId, String ... path);
 
     /**
      * <p>
@@ -148,7 +149,7 @@ public interface ContextBuilder {
      * </p>
      *
      * <p>A workflow consists to chain a set of engines produced by the specified
-     * {@link EngineFactoryBuilder builders} with a {@link FilesGroup group} as data to be processed. There is a chain
+     * {@link EngineFactoryBuilder builders} with a {@link com.github.wuic.nut.NutsHeap heap} as data to be processed. There is a chain
      * for each possible {@link FileType}. If no chain is specified for a particular {@link FileType}, then a default
      * one will be created. Moreover, default engines are injected in the chain to perform common operations to be done
      * on resources. If an {@link EngineFactoryBuilder} is specified in a chain while it is by default, then the
@@ -156,27 +157,28 @@ public interface ContextBuilder {
      * </p>
      *
      * <p>
-     * A set of {@link WuicResourceFactoryBuilder} could be specified to store processed resources. When the client will
+     * A set of {@link com.github.wuic.nut.NutDaoBuilder} could be specified to store processed resources. When the client will
      * retrieve the resources, it will access it through a proxy URI configured in the protocol. This URI corresponds to
      * a server in front of the location where resources have been stored.
      * </p>
      *
      * @param id the workflow ID
-     * @param groupId the group that needs to be processed
+     * @param heapId the heap that needs to be processed
      * @param efbId the set of {@link EngineFactoryBuilder} to use
-     * @param rfbIds the set of {@link WuicResourceFactoryBuilder} where to eventually upload processed resources
+     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
      */
-    ContextBuilder workflow(String id, String groupId,
+    ContextBuilder workflow(String id,
+                            String heapId,
                             Map<FileType, String[]> efbId,
                             Boolean includeDefaultEngines,
-                            String ... rfbIds);
+                            String ... ndbIds);
 
     /**
      * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
-     * For instance : associate a group to an undeclared {@link WuicResourceFactoryBuilder} ID.
+     * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.NutDaoBuilder} ID.
      * </p>
      *
      * @return this {@link ContextBuilder}

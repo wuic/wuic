@@ -42,9 +42,9 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
-import com.github.wuic.resource.impl.ByteArrayWuicResource;
+import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.FileType;
-import com.github.wuic.resource.WuicResource;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.ImageConfiguration;
 import com.github.wuic.engine.EngineRequest;
@@ -114,21 +114,21 @@ public class CGImageAggregatorEngine extends PackerEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<WuicResource> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
         /*
          * Do nothing if the configuration says that no aggregation should be done
          */
         if (!works()) {
             return request.getResources();
         } else {
-            final Map<Region, WuicResource> packed = pack(request.getResources());
+            final Map<Region, Nut> packed = pack(request.getResources());
     
             // Initializing the final image  
             final Dimension finalDim = getDimensionPack();
             final BufferedImage transparentImage = makeTransparentImage((int) finalDim.getWidth(), (int) finalDim.getHeight());        
             
             // Merge each image into the final image
-            for (Entry<Region, WuicResource> entry : packed.entrySet()) {
+            for (Entry<Region, Nut> entry : packed.entrySet()) {
                 InputStream is = null;
               
                 try {
@@ -143,7 +143,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
                 }
             }
             
-            // Write the generated image as a WUIC resource to return it
+            // Write the generated image as a WUIC nut to return it
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             try {
@@ -152,7 +152,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
                 throw new StreamException(ioe);
             }
 
-            final WuicResource res = new ByteArrayWuicResource(bos.toByteArray(), AGGREGATION_NAME, FileType.PNG);
+            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, FileType.PNG);
 
             return Arrays.asList(res);
         }
