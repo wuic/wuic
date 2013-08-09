@@ -163,12 +163,19 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String pathName, final NutDaoListener... observers) throws StreamException {
+    public List<Nut> create(final String pathName, final NutDaoListener ... observers) throws StreamException {
         final List<String> pathNames = computeRealPaths(pathName);
         final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
         for (final String p : pathNames) {
-            final String ext = p.substring(p.lastIndexOf('.'));
+            final int index = p.lastIndexOf('.');
+
+            if (index < 0) {
+                log.warn(String.format("'%s' does not contains any extension, ignoring resource", p));
+                continue;
+            }
+
+            final String ext = p.substring(index);
             final FileType type = FileType.getFileTypeForExtension(ext);
             final Nut res = accessFor(p, type);
 
@@ -294,5 +301,12 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
         }
 
         super.finalize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return String.format("%s with base path %s", getClass().getName(), getBasePath());
     }
 }

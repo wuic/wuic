@@ -295,12 +295,18 @@ public class FtpNutDao extends AbstractNutDao {
         return String.format("%s with base path %s", getClass().getName(), getBasePath());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void save(final Nut resource) {
         // TODO : implement FTP upload
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Boolean saveSupported() {
         // TODO : return true once save() is implemented

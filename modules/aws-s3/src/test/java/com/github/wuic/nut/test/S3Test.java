@@ -38,6 +38,8 @@
 
 package com.github.wuic.nut.test;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.*;
 import com.github.wuic.FileType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.configuration.Configuration;
@@ -49,19 +51,23 @@ import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
 import com.github.wuic.factory.impl.AggregationEngineFactory;
 import com.github.wuic.factory.impl.CompressionEngineFactory;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.s3.S3NutDao;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -83,11 +89,33 @@ public class S3Test {
      */
     @Test
     public void s3Test() throws Exception {
-        final NutsHeap nutsHeap = mock(NutsHeap.class);
-        final byte[] array = ".cloud { text-align : justify;}".getBytes();
         final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
-        when(nutsHeap.getConfiguration()).thenReturn(config);
-        when(nutsHeap.getNuts()).thenReturn(Arrays.asList((Nut) new ByteArrayNut(array, "cloud.css", FileType.CSS)));
+
+        // Create a real object and mock its initClient method
+        final S3NutDao dao = spy(new S3NutDao("/path", false, null, -1, "wuic", "login", "pwd"));
+
+        // Build client mock
+        final AmazonS3Client client = mock(AmazonS3Client.class);
+        when(dao.initClient()).thenReturn(client);
+
+        // List returned by client
+        final ObjectListing list = mock(ObjectListing.class);
+        final S3ObjectSummary summary = mock(S3ObjectSummary.class);
+        when(summary.getKey()).thenReturn("[cloud].css");
+        final S3ObjectSummary summarBis = mock(S3ObjectSummary.class);
+        when(summarBis.getKey()).thenReturn("cloud.css");
+        when(client.listObjects(any(ListObjectsRequest.class))).thenReturn(list);
+        when(list.getObjectSummaries()).thenReturn(Arrays.asList(summary, summarBis));
+
+        // Bytes returned by mocked S3
+        final byte[] array = ".cloud { text-align : justify;}".getBytes();
+        final S3Object object = mock(S3Object.class);
+        when(object.getObjectContent()).thenReturn(new S3ObjectInputStream(new ByteArrayInputStream(array), null));
+        when(client.getObject(anyString(), anyString())).thenReturn(object);
+
+        // TODO : problem here : we specify '[cloud.css]' but getNuts() returns 'cloud.css' because regex are always activated !
+        final NutsHeap nutsHeap = new NutsHeap(config, Arrays.asList("[cloud].css"), dao, "heap");
+        Assert.assertEquals(nutsHeap.getNuts().size(), 1);
 
         final Engine compressor = new CompressionEngineFactory(config).create(FileType.CSS);
         final Engine cacheEngine = new EhCacheEngine(config);

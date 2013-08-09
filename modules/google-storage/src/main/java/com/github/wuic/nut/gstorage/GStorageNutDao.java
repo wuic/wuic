@@ -138,12 +138,12 @@ public class GStorageNutDao extends AbstractNutDao {
      */
     private void checkGoogleOAuth2() throws IOException {
         // Check if we have build Google credential
-        if(googleCredential == null) {
+        if (googleCredential == null) {
             this.buildOAuth2();
         }
 
         // Check token
-        if(googleCredential.getExpiresInSeconds() == null || googleCredential.getExpirationTimeMilliseconds() == 0 ) {
+        if (googleCredential.getExpiresInSeconds() == null || googleCredential.getExpirationTimeMilliseconds() == 0) {
             googleCredential.refreshToken();
         }
     }
@@ -175,10 +175,10 @@ public class GStorageNutDao extends AbstractNutDao {
             storage = new Storage.Builder(netHttpTransport, jsonFactory, googleCredential).setApplicationName("Wuic").build();
         } catch (GeneralSecurityException gse) {
             // Security exception (local check)
-            throw new IOException("Can't build Google credential on bucket " + bucketName + " for nut key : " + getBasePath(), gse);
+            throw new IOException("Can't build Google credential on bucket " + bucketName + " for key : " + getBasePath(), gse);
         } catch (IOException ioe) {
             // Private key path not found
-            throw new IOException("Can't build Google credential on bucket " + bucketName + " for nut key : " + getBasePath() + " check your private key file", ioe);
+            throw new IOException("Can't build Google credential on bucket " + bucketName + " for key : " + getBasePath() + " check your private key file", ioe);
         }
     }
 

@@ -85,6 +85,16 @@ public class S3NutDao extends AbstractNutDao {
     private String bucketName;
 
     /**
+     * Access key.
+     */
+    private String login;
+
+    /**
+     * Secret key.
+     */
+    private String password;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -106,10 +116,30 @@ public class S3NutDao extends AbstractNutDao {
                     final String secretKey) {
         super(path, basePathAsSysProp, proxyUris, pollingInterleave);
         bucketName = bucket;
+        login = accessKey;
+        password = secretKey;
+    }
 
-        if (accessKey != null && secretKey != null) {
-            amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(accessKey, secretKey));
+    /**
+     * <p>
+     * Connects to S3 if not already connected.
+     * </p>
+     */
+    public void connect() {
+        if (login != null && password != null && amazonS3Client == null) {
+            amazonS3Client = initClient();
         }
+    }
+
+    /**
+     * <p>
+     * Initializes a new client based on the instance's credentials.
+     * </p>
+     *
+     * @return the client
+     */
+    public AmazonS3Client initClient() {
+        return new AmazonS3Client(new BasicAWSCredentials(login, password));
     }
 
     /**
@@ -136,6 +166,7 @@ public class S3NutDao extends AbstractNutDao {
 
         try {
             final String finalSuffix =  path.equals("") ? "" : "/";
+            connect();
             objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(path + finalSuffix).withDelimiter("/"));
         } catch (AmazonServiceException ase) {
             throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s for nut key : %s", bucketName, path), ase));
@@ -170,6 +201,7 @@ public class S3NutDao extends AbstractNutDao {
         S3Object s3Object;
 
         try {
+            connect();
             s3Object = amazonS3Client.getObject(bucketName, realPath);
         } catch (AmazonServiceException ase) {
             throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s  for nut key : %s", bucketName, realPath), ase));
@@ -210,16 +242,11 @@ public class S3NutDao extends AbstractNutDao {
 
             // This object if not referenced and is going to be garbage collected.
             // Do not keep the client connected.
-            amazonS3Client.shutdown();
+            if (amazonS3Client != null) {
+                amazonS3Client.shutdown();
+            }
         } finally {
             super.finalize();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String toString() {
-        return String.format("%s with base path %s", getClass().getName(), getBasePath());
     }
 }
