@@ -81,7 +81,7 @@ public interface ApplicationConfig {
     /**
      * Proxies that can be use to access the resources.
      */
-    String PROXIES_URIS = "c.g.wuic.diskBasePath";
+    String PROXY_URIS = "c.g.wuic.proxyUris";
 
     /**
      * The server's domain when accessing resources remotely.

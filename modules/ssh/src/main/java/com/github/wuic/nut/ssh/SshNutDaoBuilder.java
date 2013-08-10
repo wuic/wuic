@@ -90,7 +90,7 @@ public class SshNutDaoBuilder extends AbstractNutDaoBuilder {
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
                 (String) property(ApplicationConfig.LOGIN),
                 (String) property(ApplicationConfig.PASSWORD),
-                (String[]) property(ApplicationConfig.PROXIES_URIS),
+                (String[]) property(ApplicationConfig.PROXY_URIS),
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE));
     }
 }

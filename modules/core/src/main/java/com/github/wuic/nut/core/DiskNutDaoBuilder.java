@@ -76,7 +76,7 @@ public class DiskNutDaoBuilder extends AbstractNutDaoBuilder {
     public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
         return new DiskNutDao((String) property(ApplicationConfig.BASE_PATH),
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
-                (String[]) property(ApplicationConfig.PROXIES_URIS),
+                (String[]) property(ApplicationConfig.PROXY_URIS),
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
                 (Boolean) property(ApplicationConfig.REGEX));
     }

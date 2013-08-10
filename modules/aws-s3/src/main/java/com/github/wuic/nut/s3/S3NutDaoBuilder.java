@@ -82,7 +82,7 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
         return new S3NutDao(
                 (String) property(ApplicationConfig.BASE_PATH),
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
-                (String[]) property(ApplicationConfig.PROXIES_URIS),
+                (String[]) property(ApplicationConfig.PROXY_URIS),
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
                 (String) property(ApplicationConfig.CLOUD_BUCKET),
                 (String) property(ApplicationConfig.LOGIN),

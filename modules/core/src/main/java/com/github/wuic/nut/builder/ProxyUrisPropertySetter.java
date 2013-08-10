@@ -43,7 +43,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#PROXIES_URIS} property.
+ * Setter for the {@link com.github.wuic.ApplicationConfig#PROXY_URIS} property.
  * </p>
  *
  * @author Guillaume DROUET
@@ -94,6 +94,6 @@ public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
      */
     @Override
     protected String getPropertyKey() {
-        return ApplicationConfig.PROXIES_URIS;
+        return ApplicationConfig.PROXY_URIS;
     }
 }
