@@ -42,16 +42,8 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.AbstractNutDaoBuilder;
-import com.github.wuic.nut.builder.BasePathPropertySetter;
-import com.github.wuic.nut.builder.BasePathAsSysPropPropertySetter;
-import com.github.wuic.nut.builder.PasswordPropertySetter;
-import com.github.wuic.nut.builder.LoginPropertySetter;
-import com.github.wuic.nut.builder.ProxiesUrisPropertySetter;
-import com.github.wuic.nut.builder.PollingInterleavePropertySetter;
-import com.github.wuic.nut.builder.ServerDomainPropertySetter;
-import com.github.wuic.nut.builder.ServerPortPropertySetter;
-import com.github.wuic.nut.builder.RegexPropertySetter;
+import com.github.wuic.nut.builder.*;
+import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
 
 /**
  * <p>
@@ -79,7 +71,7 @@ public class SshNutDaoBuilder extends AbstractNutDaoBuilder {
         addPropertySetter(new RegexPropertySetter(this),
                 new BasePathPropertySetter(this, "."),
                 new BasePathAsSysPropPropertySetter(this, false),
-                new ProxiesUrisPropertySetter(this, null),
+                new ProxyUrisPropertySetter(this, null),
                 new PollingInterleavePropertySetter(this, -1),
                 new ServerDomainPropertySetter(this, "localhost"),
                 new ServerPortPropertySetter(this, DEFAULT_PORT),

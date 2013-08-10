@@ -42,14 +42,8 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
 
 import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.builder.BucketPropertySetter;
-import com.github.wuic.nut.builder.AbstractNutDaoBuilder;
-import com.github.wuic.nut.builder.ProxiesUrisPropertySetter;
-import com.github.wuic.nut.builder.PollingInterleavePropertySetter;
-import com.github.wuic.nut.builder.BasePathPropertySetter;
-import com.github.wuic.nut.builder.BasePathAsSysPropPropertySetter;
-import com.github.wuic.nut.builder.LoginPropertySetter;
-import com.github.wuic.nut.builder.PasswordPropertySetter;
+import com.github.wuic.nut.builder.*;
+import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
 
 /**
  * <p>
@@ -70,7 +64,7 @@ public class GStorageNutDaoBuilder extends AbstractNutDaoBuilder {
     public GStorageNutDaoBuilder() {
         super();
         addPropertySetter(new BucketPropertySetter(this, null),
-                new ProxiesUrisPropertySetter(this),
+                new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
                 new BasePathPropertySetter(this, ""),
                 new BasePathAsSysPropPropertySetter(this),

@@ -42,17 +42,8 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.BasePathPropertySetter;
-import com.github.wuic.nut.builder.BasePathAsSysPropPropertySetter;
-import com.github.wuic.nut.builder.SecretProtocolPropertySetter;
-import com.github.wuic.nut.builder.ServerPortPropertySetter;
-import com.github.wuic.nut.builder.ServerDomainPropertySetter;
-import com.github.wuic.nut.builder.RegexPropertySetter;
-import com.github.wuic.nut.builder.PollingInterleavePropertySetter;
-import com.github.wuic.nut.builder.ProxiesUrisPropertySetter;
-import com.github.wuic.nut.builder.LoginPropertySetter;
-import com.github.wuic.nut.builder.PasswordPropertySetter;
-import com.github.wuic.nut.builder.AbstractNutDaoBuilder;
+import com.github.wuic.nut.builder.*;
+import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
 
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -76,7 +67,7 @@ public class FtpNutDaoBuilder extends AbstractNutDaoBuilder {
         super();
         addPropertySetter(new BasePathPropertySetter(this, "/"),
                 new BasePathAsSysPropPropertySetter(this),
-                new ProxiesUrisPropertySetter(this),
+                new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
                 new ServerPortPropertySetter(this, FTPClient.DEFAULT_PORT),
                 new ServerDomainPropertySetter(this),

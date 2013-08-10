@@ -66,7 +66,7 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
         super();
         addPropertySetter(new BasePathPropertySetter(this, "."),
                 new BasePathAsSysPropPropertySetter(this),
-                new ProxiesUrisPropertySetter(this),
+                new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
                 new RegexPropertySetter(this));
     }

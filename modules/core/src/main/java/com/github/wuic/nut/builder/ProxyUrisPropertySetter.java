@@ -50,7 +50,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
  * @version 1.0
  * @since 0.4.0
  */
-public class ProxiesUrisPropertySetter extends PropertySetter<String[]> {
+public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
 
     /**
      * <p>
@@ -60,7 +60,7 @@ public class ProxiesUrisPropertySetter extends PropertySetter<String[]> {
      * @param b the {@link AbstractNutDaoBuilder} which needs to be configured
      * @param defaultValue the default value
      */
-    public ProxiesUrisPropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
+    public ProxyUrisPropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
         // Prevent ClassCastException by validating the parameter in 'set(Object)' method
         super(b, null);
         set(defaultValue);
@@ -73,7 +73,7 @@ public class ProxiesUrisPropertySetter extends PropertySetter<String[]> {
      *
      * @param b the {@link AbstractNutDaoBuilder} which needs to be configured
      */
-    public ProxiesUrisPropertySetter(final AbstractNutDaoBuilder b) {
+    public ProxyUrisPropertySetter(final AbstractNutDaoBuilder b) {
         this(b, null);
     }
 
