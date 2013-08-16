@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.YuiConfiguration;
 
 import net.sf.ehcache.Cache;
@@ -104,7 +104,7 @@ public class YuiConfigurationImpl extends ConfigurationImpl implements YuiConfig
     /**
      * {@inheritDoc}
      */
-    public FileType getFileType() {
+    public NutType getNutType() {
         throw new UnsupportedOperationException();
     }
 }

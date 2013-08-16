@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.gstorage;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
@@ -236,7 +236,7 @@ public class GStorageNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final FileType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
         try {
             // Try to get a Storage object
             final Storage.Objects.Get storageObject = storage.objects().get(bucketName, realPath);

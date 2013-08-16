@@ -145,7 +145,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             compress(is, os);
 
             // Now create nut
-            final Nut res = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getFileType());
+            final Nut res = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
             res.setAggregatable(resource.isAggregatable());
             res.setBinaryCompressible(resource.isBinaryCompressible());
             res.setTextCompressible(resource.isTextCompressible());

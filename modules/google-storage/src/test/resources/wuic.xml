@@ -5,31 +5,31 @@
 	<resource-factory-builders>
         <resource-factory-builder id="gStorageFactoryBuilder" class="GStorageNutDaoBuilder">
             <properties>
-                <!--    Key : c.g.wuic.cloudBucket
+                <!--    Key : c.g.wuic.dao.cloudBucket
                         You can set in your Google Cloud Console
                         https://cloud.google.com/console -->
-                <property key="c.g.wuic.cloudBucket">bucket-wuic-test</property>
-                <!--    Key : c.g.wuic.login
+                <property key="c.g.wuic.dao.cloudBucket">bucket-wuic-test</property>
+                <!--    Key : c.g.wuic.dao.login
                         The Google Cloud API client id, you can generate a new client ID on this page :
                         https://code.google.com/apis/console/
                         - Go on : API Access > "Create another client ID..."
                         - Installed application type : select "Service account"
                         - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com -->
-                <property key="c.g.wuic.login">xxxxx-yyyyy@developer.gserviceaccount.com</property>
-                <!--    Key : c.g.wuic.basePath
+                <property key="c.g.wuic.dao.login">xxxxx-yyyyy@developer.gserviceaccount.com</property>
+                <!--    Key : c.g.wuic.dao.basePath
                         The Google Storage path for search resources without bucket name, example :
                         empty : search in root and sub directories
                         wuic : search in "wuic/*"
                         wuic/test : search in "wuic/test/*" -->
-                <property key="c.g.wuic.basePath"></property>
-                <!--    Key : c.g.wuic.password
+                <property key="c.g.wuic.dao.basePath"></property>
+                <!--    Key : c.g.wuic.dao.password
                         You can generate a new key path on this page :
                         https://code.google.com/apis/console/
                         - Go on : API Access > "Create another client ID..."
                         - Installed application type : select "Service account"
                         - Download key path or Generate new key
                  -->
-                <property key="c.g.wuic.password">privatekey.p12</property>
+                <property key="c.g.wuic.dao.password">privatekey.p12</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

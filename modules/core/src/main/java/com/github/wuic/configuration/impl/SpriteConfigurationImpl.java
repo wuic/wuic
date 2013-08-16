@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.SpriteConfiguration;
@@ -100,8 +100,8 @@ public class SpriteConfigurationImpl extends ConfigurationImpl implements Sprite
     /**
      * {@inheritDoc}
      */
-    public FileType getFileType() {
-        return FileType.SPRITE;
+    public NutType getNutType() {
+        return NutType.PNG;
     }
     
     /**

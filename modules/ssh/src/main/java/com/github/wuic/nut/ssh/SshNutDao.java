@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.ssh;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.core.ByteArrayNut;
@@ -167,7 +167,7 @@ public class SshNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String path, final FileType type) throws StreamException {
+    public Nut accessFor(final String path, final NutType type) throws StreamException {
         ChannelSftp channel = null;
 
         try {

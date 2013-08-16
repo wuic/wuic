@@ -42,7 +42,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
@@ -196,7 +196,7 @@ public class S3NutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final FileType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
         // Try to get S3 object
         S3Object s3Object;
 

@@ -39,11 +39,12 @@
 package com.github.wuic.nut.gstorage;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
+import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.builder.*;
-import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
+import com.github.wuic.nut.setter.*;
+import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 
 /**
  * <p>
@@ -77,7 +78,7 @@ public class GStorageNutDaoBuilder extends AbstractNutDaoBuilder {
      * {@inheritDoc}
      */
     @Override
-    public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
+    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
         // TODO : add regex support
         return new GStorageNutDao(
                 (String) property(ApplicationConfig.BASE_PATH),

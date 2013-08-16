@@ -38,7 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.engine.Region;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.core.ByteArrayNut;
@@ -89,6 +89,6 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
         }
 
         // Make a nut and return it
-        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", FileType.CSS);
+        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", NutType.CSS);
     }
 }

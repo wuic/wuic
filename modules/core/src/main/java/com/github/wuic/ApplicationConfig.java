@@ -61,47 +61,47 @@ public interface ApplicationConfig {
      * wuic/test : search in "wuic/test/*"
      * </p>
      */
-    String BASE_PATH = "c.g.wuic.basePath";
+    String BASE_PATH = "c.g.wuic.dao.basePath";
 
     /**
      * Consider the base path as a system property associated to actual value.
      */
-    String BASE_PATH_AS_SYS_PROP = "c.g.wuic.basePathAsSystemProperty";
+    String BASE_PATH_AS_SYS_PROP = "c.g.wuic.dao.basePathAsSystemProperty";
 
     /**
      * Polling interleave for resources refresher.
      */
-    String POLLING_INTERLEAVE = "c.g.wuic.pollingInterleave";
+    String POLLING_INTERLEAVE = "c.g.wuic.dao.pollingInterleave";
 
     /**
      * Boolean which indicates if path are evaluated as regex or not.
      */
-    String REGEX = "c.g.wuic.regex";
+    String REGEX = "c.g.wuic.dao.regex";
 
     /**
      * Proxies that can be use to access the resources.
      */
-    String PROXY_URIS = "c.g.wuic.proxyUris";
+    String PROXY_URIS = "c.g.wuic.dao.proxyUris";
 
     /**
      * The server's domain when accessing resources remotely.
      */
-    String SERVER_DOMAIN = "c.g.wuic.serverDomain";
+    String SERVER_DOMAIN = "c.g.wuic.dao.serverDomain";
 
     /**
      * The server's port when accessing resources remotely.
      */
-    String SERVER_PORT = "c.g.wuic.serverPort";
+    String SERVER_PORT = "c.g.wuic.dao.serverPort";
 
     /**
      * The bucket usually defined in cloud storage services.
      */
-    String CLOUD_BUCKET = "c.g.wuic.cloudBucket";
+    String CLOUD_BUCKET = "c.g.wuic.dao.cloudBucket";
 
     /**
      * Use the secured version of the protocol.
      */
-    String SECRET_PROTOCOL = "c.g.wuic.secret";
+    String SECRET_PROTOCOL = "c.g.wuic.dao.secret";
 
     /**
      * <p>
@@ -116,7 +116,7 @@ public interface ApplicationConfig {
      * - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com
      * </p>
      */
-    String LOGIN = "c.g.wuic.login";
+    String LOGIN = "c.g.wuic.dao.login";
 
     /**
      * <p>
@@ -130,5 +130,75 @@ public interface ApplicationConfig {
      * - Download key path or Generate new key
      * </p>
      */
-    String PASSWORD = "c.g.wuic.password";
+    String PASSWORD = "c.g.wuic.dao.password";
+
+    /**
+     * <p>
+     * Indicates if the engine should cache or not.
+     * </p>
+     */
+    String CACHE = "c.g.wuic.engine.cache";
+
+    /**
+     * <p>
+     * Indicates a particular
+     * </p>
+     */
+    String CACHE_PROVIDER_CLASS = "c.g.wuic.engine.cacheProviderClass";
+
+    /**
+     * <p>
+     * Indicates if the engine should compress or not.
+     * </p>
+     */
+    String COMPRESS = "c.g.wuic.engine.compress";
+
+    /**
+     * <p>
+     * Indicates if the engine should aggregate or not.
+     * </p>
+     */
+    String AGGREGATE = "c.g.wuic.engine.aggregate";
+
+    /**
+     * <p>
+     * Position where \n is inserted in text compressor.
+     * </p>
+     */
+    String LINE_BREAK_POS = "c.g.wuic.engine.lineBreakPos";
+
+    /**
+     * <p>
+     * Indicates if javascript processor should obfuscate code.
+     * </p>
+     */
+    String OBFUSCATE = "c.g.wuic.engine.obfuscate";
+
+    /**
+     * <p>
+     * Indicates if javascript processor should preserve unnecessary semicolons.
+     * </p>
+     */
+    String PRESERVE_SEMICOLONS = "c.g.wuic.engine.preserveSemiColons";
+
+    /**
+     * <p>
+     * Indicates if javascript processor should not apply extra optimizations.
+     * </p>
+     */
+    String DISABLE_OPTIMIZATIONS = "c.g.wuic.engine.disableOptimizations";
+
+    /**
+     * <p>
+     * Indicates if the engine should be verbose when processing resources.
+     * </p>
+     */
+    String VERBOSE = "c.g.wuic.engine.verbose";
+
+    /**
+     * <p>
+     * Indicates the charset for text processor.
+     * </p>
+     */
+    String CHARSET = "c.g.wuic.engine.charset";
 }

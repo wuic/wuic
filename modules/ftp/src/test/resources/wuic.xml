@@ -5,10 +5,10 @@
 	<resource-factory-builders>
         <resource-factory-builder id="ftpFactoryBuilder" class="FtpNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.regex">true</property>
-                <property key="c.g.wuic.serverPort">2221</property>
-                <property key="c.g.wuic.login">wuicuser</property>
-                <property key="c.g.wuic.password">wuicpassword</property>
+                <property key="c.g.wuic.dao.regex">true</property>
+                <property key="c.g.wuic.dao.serverPort">2221</property>
+                <property key="c.g.wuic.dao.login">wuicuser</property>
+                <property key="c.g.wuic.dao.password">wuicpassword</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

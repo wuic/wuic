@@ -158,7 +158,24 @@
                 <artifactId>google-collections</artifactId>
                 <version>${google-collections.version}</version>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
+
+    <!-- Tests dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+    </dependencies>
 </project>

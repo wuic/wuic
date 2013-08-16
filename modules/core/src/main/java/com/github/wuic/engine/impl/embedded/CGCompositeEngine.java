@@ -53,7 +53,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.3
  */
 public class CGCompositeEngine extends Engine {
@@ -71,11 +71,29 @@ public class CGCompositeEngine extends Engine {
      * @param e the non-null and non-empty array of engines (should share the same configuration)
      */
     public CGCompositeEngine(final Engine... e) {
+        engines = new Engine[0];
+        add(e);
+    }
+
+    /**
+     * <p>
+     * Adds the given {@link Engine engines} to the composition.
+     * </p>
+     *
+     * @param e the engines
+     */
+    public final void add(final Engine ... e) {
         if (e == null || e.length == 0) {
             throw new BadArgumentException(new IllegalArgumentException("A composite engine must be built with a non-null and non-empty array of engines"));
         }
 
-        engines = e;
+        final Engine[] target = new Engine[e.length + engines.length];
+        System.arraycopy(engines, 0, target, 0, engines.length);
+        System.arraycopy(e, 0, target, engines.length, e.length);
+        engines = target;
+
+        // TODO : add EngineType for each engine
+        // TODO : enhance CompositeEngine to order engines by EngineType
     }
 
     /**

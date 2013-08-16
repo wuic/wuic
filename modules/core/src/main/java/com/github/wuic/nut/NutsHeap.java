@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -76,17 +76,17 @@ public class NutsHeap {
     /**
      * Message's template displayed when the extensions of resources path is not correct.
      */
-    private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for nut %s associated to the FileType %s";
-
-    /**
-     * The configuration.
-     */
-    private Configuration configuration;
+    private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for nut %s associated to the NutType %s";
     
     /**
      * The paths list.
      */
     private List<String> paths;
+
+    /**
+     * The nut type.
+     */
+    private NutType nutType;
 
     /**
      * The nut DAO.
@@ -106,68 +106,98 @@ public class NutsHeap {
     /**
      * <p>
      * Builds a new {@link NutsHeap}. All the paths must be named with an
-     * extension that matches the {@link com.github.wuic.FileType}. If it is not the case, then
+     * extension that matches the {@link com.github.wuic.NutType}. If it is not the case, then
      * an {@link BadArgumentException} will be thrown.
      * </p>
      * 
-     * @param config the {@link Configuration}
      * @param pathsList the paths
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
+     * @throws StreamException if the HEAP could not be created
      */
-    public NutsHeap(final Configuration config,
-                    final List<String> pathsList,
+    public NutsHeap(final List<String> pathsList,
                     final NutDao theNutDao,
-                    final String heapId) {
+                    final String heapId) throws StreamException {
         this.id = heapId;
-        this.configuration = config;
         this.paths = pathsList;
         this.nutDao = theNutDao;
+        checkFiles();
     }
 
     /**
      * <p>
-     * Checks that the {@link com.github.wuic.FileType} and the paths list of this group are not
+     * Builds a new heap based on a configuration.
+     * TODO : remove this constructor when configurations design will be changed
+     * </p>
+     *
+     * @param configuration the configuration
+     * @param pathsList the paths
+     * @param theNutDao the {@link NutDao}
+     * @param heapId the heap ID
+     * @deprecated
+     * @throws StreamException if the HEAP could not be created
+     */
+    public NutsHeap(final Configuration configuration,
+                    final List<String> pathsList,
+                    final NutDao theNutDao,
+                    final String heapId) throws StreamException {
+        this.id = heapId;
+        this.paths = pathsList;
+        this.nutDao = theNutDao;
+        this.nutType = configuration.getNutType();
+        checkFiles();
+    }
+
+    /**
+     * <p>
+     * Checks that the {@link com.github.wuic.NutType} and the paths list of this group are not
      * null. If they are, this methods will throw an {@link BadArgumentException}.
      * This exception could also be thrown if one path of the list does have a name
-     * which ends with one of the possible {@link com.github.wuic.FileType#extensions extensions}.
+     * which ends with one of the possible {@link com.github.wuic.NutType#extensions extensions}.
      * </p>
+     *
+     * @throws StreamException in I/O error case
      */
-    private void checkFiles() {
-        
+    private void checkFiles() throws StreamException {
+        this.resources = new ArrayList<Nut>();
+
+        for (final String path : paths) {
+            resources.addAll(nutDao.create(path));
+        }
+
         // Non null assertion
         if (paths == null) {
             throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list"));
         // Do not allow empty groups
-        } else if (configuration == null) {
-            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null configuration"));
         } else if (resources.isEmpty()) {
             final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
             throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, nutDao.toString())));
         }
 
-        // Check the extension of each path
+        // Check the extension of each path : all of them must share the same nut type
         for (Nut res : resources) {
 
             // Extract name to be test
             final String file = res.getName();
 
             Boolean valid = Boolean.FALSE;
-            final FileType type = configuration.getFileType();
-            
-            final String[] extensions = type.getExtensions();
-            
+
             // Apply test for each possible extension
-            for (String extension : extensions) {
-                if (file.endsWith(extension)) {
-                    valid = Boolean.TRUE;
-                    break;
+            for (NutType nt : NutType.values()) {
+                for (String extension : nt.getExtensions()) {
+                    if (file.endsWith(extension)) {
+                        if (getNutType() == null) {
+                            nutType = nt;
+                        }
+
+                        valid = nt.equals(nutType);
+                    }
                 }
             }
             
             // The path has not one of the possible extension : throw an IAE
             if (!valid) {
-                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, type);
+                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, getNutType());
                 throw new BadArgumentException(new IllegalArgumentException(message));
             }
         }
@@ -186,13 +216,13 @@ public class NutsHeap {
 
     /**
      * <p>
-     * Gets the {@link Configuration}.
+     * Gets the {@link NutType}.
      * </p>
      * 
-     * @return the configuration
+     * @return the type
      */
-    public Configuration getConfiguration() {
-        return configuration;
+    public NutType getNutType() {
+        return nutType;
     }
 
     /**
@@ -212,19 +242,8 @@ public class NutsHeap {
      * </p>
      *
      * @return the nuts
-     * @throws StreamException if an I/O error occurs while building nuts
      */
-    public List<Nut> getNuts() throws StreamException {
-        if (resources == null) {
-            this.resources = new ArrayList<Nut>();
-
-            for (String path : paths) {
-                resources.addAll(nutDao.create(path));
-            }
-
-            checkFiles();
-        }
-
+    public List<Nut> getNuts() {
         return resources;
     }
 }

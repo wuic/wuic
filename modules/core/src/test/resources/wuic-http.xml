@@ -5,8 +5,8 @@
     <resource-factory-builders>
         <resource-factory-builder id="httpSourceRootProvider" class="HttpNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.secret">false</property>
-                <property key="c.g.wuic.serverPort">9876</property>
+                <property key="c.g.wuic.dao.secret">false</property>
+                <property key="c.g.wuic.dao.serverPort">9876</property>
             </properties>
         </resource-factory-builder>
     </resource-factory-builders>

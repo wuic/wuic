@@ -98,7 +98,7 @@ public class WuicTag extends TagSupport {
             final List<Nut> files = facade.getGroup(pageName);
 
             for (Nut resource : files) {
-                switch (resource.getFileType()) {
+                switch (resource.getNutType()) {
                     case CSS :
                         pageContext.getOut().println(cssImport(resource));
                         break;

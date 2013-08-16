@@ -38,8 +38,8 @@
 
 package com.github.wuic.nut.core;
 
-import com.github.wuic.FileType;
-import com.github.wuic.exception.WuicResourceNotFoundException;
+import com.github.wuic.NutType;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 
 import java.io.ByteArrayInputStream;
@@ -74,7 +74,7 @@ public class ByteArrayNut extends AbstractNut {
      * 
      * @param bytes the byte array
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final FileType ft) {
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType ft) {
         super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
@@ -83,7 +83,7 @@ public class ByteArrayNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws WuicResourceNotFoundException {
+    public InputStream openStream() throws NutNotFoundException {
         return new ByteArrayInputStream(byteArray);
     }
 }

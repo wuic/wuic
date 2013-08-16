@@ -38,7 +38,7 @@
 
 package com.github.wuic.factory.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
@@ -54,7 +54,7 @@ import java.util.Map;
  * This {@link EngineFactory} implementation produces a chain of responsibility
  * composed of engines produced with the {@link AggregationEngineFactory}, a
  * {@link EhCacheEngine} and a compression engine which is chosen according to
- * a given {@link FileType}. 
+ * a given {@link com.github.wuic.NutType}.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -64,9 +64,9 @@ import java.util.Map;
 public class EngineFactoryImpl implements EngineFactory {
 
     /**
-     * The configuration to use for each supported {@link FileType}.
+     * The configuration to use for each supported {@link com.github.wuic.NutType}.
      */
-    private Map<FileType, Configuration> configurationForFileType;
+    private Map<NutType, Configuration> configurationForFileType;
 
     /**
      * <p>
@@ -74,25 +74,25 @@ public class EngineFactoryImpl implements EngineFactory {
      * </p>
      */
     public EngineFactoryImpl() {
-        configurationForFileType = new HashMap<FileType, Configuration>();
+        configurationForFileType = new HashMap<NutType, Configuration>();
     }
     
     /**
      * <p>
-     * Adds a configuration for a defined {@link FileType}.
+     * Adds a configuration for a defined {@link com.github.wuic.NutType}.
      * </p>
      * 
      * @param fileType the path type
      * @param conf the configuration
      */
-    public void addConfigurationForFileType(final FileType fileType, final Configuration conf) {
+    public void addConfigurationForFileType(final NutType fileType, final Configuration conf) {
         configurationForFileType.put(fileType, conf);
     }
     
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws WuicXmlReadException {
+    public Engine create(final NutType fileType) throws WuicXmlReadException {
         
         if (!configurationForFileType.containsKey(fileType)) {
             throw new BadArgumentException(new IllegalArgumentException(String.format("%s has no supported configuration associated", fileType)));

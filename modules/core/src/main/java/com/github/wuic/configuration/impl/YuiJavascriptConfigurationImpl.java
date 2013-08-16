@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.YuiConfiguration;
 import com.github.wuic.configuration.YuiJavascriptConfiguration;
 
@@ -131,7 +131,7 @@ public class YuiJavascriptConfigurationImpl extends YuiConfigurationImpl impleme
      * {@inheritDoc}
      */
     @Override
-    public FileType getFileType() {
-        return FileType.JAVASCRIPT;
+    public NutType getNutType() {
+        return NutType.JAVASCRIPT;
     }
 }

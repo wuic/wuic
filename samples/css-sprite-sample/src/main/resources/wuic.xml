@@ -5,8 +5,8 @@
     <resource-factory-builders>
         <resource-factory-builder id="imgSourceRootProvider" class="ClasspathNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.basePath">/img</property>
-                <property key="c.g.wuic.regex">true</property>
+                <property key="c.g.wuic.dao.basePath">/img</property>
+                <property key="c.g.wuic.dao.regex">true</property>
             </properties>
         </resource-factory-builder>
     </resource-factory-builders>

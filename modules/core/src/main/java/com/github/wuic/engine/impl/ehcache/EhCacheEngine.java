@@ -152,7 +152,7 @@ public class EhCacheEngine extends Engine {
             is = resource.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
-            final Nut bytes = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getFileType());
+            final Nut bytes = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
 
             if (resource.getReferencedNuts() != null) {
                 for (Nut ref : resource.getReferencedNuts()) {

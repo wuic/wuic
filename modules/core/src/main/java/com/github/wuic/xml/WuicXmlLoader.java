@@ -38,7 +38,11 @@
 
 package com.github.wuic.xml;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
+import com.github.wuic.bootstrap.core.NutDaoBuilderFactory;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.configuration.Configuration;
@@ -60,8 +64,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
-import com.github.wuic.exception.WuicGroupNotFoundException;
 import com.github.wuic.exception.xml.WuicXmlException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.exception.xml.WuicXmlWrappedErrorCodeException;
@@ -70,7 +72,7 @@ import com.github.wuic.exception.xml.WuicXmlNoResourceFactoryBuilderIdAttributeE
 import com.github.wuic.exception.xml.WuicXmlUnableToInstantiateException;
 import com.github.wuic.exception.xml.WuicXmlBadReferenceToFactoryBuilderException;
 
-import com.github.wuic.nut.builder.NutDaoBuilderFactory;
+import com.github.wuic.util.GenericBuilder;
 import net.sf.ehcache.Cache;
 
 import org.slf4j.Logger;
@@ -114,9 +116,9 @@ public final class WuicXmlLoader {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
-     * All the {@link DomConfigurationBuilder builders} for each supported {@link FileType}.
+     * All the {@link DomConfigurationBuilder builders} for each supported {@link com.github.wuic.NutType}.
      */
-    private Map<FileType, DomConfigurationBuilder> confBuildersForFileType;
+    private Map<NutType, DomConfigurationBuilder> confBuildersForFileType;
     
     /**
      * All the loaded {@link Configuration configurations} associated to their ID.
@@ -168,11 +170,11 @@ public final class WuicXmlLoader {
             builtConfigurations = new HashMap<String, Configuration>();
             filesGroups = new HashMap<String, NutsHeap>();
             
-            // All possible builders for each supported FileType
-            confBuildersForFileType = new HashMap<FileType, DomConfigurationBuilder>();
-            confBuildersForFileType.put(FileType.CSS, new YuiCssConfigurationDomBuilder());
-            confBuildersForFileType.put(FileType.JAVASCRIPT, new YuiJavascriptConfigurationDomBuilder());
-            confBuildersForFileType.put(FileType.SPRITE, new SpriteConfiguratonDomBuilder());
+            // All possible builders for each supported NutType
+            confBuildersForFileType = new HashMap<NutType, DomConfigurationBuilder>();
+            confBuildersForFileType.put(NutType.CSS, new YuiCssConfigurationDomBuilder());
+            confBuildersForFileType.put(NutType.JAVASCRIPT, new YuiJavascriptConfigurationDomBuilder());
+            confBuildersForFileType.put(NutType.PNG, new SpriteConfiguratonDomBuilder());
 
             // Create and configure the builder
             final DocumentBuilder builder = factory.newDocumentBuilder();
@@ -199,6 +201,8 @@ public final class WuicXmlLoader {
             throw new WuicXmlReadException(se);
         } catch (IOException ioe) {
             throw new WuicXmlReadException(ioe);
+        } catch (StreamException se) {
+            throw new WuicXmlReadException(se);
         }
     }
     
@@ -261,7 +265,7 @@ public final class WuicXmlLoader {
             final String className = classAttr.getNodeValue();
 
             try {
-                NutDaoBuilder wrdb = NutDaoBuilderFactory.getInstance().create(className);
+                GenericBuilder wrdb = NutDaoBuilderFactory.getInstance().create(className);
 
                 // Look for properties
                 final Node propertiesNode = resourceDaoBuilderNode.getFirstChild();
@@ -274,11 +278,11 @@ public final class WuicXmlLoader {
                     }
                 }
 
-                resourceDaoBuilders.put(idAttr.getNodeValue(), wrdb);
+                resourceDaoBuilders.put(idAttr.getNodeValue(), (NutDaoBuilder) wrdb);
             } catch (UnableToInstantiateException utie) {
                 throw new WuicXmlUnableToInstantiateException(utie);
-            } catch (WuicRdbPropertyNotSupportedException wrnse) {
-                throw new WuicXmlWrappedErrorCodeException(wrnse);
+            } catch (BuilderPropertyNotSupportedException bpnse) {
+                throw new WuicXmlWrappedErrorCodeException(bpnse);
             }
         }
     }
@@ -337,7 +341,7 @@ public final class WuicXmlLoader {
             
             // From the type, we can determine which builder has to be used
             final Node typeAttribute = configuration.getAttributes().getNamedItem("type");
-            final FileType type = FileType.parseFileType(typeAttribute.getNodeValue());
+            final NutType type = NutType.parseNutType(typeAttribute.getNodeValue());
             
             // A builder exists
             if (confBuildersForFileType.containsKey(type)) {
@@ -367,8 +371,9 @@ public final class WuicXmlLoader {
      * 
      * @param document the document which contains the groups to read
      * @throws com.github.wuic.exception.xml.WuicXmlReadException if the {@link com.github.wuic.nut.NutDaoBuilder} could not be read
+     * @throws StreamException if one {@link NutsHeap} could not be created
      */
-    private void readGroups(final Document document) throws WuicXmlException {
+    private void readGroups(final Document document) throws WuicXmlException, StreamException {
         // Get the root element
         final Node groups = document.getElementsByTagName("groups").item(0);
 
@@ -428,13 +433,13 @@ public final class WuicXmlLoader {
      * 
      * @param id the id
      * @return the {@code NutsHeap} is exists
-     * @throws WuicGroupNotFoundException if the group does not exists
+     * @throws com.github.wuic.exception.WorkflowNotFoundException if the group does not exists
      */
-    public NutsHeap getFilesGroup(final String id) throws WuicGroupNotFoundException {
+    public NutsHeap getFilesGroup(final String id) throws WorkflowNotFoundException {
         final NutsHeap retval = filesGroups.get(id);
 
         if (retval == null) {
-            throw new WuicGroupNotFoundException(id);
+            throw new WorkflowNotFoundException(id);
         }
 
         return retval;

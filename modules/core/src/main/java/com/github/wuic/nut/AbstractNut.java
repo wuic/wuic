@@ -37,7 +37,7 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ import java.util.List;
 /**
  * <p>
  * Base implementation of the {@link Nut} interface. A Nut is often represented by a name and a
- * {@link FileType}. This class already manages it.
+ * {@link com.github.wuic.NutType}. This class already manages it.
  * </p>
  *
  * @author Guillaume DROUET
@@ -58,7 +58,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * The path type.
      */
-    private FileType fileType;
+    private NutType fileType;
 
     /**
      * The path name.
@@ -107,9 +107,9 @@ public abstract class AbstractNut implements Nut {
      * @param c cacheable or not
      * @param a aggregatable or not
      */
-    protected AbstractNut(final String name, final FileType ft, final Boolean bc, final Boolean tc, final Boolean c, final Boolean a) {
+    protected AbstractNut(final String name, final NutType ft, final Boolean bc, final Boolean tc, final Boolean c, final Boolean a) {
         if (ft == null) {
-            throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null FileType"));
+            throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
         }
 
         if (name == null) {
@@ -129,7 +129,7 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public FileType getFileType() {
+    public NutType getNutType() {
         return fileType;
     }
 

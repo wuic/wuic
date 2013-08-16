@@ -38,9 +38,9 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.FileType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
@@ -96,12 +96,12 @@ public class CGTextAggregatorEngine extends Engine {
         }
         
         // In memory buffer for the aggregated resources
-        final String fileName = "aggregate" + configuration.getFileType().getExtensions()[0];
+        final String fileName = "aggregate" + request.getResources().get(0).getNutType().getExtensions()[0];
         final ByteArrayOutputStream target = new ByteArrayOutputStream();
         
         // Append each path
         InputStream is = null;
-        FileType fileType = null;
+        NutType nutType = null;
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
 
         final List<Nut> retval = new ArrayList<Nut>();
@@ -112,12 +112,12 @@ public class CGTextAggregatorEngine extends Engine {
             // Resource must be aggregatable
             if (resource.isAggregatable()) {
                 try {
-                    fileType = resource.getFileType();
+                    nutType = resource.getNutType();
                     is = resource.openStream();
                     IOUtils.copyStream(is, target);
 
                     // Begin content path writing on a new line when no compression is configured
-                    if (!configuration.compress()) {
+                    if (!getConfiguration().compress()) {
                         buffer[0] = '\n';
                         target.write(buffer, 0, 1);
                     }
@@ -134,7 +134,7 @@ public class CGTextAggregatorEngine extends Engine {
         }
 
         // Create the a nut containing all the aggregated resources
-        final Nut aggregate = new ByteArrayNut(target.toByteArray(), fileName, fileType);
+        final Nut aggregate = new ByteArrayNut(target.toByteArray(), fileName, nutType);
 
         // Eventually add some extracted referenced resources
         if (!referencedResources.isEmpty()) {

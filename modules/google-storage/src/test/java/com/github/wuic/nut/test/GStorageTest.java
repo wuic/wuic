@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.test;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.impl.YuiConfigurationImpl;
@@ -86,12 +86,12 @@ public class GStorageTest {
         final NutsHeap nutsHeap = mock(NutsHeap.class);
         final byte[] array = ".cloud { text-align : justify;}".getBytes();
         final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
-        when(nutsHeap.getConfiguration()).thenReturn(config);
-        when(nutsHeap.getNuts()).thenReturn(Arrays.asList((Nut) new ByteArrayNut(array, "cloud.css", FileType.CSS)));
+        when(nutsHeap.getNutType()).thenReturn(NutType.CSS);
+        when(nutsHeap.getNuts()).thenReturn(Arrays.asList((Nut) new ByteArrayNut(array, "cloud.css", NutType.CSS)));
 
-        final Engine compressor = new CompressionEngineFactory(config).create(FileType.CSS);
+        final Engine compressor = new CompressionEngineFactory(config).create(NutType.CSS);
         final Engine cacheEngine = new EhCacheEngine(config);
-        final Engine aggregator = new AggregationEngineFactory(config).create(FileType.CSS);
+        final Engine aggregator = new AggregationEngineFactory(config).create(NutType.CSS);
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 

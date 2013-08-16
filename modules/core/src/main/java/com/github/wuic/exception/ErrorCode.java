@@ -119,12 +119,24 @@ public interface ErrorCode {
     /**
      * Indicates that a nut has not been found.
      */
-    long RESOURCE_NOT_FOUND = 19860606200L;
+    long NUT_NOT_FOUND = 19860606200L;
 
     /**
-     * Indicates that a group has not been found.
+     * Indicates that a workflow has not been found.
      */
-    long GROUP_NOT_FOUND = 19860606201L;
+    long WORKFLOW_NOT_FOUND = 19860606201L;
+
+    /**
+     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by a
+     * {@link com.github.wuic.nut.NutDaoBuilder}.
+     */
+    long NUT_DAO_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606202L;
+
+    /**
+     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
+     * {@link com.github.wuic.factory.EngineBuilder}.
+     */
+    long ENGINE_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
 
     /**
      * <p>

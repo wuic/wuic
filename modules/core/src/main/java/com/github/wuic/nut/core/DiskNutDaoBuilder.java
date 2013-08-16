@@ -39,11 +39,12 @@
 package com.github.wuic.nut.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.*;
-import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
+import com.github.wuic.nut.setter.*;
+import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 
 /**
  * <p>
@@ -73,7 +74,7 @@ public class DiskNutDaoBuilder extends AbstractNutDaoBuilder {
     /**
      * {@inheritDoc}
      */
-    public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
+    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
         return new DiskNutDao((String) property(ApplicationConfig.BASE_PATH),
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
                 (String[]) property(ApplicationConfig.PROXY_URIS),

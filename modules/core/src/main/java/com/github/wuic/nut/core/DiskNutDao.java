@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.core;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -137,7 +137,7 @@ public class DiskNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final FileType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
         init();
 
         try {

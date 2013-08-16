@@ -40,9 +40,9 @@ package com.github.wuic.servlet;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.ErrorCode;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.WuicResourceNotFoundException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
@@ -124,8 +124,8 @@ public class WuicServlet extends HttpServlet {
     public WuicServlet() {
         errorCodeToHttpCode = new HashMap<Long, Integer>();
 
-        errorCodeToHttpCode.put(ErrorCode.RESOURCE_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
-        errorCodeToHttpCode.put(ErrorCode.GROUP_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
+        errorCodeToHttpCode.put(ErrorCode.NUT_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
+        errorCodeToHttpCode.put(ErrorCode.WORKFLOW_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
     }
 
     /**
@@ -214,7 +214,7 @@ public class WuicServlet extends HttpServlet {
         // Resource found
         if (resource != null) {
             try {
-                response.setContentType(resource.getFileType().getMimeType());
+                response.setContentType(resource.getNutType().getMimeType());
                 is = resource.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
                 is = null;
@@ -224,7 +224,7 @@ public class WuicServlet extends HttpServlet {
                 IOUtils.close(is);
             }
         } else {
-            throw new WuicResourceNotFoundException(resourceName, groupId);
+            throw new NutNotFoundException(resourceName, groupId);
         }
     }
 

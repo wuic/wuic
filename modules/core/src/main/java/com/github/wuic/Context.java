@@ -38,11 +38,20 @@
 
 package com.github.wuic;
 
-import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.Nut;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * <p>
- * The context is the nut element of WUIC which allows to process resources.
+ * The context is the core element of WUIC which allows to process resources.
  * </p>
  *
  * <p>
@@ -54,7 +63,37 @@ import com.github.wuic.nut.NutsHeap;
  * @version 1.0
  * @since 0.4.0
  */
-public interface Context {
+public class Context implements Observer {
+
+    /**
+     * All possible workflow mapped to their ID.
+     */
+    private Map<String, Workflow> workflowMap;
+
+    /**
+     * Indicates if this context is up to date or not.
+     */
+    private Boolean upToDate;
+
+    /**
+     * The {@link ContextBuilder} which created this instance.
+     */
+    private ContextBuilder contextBuilder;
+
+    /**
+     * <p>
+     * Creates a new instance. Package level access to let to the {@link ContextBuilder} the total control on instantiation.
+     * </p>
+     *
+     * @param cb the builder
+     * @param wm the workflow map
+     */
+    Context(final ContextBuilder cb, final Map<String, Workflow> wm) {
+        contextBuilder = cb;
+        contextBuilder.addObserver(this);
+        workflowMap = wm;
+        upToDate = true;
+    }
 
     /**
      * <p>
@@ -62,9 +101,20 @@ public interface Context {
      * </p>
      *
      * @param workflowId the workflow ID
-     * @return the nuts heap
+     * @param contextPath the context path where resources will be referenced
+     * @return the resulting nuts
+     * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    NutsHeap process(String workflowId);
+    public List<Nut> process(final String workflowId, final String contextPath) throws WuicException {
+        final Workflow workflow = workflowMap.get(workflowId);
+
+        if (workflow == null) {
+            throw new WorkflowNotFoundException(workflowId);
+        }
+
+        final Engine chain = workflow.getChains().get(workflow.getHeap().getNutType());
+        return chain.parse(new EngineRequest(contextPath, workflow.getHeap()));
+    }
 
     /**
      * <p>
@@ -74,5 +124,18 @@ public interface Context {
      * @return {@code true} if this context is up to date, {@code false} if the builder has been modified since the
      * context has been generated
      */
-    Boolean upToDate();
+    public Boolean isUpToDate() {
+        return upToDate;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final Observable o, final Object arg) {
+
+        // This context is not usable anymore, stop observing to not still referenced anymore
+        contextBuilder.deleteObserver(this);
+        upToDate = false;
+    }
 }

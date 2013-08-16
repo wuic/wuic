@@ -38,12 +38,11 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.FileType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.ImageConfiguration;
@@ -98,10 +97,8 @@ public class CGImageAggregatorEngine extends PackerEngine {
      * </p>
      * 
      * @param config the configuration
-     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a bad configuration is detected
      */
-    public CGImageAggregatorEngine(final Configuration config)
-            throws WuicXmlReadException {
+    public CGImageAggregatorEngine(final Configuration config) {
         if (config instanceof ImageConfiguration) {
             configuration = (ImageConfiguration) config;
             setDimensionPacker(configuration.createDimensionPacker());
@@ -152,7 +149,7 @@ public class CGImageAggregatorEngine extends PackerEngine {
                 throw new StreamException(ioe);
             }
 
-            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, FileType.PNG);
+            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG);
 
             return Arrays.asList(res);
         }

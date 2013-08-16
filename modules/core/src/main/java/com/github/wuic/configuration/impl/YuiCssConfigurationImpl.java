@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.YuiConfiguration;
 import com.github.wuic.configuration.YuiCssConfiguration;
 
@@ -68,7 +68,7 @@ public class YuiCssConfigurationImpl extends YuiConfigurationImpl implements Yui
      * {@inheritDoc}
      */
     @Override
-    public FileType getFileType() {
-        return FileType.CSS;
+    public NutType getNutType() {
+        return NutType.CSS;
     }
 }

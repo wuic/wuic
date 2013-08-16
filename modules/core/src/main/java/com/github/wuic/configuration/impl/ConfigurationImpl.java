@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.Configuration;
 
 import net.sf.ehcache.Cache;
@@ -153,7 +153,7 @@ public class ConfigurationImpl implements Configuration {
     /**
      * {@inheritDoc}
      */
-    public FileType getFileType() {
+    public NutType getNutType() {
         throw new UnsupportedOperationException();
     }
     

@@ -41,7 +41,6 @@ package com.github.wuic;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
 
 import java.util.List;
@@ -70,9 +69,9 @@ public final class WuicFacade {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     /**
-     * The {@link EngineFactoryBuilder} used in this facade.
+     * The {@link com.github.wuic.factory.EngineBuilder} used in this facade.
      */
-    private EngineFactoryBuilder factoryBuilder;
+    private EngineFactoryBuilderImpl factoryBuilder;
 
     /**
      * The context path where the files will be exposed.
@@ -157,7 +156,7 @@ public final class WuicFacade {
         final NutsHeap group = factoryBuilder.getLoader().getFilesGroup(id);
 
         // Build the engine that generates the files
-        final FileType fileType = group.getConfiguration().getFileType();
+        final NutType fileType = group.getNutType();
         final Engine engine = factoryBuilder.build().create(fileType);
 
         // Parse the files

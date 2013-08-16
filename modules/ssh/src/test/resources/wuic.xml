@@ -5,12 +5,12 @@
 	<resource-factory-builders>
         <resource-factory-builder id="sshFactoryBuilder" class="SshNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.regex">true</property>
-                <property key="c.g.wuic.login">wuic</property>
-                <property key="c.g.wuic.password">wuic</property>
-                <property key="c.g.wuic.basePath">java.io.tmpdir</property>
-                <property key="c.g.wuic.basePathAsSystemProperty">true</property>
-                <property key="c.g.wuic.serverPort">9876</property>
+                <property key="c.g.wuic.dao.regex">true</property>
+                <property key="c.g.wuic.dao.login">wuic</property>
+                <property key="c.g.wuic.dao.password">wuic</property>
+                <property key="c.g.wuic.dao.basePath">java.io.tmpdir</property>
+                <property key="c.g.wuic.dao.basePathAsSystemProperty">true</property>
+                <property key="c.g.wuic.dao.serverPort">9876</property>
             </properties>
         </resource-factory-builder>
 	</resource-factory-builders>

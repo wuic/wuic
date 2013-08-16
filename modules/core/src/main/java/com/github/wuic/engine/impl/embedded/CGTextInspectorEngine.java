@@ -38,7 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
@@ -155,7 +155,7 @@ public class CGTextInspectorEngine extends Engine {
             }
 
             // Create and add the inspected nut with its transformations
-            final Nut inspected = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getFileType());
+            final Nut inspected = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
             inspected.setCacheable(resource.isCacheable());
             inspected.setAggregatable(resource.isAggregatable());
             inspected.setTextCompressible(resource.isTextCompressible());
@@ -224,7 +224,7 @@ public class CGTextInspectorEngine extends Engine {
                 for (Nut r : res) {
                     Nut inspected = r;
 
-                    if (r.getFileType().equals(FileType.CSS)) {
+                    if (r.getNutType().equals(NutType.CSS)) {
                         inspected = inspect(r, request);
                     }
 
@@ -248,8 +248,8 @@ public class CGTextInspectorEngine extends Engine {
      */
     private void configureExtracted(final Nut resource) {
         resource.setAggregatable(Boolean.FALSE);
-        resource.setTextCompressible(resource.getFileType().isText());
-        resource.setBinaryCompressible(!resource.getFileType().isText());
+        resource.setTextCompressible(resource.getNutType().isText());
+        resource.setBinaryCompressible(!resource.getNutType().isText());
     }
 
     /**

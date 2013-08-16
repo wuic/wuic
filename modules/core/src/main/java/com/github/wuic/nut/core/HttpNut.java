@@ -38,8 +38,8 @@
 
 package com.github.wuic.nut.core;
 
-import com.github.wuic.FileType;
-import com.github.wuic.exception.WuicResourceNotFoundException;
+import com.github.wuic.NutType;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class HttpNut extends AbstractNut {
      * @param url the URL
      * @param fileType the path type
      */
-    public HttpNut(final String name, final URL url, final FileType fileType) {
+    public HttpNut(final String name, final URL url, final NutType fileType) {
         super(name, fileType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         resourceUrl = url;
     }
@@ -80,11 +80,11 @@ public class HttpNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws WuicResourceNotFoundException {
+    public InputStream openStream() throws NutNotFoundException {
         try {
             return resourceUrl.openStream();
         } catch (IOException ioe) {
-            throw new WuicResourceNotFoundException(ioe);
+            throw new NutNotFoundException(ioe);
         }
     }
 }

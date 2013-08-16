@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -176,7 +176,7 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
             }
 
             final String ext = p.substring(index);
-            final FileType type = FileType.getFileTypeForExtension(ext);
+            final NutType type = NutType.getNutTypeForExtension(ext);
             final Nut res = accessFor(p, type);
 
             // last update is an information only required when polling
@@ -278,7 +278,7 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
      * @return the {@link Nut}
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while creating access
      */
-    protected abstract Nut accessFor(String realPath, FileType type) throws StreamException;
+    protected abstract Nut accessFor(String realPath, NutType type) throws StreamException;
 
     /**
      * <p>

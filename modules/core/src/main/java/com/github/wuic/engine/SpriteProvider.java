@@ -51,7 +51,7 @@ import com.github.wuic.nut.Nut;
  * generated image is located through a sprite. A sprite could be generated
  * according to specific convention in a chosen language. The implementation
  * of this interface must be able to specify the language through a known
- * {@link com.github.wuic.FileType}.
+ * {@link com.github.wuic.NutType}.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -73,12 +73,12 @@ public interface SpriteProvider {
     /**
      * <p>
      * Get the sprite of all the added images in a map associating
-     * a {@link com.github.wuic.FileType} as key a {@link com.github.wuic.nut.Nut} as value.
+     * a {@link com.github.wuic.NutType} as key a {@link com.github.wuic.nut.Nut} as value.
      * </p>
      * 
      * <p>
      * Each sprite is in a path associated to a supported
-     * {@link com.github.wuic.FileType} which helps
+     * {@link com.github.wuic.NutType} which helps
      * to determinate the language used to represent them. 
      * </p>
      * 

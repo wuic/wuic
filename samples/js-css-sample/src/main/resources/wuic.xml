@@ -5,13 +5,13 @@
     <resource-factory-builders>
         <resource-factory-builder id="appResourceFactoryBuilder" class="WebappNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.basePath">jquery-ui-1.10.2</property>
+                <property key="c.g.wuic.dao.basePath">jquery-ui-1.10.2</property>
             </properties>
         </resource-factory-builder>
         <resource-factory-builder id="httpResourceFactoryBuilder" class="HttpNutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.serverPort">8080</property>
-                <property key="c.g.wuic.basePath">jquery-ui-1.10.2</property>
+                <property key="c.g.wuic.dao.serverPort">8080</property>
+                <property key="c.g.wuic.dao.basePath">jquery-ui-1.10.2</property>
             </properties>
         </resource-factory-builder>
     </resource-factory-builders>

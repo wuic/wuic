@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.ftp;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.PollingOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
@@ -226,7 +226,7 @@ public class FtpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final FileType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
         try {
             // Connect if necessary
             connect();

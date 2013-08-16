@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 
 import net.sf.ehcache.Cache;
 
@@ -101,12 +101,12 @@ public interface Configuration {
 
     /**
      * <p>
-     * Gets the {@link FileType} supported by this configuration.
+     * Gets the {@link com.github.wuic.NutType} supported by this configuration.
      * </p>
      * 
-     * @return the supported {@link FileType}
+     * @return the supported {@link com.github.wuic.NutType}
      */
-    FileType getFileType();
+    NutType getNutType();
 
     /**
      * <p>

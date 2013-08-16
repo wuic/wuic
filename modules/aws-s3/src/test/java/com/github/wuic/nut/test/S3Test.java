@@ -40,7 +40,8 @@ package com.github.wuic.nut.test;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.github.wuic.FileType;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.impl.YuiConfigurationImpl;
@@ -52,6 +53,7 @@ import com.github.wuic.factory.impl.AggregationEngineFactory;
 import com.github.wuic.factory.impl.CompressionEngineFactory;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.s3.S3NutDao;
+import com.github.wuic.nut.s3.S3NutDaoBuilder;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -76,7 +78,7 @@ import static org.mockito.Mockito.when;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.0
+ * @version 1.1
  * @since 0.3.3
  */
 @RunWith(JUnit4.class)
@@ -84,8 +86,33 @@ public class S3Test {
 
     /**
      * <p>
+     * Test builder.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void builderTest() throws Exception {
+        new S3NutDaoBuilder()
+                .property(ApplicationConfig.CLOUD_BUCKET, "bucket")
+                .property(ApplicationConfig.LOGIN, "login")
+                .property(ApplicationConfig.PASSWORD, "password")
+                .build();
+
+        try {
+            new S3NutDaoBuilder().property("foo", "value");
+            Assert.fail();
+        } catch (Exception e) {
+            // Normal behavior : property not supported
+        }
+    }
+
+    /**
+     * <p>
      * Tests the S3 access.
      * </p>
+     *
+     * @throws Exception if test fails
      */
     @Test
     public void s3Test() throws Exception {
@@ -117,9 +144,9 @@ public class S3Test {
         final NutsHeap nutsHeap = new NutsHeap(config, Arrays.asList("[cloud].css"), dao, "heap");
         Assert.assertEquals(nutsHeap.getNuts().size(), 1);
 
-        final Engine compressor = new CompressionEngineFactory(config).create(FileType.CSS);
+        final Engine compressor = new CompressionEngineFactory(config).create(NutType.CSS);
         final Engine cacheEngine = new EhCacheEngine(config);
-        final Engine aggregator = new AggregationEngineFactory(config).create(FileType.CSS);
+        final Engine aggregator = new AggregationEngineFactory(config).create(NutType.CSS);
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 

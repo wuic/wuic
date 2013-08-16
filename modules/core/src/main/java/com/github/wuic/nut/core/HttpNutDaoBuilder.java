@@ -39,15 +39,15 @@
 package com.github.wuic.nut.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.BasePathPropertySetter;
-import com.github.wuic.nut.builder.BasePathAsSysPropPropertySetter;
-import com.github.wuic.nut.builder.AbstractNutDaoBuilder;
-import com.github.wuic.nut.builder.ServerDomainPropertySetter;
-import com.github.wuic.nut.builder.SecretProtocolPropertySetter;
-import com.github.wuic.nut.builder.ServerPortPropertySetter;
+import com.github.wuic.nut.setter.BasePathPropertySetter;
+import com.github.wuic.nut.setter.BasePathAsSysPropPropertySetter;
+import com.github.wuic.nut.AbstractNutDaoBuilder;
+import com.github.wuic.nut.setter.ServerDomainPropertySetter;
+import com.github.wuic.nut.setter.SecretProtocolPropertySetter;
+import com.github.wuic.nut.setter.ServerPortPropertySetter;
 
 /**
  * <p>
@@ -78,7 +78,7 @@ public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {
      * {@inheritDoc}
      */
     @Override
-    public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
+    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
         return new HttpNutDao((Boolean) property(ApplicationConfig.SECRET_PROTOCOL),
                 (String) property(ApplicationConfig.SERVER_DOMAIN),
                 (Integer) property(ApplicationConfig.SERVER_PORT),

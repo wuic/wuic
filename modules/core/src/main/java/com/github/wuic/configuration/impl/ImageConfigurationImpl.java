@@ -38,7 +38,7 @@
 
 package com.github.wuic.configuration.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.ImageConfiguration;
@@ -93,8 +93,8 @@ public class ImageConfigurationImpl extends ConfigurationImpl implements ImageCo
     /**
      * {@inheritDoc}
      */
-    public FileType getFileType() {
-        return FileType.PNG;
+    public NutType getNutType() {
+        return NutType.PNG;
     }
 
     /**

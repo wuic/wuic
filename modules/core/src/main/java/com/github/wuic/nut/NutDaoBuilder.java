@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.util.GenericBuilder;
 
 /**
  * <p>
@@ -49,43 +49,6 @@ import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
  * @version 1.2
  * @since 0.3.1
  */
-public interface NutDaoBuilder {
+public interface NutDaoBuilder extends GenericBuilder<NutDao> {
 
-    /**
-     * <p>
-     * Decorates this builder with a property.
-     * </p>
-     *
-     * @param key the key
-     * @param value the value
-     * @return a builder taking in consideration the new property
-     * @throws WuicRdbPropertyNotSupportedException if the property key is not supported or if the value is incorrect
-     */
-    NutDaoBuilder property(String key, Object value) throws WuicRdbPropertyNotSupportedException;
-
-    /**
-     * <p>
-     * Gets the property identified by the given key.
-     * </p>
-     *
-     * @param key the key
-     * @return the value associated to the key
-     * @throws WuicRdbPropertyNotSupportedException if the property key is not supported
-     */
-    Object property(String key) throws WuicRdbPropertyNotSupportedException;
-
-    /**
-     * <p>
-     * Builds a new {@link NutDao} thanks to the current state
-     * of this builder.
-     * </p>
-     *
-     * <p>
-     * If the {@link NutDao} could not be built, then {@link com.github.wuic.exception.wrapper.BadArgumentException}
-     * should be thrown.
-     * </p>
-     *
-     * @return the new {@link NutDao}
-     */
-    NutDao build();
 }

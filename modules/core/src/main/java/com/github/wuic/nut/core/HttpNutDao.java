@@ -38,7 +38,7 @@
 
 package com.github.wuic.nut.core;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
@@ -107,7 +107,7 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final FileType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
         final String url = IOUtils.mergePath(baseUrl, realPath);
         log.debug("Opening HTTP access for {}", url);
 

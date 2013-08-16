@@ -39,11 +39,12 @@
 package com.github.wuic.nut.ssh;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.*;
-import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
+import com.github.wuic.nut.setter.*;
+import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 
 /**
  * <p>
@@ -82,7 +83,7 @@ public class SshNutDaoBuilder extends AbstractNutDaoBuilder {
     /**
      * {@inheritDoc}
      */
-    public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
+    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
         return new SshNutDao((Boolean) property(ApplicationConfig.REGEX),
                 (String) property(ApplicationConfig.SERVER_DOMAIN),
                 (Integer) property(ApplicationConfig.SERVER_PORT),

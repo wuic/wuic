@@ -38,11 +38,10 @@
 
 package com.github.wuic.factory.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.factory.EngineFactory;
-import com.github.wuic.factory.EngineFactoryBuilder;
 import com.github.wuic.xml.WuicXmlLoader;
 
 /**
@@ -55,7 +54,7 @@ import com.github.wuic.xml.WuicXmlLoader;
  * @version 1.3
  * @since 0.1.0
  */
-public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
+public class EngineFactoryBuilderImpl {
 
     /**
      * The XML loader.
@@ -86,32 +85,41 @@ public class EngineFactoryBuilderImpl implements EngineFactoryBuilder {
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Builds a new factory.
+     * </p>
+     *
+     * @return {@link EngineFactory}
      */
     public EngineFactory build() {
         final EngineFactoryImpl retval = new EngineFactoryImpl();
         
         // YUI support for CSS compression
         final Configuration cssConf = wuicXml.getConfiguration("yuicompressor-css");
-        retval.addConfigurationForFileType(FileType.CSS, cssConf);
+        retval.addConfigurationForFileType(NutType.CSS, cssConf);
 
         // YUI support for JS compression
         final Configuration jsConf = wuicXml.getConfiguration("yuicompressor-js");
-        retval.addConfigurationForFileType(FileType.JAVASCRIPT, jsConf);
+        retval.addConfigurationForFileType(NutType.JAVASCRIPT, jsConf);
 
         // Default compression for sprite files
         final Configuration spriteConf = wuicXml.getConfiguration("sprite-image-png");
-        retval.addConfigurationForFileType(FileType.SPRITE, spriteConf);
+        retval.addConfigurationForFileType(NutType.PNG, spriteConf);
         
         // Default compression for PNG files
-        final Configuration pngConf = wuicXml.getConfiguration("image-png");
-        retval.addConfigurationForFileType(FileType.PNG, pngConf);
+        //final Configuration pngConf = wuicXml.getConfiguration("image-png");
+        //retval.addConfigurationForFileType(NutType.PNG, pngConf);
         
         return retval;
     }
-    
+
+
     /**
-     * {@inheritDoc}
+     * <p>
+     * Returns the {@link WuicXmlLoader} used by this builder.
+     * </p>
+     *
+     * @return the XML loader
      */
     public WuicXmlLoader getLoader() {
         return wuicXml;

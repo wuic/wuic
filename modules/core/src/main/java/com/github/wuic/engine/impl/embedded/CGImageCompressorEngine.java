@@ -40,7 +40,6 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.configuration.ImageConfiguration;
 import com.github.wuic.util.IOUtils;
@@ -73,9 +72,8 @@ public class CGImageCompressorEngine extends CGAbstractCompressorEngine {
      * </p>
      * 
      * @param config the {@link Configuration}
-     * @throws com.github.wuic.exception.xml.WuicXmlReadException if a bad configuration is detected
      */
-    public CGImageCompressorEngine(final Configuration config) throws WuicXmlReadException {
+    public CGImageCompressorEngine(final Configuration config) {
         if (config instanceof ImageConfiguration) {
             configuration = (ImageConfiguration) config;
         } else {

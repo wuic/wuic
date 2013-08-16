@@ -40,7 +40,7 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.util.IOUtils;
@@ -105,7 +105,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
 
         // Make a nut and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayNut(bytes, "sprites" + spriteResourceNameSuffix + ".js", FileType.JAVASCRIPT);
+        return new ByteArrayNut(bytes, "sprites" + spriteResourceNameSuffix + ".js", NutType.JAVASCRIPT);
     }
 
     /**

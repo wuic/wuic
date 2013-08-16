@@ -38,8 +38,8 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.FileType;
-import com.github.wuic.exception.WuicResourceNotFoundException;
+import com.github.wuic.NutType;
+import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -69,9 +69,9 @@ public interface Nut extends Serializable {
      * </p>
      *
      * @return the opened input stream
-     * @throws WuicResourceNotFoundException if an I/O error occurs
+     * @throws com.github.wuic.exception.NutNotFoundException if an I/O error occurs
      */
-    InputStream openStream() throws WuicResourceNotFoundException;
+    InputStream openStream() throws NutNotFoundException;
 
     /**
      * <p>
@@ -80,7 +80,7 @@ public interface Nut extends Serializable {
      * 
      * @return the path type
      */
-    FileType getFileType();
+    NutType getNutType();
     
     /**
      * <p>

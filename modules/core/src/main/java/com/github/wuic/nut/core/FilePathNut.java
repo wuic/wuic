@@ -37,8 +37,8 @@
 
 package com.github.wuic.nut.core;
 
-import com.github.wuic.FileType;
-import com.github.wuic.exception.WuicResourceNotFoundException;
+import com.github.wuic.NutType;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 import com.github.wuic.path.FilePath;
 
@@ -76,7 +76,7 @@ public class FilePathNut extends AbstractNut {
      * @param name the nut name
      * @param ft the path type
      */
-    public FilePathNut(final FilePath p, final String name, final FileType ft) {
+    public FilePathNut(final FilePath p, final String name, final NutType ft) {
         super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         path = p;
     }
@@ -85,11 +85,11 @@ public class FilePathNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws WuicResourceNotFoundException {
+    public InputStream openStream() throws NutNotFoundException {
         try {
             return path.openStream();
         } catch (IOException ioe) {
-            throw new WuicResourceNotFoundException(ioe);
+            throw new NutNotFoundException(ioe);
         }
     }
 }

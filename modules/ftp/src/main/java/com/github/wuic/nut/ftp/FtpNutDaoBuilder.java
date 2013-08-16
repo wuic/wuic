@@ -39,11 +39,12 @@
 package com.github.wuic.nut.ftp;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.WuicRdbPropertyNotSupportedException;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.builder.*;
-import com.github.wuic.nut.builder.ProxyUrisPropertySetter;
+import com.github.wuic.nut.setter.*;
+import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -81,7 +82,7 @@ public class FtpNutDaoBuilder extends AbstractNutDaoBuilder {
      * {@inheritDoc}
      */
     @Override
-    public NutDao internalBuild() throws WuicRdbPropertyNotSupportedException {
+    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
         return new FtpNutDao(
                 (Boolean) property(ApplicationConfig.SECRET_PROTOCOL),
                 (String) property(ApplicationConfig.SERVER_DOMAIN),

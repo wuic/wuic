@@ -38,14 +38,13 @@
 
 package com.github.wuic.factory.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGCompositeEngine;
 import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
-import com.github.wuic.engine.impl.embedded.CGImageCompressorEngine;
 import com.github.wuic.engine.impl.embedded.CGSpriteCompressorEngine;
 import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
 import com.github.wuic.engine.impl.yuicompressor.JavascriptYuiCompressorEngine;
@@ -81,7 +80,7 @@ public class CompressionEngineFactory implements EngineFactory {
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws WuicXmlReadException {
+    public Engine create(final NutType fileType) throws WuicXmlReadException {
         switch (fileType) {
             case CSS :
                 return new CGCompositeEngine(new CGCssInspectorEngine(configuration), new CssYuiCompressorEngine(configuration));
@@ -90,9 +89,9 @@ public class CompressionEngineFactory implements EngineFactory {
                 return new JavascriptYuiCompressorEngine(configuration);
                 
             case PNG :
-                return new CGImageCompressorEngine(configuration);
+            //    return new CGImageCompressorEngine(configuration);
                 
-            case SPRITE :
+            //case SPRITE :
                 return new CGSpriteCompressorEngine(configuration);
             
             default :

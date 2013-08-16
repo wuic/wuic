@@ -38,12 +38,11 @@
 
 package com.github.wuic.factory.impl;
 
-import com.github.wuic.FileType;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine;
 import com.github.wuic.engine.impl.embedded.CGSpriteAggregatorEngine;
 import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
 import com.github.wuic.factory.EngineFactory;
@@ -78,16 +77,16 @@ public class AggregationEngineFactory implements EngineFactory {
     /**
      * {@inheritDoc}
      */
-    public Engine create(final FileType fileType) throws WuicXmlReadException {
+    public Engine create(final NutType fileType) throws WuicXmlReadException {
         switch (fileType) {
             case CSS :
             case JAVASCRIPT :
                 return new CGTextAggregatorEngine(configuration);
                 
             case PNG :
-                return new CGImageAggregatorEngine(configuration);
+            //    return new CGImageAggregatorEngine(configuration);
                 
-            case SPRITE :
+            //case SPRITE :
                 return new CGSpriteAggregatorEngine(configuration);
             
             default :
