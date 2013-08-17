@@ -35,41 +35,11 @@
  * licenses."
  */
 
-
-package com.github.wuic.nut;
-
 /**
  * <p>
- * This interface represents a listener which expects to be notified of changes when they occur on a particular
- * nut.
+ * Test package for engine.
  * </p>
- *
- * <p>
- * To be notified, it must be registered to the {@link NutDao} thanks to its  {@link NutDao#observe(String, NutDaoListener...)}
- * method.
- * </p>
- *
+ * 
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.4.0
  */
-public interface NutDaoListener {
-
-    /**
-     * <p>
-     * Called when a nut has been updated.
-     * </p>
-     *
-     * <p>
-     * When the observable object checks in one operation the changes on a set of nut and when this listener is
-     * registered for many of them, the later could notifies the former to stops notifying it <b>only</b> during
-     * the operation.
-     * </p>
-     *
-     * @param dao the DAO which detects the update
-     * @param path the updated nut's path
-     * @return {@code true} if this listener needs to be notified of any other update during the observable's operation,
-     * {@code false} otherwise
-     */
-    boolean resourceUpdated(NutDao dao, String path);
-}
+package com.github.wuic.test.engine;

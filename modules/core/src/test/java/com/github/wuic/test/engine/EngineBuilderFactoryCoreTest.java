@@ -36,7 +36,7 @@
  */
 
 
-package com.github.wuic.test.dao;
+package com.github.wuic.test.engine;
 
 import com.github.wuic.bootstrap.core.EngineBuilderFactory;
 import com.github.wuic.engine.core.*;

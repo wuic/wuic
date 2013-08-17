@@ -91,11 +91,6 @@ public abstract class AbstractNut implements Nut {
     private List<Nut> referencedResources;
 
     /**
-     * Timestamp which indicated the last update.
-     */
-    private long lastUpdate;
-
-    /**
      * <p>
      * Creates a new instance.
      * </p>
@@ -228,16 +223,6 @@ public abstract class AbstractNut implements Nut {
     @Override
     public List<Nut> getReferencedNuts() {
         return referencedResources;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean lastUpdate(final long timestamp) {
-        final Boolean retval = timestamp != this.lastUpdate;
-        this.lastUpdate = timestamp;
-        return retval;
     }
 
     /**

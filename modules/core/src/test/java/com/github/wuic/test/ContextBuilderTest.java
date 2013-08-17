@@ -187,10 +187,12 @@ public class ContextBuilderTest {
     public void nominalTest() throws Exception {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
+                .tag("test")
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                 .workflow("workflow", "heap", new String[]{"engine"})
+                .releaseTag()
                 .build();
 
         // Should be aggregated now
@@ -206,10 +208,12 @@ public class ContextBuilderTest {
     public void withoutDefaultEnginesTest() throws Exception {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
+                .tag("test")
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                 .workflow("workflow", "heap", new String[]{"engine"}, false)
+                .releaseTag()
                 .build();
 
         Assert.assertTrue(context.process("workflow", "").size() > 1);
@@ -237,20 +241,26 @@ public class ContextBuilderTest {
     @Test
     public void withStoreTest() throws Exception {
         try {
-            new ContextBuilder().nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+            new ContextBuilder()
+                    .tag("test")
+                    .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                     .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                     .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                     .workflow("workflow", "heap", new String[]{"engine"}, "dao")
+                    .releaseTag()
                     .build();
         } catch (Exception e) {
             // Normal behavior : mockDaoBuilder does not supports save()
         }
 
-        new ContextBuilder().nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+        new ContextBuilder()
+                .tag("test")
+                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .nutDaoBuilder("store", mockStoreBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                 .workflow("workflow", "heap", new String[]{"engine"}, "store")
+                .releaseTag()
                 .build();
     }
 
@@ -261,9 +271,11 @@ public class ContextBuilderTest {
     @Test
     public void testClearTag() throws Exception {
         final ContextBuilder builder = new ContextBuilder()
+                .tag("test")
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .releaseTag()
                 .tag("tag")
                 .workflow("workflow", "heap", new String[]{"engine"})
                 .releaseTag();
@@ -276,13 +288,94 @@ public class ContextBuilderTest {
             // Exception normally raised
         }
 
-        builder.workflow("workflow", "heap", new String[]{"engine"}).build().process("workflow", "");
+        builder.tag("test")
+                .workflow("workflow", "heap", new String[]{"engine"})
+                .releaseTag()
+                .build()
+                .process("workflow", "");
 
         try {
-            builder.clearTag(null).build().process("workflow", "");
+            builder.clearTag("test").build().process("workflow", "");
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
+        }
+    }
+
+    /**
+     * Test when a builder is used without any tag.
+     */
+    @Test
+    public void unTaggedUsageTest() {
+        try {
+            new ContextBuilder().nutDaoBuilder("dao", mock(NutDaoBuilder.class), new HashMap<String, Object>());
+        } catch (Exception e) {
+            // Normal behavior
+        }
+    }
+
+    /**
+     * Test some concurrent accesses.
+     */
+    @Test
+    public void concurrentTest() {
+        final ContextBuilder builder = new ContextBuilder();
+
+        for (int i = 0; i < 1000; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        builder.tag("test")
+                            .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+                            .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                            .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                            .workflow("workflow", "heap", new String[]{"engine"})
+                            .releaseTag();
+                    } catch (Exception e) {
+                        Assert.fail();
+                    }
+                }
+            }).start();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        builder.tag("foo")
+                                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+                                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                                .workflow("workflow", "heap", new String[]{"engine"})
+                                .releaseTag();
+                    } catch (Exception e) {
+                        Assert.fail();
+                    }
+                }
+            }).start();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        builder.clearTag("test");
+                    } catch (Exception e) {
+                        Assert.fail();
+                    }
+                }
+            }).start();
+
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        builder.clearTag("foo");
+                    } catch (Exception e) {
+                        Assert.fail();
+                    }
+                }
+            }).start();
         }
     }
 }

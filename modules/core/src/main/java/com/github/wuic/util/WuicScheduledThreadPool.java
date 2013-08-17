@@ -36,78 +36,83 @@
  */
 
 
-package com.github.wuic.nut;
+package com.github.wuic.util;
 
-import com.github.wuic.exception.wrapper.StreamException;
-
-import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * <p>
- * This interface abstracts the way you can read and eventually save resources through a particular protocol.
+ * This class is used internally by WUIC to control the number of created threads for different tasks. When a
+ * peace of code needs to create asynchronous task in WUIC, it always uses this singleton which wraps a thread
+ * pool. The class is tread safe and don't need to be called with a mutex.
+ * </p>
+ *
+ * <p>
+ * The singleton adds a hook with {@link Runtime#addShutdownHook(Thread)} to shutdown the pool when executed.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.0
  */
-public interface NutDao {
+public final class WuicScheduledThreadPool extends Thread {
+
+    /**
+     * The unique instance.
+     */
+    private static WuicScheduledThreadPool instance = null;
+
+    /**
+     * The thread pool.
+     */
+    private ScheduledExecutorService pool;
 
     /**
      * <p>
-     * Creates a list of {@link Nut resources} thanks to the given path.
+     * Creates an unique instance.
      * </p>
-     *
-     * @param path the path representing the location of the nut(s)
-     * @return the created nut(s)
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
      */
-    List<Nut> create(String path) throws StreamException;
+    private WuicScheduledThreadPool() {
+        pool = Executors.newScheduledThreadPool(NumberUtils.TWO);
+        Runtime.getRuntime().addShutdownHook(this);
+    }
 
     /**
      * <p>
-     * Adds a set of {@link NutDaoListener listeners} to be notified when an update as been detected on the nut.
-     * The targeted nut is represented by the specified path.
+     * Gets the unique instance.
      * </p>
      *
-     * @param realPath the real path name of the nut.
-     * @param listener some listeners to be notified when an update has been detected on a nut
-     * @throws StreamException if an I/O occurs while retrieving last update of the nut
+     * @return the unique instance
      */
-     void observe(String realPath, NutDaoListener... listener) throws StreamException;
+    public static synchronized WuicScheduledThreadPool getInstance() {
+        if (instance == null) {
+            instance = new WuicScheduledThreadPool();
+        }
+
+        return instance;
+    }
 
     /**
      * <p>
-     * Returns an URI in a {@code String} representation of a proxy serving the given nut.
+     * Schedules an execution in a specified delay of a given job. Once the job is executed, its execution will
+     * be repeated in the initial delay, and so on.
      * </p>
      *
-     * <p>
-     * If many proxies are defined, proxy URI is selected in a round-robin mode. Each time a proxy is used, it won't
-     * be reused until all other proxies have been used too.
-     * </p>
-     *
-     * @param resource the nut
-     * @return the proxy URI, {@code null} if not proxy is set
+     * @param job the job to execute
+     * @param delay the delay between executions
+     * @return an object which gives control over scheduled executions
      */
-    String proxyUriFor(Nut resource);
+    public synchronized ScheduledFuture<?> executeEveryTimeInSeconds(final Runnable job, final long delay) {
+        return pool.scheduleWithFixedDelay(job, delay, delay, TimeUnit.SECONDS);
+    }
 
     /**
-     * <p>
-     * Saves the give nut. An {@link UnsupportedOperationException} will be thrown if the implementation supports
-     * only nut access.
-     * </p>
-     *
-     * @param resource the nut to save
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while saving nut
+     * {@inheritDoc}
      */
-    void save(Nut resource);
-
-    /**
-     * <p>
-     * Indicates if this DAO is able to save a nut, which depends on the underlying protocol.
-     * </p>
-     *
-     * @return {@code true} if {@link NutDao#save(Nut)} is supported, {@code false} otherwise
-     */
-    Boolean saveSupported();
+    public void run() {
+        pool.shutdownNow();
+    }
 }

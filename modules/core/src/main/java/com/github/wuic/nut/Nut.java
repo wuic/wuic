@@ -180,19 +180,4 @@ public interface Nut extends Serializable {
      * @return the referenced nuts, {@code null} if no nut is referenced
      */
     List<Nut> getReferencedNuts();
-
-    /**
-     * <p>
-     * Updates the timestamp indicating when the nut has been updated for the last time.
-     * </p>
-     *
-     * <p>
-     * The first time this method is called, it should always returns {@code true} since the timestamp is not
-     * initialized.
-     * </p>
-     *
-     * @param timestamp the timestamp
-     * @return {@code true} if the timestamp has changed, {@code false} otherwise
-     */
-    Boolean lastUpdate(long timestamp);
 }

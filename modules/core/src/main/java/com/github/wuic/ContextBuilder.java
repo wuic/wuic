@@ -54,14 +54,17 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.GenericBuilder;
 
 import java.util.Arrays;
-
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Observable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
- * This builder can be configured to build contexts in an expected state by the user.
+ * This builder can be configured to build contexts in an expected state by the user. It is designed to be used in a
+ * multi-threaded environment.
  * </p>
  *
  * <p>
@@ -70,20 +73,31 @@ import java.util.Observable;
  * <pre>
  *     final ContextBuilder contextBuilder = new ContextBuilder();
  *
- *     // Create a context with some settings tagged as "custom"
- *     final Context ctx = contextBuilder.tag("custom")
- *                  .nutDaoBuilder("FtpNutDaoBuilder", daoBuilder, daoProps)
- *                  .heap("heap", "FtpNutDaoBuilder", "dark.js", "vador.js")
- *                  .engineBuilder("engineId", engineBuilder, engineProps)
- *                  .workflow("starwarsWorkflow", "heap", "engineId", true)
- *                  .releaseTag()
- *                  .build();
- *     ctx.isUpToDate(); // returns true
+ *     try {
+ *         // Create a context with some settings tagged as "custom"
+ *         final Context ctx = contextBuilder.tag("custom")
+ *                      .nutDaoBuilder("FtpNutDaoBuilder", daoBuilder, daoProps)
+ *                      .heap("heap", "FtpNutDaoBuilder", "dark.js", "vador.js")
+ *                      .engineBuilder("engineId", engineBuilder, engineProps)
+ *                      .workflow("starwarsWorkflow", "heap", "engineId", true)
+ *                      .build();
+ *         ctx.isUpToDate(); // returns true
  *
- *     // Clear settings
- *     contextBuilder.clearTag("custom");
- *     ctx.isUpToDate(); // returns false
+ *         // Clear settings
+ *         contextBuilder.clearTag("custom");
+ *         ctx.isUpToDate(); // returns false
+ *     } finally {
+ *         contextBuilder.releaseTag();
+ *     }
  * </pre>
+ * </p>
+ *
+ *
+ * <p>
+ * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
+ * {@link ContextBuilder#tag(String)} method is called, the current threads holds a lock on the object.
+ * It will be released when the {@link com.github.wuic.ContextBuilder#releaseTag()} will be called.
+ * Consequenlty, it is really important to always call this last method in a finally block.
  * </p>
  *
  * @author Guillaume DROUET
@@ -91,6 +105,11 @@ import java.util.Observable;
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {
+
+    /**
+     * The internal lock for tags.
+     */
+    private Lock lock;
 
     /**
      * The current tag.
@@ -108,7 +127,8 @@ public class ContextBuilder extends Observable {
      * </p>
      */
     public ContextBuilder() {
-        taggedSettings = new HashMap<String, ContextSetting>();
+        taggedSettings = Collections.synchronizedMap(new HashMap<String, ContextSetting>());
+        lock = new ReentrantLock();
     }
 
     /**
@@ -189,12 +209,17 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Gets the setting associated to the current tag.
+     * Gets the setting associated to the current tag. If no tag is defined, then an {@link IllegalStateException} will
+     * be thrown.
      * </p>
      *
      * @return the setting
      */
     private ContextSetting getSetting() {
+        if (currentTag == null) {
+            throw new IllegalStateException("Call tag() method first");
+        }
+
         final ContextSetting setting = taggedSettings.get(currentTag);
 
         if (setting == null) {
@@ -222,6 +247,8 @@ public class ContextBuilder extends Observable {
      * @see com.github.wuic.ContextBuilder#releaseTag()
      */
     public ContextBuilder tag(final String tagName) {
+        lock.lock();
+
         if (currentTag != null) {
             releaseTag();
         }
@@ -257,9 +284,18 @@ public class ContextBuilder extends Observable {
      * @return this current builder without tag
      */
     public ContextBuilder releaseTag() {
+
+        // Won't block is the thread already own the lock
+        lock.lock();
+
+        // Check that a tag exists
+        getSetting();
         currentTag = null;
-        notifyObservers();
         setChanged();
+        notifyObservers();
+
+        // Release the lock
+        lock.unlock();
 
         return this;
     }
