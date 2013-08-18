@@ -55,6 +55,18 @@ public interface NutDao {
 
     /**
      * <p>
+     * Adds a set of {@link NutDaoListener listeners} to be notified when an update has been detected on the nut.
+     * The targeted nut is represented by the specified path.
+     * </p>
+     *
+     * @param realPath the real path name of the nut.
+     * @param listeners some listeners to be notified when an update has been detected on a nut
+     * @throws StreamException if an I/O occurs while retrieving last update of the nut
+     */
+    void observe(String realPath, NutDaoListener ... listeners) throws StreamException;
+
+    /**
+     * <p>
      * Creates a list of {@link Nut resources} thanks to the given path.
      * </p>
      *
@@ -63,18 +75,6 @@ public interface NutDao {
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
      */
     List<Nut> create(String path) throws StreamException;
-
-    /**
-     * <p>
-     * Adds a set of {@link NutDaoListener listeners} to be notified when an update as been detected on the nut.
-     * The targeted nut is represented by the specified path.
-     * </p>
-     *
-     * @param realPath the real path name of the nut.
-     * @param listener some listeners to be notified when an update has been detected on a nut
-     * @throws StreamException if an I/O occurs while retrieving last update of the nut
-     */
-     void observe(String realPath, NutDaoListener... listener) throws StreamException;
 
     /**
      * <p>

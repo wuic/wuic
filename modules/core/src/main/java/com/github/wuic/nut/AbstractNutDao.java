@@ -43,19 +43,16 @@ import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.WuicScheduledThreadPool;
+import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashSet;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -72,7 +69,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 1.1
  * @since 0.3.1
  */
-public abstract class AbstractNutDao implements NutDao, Runnable {
+public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {
 
     /**
      * The logger.
@@ -90,24 +87,9 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
     private String[] proxyUris;
 
     /**
-     * Polling interleave in seconds (-1 to disable).
-     */
-    private int pollingInterleave;
-
-    /**
      * Index of the next proxy URI to use.
      */
     private final AtomicInteger nextProxyIndex;
-
-    /**
-     * Help to know when a polling operation is done.
-     */
-    private Future<?> pollingResult;
-
-    /**
-     * All observers per nut.
-     */
-    private final Map<String, NutPolling> resourceObservers;
 
     /**
      * <p>
@@ -130,46 +112,7 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
         basePath = IOUtils.mergePath("/", basePathAsSysProp ? System.getProperty(base) : base);
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
-        resourceObservers = new HashMap<String, NutPolling>();
         setPollingInterleave(pollingSeconds);
-    }
-
-    /**
-     * <p>
-     * Returns the polling interleave.
-     * </p>
-     *
-     * @return the polling interleave
-     */
-    public final int getPollingInterleave() {
-        return pollingInterleave;
-    }
-
-    /**
-     * <p>
-     * Defines a new polling interleave. If current polling operation are currently processed, then they are not interrupted
-     * and a new scheduling is created if the given value is a positive number. If the value is not positive, then no
-     * polling will occur.
-     * </p>
-     *
-     * @param interleaveSeconds interleave in seconds
-     */
-    public final synchronized void setPollingInterleave(final int interleaveSeconds) {
-
-        // Stop current scheduling
-        if (pollingResult != null) {
-            log.info("Cancelling repeated polling operation for {}", getClass().getName());
-            pollingResult.cancel(false);
-            pollingResult = null;
-        }
-
-        pollingInterleave = interleaveSeconds;
-
-        // Create new scheduling if necessary
-        if (pollingInterleave > 0) {
-            log.info("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterleave);
-            pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterleave);
-        }
     }
 
     /**
@@ -181,17 +124,17 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
         // Keep in this set all listeners that told that they don't want to be notified until the end of the operation
         final Set<NutDaoListener> exclusions = new HashSet<NutDaoListener>();
 
-        synchronized (resourceObservers) {
+        synchronized (getResourceObservers()) {
 
             // Poll each nut's path
-            for (final Map.Entry<String, NutPolling> entry : resourceObservers.entrySet()) {
+            for (final Map.Entry<String, ? extends Polling> entry : getResourceObservers().entrySet()) {
                 final String nut = entry.getKey();
-                final NutPolling pollingData = entry.getValue();
+                final Polling pollingData = entry.getValue();
 
                 try {
                     // Nut has changed since its last call
                     if (pollingData.lastUpdate(getLastUpdateTimestampFor(nut))) {
-                        for (NutDaoListener o : pollingData.listeners) {
+                        for (NutDaoListener o : pollingData.getListeners()) {
                             // Not already excluded and asks for exclusion
                             if (!exclusions.contains(o) && !o.resourceUpdated(this, nut)) {
                                 exclusions.add(o);
@@ -202,20 +145,6 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
                     log.warn(String.format("Unable to poll nut %s", nut), se);
                 }
             }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
-        synchronized (resourceObservers) {
-            final NutPolling nutPolling = resourceObservers.containsKey(realPath)
-                    ? resourceObservers.get(realPath) : new NutPolling(getLastUpdateTimestampFor(realPath));
-
-            nutPolling.addListeners(listeners);
-            resourceObservers.put(realPath, nutPolling);
         }
     }
 
@@ -337,79 +266,9 @@ public abstract class AbstractNutDao implements NutDao, Runnable {
     protected abstract Nut accessFor(String realPath, NutType type) throws StreamException;
 
     /**
-     * <p>
-     * Retrieves a timestamp that indicates the last time this nut has changed.
-     * </p>
-     *
-     * @param path the real path of the nut
-     * @return the timestamp
-     * @throws StreamException if any I/O error occurs
-     */
-    protected abstract Long getLastUpdateTimestampFor(final String path) throws StreamException;
-
-    /**
      * {@inheritDoc}
      */
     public String toString() {
         return String.format("%s with base path %s", getClass().getName(), getBasePath());
-    }
-
-    /**
-     * <p>
-     * Internal class which tracks observers and last update informations for a particular nut.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.0
-     */
-    private final class NutPolling {
-
-        /**
-         * Listeners.
-         */
-        private Set<NutDaoListener> listeners;
-
-        /**
-         * Last update.
-         */
-        private Long lastUpdate;
-
-        /**
-         * <p>
-         * Creates a new instance.
-         * </p>
-         *
-         * @param lastUpdateTimestamp the timestamp representing the last update of the nut
-         */
-        private NutPolling(final long lastUpdateTimestamp) {
-            listeners = new HashSet<NutDaoListener>();
-            lastUpdate = lastUpdateTimestamp;
-        }
-
-        /**
-         * <p>
-         * Updates the timestamp indicating when the nut has been updated for the last time.
-         * </p>
-         *
-         * @param timestamp the timestamp
-         * @return {@code true} if the timestamp has changed, {@code false} otherwise
-         */
-        public Boolean lastUpdate(final long timestamp) {
-            final Boolean retval = timestamp != this.lastUpdate;
-            this.lastUpdate = timestamp;
-            return retval;
-        }
-
-        /**
-         * <p>
-         * Adds all the specified listeners.
-         * </p>
-         *
-         * @param listener the array to add
-         */
-        public void addListeners(final NutDaoListener ... listener) {
-            Collections.addAll(listeners, listener);
-        }
     }
 }

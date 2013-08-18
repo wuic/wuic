@@ -80,6 +80,7 @@ public class AbstractNutDaoTest {
      * A mocked DAO for tests.
      * </p>
      *
+     * @author Guillaume DROUET
      * @version 1.0
      * @since 0.4.0
      */
@@ -98,7 +99,7 @@ public class AbstractNutDaoTest {
          * @param pollingSeconds polling interleave
          */
         private MockNutDaoTest(final int pollingSeconds) {
-            super("/", false, null, pollingSeconds);
+            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds);
             age = System.currentTimeMillis();
         }
 
@@ -253,8 +254,10 @@ public class AbstractNutDaoTest {
     @Test
     public void concurrentTest() throws Exception {
         final AbstractNutDao dao = new MockNutDaoTest(1);
+        final Nut nut = mock(Nut.class);
+        when(nut.getName()).thenReturn("mock");
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 750; i++) {
             new Thread(new Runnable() {
 
                 /**
@@ -277,7 +280,7 @@ public class AbstractNutDaoTest {
                         dao.setPollingInterleave(2);
                         dao.getPollingInterleave();
                         dao.computeRealPaths("");
-                        dao.proxyUriFor(mock(Nut.class));
+                        dao.proxyUriFor(nut);
                     } catch (Exception e) {
                         e.printStackTrace();
                         Assert.fail(e.getMessage());

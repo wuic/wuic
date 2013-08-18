@@ -38,41 +38,105 @@
 
 package com.github.wuic;
 
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.PollingScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <p>
- * A configurator is called by a WUIC bootstrap in charge of {@link Context} creation using a {@link ContextBuilder}.
+ * A configurator configures {@link ContextBuilder}. It's is called by a WUIC bootstrap in charge of {@link Context}
+ * creation using a {@link ContextBuilder}.
+ * </p>
+ *
+ * <p>
+ * This class is abstract and should be extended to configure in a specific way the {@link ContextBuilder}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public interface ContextBuilderConfigurator {
+public abstract class ContextBuilderConfigurator extends PollingScheduler<ContextBuilderConfigurator> {
+
+    /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * Tracks {@link ContextBuilder} to update when polling.
+     */
+    private ContextBuilder pollingContextBuilder;
+
+    /**
+     * {@inheritDoc}
+     */
+    public void run() {
+        if (pollingContextBuilder != null) {
+            final Polling polling = getResourceObservers().get(getClass().getName());
+
+            try {
+                // Configuration has been updated so we reset current settings and refresh it
+                if (polling.lastUpdate(getLastUpdateTimestampFor(getClass().getName()))) {
+                    log.info("Updating configuration for {}", getClass().getName());
+                    pollingContextBuilder.clearTag(getTag());
+                    configure(pollingContextBuilder);
+                }
+            } catch (StreamException se) {
+                log.info("Unable to poll configuration", se);
+            }
+        } else {
+            log.warn("Polling interleave is set to {} seconds but no context builder is polled", getPollingInterleave());
+        }
+    }
 
     /**
      * <p>
-     * Configures the given context. Should {@link ContextBuilder#tag(String) tag} its configurations to change it
-     * when it needs to update stuffs.
+     * Configures the given context. It tags all the settings with the value returned by
+     * the {@link com.github.wuic.ContextBuilderConfigurator#getTag()} method.
      * </p>
      *
-     * @param cxtBuilder the builder
+     * @param ctxBuilder the builder
+     * @throws StreamException if I/O error occurs when start polling
      */
-    void configure(ContextBuilder cxtBuilder);
+    public void configure(final ContextBuilder ctxBuilder) throws StreamException {
+        ctxBuilder.tag(getTag());
+
+        // Update polling
+        final int polling = internalConfigure(ctxBuilder);
+        pollingContextBuilder = polling > 0 ? ctxBuilder : null;
+        setPollingInterleave(polling);
+
+        // Add this instance as an observer to be notified when polling
+        observe(getClass().getName(), this);
+
+        ctxBuilder.releaseTag();
+    }
 
     /**
      * <p>
-     * If this configurator polls its configurations to see check changes, then it should returns a positive number of
-     * seconds to wait before the next polling operation.
+     * Configures the given context internally. This method is called just after the {@link ContextBuilder} has been
+     * tagged with the value returned by {@link com.github.wuic.ContextBuilderConfigurator#getTag()} method. Once the
+     * execution of this method is terminated, the tag is released.
      * </p>
      *
      * <p>
-     * If changes are detected, then configurations should be updated in the {@link ContextBuilder} specified when its
-     * method {@link ContextBuilderConfigurator#configure(ContextBuilder)} method has been called. The use of
-     * {@link ContextBuilder#clearTag(String)} will be required to erase obsolete configuration for this configurator.
-     * If {@link ContextBuilderConfigurator#configure(ContextBuilder)} has never been called, nothing will be done.
+     * To activate polling on this configurator, this method should returns a positive integer representing the polling
+     * interleave in seconds.
      * </p>
      *
-     * @return the number of seconds before next polling, -1 if not polling will be performed
+     * @param ctxBuilder the builder
      */
-    int nextPoll();
+    public abstract int internalConfigure(ContextBuilder ctxBuilder);
+
+    /**
+     * <p>
+     * Gets the tag to use to identify the set of settings defined when {@link ContextBuilderConfigurator#configure(ContextBuilder)}
+     * is called.
+     * </p>
+     *
+     * @return the tag
+     */
+    public abstract String getTag();
 }
