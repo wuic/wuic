@@ -101,17 +101,19 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * @throws StreamException if I/O error occurs when start polling
      */
     public void configure(final ContextBuilder ctxBuilder) throws StreamException {
-        ctxBuilder.tag(getTag());
+        try {
+            ctxBuilder.tag(getTag());
 
-        // Update polling
-        final int polling = internalConfigure(ctxBuilder);
-        pollingContextBuilder = polling > 0 ? ctxBuilder : null;
-        setPollingInterleave(polling);
+            // Update polling
+            final int polling = internalConfigure(ctxBuilder);
+            pollingContextBuilder = polling > 0 ? ctxBuilder : null;
+            setPollingInterleave(polling);
 
-        // Add this instance as an observer to be notified when polling
-        observe(getClass().getName(), this);
-
-        ctxBuilder.releaseTag();
+            // Add this instance as an observer to be notified when polling
+            observe(getClass().getName(), this);
+        } finally {
+            ctxBuilder.releaseTag();
+        }
     }
 
     /**

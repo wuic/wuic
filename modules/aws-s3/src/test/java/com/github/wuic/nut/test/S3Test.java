@@ -42,15 +42,12 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
+import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.impl.YuiConfigurationImpl;
-import com.github.wuic.configuration.impl.YuiCssConfigurationImpl;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
-import com.github.wuic.factory.impl.AggregationEngineFactory;
-import com.github.wuic.factory.impl.CompressionEngineFactory;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.s3.S3NutDao;
 import com.github.wuic.nut.s3.S3NutDaoBuilder;
@@ -64,6 +61,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
@@ -116,8 +114,6 @@ public class S3Test {
      */
     @Test
     public void s3Test() throws Exception {
-        final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
-
         // Create a real object and mock its initClient method
         final S3NutDao dao = spy(new S3NutDao("/path", false, null, -1, "wuic", "login", "pwd"));
 
@@ -141,16 +137,16 @@ public class S3Test {
         when(client.getObject(anyString(), anyString())).thenReturn(object);
 
         // TODO : problem here : we specify '[cloud.css]' but getNuts() returns 'cloud.css' because regex are always activated !
-        final NutsHeap nutsHeap = new NutsHeap(config, Arrays.asList("[cloud].css"), dao, "heap");
+        final NutsHeap nutsHeap = new NutsHeap(Arrays.asList("[cloud].css"), dao, "heap");
         Assert.assertEquals(nutsHeap.getNuts().size(), 1);
 
-        final Engine compressor = new CompressionEngineFactory(config).create(NutType.CSS);
-        final Engine cacheEngine = new EhCacheEngine(config);
-        final Engine aggregator = new AggregationEngineFactory(config).create(NutType.CSS);
+        final Engine compressor = new CssYuiCompressorEngine(true, "UTF-8", -1);
+        final Engine cacheEngine = new EhCacheEngine(false, null);
+        final Engine aggregator = new CGTextAggregatorEngine(true);
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 
-        final List<Nut> group = cacheEngine.parse(new EngineRequest("", nutsHeap));
+        final List<Nut> group = cacheEngine.parse(new EngineRequest("", nutsHeap, new HashMap<NutType, Engine>()));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

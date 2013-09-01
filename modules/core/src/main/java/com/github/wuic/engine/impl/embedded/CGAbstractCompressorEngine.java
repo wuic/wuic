@@ -63,8 +63,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * <p>
- * The compression is never performed if the {@link com.github.wuic.configuration.Configuration#compress()}
- * method returns {@code false}.
+ * The compression is never performed if the {@link CGAbstractCompressorEngine#doCompression} flag is set to {@code true}.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -77,7 +76,12 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
+    /**
+     * Activate compression or not.
+     */
+    private Boolean doCompression;
+
     /**
      * <p>
      * Compress a stream (the source) into a target. The target is overridden if
@@ -89,7 +93,18 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs during compression
      */
     protected abstract void compress(InputStream source, OutputStream target) throws StreamException;
-    
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param compress activate compression or not
+     */
+    public CGAbstractCompressorEngine(final Boolean compress) {
+        doCompression = compress;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -169,6 +184,6 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      */
     @Override
     public Boolean works() {
-        return getConfiguration().compress();
+        return doCompression;
     }
 }

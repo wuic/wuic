@@ -39,12 +39,10 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.configuration.impl.ConfigurationImpl;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
 import com.github.wuic.engine.setter.AggregatePropertySetter;
-import com.github.wuic.engine.setter.CharsetPropertySetter;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -65,8 +63,7 @@ public class TextAggregatorEngineBuilder extends AbstractEngineBuilder {
      */
     public TextAggregatorEngineBuilder() {
         super();
-        addPropertySetter(new AggregatePropertySetter(this),
-                new CharsetPropertySetter(this));
+        addPropertySetter(new AggregatePropertySetter(this));
     }
 
     /**
@@ -74,11 +71,6 @@ public class TextAggregatorEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new CGTextAggregatorEngine(new ConfigurationImpl(null,
-                        null,
-                        true,
-                        (Boolean) property(ApplicationConfig.AGGREGATE),
-                        (String) property(ApplicationConfig.CHARSET),
-                        null));
+        return new CGTextAggregatorEngine((Boolean) property(ApplicationConfig.AGGREGATE));
     }
 }

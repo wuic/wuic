@@ -37,10 +37,9 @@
 
 package com.github.wuic.engine.impl.yuicompressor;
 
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.YuiCssConfiguration;
+import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
-import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.CssCompressor;
@@ -52,6 +51,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -65,32 +66,28 @@ import java.io.Writer;
 public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
 
     /**
-     * The configuration.
+     * Charset of processed files.
      */
-    private YuiCssConfiguration configuration;
-    
+    private String charset;
+
+    /**
+     * Position of break line (-1 if not \n should be inserted).
+     */
+    private Integer lineBreakPos;
+
     /**
      * <p>
-     * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link com.github.wuic.exception.wrapper.BadClassException} will be thrown if the configuration
-     * is not a {@link CssYuiCompressorEngine}.
+     * Builds a new instance.
      * </p>
-     * 
-     * @param config the {@link Configuration}
+     *
+     * @param compress activate compression or not
+     * @param cs the char set
+     * @param lbp the line break position
      */
-    public CssYuiCompressorEngine(final Configuration config) {
-        if (config instanceof YuiCssConfiguration) {
-            configuration = (YuiCssConfiguration) config;
-        } else {
-            throw new BadClassException(config, YuiCssConfiguration.class);
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Configuration getConfiguration() {
-        return configuration;
+    public CssYuiCompressorEngine(final Boolean compress, final String cs, final Integer lbp) {
+        super(compress);
+        charset = cs;
+        lineBreakPos = lbp;
     }
 
     /**
@@ -104,7 +101,7 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
         
         try {
             // Stream to read from the source
-            in = new InputStreamReader(source, configuration.charset());
+            in = new InputStreamReader(source, charset);
      
             // Create the compressor using the source stream
             final CssCompressor compressor = new CssCompressor(in);
@@ -114,15 +111,31 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
             in = null;
             
             // Stream to write into the target
-            out = new OutputStreamWriter(target, configuration.charset());
+            out = new OutputStreamWriter(target, charset);
             
             // Compress the script into the output target
-            compressor.compress(out, configuration.yuiLineBreakPos());
+            compressor.compress(out, lineBreakPos);
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         } finally {
             IOUtils.close(in);
             IOUtils.close(out);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.CSS);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.MINIFICATION;
     }
 }

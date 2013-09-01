@@ -152,31 +152,6 @@ public enum NutType {
 
     /**
      * <p>
-     * Parses the given {@code String} object into a {@link NutType}. If the
-     * value does not equal to any exiting {@link NutType#name()}, then an
-     * {@link BadArgumentException} will be thrown.
-     * </p>
-     * 
-     * @param strValue the value to parse
-     * @return the parsed {@link NutType}
-     */
-    public static NutType parseNutType(final String strValue) {
-        // TODO : delete this test when wuic.xml has been refactored
-        if ("SPRITE".equals(strValue)) {
-            return NutType.PNG;
-        }
-
-        for (NutType fileType : NutType.values()) {
-            if (fileType.name().equals(strValue)) {
-                return fileType;
-            }
-        }
-        
-        throw new BadArgumentException(new IllegalArgumentException(strValue + " has not been recognized as a NutType"));
-    }
-
-    /**
-     * <p>
      * Returns the {@link NutType} which the given extension belongs to.
      * </p>
      *

@@ -39,8 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.configuration.WuicEhcacheProvider;
-import com.github.wuic.configuration.impl.ConfigurationImpl;
+import com.github.wuic.engine.impl.ehcache.WuicEhcacheProvider;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
@@ -76,13 +75,9 @@ public class EhCacheEngineBuilder extends AbstractEngineBuilder {
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
         try {
-            return new EhCacheEngine(new ConfigurationImpl(null,
-                    (Boolean) property(ApplicationConfig.CACHE),
-                    null,
-                    null,
-                    null,
+            return new EhCacheEngine((Boolean) property(ApplicationConfig.CACHE),
                     ((WuicEhcacheProvider) Class.forName(property(ApplicationConfig.CACHE_PROVIDER_CLASS).toString())
-                            .newInstance()).getCache()));
+                            .newInstance()).getCache());
         } catch (InstantiationException ie) {
             throw new BadArgumentException(new IllegalArgumentException(ie));
         } catch (IllegalAccessException iae) {

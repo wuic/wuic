@@ -39,7 +39,6 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
@@ -68,12 +67,7 @@ import java.util.regex.Matcher;
  * @version 1.1
  * @since 0.3.3
  */
-public class CGTextInspectorEngine extends Engine {
-
-    /**
-     * Configuration based on CSS.
-     */
-    private Configuration configuration;
+public abstract class CGTextInspectorEngine extends Engine {
 
     /**
      * The inspectors of each line
@@ -81,16 +75,28 @@ public class CGTextInspectorEngine extends Engine {
     private LineInspector[] lineInspectors;
 
     /**
+     * Inspects or not.
+     */
+    private Boolean doInspection;
+
+    /**
+     * The charset of inspected file.
+     */
+    private String charset;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param config the configuration
+     * @param inspect activate inspection or not
+     * @param cs files charset
      * @param inspectors the line inspectors to use
      */
-    public CGTextInspectorEngine(final Configuration config, final LineInspector... inspectors) {
-        configuration = config;
+    public CGTextInspectorEngine(final Boolean inspect, final String cs, final LineInspector... inspectors) {
         lineInspectors = inspectors;
+        doInspection = inspect;
+        charset = cs;
     }
 
     /**
@@ -140,7 +146,7 @@ public class CGTextInspectorEngine extends Engine {
 
         try {
             // Read the path line per line
-            br = new BufferedReader(new InputStreamReader(resource.openStream(), configuration.charset()));
+            br = new BufferedReader(new InputStreamReader(resource.openStream(), charset));
 
             // Reads each line and keep the transformations in memory
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -216,9 +222,10 @@ public class CGTextInspectorEngine extends Engine {
                 List<Nut> res = request.getGroup().getNutDao().create(resourceName);
 
                 // Process nut
-                if (getNext() != null) {
-                    res = getNext().parse(new EngineRequest(res, request));
-                }
+                //if (getNext() != null) {
+                    // TODO : inspection fails when file is compressed => need to improve regex usage to uncomment this
+                    //res = getNext().parse(new EngineRequest(res, request));
+                //}
 
                 // Add the nut and inspect it recursively if it's a CSS path
                 for (Nut r : res) {
@@ -256,17 +263,7 @@ public class CGTextInspectorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Boolean works() {
-
-        // TODO : create an engine's property after refactoring targeted for v0.4
-        return Boolean.TRUE;
+        return doInspection;
     }
 }

@@ -39,15 +39,16 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
@@ -57,8 +58,7 @@ import com.github.wuic.util.IOUtils;
  * <p>
  * This {@link Engine engine} can aggregate all the specified files in one path.
  * Files are aggregated in the order of apparition in the given list. Note that
- * nothing will be done is {@link Configuration#aggregate()} returns {@code false}
- * in the given {@link Configuration}.
+ * nothing will be done if {@link CGTextAggregatorEngine#doAggregation} flag is {@code false}.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -68,19 +68,19 @@ import com.github.wuic.util.IOUtils;
 public class CGTextAggregatorEngine extends Engine {
 
     /**
-     * The configuration to use.
+     * Activate aggregation or not.
      */
-    private Configuration configuration;
-    
+    private Boolean doAggregation;
+
     /**
      * <p>
      * Builds the engine.
      * </p>
-     * 
-     * @param config the {@link Configuration} to use
+     *
+     * @param aggregate activate aggregation or not
      */
-    public CGTextAggregatorEngine(final Configuration config) {
-        this.configuration = config;
+    public CGTextAggregatorEngine(final Boolean aggregate) {
+        this.doAggregation = aggregate;
     }
     
     /**
@@ -117,9 +117,13 @@ public class CGTextAggregatorEngine extends Engine {
                     IOUtils.copyStream(is, target);
 
                     // Begin content path writing on a new line when no compression is configured
-                    if (!getConfiguration().compress()) {
-                        buffer[0] = '\n';
-                        target.write(buffer, 0, 1);
+                    for (Engine previous = getPrevious(); previous != null; previous = previous.getPrevious()) {
+
+                        // Text compression is done before aggregation so it is a previous engine
+                        if (previous instanceof CGAbstractCompressorEngine && !previous.works()) {
+                            buffer[0] = '\n';
+                            target.write(buffer, 0, 1);
+                        }
                     }
 
                     if (resource.getReferencedNuts() != null) {
@@ -156,15 +160,23 @@ public class CGTextAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public Configuration getConfiguration() {
-        return configuration;
+    public Boolean works() {
+        return doAggregation;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return configuration.aggregate();
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.CSS, NutType.JAVASCRIPT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.AGGREGATOR;
     }
 }

@@ -38,26 +38,28 @@
 
 package com.github.wuic.ssh.test;
 
-import com.github.wuic.WuicFacade;
+import com.github.wuic.Context;
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import com.jcraft.jsch.JSchException;
 import junit.framework.Assert;
 import org.apache.sshd.SshServer;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.server.Command;
-import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.sftp.SftpSubsystem;
-import org.apache.sshd.server.shell.ProcessShellFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -158,11 +160,15 @@ public class SshTest {
      * @throws WuicException if WUIC request fails
      * @throws InterruptedException if the SSH server does not respond in time
      * @throws IOException if any I/O error occurs
+     * @throws JAXBException if test fails
      */
     @Test
-    public void sshTest() throws JSchException, IOException, InterruptedException, WuicException {
-        final WuicFacade facade = WuicFacade.newInstance("");
-        final List<Nut> group = facade.getGroup("css-image");
+    public void sshTest() throws JSchException, IOException, InterruptedException, WuicException, JAXBException {
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        final Context facade = builder.build();
+        final List<Nut> group = facade.process("css-image", "");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

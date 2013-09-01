@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<wuic>
+    <heaps>
+        <heap id="simpleHeap" dao-builder-id="wuicDefaultClasspathNutDaoBuilder">
+            <nut-path>css/jquery-ui.css</nut-path>
+        </heap>
+    </heaps>
+
+    <workflows>
+        <workflow id="simpleWorkflow" heap-id="simpleHeap">
+            <engine-chain />
+        </workflow>
+    </workflows>
+</wuic>

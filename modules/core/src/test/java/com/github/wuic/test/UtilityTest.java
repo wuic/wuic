@@ -56,7 +56,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * Utils classes tests.
+ * Utility class tests.
  * </p>
  * 
  * @author Guillaume DROUET

@@ -38,7 +38,9 @@
 
 package com.github.wuic.test;
 
-import com.github.wuic.WuicFacade;
+import com.github.wuic.Context;
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.nut.Nut;
 
 import java.io.File;
@@ -50,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -84,12 +87,14 @@ public class CoreTest extends WuicTest {
     @Test
     public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("");
+        final ContextBuilder builder = new ContextBuilder();
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<Nut> group = facade.getGroup("util-js");
+        List<Nut> group = facade.process("util-js", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -103,7 +108,7 @@ public class CoreTest extends WuicTest {
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.getGroup("util-js");
+        group = facade.process("util-js", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -127,11 +132,16 @@ public class CoreTest extends WuicTest {
     public void cssTest() throws Exception {
         // TODO : WUIC currently supports only one configuration per NutType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("", "/wuic-css.xml");
+
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-css.xml")).configure(builder);
+        final Context ctx = builder.build();
+
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        List<Nut> group = facade.getGroup("css-image");
+        List<Nut> group = ctx.process("css-image", "");
         int i = 0;
 
         for (Nut res : group) {
@@ -141,7 +151,7 @@ public class CoreTest extends WuicTest {
             writeToDisk(res, i++ + "sprite.css");
         }
 
-        group = facade.getGroup("css-scripts");
+        group = ctx.process("css-scripts", "");
         i = 0;
 
         for (Nut res : group) {
@@ -160,15 +170,17 @@ public class CoreTest extends WuicTest {
     @Test
     public void jsSpriteTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("");
+        final ContextBuilder builder = new ContextBuilder();
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<Nut> group = facade.getGroup("js-image");
+        List<Nut> group = facade.process("js-image", "");
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
 
-        final Iterator<Nut> it = group.iterator();
+        final Iterator<Nut> it = group.get(0).getReferencedNuts().iterator();
         int i = 0;
 
         while (it.hasNext()) {
@@ -187,7 +199,7 @@ public class CoreTest extends WuicTest {
                 final int start = content.indexOf("url : \"") + 8;
                 final int end = content.indexOf("/aggregate.png");
                 final String imageGroup = content.substring(start, end);
-                group = facade.getGroup(imageGroup);
+                group = facade.process(imageGroup, "");
 
                 writeToDisk(group.get(0).getReferencedNuts().get(0), "aggregate.png");
             } finally {

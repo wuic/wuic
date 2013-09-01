@@ -41,11 +41,11 @@ package com.github.wuic.test;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WorkflowNotFoundException;
-import com.github.wuic.factory.EngineBuilder;
+import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
@@ -123,13 +123,6 @@ public class ContextBuilderTest {
      */
     @Before
     public void prepareMocks() throws Exception {
-        // Prepare Configuration mock
-        final Configuration configurationMock = mock(Configuration.class);
-        when(configurationMock.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(configurationMock.compress()).thenReturn(true);
-        when(configurationMock.aggregate()).thenReturn(true);
-        when(configurationMock.cache()).thenReturn(true);
-
         // Prepare Nut mock
         mockNutOne = mock(Nut.class);
         when(mockNutOne.getName()).thenReturn("foo.js");
@@ -165,7 +158,8 @@ public class ContextBuilderTest {
 
         // Prepare Engine mock
         mockEngine = mock(Engine.class);
-        when(mockEngine.getConfiguration()).thenReturn(configurationMock);
+        when(mockEngine.getNutTypes()).thenReturn(Arrays.asList(NutType.JAVASCRIPT));
+        when(mockEngine.getEngineType()).thenReturn(EngineType.AGGREGATOR);
         when(mockEngine.parse(any(EngineRequest.class))).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
@@ -316,13 +310,17 @@ public class ContextBuilderTest {
 
     /**
      * Test some concurrent accesses.
+     *
+     * @throws InterruptedException if test fails
      */
     @Test
-    public void concurrentTest() {
+    public void concurrentTest() throws InterruptedException {
         final ContextBuilder builder = new ContextBuilder();
+        final int threadNumber = 2000;
+        final Thread[] threads = new Thread[threadNumber];
 
-        for (int i = 0; i < 1000; i++) {
-            new Thread(new Runnable() {
+        for (int i = 0; i < threadNumber; i = i + 4) {
+            threads[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -331,14 +329,17 @@ public class ContextBuilderTest {
                             .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                             .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                             .workflow("workflow", "heap", new String[]{"engine"})
-                            .releaseTag();
+                            .releaseTag()
+                            .build();
                     } catch (Exception e) {
+                        System.out.println(Thread.currentThread().toString());
+                        e.printStackTrace(System.out);
                         Assert.fail();
                     }
                 }
-            }).start();
+            });
 
-            new Thread(new Runnable() {
+            threads[i + 1] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -347,35 +348,47 @@ public class ContextBuilderTest {
                                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                                 .workflow("workflow", "heap", new String[]{"engine"})
-                                .releaseTag();
+                                .releaseTag()
+                                .build();
                     } catch (Exception e) {
                         Assert.fail();
                     }
                 }
-            }).start();
+            });
 
-            new Thread(new Runnable() {
+            threads[i + 2] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         builder.clearTag("test");
                     } catch (Exception e) {
+                        e.printStackTrace(System.out);
                         Assert.fail();
                     }
                 }
-            }).start();
+            });
 
-
-            new Thread(new Runnable() {
+            threads[i + 3] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         builder.clearTag("foo");
                     } catch (Exception e) {
+                        e.printStackTrace(System.out);
                         Assert.fail();
                     }
                 }
-            }).start();
+            });
+        }
+
+        // Start all threads
+        for (Thread t : threads) {
+            t.start();
+        }
+
+        // Wait all threads
+        for (Thread t : threads) {
+            t.join();
         }
     }
 }

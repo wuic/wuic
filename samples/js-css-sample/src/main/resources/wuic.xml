@@ -1,139 +1,212 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
-<wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
-    <resource-factory-builders>
-        <resource-factory-builder id="appResourceFactoryBuilder" class="WebappNutDaoBuilder">
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="appResourceFactoryBuilder" type="WebappNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.basePath">jquery-ui-1.10.2</property>
             </properties>
-        </resource-factory-builder>
-        <resource-factory-builder id="httpResourceFactoryBuilder" class="HttpNutDaoBuilder">
+        </nut-dao-builder>
+        <nut-dao-builder id="httpResourceFactoryBuilder" type="HttpNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.serverPort">8080</property>
                 <property key="c.g.wuic.dao.basePath">jquery-ui-1.10.2</property>
             </properties>
-        </resource-factory-builder>
-    </resource-factory-builders>
-    <groups>
-        <group id="collapsible-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.accordion.js</file>
-        </group>
-        <group id="custom-icons-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.accordion.js</file>
-            <file>ui/jquery.ui.button.js</file>
-        </group>
-        <group id="fillspace-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.accordion.js</file>
-            <file>ui/jquery.ui.mouse.js</file>
-            <file>ui/jquery.ui.resizable.js</file>
-        </group>
-        <group id="sortable-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.accordion.js</file>
-            <file>ui/jquery.ui.mouse.js</file>
-            <file>ui/jquery.ui.sortable.js</file>
-        </group>
-        <group id="effect-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.effect.js</file>
-        </group>
-        <group id="autocomplete-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.position.js</file>
-            <file>ui/jquery.ui.menu.js</file>
-            <file>ui/jquery.ui.autocomplete.js</file>
-        </group>
-        <group id="tooltip-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.button.js</file>
-            <file>ui/jquery.ui.position.js</file>
-            <file>ui/jquery.ui.menu.js</file>
-            <file>ui/jquery.ui.autocomplete.js</file>
-            <file>ui/jquery.ui.tooltip.js</file>
-        </group>
-        <group id="button-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.button.js</file>
-        </group>
-        <group id="splitbutton-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.button.js</file>
-            <file>ui/jquery.ui.position.js</file>
-            <file>ui/jquery.ui.menu.js</file>
-        </group>
-        <group id="datepicker-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.datepicker.js</file>
-        </group>
-        <group id="effect-datepicker-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.effect.js</file>
-            <file>ui/jquery.ui.effect-blind.js</file>
-            <file>ui/jquery.ui.effect-bounce.js</file>
-            <file>ui/jquery.ui.effect-clip.js</file>
-            <file>ui/jquery.ui.effect-drop.js</file>
-            <file>ui/jquery.ui.effect-fold.js</file>
-            <file>ui/jquery.ui.effect-slide.js</file>
-            <file>ui/jquery.ui.datepicker.js</file>
-        </group>
-        <group id="datepicker-loc-js" configuration="yuicompressor-js" default-builder="httpResourceFactoryBuilder">
-            <file>jquery-1.9.1.js</file>
-            <file>ui/jquery.ui.core.js</file>
-            <file>ui/jquery.ui.widget.js</file>
-            <file>ui/jquery.ui.datepicker.js</file>
-            <file>demos/datepicker/jquery.ui.datepicker-ar.js</file>
-            <file>demos/datepicker/jquery.ui.datepicker-fr.js</file>
-            <file>demos/datepicker/jquery.ui.datepicker-he.js</file>
-            <file>demos/datepicker/jquery.ui.datepicker-zh-TW.js</file>
-        </group>
+        </nut-dao-builder>
+    </nut-dao-builders>
+    <heaps>
+        <heap id="collapsible-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.accordion.js</nut-path>
+        </heap>
+        <heap id="custom-icons-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.accordion.js</nut-path>
+            <nut-path>ui/jquery.ui.button.js</nut-path>
+        </heap>
+        <heap id="fillspace-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.accordion.js</nut-path>
+            <nut-path>ui/jquery.ui.mouse.js</nut-path>
+            <nut-path>ui/jquery.ui.resizable.js</nut-path>
+        </heap>
+        <heap id="sortable-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.accordion.js</nut-path>
+            <nut-path>ui/jquery.ui.mouse.js</nut-path>
+            <nut-path>ui/jquery.ui.sortable.js</nut-path>
+        </heap>
+        <heap id="effect-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.effect.js</nut-path>
+        </heap>
+        <heap id="autocomplete-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.position.js</nut-path>
+            <nut-path>ui/jquery.ui.menu.js</nut-path>
+            <nut-path>ui/jquery.ui.autocomplete.js</nut-path>
+        </heap>
+        <heap id="tooltip-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.button.js</nut-path>
+            <nut-path>ui/jquery.ui.position.js</nut-path>
+            <nut-path>ui/jquery.ui.menu.js</nut-path>
+            <nut-path>ui/jquery.ui.autocomplete.js</nut-path>
+            <nut-path>ui/jquery.ui.tooltip.js</nut-path>
+        </heap>
+        <heap id="button-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.button.js</nut-path>
+        </heap>
+        <heap id="splitbutton-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.button.js</nut-path>
+            <nut-path>ui/jquery.ui.position.js</nut-path>
+            <nut-path>ui/jquery.ui.menu.js</nut-path>
+        </heap>
+        <heap id="datepicker-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.datepicker.js</nut-path>
+        </heap>
+        <heap id="effect-datepicker-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.effect.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-blind.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-bounce.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-clip.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-drop.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-fold.js</nut-path>
+            <nut-path>ui/jquery.ui.effect-slide.js</nut-path>
+            <nut-path>ui/jquery.ui.datepicker.js</nut-path>
+        </heap>
+        <heap id="datepicker-loc-js" dao-builder-id="httpResourceFactoryBuilder">
+            <nut-path>jquery-1.9.1.js</nut-path>
+            <nut-path>ui/jquery.ui.core.js</nut-path>
+            <nut-path>ui/jquery.ui.widget.js</nut-path>
+            <nut-path>ui/jquery.ui.datepicker.js</nut-path>
+            <nut-path>demos/datepicker/jquery.ui.datepicker-ar.js</nut-path>
+            <nut-path>demos/datepicker/jquery.ui.datepicker-fr.js</nut-path>
+            <nut-path>demos/datepicker/jquery.ui.datepicker-he.js</nut-path>
+            <nut-path>demos/datepicker/jquery.ui.datepicker-zh-TW.js</nut-path>
+        </heap>
 
-        <group id="demo-css" configuration="yuicompressor-css" default-builder="appResourceFactoryBuilder">
-            <file>themes/base/jquery.ui.all.css</file>
-            <file>demos/demos.css</file>
-        </group>
-    </groups>
-    <configurations>
-        <configuration id="yuicompressor-js" type="JAVASCRIPT">
-            <cache>true</cache>
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <compress>true</compress>
-            <yuiLineBreakPos>-1</yuiLineBreakPos>
-            <yuiDisableOptimizations>false</yuiDisableOptimizations>
-            <yuiMunge>true</yuiMunge>
-            <yuiPreserveAllSemiColons>false</yuiPreserveAllSemiColons>
-            <yuiVerbose>true</yuiVerbose>
-        </configuration>
-        <configuration id="yuicompressor-css" type="CSS">
-            <cache>true</cache>
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <compress>true</compress>
-            <yuiLineBreakPos>-1</yuiLineBreakPos>
-        </configuration>
-    </configurations>
+        <heap id="demo-css" dao-builder-id="appResourceFactoryBuilder">
+            <nut-path>themes/base/jquery.ui.all.css</nut-path>
+            <nut-path>demos/demos.css</nut-path>
+        </heap>
+    </heaps>
+    
+    <workflows>
+        <workflow id="collapsible-js" heap-id="collapsible-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="custom-icons-js" heap-id="custom-icons-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="fillspace-js" heap-id="fillspace-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="sortable-js" heap-id="sortable-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="effect-js" heap-id="effect-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="autocomplete-js" heap-id="autocomplete-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="tooltip-js" heap-id="tooltip-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="button-js" heap-id="button-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="splitbutton-js" heap-id="splitbutton-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="datepicker-js" heap-id="datepicker-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="effect-datepicker-js" heap-id="effect-datepicker-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="datepicker-loc-js" heap-id="datepicker-loc-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="demo-css" heap-id="demo-css">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorCssEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+    </workflows>
 </wuic>

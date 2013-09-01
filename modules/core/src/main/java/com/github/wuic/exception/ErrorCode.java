@@ -134,7 +134,7 @@ public interface ErrorCode {
 
     /**
      * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
-     * {@link com.github.wuic.factory.EngineBuilder}.
+     * {@link com.github.wuic.engine.EngineBuilder}.
      */
     long ENGINE_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
 

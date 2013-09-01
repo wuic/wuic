@@ -38,6 +38,9 @@
 
 package com.github.wuic.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -61,9 +64,19 @@ import java.util.concurrent.ScheduledFuture;
 public final class WuicScheduledThreadPool extends Thread {
 
     /**
+     * We just create 1 thread per processor.
+     */
+    public static final int POOL_SIZE = Runtime.getRuntime().availableProcessors();
+
+    /**
      * The unique instance.
      */
     private static WuicScheduledThreadPool instance = null;
+
+    /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The thread pool.
@@ -76,7 +89,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      */
     private WuicScheduledThreadPool() {
-        pool = Executors.newScheduledThreadPool(NumberUtils.TWO);
+        pool = Executors.newScheduledThreadPool(POOL_SIZE);
         Runtime.getRuntime().addShutdownHook(this);
     }
 
@@ -106,7 +119,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * @return an object which gives control over scheduled executions
      */
     public synchronized ScheduledFuture<?> executeEveryTimeInSeconds(final Runnable job, final long delay) {
-        return pool.scheduleWithFixedDelay(job, delay, delay, TimeUnit.SECONDS);
+        return pool.scheduleWithFixedDelay(new ExceptionLogger(job), delay, delay, TimeUnit.SECONDS);
     }
 
     /**
@@ -114,5 +127,45 @@ public final class WuicScheduledThreadPool extends Thread {
      */
     public void run() {
         pool.shutdownNow();
+    }
+
+    /**
+     * <p>
+     * Logs any exception which occurs when running a delegated {@link Runnable}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.0
+     */
+    private final class ExceptionLogger implements Runnable {
+
+        /**
+         * Wrapped runnable.
+         */
+        private Runnable delegate;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param r the runnable
+         */
+        private ExceptionLogger(final Runnable r) {
+            delegate = r;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void run() {
+            try {
+                delegate.run();
+            } catch (Exception e) {
+                log.error("A thread execution has failed in WUIC", e);
+            }
+        }
     }
 }

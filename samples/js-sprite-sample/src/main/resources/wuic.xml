@@ -1,94 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
-<wuic ehcache-provider="com.github.wuic.configuration.impl.DefaultEhCacheProvider">
-    <resource-factory-builders>
-        <resource-factory-builder id="imgSourceRootProvider" class="ClasspathNutDaoBuilder">
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="imgSourceRootProvider" type="ClasspathNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.regex">true</property>
                 <property key="c.g.wuic.dao.basePath">/img</property>
             </properties>
-        </resource-factory-builder>
-        <resource-factory-builder id="appSourceRootProvider" class="WebappNutDaoBuilder" />
-    </resource-factory-builders>
-    <groups>
-        <group id="img" configuration="sprite-image-png" default-builder="imgSourceRootProvider">
-            <file>.*.png</file>
-        </group>
-        <group id="cgsg-js" configuration="yuicompressor-js" default-builder="appSourceRootProvider">
-            <file>cgsg/utils/util.array.js</file>
-            <file>cgsg/utils/class.class.js</file>
-            <file>cgsg/utils/class.map.js</file>
-            <file>cgsg/utils/util.color.js</file>
-            <file>cgsg/utils/math/class.vector2D.js</file>
-            <file>cgsg/utils/class.region.js</file>
-            <file>cgsg/constants.js</file>
-            <file>cgsg/utils/class.traverser.js</file>
+        </nut-dao-builder>
+        <nut-dao-builder id="appSourceRootProvider" type="WebappNutDaoBuilder" />
+    </nut-dao-builders>
 
-            <file>cgsg/event/class.event.js</file>
-            <file>cgsg/event/class.eventmanager.js</file>
+    <engine-builders>
+        <engine-builder id="jsSprite" type="ImageAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
+            </properties>
+        </engine-builder>
+    </engine-builders>
 
-            <file>cgsg/animation/class.keyframe.js</file>
-            <file>cgsg/interpolator/class.interpolator.js</file>
-            <file>cgsg/interpolator/class.interpolator.linear.js</file>
-            <file>cgsg/interpolator/class.interpolator.TCB.js</file>
-            <file>cgsg/animation/class.anim.timeline.js</file>
-            <file>cgsg/animation/class.animmanager.js</file>
+    <heaps>
+        <heap id="img" dao-builder-id="imgSourceRootProvider">
+            <nut-path>.*.png</nut-path>
+        </heap>
+        <heap id="cgsg-js" dao-builder-id="appSourceRootProvider">
+            <nut-path>cgsg/utils/util.array.js</nut-path>
+            <nut-path>cgsg/utils/class.class.js</nut-path>
+            <nut-path>cgsg/utils/class.map.js</nut-path>
+            <nut-path>cgsg/utils/util.color.js</nut-path>
+            <nut-path>cgsg/utils/math/class.vector2D.js</nut-path>
+            <nut-path>cgsg/utils/class.region.js</nut-path>
+            <nut-path>cgsg/constants.js</nut-path>
+            <nut-path>cgsg/utils/class.traverser.js</nut-path>
 
-            <file>cgsg/collision/enum.collision.method.js</file>
-            <file>cgsg/collision/class.collision.tester.region.js</file>
-            <file>cgsg/collision/class.collision.tester.ghost.ondemand.js</file>
-            <file>cgsg/collision/class.collision.tester.factory.js</file>
-            <file>cgsg/collision/class.collision.manager.js</file>
+            <nut-path>cgsg/event/class.event.js</nut-path>
+            <nut-path>cgsg/event/class.eventmanager.js</nut-path>
 
-            <file>cgsg/globals.js</file>
-            <file>cgsg/utils/util.global.js</file>
-            <file>cgsg/utils/util.color.js</file>
+            <nut-path>cgsg/animation/class.keyframe.js</nut-path>
+            <nut-path>cgsg/interpolator/class.interpolator.js</nut-path>
+            <nut-path>cgsg/interpolator/class.interpolator.linear.js</nut-path>
+            <nut-path>cgsg/interpolator/class.interpolator.TCB.js</nut-path>
+            <nut-path>cgsg/animation/class.anim.timeline.js</nut-path>
+            <nut-path>cgsg/animation/class.animmanager.js</nut-path>
 
-            <file>cgsg/mask/class.mask.js</file>
-            <file>cgsg/mask/class.mask.clip.js</file>
+            <nut-path>cgsg/collision/enum.collision.method.js</nut-path>
+            <nut-path>cgsg/collision/class.collision.tester.region.js</nut-path>
+            <nut-path>cgsg/collision/class.collision.tester.ghost.ondemand.js</nut-path>
+            <nut-path>cgsg/collision/class.collision.tester.factory.js</nut-path>
+            <nut-path>cgsg/collision/class.collision.manager.js</nut-path>
 
-            <file>cgsg/utils/math/math.js</file>
-            <file>cgsg/utils/class.handlebox.js</file>
-            <file>cgsg/node/class.node.js</file>
+            <nut-path>cgsg/globals.js</nut-path>
+            <nut-path>cgsg/utils/util.global.js</nut-path>
+            <nut-path>cgsg/utils/util.color.js</nut-path>
 
-            <file>cgsg/node/class.node.curveTCB.js</file>
-            <file>cgsg/node/class.node.colorPicker.js</file>
-            <file>cgsg/node/class.node.tabMenu.js</file>
-            <file>cgsg/node/class.node.text.js</file>
-            <file>cgsg/node/class.node.webview.js</file>
-            <file>cgsg/node/class.node.square.js</file>
-            <file>cgsg/node/class.node.slider.js</file>
-            <file>cgsg/node/class.node.circle.js</file>
-            <file>cgsg/node/class.node.ellipse.js</file>
-            <file>cgsg/node/class.node.image.js</file>
-            <file>cgsg/node/class.node.animatedSprite.js</file>
-            <file>cgsg/node/class.node.button.js</file>
-            <file>cgsg/node/class.particles.js</file>
+            <nut-path>cgsg/mask/class.mask.js</nut-path>
+            <nut-path>cgsg/mask/class.mask.clip.js</nut-path>
 
-            <file>cgsg/class.scenegraph.js</file>
-            <file>cgsg/class.view.js</file>
-            <file>cgsg/ext/WUICCGSGNodeImageFactory.js</file>
-        </group>
-    </groups>
-    <configurations>
-        <configuration id="yuicompressor-js" type="JAVASCRIPT">
-            <cache>true</cache>
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <compress>true</compress>
-            <yuiLineBreakPos>-1</yuiLineBreakPos>
-            <yuiDisableOptimizations>false</yuiDisableOptimizations>
-            <yuiMunge>true</yuiMunge>
-            <yuiPreserveAllSemiColons>false</yuiPreserveAllSemiColons>
-            <yuiVerbose>true</yuiVerbose>
-        </configuration>
-        <configuration id="sprite-image-png" type="SPRITE">
-            <cache>true</cache>
-            <compress>true</compress>
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <sprite-provider>com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider</sprite-provider>
-        </configuration>
-    </configurations>
+            <nut-path>cgsg/utils/math/math.js</nut-path>
+            <nut-path>cgsg/utils/class.handlebox.js</nut-path>
+            <nut-path>cgsg/node/class.node.js</nut-path>
+
+            <nut-path>cgsg/node/class.node.curveTCB.js</nut-path>
+            <nut-path>cgsg/node/class.node.colorPicker.js</nut-path>
+            <nut-path>cgsg/node/class.node.tabMenu.js</nut-path>
+            <nut-path>cgsg/node/class.node.text.js</nut-path>
+            <nut-path>cgsg/node/class.node.webview.js</nut-path>
+            <nut-path>cgsg/node/class.node.square.js</nut-path>
+            <nut-path>cgsg/node/class.node.slider.js</nut-path>
+            <nut-path>cgsg/node/class.node.circle.js</nut-path>
+            <nut-path>cgsg/node/class.node.ellipse.js</nut-path>
+            <nut-path>cgsg/node/class.node.image.js</nut-path>
+            <nut-path>cgsg/node/class.node.animatedSprite.js</nut-path>
+            <nut-path>cgsg/node/class.node.button.js</nut-path>
+            <nut-path>cgsg/node/class.particles.js</nut-path>
+
+            <nut-path>cgsg/class.scenegraph.js</nut-path>
+            <nut-path>cgsg/class.view.js</nut-path>
+            <nut-path>cgsg/ext/WUICCGSGNodeImageFactory.js</nut-path>
+        </heap>
+    </heaps>
+
+    <workflows>
+        <workflow id="img" heap-id="img">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>jsSprite</engine-builder-id>
+            </engine-chain>
+        </workflow>
+        <workflow id="cgsg-js" heap-id="cgsg-js">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+    </workflows>
 </wuic>

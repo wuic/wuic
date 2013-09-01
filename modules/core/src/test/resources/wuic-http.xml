@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
-    <resource-factory-builders>
-        <resource-factory-builder id="httpSourceRootProvider" class="HttpNutDaoBuilder">
+    <nut-dao-builders>
+        <nut-dao-builder id="httpSourceRootProvider" type="HttpNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.secret">false</property>
                 <property key="c.g.wuic.dao.serverPort">9876</property>
             </properties>
-        </resource-factory-builder>
-    </resource-factory-builders>
-    <groups>
-        <group id="css-image" configuration="sprite-image-png" default-builder="httpSourceRootProvider">
-            <file>images/reject-block.png</file>
-            <file>images/reject-major.png</file>
-            <file>images/reject-warn.png</file>
-        </group>
-    </groups>
-    <configurations>
-        <configuration id="sprite-image-png" type="SPRITE">
-            <compress>true</compress>
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <sprite-provider>com.github.wuic.engine.impl.embedded.CGCssSpriteProvider</sprite-provider>
-        </configuration>
-    </configurations>
+        </nut-dao-builder>
+    </nut-dao-builders>
+    <heaps>
+        <heap id="css-image" dao-builder-id="httpSourceRootProvider">
+            <nut-path>images/reject-block.png</nut-path>
+            <nut-path>images/reject-major.png</nut-path>
+            <nut-path>images/reject-warn.png</nut-path>
+        </heap>
+    </heaps>
+    <workflows>
+        <workflow id="css-image" heap-id="css-image">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultImageAggregatorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
+    </workflows>
 </wuic>

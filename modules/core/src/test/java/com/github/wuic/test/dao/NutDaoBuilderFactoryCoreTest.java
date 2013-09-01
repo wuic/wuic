@@ -38,7 +38,7 @@
 
 package com.github.wuic.test.dao;
 
-import com.github.wuic.bootstrap.core.NutDaoBuilderFactory;
+import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.UnableToInstantiateException;
 
 import com.github.wuic.exception.wrapper.BadArgumentException;
@@ -51,7 +51,7 @@ import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * {@link com.github.wuic.bootstrap.core.NutDaoBuilderFactory} support for core module tests.
+ * {@link com.github.wuic.nut.NutDaoBuilderFactory} support for core module tests.
  * </p>
  *
  * @author Guillaume DROUET

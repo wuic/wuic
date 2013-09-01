@@ -39,7 +39,6 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.EngineBuilderPropertyNotSupportedException;
-import com.github.wuic.factory.EngineBuilder;
 import com.github.wuic.util.PropertySetter;
 import com.github.wuic.util.AbstractGenericBuilder;
 

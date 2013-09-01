@@ -243,4 +243,49 @@ public abstract class PropertySetter<T> {
             put(getPropertyKey(), value == null ? null : Boolean.valueOf(value.toString()));
         }
     }
+
+    /**
+     * <p>
+     * Abstract builder for {@code Object} values instantiated with the default constructor of a class loaded with its
+     * name.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.0
+     */
+    public abstract static class PropertySetterOfObject extends PropertySetter<Object> {
+
+        /**
+         * <p>
+         * Creates a new instance with a specific default value which will be converted into {@code Object}.
+         * </p>
+         *
+         * @param b the {@link AbstractGenericBuilder} which needs to be configured
+         * @param defaultValue the default value
+         */
+        public PropertySetterOfObject(final AbstractGenericBuilder b, final Object defaultValue) {
+            super(b, null);
+
+            if (defaultValue != null) {
+                set(defaultValue);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void set(final Object value) {
+            try {
+                put(getPropertyKey(), value == null ? null : Class.forName(value.toString()).newInstance());
+            } catch (ClassNotFoundException cnfe) {
+                throw new BadArgumentException(new IllegalArgumentException(cnfe));
+            } catch (IllegalAccessException iae) {
+                throw new BadArgumentException(new IllegalArgumentException(iae));
+            } catch (InstantiationException ie) {
+                throw new BadArgumentException(new IllegalArgumentException(ie));
+            }
+        }
+    }
 }

@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<!DOCTYPE wuic SYSTEM 'http://capgemini.com/wuic/wuic.dtd'>
 <wuic>
-	<resource-factory-builders>
-        <resource-factory-builder id="ftpFactoryBuilder" class="FtpNutDaoBuilder">
+	<nut-dao-builders>
+        <nut-dao-builder id="ftpFactoryBuilder" type="FtpNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.regex">true</property>
                 <property key="c.g.wuic.dao.serverPort">2221</property>
                 <property key="c.g.wuic.dao.login">wuicuser</property>
                 <property key="c.g.wuic.dao.password">wuicpassword</property>
             </properties>
-        </resource-factory-builder>
-	</resource-factory-builders>
-	<groups>
-		<group id="css-image" configuration="yuicompressor-css" default-builder="ftpFactoryBuilder">
-            <file>.*.css</file>
-		</group>
-	</groups>
-	<configurations>
-        <configuration id="yuicompressor-css" type="CSS">
-            <aggregate>true</aggregate>
-            <charset>UTF-8</charset>
-            <compress>true</compress>
-            <yuiLineBreakPos>-1</yuiLineBreakPos>
-        </configuration>
-	</configurations>
+        </nut-dao-builder>
+	</nut-dao-builders>
+
+	<heaps>
+		<heap id="css-image" dao-builder-id="ftpFactoryBuilder">
+            <nut-path>.*.css</nut-path>
+		</heap>
+	</heaps>
+
+    <workflows>
+        <workflow id="css-image" heap-id="css-image">
+            <engine-chain />
+        </workflow>
+    </workflows>
 </wuic>

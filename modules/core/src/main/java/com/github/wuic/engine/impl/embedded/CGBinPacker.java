@@ -52,7 +52,7 @@ import java.util.PriorityQueue;
 
 /**
  * <p>
- * This packer is inspired from the growser bin packing algorithm explained by
+ * This packer is inspired from the grower bin packing algorithm explained by
  * Jakes Gordon to give a position to a set of dimensions in the lowest area.  
  * </p>
  * 
@@ -293,6 +293,7 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
     @Override
     public void clearElements() {
         this.dataMap.clear();
+        this.root = new Node<T>(0, 0, 0, 0, null);
     }
     
     /**

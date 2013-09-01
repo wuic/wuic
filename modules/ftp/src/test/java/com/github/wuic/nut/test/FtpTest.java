@@ -38,9 +38,11 @@
 
 package com.github.wuic.nut.test;
 
-import com.github.wuic.WuicFacade;
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
@@ -133,8 +135,10 @@ public class FtpTest {
      */
     @Test
     public void ftpTest() throws Exception {
-        final WuicFacade facade = WuicFacade.newInstance("");
-        final List<Nut> group = facade.getGroup("css-image");
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        final List<Nut> group = builder.build().process("css-image", "");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

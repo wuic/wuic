@@ -38,14 +38,15 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.exception.wrapper.BadClassException;
+import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.ImageConfiguration;
 import com.github.wuic.util.IOUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -58,28 +59,16 @@ import java.io.OutputStream;
  * @since 0.2.0
  */
 public class CGImageCompressorEngine extends CGAbstractCompressorEngine {
-
-    /**
-     * The configuration.
-     */
-    private ImageConfiguration configuration;
     
     /**
      * <p>
-     * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link com.github.wuic.exception.wrapper.BadClassException} will be thrown if the configuration
-     * is not an {@link ImageConfiguration}.
+     * Creates a new {@link com.github.wuic.engine.Engine}.
      * </p>
-     * 
-     * @param config the {@link Configuration}
+     *
+     * @param compress activate compression or not
      */
-    public CGImageCompressorEngine(final Configuration config) {
-        if (config instanceof ImageConfiguration) {
-            configuration = (ImageConfiguration) config;
-        } else {
-
-            throw new BadClassException(config, ImageConfiguration.class);
-        }
+    public CGImageCompressorEngine(final Boolean compress) {
+       super(compress);
     }
 
     /**
@@ -96,7 +85,15 @@ public class CGImageCompressorEngine extends CGAbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    public Configuration getConfiguration() {
-        return configuration;
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.PNG);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.BINARY_COMPRESSION;
     }
 }

@@ -38,25 +38,27 @@
 
 package com.github.wuic;
 
+import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.factory.impl.EngineFactoryBuilderImpl;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.util.List;
 
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.JAXBException;
 
 /**
  * <p>
  * This class is a facade which exposes the WUIC features by simplifying
  * them within some exposed methods.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
  * @version 1.6
  * @since 0.1.0
@@ -67,11 +69,11 @@ public final class WuicFacade {
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
     /**
-     * The {@link com.github.wuic.factory.EngineBuilder} used in this facade.
+     * Context.
      */
-    private EngineFactoryBuilderImpl factoryBuilder;
+    private Context context;
 
     /**
      * The context path where the files will be exposed.
@@ -87,8 +89,7 @@ public final class WuicFacade {
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String cp) throws WuicException {
-        factoryBuilder = new EngineFactoryBuilderImpl();
-        contextPath = cp;
+        this("/wuic.xml", cp);
     }
 
     /**
@@ -101,7 +102,16 @@ public final class WuicFacade {
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String wuicXmlPath, final String cp) throws WuicException {
-        factoryBuilder = new EngineFactoryBuilderImpl(wuicXmlPath);
+        final ContextBuilder builder = new ContextBuilder();
+        try {
+            // TODO : create flag to not use default configuration
+            new NutDaoBuilderFactory().newContextBuilderConfigurator().configure(builder);
+            new EngineBuilderFactory().newContextBuilderConfigurator().configure(builder);
+            new WuicXmlContextBuilderConfigurator(getClass().getResource(wuicXmlPath)).configure(builder);
+            context = builder.build();
+        } catch (JAXBException je) {
+            throw new WuicXmlReadException("unable to load wuic.xml", je) ;
+        }
         contextPath = cp;
     }
 
@@ -152,15 +162,8 @@ public final class WuicFacade {
 
         log.info("Getting files for group : {}", id);
 
-        // Get the group
-        final NutsHeap group = factoryBuilder.getLoader().getFilesGroup(id);
-
-        // Build the engine that generates the files
-        final NutType fileType = group.getNutType();
-        final Engine engine = factoryBuilder.build().create(fileType);
-
         // Parse the files
-        final List<Nut> retval = engine.parse(new EngineRequest(contextPath, group));
+        final List<Nut> retval = context.process(id, contextPath);
 
         log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

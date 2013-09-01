@@ -113,7 +113,7 @@ public class Context implements Observer {
         }
 
         final Engine chain = workflow.getChains().get(workflow.getHeap().getNutType());
-        return chain.parse(new EngineRequest(contextPath, workflow.getHeap()));
+        return chain.parse(new EngineRequest(contextPath, workflow.getHeap(), workflow.getChains()));
     }
 
     /**

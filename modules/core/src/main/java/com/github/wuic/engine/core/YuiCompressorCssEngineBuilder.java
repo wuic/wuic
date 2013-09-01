@@ -39,12 +39,14 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.configuration.impl.YuiConfigurationImpl;
-import com.github.wuic.configuration.impl.YuiCssConfigurationImpl;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
-import com.github.wuic.engine.setter.*;
+
+import com.github.wuic.engine.setter.CompressPropertySetter;
+import com.github.wuic.engine.setter.LineBreakPosPropertySetter;
+import com.github.wuic.engine.setter.CharsetPropertySetter;
+
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -67,8 +69,7 @@ public class YuiCompressorCssEngineBuilder extends AbstractEngineBuilder {
         super();
         addPropertySetter(new CompressPropertySetter(this),
                 new LineBreakPosPropertySetter(this),
-                new CharsetPropertySetter(this),
-                new VerbosePropertySetter(this));
+                new CharsetPropertySetter(this));
     }
 
     /**
@@ -76,12 +77,9 @@ public class YuiCompressorCssEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new CssYuiCompressorEngine(new YuiCssConfigurationImpl(new YuiConfigurationImpl(null,
-                null,
+        return new CssYuiCompressorEngine(
                 (Boolean) property(ApplicationConfig.COMPRESS),
-                null,
-                (Integer) property(ApplicationConfig.LINE_BREAK_POS),
                 (String) property(ApplicationConfig.CHARSET),
-                null)));
+                (Integer) property(ApplicationConfig.LINE_BREAK_POS));
     }
 }

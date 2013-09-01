@@ -38,7 +38,7 @@
 
 package com.github.wuic.test.engine;
 
-import com.github.wuic.bootstrap.core.EngineBuilderFactory;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.engine.core.*;
 import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
@@ -49,7 +49,7 @@ import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * {@link com.github.wuic.bootstrap.core.EngineBuilderFactory} support for core module tests.
+ * {@link com.github.wuic.engine.EngineBuilderFactory} support for core module tests.
  * </p>
  *
  * @author Guillaume DROUET

@@ -39,7 +39,6 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.configuration.impl.ImageConfigurationImpl;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGImageCompressorEngine;
@@ -72,11 +71,6 @@ public class ImageCompressorEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new CGImageCompressorEngine(new ImageConfigurationImpl(null,
-                null,
-                (Boolean) property(ApplicationConfig.COMPRESS),
-                null,
-                null,
-                null));
+        return new CGImageCompressorEngine((Boolean) property(ApplicationConfig.COMPRESS));
     }
 }

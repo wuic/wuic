@@ -38,9 +38,11 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.YuiCssConfiguration;
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -58,14 +60,26 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
      * Builds a new instance.
      * </p>
      *
-     * @param config the configuration
+     * @param inspect activate inspection or not
+     * @param charset inspected files charset
      */
-    public CGCssInspectorEngine(final Configuration config) {
-        super(config, new CGCssImportLineInspector(), new CGCssBackgroundUrlLineInspector());
+    public CGCssInspectorEngine(final Boolean inspect, final String charset) {
+        super(inspect, charset, new CGCssImportLineInspector(), new CGCssBackgroundUrlLineInspector());
+    }
 
-        if (!(config instanceof YuiCssConfiguration)) {
-            final String message = String.format("%s must be an instance of %s", config, YuiCssConfiguration.class.getName());
-            throw new BadArgumentException(new IllegalArgumentException(message));
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.CSS);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.INSPECTOR;
     }
 }

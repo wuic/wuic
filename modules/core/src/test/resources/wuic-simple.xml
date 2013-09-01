@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="defaultDao" type="MockDaoBuilder">
+            <properties>
+                <property key="c.g.dao.foo">dao</property>
+            </properties>
+        </nut-dao-builder>
+    </nut-dao-builders>
+
+    <heaps>
+        <heap id="simpleHeap" dao-builder-id="defaultDao">
+            <nut-path>css/jquery-ui.css</nut-path>
+        </heap>
+    </heaps>
+
+    <workflows>
+        <workflow id="simpleWorkflow" heap-id="simpleHeap">
+            <engine-chain />
+        </workflow>
+    </workflows>
+</wuic>

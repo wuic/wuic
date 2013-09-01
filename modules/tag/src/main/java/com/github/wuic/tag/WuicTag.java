@@ -95,25 +95,10 @@ public class WuicTag extends TagSupport {
                 throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
             }
 
-            final List<Nut> files = facade.getGroup(pageName);
+            final List<Nut> nuts = facade.getGroup(pageName);
 
-            for (Nut resource : files) {
-                switch (resource.getNutType()) {
-                    case CSS :
-                        pageContext.getOut().println(cssImport(resource));
-                        break;
-                        
-                    case JAVASCRIPT :
-                        pageContext.getOut().println(javascriptImport(resource));
-                        break;
-                        
-                    default :
-                    final StringBuilder msg = new StringBuilder();
-                    msg.append(resource.getName());
-                    msg.append(" could not be imported. WuicTag currently supports .js and .css extensions only");
-                    
-                    throw new JspException(msg.toString());
-                }
+            for (final Nut nut : nuts) {
+                writeScriptImport(nut);
             }
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
@@ -123,7 +108,27 @@ public class WuicTag extends TagSupport {
         
         return SKIP_BODY;
     }
-    
+
+    private void writeScriptImport(final Nut nut) throws IOException {
+        switch (nut.getNutType()) {
+            case CSS :
+                pageContext.getOut().println(cssImport(nut));
+                break;
+
+            case JAVASCRIPT :
+                pageContext.getOut().println(javascriptImport(nut));
+                break;
+
+            default :
+                // TODO : think about an effective way to define nuts which should be imported
+                if (nut.getReferencedNuts() != null) {
+                    for (final Nut ref : nut.getReferencedNuts()) {
+                        writeScriptImport(ref);
+                    }
+                }
+        }
+    }
+
     /**
      * <p>
      * Generates import for CSS script.

@@ -38,11 +38,12 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.configuration.impl.YuiConfigurationImpl;
-import com.github.wuic.configuration.impl.YuiCssConfigurationImpl;
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
+import com.github.wuic.engine.setter.CharsetPropertySetter;
+import com.github.wuic.engine.setter.InspectPropertySetter;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -62,13 +63,9 @@ public class CssInspectorEngineBuilder extends AbstractEngineBuilder {
      * </p>
       */
     public CssInspectorEngineBuilder() {
-        super();          /*
-        addPropertySetter(new CachePropertySetter(this),
-                new CompressPropertySetter(this),
-                new AggregatePropertySetter(this),
-                new LineBreakPosPropertySetter(this),
-                new CharsetPropertySetter(this),
-                new VerbosePropertySetter(this));*/
+        super();
+        addPropertySetter(new InspectPropertySetter(this));
+        addPropertySetter(new CharsetPropertySetter(this));
     }
 
     /**
@@ -76,13 +73,7 @@ public class CssInspectorEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new CGCssInspectorEngine(new YuiCssConfigurationImpl(new YuiConfigurationImpl(null,
-                /*(Boolean) property(ApplicationConfig.CACHE),
-                (Boolean) property(ApplicationConfig.COMPRESS),
-                (Boolean) property(ApplicationConfig.AGGREGATE),
-                (Integer) property(ApplicationConfig.LINE_BREAK_POS),
-                (String) property(ApplicationConfig.CHARSET),*/
-                null, null, null, -1, null,
-                null)));
+        return new CGCssInspectorEngine((Boolean) property(ApplicationConfig.INSPECT),
+                ((String) property(ApplicationConfig.CHARSET)));
     }
 }

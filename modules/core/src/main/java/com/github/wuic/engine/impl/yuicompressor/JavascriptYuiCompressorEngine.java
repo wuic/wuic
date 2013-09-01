@@ -38,15 +38,25 @@
 
 package com.github.wuic.engine.impl.yuicompressor;
 
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.YuiJavascriptConfiguration;
+import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.impl.embedded.CGAbstractCompressorEngine;
-import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
-import java.io.*;
+import java.io.Reader;
+import java.io.Writer;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -70,25 +80,62 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
     private static final String[] TO_ESCAPE = {"n", "t", "r"};
     
     /**
-     * The configuration.
+     * Charset for compressed files.
      */
-    private YuiJavascriptConfiguration configuration;
-    
+    private String charset;
+
+    /**
+     * Position of line break insertion (-1 if not \n should be inserted).
+     */
+    private Integer lineBreakPos;
+
+    /**
+     * Disable micro-optimization.
+     */
+    private Boolean disableOptimization;
+
+    /**
+     * Be verbose when compressing.
+     */
+    private Boolean verbose;
+
+    /**
+     * Keep all unnecessary semicolons.
+     */
+    private Boolean preserveSemiColons;
+
+    /**
+     * Obfuscate the code or not.
+     */
+    private Boolean munge;
+
     /**
      * <p>
-     * Creates a new {@link com.github.wuic.engine.Engine}. An
-     * {@link BadClassException} will be thrown if the configuration
-     * is not a {@link JavascriptYuiCompressorEngine}.
+     * Creates a new instance.
      * </p>
-     * 
-     * @param config the {@link Configuration}
+     *
+     * @param compress activate compression or not
+     * @param cs charset of files to compress
+     * @param lbp line break position
+     * @param disableOptim disable micro optimizations
+     * @param verb be verbose when compressing
+     * @param keepSemiColons keep unnecessary semicolons
+     * @param obfuscate obfuscate the code or not
      */
-    public JavascriptYuiCompressorEngine(final Configuration config) {
-        if (config instanceof YuiJavascriptConfiguration) {
-            configuration = (YuiJavascriptConfiguration) config;
-        } else {
-            throw new BadClassException(config, YuiJavascriptConfiguration.class);
-        }
+    public JavascriptYuiCompressorEngine(final Boolean compress,
+                                         final String cs,
+                                         final Integer lbp,
+                                         final Boolean disableOptim,
+                                         final Boolean verb,
+                                         final Boolean keepSemiColons,
+                                         final Boolean obfuscate) {
+        super(compress);
+        charset = cs;
+        lineBreakPos = lbp;
+        disableOptimization = disableOptim;
+        verbose = verb;
+        preserveSemiColons = keepSemiColons;
+        munge = obfuscate;
     }
     
     /**
@@ -102,7 +149,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
         
         try {
             // Stream to read from the source
-            in = new InputStreamReader(switchSpecialChars(source, Boolean.FALSE), configuration.charset());
+            in = new InputStreamReader(switchSpecialChars(source, Boolean.FALSE), charset);
             
             // Create the compressor using the source stream
             final JavaScriptCompressor compressor =
@@ -117,18 +164,18 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
             
             // Compress the script into the temporary buffer
             compressor.compress(out,
-                    configuration.yuiLineBreakPos(),
-                    configuration.yuiMunge(),
-                    configuration.yuiVerbose(),
-                    configuration.yuiPreserveAllSemiColons(),
-                    configuration.yuiDisableOptimizations());
+                    lineBreakPos,
+                    munge,
+                    verbose,
+                    preserveSemiColons,
+                    disableOptimization);
             
             // Stream to write into the target with backed special characters
             final InputStream bis = new ByteArrayInputStream(out.getBuffer().toString().getBytes());
             final InputStream restore = switchSpecialChars(bis, Boolean.TRUE);
             targetOut = new OutputStreamWriter(target);
 
-            IOUtils.copyStreamToWriter(restore, targetOut, configuration.charset());
+            IOUtils.copyStreamToWriter(restore, targetOut, charset);
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         } finally {
@@ -151,7 +198,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
      * @throws IOException if an I/O error occurs
      */
     private InputStream switchSpecialChars(final InputStream source, final Boolean restore) throws IOException {
-        final Reader parser = new InputStreamReader(source, configuration.charset());
+        final Reader parser = new InputStreamReader(source, charset);
         ByteArrayOutputStream streamParser = null;
         
         try {
@@ -182,7 +229,16 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
     /**
      * {@inheritDoc}
      */
-    public Configuration getConfiguration() {
-        return configuration;
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.JAVASCRIPT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.MINIFICATION;
     }
 }

@@ -37,11 +37,17 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.configuration.Configuration;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Deque;
+import java.util.Collections;
+
 
 /**
  * <p>
@@ -55,18 +61,106 @@ import java.util.List;
  * in charge of the execution of the next engine and could decide not to execute
  * it.
  * </p>
+ *
+ * <p>
+ * Engines comparisons is based on their {@link EngineType}.
+ * </p>
  * 
  * @author Guillaume DROUET
  * @version 1.3
  * @since 0.1.0
  */
-public abstract class Engine {
+public abstract class Engine implements Comparable<Engine> {
 
     /**
      * The next engine.
      */
     private Engine nextEngine;
-    
+
+    /**
+     * Previous engine.
+     */
+    private Engine previousEngine;
+
+    /**
+     * <p>
+     * Link the given {@link Engine engines}. They will be linked respecting the order of the implied by their
+     * {@link Engine#getEngineType()}.
+     * </p>
+     *
+     * <p>
+     * If an {@link Engine} is already chained to other {@link Engine engines}, any engine won't be added
+     * as the next engine but to the end of the existing chain.
+     * </p>
+     *
+     * <p>
+     * If two different instances of the same class appear in the chain, then the first one will be replaced by the
+     * second one, keeping the original position.
+     * </p>
+     *
+     * @param engines the engines
+     * @return the first engine of the given array
+     */
+    public static Engine chain(final Engine ... engines) {
+        if (engines.length == 0) {
+            throw new BadArgumentException(new IllegalArgumentException(
+                    "A chain must be built with a non-empty array of engines"));
+        }
+
+        final List<Engine> flatten = new LinkedList<Engine>();
+        final Deque<Engine> retval = new LinkedList<Engine>();
+
+        // Flat the all the chains to improve data structure manipulations
+        for (final Engine engine : engines) {
+            Engine next = engine;
+
+            do {
+                flatten.add(next);
+                next = next.nextEngine;
+            } while (next != null);
+        }
+
+        Collections.sort(flatten);
+
+        // Going to reorganize the chain to keep one instance per class
+        forLoop :
+        for (final Engine engine : flatten) {
+
+            // Descending iteration to keep duplicate instance on the right and not on the left
+            final ListIterator<Engine> it = flatten.listIterator(flatten.size());
+
+            for (;it.hasPrevious();) {
+                final Engine previous = it.previous();
+
+                // Already added in the chain, nothing to add
+                if (retval.contains(previous)) {
+                    break;
+                // Two instances of the same class, keep only one
+                } else if (engine.getClass().equals(previous.getClass())) {
+                    if (!retval.isEmpty()) {
+                        retval.getLast().setNext(previous);
+                    } else {
+                        // This is the head of the chain
+                        previous.previousEngine = null;
+                    }
+
+                    retval.add(previous);
+                    continue forLoop;
+                }
+            }
+
+            if (!retval.contains(engine)) {
+                if (!retval.isEmpty()) {
+                    retval.getLast().setNext(engine);
+                }
+
+                retval.add(engine);
+            }
+        }
+
+        return retval.getFirst();
+    }
+
     /**
      * <p>
      * Parses the given files and returns the result of this operation.
@@ -76,7 +170,6 @@ public abstract class Engine {
      * Should throw an {@link com.github.wuic.exception.wrapper.BadArgumentException} the files type is not
      * supported by this {@link Engine}.
      * </p>
-     * 
      *
      * @param request the request with files to parse
      * @return the parsed files
@@ -86,13 +179,22 @@ public abstract class Engine {
 
     /**
      * <p>
-     * Gets the {@link Configuration} used by this engine.
+     * Gets the all {@link NutType types} supported by this engine.
      * </p>
-     * 
-     * @return the configuration
+     *
+     * @return the {@link NutType}
      */
-    public abstract Configuration getConfiguration();
-    
+    public abstract List<NutType> getNutTypes();
+
+    /**
+     * <p>
+     * Gets the type of engine.
+     * </p>
+     *
+     * @return the type of process done by with engine
+     */
+    public abstract EngineType getEngineType();
+
     /**
      * <p>
      * Returns a flag indicating if the engine is configured to do something
@@ -113,6 +215,10 @@ public abstract class Engine {
      */
     public void setNext(final Engine next) {
         nextEngine = next;
+
+        if (nextEngine != null) {
+            nextEngine.previousEngine = this;
+        }
     }
     
     /**
@@ -125,5 +231,24 @@ public abstract class Engine {
      */
     public Engine getNext() {
         return nextEngine;
+    }
+
+    /**
+     * <p>
+     * Returns the previous engine in the chain.
+     * </p>
+     *
+     * @return the previous {@link Engine}
+     */
+    public Engine getPrevious() {
+        return previousEngine;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final int compareTo(final Engine other) {
+        return getEngineType().compareTo(other.getEngineType());
     }
 }

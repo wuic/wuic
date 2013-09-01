@@ -162,6 +162,29 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Indicates if the engine should inspects and eventually transform or not.
+     * </p>
+     */
+    String INSPECT = "c.g.wuic.engine.inspect";
+
+    /**
+     * <p>
+     * Indicates the class name of a {@link com.github.wuic.engine.DimensionPacker} implementation to use when
+     * aggregating images.
+     * </p>
+     */
+    String PACKER_CLASS_NAME = "c.g.wuic.engine.packerClassName";
+
+    /**
+     * <p>
+     * Indicates the class name of a {@link com.github.wuic.engine.SpriteProvider} implementation to use when
+     * aggregating images.
+     * </p>
+     */
+    String SPRITE_PROVIDER_CLASS_NAME = "c.g.wuic.engine.spriteProviderClassName";
+
+    /**
+     * <p>
      * Position where \n is inserted in text compressor.
      * </p>
      */

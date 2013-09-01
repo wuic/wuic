@@ -39,15 +39,12 @@
 package com.github.wuic.nut.test;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
+import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.impl.YuiConfigurationImpl;
-import com.github.wuic.configuration.impl.YuiCssConfigurationImpl;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
-import com.github.wuic.factory.impl.AggregationEngineFactory;
-import com.github.wuic.factory.impl.CompressionEngineFactory;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.util.IOUtils;
@@ -59,6 +56,7 @@ import org.junit.runners.JUnit4;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -85,17 +83,16 @@ public class GStorageTest {
     public void gStorageTest() throws Exception {
         final NutsHeap nutsHeap = mock(NutsHeap.class);
         final byte[] array = ".cloud { text-align : justify;}".getBytes();
-        final Configuration config = new YuiCssConfigurationImpl(new YuiConfigurationImpl("css-id", false, true, true, -1, "UTF-8", null));
         when(nutsHeap.getNutType()).thenReturn(NutType.CSS);
         when(nutsHeap.getNuts()).thenReturn(Arrays.asList((Nut) new ByteArrayNut(array, "cloud.css", NutType.CSS)));
 
-        final Engine compressor = new CompressionEngineFactory(config).create(NutType.CSS);
-        final Engine cacheEngine = new EhCacheEngine(config);
-        final Engine aggregator = new AggregationEngineFactory(config).create(NutType.CSS);
+        final Engine compressor = new CssYuiCompressorEngine(true, "UTF-8", -1);
+        final Engine cacheEngine = new EhCacheEngine(false, null);
+        final Engine aggregator = new CGTextAggregatorEngine(true);
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 
-        final List<Nut> group = cacheEngine.parse(new EngineRequest("", nutsHeap));
+        final List<Nut> group = cacheEngine.parse(new EngineRequest("", nutsHeap, new HashMap<NutType, Engine>()));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

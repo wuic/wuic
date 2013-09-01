@@ -38,7 +38,6 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException;
 import com.github.wuic.util.PropertySetter;
 import com.github.wuic.util.AbstractGenericBuilder;
@@ -68,7 +67,7 @@ public abstract class AbstractNutDaoBuilder extends AbstractGenericBuilder<NutDa
     /**
      * {@inheritDoc}
      */
-    protected void throwPropertyNotSupportedException(final String key) throws BuilderPropertyNotSupportedException {
+    protected void throwPropertyNotSupportedException(final String key) throws NutDaoBuilderPropertyNotSupportedException {
         throw new NutDaoBuilderPropertyNotSupportedException(key, this.getClass());
     }
 }

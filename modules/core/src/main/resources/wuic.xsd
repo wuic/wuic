@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="wuic" type="xmlWuicBean"/>
+
+    <xs:complexType name="xmlWuicBean">
+        <xs:sequence>
+            <xs:element name="nut-dao-builders" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="nut-dao-builder" type="xmlBuilderBean" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="engine-builders" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="engine-builder" type="xmlBuilderBean" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="heaps" minOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="heap" type="xmlHeapBean" minOccurs="1" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="workflows" minOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="workflow" type="xmlWorkflowBean" minOccurs="1" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="polling-interleave-seconds" type="xs:int"/>
+    </xs:complexType>
+
+    <xs:complexType name="xmlBuilderBean">
+        <xs:sequence>
+            <xs:element name="properties" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="property" minOccurs="1" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:simpleContent>
+                                    <xs:extension base="xs:string">
+                                        <xs:attribute name="key" type="xs:string" />
+                                    </xs:extension>
+                                </xs:simpleContent>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required" />
+        <xs:attribute name="type" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="xmlHeapBean">
+        <xs:sequence>
+            <xs:element name="nut-path" minOccurs="1" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:string" />
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="dao-builder-id" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="xmlWorkflowBean">
+        <xs:sequence>
+            <xs:element name="store-to" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="dao-builder-id" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="engine-chain" type="engineChain" minOccurs="1" maxOccurs="unbounded">
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="heap-id" type="xs:string" use="required"/>
+        <xs:attribute name="use-default-engines" type="xs:boolean"/>
+    </xs:complexType>
+
+    <xs:complexType name="engineChain">
+        <xs:sequence>
+            <xs:element name="engine-builder-id" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:string" />
+                    </xs:simpleContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+

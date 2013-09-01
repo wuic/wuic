@@ -38,10 +38,13 @@
 
 package com.github.wuic.test;
 
-import com.github.wuic.WuicFacade;
+import com.github.wuic.Context;
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
@@ -172,12 +175,15 @@ public class HttpTest extends WuicTest {
     @Test
     public void httpResourceTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("", "/wuic-http.xml");
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-http.xml")).configure(builder);
+        final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final List<Nut> group = facade.getGroup("css-image");
+        final List<Nut> group = facade.process("css-image", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

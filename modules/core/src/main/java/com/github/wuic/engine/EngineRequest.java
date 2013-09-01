@@ -38,11 +38,13 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -76,6 +78,11 @@ public class EngineRequest {
     private NutsHeap group;
 
     /**
+     * The engine chains for each type.
+     */
+    private Map<NutType, ? extends Engine> chains;
+
+    /**
      * <p>
      * Builds a new {@code EngineRequest} with some resources specific and a specified context path to be used.
      * </p>
@@ -87,21 +94,24 @@ public class EngineRequest {
         resources = res;
         contextPath = other.getContextPath();
         group = other.getGroup();
+        chains = other.chains;
     }
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some resources and a specified context path to be used.
+     * Builds a new {@code EngineRequest} with a heap, engines chains and a specified context path to be used.
      * </p>
      *
      * @param cp the context root where the generated resources should be exposed
      * @param g the group
+     * @param c the engine chains
      * @throws StreamException if an I/O error occurs while getting resources
      */
-    public EngineRequest(final String cp, final NutsHeap g) throws StreamException {
+    public EngineRequest(final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
         resources = g.getNuts();
         contextPath = cp;
         group = g;
+        chains = c;
     }
 
     /**
@@ -135,5 +145,17 @@ public class EngineRequest {
      */
     public final NutsHeap getGroup() {
         return group;
+    }
+
+    /**
+     * <p>
+     * Gets the chains which can treat nuts of the given {@link NutType}.
+     * </p>
+     *
+     * @param nutType the nut type
+     * @return the chains that can treat this nut type
+     */
+    public final Engine getChainFor(final NutType nutType) {
+        return chains.get(nutType);
     }
 }

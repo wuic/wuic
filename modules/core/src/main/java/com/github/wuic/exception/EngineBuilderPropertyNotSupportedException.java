@@ -38,11 +38,11 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.factory.EngineBuilder;
+import com.github.wuic.engine.EngineBuilder;
 
 /**
  * <p>
- * This exception is thrown when a {@link com.github.wuic.factory.EngineBuilder} does not support
+ * This exception is thrown when a {@link com.github.wuic.engine.EngineBuilder} does not support
  * a specified property.
  * </p>
  *

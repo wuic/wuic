@@ -39,16 +39,11 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.*;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadClassException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.configuration.Configuration;
-import com.github.wuic.configuration.ImageConfiguration;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.PackerEngine;
-import com.github.wuic.engine.Region;
 import com.github.wuic.util.IOUtils;
 
 import java.awt.Dimension;
@@ -63,6 +58,7 @@ import java.awt.image.RGBImageFilter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -79,32 +75,41 @@ import javax.imageio.ImageIO;
  * @version 1.4
  * @since 0.2.0
  */
-public class CGImageAggregatorEngine extends PackerEngine {
+public class CGImageAggregatorEngine extends Engine {
 
     /**
      * The path name when images are aggregated.
      */
     public static final String AGGREGATION_NAME = "aggregate.png";
-    
+
     /**
-     * The configuration.
+     * Activate aggregation or not.
      */
-    private ImageConfiguration configuration;
-    
+    private Boolean doAggregation;
+
+    /**
+     * The sprite provider.
+     */
+    private SpriteProvider spriteProvider;
+
+    /**
+     * Dimension packer.
+     */
+    private DimensionPacker<Nut> dimensionPacker;
+
     /**
      * <p>
      * Builds a new aggregator engine.
      * </p>
-     * 
-     * @param config the configuration
+     *
+     * @param aggregate if aggregation should be activated or not
+     * @param packer the packer which packs the images
+     * @param sp the provider which generates sprites
      */
-    public CGImageAggregatorEngine(final Configuration config) {
-        if (config instanceof ImageConfiguration) {
-            configuration = (ImageConfiguration) config;
-            setDimensionPacker(configuration.createDimensionPacker());
-        } else {
-            throw new BadClassException(config, ImageConfiguration.class);
-        }
+    public CGImageAggregatorEngine(final Boolean aggregate, final DimensionPacker<Nut> packer, final SpriteProvider sp) {
+        doAggregation = aggregate;
+        spriteProvider = sp;
+        dimensionPacker = packer;
     }
     
     /**
@@ -112,20 +117,64 @@ public class CGImageAggregatorEngine extends PackerEngine {
      */
     @Override
     public List<Nut> parse(final EngineRequest request) throws WuicException {
-        /*
-         * Do nothing if the configuration says that no aggregation should be done
-         */
+        // Only used if sprite provider is not null
+        int spriteCpt = 0;
+
+        // If the configuration says that no aggregation should be done, keep all images separated
         if (!works()) {
-            return request.getResources();
+            // If a sprite provider exists, compute one resource for each image and link them
+            if (spriteProvider != null) {
+                final List<Nut> retval = new ArrayList<Nut>();
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
+
+                // Calculate type and dimensions of the final image
+                for (final Nut file : request.getResources()) {
+                    // Clear previous work
+                    spriteProvider.init(file.getName());
+                    InputStream is = null;
+
+                    try {
+                        is = file.openStream();
+
+                        final BufferedImage buff = ImageIO.read(is);
+                        spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
+
+                        // Process referenced nut
+                        final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
+                        final List<Nut> parsed = request.getChainFor(resource.getNutType()).parse(new EngineRequest(Arrays.asList(resource), request));
+
+                        file.addReferencedResource(parsed.get(0));
+                        retval.add(file);
+                    } catch (IOException ioe) {
+                        throw new StreamException(ioe);
+                    } finally {
+                        IOUtils.close(is);
+                    }
+                }
+
+                return retval;
+            } else {
+                return request.getResources();
+            }
         } else {
+            // Clear previous work
+            if (spriteProvider != null) {
+                spriteProvider.init(CGImageAggregatorEngine.AGGREGATION_NAME);
+            }
+
             final Map<Region, Nut> packed = pack(request.getResources());
     
             // Initializing the final image  
             final Dimension finalDim = getDimensionPack();
             final BufferedImage transparentImage = makeTransparentImage((int) finalDim.getWidth(), (int) finalDim.getHeight());        
-            
+
             // Merge each image into the final image
-            for (Entry<Region, Nut> entry : packed.entrySet()) {
+            for (final Entry<Region, Nut> entry : packed.entrySet()) {
+                // Register the region to the sprite provider
+                if (spriteProvider != null) {
+                    spriteProvider.addRegion(entry.getKey(), entry.getValue().getName());
+                }
+
                 InputStream is = null;
               
                 try {
@@ -151,10 +200,19 @@ public class CGImageAggregatorEngine extends PackerEngine {
 
             final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG);
 
+            if (spriteProvider != null) {
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
+
+                // Process referenced nut
+                final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
+                final List<Nut> parsed = request.getChainFor(resource.getNutType()).parse(new EngineRequest(Arrays.asList(resource), request));
+                res.addReferencedResource(parsed.get(0));
+            }
+
             return Arrays.asList(res);
         }
     }
-    
+
     /**
      * <p>
      * Makes a transparent image of the given dimensions.
@@ -172,21 +230,21 @@ public class CGImageAggregatorEngine extends PackerEngine {
         final ImageFilter filter = new TransparentImageFilter();
         final ImageProducer ip = new FilteredImageSource(img.getSource(), filter);
         final Image image = Toolkit.getDefaultToolkit().createImage(ip);
-        
+
         // Write the resulting image in the buffered image to return
         final BufferedImage bufferedImage = new BufferedImage(width, height, img.getType());
         final Graphics graphics = bufferedImage.createGraphics();
         graphics.drawImage(image, 0, 0, null);
         graphics.dispose();
-        
+
         return bufferedImage;
     }
-    
+
     /**
      * <p>
      * This filter helps make an image transparent.
      * </p>
-     * 
+     *
      * @author Guillaume DROUET
      * @version 1.1
      * @since 0.2.0
@@ -206,20 +264,74 @@ public class CGImageAggregatorEngine extends PackerEngine {
             return FILTER_OFFSET & rgb;
         }
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Configuration getConfiguration() {
-        return configuration;
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Boolean works() {
-        return configuration.aggregate();
+        return doAggregation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.PNG);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.AGGREGATOR;
+    }
+
+    /**
+     * <p>
+     * Packs the given resources (which embed images) in the smallest area.
+     * </p>
+     *
+     * @param files the images to pack
+     * @return a map which associates each packed image to its allocated region
+     * @throws WuicException if one image could not be read
+     */
+    public Map<Region, Nut> pack(final List<Nut> files) throws WuicException {
+
+        // Clear previous work
+        dimensionPacker.clearElements();
+
+        // Load each image, read its dimension and add it to the packer with the ile as data
+        for (Nut file : files) {
+            InputStream is = null;
+
+            try {
+                is = file.openStream();
+                final BufferedImage buff = ImageIO.read(is);
+
+                dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), file);
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
+            } finally {
+                IOUtils.close(is);
+            }
+        }
+
+        // Get the regions calculated by the packer !
+        return dimensionPacker.getRegions();
+    }
+
+    /**
+     * <p>
+     * Gets the dimension computed by the packer when defining a position for
+     * elements.
+     * </p>
+     *
+     * @return the packed dimension
+     */
+    public Dimension getDimensionPack() {
+        return dimensionPacker.getFilledArea();
     }
 }

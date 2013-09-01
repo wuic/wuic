@@ -73,7 +73,7 @@ public class ObfuscatePropertySetter extends PropertySetter.PropertySetterOfBool
      * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
      */
     public ObfuscatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, false);
+        this(b, true);
     }
 
     /**
@@ -81,6 +81,6 @@ public class ObfuscatePropertySetter extends PropertySetter.PropertySetterOfBool
      */
     @Override
     public String getPropertyKey() {
-        return ApplicationConfig.COMPRESS;
+        return ApplicationConfig.OBFUSCATE;
     }
 }

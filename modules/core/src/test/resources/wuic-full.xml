@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<wuic polling-interleave-seconds="1">
+    <nut-dao-builders>
+        <nut-dao-builder id="defaultDao" type="MockDaoBuilder">
+            <properties>
+                <property key="c.g.dao.foo">dao</property>
+            </properties>
+        </nut-dao-builder>
+
+        <nut-dao-builder id="anotherDao" type="MockDaoBuilder" />
+    </nut-dao-builders>
+
+    <engine-builders>
+        <engine-builder id="defaultEngine" type="MockEngineBuilder">
+            <properties>
+                <property key="c.g.engine.foo">engine</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="anotherEngine" type="MockEngineBuilder" />
+    </engine-builders>
+
+    <heaps>
+        <heap id="defaultHeap" dao-builder-id="defaultDao">
+            <nut-path>*.css</nut-path>
+            <nut-path>foo/style.css</nut-path>
+        </heap>
+
+        <heap id="anotherHeap" dao-builder-id="anotherDao">
+            <nut-path>*.js</nut-path>
+            <nut-path>foo/style.js</nut-path>
+        </heap>
+    </heaps>
+
+    <workflows>
+        <workflow id="defaultWorkflow" heap-id="defaultHeap">
+            <store-to>
+                <dao-builder-id>defaultDao</dao-builder-id>
+            </store-to>
+            <engine-chain>
+                <engine-builder-id>defaultEngine</engine-builder-id>
+                <engine-builder-id>anotherEngine</engine-builder-id>
+            </engine-chain>
+        </workflow>
+
+        <workflow id="defaultWorkflow" heap-id="anotherHeap">
+            <engine-chain>
+                <engine-builder-id>defaultEngine</engine-builder-id>
+                <engine-builder-id>anotherEngine</engine-builder-id>
+            </engine-chain>
+        </workflow>
+    </workflows>
+</wuic>

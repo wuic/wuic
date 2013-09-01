@@ -38,20 +38,23 @@
 
 package com.github.wuic.engine.impl.ehcache;
 
+import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 import org.slf4j.Logger;
@@ -59,10 +62,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * This {@link Engine engine} reads from a cache specified in the WUIC XML path
+ * This {@link Engine engine} reads from a doCache specified in the WUIC XML path
  * the given set of elements. If they exists, then they are returned and no more
  * engine is executed. Otherwise, the chain is executed and the result is put in
- * cache.
+ * doCache.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -75,21 +78,28 @@ public class EhCacheEngine extends Engine {
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
+
     /**
-     * The configuration.
+     * If doCache or not.
      */
-    private Configuration configuration;
+    private Boolean doCache;
+
+    /**
+     * The wrapped cache.
+     */
+    private Cache ehCache;
 
     /**
      * <p>
      * Builds a new engine.
      * </p>
-     * 
-     * @param conf the configuration to use
+     *
+     * @param work if cache should be activated or not
+     * @param cache the cache to be wrapped
      */
-    public EhCacheEngine(final Configuration conf) {
-        configuration = conf;
+    public EhCacheEngine(final Boolean work, final Cache cache) {
+        doCache = work;
+        ehCache = cache;
     }
 
     /**
@@ -102,13 +112,13 @@ public class EhCacheEngine extends Engine {
         final Long start = System.currentTimeMillis();
         List<Nut> retval = null;
 
-        if (configuration.cache()) {
+        if (works()) {
             final String key = request.getGroup().getId();
-            final Element value = getConfiguration().getCache().get(key);
+            final Element value = ehCache.get(key);
 
-            // Resources exist in cache, returns them
+            // Resources exist in doCache, returns them
             if (value != null) {
-                log.info("Resources for group '{}' found in cache", key);
+                log.info("Resources for group '{}' found in doCache", key);
                 retval = (List<Nut>) value.getObjectValue();
             } else if (getNext() != null) {
                 final List<Nut> resources = getNext().parse(request);
@@ -122,7 +132,7 @@ public class EhCacheEngine extends Engine {
 
                 log.debug("Caching nut with {}", key);
 
-                getConfiguration().getCache().put(new Element(key, toCache));
+                ehCache.put(new Element(key, toCache));
 
                 retval = toCache;
             }
@@ -170,16 +180,23 @@ public class EhCacheEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public Configuration getConfiguration() {
-        return configuration;
+    public Boolean works() {
+        return doCache;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        // WUIC framework ALWAYS uses cache
-        return Boolean.TRUE;
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.values());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.CACHE;
     }
 }

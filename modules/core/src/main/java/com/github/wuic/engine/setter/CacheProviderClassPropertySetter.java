@@ -39,6 +39,7 @@
 package com.github.wuic.engine.setter;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.engine.impl.ehcache.DefaultEhCacheProvider;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.util.PropertySetter;
 
@@ -73,7 +74,7 @@ public class CacheProviderClassPropertySetter extends PropertySetter.PropertySet
      * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
      */
     public CacheProviderClassPropertySetter(final AbstractEngineBuilder b) {
-        this(b, null);
+        this(b, DefaultEhCacheProvider.class.getName());
     }
 
     /**

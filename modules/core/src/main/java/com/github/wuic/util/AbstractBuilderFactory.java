@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -89,12 +90,10 @@ public abstract class AbstractBuilderFactory<T extends GenericBuilder> {
 
         for (final String className : classes()) {
             try {
-                final Class<?> clazz = Class.forName(className);
-                builders.put(clazz.getSimpleName(), clazz.getConstructor());
-                log.info("{} registered in the factory", className);
+                registerBuilderClass(className);
             } catch (ClassNotFoundException cNfe) {
-                // Ok, the extension has not been added so we can accept this
-                log.debug(String.format("'%s' not available in the classpath", cNfe));
+                // Ok, the extension has not been added to classpath so we can accept this
+                log.debug("{} not available in the classpath", cNfe);
             } catch (NoSuchMethodException nSme) {
                 final String message = String.format("The %s class must provide a default constructor", className);
                 throw new BadArgumentException(new IllegalArgumentException(message, nSme));
@@ -131,6 +130,51 @@ public abstract class AbstractBuilderFactory<T extends GenericBuilder> {
         } catch (Exception ex) {
             throw new UnableToInstantiateException(new IllegalArgumentException(String.format("%s can't be created", builderName), ex));
         }
+    }
+
+    /**
+     * <p>
+     * Tries to add a new builder class.
+     * </p>
+     *
+     * @param className the class name
+     */
+    public void addBuilderClass(final String className) {
+        try {
+            registerBuilderClass(className);
+        } catch (ClassNotFoundException cNfe) {
+            final String message = String.format("The %s class is not loaded in the classpath", className);
+            throw new BadArgumentException(new IllegalArgumentException(message, cNfe));
+        } catch (NoSuchMethodException nSme) {
+            final String message = String.format("The %s class must provide a default constructor", className);
+            throw new BadArgumentException(new IllegalArgumentException(message, nSme));
+        }
+    }
+
+    /**
+     * <p>
+     * Tries to register the given class name as a usable builder.
+     * </p>
+     *
+     * @param className the class name
+     * @throws ClassNotFoundException if class is not in classpath
+     * @throws NoSuchMethodException if there is not default builder
+     */
+    private void registerBuilderClass(final String className) throws ClassNotFoundException, NoSuchMethodException {
+        final Class<?> clazz = Class.forName(className);
+        builders.put(clazz.getSimpleName(), clazz.getConstructor());
+        log.info("{} registered in the factory", className);
+    }
+
+    /**
+     * <p>
+     * Gets all the supported types.
+     * </p>
+     *
+     * @return the types
+     */
+    protected Collection<String> knownTypes() {
+        return builders.keySet();
     }
 
     /**

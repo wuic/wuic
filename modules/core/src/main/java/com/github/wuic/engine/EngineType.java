@@ -75,7 +75,7 @@ public enum EngineType {
     /**
      * Third type in a chain. Compress the text only.
      */
-    TEXT_COMPRESSION,
+    MINIFICATION,
 
     /**
      * Fourth type in a chain. Aggregates the text only.

@@ -43,22 +43,18 @@ import com.github.wuic.engine.core.CssInspectorEngineBuilder;
 import com.github.wuic.engine.core.ImageAggregatorEngineBuilder;
 import com.github.wuic.engine.core.ImageCompressorEngineBuilder;
 import com.github.wuic.engine.core.TextAggregatorEngineBuilder;
-import com.github.wuic.engine.impl.embedded.CGCompositeEngine;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.factory.EngineBuilder;
+import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.GenericBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Observable;
-import java.util.concurrent.locks.Lock;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -107,9 +103,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ContextBuilder extends Observable {
 
     /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
      * The internal lock for tags.
      */
-    private Lock lock;
+    private ReentrantLock lock;
 
     /**
      * The current tag.
@@ -127,7 +128,7 @@ public class ContextBuilder extends Observable {
      * </p>
      */
     public ContextBuilder() {
-        taggedSettings = Collections.synchronizedMap(new HashMap<String, ContextSetting>());
+        taggedSettings = new HashMap<String, ContextSetting>();
         lock = new ReentrantLock();
     }
 
@@ -148,9 +149,9 @@ public class ContextBuilder extends Observable {
         private Map<String, NutDao> nutDaoMap = new HashMap<String, NutDao>();
 
         /**
-         * All {@link Engine engines} associated to their builder ID.
+         * All {@link EngineBuilder engines} associated to their ID.
          */
-        private Map<String, Engine> engineMap = new HashMap<String, Engine>();
+        private Map<String, EngineBuilder> engineMap = new HashMap<String, EngineBuilder>();
 
         /**
          * All {@link NutsHeap heap} associated to their ID.
@@ -175,12 +176,12 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the {@link Engine} associated to an ID.
+         * Gets the {@link EngineBuilder} associated to an ID.
          * </p>
          *
          * @return the map
          */
-        public Map<String, Engine> getEngineMap() {
+        public Map<String, EngineBuilder> getEngineMap() {
             return engineMap;
         }
 
@@ -248,14 +249,15 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder tag(final String tagName) {
         lock.lock();
+        log.debug("ContextBuilder locked by {}", Thread.currentThread().toString());
 
         if (currentTag != null) {
             releaseTag();
         }
 
         currentTag = tagName;
-        notifyObservers(tagName);
         setChanged();
+        notifyObservers(tagName);
         return this;
     }
 
@@ -268,11 +270,19 @@ public class ContextBuilder extends Observable {
      * @return this {@link ContextBuilder}
      */
     public ContextBuilder clearTag(final String tagName) {
-        taggedSettings.remove(tagName);
-        notifyObservers(tagName);
-        setChanged();
+        try {
+            if (!lock.isHeldByCurrentThread()) {
+                lock.lock();
+            }
 
-        return this;
+            taggedSettings.remove(tagName);
+            setChanged();
+            notifyObservers(tagName);
+
+            return this;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -284,20 +294,25 @@ public class ContextBuilder extends Observable {
      * @return this current builder without tag
      */
     public ContextBuilder releaseTag() {
+        try {
+            // Won't block if the thread already own the
+            if (!lock.isHeldByCurrentThread()) {
+                lock.lock();
+                log.debug("ContextBuilder locked by {}", Thread.currentThread().toString());
+            }
 
-        // Won't block is the thread already own the lock
-        lock.lock();
+            // Check that a tag exists
+            getSetting();
+            currentTag = null;
+            setChanged();
+            notifyObservers();
 
-        // Check that a tag exists
-        getSetting();
-        currentTag = null;
-        setChanged();
-        notifyObservers();
-
-        // Release the lock
-        lock.unlock();
-
-        return this;
+            return this;
+        } finally {
+            // Release the lock
+            lock.unlock();
+            log.debug("ContextBuilder unlocked by {}", Thread.currentThread().toString());
+        }
     }
 
     /**
@@ -326,20 +341,20 @@ public class ContextBuilder extends Observable {
             s.nutDaoMap.remove(id);
         }
 
-        setting.nutDaoMap.put(id, configureAndBuild(daoBuilder, properties));
+        setting.nutDaoMap.put(id, configure(daoBuilder, properties).build());
         taggedSettings.put(currentTag, setting);
-        notifyObservers(id);
         setChanged();
+        notifyObservers(id);
 
         return this;
     }
 
     /**
      * <p>
-     * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A group is always identified
+     * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A heap is always identified
      * by an ID and is associated to {@link com.github.wuic.nut.NutDaoBuilder} to use to convert paths into
      * {@link com.github.wuic.nut.Nut}. A list of paths needs also to be specified to know which underlying
-     * resources compose the group.
+     * nuts compose the heap.
      * </p>
      *
      * <p>
@@ -354,8 +369,17 @@ public class ContextBuilder extends Observable {
      * @throws StreamException if the HEAP could not be created
      */
     public ContextBuilder heap(final String id, final String ndbId, final String ... path) throws StreamException {
-        final ContextSetting setting = getSetting();
-        final NutDao dao = setting.getNutDaoMap().get(ndbId);
+        NutDao dao = null;
+
+        // Will override existing element
+        for (final ContextSetting s : taggedSettings.values()) {
+            s.getNutsHeaps().remove(id);
+
+            // Find DAO
+            if (dao == null) {
+                dao = s.getNutDaoMap().get(ndbId);
+            }
+        }
 
         if (dao == null) {
             final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
@@ -363,28 +387,24 @@ public class ContextBuilder extends Observable {
             throw new BadArgumentException(new IllegalArgumentException(msg));
         }
 
-        // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
-            s.getNutsHeaps().remove(id);
-        }
-
+        final ContextSetting setting = getSetting();
         setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id));
         taggedSettings.put(currentTag, setting);
-        notifyObservers(id);
         setChanged();
+        notifyObservers(id);
 
         return this;
     }
 
     /**
      * <p>
-     * Declares a new {@link com.github.wuic.factory.EngineBuilder} with its specific properties.
+     * Declares a new {@link com.github.wuic.engine.EngineBuilder} with its specific properties.
      * The builder is identified by an unique ID and produces in fine {@link com.github.wuic.engine.Engine engines}
      * that could be chained.
      * </p>
      *
      * @param id the {@link EngineBuilder} ID
-     * @param engineBuilder the {@link com.github.wuic.factory.EngineBuilder} to configure
+     * @param engineBuilder the {@link com.github.wuic.engine.EngineBuilder} to configure
      * @param properties the builder's properties (must be supported by the builder)
      * @return this {@link ContextBuilder}
      * @throws BuilderPropertyNotSupportedException if a property is not supported
@@ -400,10 +420,10 @@ public class ContextBuilder extends Observable {
             s.getEngineMap().remove(id);
         }
 
-        setting.getEngineMap().put(id, configureAndBuild(engineBuilder, properties));
+        setting.getEngineMap().put(id, configure(engineBuilder, properties));
         taggedSettings.put(currentTag, setting);
-        notifyObservers(id);
         setChanged();
+        notifyObservers(id);
 
         return this;
     }
@@ -414,12 +434,12 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * A workflow consists to chain a set of engines produced by the specified {@link com.github.wuic.factory.EngineBuilder builders}
+     * A workflow consists to chain a set of engines produced by the specified {@link com.github.wuic.engine.EngineBuilder builders}
      * with a {@link com.github.wuic.nut.NutsHeap heap} as data to be processed. There is a chain for each possible {@link NutType}.
      * A chain that processes a particular {@link NutType} of {@link com.github.wuic.nut.Nut} is composed of {@link Engine}
      * ordered by type. All engines specified in parameter as array are simply organized following those two criteria to
      * create the chains. Moreover, default engines could be injected in the chain to perform common operations to be done
-     * on resources. If an {@link com.github.wuic.factory.EngineBuilder} is specified in a chain while it is injected
+     * on resources. If an {@link com.github.wuic.engine.EngineBuilder} is specified in a chain while it is injected
      * by default, then the configuration of the given builder will overrides the default one.
      * </p>
      *
@@ -442,7 +462,7 @@ public class ContextBuilder extends Observable {
      *
      * @param id the workflow ID
      * @param heapId the heap that needs to be processed
-     * @param ebIds the set of {@link com.github.wuic.factory.EngineBuilder} to use
+     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
@@ -480,28 +500,33 @@ public class ContextBuilder extends Observable {
         }
 
         // Retrieve each engine associated to all provided IDs and group them by nut type
-        final Map<NutType, CGCompositeEngine> chains = new HashMap<NutType, CGCompositeEngine>();
+        final Map<NutType, Engine> chains = new HashMap<NutType, Engine>();
 
         // Include default engines
         if (includeDefaultEngines) {
-            chains.put(NutType.CSS, new CGCompositeEngine(new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
-            chains.put(NutType.PNG, new CGCompositeEngine(new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
-            chains.put(NutType.JAVASCRIPT, new CGCompositeEngine(new TextAggregatorEngineBuilder().build()));
+            chains.put(NutType.CSS, Engine.chain(new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
+            chains.put(NutType.PNG, Engine.chain(new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
+            chains.put(NutType.JAVASCRIPT, Engine.chain(new TextAggregatorEngineBuilder().build()));
             // TODO : when created, include embedded cache, JS minification, CSS minification and GZIP compressor
         }
 
         for (final String ebId : ebIds) {
-            final Engine engine = getEngine(ebId);
+            // Create a different instance per chain
+            final Engine engine = newEngine(ebId);
 
             if (engine == null) {
                 throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineBuilder.class.getName()));
             } else {
-                // Already exists
-                if (chains.containsKey(engine.getConfiguration().getNutType())) {
-                    chains.get(engine.getConfiguration().getNutType()).add(engine);
-                } else {
-                    // Create first entry
-                    chains.put(engine.getConfiguration().getNutType(), new CGCompositeEngine(engine));
+                final List<NutType> nutTypes = engine.getNutTypes();
+
+                for (final NutType nt : nutTypes) {
+                    // Already exists
+                    if (chains.containsKey(nt)) {
+                        chains.put(nt, Engine.chain(chains.get(nt), newEngine(ebId)));
+                    } else {
+                        // Create first entry
+                        chains.put(nt, engine);
+                    }
                 }
             }
         }
@@ -513,8 +538,8 @@ public class ContextBuilder extends Observable {
 
         setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
         taggedSettings.put(currentTag, setting);
-        notifyObservers(id);
         setChanged();
+        notifyObservers(id);
 
         return this;
     }
@@ -530,7 +555,7 @@ public class ContextBuilder extends Observable {
      *
      * @param id the workflow ID
      * @param heapId the heap that needs to be processed
-     * @param ebIds the set of {@link com.github.wuic.factory.EngineBuilder} to use
+     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
      * @return this {@link ContextBuilder}
      */
@@ -550,13 +575,28 @@ public class ContextBuilder extends Observable {
      * @return the new {@link Context}
      */
     public Context build() {
-        final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
 
-        for (ContextSetting setting : taggedSettings.values()) {
-            workflowMap.putAll(setting.workflowMap);
+        // This thread needs to lock to build the context
+        // However, if it is already done, the method should not unlock at the end of the method
+        final boolean requiresLock = !lock.isHeldByCurrentThread();
+
+        try {
+            if (requiresLock) {
+                lock.lock();
+            }
+
+            final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
+
+            for (ContextSetting setting : taggedSettings.values()) {
+                workflowMap.putAll(setting.workflowMap);
+            }
+
+            return new Context(this, workflowMap);
+        } finally {
+            if (requiresLock) {
+                lock.unlock();
+            }
         }
-
-        return new Context(this, workflowMap);
     }
 
     /**
@@ -597,16 +637,16 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Gets the {@link Engine} associated to the given builder ID.
+     * Gets the {@link Engine} produced by the builder associated to the given ID.
      * </p>
      *
-     * @param engineId the builder ID
+     * @param engineBuilderId the builder ID
      * @return the {@link Engine}, {@code null} if nothing is associated to the ID
      */
-    private Engine getEngine(final String engineId) {
+    private Engine newEngine(final String engineBuilderId) {
         for (ContextSetting setting : taggedSettings.values()) {
-            if (setting.engineMap.containsKey(engineId)) {
-                return setting.engineMap.get(engineId);
+            if (setting.engineMap.containsKey(engineBuilderId)) {
+                return setting.engineMap.get(engineBuilderId).build();
             }
         }
 
@@ -615,22 +655,22 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Configures the given builder with the specified properties and then return the result of the build() invocation.
+     * Configures the given builder with the specified properties and then return it.
      * </p>
      *
      * @param builder the builder
      * @param properties the properties to use to configure the builder
      * @param <O> the type produced by the builder
      * @param <T> the type of builder
-     * @return the result of build operation
+     * @return the given builder
      * @throws BuilderPropertyNotSupportedException if a specified property is not supported by the builder
      */
-    private <O, T extends GenericBuilder<O>> O configureAndBuild(final T builder,  final Map<String, Object> properties)
+    private <O, T extends GenericBuilder<O>> T configure(final T builder,  final Map<String, Object> properties)
             throws BuilderPropertyNotSupportedException {
         for (final Map.Entry entry : properties.entrySet()) {
             builder.property(String.valueOf(entry.getKey()), entry.getValue());
         }
 
-        return builder.build();
+        return builder;
     }
 }

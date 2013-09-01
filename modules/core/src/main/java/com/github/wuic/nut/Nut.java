@@ -55,8 +55,6 @@ import java.util.List;
  * The name is the path relative to a location specified by a {@link NutDao} which is in charge of nut creations.
  * </p>
  *
- * TODO : refactor Configuration and Nut interfaces to manage from Configuration the cache, aggregation and compressions boolean.
- * 
  * @author Guillaume DROUET
  * @version 1.2
  * @since 0.1.1

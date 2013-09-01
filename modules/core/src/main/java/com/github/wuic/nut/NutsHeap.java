@@ -39,7 +39,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.configuration.Configuration;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.StringUtils;
@@ -121,30 +120,6 @@ public class NutsHeap {
         this.id = heapId;
         this.paths = pathsList;
         this.nutDao = theNutDao;
-        checkFiles();
-    }
-
-    /**
-     * <p>
-     * Builds a new heap based on a configuration.
-     * TODO : remove this constructor when configurations design will be changed
-     * </p>
-     *
-     * @param configuration the configuration
-     * @param pathsList the paths
-     * @param theNutDao the {@link NutDao}
-     * @param heapId the heap ID
-     * @deprecated
-     * @throws StreamException if the HEAP could not be created
-     */
-    public NutsHeap(final Configuration configuration,
-                    final List<String> pathsList,
-                    final NutDao theNutDao,
-                    final String heapId) throws StreamException {
-        this.id = heapId;
-        this.paths = pathsList;
-        this.nutDao = theNutDao;
-        this.nutType = configuration.getNutType();
         checkFiles();
     }
 

@@ -39,12 +39,18 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.configuration.impl.YuiConfigurationImpl;
-import com.github.wuic.configuration.impl.YuiJavascriptConfigurationImpl;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.yuicompressor.JavascriptYuiCompressorEngine;
-import com.github.wuic.engine.setter.*;
+
+import com.github.wuic.engine.setter.CompressPropertySetter;
+import com.github.wuic.engine.setter.LineBreakPosPropertySetter;
+import com.github.wuic.engine.setter.CharsetPropertySetter;
+import com.github.wuic.engine.setter.DisableOptimizationsPropertySetter;
+import com.github.wuic.engine.setter.PreserveSemicolonsPropertySetter;
+import com.github.wuic.engine.setter.ObfuscatePropertySetter;
+import com.github.wuic.engine.setter.VerbosePropertySetter;
+
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -70,8 +76,8 @@ public class YuiCompressorJavascriptEngineBuilder extends AbstractEngineBuilder 
                 new CharsetPropertySetter(this),
                 new DisableOptimizationsPropertySetter(this),
                 new ObfuscatePropertySetter(this),
-                new VerbosePropertySetter(this),
-                new PreserveSemicolonsPropertySetter(this));
+                new PreserveSemicolonsPropertySetter(this),
+                new VerbosePropertySetter(this));
     }
 
     /**
@@ -79,17 +85,13 @@ public class YuiCompressorJavascriptEngineBuilder extends AbstractEngineBuilder 
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new JavascriptYuiCompressorEngine(new YuiJavascriptConfigurationImpl(
-                new YuiConfigurationImpl(null,
-                        null,
+        return new JavascriptYuiCompressorEngine(
                         (Boolean) property(ApplicationConfig.COMPRESS),
-                        null,
-                        (Integer) property(ApplicationConfig.LINE_BREAK_POS),
                         (String) property(ApplicationConfig.CHARSET),
-                        null),
-                        (Boolean) property(ApplicationConfig.OBFUSCATE),
+                        (Integer) property(ApplicationConfig.LINE_BREAK_POS),
                         (Boolean) property(ApplicationConfig.VERBOSE),
                         (Boolean) property(ApplicationConfig.PRESERVE_SEMICOLONS),
-                        (Boolean) property(ApplicationConfig.DISABLE_OPTIMIZATIONS)));
+                        (Boolean) property(ApplicationConfig.DISABLE_OPTIMIZATIONS),
+                        (Boolean) property(ApplicationConfig.OBFUSCATE));
     }
 }
