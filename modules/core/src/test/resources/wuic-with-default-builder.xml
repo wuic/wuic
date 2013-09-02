@@ -7,7 +7,7 @@
     </heaps>
 
     <workflows>
-        <workflow id="simpleWorkflow" heap-id="simpleHeap">
+        <workflow id-prefix="simpleWorkflow" heap-id-pattern="simpleHeap">
             <engine-chain />
         </workflow>
     </workflows>

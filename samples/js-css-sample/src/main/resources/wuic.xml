@@ -117,91 +117,14 @@
     </heaps>
     
     <workflows>
-        <workflow id="collapsible-js" heap-id="collapsible-js">
+        <workflow id-prefix="" heap-id-pattern=".*-js">
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
             </engine-chain>
         </workflow>
-        <workflow id="custom-icons-js" heap-id="custom-icons-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="fillspace-js" heap-id="fillspace-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="sortable-js" heap-id="sortable-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="effect-js" heap-id="effect-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="autocomplete-js" heap-id="autocomplete-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="tooltip-js" heap-id="tooltip-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="button-js" heap-id="button-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="splitbutton-js" heap-id="splitbutton-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="datepicker-js" heap-id="datepicker-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="effect-datepicker-js" heap-id="effect-datepicker-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="datepicker-loc-js" heap-id="datepicker-loc-js">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id="demo-css" heap-id="demo-css">
+        <workflow id-prefix="" heap-id-pattern=".*-css">
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorCssEngineBuilder</engine-builder-id>

@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -76,6 +77,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *                      .heap("heap", "FtpNutDaoBuilder", "dark.js", "vador.js")
  *                      .engineBuilder("engineId", engineBuilder, engineProps)
  *                      .workflow("starwarsWorkflow", "heap", "engineId", true)
+ *                      .releaseTag()
  *                      .build();
  *         ctx.isUpToDate(); // returns true
  *
@@ -460,15 +462,15 @@ public class ContextBuilder extends Observable {
      *  </ul>
      * </p>
      *
-     * @param id the workflow ID
-     * @param heapId the heap that needs to be processed
+     * @param prefixId the prefix of workflow ID
+     * @param heapIdPattern the regex matching the heap IDs that needs to be processed
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder workflow(final String id,
-                                   final String heapId,
+    public ContextBuilder workflow(final String prefixId,
+                                   final String heapIdPattern,
                                    final String[] ebIds,
                                    final Boolean includeDefaultEngines,
                                    final String ... ndbIds) {
@@ -493,22 +495,14 @@ public class ContextBuilder extends Observable {
         }
 
         // Retrieve HEAP
-        final NutsHeap heap = getNutsHeap(heapId);
+        final List<NutsHeap> heaps = getNutsHeap(heapIdPattern);
 
-        if (heap == null) {
-            throw new IllegalStateException(String.format("'%s' not associated to any %s", heapId, NutsHeap.class.getName()));
+        if (heaps.isEmpty()) {
+            throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
         }
 
         // Retrieve each engine associated to all provided IDs and group them by nut type
-        final Map<NutType, Engine> chains = new HashMap<NutType, Engine>();
-
-        // Include default engines
-        if (includeDefaultEngines) {
-            chains.put(NutType.CSS, Engine.chain(new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
-            chains.put(NutType.PNG, Engine.chain(new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
-            chains.put(NutType.JAVASCRIPT, Engine.chain(new TextAggregatorEngineBuilder().build()));
-            // TODO : when created, include embedded cache, JS minification, CSS minification and GZIP compressor
-        }
+        final Map<NutType, Engine> chains = createChains(includeDefaultEngines);
 
         for (final String ebId : ebIds) {
             // Create a different instance per chain
@@ -531,15 +525,21 @@ public class ContextBuilder extends Observable {
             }
         }
 
-        // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
-            s.getWorkflowMap().remove(id);
+
+        for (NutsHeap heap : heaps) {
+            final String id = prefixId + heap.getId();
+
+            // Will override existing element
+            for (ContextSetting s : taggedSettings.values()) {
+                s.getWorkflowMap().remove(id);
+            }
+
+            setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
         }
 
-        setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
         taggedSettings.put(currentTag, setting);
         setChanged();
-        notifyObservers(id);
+        notifyObservers(prefixId);
 
         return this;
     }
@@ -554,7 +554,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the workflow ID
-     * @param heapId the heap that needs to be processed
+     * @param heapId the regex matching the heap IDs that needs to be processed
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
      * @return this {@link ContextBuilder}
@@ -563,7 +563,7 @@ public class ContextBuilder extends Observable {
                                    final String heapId,
                                    final String[] ebIds,
                                    final String ... ndbIds) {
-        return workflow(id, heapId, ebIds, true, ndbIds);
+        return workflow(id, heapId, ebIds, Boolean.TRUE, ndbIds);
     }
 
     /**
@@ -586,9 +586,28 @@ public class ContextBuilder extends Observable {
             }
 
             final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
+            final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
 
-            for (ContextSetting setting : taggedSettings.values()) {
+            // Add all specified workflow
+            for (final ContextSetting setting : taggedSettings.values()) {
                 workflowMap.putAll(setting.workflowMap);
+
+                for (final NutsHeap heap : setting.getNutsHeaps().values()) {
+                    heapMap.put(heap.getId(), heap);
+                }
+            }
+
+            // Create a default workflow for heaps not referenced by any workflow
+            heapLoop :
+            for (final NutsHeap heap : heapMap.values()) {
+                for (final Workflow workflow : workflowMap.values()) {
+                    if (workflow.getHeap().equals(heap)) {
+                        continue heapLoop;
+                    }
+                }
+
+                // No workflow has been found : create a default with the heap ID as ID
+                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE), heap, heap.getNutDao()));
             }
 
             return new Context(this, workflowMap);
@@ -597,6 +616,28 @@ public class ContextBuilder extends Observable {
                 lock.unlock();
             }
         }
+    }
+
+    /**
+     * <p>
+     * Creates a new set of chains. If we don't include default engines, then the returned map will be empty.
+     * </p>
+     *
+     * @param includeDefaultEngines include default or not
+     * @return the different chains
+     */
+    private Map<NutType, Engine> createChains(final Boolean includeDefaultEngines) {
+        final Map<NutType, Engine> chains = new HashMap<NutType, Engine>();
+
+        // Include default engines
+        if (includeDefaultEngines) {
+            chains.put(NutType.CSS, Engine.chain(new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
+            chains.put(NutType.PNG, Engine.chain(new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
+            chains.put(NutType.JAVASCRIPT, Engine.chain(new TextAggregatorEngineBuilder().build()));
+            // TODO : when created, include embedded cache, JS minification, CSS minification and GZIP compressor
+        }
+
+        return chains;
     }
 
     /**
@@ -619,20 +660,25 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Gets the {@link NutsHeap} associated to the given ID.
+     * Gets the {@link NutsHeap} associated to an ID matching the given regex.
      * </p>
      *
-     * @param heapId the ID
-     * @return the {@link NutsHeap}, {@code null} if nothing is associated to the ID
+     * @param regex the regex ID
+     * @return the matching {@link NutsHeap heaps}
      */
-    private NutsHeap getNutsHeap(final String heapId) {
-        for (ContextSetting setting : taggedSettings.values()) {
-            if (setting.nutsHeaps.containsKey(heapId)) {
-                return setting.nutsHeaps.get(heapId);
+    private List<NutsHeap> getNutsHeap(final String regex) {
+        final List<NutsHeap> retval = new ArrayList<NutsHeap>();
+        final Pattern pattern = Pattern.compile(regex);
+
+        for (final ContextSetting setting : taggedSettings.values()) {
+            for (final NutsHeap heap : setting.getNutsHeaps().values()) {
+                if (pattern.matcher(heap.getId()).matches()) {
+                    retval.add(heap);
+                }
             }
         }
 
-        return null;
+        return retval;
     }
 
     /**

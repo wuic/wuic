@@ -70,12 +70,12 @@
 	</heaps>
 
     <workflows>
-        <workflow id="js-image" heap-id="js-image">
+        <workflow id-prefix="js-image" heap-id-pattern="js-image">
             <engine-chain>
                 <engine-builder-id>jsSprite</engine-builder-id>
             </engine-chain>
         </workflow>
-        <workflow id="util-js" heap-id="util-js">
+        <workflow id-prefix="util-js" heap-id-pattern="util-js">
             <engine-chain />
         </workflow>
     </workflows>

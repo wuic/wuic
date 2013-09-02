@@ -38,14 +38,13 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.*;
+import com.github.wuic.engine.core.TextAggregatorEngineBuilder;
 import com.github.wuic.exception.WorkflowNotFoundException;
-import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
@@ -65,6 +64,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -185,12 +185,12 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow", "heap", new String[]{"engine"})
+                .workflow("workflow-", "heap", new String[]{"engine"})
                 .releaseTag()
                 .build();
 
         // Should be aggregated now
-        Assert.assertTrue(context.process("workflow", "").size() == 1);
+        Assert.assertTrue(context.process("workflow-heap", "").size() == 1);
     }
 
     /**
@@ -206,11 +206,99 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow", "heap", new String[]{"engine"}, false)
+                .workflow("workflow-", "heap", new String[]{"engine"}, false)
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("workflow", "").size() > 1);
+        Assert.assertTrue(context.process("workflow-heap", "").size() > 1);
+    }
+
+    /**
+     * Test when a default engine is overridden.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void overrideDefaultEnginesTest() throws Exception {
+        final String defaultName = "wuicDefault" + TextAggregatorEngineBuilder.class.getSimpleName();
+        final Map<String, Object> props = new HashMap<String, Object>();
+        props.put(ApplicationConfig.AGGREGATE, false);
+
+        // Typical use : no exception should be thrown
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        builder.tag("test")
+               .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+               .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
+               .engineBuilder(defaultName, new TextAggregatorEngineBuilder(), props)
+               .workflow("workflow-", "heap", new String[]{defaultName}, true)
+               .releaseTag();
+
+        Assert.assertTrue(builder.build().process("workflow-heap", "").size() > 1);
+    }
+
+    /**
+     * Tests with many heaps referenced by a workflow in a regex.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void regexTest() throws Exception {
+        // Typical use : no exception should be thrown
+        final Context context = new ContextBuilder()
+                .tag("test")
+                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+                .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .workflow("workflow-", "heap-.*", new String[]{"engine"})
+                .releaseTag()
+                .build();
+
+        Assert.assertTrue(context.process("workflow-heap-one", "").size() == 1);
+        Assert.assertTrue(context.process("workflow-heap-two", "").size() == 1);
+    }
+
+
+    /**
+     * Tests with an implicit heap created when no workflow refers it.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void implicitWorkflowTest() throws Exception {
+        // Typical use : no exception should be thrown
+        final Context context = new ContextBuilder()
+                .tag("test")
+                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+                .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .workflow("workflow-", "heap-one", new String[]{"engine"})
+                .releaseTag()
+                .build();
+
+        Assert.assertTrue(context.process("workflow-heap-one", "").size() == 1);
+        Assert.assertTrue(context.process("heap-two", "").size() == 1);
+    }
+
+    /**
+     * Tests with an empry chain.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void emptyChainTest() throws Exception {
+        // Typical use : no exception should be thrown
+        final Context context = new ContextBuilder()
+                .tag("test")
+                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
+                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .workflow("workflow-", "heap", new String[] {}, false)
+                .releaseTag()
+                .build();
+
+        Assert.assertTrue(context.process("workflow-heap", "").size() > 1);
     }
 
     /**
@@ -271,25 +359,25 @@ public class ContextBuilderTest {
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                 .releaseTag()
                 .tag("tag")
-                .workflow("workflow", "heap", new String[]{"engine"})
+                .workflow("workflow-", "heap", new String[]{"engine"})
                 .releaseTag();
-        builder.build().process("workflow", "");
+        builder.build().process("workflow-heap", "");
 
         try {
-            builder.clearTag("tag").build().process("workflow", "");
+            builder.clearTag("tag").build().process("workflow-heap", "");
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
         }
 
         builder.tag("test")
-                .workflow("workflow", "heap", new String[]{"engine"})
+                .workflow("workflow-", "heap", new String[]{"engine"})
                 .releaseTag()
                 .build()
-                .process("workflow", "");
+                .process("workflow-heap", "");
 
         try {
-            builder.clearTag("test").build().process("workflow", "");
+            builder.clearTag("test").build().process("workflow-heap", "");
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised

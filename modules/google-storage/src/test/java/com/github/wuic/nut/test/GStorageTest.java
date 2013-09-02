@@ -92,7 +92,7 @@ public class GStorageTest {
         cacheEngine.setNext(compressor);
         compressor.setNext(aggregator);
 
-        final List<Nut> group = cacheEngine.parse(new EngineRequest("", nutsHeap, new HashMap<NutType, Engine>()));
+        final List<Nut> group = cacheEngine.parse(new EngineRequest("", "", nutsHeap, new HashMap<NutType, Engine>()));
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

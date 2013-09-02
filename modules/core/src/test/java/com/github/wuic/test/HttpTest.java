@@ -183,7 +183,7 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final List<Nut> group = facade.process("css-image", "");
+        final List<Nut> group = facade.process("css-imagecss-image", "");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

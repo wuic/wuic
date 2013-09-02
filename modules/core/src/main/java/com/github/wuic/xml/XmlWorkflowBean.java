@@ -56,16 +56,16 @@ import java.util.List;
 public class XmlWorkflowBean {
 
     /**
-     * The ID.
+     * The ID prefix.
      */
-    @XmlAttribute(name = "id")
-    private String id;
+    @XmlAttribute(name = "id-prefix")
+    private String idPrefix;
 
     /**
-     * The heap ID.
+     * The heap ID pattern.
      */
-    @XmlAttribute(name = "heap-id")
-    private String heapId;
+    @XmlAttribute(name = "heap-id-pattern")
+    private String heapIdPattern;
 
     /**
      * Include default engine.
@@ -94,8 +94,8 @@ public class XmlWorkflowBean {
      *
      * @return the ID identifying the workflow
      */
-    public String getId() {
-        return id;
+    public String getIdPrefix() {
+        return idPrefix;
     }
 
     /**
@@ -127,8 +127,8 @@ public class XmlWorkflowBean {
      *
      * @return the heap ID
      */
-    public String getHeapId() {
-        return heapId;
+    public String getHeapIdPattern() {
+        return heapIdPattern;
     }
 
     /**

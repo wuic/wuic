@@ -81,14 +81,14 @@
     </heaps>
 
     <workflows>
-        <workflow id="img" heap-id="img">
+        <workflow id-prefix="js-" heap-id-pattern="img">
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
                 <engine-builder-id>jsSprite</engine-builder-id>
             </engine-chain>
         </workflow>
-        <workflow id="cgsg-js" heap-id="cgsg-js">
+        <workflow id-prefix="js-" heap-id-pattern="cgsg-js">
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>

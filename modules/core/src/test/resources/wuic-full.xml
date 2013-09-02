@@ -32,7 +32,7 @@
     </heaps>
 
     <workflows>
-        <workflow id="defaultWorkflow" heap-id="defaultHeap">
+        <workflow id-prefix="defaultWorkflow" heap-id-pattern="defaultHeap">
             <store-to>
                 <dao-builder-id>defaultDao</dao-builder-id>
             </store-to>
@@ -42,7 +42,7 @@
             </engine-chain>
         </workflow>
 
-        <workflow id="defaultWorkflow" heap-id="anotherHeap">
+        <workflow id-prefix="defaultWorkflow" heap-id-pattern="anotherHeap">
             <engine-chain>
                 <engine-builder-id>defaultEngine</engine-builder-id>
                 <engine-builder-id>anotherEngine</engine-builder-id>

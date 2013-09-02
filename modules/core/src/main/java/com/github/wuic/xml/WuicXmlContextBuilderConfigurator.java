@@ -195,13 +195,13 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
 
             // DAO where we can store process result is optional
             if (workflow.getDaoBuilderIds() == null) {
-                ctxBuilder.workflow(workflow.getId(),
-                        workflow.getHeapId(),
+                ctxBuilder.workflow(workflow.getIdPrefix(),
+                        workflow.getHeapIdPattern(),
                         workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
                         workflow.getUseDefaultEngines());
             } else {
-                ctxBuilder.workflow(workflow.getId(),
-                        workflow.getHeapId(),
+                ctxBuilder.workflow(workflow.getIdPrefix(),
+                        workflow.getHeapIdPattern(),
                         workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
                         workflow.getUseDefaultEngines(),
                         workflow.getDaoBuilderIds().toArray(new String[workflow.getDaoBuilderIds().size()]));

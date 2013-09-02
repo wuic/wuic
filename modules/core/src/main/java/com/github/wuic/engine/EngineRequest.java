@@ -42,6 +42,8 @@ import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -60,7 +62,12 @@ import java.util.Map;
  * @since 0.3.0
  * @version 1.2
  */
-public class EngineRequest {
+public final class EngineRequest {
+
+    /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The resources.
@@ -76,6 +83,11 @@ public class EngineRequest {
      * The group.
      */
     private NutsHeap group;
+
+    /**
+     * The workflow ID.
+     */
+    private String workflowId;
 
     /**
      * The engine chains for each type.
@@ -95,6 +107,7 @@ public class EngineRequest {
         contextPath = other.getContextPath();
         group = other.getGroup();
         chains = other.chains;
+        workflowId = other.workflowId;
     }
 
     /**
@@ -102,16 +115,18 @@ public class EngineRequest {
      * Builds a new {@code EngineRequest} with a heap, engines chains and a specified context path to be used.
      * </p>
      *
+     * @param wid the workflow ID
      * @param cp the context root where the generated resources should be exposed
      * @param g the group
      * @param c the engine chains
      * @throws StreamException if an I/O error occurs while getting resources
      */
-    public EngineRequest(final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
+    public EngineRequest(final String wid, final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
         resources = g.getNuts();
         contextPath = cp;
         group = g;
         chains = c;
+        workflowId = wid;
     }
 
     /**
@@ -121,7 +136,7 @@ public class EngineRequest {
      *
      * @return the resources
      */
-    public final List<Nut> getResources() {
+    public List<Nut> getResources() {
         return resources;
     }
 
@@ -132,7 +147,7 @@ public class EngineRequest {
      *
      * @return the context path
      */
-    public final String getContextPath() {
+    public String getContextPath() {
         return contextPath;
     }
 
@@ -143,8 +158,19 @@ public class EngineRequest {
      *
      * @return the group
      */
-    public final NutsHeap getGroup() {
+    public NutsHeap getGroup() {
         return group;
+    }
+
+    /**
+     * <p>
+     * Gets the workflow ID.
+     * </p>
+     *
+     * @return the workflow ID.
+     */
+    public String getWorkflowId() {
+        return workflowId;
     }
 
     /**
@@ -155,7 +181,9 @@ public class EngineRequest {
      * @param nutType the nut type
      * @return the chains that can treat this nut type
      */
-    public final Engine getChainFor(final NutType nutType) {
-        return chains.get(nutType);
+    public Engine getChainFor(final NutType nutType) {
+        final Engine retval = chains.get(nutType);
+        log.warn("No chain exists for the heap '{}' and the nut type {}.", group.getId(), nutType.name());
+        return retval;
     }
 }

@@ -286,9 +286,9 @@ public class WuicXmlTest {
         for (int i = 0; i < xml.getWorkflows().size(); i++) {
             final XmlWorkflowBean workflow = xml.getWorkflows().get(i);
 
-            Assert.assertNotNull(workflow.getId());
+            Assert.assertNotNull(workflow.getIdPrefix());
             Assert.assertNotNull(workflow.getEngineBuilderIds());
-            Assert.assertNotNull(workflow.getHeapId());
+            Assert.assertNotNull(workflow.getHeapIdPattern());
 
             if (i == 1) {
                 Assert.assertNull(workflow.getDaoBuilderIds());
@@ -316,7 +316,7 @@ public class WuicXmlTest {
         NutDaoBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
-        builder.build().process("simpleWorkflow", "");
+        builder.build().process("simpleWorkflowsimpleHeap", "");
     }
 
     /**
@@ -354,7 +354,7 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("simpleWorkflow", "");
+        ctx.process("simpleWorkflowsimpleHeap", "");
 
         // Remove test file
         tmp.delete();

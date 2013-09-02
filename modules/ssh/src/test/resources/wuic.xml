@@ -19,7 +19,7 @@
 		</heap>
 	</heaps>
     <workflows>
-        <workflow id="css-image" heap-id="css-image">
+        <workflow id-prefix="css-image" heap-id-pattern="css-image">
             <engine-chain>
                 <engine-builder-id>wuicDefaultYuiCompressorCssEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>

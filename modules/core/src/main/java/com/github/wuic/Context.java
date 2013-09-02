@@ -112,8 +112,14 @@ public class Context implements Observer {
             throw new WorkflowNotFoundException(workflowId);
         }
 
-        final Engine chain = workflow.getChains().get(workflow.getHeap().getNutType());
-        return chain.parse(new EngineRequest(contextPath, workflow.getHeap(), workflow.getChains()));
+        final EngineRequest request = new EngineRequest(workflowId, contextPath, workflow.getHeap(), workflow.getChains());
+        final Engine chain = request.getChainFor(workflow.getHeap().getNutType());
+
+        if (chain == null) {
+            return workflow.getHeap().getNuts();
+        } else {
+            return chain.parse(request);
+        }
     }
 
     /**

@@ -125,7 +125,7 @@ public class CGImageAggregatorEngine extends Engine {
             // If a sprite provider exists, compute one resource for each image and link them
             if (spriteProvider != null) {
                 final List<Nut> retval = new ArrayList<Nut>();
-                final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Calculate type and dimensions of the final image
                 for (final Nut file : request.getResources()) {
@@ -141,9 +141,15 @@ public class CGImageAggregatorEngine extends Engine {
 
                         // Process referenced nut
                         final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
-                        final List<Nut> parsed = request.getChainFor(resource.getNutType()).parse(new EngineRequest(Arrays.asList(resource), request));
+                        final Engine chain = request.getChainFor(resource.getNutType());
 
-                        file.addReferencedResource(parsed.get(0));
+                        if (chain != null) {
+                            final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(resource), request));
+                            file.addReferencedResource(parsed.get(0));
+                        } else {
+                            file.addReferencedResource(resource);
+                        }
+
                         retval.add(file);
                     } catch (IOException ioe) {
                         throw new StreamException(ioe);
@@ -201,12 +207,18 @@ public class CGImageAggregatorEngine extends Engine {
             final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG);
 
             if (spriteProvider != null) {
-                final String url = IOUtils.mergePath(request.getContextPath(), request.getGroup().getId());
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Process referenced nut
                 final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
-                final List<Nut> parsed = request.getChainFor(resource.getNutType()).parse(new EngineRequest(Arrays.asList(resource), request));
-                res.addReferencedResource(parsed.get(0));
+                final Engine chain = request.getChainFor(resource.getNutType());
+
+                if (chain != null) {
+                    final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(resource), request));
+                    res.addReferencedResource(parsed.get(0));
+                } else {
+                    res.addReferencedResource(resource);
+                }
             }
 
             return Arrays.asList(res);

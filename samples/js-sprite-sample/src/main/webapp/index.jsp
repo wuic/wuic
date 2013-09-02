@@ -4,8 +4,8 @@
     <title>Sample JS sprites (with cgSceneGraph)</title>
 
       <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
-      <wuic:html-import pageName="img" />
-      <wuic:html-import pageName="cgsg-js" />
+      <wuic:html-import pageName="js-img" />
+      <wuic:html-import pageName="js-cgsg-js" />
   </head>
   <body>
 

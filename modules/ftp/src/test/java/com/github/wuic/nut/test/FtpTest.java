@@ -138,7 +138,7 @@ public class FtpTest {
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
-        final List<Nut> group = builder.build().process("css-image", "");
+        final List<Nut> group = builder.build().process("css-imagecss-image", "");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;

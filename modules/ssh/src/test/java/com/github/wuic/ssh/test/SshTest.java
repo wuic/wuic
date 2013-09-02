@@ -168,12 +168,12 @@ public class SshTest {
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context facade = builder.build();
-        final List<Nut> group = facade.process("css-image", "");
+        final List<Nut> group = facade.process("css-imagecss-image", "");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
 
-        for (Nut res : group) {
+        for (final Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();

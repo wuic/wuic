@@ -26,11 +26,11 @@
     </heaps>
 
     <workflows>
-        <workflow id="css-image" heap-id="css-image">
+        <workflow id-prefix="css-image" heap-id-pattern="css-image">
             <engine-chain />
         </workflow>
 
-        <workflow id="css-scripts" heap-id="css-scripts">
+        <workflow id-prefix="css-scripts" heap-id-pattern="css-scripts">
             <engine-chain />
         </workflow>
     </workflows>
