@@ -41,10 +41,12 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -65,7 +67,7 @@ import java.util.List;
  * @version 1.4
  * @since 0.1.0
  */
-public class NutsHeap {
+public class NutsHeap implements NutDaoListener {
 
     /**
      * Message's template displayed when no nut has been found.
@@ -76,6 +78,11 @@ public class NutsHeap {
      * Message's template displayed when the extensions of resources path is not correct.
      */
     private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for nut %s associated to the NutType %s";
+
+    /**
+     * The logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     /**
      * The paths list.
@@ -93,9 +100,14 @@ public class NutsHeap {
     private NutDao nutDao;
 
     /**
-     * The resources corresponding to the paths.
+     * The nuts corresponding to the paths associated to their last update.
      */
-    private List<Nut> resources;
+    private Map<Nut, Long> nuts;
+
+    /**
+     * Listeners.
+     */
+    private Set<HeapListener> listeners;
 
     /**
      * The ID identifying this group.
@@ -120,7 +132,20 @@ public class NutsHeap {
         this.id = heapId;
         this.paths = pathsList;
         this.nutDao = theNutDao;
+        this.listeners = new HashSet<HeapListener>();
         checkFiles();
+    }
+
+    /**
+     * <p>
+     * Observes all the nuts in this heap with the given listener.
+     * </p>
+     *
+     * @param listener the listener
+     * @throws StreamException if an I/O error occurs
+     */
+    public void addObserver(final HeapListener listener) throws StreamException {
+        this.listeners.add(listener);
     }
 
     /**
@@ -134,23 +159,24 @@ public class NutsHeap {
      * @throws StreamException in I/O error case
      */
     private void checkFiles() throws StreamException {
-        this.resources = new ArrayList<Nut>();
+        this.nuts = new HashMap<Nut, Long>();
 
         for (final String path : paths) {
-            resources.addAll(nutDao.create(path));
+            nuts.putAll(nutDao.create(path));
+            nutDao.observe(path, this);
         }
 
         // Non null assertion
         if (paths == null) {
             throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list"));
         // Do not allow empty groups
-        } else if (resources.isEmpty()) {
+        } else if (nuts.isEmpty()) {
             final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
             throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, nutDao.toString())));
         }
 
         // Check the extension of each path : all of them must share the same nut type
-        for (Nut res : resources) {
+        for (final Nut res : nuts.keySet()) {
 
             // Extract name to be test
             final String file = res.getName();
@@ -158,10 +184,10 @@ public class NutsHeap {
             Boolean valid = Boolean.FALSE;
 
             // Apply test for each possible extension
-            for (NutType nt : NutType.values()) {
+            for (final NutType nt : NutType.values()) {
                 for (String extension : nt.getExtensions()) {
                     if (file.endsWith(extension)) {
-                        if (getNutType() == null) {
+                        if (nutType == null) {
                             nutType = nt;
                         }
 
@@ -172,7 +198,7 @@ public class NutsHeap {
             
             // The path has not one of the possible extension : throw an IAE
             if (!valid) {
-                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, getNutType());
+                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, nutType);
                 throw new BadArgumentException(new IllegalArgumentException(message));
             }
         }
@@ -218,7 +244,61 @@ public class NutsHeap {
      *
      * @return the nuts
      */
-    public List<Nut> getNuts() {
-        return resources;
+    public Set<Nut> getNuts() {
+        return nuts.keySet();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean polling(final Set<String> paths) {
+        final Set<String> current = new HashSet<String>();
+
+        for (final Nut nut : nuts.keySet()) {
+            current.add(nut.getName());
+        }
+
+        // Paths have not changed if different is empty, otherwise we notify listeners
+        return CollectionUtils.difference(current, paths).isEmpty() || notifyListeners();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
+        for (final Map.Entry<Nut, Long> entry : nuts.entrySet()) {
+            // Nut has changed
+            if (entry.getKey().getName().equals(path) && !entry.getValue().equals(timestamp)) {
+                // We don't need to be notified anymore
+                return notifyListeners();
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * <p>
+     * Notifies the listeners that this heap has detected an update in one or many nuts.
+     * </p>
+     *
+     * @return {@link false} for convenient usage in caller
+     */
+    private boolean notifyListeners() {
+        try {
+
+            // Will update the nuts
+            checkFiles();
+    
+            for (HeapListener l : listeners) {
+                l.nutUpdated(this);
+            }
+        } catch (StreamException se) {
+            log.error("Unable to update nuts in the heap", se);
+        }
+
+        return false;
     }
 }

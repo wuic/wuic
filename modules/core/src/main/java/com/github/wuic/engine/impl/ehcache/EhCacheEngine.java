@@ -41,6 +41,8 @@ package com.github.wuic.engine.impl.ehcache;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Engine;
@@ -113,7 +115,7 @@ public class EhCacheEngine extends Engine {
         List<Nut> retval = null;
 
         if (works()) {
-            final String key = request.getGroup().getId();
+            final String key = request.getWorkflowId();
             final Element value = ehCache.get(key);
 
             // Resources exist in doCache, returns them
@@ -121,17 +123,19 @@ public class EhCacheEngine extends Engine {
                 log.info("Resources for group '{}' found in doCache", key);
                 retval = (List<Nut>) value.getObjectValue();
             } else if (getNext() != null) {
+                // Observe and invalidate the cache when updates are notified
+                request.getGroup().addObserver(new InvalidateCache(key));
+
                 final List<Nut> resources = getNext().parse(request);
                 final List<Nut> toCache = new ArrayList<Nut>(resources.size());
 
-                for (Nut resource : resources) {
+                for (final Nut resource : resources) {
                     if (resource.isCacheable()) {
                         toCache.add(toByteArrayResource(resource));
                     }
                 }
 
                 log.debug("Caching nut with {}", key);
-
                 ehCache.put(new Element(key, toCache));
 
                 retval = toCache;
@@ -198,5 +202,42 @@ public class EhCacheEngine extends Engine {
     @Override
     public EngineType getEngineType() {
         return EngineType.CACHE;
+    }
+
+    /**
+     * <p>
+     * Internal class that invalidates a cache entry identified with a workflow ID when it's notified that a nut has been
+     * updated in an associatied heap.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.0
+     */
+    private final class InvalidateCache implements HeapListener {
+
+        /**
+         * The workflow ID as cache key.
+         */
+        private String workflowId;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param wid the cache key
+         */
+        private InvalidateCache(final String wid) {
+            workflowId = wid;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void nutUpdated(final NutsHeap heap) {
+            EhCacheEngine.this.ehCache.remove(workflowId);
+        }
     }
 }

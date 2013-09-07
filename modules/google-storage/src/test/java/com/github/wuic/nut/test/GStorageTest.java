@@ -55,9 +55,9 @@ import org.junit.runners.JUnit4;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -84,7 +84,9 @@ public class GStorageTest {
         final NutsHeap nutsHeap = mock(NutsHeap.class);
         final byte[] array = ".cloud { text-align : justify;}".getBytes();
         when(nutsHeap.getNutType()).thenReturn(NutType.CSS);
-        when(nutsHeap.getNuts()).thenReturn(Arrays.asList((Nut) new ByteArrayNut(array, "cloud.css", NutType.CSS)));
+        final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
+        nuts.put(new ByteArrayNut(array, "cloud.css", NutType.CSS), -1L);
+        when(nutsHeap.getNuts()).thenReturn(nuts.keySet());
 
         final Engine compressor = new CssYuiCompressorEngine(true, "UTF-8", -1);
         final Engine cacheEngine = new EhCacheEngine(false, null);

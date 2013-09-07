@@ -144,8 +144,14 @@ public class ContextBuilderTest {
 
         // Prepare DAO mock
         mockDao = mock(NutDao.class);
-        when(mockDao.create(mockNutOne.getName())).thenReturn(Arrays.asList(mockNutOne));
-        when(mockDao.create(mockNutTwo.getName())).thenReturn(Arrays.asList(mockNutTwo));
+
+        final Map<Nut, Long> nutsOne = new HashMap<Nut, Long>();
+        nutsOne.put(mockNutOne, -1L);
+        when(mockDao.create(mockNutOne.getName())).thenReturn(nutsOne);
+
+        final Map<Nut, Long> nutTwo = new HashMap<Nut, Long>();
+        nutTwo.put(mockNutTwo, -1L);
+        when(mockDao.create(mockNutTwo.getName())).thenReturn(nutTwo);
         when(mockDao.saveSupported()).thenReturn(false);
         mockStore = mock(NutDao.class);
         when(mockStore.saveSupported()).thenReturn(true);

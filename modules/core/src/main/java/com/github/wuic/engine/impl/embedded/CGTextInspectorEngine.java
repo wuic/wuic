@@ -219,7 +219,7 @@ public abstract class CGTextInspectorEngine extends Engine {
 
             // If nut name is null, it means that nothing has been changed by the inspector
             if (resourceName != null) {
-                List<Nut> res = request.getGroup().getNutDao().create(resourceName);
+                List<Nut> res = new ArrayList<Nut>(request.getGroup().getNutDao().create(resourceName).keySet());
 
                 // Process nut
                 //if (getNext() != null) {

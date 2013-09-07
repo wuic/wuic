@@ -70,15 +70,21 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
     private ContextBuilder pollingContextBuilder;
 
     /**
+     * Last update timestamp.
+     */
+    private Long timestamp;
+
+    /**
      * {@inheritDoc}
      */
     public void run() {
         if (pollingContextBuilder != null) {
-            final Polling polling = getResourceObservers().get(getClass().getName());
-
             try {
+                final Long ts = getLastUpdateTimestampFor(getClass().getName());
+
                 // Configuration has been updated so we reset current settings and refresh it
-                if (polling.lastUpdate(getLastUpdateTimestampFor(getClass().getName()))) {
+                if (!ts.equals(timestamp)) {
+                    timestamp = ts;
                     log.info("Updating configuration for {}", getClass().getName());
                     pollingContextBuilder.clearTag(getTag());
                     configure(pollingContextBuilder);
@@ -108,6 +114,10 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
             final int polling = internalConfigure(ctxBuilder);
             pollingContextBuilder = polling > 0 ? ctxBuilder : null;
             setPollingInterleave(polling);
+
+            if (polling != -1) {
+                timestamp = getLastUpdateTimestampFor(getClass().getName());
+            }
 
             // Add this instance as an observer to be notified when polling
             observe(getClass().getName(), this);

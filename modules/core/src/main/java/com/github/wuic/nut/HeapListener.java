@@ -38,16 +38,14 @@
 
 package com.github.wuic.nut;
 
-import java.util.Set;
-
 /**
  * <p>
  * This interface represents a listener which expects to be notified of changes when they occur on a particular
- * nut.
+ * heap.
  * </p>
  *
  * <p>
- * To be notified, it must be registered to the {@link NutDao} thanks to its  {@link NutDao#observe(String, NutDaoListener...)}
+ * To be notified, it must be registered to the {@link NutsHeap} thanks to its  {@link NutsHeap#observe(HeapListener)}
  * method.
  * </p>
  *
@@ -55,43 +53,14 @@ import java.util.Set;
  * @version 1.0
  * @since 0.4.0
  */
-public interface NutDaoListener {
+public interface HeapListener {
 
     /**
      * <p>
-     * When a DAO performs a polling operation, this method is called first with all path which are going to be polled.
+     * Called when a nut has been updated in the heap.
      * </p>
      *
-     * <p>
-     * The paths are computed thanks to their representation (regex or not) specified when this listener has been
-     * registered to the observable.
-     * </p>
-     *
-     * <p>
-     * If the listener returns {@link false}, the observable will stop notifying it <b>only</b> during the polling
-     * operation.
-     * </p>
-     *
-     * @param paths all the real paths which are going to be polled
-     * @return {@link false} if polling should not be done, {@link true} otherwise
+     * @param heap the heap which detects the update
      */
-    boolean polling(Set<String> paths);
-
-    /**
-     * <p>
-     * Called when a nut has been polled.
-     * </p>
-     *
-     * <p>
-     * When the observable object checks in one operation the changes on a set of nuts, the listener could notifies the
-     * observable to stop notifying it <b>only</b> during the operation.
-     * </p>
-     *
-     * @param dao the DAO which polls
-     * @param path the polled path
-     * @param timestamp the timestamp retrieved when poling the nut
-     * @return {@code true} if this listener needs to be notified of any other update during the observable's operation,
-     * {@code false} otherwise
-     */
-    boolean nutPolled(NutDao dao, String path, Long timestamp);
+    void nutUpdated(NutsHeap heap);
 }

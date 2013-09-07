@@ -45,6 +45,7 @@ import com.github.wuic.nut.Nut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -122,7 +123,7 @@ public final class EngineRequest {
      * @throws StreamException if an I/O error occurs while getting resources
      */
     public EngineRequest(final String wid, final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
-        resources = g.getNuts();
+        resources = new ArrayList<Nut>(g.getNuts());
         contextPath = cp;
         group = g;
         chains = c;

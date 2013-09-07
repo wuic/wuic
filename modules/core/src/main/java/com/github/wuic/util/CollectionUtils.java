@@ -38,10 +38,7 @@
 
 package com.github.wuic.util;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -69,20 +66,6 @@ public final class CollectionUtils {
      * Returns a {@code Map} that keep the orders of its keys.
      * </p>
      *
-     * @param capacity the map capacity
-     * @param <K> the type of the key
-     * @param <V> the type of the value
-     * @return the map
-     */
-    public static <K, V> Map<K, V> indexedKeyMap(final int capacity) {
-        return new LinkedHashMap<K, V>(capacity);
-    }
-
-    /**
-     * <p>
-     * Returns a {@code Map} that keep the orders of its keys.
-     * </p>
-     *
      * @param <K> the type of the key
      * @param <V> the type of the value
      * @return the map
@@ -101,11 +84,39 @@ public final class CollectionUtils {
      * @param <T> the generic of the list
      * @return the creates {@code List}
      */
-    public static <T> List<T> newList(T ... elements) {
+    public static <T> List<T> newList(final T ... elements) {
         final List<T> retval = new ArrayList<T>(elements.length);
 
-        for (T element : elements) {
+        for (final T element : elements) {
             retval.add(element);
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Returns a set containing all the elements which are not contained by the two given sets.
+     * </p>
+     *
+     * @param first the first set
+     * @param second the second set
+     * @param <T> the type of element
+     * @return the difference between two sets
+     */
+    public static <T> Set<T> difference(final Set<T> first, final Set<T> second) {
+        final Set<T> retval = new HashSet<T>();
+
+        for (final T e : first) {
+            if (!second.contains(e)) {
+                retval.add(e);
+            }
+        }
+
+        for (final T e : second) {
+            if (!first.contains(e)) {
+                retval.add(e);
+            }
         }
 
         return retval;

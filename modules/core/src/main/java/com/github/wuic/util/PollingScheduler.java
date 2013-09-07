@@ -90,20 +90,20 @@ public abstract class PollingScheduler<T> implements Runnable {
 
     /**
      * <p>
-     * Adds a set of listeners to be notified when an update has been detected on the resource.
+     * Adds a set of listeners to be notified when a polling operation is perform on a nut matching the given pattern.
      * </p>
      *
-     * @param realPath the real path name of the resource
-     * @param listeners some listeners to be notified when an update has been detected on a resource
+     * @param pattern the pattern to use to retrieve the different real paths to poll
+     * @param listeners some listeners to be notified when an update has been detected on a nut
      * @throws StreamException if an I/O occurs while retrieving last update of the resource
      */
-    public final void observe(final String realPath, final T ... listeners) throws StreamException {
+    public final void observe(final String pattern, final T ... listeners) throws StreamException {
         synchronized (getResourceObservers()) {
-            final Polling polling = getResourceObservers().containsKey(realPath)
-                    ? getResourceObservers().get(realPath) : new Polling(getLastUpdateTimestampFor(realPath));
+            final Polling polling = getResourceObservers().containsKey(pattern)
+                    ? getResourceObservers().get(pattern) : new Polling(pattern);
 
             polling.addListeners(listeners);
-            resourceObservers.put(realPath, polling);
+            resourceObservers.put(pattern, polling);
         }
     }
 
@@ -169,8 +169,8 @@ public abstract class PollingScheduler<T> implements Runnable {
 
     /**
      * <p>
-     * This class represents a polling information. It's composed of a last update date and a set of listeners to be
-     * notified when last update timestamp changes.
+     * This class represents a polling information. It's composed of a pattern matching the desired nuts and a set of
+     * listeners to be notified when a nut has been polled.
      * </p>
      *
      * @author Guillaume DROUET
@@ -185,34 +185,31 @@ public abstract class PollingScheduler<T> implements Runnable {
         private Set<T> listeners;
 
         /**
-         * Last update.
+         * The pattern.
          */
-        private Long lastUpdate;
+        private String pattern;
 
         /**
          * <p>
          * Creates a new instance.
          * </p>
          *
-         * @param lastUpdateTimestamp the timestamp representing the last update of the nut
+         * @param p the pattern matching the nuts to test
          */
-        public Polling(final long lastUpdateTimestamp) {
+        public Polling(final String p) {
             listeners = new HashSet<T>();
-            lastUpdate = lastUpdateTimestamp;
+            pattern = p;
         }
 
         /**
          * <p>
-         * Updates the timestamp indicating when the nut has been updated for the last time.
+         * Gets the pattern.
          * </p>
          *
-         * @param timestamp the timestamp
-         * @return {@code true} if the timestamp has changed, {@code false} otherwise
+         * @return the pattern
          */
-        public Boolean lastUpdate(final long timestamp) {
-            final Boolean retval = timestamp != this.lastUpdate;
-            this.lastUpdate = timestamp;
-            return retval;
+        public String getPattern() {
+            return pattern;
         }
 
         /**

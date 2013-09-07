@@ -40,7 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.exception.wrapper.StreamException;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -67,14 +67,16 @@ public interface NutDao {
 
     /**
      * <p>
-     * Creates a list of {@link Nut resources} thanks to the given path.
+     * Creates a list of {@link Nut nuts} thanks to the given path. Each nut will be associated to a timestamp value
+     * associated to the last update. If no polling interleave is set in the DAO, no polling should be performed here
+     * and the nut should be associated to the value -1.
      * </p>
      *
      * @param path the path representing the location of the nut(s)
      * @return the created nut(s)
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
      */
-    List<Nut> create(String path) throws StreamException;
+    Map<Nut, Long> create(String path) throws StreamException;
 
     /**
      * <p>

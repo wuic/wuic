@@ -75,7 +75,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * <p>
@@ -162,7 +162,9 @@ public class WuicXmlTest {
                 final Nut nut = mock(Nut.class);
                 when(nut.getNutType()).thenReturn(NutType.CSS);
                 when(nut.getName()).thenReturn("foo.css");
-                when(retval.create(anyString())).thenReturn(Arrays.asList(nut));
+                final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
+                nuts.put(nut, -1L);
+                when(retval.create(anyString())).thenReturn(nuts);
                 when(retval.saveSupported()).thenReturn(true);
                 when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
                 when(nut.isAggregatable()).thenReturn(true);

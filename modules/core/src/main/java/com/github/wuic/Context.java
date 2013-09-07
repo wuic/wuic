@@ -44,10 +44,7 @@ import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 
 /**
  * <p>
@@ -116,7 +113,7 @@ public class Context implements Observer {
         final Engine chain = request.getChainFor(workflow.getHeap().getNutType());
 
         if (chain == null) {
-            return workflow.getHeap().getNuts();
+            return new ArrayList<Nut>(workflow.getHeap().getNuts());
         } else {
             return chain.parse(request);
         }

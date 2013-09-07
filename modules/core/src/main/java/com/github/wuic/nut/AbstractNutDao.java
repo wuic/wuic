@@ -47,12 +47,7 @@ import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -132,17 +127,45 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 final Polling pollingData = entry.getValue();
 
                 try {
-                    // Nut has changed since its last call
-                    if (pollingData.lastUpdate(getLastUpdateTimestampFor(nut))) {
-                        for (NutDaoListener o : pollingData.getListeners()) {
-                            // Not already excluded and asks for exclusion
-                            if (!exclusions.contains(o) && !o.resourceUpdated(this, nut)) {
-                                exclusions.add(o);
+                    final Set<String> paths = new HashSet<String>(listResourcesPaths(pollingData.getPattern()));
+                    Map<String, Long> timestamps = null;
+
+                    // Notifies listeners
+                    for (final NutDaoListener o : pollingData.getListeners()) {
+                        final boolean excluded = exclusions.contains(o);
+
+                        // Not already excluded and asks for exclusion
+                        if (!excluded && !o.polling(paths)) {
+                            exclusions.add(o);
+                        } else if (!excluded) {
+
+                            // Timestamps not already retrieved
+                            if (timestamps == null) {
+                                timestamps = new HashMap<String, Long>(paths.size());
+
+                                for (final String path : paths) {
+                                    final Long timestamp = getLastUpdateTimestampFor(path);
+                                    timestamps.put(path, timestamp);
+
+                                    // Stop notifying
+                                    if (!o.nutPolled(this, path, timestamp)) {
+                                        exclusions.add(o);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for (final Map.Entry<String, Long> pathEntry : timestamps.entrySet()) {
+                                    // Stop notifying
+                                    if (!o.nutPolled(this, pathEntry.getKey(), pathEntry.getValue())) {
+                                        exclusions.add(o);
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
                 } catch (StreamException se) {
-                    log.warn(String.format("Unable to poll nut %s", nut), se);
+                    log.error(String.format("Unable to poll nut %s", nut), se);
                 }
             }
         }
@@ -152,9 +175,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String pathName) throws StreamException {
+    public Map<Nut, Long> create(final String pathName) throws StreamException {
         final List<String> pathNames = computeRealPaths(pathName);
-        final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
+        final Map<Nut, Long> retval = new HashMap<Nut, Long>(pathNames.size());
 
         for (final String p : pathNames) {
             final int index = p.lastIndexOf('.');
@@ -168,7 +191,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final NutType type = NutType.getNutTypeForExtension(ext);
             final Nut res = accessFor(p, type);
 
-            retval.add(res);
+            // Poll only if polling interleave is enabled
+            retval.put(res, getPollingInterleave() != -1 ? getLastUpdateTimestampFor(p) : -1L);
         }
 
         return retval;

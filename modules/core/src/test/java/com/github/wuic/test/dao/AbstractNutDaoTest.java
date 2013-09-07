@@ -56,6 +56,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -148,12 +149,13 @@ public class AbstractNutDaoTest {
         final NutDao dao = new MockNutDaoTest(1);
         dao.create("");
         dao.observe("", new NutDaoListener() {
-
-            /**
-             * {@inheritDoc}
-             */
             @Override
-            public boolean resourceUpdated(final NutDao dao, final String resource) {
+            public boolean polling(final Set<String> paths) {
+                return true;
+            }
+
+            @Override
+            public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
                 logger.info("Resource updated");
                 synchronized (AbstractNutDaoTest.class) {
                     if (count.incrementAndGet() > 1) {
@@ -188,12 +190,13 @@ public class AbstractNutDaoTest {
         final MockNutDaoTest dao = new MockNutDaoTest(1);
         dao.create("");
         dao.observe("", new NutDaoListener() {
-
-            /**
-             * {@inheritDoc}
-             */
             @Override
-            public boolean resourceUpdated(final NutDao dao, final String resource) {
+            public boolean polling(Set<String> paths) {
+                return true;
+            }
+
+            @Override
+            public boolean nutPolled(NutDao dao, String path, Long timestamp) {
                 logger.info("Resource updated");
                 synchronized (AbstractNutDaoTest.class) {
                     count.incrementAndGet();
@@ -203,7 +206,7 @@ public class AbstractNutDaoTest {
             }
         });
 
-        Thread.sleep(2500L);
+        Thread.sleep(1500L);
         dao.setPollingInterleave(-1);
         Thread.sleep(2500L);
         Assert.assertEquals(count.intValue(), 1);
@@ -224,13 +227,9 @@ public class AbstractNutDaoTest {
         dao.create("2");
 
         final NutDaoListener listener = new NutDaoListener() {
-
-            /**
-             * {@inheritDoc}
-             */
             @Override
-            public boolean resourceUpdated(final NutDao dao, final String resource) {
-                logger.info("Resource updated");
+            public boolean polling(final Set<String> paths) {
+                logger.info("Polling nut");
                 synchronized (AbstractNutDaoTest.class) {
                     count.incrementAndGet();
                 }
@@ -238,12 +237,18 @@ public class AbstractNutDaoTest {
                 // Ask for exclusion by returning false
                 return false;
             }
+
+            @Override
+            public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
+                return true;
+            }
         };
+
         dao.observe("1", listener);
         dao.observe("2", listener);
 
         Thread.sleep(2500L);
-        Assert.assertEquals(count.intValue(), 1);
+        Assert.assertEquals(count.intValue(), 2);
     }
 
     /**
@@ -268,15 +273,17 @@ public class AbstractNutDaoTest {
                     try {
                         dao.create("");
                         dao.observe("", new NutDaoListener() {
-
-                            /**
-                             * {@inheritDoc}
-                             */
                             @Override
-                            public boolean resourceUpdated(NutDao dao, String path) {
+                            public boolean polling(Set<String> paths) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean nutPolled(NutDao dao, String path, Long timestamp) {
                                 return false;
                             }
                         });
+
                         dao.setPollingInterleave(2);
                         dao.getPollingInterleave();
                         dao.computeRealPaths("");

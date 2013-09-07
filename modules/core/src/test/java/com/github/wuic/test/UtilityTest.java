@@ -50,8 +50,7 @@ import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -147,5 +146,33 @@ public class UtilityTest extends WuicTest {
         for (String f : listFiles) {
             Assert.assertEquals(directoryPath.getChild(f).getAbsolutePath(), IOUtils.mergePath(directoryPath.getAbsolutePath(), f));
         }
+    }
+
+    /**
+     * Test difference between sets.
+     */
+    @Test
+    public void differenceTest() {
+        final Set<String> first = new HashSet<String>();
+        final Set<String> second = new HashSet<String>();
+        Set<String> diff = CollectionUtils.difference(first, second);
+        Assert.assertTrue(diff.isEmpty());
+
+        first.addAll(Arrays.asList("a", "b", "c", "d"));
+        second.addAll(Arrays.asList("a", "b"));
+        diff = CollectionUtils.difference(first, second);
+        Assert.assertEquals(diff.size(), 2);
+
+        first.clear();
+        second.clear();
+        first.addAll(Arrays.asList("a", "b"));
+        second.addAll(Arrays.asList("a", "b", "c"));
+        diff = CollectionUtils.difference(first, second);
+        Assert.assertEquals(diff.size(), 1);
+        Assert.assertEquals("c", diff.iterator().next());
+
+        first.add("c");
+        diff = CollectionUtils.difference(first, second);
+        Assert.assertTrue(diff.isEmpty());
     }
 }
