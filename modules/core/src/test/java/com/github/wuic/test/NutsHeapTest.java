@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * <p>
  * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
- * path when retrieved resources, a set of proxies URIs and a polling feature.
+ * path when retrieved nuts, a set of proxies URIs and a polling feature.
  * </p>
  *
  * <p>
@@ -98,7 +98,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        protected List<String> listResourcesPaths(final String pattern) throws StreamException {
+        protected List<String> listNutsPaths(final String pattern) throws StreamException {
             return new ArrayList<String>(mockPaths.keySet());
         }
 

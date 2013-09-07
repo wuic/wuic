@@ -122,35 +122,35 @@ public class CGImageAggregatorEngine extends Engine {
 
         // If the configuration says that no aggregation should be done, keep all images separated
         if (!works()) {
-            // If a sprite provider exists, compute one resource for each image and link them
+            // If a sprite provider exists, compute one nut for each image and link them
             if (spriteProvider != null) {
                 final List<Nut> retval = new ArrayList<Nut>();
                 final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Calculate type and dimensions of the final image
-                for (final Nut file : request.getResources()) {
+                for (final Nut n : request.getNuts()) {
                     // Clear previous work
-                    spriteProvider.init(file.getName());
+                    spriteProvider.init(n.getName());
                     InputStream is = null;
 
                     try {
-                        is = file.openStream();
+                        is = n.openStream();
 
                         final BufferedImage buff = ImageIO.read(is);
-                        spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), file.getName());
+                        spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), n.getName());
 
                         // Process referenced nut
-                        final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt++));
-                        final Engine chain = request.getChainFor(resource.getNutType());
+                        final Nut nut = spriteProvider.getSprite(url, request.getHeap().getId(), String.valueOf(spriteCpt++));
+                        final Engine chain = request.getChainFor(nut.getNutType());
 
                         if (chain != null) {
-                            final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(resource), request));
-                            file.addReferencedResource(parsed.get(0));
+                            final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(nut), request));
+                            n.addReferencedNut(parsed.get(0));
                         } else {
-                            file.addReferencedResource(resource);
+                            n.addReferencedNut(nut);
                         }
 
-                        retval.add(file);
+                        retval.add(n);
                     } catch (IOException ioe) {
                         throw new StreamException(ioe);
                     } finally {
@@ -160,7 +160,7 @@ public class CGImageAggregatorEngine extends Engine {
 
                 return retval;
             } else {
-                return request.getResources();
+                return request.getNuts();
             }
         } else {
             // Clear previous work
@@ -168,7 +168,7 @@ public class CGImageAggregatorEngine extends Engine {
                 spriteProvider.init(CGImageAggregatorEngine.AGGREGATION_NAME);
             }
 
-            final Map<Region, Nut> packed = pack(request.getResources());
+            final Map<Region, Nut> packed = pack(request.getNuts());
     
             // Initializing the final image  
             final Dimension finalDim = getDimensionPack();
@@ -210,14 +210,14 @@ public class CGImageAggregatorEngine extends Engine {
                 final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Process referenced nut
-                final Nut resource = spriteProvider.getSprite(url, request.getGroup().getId(), String.valueOf(spriteCpt));
-                final Engine chain = request.getChainFor(resource.getNutType());
+                final Nut nut = spriteProvider.getSprite(url, request.getHeap().getId(), String.valueOf(spriteCpt));
+                final Engine chain = request.getChainFor(nut.getNutType());
 
                 if (chain != null) {
-                    final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(resource), request));
-                    res.addReferencedResource(parsed.get(0));
+                    final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(nut), request));
+                    res.addReferencedNut(parsed.get(0));
                 } else {
-                    res.addReferencedResource(resource);
+                    res.addReferencedNut(nut);
                 }
             }
 
@@ -303,27 +303,27 @@ public class CGImageAggregatorEngine extends Engine {
 
     /**
      * <p>
-     * Packs the given resources (which embed images) in the smallest area.
+     * Packs the given nuts (which embed images) in the smallest area.
      * </p>
      *
-     * @param files the images to pack
+     * @param nuts the images to pack
      * @return a map which associates each packed image to its allocated region
      * @throws WuicException if one image could not be read
      */
-    public Map<Region, Nut> pack(final List<Nut> files) throws WuicException {
+    public Map<Region, Nut> pack(final List<Nut> nuts) throws WuicException {
 
         // Clear previous work
         dimensionPacker.clearElements();
 
         // Load each image, read its dimension and add it to the packer with the ile as data
-        for (Nut file : files) {
+        for (final Nut nut : nuts) {
             InputStream is = null;
 
             try {
-                is = file.openStream();
+                is = nut.openStream();
                 final BufferedImage buff = ImageIO.read(is);
 
-                dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), file);
+                dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), nut);
             } catch (IOException ioe) {
                 throw new StreamException(ioe);
             } finally {

@@ -62,14 +62,14 @@ public class WuicTest {
      * </p>
      *
      * @param name the path name on the disk
-     * @param resource the nut
+     * @param nut the nut
      * @throws Exception if an I/O error occurs
      */
-    protected void writeToDisk(final Nut resource, final String name) throws Exception {
+    protected void writeToDisk(final Nut nut, final String name) throws Exception {
         final String dir = System.getProperty("wuic.test.storeTo");
 
         if (dir != null) {
-            IOUtils.copyStream(resource.openStream(), new FileOutputStream(new File(dir, name)));
+            IOUtils.copyStream(nut.openStream(), new FileOutputStream(new File(dir, name)));
         }
     }
 }

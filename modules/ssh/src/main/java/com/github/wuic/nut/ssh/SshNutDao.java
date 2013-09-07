@@ -92,7 +92,7 @@ public class SshNutDao extends AbstractNutDao {
      * @param user the user name ({@code null} to skip the the authentication)
      * @param pwd the password (will be ignored if user is {@code null})
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxyUris the proxies URIs in front of the resource
+     * @param proxyUris the proxies URIs in front of the nut
      */
     public SshNutDao(final Boolean regex,
                      final String host,
@@ -137,7 +137,7 @@ public class SshNutDao extends AbstractNutDao {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<String> listResourcesPaths(final String pattern) throws StreamException {
+    public List<String> listNutsPaths(final String pattern) throws StreamException {
         try {
             connect();
 

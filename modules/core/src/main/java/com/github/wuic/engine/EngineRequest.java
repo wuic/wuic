@@ -55,8 +55,8 @@ import java.util.Map;
  * </p>
  *
  * <p>
- * The user which invokes {@link Engine#parse(EngineRequest)} should indicates in the parameter the resources
- * to be parsed and the context path to use to expose the generated resources.
+ * The user which invokes {@link Engine#parse(EngineRequest)} should indicates in the parameter the nuts
+ * to be parsed and the context path to use to expose the generated nuts.
  * </p>
  *
  * @author Guillaume DROUET
@@ -71,9 +71,9 @@ public final class EngineRequest {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * The resources.
+     * The nuts.
      */
-    private List<Nut> resources;
+    private List<Nut> nuts;
 
     /**
      * The context path.
@@ -81,9 +81,9 @@ public final class EngineRequest {
     private String contextPath;
 
     /**
-     * The group.
+     * The heap.
      */
-    private NutsHeap group;
+    private NutsHeap heap;
 
     /**
      * The workflow ID.
@@ -97,16 +97,16 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some resources specific and a specified context path to be used.
+     * Builds a new {@code EngineRequest} with some nuts specific and a specified context path to be used.
      * </p>
      *
-     * @param res the resources to be parsed
+     * @param n the nuts to be parsed
      * @param other the request to copy
      */
-    public EngineRequest(final List<Nut> res, final EngineRequest other) {
-        resources = res;
+    public EngineRequest(final List<Nut> n, final EngineRequest other) {
+        nuts = n;
         contextPath = other.getContextPath();
-        group = other.getGroup();
+        heap = other.getHeap();
         chains = other.chains;
         workflowId = other.workflowId;
     }
@@ -117,28 +117,28 @@ public final class EngineRequest {
      * </p>
      *
      * @param wid the workflow ID
-     * @param cp the context root where the generated resources should be exposed
-     * @param g the group
+     * @param cp the context root where the generated nuts should be exposed
+     * @param g the heap
      * @param c the engine chains
-     * @throws StreamException if an I/O error occurs while getting resources
+     * @throws StreamException if an I/O error occurs while getting nuts
      */
     public EngineRequest(final String wid, final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
-        resources = new ArrayList<Nut>(g.getNuts());
+        nuts = new ArrayList<Nut>(g.getNuts());
         contextPath = cp;
-        group = g;
+        heap = g;
         chains = c;
         workflowId = wid;
     }
 
     /**
      * <p>
-     * Gets the resources.
+     * Gets the nuts.
      * </p>
      *
-     * @return the resources
+     * @return the nuts
      */
-    public List<Nut> getResources() {
-        return resources;
+    public List<Nut> getNuts() {
+        return nuts;
     }
 
     /**
@@ -154,13 +154,13 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Returns the group.
+     * Returns the heap.
      * </p>
      *
-     * @return the group
+     * @return the heap
      */
-    public NutsHeap getGroup() {
-        return group;
+    public NutsHeap getHeap() {
+        return heap;
     }
 
     /**
@@ -184,7 +184,7 @@ public final class EngineRequest {
      */
     public Engine getChainFor(final NutType nutType) {
         final Engine retval = chains.get(nutType);
-        log.warn("No chain exists for the heap '{}' and the nut type {}.", group.getId(), nutType.name());
+        log.warn("No chain exists for the heap '{}' and the nut type {}.", heap.getId(), nutType.name());
         return retval;
     }
 }

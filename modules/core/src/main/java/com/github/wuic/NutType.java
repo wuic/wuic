@@ -163,10 +163,10 @@ public enum NutType {
      * @return the path type
      */
     public static NutType getNutTypeForExtension(final String ext) {
-        for (NutType fileType : NutType.values()) {
-            for (String e : fileType.getExtensions()) {
+        for (final NutType nutType : NutType.values()) {
+            for (String e : nutType.getExtensions()) {
                 if (e.equals(ext)) {
-                    return fileType;
+                    return nutType;
                 }
             }
         }

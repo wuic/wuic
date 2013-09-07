@@ -130,7 +130,7 @@ public class FtpTest {
 
     /**
      * <p>
-     * Tests the FTP access resources with an embedded server.
+     * Tests the FTP access nuts with an embedded server.
      * </p>
      */
     @Test

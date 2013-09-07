@@ -83,12 +83,12 @@ public interface SpriteProvider {
      * </p>
      * 
      * @param url of the final image
-     * @param groupId the group ID
-     * @param resourceNameSuffix the suffix to append to the sprite nut name
+     * @param heapId the group ID
+     * @param nutNameSuffix the suffix to append to the sprite nut name
      * @return a nut representing the sprite path
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    Nut getSprite(String url, String groupId, String resourceNameSuffix) throws StreamException;
+    Nut getSprite(String url, String heapId, String nutNameSuffix) throws StreamException;
 
     /**
      * <p>

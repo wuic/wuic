@@ -118,7 +118,7 @@ public interface Nut extends Serializable {
 
     /**
      * <p>
-     * Indicates if the nut is aggregatable with other resources.
+     * Indicates if the nut is aggregatable with other nuts.
      * </p>
      *
      * @return {@code true} if aggregatable, {@code false} otherwise
@@ -154,7 +154,7 @@ public interface Nut extends Serializable {
 
     /**
      * <p>
-     * Sets if the nut is aggregatable with other resources.
+     * Sets if the nut is aggregatable with other nuts.
      * </p>
      *
      * @param a {@code true} if aggregatable, {@code false} otherwise
@@ -168,7 +168,7 @@ public interface Nut extends Serializable {
      *
      * @param referenced the referenced nut
      */
-    void addReferencedResource(Nut referenced);
+    void addReferencedNut(Nut referenced);
 
     /**
      * <p>

@@ -111,16 +111,16 @@ public abstract class CGAbstractCompressorEngine extends Engine {
     @Override
     public List<Nut> parse(final EngineRequest request) throws WuicException {
         // Return the same number of files
-        final List<Nut> retval = new ArrayList<Nut>(request.getResources().size());
+        final List<Nut> retval = new ArrayList<Nut>(request.getNuts().size());
         
         // Compress only if needed
         if (works()) {
             // Compress each path
-            for (Nut resource : request.getResources()) {
-                retval.add(compress(resource));
+            for (Nut nut : request.getNuts()) {
+                retval.add(compress(nut));
             }
         } else {
-            retval.addAll(request.getResources());
+            retval.addAll(request.getNuts());
         }
         
         if (getNext() != null) {
@@ -135,23 +135,23 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * Compresses the given nut.
      * </p>
      *
-     * @param resource the nut to be compressed
+     * @param nut the nut to be compressed
      * @return the compressed nut
      * @throws WuicException if an I/O error occurs
      */
-    private Nut compress(final Nut resource) throws WuicException {
-        if (!resource.isTextCompressible()) {
-            return resource;
+    private Nut compress(final Nut nut) throws WuicException {
+        if (!nut.isTextCompressible()) {
+            return nut;
         }
 
         // Compression has to be implemented by sub-classes
         InputStream is = null;
 
         try {
-            log.debug("Compressing {}", resource.getName());
+            log.debug("Compressing {}", nut.getName());
 
             // Source
-            is = resource.openStream();
+            is = nut.openStream();
 
             // Where compression result will be written
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -160,16 +160,16 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             compress(is, os);
 
             // Now create nut
-            final Nut res = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
-            res.setAggregatable(resource.isAggregatable());
-            res.setBinaryCompressible(resource.isBinaryCompressible());
-            res.setTextCompressible(resource.isTextCompressible());
-            res.setCacheable(resource.isCacheable());
+            final Nut res = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            res.setAggregatable(nut.isAggregatable());
+            res.setBinaryCompressible(nut.isBinaryCompressible());
+            res.setTextCompressible(nut.isTextCompressible());
+            res.setCacheable(nut.isCacheable());
 
-            // Also compress referenced resources
-            if (resource.getReferencedNuts() != null) {
-                for (Nut ref : resource.getReferencedNuts()) {
-                    res.addReferencedResource(compress(ref));
+            // Also compress referenced nuts
+            if (nut.getReferencedNuts() != null) {
+                for (Nut ref : nut.getReferencedNuts()) {
+                    res.addReferencedNut(compress(ref));
                 }
             }
 

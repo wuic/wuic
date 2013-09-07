@@ -86,7 +86,7 @@ public class DiskNutDao extends AbstractNutDao {
      * @param base the directory where we have to look up
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxies the proxies URIs in front of the resource
+     * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      */
     public DiskNutDao(final String base,
@@ -126,7 +126,7 @@ public class DiskNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final String pattern) throws StreamException {
+    public List<String> listNutsPaths(final String pattern) throws StreamException {
         init();
         final Pattern compiled = Pattern.compile(regularExpression ? pattern :  Pattern.quote(pattern));
 
@@ -169,7 +169,7 @@ public class DiskNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut resource) {
+    public void save(final Nut nut) {
         // TODO : update path API
         throw new SaveOperationNotSupportedException(this.getClass());
     }

@@ -55,7 +55,7 @@ import java.util.*;
  * </p>
  *
  * <p>
- * A path is an abstract location of one to many resources because it could be a regular expression. It is relative to
+ * A path is an abstract location of one to many nuts because it could be a regular expression. It is relative to
  * the base path of the {@link NutDao}.
  * </p>
  *
@@ -72,10 +72,10 @@ public class NutsHeap implements NutDaoListener {
     /**
      * Message's template displayed when no nut has been found.
      */
-    private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic resources";
+    private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic nuts";
 
     /**
-     * Message's template displayed when the extensions of resources path is not correct.
+     * Message's template displayed when the extensions of nuts path is not correct.
      */
     private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for nut %s associated to the NutType %s";
 

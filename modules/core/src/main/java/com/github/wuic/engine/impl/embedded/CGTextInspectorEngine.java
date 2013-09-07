@@ -58,8 +58,8 @@ import java.util.regex.Matcher;
 
 /**
  * <p>
- * Basic inspector engine for text resources processing text line per line. This kind of engine inspects
- * each nut of a request to eventually alter their content or to extract other referenced resources
+ * Basic inspector engine for text nuts processing text line per line. This kind of engine inspects
+ * each nut of a request to eventually alter their content or to extract other referenced nuts
  * thanks to a set of {@link LineInspector inspectors}.
  * </p>
  *
@@ -104,12 +104,12 @@ public abstract class CGTextInspectorEngine extends Engine {
      */
     @Override
     public List<Nut> parse(final EngineRequest request) throws WuicException {
-        // Will contains both group's resources eventually modified or extracted resources.
+        // Will contains both heap's nuts eventually modified or extracted nuts.
         final List<Nut> retval = new ArrayList<Nut>();
 
         if (works()) {
-            for (Nut resource : request.getResources()) {
-                retval.add(inspect(resource, request));
+            for (Nut nut : request.getNuts()) {
+                retval.add(inspect(nut, request));
             }
         }
 
@@ -122,54 +122,54 @@ public abstract class CGTextInspectorEngine extends Engine {
 
     /**
      * <p>
-     * Extracts from the given nut all the resources referenced by the @import statement in CSS.
+     * Extracts from the given nut all the nuts referenced by the @import statement in CSS.
      * </p>
      *
      * <p>
      * This method is recursive.
      * </p>
      *
-     * @param resource the nut
+     * @param nut the nut
      * @param request the initial request
      * @return the nut corresponding the inspected nut specified in parameter
      * @throws WuicException if an I/O error occurs while reading
      */
-    protected Nut inspect(final Nut resource, final EngineRequest request)
+    protected Nut inspect(final Nut nut, final EngineRequest request)
             throws WuicException {
-        // Extracts the location where nut is listed in order to compute the location of the extracted imported resources
-        final int lastIndexOfSlash = resource.getName().lastIndexOf("/") + 1;
-        final String name = resource.getName();
-        final String resourceLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
+        // Extracts the location where nut is listed in order to compute the location of the extracted imported nuts
+        final int lastIndexOfSlash = nut.getName().lastIndexOf("/") + 1;
+        final String name = nut.getName();
+        final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
 
         BufferedReader br = null;
         String line;
 
         try {
             // Read the path line per line
-            br = new BufferedReader(new InputStreamReader(resource.openStream(), charset));
+            br = new BufferedReader(new InputStreamReader(nut.openStream(), charset));
 
             // Reads each line and keep the transformations in memory
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            final List<Nut> referencedResources = new ArrayList<Nut>();
+            final List<Nut> referencednuts = new ArrayList<Nut>();
 
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
-                    line = inspectLine(line, resourceLocation, request, inspector, referencedResources);
+                    line = inspectLine(line, nutLocation, request, inspector, referencednuts);
                 }
 
                 os.write((line + "\n").getBytes());
             }
 
             // Create and add the inspected nut with its transformations
-            final Nut inspected = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
-            inspected.setCacheable(resource.isCacheable());
-            inspected.setAggregatable(resource.isAggregatable());
-            inspected.setTextCompressible(resource.isTextCompressible());
-            inspected.setBinaryCompressible(resource.isBinaryCompressible());
+            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            inspected.setCacheable(nut.isCacheable());
+            inspected.setAggregatable(nut.isAggregatable());
+            inspected.setTextCompressible(nut.isTextCompressible());
+            inspected.setBinaryCompressible(nut.isBinaryCompressible());
 
-            // Also add all the referenced resources
-            for (Nut ref : referencedResources) {
-                inspected.addReferencedResource(ref);
+            // Also add all the referenced nuts
+            for (Nut ref : referencednuts) {
+                inspected.addReferencedNut(ref);
             }
 
             return inspected;
@@ -182,7 +182,7 @@ public abstract class CGTextInspectorEngine extends Engine {
 
     /**
      * <p>
-     * Inspects the given line and eventually adds some extracted resources to the nut referencing it.
+     * Inspects the given line and eventually adds some extracted nuts to the nut referencing it.
      * </p>
      *
      * <p>
@@ -190,18 +190,18 @@ public abstract class CGTextInspectorEngine extends Engine {
      * </p>
      *
      * @param line the line to be inspected
-     * @param resourceLocation the location of the nut
+     * @param nutLocation the location of the nut
      * @param request the initial request
      * @param inspector the inspector to use
-     * @param referencedResources the collection where any referenced nut identified by the method will be added
+     * @param referencednuts the collection where any referenced nut identified by the method will be added
      * @throws WuicException if an I/O error occurs while reading
      * @return the given line eventually transformed
      */
     protected String inspectLine(final String line,
-                                 final String resourceLocation,
+                                 final String nutLocation,
                                  final EngineRequest request,
                                  final LineInspector inspector,
-                                 final List<Nut> referencedResources)
+                                 final List<Nut> referencednuts)
             throws WuicException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
@@ -210,16 +210,16 @@ public abstract class CGTextInspectorEngine extends Engine {
         final Matcher matcher = inspector.getPattern().matcher(line);
 
         while (matcher.find()) {
-            // Compute replacement, extract nut name and referenced resources
+            // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final String resourceName = inspector.appendTransformation(matcher, replacement,
-                    IOUtils.mergePath(request.getContextPath(), request.getGroup().getId()),
-                    resourceLocation, request.getGroup().getNutDao());
+            final String nutName = inspector.appendTransformation(matcher, replacement,
+                    IOUtils.mergePath(request.getContextPath(), request.getHeap().getId()),
+                    nutLocation, request.getHeap().getNutDao());
             matcher.appendReplacement(retval, replacement.toString());
 
             // If nut name is null, it means that nothing has been changed by the inspector
-            if (resourceName != null) {
-                List<Nut> res = new ArrayList<Nut>(request.getGroup().getNutDao().create(resourceName).keySet());
+            if (nutName != null) {
+                List<Nut> res = new ArrayList<Nut>(request.getHeap().getNutDao().create(nutName).keySet());
 
                 // Process nut
                 //if (getNext() != null) {
@@ -236,7 +236,7 @@ public abstract class CGTextInspectorEngine extends Engine {
                     }
 
                     configureExtracted(inspected);
-                    referencedResources.add(inspected);
+                    referencednuts.add(inspected);
                 }
             }
         }
@@ -248,15 +248,15 @@ public abstract class CGTextInspectorEngine extends Engine {
 
     /**
      * <p>
-     * Configures the given extracted resources to know if it should be aggregated, compressed, cached, etc.
+     * Configures the given extracted nuts to know if it should be aggregated, compressed, cached, etc.
      * </p>
      *
-     * @param resource the nut to configure
+     * @param nut the nut to configure
      */
-    private void configureExtracted(final Nut resource) {
-        resource.setAggregatable(Boolean.FALSE);
-        resource.setTextCompressible(resource.getNutType().isText());
-        resource.setBinaryCompressible(!resource.getNutType().isText());
+    private void configureExtracted(final Nut nut) {
+        nut.setAggregatable(Boolean.FALSE);
+        nut.setTextCompressible(nut.getNutType().isText());
+        nut.setBinaryCompressible(!nut.getNutType().isText());
     }
 
     /**

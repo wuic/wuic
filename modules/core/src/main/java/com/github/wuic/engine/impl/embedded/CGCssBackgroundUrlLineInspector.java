@@ -50,8 +50,8 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * This class inspects CSS files to extract resources referenced as a background URL to process it.
- * Then it adapts the path of those processed resources to be accessible when exposed to the browser
+ * This class inspects CSS files to extract nuts referenced as a background URL to process it.
+ * Then it adapts the path of those processed nuts to be accessible when exposed to the browser
  * through WUIC's URI.
  * </p>
  *
@@ -92,7 +92,7 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
     public String appendTransformation(final Matcher matcher,
                                        final StringBuilder replacement,
                                        final String groupPath,
-                                       final String resourceLocation,
+                                       final String nutLocation,
                                        final NutDao dao) {
 
         final String referencedPath = matcher.group(NumberUtils.TWO).trim();
@@ -101,7 +101,7 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
         log.info("Background with an URL statement found for nut {}", referencedPath);
 
         // Extract the nut
-        final String resourceName = resourceLocation.isEmpty() ? referencedPath : IOUtils.mergePath(resourceLocation, referencedPath);
+        final String nutName = nutLocation.isEmpty() ? referencedPath : IOUtils.mergePath(nutLocation, referencedPath);
 
         // Rewrite the statement from its beginning to the beginning of the nut name
         final String start = matcher.group().substring(0, matcher.start(NumberUtils.TWO) - matcher.start());
@@ -119,10 +119,10 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
 
         // Don't change nut if absolute
         if (isAbsolute) {
-            log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut factory.", referencedPath);
+            log.warn("{} is referenced as an absolute static and won't be processed by WUIC. You should only use relative URL reachable by nut DAO.", referencedPath);
             replacement.append(referencedPath);
         } else {
-            replacement.append(IOUtils.mergePath("/", groupPath, resourceName));
+            replacement.append(IOUtils.mergePath("/", groupPath, nutName));
         }
 
         replacement.append("\")");
@@ -136,6 +136,6 @@ public class CGCssBackgroundUrlLineInspector implements LineInspector {
         }
 
         // Return null means we don't change the original nut
-        return isAbsolute ? null : resourceName;
+        return isAbsolute ? null : nutName;
     }
 }

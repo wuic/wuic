@@ -258,7 +258,7 @@ public class FtpNutDao extends AbstractNutDao {
             // Connect if necessary
             connect();
 
-            log.info("Polling FTP resource '{}'", path);
+            log.info("Polling FTP nut '{}'", path);
             final String response = ftpClient.getModificationTime(IOUtils.mergePath(getBasePath(), path));
             log.info("Last modification response : {}", response);
             log.info("Parse the response with {} date format which could be preceded by the server code and a space",
@@ -299,7 +299,7 @@ public class FtpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut resource) {
+    public void save(final Nut nut) {
         // TODO : implement FTP upload
         throw new UnsupportedOperationException();
     }
@@ -317,7 +317,7 @@ public class FtpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    protected List<String> listResourcesPaths(final String pattern) throws StreamException {
+    protected List<String> listNutsPaths(final String pattern) throws StreamException {
         try {
             connect();
             return recursiveSearch(getBasePath(), Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern)));

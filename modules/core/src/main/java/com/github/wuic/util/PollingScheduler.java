@@ -79,13 +79,13 @@ public abstract class PollingScheduler<T> implements Runnable {
     /**
      * All observers per nut.
      */
-    private final Map<String, Polling> resourceObservers;
+    private final Map<String, Polling> nutObservers;
 
     /**
      * Creates a new instance.
      */
     public PollingScheduler() {
-        resourceObservers = new HashMap<String, Polling>();
+        nutObservers = new HashMap<String, Polling>();
     }
 
     /**
@@ -95,15 +95,15 @@ public abstract class PollingScheduler<T> implements Runnable {
      *
      * @param pattern the pattern to use to retrieve the different real paths to poll
      * @param listeners some listeners to be notified when an update has been detected on a nut
-     * @throws StreamException if an I/O occurs while retrieving last update of the resource
+     * @throws StreamException if an I/O occurs while retrieving last update of the nut
      */
     public final void observe(final String pattern, final T ... listeners) throws StreamException {
-        synchronized (getResourceObservers()) {
-            final Polling polling = getResourceObservers().containsKey(pattern)
-                    ? getResourceObservers().get(pattern) : new Polling(pattern);
+        synchronized (getNutObservers()) {
+            final Polling polling = getNutObservers().containsKey(pattern)
+                    ? getNutObservers().get(pattern) : new Polling(pattern);
 
             polling.addListeners(listeners);
-            resourceObservers.put(pattern, polling);
+            nutObservers.put(pattern, polling);
         }
     }
 
@@ -114,8 +114,8 @@ public abstract class PollingScheduler<T> implements Runnable {
      *
      * @return the observers
      */
-    public Map<String, ? extends Polling> getResourceObservers() {
-        return resourceObservers;
+    public Map<String, ? extends Polling> getNutObservers() {
+        return nutObservers;
     }
 
     /**
@@ -158,10 +158,10 @@ public abstract class PollingScheduler<T> implements Runnable {
 
     /**
      * <p>
-     * Retrieves a timestamp that indicates the last time this resource has changed.
+     * Retrieves a timestamp that indicates the last time this nut has changed.
      * </p>
      *
-     * @param path the real path of the resource
+     * @param path the real path of the nut
      * @return the timestamp
      * @throws StreamException if any I/O error occurs
      */

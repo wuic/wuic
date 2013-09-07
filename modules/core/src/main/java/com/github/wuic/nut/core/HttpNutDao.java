@@ -80,7 +80,7 @@ public class HttpNutDao extends AbstractNutDao {
      * @param https use HTTPS protocol instead of HTTP ?
      * @param domain the HTTP server domain name
      * @param port the HTTP server port
-     * @param path the base path where resources are provided
+     * @param path the base path where nuts are provided
      * @param basePathAsSysProp {@code true} if the base path is a system property
      */
     public HttpNutDao(final Boolean https, final String domain, final Integer port, final String path, final Boolean basePathAsSysProp) {
@@ -97,8 +97,8 @@ public class HttpNutDao extends AbstractNutDao {
     }
 
     @Override
-    protected List<String> listResourcesPaths(String pattern) throws StreamException {
-        // Finding resources with a regex through HTTP protocol is tricky
+    protected List<String> listNutsPaths(String pattern) throws StreamException {
+        // Finding nuts with a regex through HTTP protocol is tricky
         // Until this feature is implemented, we only expect pattern that represent a real nut
         return Arrays.asList(pattern);
     }

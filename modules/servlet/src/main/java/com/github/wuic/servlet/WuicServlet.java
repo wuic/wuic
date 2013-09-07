@@ -136,7 +136,7 @@ public class WuicServlet extends HttpServlet {
         servletContext = config.getServletContext();
         servletMapping = config.getInitParameter(WUIC_SERVLET_CONTEXT_PARAM);
 
-        // Context where resources will be exposed
+        // Context where nuts will be exposed
         final String wuicCp = IOUtils.mergePath("/", servletContext().getContextPath(), servletMapping());
 
         log.info("WUIC's full context path is {}", wuicCp);
@@ -175,11 +175,11 @@ public class WuicServlet extends HttpServlet {
         final Matcher matcher = urlPattern.matcher(request.getRequestURI());
 
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
-            response.getWriter().println("URL pattern. Expected [groupId]/[resourceName]");
+            response.getWriter().println("URL pattern. Expected [groupId]/[nutName]");
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
-                writeResource(matcher.group(1), matcher.group(NumberUtils.TWO), response);
+                writeNut(matcher.group(1), matcher.group(NumberUtils.TWO), response);
             } catch (WuicException we) {
                 log.error("Unable to retrieve nut", we);
 
@@ -199,23 +199,23 @@ public class WuicServlet extends HttpServlet {
      * </p>
      *
      * @param groupId the group ID
-     * @param resourceName the nut name
+     * @param nutName the nut name
      * @param response the response
      * @throws WuicException if an I/O error occurs or nut not found
      */
-    private void writeResource(final String groupId, final String resourceName, final HttpServletResponse response)
+    private void writeNut(final String groupId, final String nutName, final HttpServletResponse response)
             throws WuicException {
 
-        // Get the files group
-        final List<Nut> files = getWuicFacade().getGroup(groupId);
-        final Nut resource = getResource(files, resourceName);
+        // Get the nuts group
+        final List<Nut> nuts = getWuicFacade().runWorkflow(groupId);
+        final Nut nut = getNut(nuts, nutName);
         InputStream is = null;
 
-        // Resource found
-        if (resource != null) {
+        // Nut found
+        if (nut != null) {
             try {
-                response.setContentType(resource.getNutType().getMimeType());
-                is = resource.openStream();
+                response.setContentType(nut.getNutType().getMimeType());
+                is = nut.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
                 is = null;
             } catch (IOException ioe) {
@@ -224,7 +224,7 @@ public class WuicServlet extends HttpServlet {
                 IOUtils.close(is);
             }
         } else {
-            throw new NutNotFoundException(resourceName, groupId);
+            throw new NutNotFoundException(nutName, groupId);
         }
     }
 
@@ -233,19 +233,19 @@ public class WuicServlet extends HttpServlet {
      * Gets the nut with the specified name
      * </p>
      *
-     * @param resources the resources where the research
-     * @param resourceName the name of the nut
+     * @param nuts the nuts where the research
+     * @param nutName the name of the nut
      * @return the nut corresponding to the name, {@code null} if nothing match
      */
-    private Nut getResource(final List<Nut> resources, final String resourceName) {
-        // Iterates the resources to find the requested element
-        for (Nut resource : resources) {
-            // Resource found : write the stream and return
-            if (resource.getName().equals(resourceName) || ("/" + resource.getName()).equals(resourceName)) {
-                return resource;
-            } else if (resource.getReferencedNuts() != null) {
-                // Find in referenced resources
-                final Nut ref = getResource(resource.getReferencedNuts(), resourceName);
+    private Nut getNut(final List<Nut> nuts, final String nutName) {
+        // Iterates the nuts to find the requested element
+        for (Nut nut : nuts) {
+            // Nut found : write the stream and return
+            if (nut.getName().equals(nutName) || ("/" + nut.getName()).equals(nutName)) {
+                return nut;
+            } else if (nut.getReferencedNuts() != null) {
+                // Find in referenced nuts
+                final Nut ref = getNut(nut.getReferencedNuts(), nutName);
 
                 if (ref != null) {
                     return ref;

@@ -168,12 +168,12 @@ public class HttpTest extends WuicTest {
     }
 
     /**
-     * Test HTTP resources.
+     * Test HTTP nuts.
      *
      * @throws Exception if test fails
      */
     @Test
-    public void httpResourceTest() throws Exception {
+    public void httpNutTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);

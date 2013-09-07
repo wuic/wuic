@@ -88,7 +88,7 @@ public class AbstractNutDaoTest {
     private class MockNutDaoTest extends AbstractNutDao {
 
         /**
-         * Age of last resource.
+         * Age of last nut.
          */
         private Long age;
 
@@ -108,7 +108,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        protected List<String> listResourcesPaths(final String pattern) throws StreamException {
+        protected List<String> listNutsPaths(final String pattern) throws StreamException {
             return Arrays.asList("foo.js");
         }
 
@@ -156,7 +156,7 @@ public class AbstractNutDaoTest {
 
             @Override
             public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
-                logger.info("Resource updated");
+                logger.info("Nut updated");
                 synchronized (AbstractNutDaoTest.class) {
                     if (count.incrementAndGet() > 1) {
                         AbstractNutDaoTest.class.notify();
@@ -197,7 +197,7 @@ public class AbstractNutDaoTest {
 
             @Override
             public boolean nutPolled(NutDao dao, String path, Long timestamp) {
-                logger.info("Resource updated");
+                logger.info("Nut updated");
                 synchronized (AbstractNutDaoTest.class) {
                     count.incrementAndGet();
                 }

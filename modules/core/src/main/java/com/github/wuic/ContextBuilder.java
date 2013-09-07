@@ -364,7 +364,7 @@ public class ContextBuilder extends Observable {
      * will be thrown.
      * </p>
      *
-     * @param id the group ID
+     * @param id the heap ID
      * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
@@ -432,7 +432,7 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Creates a new workflow. Any resource processing will be done through an existing workflow.
+     * Creates a new workflow. Any nut processing will be done through an existing workflow.
      * </p>
      *
      * <p>
@@ -441,14 +441,14 @@ public class ContextBuilder extends Observable {
      * A chain that processes a particular {@link NutType} of {@link com.github.wuic.nut.Nut} is composed of {@link Engine}
      * ordered by type. All engines specified in parameter as array are simply organized following those two criteria to
      * create the chains. Moreover, default engines could be injected in the chain to perform common operations to be done
-     * on resources. If an {@link com.github.wuic.engine.EngineBuilder} is specified in a chain while it is injected
+     * on nuts. If an {@link com.github.wuic.engine.EngineBuilder} is specified in a chain while it is injected
      * by default, then the configuration of the given builder will overrides the default one.
      * </p>
      *
      * <p>
-     * A set of {@link com.github.wuic.nut.NutDaoBuilder} could be specified to store processed resources. When the client
-     * will retrieve the resources, it will access it through a proxy URI configured in the protocol. This URI corresponds
-     * to a server in front of the location where resources have been stored. For that reason the {@link NutDao} must
+     * A set of {@link com.github.wuic.nut.NutDaoBuilder} could be specified to store processed nuts. When the client
+     * will retrieve the nuts, it will access it through a proxy URI configured in the protocol. This URI corresponds
+     * to a server in front of the location where nuts have been stored. For that reason the {@link NutDao} must
      * support {@link NutDao#save(com.github.wuic.nut.Nut)} operation.
      * </p>
      *
@@ -465,7 +465,7 @@ public class ContextBuilder extends Observable {
      * @param prefixId the prefix of workflow ID
      * @param heapIdPattern the regex matching the heap IDs that needs to be processed
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
-     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
+     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
      */
@@ -556,7 +556,7 @@ public class ContextBuilder extends Observable {
      * @param id the workflow ID
      * @param heapId the regex matching the heap IDs that needs to be processed
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
-     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed resources
+     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
      * @return this {@link ContextBuilder}
      */
     public ContextBuilder workflow(final String id,

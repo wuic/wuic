@@ -86,9 +86,9 @@ public interface ErrorCode {
     long XML_NO_CONFIGURATION_ID = 19860606101L;
 
     /**
-     * No id has been defined for a nut factory builder in the wuic.xml path.
+     * No id has been defined for a nut DAO builder in the wuic.xml path.
      */
-    long XML_NO_RESOURCE_FACTORY_BUILDER_ID = 19860606101L;
+    long XML_NO_NUT_DAO_BUILDER_ID = 19860606101L;
 
     /**
      * Not all required elements have been defined for a configuration in the wuic.xml path.
@@ -96,9 +96,9 @@ public interface ErrorCode {
     long XML_MISSING_CONFIGURATION_ELEMENT = 19860606103L;
 
     /**
-     * No class has been defined for a nut factory builder in the wuic.xml path.
+     * No class has been defined for a nut dao builder in the wuic.xml path.
      */
-    long XML_NO_RESOURCE_FACTORY_BUILDER_CLASS = 19860606104L;
+    long XML_NO_NUT_DAO_BUILDER_CLASS = 19860606104L;
 
     /**
      * An expected class could not be instantiated with an actual value.
@@ -112,9 +112,9 @@ public interface ErrorCode {
     long XML_BAD_TYPE_OF_VALUE = 19860606106L;
 
     /**
-     * A reference is made to a non existing factory builder.
+     * A reference is made to a non existing dao builder.
      */
-    long XML_BAD_REF_TO_FACTORY_BUILDER = 19860606107L;
+    long XML_BAD_REF_TO_DAO_BUILDER = 19860606107L;
 
     /**
      * Indicates that a nut has not been found.

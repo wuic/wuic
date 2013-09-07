@@ -95,7 +95,7 @@ public class WuicTag extends TagSupport {
                 throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
             }
 
-            final List<Nut> nuts = facade.getGroup(pageName);
+            final List<Nut> nuts = facade.runWorkflow(pageName);
 
             for (final Nut nut : nuts) {
                 writeScriptImport(nut);
@@ -134,14 +134,14 @@ public class WuicTag extends TagSupport {
      * Generates import for CSS script.
      * </p>
      * 
-     * @param resource the CSS nut
+     * @param nut the CSS nut
      * @return the import
      */
-    private String cssImport(final Nut resource) {
+    private String cssImport(final Nut nut) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-        retval.append(getUrl(resource));
+        retval.append(getUrl(nut));
         retval.append("\" />");
         
         return retval.toString();
@@ -152,15 +152,15 @@ public class WuicTag extends TagSupport {
      * Generates import for Javascript script.
      * </p>
      * 
-     * @param resource the Javascript nut
+     * @param nut the Javascript nut
      * @return the import
      */
-    private String javascriptImport(final Nut resource) {
+    private String javascriptImport(final Nut nut) {
         final StringBuilder retval = new StringBuilder();
         
         retval.append("<script type=\"text/javascript");
         retval.append("\" src=\"");
-        retval.append(getUrl(resource));
+        retval.append(getUrl(nut));
         retval.append("\"></script>");
         
         return retval.toString();
@@ -171,15 +171,15 @@ public class WuicTag extends TagSupport {
      * Generates the URL to use to access to the given nut.
      * </p>
      * 
-     * @param resource the nut
+     * @param nut the nut
      * @return the url
      */
-    private String getUrl(final Nut resource) {
+    private String getUrl(final Nut nut) {
         return IOUtils.mergePath("/",
                 WuicServlet.servletContext().getContextPath(),
                 WuicServlet.servletMapping(),
                 pageName,
-                resource.getName());
+                nut.getName());
     }
 
     /**

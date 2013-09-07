@@ -118,20 +118,20 @@ public class EhCacheEngine extends Engine {
             final String key = request.getWorkflowId();
             final Element value = ehCache.get(key);
 
-            // Resources exist in doCache, returns them
+            // Nuts exist in doCache, returns them
             if (value != null) {
-                log.info("Resources for group '{}' found in doCache", key);
+                log.info("Nuts for group '{}' found in doCache", key);
                 retval = (List<Nut>) value.getObjectValue();
             } else if (getNext() != null) {
                 // Observe and invalidate the cache when updates are notified
-                request.getGroup().addObserver(new InvalidateCache(key));
+                request.getHeap().addObserver(new InvalidateCache(key));
 
-                final List<Nut> resources = getNext().parse(request);
-                final List<Nut> toCache = new ArrayList<Nut>(resources.size());
+                final List<Nut> nuts = getNext().parse(request);
+                final List<Nut> toCache = new ArrayList<Nut>(nuts.size());
 
-                for (final Nut resource : resources) {
-                    if (resource.isCacheable()) {
-                        toCache.add(toByteArrayResource(resource));
+                for (final Nut nut : nuts) {
+                    if (nut.isCacheable()) {
+                        toCache.add(toByteArrayNut(nut));
                     }
                 }
 
@@ -152,25 +152,25 @@ public class EhCacheEngine extends Engine {
 
     /**
      * <p>
-     * Converts the given nut and its referenced resources into resources wrapping an in memory byte array.
+     * Converts the given nut and its referenced nuts into nuts wrapping an in memory byte array.
      * </p>
      *
-     * @param resource the nut to convert
+     * @param nut the nut to convert
      * @return the byte array nut
      * @throws WuicException if an I/O error occurs
      */
-    private Nut toByteArrayResource(final Nut resource) throws WuicException {
+    private Nut toByteArrayNut(final Nut nut) throws WuicException {
         InputStream is = null;
 
         try {
-            is = resource.openStream();
+            is = nut.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
-            final Nut bytes = new ByteArrayNut(os.toByteArray(), resource.getName(), resource.getNutType());
+            final Nut bytes = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
 
-            if (resource.getReferencedNuts() != null) {
-                for (Nut ref : resource.getReferencedNuts()) {
-                    bytes.addReferencedResource(toByteArrayResource(ref));
+            if (nut.getReferencedNuts() != null) {
+                for (Nut ref : nut.getReferencedNuts()) {
+                    bytes.addReferencedNut(toByteArrayNut(ref));
                 }
             }
 

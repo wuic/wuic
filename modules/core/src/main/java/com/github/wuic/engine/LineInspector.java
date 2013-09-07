@@ -73,13 +73,13 @@ public interface LineInspector {
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
      * @param groupPath the absolute path to the group
-     * @param resourceLocation the location of the current nut
+     * @param nutLocation the location of the current nut
      * @param dao the DAO to use when we need to create nut
      * @return the nut name that was referenced in the matching text, {@code null} if the inspector did not perform any change
      */
     String appendTransformation(Matcher matcher,
                                 StringBuilder replacement,
                                 String groupPath,
-                                String resourceLocation,
+                                String nutLocation,
                                 NutDao dao);
 }

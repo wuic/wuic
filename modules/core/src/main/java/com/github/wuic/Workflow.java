@@ -57,7 +57,7 @@ import java.util.Map;
  * </p>
  *
  * <p>
- * Finally, the workflow could have zero to many {@link NutDao} where resulting resource should be saved. Consequently,
+ * Finally, the workflow could have zero to many {@link NutDao} where resulting nut should be saved. Consequently,
  * {@link NutDao} must supports {@link NutDao#save(com.github.wuic.nut.Nut)}. This is something which is checked by the
  * {@link ContextBuilder}.
  * </p>

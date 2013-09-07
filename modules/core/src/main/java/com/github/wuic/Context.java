@@ -48,7 +48,7 @@ import java.util.*;
 
 /**
  * <p>
- * The context is the core element of WUIC which allows to process resources.
+ * The context is the core element of WUIC which allows to process nuts inside workflow.
  * </p>
  *
  * <p>
@@ -94,11 +94,11 @@ public class Context implements Observer {
 
     /**
      * <p>
-     * Processes a workflow and returns the resulting resources.
+     * Processes a workflow and returns the resulting nuts.
      * </p>
      *
      * @param workflowId the workflow ID
-     * @param contextPath the context path where resources will be referenced
+     * @param contextPath the context path where nuts will be referenced
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */

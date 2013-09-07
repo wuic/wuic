@@ -60,7 +60,7 @@ public class HttpNut extends AbstractNut {
     /**
      * The nut URL.
      */
-    private URL resourceUrl;
+    private URL nutUrl;
 
     /**
      * <p>
@@ -69,11 +69,11 @@ public class HttpNut extends AbstractNut {
      *
      * @param name the name
      * @param url the URL
-     * @param fileType the path type
+     * @param nutType the path type
      */
-    public HttpNut(final String name, final URL url, final NutType fileType) {
-        super(name, fileType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
-        resourceUrl = url;
+    public HttpNut(final String name, final URL url, final NutType nutType) {
+        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        nutUrl = url;
     }
 
     /**
@@ -82,7 +82,7 @@ public class HttpNut extends AbstractNut {
     @Override
     public InputStream openStream() throws NutNotFoundException {
         try {
-            return resourceUrl.openStream();
+            return nutUrl.openStream();
         } catch (IOException ioe) {
             throw new NutNotFoundException(ioe);
         }

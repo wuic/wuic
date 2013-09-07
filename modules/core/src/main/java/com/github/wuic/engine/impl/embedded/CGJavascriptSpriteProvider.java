@@ -54,7 +54,7 @@ import com.github.wuic.util.IOUtils;
  *
  * <p>
  * In Javascript, an object is declared in variable starting with WUIC_SPRITE_
- * and ending with the group ID. The group ID is treated to be in upper case and
+ * and ending with the heap ID. The heap ID is treated to be in upper case and
  * with its characters which are invalid in javascript variable names replaced
  * with an underscore.
  * </p>
@@ -69,12 +69,12 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
+    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix)
             throws StreamException {
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
-        final String jsName = createJsName(groupId);
+        final String jsName = createJsName(heapId);
         jsBuilder.append("if (!");
         jsBuilder.append(jsName);
         jsBuilder.append(") {");
@@ -105,7 +105,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
 
         // Make a nut and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayNut(bytes, "sprites" + spriteResourceNameSuffix + ".js", NutType.JAVASCRIPT);
+        return new ByteArrayNut(bytes, "sprites" + nutNameSuffix + ".js", NutType.JAVASCRIPT);
     }
 
     /**

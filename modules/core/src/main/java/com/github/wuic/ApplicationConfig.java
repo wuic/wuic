@@ -51,11 +51,11 @@ public interface ApplicationConfig {
 
     /**
      * <p>
-     * The base path when accessing resources.
+     * The base path when accessing nuts.
      * </p>
      *
      * <p>
-     * For the Google Storage path for search resources without bucket name, example :
+     * For the Google Storage path for search nuts without bucket name, example :
      * empty : search in root and sub directories
      * wuic : search in "wuic/*"
      * wuic/test : search in "wuic/test/*"
@@ -69,7 +69,7 @@ public interface ApplicationConfig {
     String BASE_PATH_AS_SYS_PROP = "c.g.wuic.dao.basePathAsSystemProperty";
 
     /**
-     * Polling interleave for resources refresher.
+     * Polling interleave for nuts refresher.
      */
     String POLLING_INTERLEAVE = "c.g.wuic.dao.pollingInterleave";
 
@@ -79,17 +79,17 @@ public interface ApplicationConfig {
     String REGEX = "c.g.wuic.dao.regex";
 
     /**
-     * Proxies that can be use to access the resources.
+     * Proxies that can be use to access the nuts.
      */
     String PROXY_URIS = "c.g.wuic.dao.proxyUris";
 
     /**
-     * The server's domain when accessing resources remotely.
+     * The server's domain when accessing nuts remotely.
      */
     String SERVER_DOMAIN = "c.g.wuic.dao.serverDomain";
 
     /**
-     * The server's port when accessing resources remotely.
+     * The server's port when accessing nuts remotely.
      */
     String SERVER_PORT = "c.g.wuic.dao.serverPort";
 
@@ -105,7 +105,7 @@ public interface ApplicationConfig {
 
     /**
      * <p>
-     * The login to use when accessing resources protected by authentication.
+     * The login to use when accessing nuts protected by authentication.
      * </p>
      *
      * <p>
@@ -120,7 +120,7 @@ public interface ApplicationConfig {
 
     /**
      * <p>
-     * The password to use when accessing resources protected by authentication.
+     * The password to use when accessing nuts protected by authentication.
      * </p>
      *
      * <p>
@@ -213,7 +213,7 @@ public interface ApplicationConfig {
 
     /**
      * <p>
-     * Indicates if the engine should be verbose when processing resources.
+     * Indicates if the engine should be verbose when processing nuts.
      * </p>
      */
     String VERBOSE = "c.g.wuic.engine.verbose";

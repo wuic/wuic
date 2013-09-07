@@ -42,28 +42,28 @@ import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * Thrown when a class is not properly defined for a nut factory builder in wuic.xml path.
+ * Thrown when an ID is not properly defined for a nut DAO builder in wuic.xml path.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.3.4
  */
-public class WuicXmlNoResourceFactoryBuilderClassAttributeException extends WuicXmlNoClassAttributeException {
+public class WuicXmlNoNutDaoBuilderIdAttributeException extends WuicXmlNoIdAttributeException {
 
     /**
      * <p>
      * Builds a new exception.
      * </p>
      */
-    public WuicXmlNoResourceFactoryBuilderClassAttributeException() {
-        super("nut-factory-builder");
+    public WuicXmlNoNutDaoBuilderIdAttributeException() {
+        super("nut-dao-builder");
     }
 
     /**
      * {@inheritDoc}
      */
     public long getErrorCode() {
-        return ErrorCode.XML_NO_RESOURCE_FACTORY_BUILDER_CLASS;
+        return ErrorCode.XML_NO_NUT_DAO_BUILDER_ID;
     }
 }

@@ -49,7 +49,7 @@ import com.github.wuic.exception.ErrorCode;
  * @version 1.0
  * @since 0.3.4
  */
-public class WuicXmlBadReferenceToFactoryBuilderException extends WuicXmlBadReferenceException {
+public class WuicXmlBadReferenceToDaoBuilderException extends WuicXmlBadReferenceException {
 
     /**
      * <p>
@@ -59,14 +59,14 @@ public class WuicXmlBadReferenceToFactoryBuilderException extends WuicXmlBadRefe
      * @param attr the attribute name
      * @param element the element name
      */
-    public WuicXmlBadReferenceToFactoryBuilderException(final String attr, final String element) {
-        super(element, attr, "wuic-factory-builder", "id");
+    public WuicXmlBadReferenceToDaoBuilderException(final String attr, final String element) {
+        super(element, attr, "dao-builder-id", "id");
     }
 
     /**
      * {@inheritDoc}
      */
     public long getErrorCode() {
-        return ErrorCode.XML_BAD_REF_TO_FACTORY_BUILDER;
+        return ErrorCode.XML_BAD_REF_TO_DAO_BUILDER;
     }
 }

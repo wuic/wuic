@@ -44,7 +44,7 @@ import java.util.Map;
 
 /**
  * <p>
- * This interface abstracts the way you can read and eventually save resources through a particular protocol.
+ * This interface abstracts the way you can read and eventually save nuts through a particular protocol.
  * </p>
  *
  * @author Guillaume DROUET
@@ -88,10 +88,10 @@ public interface NutDao {
      * be reused until all other proxies have been used too.
      * </p>
      *
-     * @param resource the nut
+     * @param nut the nut
      * @return the proxy URI, {@code null} if not proxy is set
      */
-    String proxyUriFor(Nut resource);
+    String proxyUriFor(Nut nut);
 
     /**
      * <p>
@@ -99,10 +99,9 @@ public interface NutDao {
      * only nut access.
      * </p>
      *
-     * @param resource the nut to save
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while saving nut
+     * @param nut the nut to save
      */
-    void save(Nut resource);
+    void save(Nut nut);
 
     /**
      * <p>

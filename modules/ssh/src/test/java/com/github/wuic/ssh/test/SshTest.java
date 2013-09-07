@@ -132,7 +132,7 @@ public class SshTest {
         // Run server
         sshdServer.start();
 
-        // Copy resources
+        // Copy nuts
         com.github.wuic.util.IOUtils.copyStream(new FileInputStream(new File(SshTest.class.getResource("/chosen.css").getFile())),
                 new FileOutputStream(File.createTempFile("junit-chosen", ".css")));
         com.github.wuic.util.IOUtils.copyStream(new FileInputStream(new File(SshTest.class.getResource("/style.css").getFile())),
@@ -153,7 +153,7 @@ public class SshTest {
 
     /**
      * <p>
-     * Tests the SSH access resources with an embedded server.
+     * Tests the SSH access nuts with an embedded server.
      * </p>
      *
      * @throws JSchException if SSH session could not be opened

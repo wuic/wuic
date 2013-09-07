@@ -66,7 +66,7 @@ public class PollingOperationNotSupportedException extends WuicRuntimeException 
      * @param origin the origin explained why operation is not supported
      */
     public PollingOperationNotSupportedException(final Class<? extends NutDao> clazz, final Exception origin) {
-        super(String.format("%s does not supports save(Nut) method. It can only read resources!", clazz.getName()),
+        super(String.format("%s does not supports save(Nut) method. It can only read nuts!", clazz.getName()),
                 new UnsupportedOperationException(origin));
     }
 

@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * <p>
  * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
- * path when retrieved resources, a set of proxies URIs and a polling feature.
+ * path when retrieved nuts, a set of proxies URIs and a polling feature.
  * </p>
  *
  * <p>
@@ -119,15 +119,15 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         // Keep in this set all listeners that told that they don't want to be notified until the end of the operation
         final Set<NutDaoListener> exclusions = new HashSet<NutDaoListener>();
 
-        synchronized (getResourceObservers()) {
+        synchronized (getNutObservers()) {
 
             // Poll each nut's path
-            for (final Map.Entry<String, ? extends Polling> entry : getResourceObservers().entrySet()) {
+            for (final Map.Entry<String, ? extends Polling> entry : getNutObservers().entrySet()) {
                 final String nut = entry.getKey();
                 final Polling pollingData = entry.getValue();
 
                 try {
-                    final Set<String> paths = new HashSet<String>(listResourcesPaths(pollingData.getPattern()));
+                    final Set<String> paths = new HashSet<String>(listNutsPaths(pollingData.getPattern()));
                     Map<String, Long> timestamps = null;
 
                     // Notifies listeners
@@ -183,7 +183,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final int index = p.lastIndexOf('.');
 
             if (index < 0) {
-                log.warn(String.format("'%s' does not contains any extension, ignoring resource", p));
+                log.warn(String.format("'%s' does not contains any extension, ignoring nut", p));
                 continue;
             }
 
@@ -202,7 +202,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public String proxyUriFor(final Nut resource) {
+    public String proxyUriFor(final Nut nut) {
         if (proxyUris != null && proxyUris.length > 0) {
 
             synchronized (nextProxyIndex) {
@@ -212,7 +212,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 }
 
                 // Do the round-robin by incrementing nextProxyIndex counter
-                return IOUtils.mergePath(String.valueOf(proxyUris[nextProxyIndex.getAndIncrement()]), resource.getName());
+                return IOUtils.mergePath(String.valueOf(proxyUris[nextProxyIndex.getAndIncrement()]), nut.getName());
             }
         } else {
             return null;
@@ -223,7 +223,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut resource) {
+    public void save(final Nut nut) {
         throw new SaveOperationNotSupportedException(this.getClass());
     }
 
@@ -237,8 +237,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
-     * Returns a list of paths depending of the behavior of the factory with the given path.
-     * In fact, the factory could consider the path as a regex, a directory, etc.
+     * Returns a list of paths depending of the behavior of the dao with the given path.
+     * In fact, the dao could consider the path as a regex, a directory, etc.
      * </p>
      *
      * @param pathName the path access
@@ -246,7 +246,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @throws StreamException if an I/O error occurs when creating the nut
      */
     public List<String> computeRealPaths(final String pathName) throws StreamException {
-        final List<String> paths = listResourcesPaths(pathName);
+        final List<String> paths = listNutsPaths(pathName);
         final List<String> retval = new ArrayList<String>(paths.size());
 
         for (String p : paths) {
@@ -269,13 +269,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
-     * Lists all the resources path matching the given pattern.
+     * Lists all the nuts path matching the given pattern.
      * </p>
      *
      * @param pattern the pattern
-     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading resources
+     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading nuts
      */
-    protected abstract List<String> listResourcesPaths(String pattern) throws StreamException;
+    protected abstract List<String> listNutsPaths(String pattern) throws StreamException;
 
     /**
      * <p>

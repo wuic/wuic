@@ -49,7 +49,7 @@ package com.github.wuic.engine;
  * behavior :
  * <ul>
  *     <li>See if result is already cached or not.</li>
- *     <li>Inspects all resources and eventually transform them</li>
+ *     <li>Inspects all nuts and eventually transform them</li>
  *     <li>Perform text compression on text files like scripts</li>
  *     <li>Perform aggregation</li>
  *     <li>Compress bytes</li>

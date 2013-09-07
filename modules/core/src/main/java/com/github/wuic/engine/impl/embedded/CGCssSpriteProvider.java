@@ -60,7 +60,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String groupId, final String spriteResourceNameSuffix)
+    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix)
             throws StreamException {
         final StringBuilder cssBuilder = new StringBuilder();
 
@@ -89,6 +89,6 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
         }
 
         // Make a nut and return it
-        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + spriteResourceNameSuffix + ".css", NutType.CSS);
+        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + nutNameSuffix + ".css", NutType.CSS);
     }
 }

@@ -92,11 +92,11 @@ public class CGTextAggregatorEngine extends Engine {
 
         // Do nothing if the configuration says that no aggregation should be done
         if (!works()) {
-            return request.getResources();
+            return request.getNuts();
         }
         
-        // In memory buffer for the aggregated resources
-        final String fileName = "aggregate" + request.getResources().get(0).getNutType().getExtensions()[0];
+        // In memory buffer for the aggregated nuts
+        final String nutName = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
         final ByteArrayOutputStream target = new ByteArrayOutputStream();
         
         // Append each path
@@ -105,15 +105,15 @@ public class CGTextAggregatorEngine extends Engine {
         final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
 
         final List<Nut> retval = new ArrayList<Nut>();
-        final List<Nut> referencedResources = new ArrayList<Nut>();
+        final List<Nut> referencedNuts = new ArrayList<Nut>();
 
         // Aggregate each nut
-        for (Nut resource : request.getResources()) {
-            // Resource must be aggregatable
-            if (resource.isAggregatable()) {
+        for (Nut nut : request.getNuts()) {
+            // Nut must be aggregatable
+            if (nut.isAggregatable()) {
                 try {
-                    nutType = resource.getNutType();
-                    is = resource.openStream();
+                    nutType = nut.getNutType();
+                    is = nut.openStream();
                     IOUtils.copyStream(is, target);
 
                     // Begin content path writing on a new line when no compression is configured
@@ -126,24 +126,24 @@ public class CGTextAggregatorEngine extends Engine {
                         }
                     }
 
-                    if (resource.getReferencedNuts() != null) {
-                        referencedResources.addAll(resource.getReferencedNuts());
+                    if (nut.getReferencedNuts() != null) {
+                        referencedNuts.addAll(nut.getReferencedNuts());
                     }
                 } finally {
                     IOUtils.close(is);
                 }
             } else {
-                retval.add(resource);
+                retval.add(nut);
             }
         }
 
-        // Create the a nut containing all the aggregated resources
-        final Nut aggregate = new ByteArrayNut(target.toByteArray(), fileName, nutType);
+        // Create the a nut containing all the aggregated nuts
+        final Nut aggregate = new ByteArrayNut(target.toByteArray(), nutName, nutType);
 
-        // Eventually add some extracted referenced resources
-        if (!referencedResources.isEmpty()) {
-            for (Nut ref : referencedResources) {
-                aggregate.addReferencedResource(ref);
+        // Eventually add some extracted referenced nuts
+        if (!referencedNuts.isEmpty()) {
+            for (Nut ref : referencedNuts) {
+                aggregate.addReferencedNut(ref);
             }
         }
 

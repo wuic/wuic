@@ -58,12 +58,12 @@ public abstract class AbstractNut implements Nut {
     /**
      * The path type.
      */
-    private NutType fileType;
+    private NutType nutType;
 
     /**
      * The path name.
      */
-    private String fileName;
+    private String nutName;
 
     /**
      * Text compressible or not.
@@ -86,9 +86,9 @@ public abstract class AbstractNut implements Nut {
     private Boolean aggregatable;
 
     /**
-     * Returns all the referenced resources.
+     * Returns all the referenced nuts.
      */
-    private List<Nut> referencedResources;
+    private List<Nut> referencedNuts;
 
     /**
      * <p>
@@ -111,13 +111,13 @@ public abstract class AbstractNut implements Nut {
             throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null name"));
         }
 
-        fileType = ft;
-        fileName = name;
+        nutType = ft;
+        nutName = name;
         binaryCompressible = bc;
         textCompressible = tc;
         cacheable = c;
         aggregatable = a;
-        referencedResources = null;
+        referencedNuts = null;
     }
 
     /**
@@ -125,7 +125,7 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public NutType getNutType() {
-        return fileType;
+        return nutType;
     }
 
     /**
@@ -133,7 +133,7 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public String getName() {
-        return fileName;
+        return nutName;
     }
 
     /**
@@ -204,17 +204,17 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public void addReferencedResource(final Nut referenced) {
-        if (referencedResources == null) {
-            referencedResources = new ArrayList<Nut>();
+    public void addReferencedNut(final Nut referenced) {
+        if (referencedNuts == null) {
+            referencedNuts = new ArrayList<Nut>();
         }
 
-        // Do not allow duplicate resources (many resources with same name)
-        if (referencedResources.contains(referenced)) {
-            referencedResources.remove(referenced);
+        // Do not allow duplicate nuts (many nuts with same name)
+        if (referencedNuts.contains(referenced)) {
+            referencedNuts.remove(referenced);
         }
 
-        referencedResources.add(referenced);
+        referencedNuts.add(referenced);
     }
 
     /**
@@ -222,14 +222,14 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public List<Nut> getReferencedNuts() {
-        return referencedResources;
+        return referencedNuts;
     }
 
     /**
      * {@inheritDoc}
      */
     public String toString() {
-        return getClass().getSimpleName() + "[" + fileName + "]";
+        return getClass().getSimpleName() + "[" + nutName + "]";
     }
 
     /**
@@ -237,7 +237,7 @@ public abstract class AbstractNut implements Nut {
      */
     public boolean equals(final Object other) {
         if (other instanceof AbstractNut) {
-            return ((AbstractNut) other).fileName.equals(fileName);
+            return ((AbstractNut) other).nutName.equals(nutName);
         } else {
             return Boolean.FALSE;
         }
@@ -247,6 +247,6 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     public int hashCode() {
-        return fileName.hashCode();
+        return nutName.hashCode();
     }
 }

@@ -169,7 +169,7 @@ public class ContextBuilderTest {
         when(mockEngine.parse(any(EngineRequest.class))).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return ((EngineRequest) invocationOnMock.getArguments()[0]).getResources();
+                return ((EngineRequest) invocationOnMock.getArguments()[0]).getNuts();
             }
         });
 

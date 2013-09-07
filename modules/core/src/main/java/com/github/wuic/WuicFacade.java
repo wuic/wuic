@@ -71,6 +71,11 @@ public final class WuicFacade {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
+     * The context builder.
+     */
+    private ContextBuilder builder;
+
+    /**
      * Context.
      */
     private Context context;
@@ -102,7 +107,8 @@ public final class WuicFacade {
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String wuicXmlPath, final String cp) throws WuicException {
-        final ContextBuilder builder = new ContextBuilder();
+        builder = new ContextBuilder();
+
         try {
             // TODO : create flag to not use default configuration
             new NutDaoBuilderFactory().newContextBuilderConfigurator().configure(builder);
@@ -121,7 +127,7 @@ public final class WuicFacade {
      * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
      * </p>
      *
-     * @param contextPath the context where the resources will be exposed
+     * @param contextPath the context where the nuts will be exposed
      * @return the unique instance
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
@@ -136,7 +142,7 @@ public final class WuicFacade {
      * </p>
      *
      * @param wuicXmlPath the specific wuic.xml path in classpath (could be {@code null}
-     * @param contextPath the context where the resources will be exposed
+     * @param contextPath the context where the nuts will be exposed
      * @return the unique instance
      *
      */
@@ -150,22 +156,27 @@ public final class WuicFacade {
     
     /**
      * <p>
-     * Gets the files representing group identified by the given ID.
+     * Gets the nuts processed by the workflow identified by the given ID.
      * </p>
      * 
-     * @param id the group ID
-     * @return the files
-     * @throws WuicException if the 'wuic.xml' path is not well configured
+     * @param id the workflow ID
+     * @return the processed nuts
+     * @throws WuicException if the context can't be processed
      */
-    public synchronized List<Nut> getGroup(final String id) throws WuicException {
+    public synchronized List<Nut> runWorkflow(final String id) throws WuicException {
         final long start = System.currentTimeMillis();
 
-        log.info("Getting files for group : {}", id);
+        log.info("Getting nuts for workflow : {}", id);
 
-        // Parse the files
+        // Update context if necessary
+        if (!context.isUpToDate()) {
+            context = builder.build();
+        }
+
+        // Parse the nuts
         final List<Nut> retval = context.process(id, contextPath);
 
-        log.info("Group retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }

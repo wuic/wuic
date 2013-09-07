@@ -116,7 +116,7 @@ public class GStorageNutDao extends AbstractNutDao {
      * @param path the root path
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxyUris the proxies URIs in front of the resource
+     * @param proxyUris the proxies URIs in front of the nut
      * @param keyFile the private key path location
      */
     public GStorageNutDao(final String path,
@@ -186,7 +186,7 @@ public class GStorageNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listResourcesPaths(final String pattern) throws StreamException {
+    public List<String> listNutsPaths(final String pattern) throws StreamException {
 
         try {
             // Check if we are ready to read on Google Storage
@@ -219,7 +219,7 @@ public class GStorageNutDao extends AbstractNutDao {
 
         final List<String> retval = new ArrayList<String>();
         for (final StorageObject storageObject : objectListing.getItems()) {
-            // Ignore directories, all resources are in the listing
+            // Ignore directories, all nuts are in the listing
             if (!storageObject.getName().endsWith("/")) {
                 final Matcher matcher = pattern.matcher(storageObject.getName());
 

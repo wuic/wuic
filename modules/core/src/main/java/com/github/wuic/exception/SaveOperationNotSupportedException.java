@@ -65,7 +65,7 @@ public class SaveOperationNotSupportedException extends WuicRuntimeException imp
      * @param clazz the DAO which does not supports the save() operation
      */
     public SaveOperationNotSupportedException(final Class<? extends NutDao> clazz) {
-        super(String.format("%s does not supports save(Nut) method. It can only read resources!", clazz.getName()),
+        super(String.format("%s does not supports save(Nut) method. It can only read nuts!", clazz.getName()),
                 new UnsupportedOperationException());
     }
 
