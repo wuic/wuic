@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,68 +36,41 @@
  */
 
 
-package com.github.wuic.engine.impl.ehcache;
+package com.github.wuic.engine.core;
 
-import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
-import com.github.wuic.nut.Nut;
-
-import java.util.List;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.Element;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
+import com.github.wuic.engine.setter.CachePropertySetter;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
  * <p>
- * This {@link com.github.wuic.engine.Engine engine} reads from a cache provided by EhCache the nuts associated to a
- * workflow to be processed.
+ * This builder creates an engine that caches with a memory map.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.7
- * @since 0.1.1
+ * @version 1.0
+ * @since 0.4.0
  */
-public class EhCacheEngine extends AbstractCacheEngine {
-
-    /**
-     * The wrapped cache.
-     */
-    private Cache ehCache;
+public class MemoryMapCacheEngineBuilder extends AbstractEngineBuilder {
 
     /**
      * <p>
-     * Builds a new engine.
+     * Builds a new instance.
      * </p>
-     *
-     * @param work if cache should be activated or not
-     * @param cache the cache to be wrapped
      */
-    public EhCacheEngine(final Boolean work, final Cache cache) {
-        super(work);
-        ehCache = cache;
+    public MemoryMapCacheEngineBuilder() {
+        super();
+        addPropertySetter(new CachePropertySetter(this));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        ehCache.put(new Element(workflowId, nuts));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeFromCache(final String workflowId) {
-        ehCache.remove(workflowId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        final Element el = ehCache.get(workflowId);
-        return el == null ? null : (List<Nut>) el.getObjectValue();
+    protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
+        return new MemoryMapCacheEngine((Boolean) property(ApplicationConfig.CACHE));
     }
 }

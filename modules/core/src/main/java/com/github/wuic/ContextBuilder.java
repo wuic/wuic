@@ -39,10 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.core.CssInspectorEngineBuilder;
-import com.github.wuic.engine.core.ImageAggregatorEngineBuilder;
-import com.github.wuic.engine.core.ImageCompressorEngineBuilder;
-import com.github.wuic.engine.core.TextAggregatorEngineBuilder;
+import com.github.wuic.engine.core.*;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -666,10 +663,11 @@ public class ContextBuilder extends Observable {
 
         // Include default engines
         if (includeDefaultEngines) {
-            chains.put(NutType.CSS, Engine.chain(new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
-            chains.put(NutType.PNG, Engine.chain(new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
-            chains.put(NutType.JAVASCRIPT, Engine.chain(new TextAggregatorEngineBuilder().build()));
-            // TODO : when created, include embedded cache, JS minification, CSS minification and GZIP compressor
+            final EngineBuilder cache = new MemoryMapCacheEngineBuilder();
+            chains.put(NutType.CSS, Engine.chain(cache.build(), new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
+            chains.put(NutType.PNG, Engine.chain(cache.build(), new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
+            chains.put(NutType.JAVASCRIPT, Engine.chain(cache.build(), new TextAggregatorEngineBuilder().build()));
+            // TODO : when created, include GZIP compressor
         }
 
         return chains;

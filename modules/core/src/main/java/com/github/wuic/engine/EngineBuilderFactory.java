@@ -64,6 +64,7 @@ public final class EngineBuilderFactory extends AbstractBuilderFactory<EngineBui
      */
     private static final String[] LOOKUP_CLASSES = {
             EhCacheEngineBuilder.class.getName(),
+            MemoryMapCacheEngineBuilder.class.getName(),
             YuiCompressorJavascriptEngineBuilder.class.getName(),
             YuiCompressorCssEngineBuilder.class.getName(),
             CssInspectorEngineBuilder.class.getName(),

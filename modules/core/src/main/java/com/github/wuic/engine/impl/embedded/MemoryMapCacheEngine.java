@@ -36,32 +36,30 @@
  */
 
 
-package com.github.wuic.engine.impl.ehcache;
+package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
 import com.github.wuic.nut.Nut;
 
 import java.util.List;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.Element;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <p>
- * This {@link com.github.wuic.engine.Engine engine} reads from a cache provided by EhCache the nuts associated to a
- * workflow to be processed.
+ * This {@link com.github.wuic.engine.Engine engine} reads from a {@link java.util.Map} kept in memory
+ * the nuts associated to a workflow to be processed.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
- * @version 1.7
- * @since 0.1.1
+ * @version 1.0
+ * @since 0.4.0
  */
-public class EhCacheEngine extends AbstractCacheEngine {
+public class MemoryMapCacheEngine extends AbstractCacheEngine {
 
     /**
-     * The wrapped cache.
+     * Memory map.
      */
-    private Cache ehCache;
+    private Map<String, List<Nut>> cache;
 
     /**
      * <p>
@@ -69,11 +67,10 @@ public class EhCacheEngine extends AbstractCacheEngine {
      * </p>
      *
      * @param work if cache should be activated or not
-     * @param cache the cache to be wrapped
      */
-    public EhCacheEngine(final Boolean work, final Cache cache) {
+    public MemoryMapCacheEngine(final Boolean work) {
         super(work);
-        ehCache = cache;
+        cache = new HashMap<String, List<Nut>>();
     }
 
     /**
@@ -81,7 +78,7 @@ public class EhCacheEngine extends AbstractCacheEngine {
      */
     @Override
     public void putToCache(final String workflowId, final List<Nut> nuts) {
-        ehCache.put(new Element(workflowId, nuts));
+        cache.put(workflowId, nuts);
     }
 
     /**
@@ -89,7 +86,7 @@ public class EhCacheEngine extends AbstractCacheEngine {
      */
     @Override
     public void removeFromCache(final String workflowId) {
-        ehCache.remove(workflowId);
+        cache.remove(workflowId);
     }
 
     /**
@@ -97,7 +94,6 @@ public class EhCacheEngine extends AbstractCacheEngine {
      */
     @Override
     public List<Nut> getFromCache(final String workflowId) {
-        final Element el = ehCache.get(workflowId);
-        return el == null ? null : (List<Nut>) el.getObjectValue();
+        return cache.get(workflowId);
     }
 }
