@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="defaultDao" type="MockDaoBuilder">
+            <properties>
+                <property key="c.g.dao.foo">dao</property>
+            </properties>
+        </nut-dao-builder>
+    </nut-dao-builders>
+
+    <heaps>
+        <heap id="simple" dao-builder-id="defaultDao">
+            <nut-path>css/simple.css</nut-path>
+        </heap>
+
+        <heap id="nested" dao-builder-id="defaultDao">
+            <heap id="nested-nested" dao-builder-id="defaultDao">
+                <nut-path>css/nested.css</nut-path>
+            </heap>
+        </heap>
+
+        <heap id="referenced" dao-builder-id="defaultDao">
+            <heap-id>simple</heap-id>
+            <heap-id>nested-nested</heap-id>
+        </heap>
+
+        <heap id="both" dao-builder-id="defaultDao">
+            <heap-id>simple</heap-id>
+            <heap id="both-nested" dao-builder-id="defaultDao">
+                <nut-path>css/both-nested.css</nut-path>
+            </heap>
+        </heap>
+
+        <heap id="full" dao-builder-id="defaultDao">
+            <nut-path>css/full.css</nut-path>
+            <heap-id>simple</heap-id>
+            <heap id="full-nested" dao-builder-id="defaultDao">
+                <nut-path>css/full-nested.css</nut-path>
+            </heap>
+        </heap>
+    </heaps>
+</wuic>

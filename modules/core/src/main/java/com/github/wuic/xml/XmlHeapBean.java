@@ -72,6 +72,19 @@ public class XmlHeapBean {
     private List<String> nutPaths;
 
     /**
+     * Composition from other nested heaps.
+     */
+    @XmlElement(name = "heap")
+    private List<XmlHeapBean> nestedComposition;
+
+
+    /**
+     * Composition from other referenced heaps.
+     */
+    @XmlElement(name = "heap-id")
+    private List<String> referencedComposition;
+
+    /**
      * <p>
      * Gets the paths.
      * </p>
@@ -102,5 +115,27 @@ public class XmlHeapBean {
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * <p>
+     * Gets nested heaps.
+     * </p>
+     *
+     * @return the heaps
+     */
+    public List<XmlHeapBean> getNestedComposition() {
+        return nestedComposition;
+    }
+
+    /**
+     * <p>
+     * Gets referenced heaps.
+     * </p>
+     *
+     * @return the heaps
+     */
+    public List<String> getReferencedComposition() {
+        return referencedComposition;
     }
 }

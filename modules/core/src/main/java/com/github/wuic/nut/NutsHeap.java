@@ -67,7 +67,7 @@ import java.util.*;
  * @version 1.4
  * @since 0.1.0
  */
-public class NutsHeap implements NutDaoListener {
+public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * Message's template displayed when no nut has been found.
@@ -110,9 +110,14 @@ public class NutsHeap implements NutDaoListener {
     private Set<HeapListener> listeners;
 
     /**
-     * The ID identifying this group.
+     * The ID identifying this heap.
      */
     private String id;
+
+    /**
+     * Heap composition.
+     */
+    private NutsHeap[] composition;
 
     /**
      * <p>
@@ -120,19 +125,26 @@ public class NutsHeap implements NutDaoListener {
      * extension that matches the {@link com.github.wuic.NutType}. If it is not the case, then
      * an {@link BadArgumentException} will be thrown.
      * </p>
+     *
+     * <p>
+     * Some additional heaps could be specified to make a composition.
+     * </p>
      * 
      * @param pathsList the paths
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
+     * @param heaps some other heaps that compose this heap
      * @throws StreamException if the HEAP could not be created
      */
     public NutsHeap(final List<String> pathsList,
                     final NutDao theNutDao,
-                    final String heapId) throws StreamException {
+                    final String heapId,
+                    final NutsHeap ... heaps) throws StreamException {
         this.id = heapId;
         this.paths = pathsList;
         this.nutDao = theNutDao;
         this.listeners = new HashSet<HeapListener>();
+        this.composition = heaps;
         checkFiles();
     }
 
@@ -150,7 +162,7 @@ public class NutsHeap implements NutDaoListener {
 
     /**
      * <p>
-     * Checks that the {@link com.github.wuic.NutType} and the paths list of this group are not
+     * Checks that the {@link com.github.wuic.NutType} and the paths list of this heap are not
      * null. If they are, this methods will throw an {@link BadArgumentException}.
      * This exception could also be thrown if one path of the list does have a name
      * which ends with one of the possible {@link com.github.wuic.NutType#extensions extensions}.
@@ -167,26 +179,42 @@ public class NutsHeap implements NutDaoListener {
         }
 
         // Non null assertion
-        if (paths == null) {
-            throw new BadArgumentException(new IllegalArgumentException("A group must have a non-null paths list"));
-        // Do not allow empty groups
-        } else if (nuts.isEmpty()) {
+        if (paths == null && composition.length == 0) {
+            throw new BadArgumentException(new IllegalArgumentException("A heap must have a non-null paths list and a non-empty composition"));
+        // Do not allow empty heaps
+        } else if (nuts.isEmpty() && composition.length == 0) {
             final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
             throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, nutDao.toString())));
         }
 
         // Check the extension of each path : all of them must share the same nut type
-        for (final Nut res : nuts.keySet()) {
+        checkExtension(nuts.keySet());
 
+        // Also check other heaps and observe them
+        for (final NutsHeap heap : composition) {
+            checkExtension(heap.nuts.keySet());
+            heap.addObserver(this);
+        }
+    }
+
+    /**
+     * <p>
+     * Checks the extension of the given set. Makes sure that all nuts share the same type.
+     * </p>
+     *
+     * @param toCheck set to check.
+     */
+    private void checkExtension(final Set<Nut> toCheck) {
+        for (final Nut res : toCheck) {
             // Extract name to be test
-            final String file = res.getName();
+            final String nut = res.getName();
 
             Boolean valid = Boolean.FALSE;
 
             // Apply test for each possible extension
             for (final NutType nt : NutType.values()) {
-                for (String extension : nt.getExtensions()) {
-                    if (file.endsWith(extension)) {
+                for (final String extension : nt.getExtensions()) {
+                    if (nut.endsWith(extension)) {
                         if (nutType == null) {
                             nutType = nt;
                         }
@@ -195,10 +223,10 @@ public class NutsHeap implements NutDaoListener {
                     }
                 }
             }
-            
+
             // The path has not one of the possible extension : throw an IAE
             if (!valid) {
-                final String message = String.format(BAD_EXTENSIONS_MESSAGE, file, nutType);
+                final String message = String.format(BAD_EXTENSIONS_MESSAGE, nut, nutType);
                 throw new BadArgumentException(new IllegalArgumentException(message));
             }
         }
@@ -245,7 +273,13 @@ public class NutsHeap implements NutDaoListener {
      * @return the nuts
      */
     public Set<Nut> getNuts() {
-        return nuts.keySet();
+        final Set<Nut> retval = new HashSet<Nut>(nuts.keySet());
+
+        for (final NutsHeap c : composition) {
+            retval.addAll(c.getNuts());
+        }
+
+        return retval;
     }
 
     /**
@@ -287,18 +321,37 @@ public class NutsHeap implements NutDaoListener {
      * @return {@link false} for convenient usage in caller
      */
     private boolean notifyListeners() {
-        try {
+        return notifyListeners(this);
+    }
 
+    /**
+     * <p>
+     * Notifies the listeners that this heap has detected an update in one or many nuts.
+     * </p>
+     *
+     * @param observable the heap where change has been detected
+     * @return {@link false} for convenient usage in caller
+     */
+    private boolean notifyListeners(final NutsHeap observable) {
+        try {
             // Will update the nuts
             checkFiles();
     
-            for (HeapListener l : listeners) {
-                l.nutUpdated(this);
+            for (final HeapListener l : listeners) {
+                l.nutUpdated(observable);
             }
         } catch (StreamException se) {
             log.error("Unable to update nuts in the heap", se);
         }
 
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void nutUpdated(final NutsHeap heap) {
+        notifyListeners(heap);
     }
 }

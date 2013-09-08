@@ -86,11 +86,7 @@ public final class CollectionUtils {
      */
     public static <T> List<T> newList(final T ... elements) {
         final List<T> retval = new ArrayList<T>(elements.length);
-
-        for (final T element : elements) {
-            retval.add(element);
-        }
-
+        Collections.addAll(retval, elements);
         return retval;
     }
 

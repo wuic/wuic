@@ -112,7 +112,29 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
 
             // The heaps
             for (XmlHeapBean heap : xml.getHeaps()) {
-                ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), heap.getNutPaths().toArray(new String[heap.getNutPaths().size()]));
+                final String[] paths = heap.getNutPaths() == null ? new String[0] : heap.getNutPaths().toArray(new String[heap.getNutPaths().size()]);
+                final String[] nested = configureNestedHeap(ctxBuilder, heap);
+                final String[] referenced = getReferencedHeap(heap);
+
+                // Merges referenced and nested heap into one array to give to context builder
+                final String[] target = new String[(referenced == null ? 0 : referenced.length) + (nested == null ? 0 : nested.length)];
+
+                // Nested exist
+                if (nested != null) {
+                    System.arraycopy(nested, 0, target, 0, nested.length);
+                }
+
+                // Referenced exist
+                if (referenced != null) {
+                    System.arraycopy(referenced, 0, target, nested == null ? 0 : nested.length, referenced.length);
+                }
+
+                // The heap is not a composition
+                if (target.length == 0) {
+                    ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), paths);
+                } else {
+                    ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), target, paths);
+                }
             }
 
             // The engines
@@ -160,6 +182,56 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
 
     /**
      * <p>
+     * Gets nested declaration of a heap inside the given heap and configure the given context builder with them.
+     * </p>
+     *
+     * @param ctxBuilder the context builder
+     * @param heap the enclosing heap
+     * @return the extracted heaps
+     * @throws StreamException if an I/O error occurs
+     */
+    private String[] configureNestedHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws StreamException{
+        if (heap.getNestedComposition() == null || heap.getNestedComposition().isEmpty()) {
+            return null;
+        } else {
+            final String[] retval = new String[heap.getNestedComposition().size()];
+
+            for (int i = 0; i < heap.getNestedComposition().size(); i++) {
+                final XmlHeapBean nested = heap.getNestedComposition().get(i);
+                final String[] paths = nested.getNutPaths() == null ? new String[0] : nested.getNutPaths().toArray(new String[nested.getNutPaths().size()]);
+                ctxBuilder.heap(nested.getId(), nested.getDaoBuilderId(), paths);
+                retval[i] = nested.getId();
+            }
+
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Gets referenced declaration of a heap inside the given heap.
+     * </p>
+     *
+     * @param heap the enclosing heap
+     * @return the extracted heaps
+     * @throws StreamException if an I/O error occurs
+     */
+    private String[] getReferencedHeap(final XmlHeapBean heap) throws StreamException{
+        if (heap.getReferencedComposition() == null || heap.getReferencedComposition().isEmpty()) {
+            return null;
+        } else {
+            final String[] retval = new String[heap.getReferencedComposition().size()];
+
+            for (int i = 0; i < heap.getReferencedComposition().size(); i++) {
+                retval[i] = heap.getReferencedComposition().get(i);
+            }
+
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
      * Extracts from the given bean a {@link Map} of properties.
      * </p>
      *
@@ -190,8 +262,12 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
      * @param ctxBuilder the builder
      */
     private void configureWorkflow(final XmlWuicBean xml, final ContextBuilder ctxBuilder) {
+        if (xml.getWorkflows() == null) {
+            return;
+        }
+
         // Some additional DAOs where process result is saved
-        for (XmlWorkflowBean workflow : xml.getWorkflows()) {
+        for (final XmlWorkflowBean workflow : xml.getWorkflows()) {
 
             // DAO where we can store process result is optional
             if (workflow.getDaoBuilderIds() == null) {

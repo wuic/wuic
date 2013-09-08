@@ -351,17 +351,11 @@ public class ContextBuilder extends Observable {
         return this;
     }
 
+
     /**
      * <p>
-     * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A heap is always identified
-     * by an ID and is associated to {@link com.github.wuic.nut.NutDaoBuilder} to use to convert paths into
-     * {@link com.github.wuic.nut.Nut}. A list of paths needs also to be specified to know which underlying
-     * nuts compose the heap.
-     * </p>
-     *
-     * <p>
-     * If the {@link NutDaoBuilder} ID is not known, a {@link com.github.wuic.exception.wrapper.BadArgumentException}
-     * will be thrown.
+     * Creates a new heap as specified by {@link ContextBuilder#heap(String, String, String[], String...)} without any
+     * composition.
      * </p>
      *
      * @param id the heap ID
@@ -371,6 +365,34 @@ public class ContextBuilder extends Observable {
      * @throws StreamException if the HEAP could not be created
      */
     public ContextBuilder heap(final String id, final String ndbId, final String ... path) throws StreamException {
+        return heap(id, ndbId, null, path);
+    }
+
+    /**
+     * <p>
+     * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A heap is always identified
+     * by an ID and is associated to {@link com.github.wuic.nut.NutDaoBuilder} to use to convert paths into
+     * {@link com.github.wuic.nut.Nut}. A list of paths needs also to be specified to know which underlying
+     * nuts compose the heap.
+     * </p>
+     *
+     * <p>
+     * The heap could be composed in part or totally of other heaps.
+     * </p>
+     *
+     * <p>
+     * If the {@link NutDaoBuilder} ID is not known, a {@link com.github.wuic.exception.wrapper.BadArgumentException}
+     * will be thrown.
+     * </p>
+     *
+     * @param id the heap ID
+     * @param heapIds the composition of heaps
+     * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
+     * @param path the path
+     * @return this {@link ContextBuilder}
+     * @throws StreamException if the HEAP could not be created
+     */
+    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws StreamException {
         NutDao dao = null;
 
         // Will override existing element
@@ -390,7 +412,20 @@ public class ContextBuilder extends Observable {
         }
 
         final ContextSetting setting = getSetting();
-        setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id));
+
+        // Composition detected, collected nested and referenced heaps
+        if (heapIds != null && heapIds.length != 0) {
+            final List<NutsHeap> composition = new ArrayList<NutsHeap>();
+
+            for (final String regex : heapIds) {
+                composition.addAll(getNutsHeap(regex));
+            }
+
+            setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id, composition.toArray(new NutsHeap[composition.size()])));
+        } else {
+            setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id));
+        }
+
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);

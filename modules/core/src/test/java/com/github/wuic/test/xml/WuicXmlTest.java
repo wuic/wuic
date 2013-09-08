@@ -361,4 +361,32 @@ public class WuicXmlTest {
         // Remove test file
         tmp.delete();
     }
+
+
+    /**
+     * Tests a wuic.xml file referencing composed heaps.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void heapCompositionTest() throws Exception {
+
+        // Add custom DAO and engine required
+        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
+        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+
+        // Load configuration
+        final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-heap-composition.xml"));
+        final ContextBuilder builder = new ContextBuilder();
+        cfg.configure(builder);
+        final Context ctx = builder.build();
+
+        // Process implicit workflow with composed heaps
+        ctx.process("simple", "");
+        ctx.process("nested", "");
+        ctx.process("referenced", "");
+        ctx.process("both", "");
+        ctx.process("full", "");
+
+    }
 }

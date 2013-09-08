@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.NutType;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.*;
 import org.junit.Assert;
@@ -68,11 +69,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NutsHeapTest {
 
     /**
-     * Path returned by mock DAO.
-     */
-    private Map<String, Long> mockPaths = new HashMap<String, Long>();
-
-    /**
      * <p>
      * Mocked DAO.
      * </p>
@@ -82,6 +78,11 @@ public class NutsHeapTest {
      * @since 0.4.0
      */
     final class MockNutDao extends AbstractNutDao {
+
+        /**
+         * Path returned by mock DAO.
+         */
+        private Map<String, Long> mockPaths = new HashMap<String, Long>();
 
         /**
          * <p>
@@ -130,11 +131,16 @@ public class NutsHeapTest {
      */
     @Test
     public void notificationTest() throws Exception {
-        mockPaths.put("hey.js", 1L);
-        final NutsHeap heap = new NutsHeap(Arrays.asList(".*"), new MockNutDao(1), "");
+        final MockNutDao dao = new MockNutDao(1);
+        dao.mockPaths.put("hey.js", 1L);
+        final NutsHeap heap = new NutsHeap(Arrays.asList(".*"), dao, "");
         final AtomicInteger count = new AtomicInteger();
 
         heap.addObserver(new HeapListener() {
+
+            /**
+             * {@inheritDoc}
+             */
             @Override
             public void nutUpdated(final NutsHeap heap) {
                 count.incrementAndGet();
@@ -144,15 +150,103 @@ public class NutsHeapTest {
         Thread.sleep(1500L);
         Assert.assertEquals(count.intValue(), 0);
 
-        mockPaths.put("foo.js", 10L);
+        dao.mockPaths.put("foo.js", 10L);
         Thread.sleep(3000L);
         Assert.assertEquals(count.intValue(), 1);
 
         Thread.sleep(1000L);
         Assert.assertEquals(count.intValue(), 1);
 
-        mockPaths.put("foo.js", 20L);
+        dao.mockPaths.put("foo.js", 20L);
         Thread.sleep(1000L);
         Assert.assertEquals(count.intValue(), 2);
     }
+
+    /**
+     * <p>
+     * Test notification when changes are detected in heap composition.
+     * </p>
+     *
+     * @throws Exception is test fails
+     */
+    @Test
+    public void notificationByCompositionTest() throws Exception {
+        final MockNutDao firstDao = new MockNutDao(1);
+        firstDao.mockPaths.put("1.js", 1L);
+        final NutsHeap firstCompo = new NutsHeap(Arrays.asList(".*"), firstDao, "");
+        final MockNutDao secondDao = new MockNutDao(1);
+        secondDao.mockPaths.put("2.js", 1L);
+        final NutsHeap secondCompo = new NutsHeap(Arrays.asList(".*"), secondDao, "");
+
+        final MockNutDao dao = new MockNutDao(1);
+        dao.mockPaths.put("hey.js", 1L);
+
+        final NutsHeap heap = new NutsHeap(Arrays.asList(".*"), dao, "", firstCompo, secondCompo);
+        final AtomicInteger count = new AtomicInteger();
+
+        heap.addObserver(new HeapListener() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void nutUpdated(final NutsHeap heap) {
+                count.incrementAndGet();
+            }
+        });
+
+        Thread.sleep(1500L);
+        Assert.assertEquals(count.intValue(), 0);
+
+        firstDao.mockPaths.put("foo.js", 10L);
+        Thread.sleep(3000L);
+        Assert.assertEquals(count.intValue(), 1);
+
+        Thread.sleep(1000L);
+        Assert.assertEquals(count.intValue(), 1);
+
+        firstDao.mockPaths.put("foo.js", 20L);
+        Thread.sleep(1000L);
+        Assert.assertEquals(count.intValue(), 2);
+
+        secondDao.mockPaths.put("foo.js", 30L);
+        Thread.sleep(1000L);
+        Assert.assertEquals(count.intValue(), 3);
+    }
+
+    /**
+     * Test when bad extensions are defined.
+     *
+     * @throws StreamException if test fails
+     */
+    @Test
+    public void badExtensionTest() throws StreamException {
+        final MockNutDao dao = new MockNutDao(-1);
+        dao.mockPaths.put("hey.js", 1L);
+        dao.mockPaths.put("hey.css", 1L);
+
+        try {
+            new NutsHeap(Arrays.asList(""), dao, "");
+            Assert.fail();
+        } catch (BadArgumentException be) {
+            // normal behavior
+        }
+    }
+
+    /**
+     * Test when no paths are defined.
+     *
+     * @throws StreamException if test fails
+     */
+    @Test
+    public void noPathTest() throws StreamException {
+        try {
+            new NutsHeap(Arrays.asList(""), new MockNutDao(-1), "");
+            Assert.fail();
+        } catch (BadArgumentException be) {
+            // normal behavior
+        }
+    }
+
+
 }
