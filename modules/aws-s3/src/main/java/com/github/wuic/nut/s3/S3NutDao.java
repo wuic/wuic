@@ -95,6 +95,11 @@ public class S3NutDao extends AbstractNutDao {
     private String password;
 
     /**
+     * Use path as regex or not.
+     */
+    private Boolean regularExpression;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -106,6 +111,7 @@ public class S3NutDao extends AbstractNutDao {
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxyUris the proxies URIs in front of the nut
+     * @param regex consider path as regex or not
      */
     public S3NutDao(final String path,
                     final Boolean basePathAsSysProp,
@@ -113,11 +119,13 @@ public class S3NutDao extends AbstractNutDao {
                     final Integer pollingInterleave,
                     final String bucket,
                     final String accessKey,
-                    final String secretKey) {
+                    final String secretKey,
+                    final Boolean regex) {
         super(path, basePathAsSysProp, proxyUris, pollingInterleave);
         bucketName = bucket;
         login = accessKey;
         password = secretKey;
+        regularExpression = regex;
     }
 
     /**
@@ -147,7 +155,7 @@ public class S3NutDao extends AbstractNutDao {
      */
     @Override
     public List<String> listNutsPaths(final String pattern) throws StreamException {
-        return recursiveSearch(getBasePath(), Pattern.compile(pattern));
+        return recursiveSearch(getBasePath(), Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern)));
     }
 
     /**
