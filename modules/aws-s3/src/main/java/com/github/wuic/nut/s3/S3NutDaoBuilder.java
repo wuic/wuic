@@ -71,7 +71,8 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
                 new BasePathAsSysPropPropertySetter(this),
                 new LoginPropertySetter(this, null),
                 new PasswordPropertySetter(this, ""),
-                new BucketPropertySetter(this, ""));
+                new BucketPropertySetter(this, ""),
+                new RegexPropertySetter(this));
     }
 
     /**
@@ -79,7 +80,6 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
      */
     @Override
     public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
-        // TODO : add regex support
         return new S3NutDao(
                 (String) property(ApplicationConfig.BASE_PATH),
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
@@ -87,6 +87,7 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
                 (String) property(ApplicationConfig.CLOUD_BUCKET),
                 (String) property(ApplicationConfig.LOGIN),
-                (String) property(ApplicationConfig.PASSWORD));
+                (String) property(ApplicationConfig.PASSWORD),
+                (Boolean) property(ApplicationConfig.REGEX));
     }
 }
