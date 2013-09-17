@@ -173,7 +173,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @throws StreamException in I/O error case
      */
     private void checkFiles() throws StreamException {
-        this.nuts = new HashMap<Nut, Long>();
+        // Keep order with a linked data structure
+        this.nuts = new LinkedHashMap<Nut, Long>();
 
         for (final String path : paths) {
             nuts.putAll(nutDao.create(path));
@@ -275,7 +276,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @return the nuts
      */
     public Set<Nut> getNuts() {
-        final Set<Nut> retval = new HashSet<Nut>(nuts.keySet());
+        final Set<Nut> retval = new LinkedHashSet<Nut>(nuts.keySet());
 
         for (final NutsHeap c : composition) {
             retval.addAll(c.getNuts());
