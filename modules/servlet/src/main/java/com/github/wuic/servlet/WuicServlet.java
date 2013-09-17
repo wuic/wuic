@@ -185,7 +185,7 @@ public class WuicServlet extends HttpServlet {
             patternBuilder.append("/");
         }
 
-        // Followed by the group ID a slash and finally the page name
+        // Followed by the workflow ID a slash and finally the page name
         patternBuilder.append("([^/]*)/(.*)");
 
         urlPattern = Pattern.compile(patternBuilder.toString());
@@ -202,7 +202,7 @@ public class WuicServlet extends HttpServlet {
         final Matcher matcher = urlPattern.matcher(request.getRequestURI());
 
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
-            response.getWriter().println("URL pattern. Expected [groupId]/[nutName]");
+            response.getWriter().println("URL pattern. Expected [workflowId]/[nutName]");
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
@@ -225,16 +225,16 @@ public class WuicServlet extends HttpServlet {
      * Writes a nut in the HTTP response.
      * </p>
      *
-     * @param groupId the group ID
+     * @param workflowId the workflow ID
      * @param nutName the nut name
      * @param response the response
      * @throws WuicException if an I/O error occurs or nut not found
      */
-    private void writeNut(final String groupId, final String nutName, final HttpServletResponse response)
+    private void writeNut(final String workflowId, final String nutName, final HttpServletResponse response)
             throws WuicException {
 
-        // Get the nuts group
-        final List<Nut> nuts = getWuicFacade().runWorkflow(groupId);
+        // Get the nuts workflow
+        final List<Nut> nuts = getWuicFacade().runWorkflow(workflowId);
         final Nut nut = getNut(nuts, nutName);
         InputStream is = null;
 
@@ -251,7 +251,7 @@ public class WuicServlet extends HttpServlet {
                 IOUtils.close(is);
             }
         } else {
-            throw new NutNotFoundException(nutName, groupId);
+            throw new NutNotFoundException(nutName, workflowId);
         }
     }
 
