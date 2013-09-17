@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<wuic polling-interleave-seconds="10">
+    <nut-dao-builders>
+        <nut-dao-builder id="diskNutDao" type="DiskNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePathAsSystemProperty">true</property>
+                <property key="c.g.wuic.dao.basePath">wuic.dir</property>
+                <property key="c.g.wuic.dao.pollingInterleave">10</property>
+            </properties>
+        </nut-dao-builder>
+    </nut-dao-builders>
+
+    <engine-builders>
+        <engine-builder id="wuicDefaultMemoryMapCacheEngineBuilder" type="MemoryMapCacheEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.cache">true</property>
+            </properties>
+        </engine-builder>
+    </engine-builders>
+
+    <heaps>
+        <heap id="apps-js" dao-builder-id="diskNutDao">
+            <nut-path>nut-polling-sample.js</nut-path>
+        </heap>
+    </heaps>
+</wuic>

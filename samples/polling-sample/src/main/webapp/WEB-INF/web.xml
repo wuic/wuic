@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+           version="2.5">
+
+    <servlet>
+        <description>Save servlet</description>
+        <servlet-name>save</servlet-name>
+        <servlet-class>com.github.wuic.sample.polling.servlet.SaveServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <description>WUIC servlet</description>
+        <servlet-name>wuic</servlet-name>
+        <servlet-class>com.github.wuic.servlet.WuicServlet</servlet-class>
+        <init-param>
+            <param-name>c.g.w.wuicContextPath</param-name>
+            <param-value>/wuic/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>c.g.w.wuicXmlPath</param-name>
+            <param-value>wuic.xml</param-value>
+        </init-param>
+        <init-param>
+            <param-name>c.g.w.wuicXmlPathAsSystemProperty</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>save</servlet-name>
+        <url-pattern>/save/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>wuic</servlet-name>
+        <url-pattern>/wuic/*</url-pattern>
+    </servlet-mapping>
+    
+    <listener>
+        <listener-class>com.github.wuic.sample.polling.servlet.InitJavascriptFileListener</listener-class>
+    </listener>
+
+</web-app>
