@@ -131,7 +131,7 @@ public final class NutDaoBuilderFactory extends AbstractBuilderFactory<NutDaoBui
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final String type : NutDaoBuilderFactory.this.knownTypes()) {
-                    ctxBuilder.nutDaoBuilder("wuicDefault" + type, create(type), new HashMap<String, Object>());
+                    ctxBuilder.nutDaoBuilder(ID_PREFIX + type, create(type), new HashMap<String, Object>());
                 }
             // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {

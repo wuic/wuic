@@ -27,7 +27,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             </b>
         </td>
         <td>
-             JS compression. Cache. CSS (currently disabled).
+             YuiCompressor Javascript & CSS minification support. EhCache support.
         </td>
     </tr>
     <tr>
@@ -38,7 +38,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             just displays the different images using sprites.
         </td>
         <td>
-             JS compression. Cache. JS sprites. Image aggregation.
+             YuiCompressor Javascript minification support. EhCache support. JS sprites. Image aggregation.
         </td>
     </tr>
     <tr>
@@ -49,6 +49,15 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         </td>
         <td>
              Cache. CSS sprites. Image aggregation.
+        </td>
+    </tr>
+    <tr>
+        <td>polling-sample</td>
+        <td>
+            Demonstrates how WUIC can poll both configuration files and nuts and refresh them at runtime.
+        </td>
+        <td>
+             Memory Cache. Configuration polling. Nut polling.
         </td>
     </tr>
 </table>

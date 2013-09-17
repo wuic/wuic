@@ -67,6 +67,11 @@ import java.util.Map;
 public abstract class AbstractBuilderFactory<T extends GenericBuilder> {
 
     /**
+     * Prefix for default IDs.
+     */
+    public static final String ID_PREFIX = "wuicDefault";
+
+    /**
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());

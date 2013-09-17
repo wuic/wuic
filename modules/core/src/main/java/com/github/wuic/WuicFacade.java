@@ -43,6 +43,7 @@ import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
+import java.net.URL;
 import java.util.List;
 
 import com.github.wuic.nut.Nut;
@@ -94,7 +95,7 @@ public final class WuicFacade {
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String cp) throws WuicException {
-        this("/wuic.xml", cp);
+        this(WuicFacade.class.getResource("/wuic.xml"), cp);
     }
 
     /**
@@ -102,18 +103,18 @@ public final class WuicFacade {
      * Builds a new {@link WuicFacade} for a particular wuic.xml path .
      * </p>
      *
-     * @param wuicXmlPath the wuic.xml location in the classpath
+     * @param wuicXmlPath the wuic.xml location URL
      * @param cp the context path where the files will be exposed
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
-    private WuicFacade(final String wuicXmlPath, final String cp) throws WuicException {
+    private WuicFacade(final URL wuicXmlPath, final String cp) throws WuicException {
         builder = new ContextBuilder();
 
         try {
             // TODO : create flag to not use default configuration
             new NutDaoBuilderFactory().newContextBuilderConfigurator().configure(builder);
             new EngineBuilderFactory().newContextBuilderConfigurator().configure(builder);
-            new WuicXmlContextBuilderConfigurator(getClass().getResource(wuicXmlPath)).configure(builder);
+            new WuicXmlContextBuilderConfigurator(wuicXmlPath).configure(builder);
             context = builder.build();
         } catch (JAXBException je) {
             throw new WuicXmlReadException("unable to load wuic.xml", je) ;
@@ -141,12 +142,12 @@ public final class WuicFacade {
      * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
      * </p>
      *
-     * @param wuicXmlPath the specific wuic.xml path in classpath (could be {@code null}
+     * @param wuicXmlPath the specific wuic.xml path URL (could be {@code null}
      * @param contextPath the context where the nuts will be exposed
      * @return the unique instance
      *
      */
-    public static synchronized WuicFacade newInstance(final String contextPath, final String wuicXmlPath) throws WuicException {
+    public static synchronized WuicFacade newInstance(final String contextPath, final URL wuicXmlPath) throws WuicException {
         if (wuicXmlPath != null) {
             return new WuicFacade(wuicXmlPath, contextPath);
         } else {

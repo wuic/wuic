@@ -111,7 +111,7 @@ public abstract class AbstractCacheEngine extends Engine {
 
             // Nuts exist in doCache, returns them
             if (value != null) {
-                log.info("Nuts for group '{}' found in doCache", key);
+                log.info("Nuts for heap '{}' found in cache", key);
                 retval = value;
             } else if (getNext() != null) {
                 // Observe and invalidate the cache when updates are notified

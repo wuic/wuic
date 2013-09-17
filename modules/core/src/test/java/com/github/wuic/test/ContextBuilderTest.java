@@ -49,6 +49,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 
+import com.github.wuic.util.AbstractBuilderFactory;
 import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -226,7 +227,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void overrideDefaultEnginesTest() throws Exception {
-        final String defaultName = "wuicDefault" + TextAggregatorEngineBuilder.class.getSimpleName();
+        final String defaultName = AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName();
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put(ApplicationConfig.AGGREGATE, false);
 

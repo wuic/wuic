@@ -66,6 +66,29 @@ public class XmlPropertyBean {
 
     /**
      * <p>
+     * Default constructor.
+     * </p>
+     */
+    public XmlPropertyBean() {
+
+    }
+
+
+    /**
+     * <p>
+     * Constructor based on a given key and a give, associated value.
+     * </p>
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public XmlPropertyBean(final String key, final String value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    /**
+     * <p>
      *  Gets the key.
      * </p>
      *

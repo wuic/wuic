@@ -47,6 +47,7 @@ import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.AbstractBuilderFactory;
 import com.github.wuic.util.GenericBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -274,7 +275,15 @@ public class ContextBuilder extends Observable {
                 lock.lock();
             }
 
-            taggedSettings.remove(tagName);
+            final ContextSetting setting = taggedSettings.remove(tagName);
+
+            // Shutdown all DAO (scheduled jobs, etc)
+            if (setting != null) {
+                for (final NutDao dao : setting.nutDaoMap.values()) {
+                    dao.shutdown();
+                }
+            }
+
             setChanged();
             notifyObservers(tagName);
 
@@ -450,7 +459,7 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.getEngineMap().remove(id);
         }
 
@@ -663,14 +672,98 @@ public class ContextBuilder extends Observable {
 
         // Include default engines
         if (includeDefaultEngines) {
-            final EngineBuilder cache = new MemoryMapCacheEngineBuilder();
-            chains.put(NutType.CSS, Engine.chain(cache.build(), new TextAggregatorEngineBuilder().build(), new CssInspectorEngineBuilder().build()));
-            chains.put(NutType.PNG, Engine.chain(cache.build(), new ImageAggregatorEngineBuilder().build(), new ImageCompressorEngineBuilder().build()));
-            chains.put(NutType.JAVASCRIPT, Engine.chain(cache.build(), new TextAggregatorEngineBuilder().build()));
+            chains.put(NutType.CSS, Engine.chain(defaultCache(), defaultTextAggregator(), defaultCssInspector()));
+            chains.put(NutType.PNG, Engine.chain(defaultCache(), defaultImageAggregator(), defaultImageCompressor()));
+            chains.put(NutType.JAVASCRIPT, Engine.chain(defaultCache(), defaultTextAggregator()));
             // TODO : when created, include GZIP compressor
         }
 
         return chains;
+    }
+
+    /**
+     * <p>
+     * Creates a default image compressor.
+     * </p>
+     *
+     * @return the default engine
+     */
+    private Engine defaultImageCompressor() {
+        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + ImageCompressorEngineBuilder.class.getSimpleName());
+
+        if (retval == null) {
+            return new ImageCompressorEngineBuilder().build();
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default image aggregator.
+     * </p>
+     *
+     * @return the default engine
+     */
+    private Engine defaultImageAggregator() {
+        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + ImageAggregatorEngineBuilder.class.getSimpleName());
+
+        if (retval == null) {
+            return new ImageAggregatorEngineBuilder().build();
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default css inspector.
+     * </p>
+     *
+     * @return the default engine
+     */
+    private Engine defaultCssInspector() {
+        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + CssInspectorEngineBuilder.class.getSimpleName());
+
+        if (retval == null) {
+            return new CssInspectorEngineBuilder().build();
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default text aggregator.
+     * </p>
+     *
+     * @return the default engine
+     */
+    private Engine defaultTextAggregator() {
+        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName());
+
+        if (retval == null) {
+            return new TextAggregatorEngineBuilder().build();
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default cache engine.
+     * </p>
+     *
+     * @return the default cache
+     */
+    private Engine defaultCache() {
+        final Engine cache = newEngine(AbstractBuilderFactory.ID_PREFIX + MemoryMapCacheEngineBuilder.class.getSimpleName());
+
+        if (cache == null) {
+            return new MemoryMapCacheEngineBuilder().build();
+        } else {
+            return cache;
+        }
     }
 
     /**

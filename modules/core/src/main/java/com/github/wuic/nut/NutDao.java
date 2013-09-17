@@ -111,4 +111,11 @@ public interface NutDao {
      * @return {@code true} if {@link NutDao#save(Nut)} is supported, {@code false} otherwise
      */
     Boolean saveSupported();
+
+    /**
+     * <p>
+     * Shutdowns this DAO by releasing its resources.
+     * </p>
+     */
+    void shutdown();
 }

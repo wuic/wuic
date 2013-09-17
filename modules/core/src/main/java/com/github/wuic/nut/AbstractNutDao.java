@@ -236,6 +236,19 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void shutdown() {
+        log.info("Shutdown DAO {}", getClass().getName());
+
+        // Will stop any scheduled operation
+        if (getPollingInterleave() != -1) {
+            setPollingInterleave(-1);
+        }
+    }
+
+    /**
      * <p>
      * Returns a list of paths depending of the behavior of the dao with the given path.
      * In fact, the dao could consider the path as a regex, a directory, etc.

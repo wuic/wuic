@@ -153,6 +153,8 @@ public abstract class PollingScheduler<T> implements Runnable {
         if (pollingInterleave > 0) {
             log.info("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterleave);
             pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterleave);
+        } else {
+            log.info("Won't perform any polling operation for {}", getClass().getName());
         }
     }
 

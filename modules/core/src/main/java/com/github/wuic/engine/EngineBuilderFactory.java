@@ -129,7 +129,7 @@ public final class EngineBuilderFactory extends AbstractBuilderFactory<EngineBui
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final String type : EngineBuilderFactory.this.knownTypes()) {
-                    ctxBuilder.engineBuilder("wuicDefault" + type, create(type), new HashMap<String, Object>());
+                    ctxBuilder.engineBuilder(ID_PREFIX + type, create(type), new HashMap<String, Object>());
                 }
                 // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {

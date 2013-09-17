@@ -58,6 +58,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,16 @@ public class WuicServlet extends HttpServlet {
      * Init parameter which indicates the WUIC context path.
      */
     public static final String WUIC_SERVLET_CONTEXT_PARAM = "c.g.w.wuicContextPath";
+
+    /**
+     * Init parameter which indicates the WUIC xml file.
+     */
+    public static final String WUIC_SERVLET_XML_PATH_PARAM = "c.g.w.wuicXmlPath";
+
+    /**
+     * Init parameter which indicates that the WUIC context path is a system property.
+     */
+    public static final String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.w.wuicXmlPathAsSystemProperty";
 
     /**
      * Serial version UID.
@@ -142,10 +154,25 @@ public class WuicServlet extends HttpServlet {
         log.info("WUIC's full context path is {}", wuicCp);
 
         try {
-            final WuicFacade facade = WuicFacade.newInstance(wuicCp);
+            final String wuicXmlPath = config.getInitParameter(WUIC_SERVLET_XML_PATH_PARAM);
+            final WuicFacade facade;
+
+            // Choose specific location for XML file
+            if (wuicXmlPath == null) {
+                facade = WuicFacade.newInstance(wuicCp);
+            } else {
+                if (Boolean.parseBoolean(config.getInitParameter(WUIC_SERVLET_XML_SYS_PROP_PARAM))) {
+                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)));
+                } else {
+                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath));
+                }
+            }
+
             config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
         } catch (WuicException we) {
             throw new ServletException("Unable to initialize WuicServlet", we);
+        } catch (MalformedURLException mue) {
+            throw new ServletException("Unable to initialize WuicServlet", mue);
         }
 
         // Build expected URL pattern

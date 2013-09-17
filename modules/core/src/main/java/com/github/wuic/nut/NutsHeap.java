@@ -157,7 +157,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @throws StreamException if an I/O error occurs
      */
     public void addObserver(final HeapListener listener) throws StreamException {
-        this.listeners.add(listener);
+        synchronized (listeners) {
+            this.listeners.add(listener);
+        }
     }
 
     /**
@@ -336,9 +338,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         try {
             // Will update the nuts
             checkFiles();
-    
-            for (final HeapListener l : listeners) {
-                l.nutUpdated(observable);
+
+            synchronized (listeners) {
+                for (final HeapListener l : listeners) {
+                    l.nutUpdated(observable);
+                }
             }
         } catch (StreamException se) {
             log.error("Unable to update nuts in the heap", se);
