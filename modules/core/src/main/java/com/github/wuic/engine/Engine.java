@@ -114,6 +114,10 @@ public abstract class Engine implements Comparable<Engine> {
         for (final Engine engine : engines) {
             Engine next = engine;
 
+            if (engine == null) {
+                continue;
+            }
+
             do {
                 flatten.add(next);
                 next = next.nextEngine;

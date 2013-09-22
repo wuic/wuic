@@ -108,7 +108,7 @@ public class CGTextAggregatorEngine extends Engine {
         final List<Nut> referencedNuts = new ArrayList<Nut>();
 
         // Aggregate each nut
-        for (Nut nut : request.getNuts()) {
+        for (final Nut nut : request.getNuts()) {
             // Nut must be aggregatable
             if (nut.isAggregatable()) {
                 try {
@@ -142,7 +142,7 @@ public class CGTextAggregatorEngine extends Engine {
 
         // Eventually add some extracted referenced nuts
         if (!referencedNuts.isEmpty()) {
-            for (Nut ref : referencedNuts) {
+            for (final Nut ref : referencedNuts) {
                 aggregate.addReferencedNut(ref);
             }
         }

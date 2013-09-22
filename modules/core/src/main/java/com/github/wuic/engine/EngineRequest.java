@@ -97,6 +97,23 @@ public final class EngineRequest {
 
     /**
      * <p>
+     * Builds a new {@code EngineRequest} with some nuts specific, a specified context path to be used and a workflow ID.
+     * </p>
+     *
+     * @param wId the workflow ID
+     * @param n the nuts to be parsed
+     * @param other the request to copy
+     */
+    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other) {
+        nuts = n;
+        contextPath = other.getContextPath();
+        heap = other.getHeap();
+        chains = other.chains;
+        workflowId = wId;
+    }
+
+    /**
+     * <p>
      * Builds a new {@code EngineRequest} with some nuts specific and a specified context path to be used.
      * </p>
      *

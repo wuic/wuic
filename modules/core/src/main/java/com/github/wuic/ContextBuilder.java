@@ -48,6 +48,7 @@ import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.AbstractBuilderFactory;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.GenericBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -494,6 +495,10 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
+     * If the context builder should include engines by default, then a set of default engine to be excluded could be specified.
+     * </p>
+     *
+     * <p>
      * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are :
      *  <ul>
      *      <li>Unknown {@link EngineBuilder} ID</li>
@@ -506,6 +511,7 @@ public class ContextBuilder extends Observable {
      * @param prefixId the prefix of workflow ID
      * @param heapIdPattern the regex matching the heap IDs that needs to be processed
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
+     * @param ebIdsExclusion some default builder to be excluded in the chain
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
@@ -513,6 +519,7 @@ public class ContextBuilder extends Observable {
     public ContextBuilder workflow(final String prefixId,
                                    final String heapIdPattern,
                                    final String[] ebIds,
+                                   final String[] ebIdsExclusion,
                                    final Boolean includeDefaultEngines,
                                    final String ... ndbIds) {
         final ContextSetting setting = getSetting();
@@ -542,8 +549,8 @@ public class ContextBuilder extends Observable {
             throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
         }
 
-        // Retrieve each engine associated to all provided IDs and group them by nut type
-        final Map<NutType, Engine> chains = createChains(includeDefaultEngines);
+        // Retrieve each engine associated to all provided IDs and heap them by nut type
+        final Map<NutType, Engine> chains = createChains(includeDefaultEngines, ebIdsExclusion);
 
         for (final String ebId : ebIds) {
             // Create a different instance per chain
@@ -591,7 +598,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * See {@link ContextBuilder#workflow(String, String, String[], Boolean, String...)} for full documentation.
+     * See {@link ContextBuilder#workflow(String, String, String[], String[], Boolean, String...)} for full documentation.
      * </p>
      *
      * @param id the workflow ID
@@ -604,7 +611,7 @@ public class ContextBuilder extends Observable {
                                    final String heapId,
                                    final String[] ebIds,
                                    final String ... ndbIds) {
-        return workflow(id, heapId, ebIds, Boolean.TRUE, ndbIds);
+        return workflow(id, heapId, ebIds, null, Boolean.TRUE, ndbIds);
     }
 
     /**
@@ -648,7 +655,7 @@ public class ContextBuilder extends Observable {
                 }
 
                 // No workflow has been found : create a default with the heap ID as ID
-                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE), heap, heap.getNutDao()));
+                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE, null), heap, heap.getNutDao()));
             }
 
             return new Context(this, workflowMap);
@@ -665,16 +672,17 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param includeDefaultEngines include default or not
+     * @param ebIdsExclusions the default engines to exclude
      * @return the different chains
      */
-    private Map<NutType, Engine> createChains(final Boolean includeDefaultEngines) {
+    private Map<NutType, Engine> createChains(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
         final Map<NutType, Engine> chains = new HashMap<NutType, Engine>();
 
         // Include default engines
         if (includeDefaultEngines) {
-            chains.put(NutType.CSS, Engine.chain(defaultCache(), defaultTextAggregator(), defaultCssInspector()));
-            chains.put(NutType.PNG, Engine.chain(defaultCache(), defaultImageAggregator(), defaultImageCompressor()));
-            chains.put(NutType.JAVASCRIPT, Engine.chain(defaultCache(), defaultTextAggregator()));
+            chains.put(NutType.CSS, Engine.chain(defaultCache(ebIdsExclusions), defaultTextAggregator(ebIdsExclusions), defaultCssInspector(ebIdsExclusions)));
+            chains.put(NutType.PNG, Engine.chain(defaultCache(ebIdsExclusions), defaultImageAggregator(ebIdsExclusions), defaultImageCompressor(ebIdsExclusions)));
+            chains.put(NutType.JAVASCRIPT, Engine.chain(defaultCache(ebIdsExclusions), defaultTextAggregator(ebIdsExclusions)));
             // TODO : when created, include GZIP compressor
         }
 
@@ -686,10 +694,17 @@ public class ContextBuilder extends Observable {
      * Creates a default image compressor.
      * </p>
      *
+     * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultImageCompressor() {
-        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + ImageCompressorEngineBuilder.class.getSimpleName());
+    private Engine defaultImageCompressor(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + ImageCompressorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final Engine retval = newEngine(name);
 
         if (retval == null) {
             return new ImageCompressorEngineBuilder().build();
@@ -703,10 +718,17 @@ public class ContextBuilder extends Observable {
      * Creates a default image aggregator.
      * </p>
      *
+     * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultImageAggregator() {
-        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + ImageAggregatorEngineBuilder.class.getSimpleName());
+    private Engine defaultImageAggregator(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + ImageAggregatorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final Engine retval = newEngine(name);
 
         if (retval == null) {
             return new ImageAggregatorEngineBuilder().build();
@@ -720,10 +742,17 @@ public class ContextBuilder extends Observable {
      * Creates a default css inspector.
      * </p>
      *
+     * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultCssInspector() {
-        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + CssInspectorEngineBuilder.class.getSimpleName());
+    private Engine defaultCssInspector(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + CssInspectorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final Engine retval = newEngine(name);
 
         if (retval == null) {
             return new CssInspectorEngineBuilder().build();
@@ -737,10 +766,17 @@ public class ContextBuilder extends Observable {
      * Creates a default text aggregator.
      * </p>
      *
+     * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultTextAggregator() {
-        final Engine retval = newEngine(AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName());
+    private Engine defaultTextAggregator(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final Engine retval = newEngine(name);
 
         if (retval == null) {
             return new TextAggregatorEngineBuilder().build();
@@ -754,15 +790,22 @@ public class ContextBuilder extends Observable {
      * Creates a default cache engine.
      * </p>
      *
+     * @param ebIdsExclusions exclusions
      * @return the default cache
      */
-    private Engine defaultCache() {
-        final Engine cache = newEngine(AbstractBuilderFactory.ID_PREFIX + MemoryMapCacheEngineBuilder.class.getSimpleName());
+    private Engine defaultCache(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + MemoryMapCacheEngineBuilder.class.getSimpleName();
 
-        if (cache == null) {
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final Engine retval = newEngine(name);
+
+        if (retval == null) {
             return new MemoryMapCacheEngineBuilder().build();
         } else {
-            return cache;
+            return retval;
         }
     }
 

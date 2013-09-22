@@ -48,6 +48,10 @@ import com.github.wuic.util.PropertySetter;
  * Setter for the {@link com.github.wuic.ApplicationConfig#PROXY_URIS} property.
  * </p>
  *
+ * <p>
+ * Uris array is specified as a {@code String} containing each value separated by a '|' character.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
@@ -84,10 +88,13 @@ public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
      */
     @Override
     protected void set(final Object value) {
-        if (value == null || value instanceof String[]) {
+        if (value == null) {
             put(getPropertyKey(), value);
+        } else if (value instanceof String) {
+            put(getPropertyKey(), value.toString().split("\\|"));
         } else {
-            throw new BadArgumentException(new NumberFormatException(String.format("Key '%s' must be a String array", value)));
+            throw new BadArgumentException(new IllegalArgumentException(
+                    String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));
         }
     }
 

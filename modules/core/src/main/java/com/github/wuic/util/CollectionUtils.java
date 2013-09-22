@@ -117,4 +117,23 @@ public final class CollectionUtils {
 
         return retval;
     }
+
+    /**
+     * <p>
+     * Gets the index of a targetted element in a specified array.
+     * </p>
+     *
+     * @param target the element to search
+     * @param elements the array
+     * @return the index of the element in the array, -1 if not found
+     */
+    public static int indexOf(final Object target, final Object ... elements) {
+        for (int i = 0; i < elements.length; i++) {
+            if (target.equals(elements[i])) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 }

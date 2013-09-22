@@ -81,6 +81,13 @@ public class XmlWorkflowBean {
     private List<String> engineBuilderIds;
 
     /**
+     * The list of default engine builders ID to exclude.
+     */
+    @XmlElementWrapper(name = "without")
+    @XmlElement(name = "engine-builder-id")
+    private List<String> withoutEngineBuilderIds;
+
+    /**
      * Some DAO where to store process result.
      */
     @XmlElementWrapper(name = "store-to")
@@ -118,6 +125,17 @@ public class XmlWorkflowBean {
      */
     public List<String> getEngineBuilderIds() {
         return engineBuilderIds;
+    }
+
+    /**
+     * <p>
+     * Gets the engine builders ID to be excluded.
+     * </p>
+     *
+     * @return the IDs identifying the builder's engine to exclude
+     */
+    public List<String> getWithoutEngineBuilderIds() {
+        return withoutEngineBuilderIds;
     }
 
     /**

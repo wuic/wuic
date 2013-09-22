@@ -335,7 +335,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param observable the heap where change has been detected
      * @return {@link false} for convenient usage in caller
      */
-    private boolean notifyListeners(final NutsHeap observable) {
+    public boolean notifyListeners(final NutsHeap observable) {
         try {
             // Will update the nuts
             checkFiles();

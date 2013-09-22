@@ -274,11 +274,15 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
                 ctxBuilder.workflow(workflow.getIdPrefix(),
                         workflow.getHeapIdPattern(),
                         workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
+                        workflow.getWithoutEngineBuilderIds() == null ?
+                                null : workflow.getWithoutEngineBuilderIds().toArray(new String[workflow.getWithoutEngineBuilderIds().size()]),
                         workflow.getUseDefaultEngines());
             } else {
                 ctxBuilder.workflow(workflow.getIdPrefix(),
                         workflow.getHeapIdPattern(),
                         workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
+                        workflow.getWithoutEngineBuilderIds() == null ?
+                                null : workflow.getWithoutEngineBuilderIds().toArray(new String[workflow.getWithoutEngineBuilderIds().size()]),
                         workflow.getUseDefaultEngines(),
                         workflow.getDaoBuilderIds().toArray(new String[workflow.getDaoBuilderIds().size()]));
             }

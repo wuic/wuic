@@ -84,7 +84,9 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="engine-chain" type="engineChain" minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="without" type="engineList" minOccurs="0" maxOccurs="unbounded">
+            </xs:element>
+            <xs:element name="engine-chain" type="engineList" minOccurs="1" maxOccurs="unbounded">
             </xs:element>
         </xs:sequence>
         <xs:attribute name="id-prefix" type="xs:string" use="required"/>
@@ -92,7 +94,7 @@
         <xs:attribute name="use-default-engines" type="xs:boolean"/>
     </xs:complexType>
 
-    <xs:complexType name="engineChain">
+    <xs:complexType name="engineList">
         <xs:sequence>
             <xs:element name="engine-builder-id" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>

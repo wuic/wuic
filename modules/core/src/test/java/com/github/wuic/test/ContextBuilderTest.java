@@ -213,7 +213,7 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow-", "heap", new String[]{"engine"}, false)
+                .workflow("workflow-", "heap", new String[]{"engine"}, null, false)
                 .releaseTag()
                 .build();
 
@@ -238,7 +238,7 @@ public class ContextBuilderTest {
                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                .engineBuilder(defaultName, new TextAggregatorEngineBuilder(), props)
-               .workflow("workflow-", "heap", new String[]{defaultName}, true)
+               .workflow("workflow-", "heap", new String[]{defaultName})
                .releaseTag();
 
         Assert.assertTrue(builder.build().process("workflow-heap", "").size() > 1);
@@ -301,7 +301,7 @@ public class ContextBuilderTest {
                 .tag("test")
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .workflow("workflow-", "heap", new String[] {}, false)
+                .workflow("workflow-", "heap", new String[] {}, null, false)
                 .releaseTag()
                 .build();
 

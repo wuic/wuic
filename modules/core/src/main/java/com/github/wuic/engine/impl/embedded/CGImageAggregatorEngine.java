@@ -90,7 +90,7 @@ public class CGImageAggregatorEngine extends Engine {
     /**
      * The sprite provider.
      */
-    private SpriteProvider spriteProvider;
+    private SpriteProvider[] spriteProviders;
 
     /**
      * Dimension packer.
@@ -106,9 +106,9 @@ public class CGImageAggregatorEngine extends Engine {
      * @param packer the packer which packs the images
      * @param sp the provider which generates sprites
      */
-    public CGImageAggregatorEngine(final Boolean aggregate, final DimensionPacker<Nut> packer, final SpriteProvider sp) {
+    public CGImageAggregatorEngine(final Boolean aggregate, final DimensionPacker<Nut> packer, final SpriteProvider[] sp) {
         doAggregation = aggregate;
-        spriteProvider = sp;
+        spriteProviders = sp;
         dimensionPacker = packer;
     }
     
@@ -123,32 +123,24 @@ public class CGImageAggregatorEngine extends Engine {
         // If the configuration says that no aggregation should be done, keep all images separated
         if (!works()) {
             // If a sprite provider exists, compute one nut for each image and link them
-            if (spriteProvider != null) {
+            if (spriteProviders != null) {
                 final List<Nut> retval = new ArrayList<Nut>();
                 final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Calculate type and dimensions of the final image
                 for (final Nut n : request.getNuts()) {
                     // Clear previous work
-                    spriteProvider.init(n.getName());
+                    initSpriteProviders(n.getName());
                     InputStream is = null;
 
                     try {
                         is = n.openStream();
 
                         final BufferedImage buff = ImageIO.read(is);
-                        spriteProvider.addRegion(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), n.getName());
+                        addRegionToSpriteProviders(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), n.getName());
 
                         // Process referenced nut
-                        final Nut nut = spriteProvider.getSprite(url, request.getHeap().getId(), String.valueOf(spriteCpt++));
-                        final Engine chain = request.getChainFor(nut.getNutType());
-
-                        if (chain != null) {
-                            final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(nut), request));
-                            n.addReferencedNut(parsed.get(0));
-                        } else {
-                            n.addReferencedNut(nut);
-                        }
+                        applySpriteProviders(url, request.getHeap().getId(), String.valueOf(spriteCpt++), n, request);
 
                         retval.add(n);
                     } catch (IOException ioe) {
@@ -164,8 +156,8 @@ public class CGImageAggregatorEngine extends Engine {
             }
         } else {
             // Clear previous work
-            if (spriteProvider != null) {
-                spriteProvider.init(CGImageAggregatorEngine.AGGREGATION_NAME);
+            if (spriteProviders != null) {
+                initSpriteProviders(CGImageAggregatorEngine.AGGREGATION_NAME);
             }
 
             final Map<Region, Nut> packed = pack(request.getNuts());
@@ -177,8 +169,8 @@ public class CGImageAggregatorEngine extends Engine {
             // Merge each image into the final image
             for (final Entry<Region, Nut> entry : packed.entrySet()) {
                 // Register the region to the sprite provider
-                if (spriteProvider != null) {
-                    spriteProvider.addRegion(entry.getKey(), entry.getValue().getName());
+                if (spriteProviders != null) {
+                    addRegionToSpriteProviders(entry.getKey(), entry.getValue().getName());
                 }
 
                 InputStream is = null;
@@ -206,22 +198,72 @@ public class CGImageAggregatorEngine extends Engine {
 
             final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG);
 
-            if (spriteProvider != null) {
+            if (spriteProviders != null) {
                 final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Process referenced nut
-                final Nut nut = spriteProvider.getSprite(url, request.getHeap().getId(), String.valueOf(spriteCpt));
-                final Engine chain = request.getChainFor(nut.getNutType());
-
-                if (chain != null) {
-                    final List<Nut> parsed = chain.parse(new EngineRequest(Arrays.asList(nut), request));
-                    res.addReferencedNut(parsed.get(0));
-                } else {
-                    res.addReferencedNut(nut);
-                }
+                applySpriteProviders(url, request.getHeap().getId(), String.valueOf(spriteCpt), res, request);
             }
 
             return Arrays.asList(res);
+        }
+    }
+
+    /**
+     * <p>
+     * Initializes all sprite providers.
+     * </p>
+     *
+     * @param name the name
+     */
+    private void initSpriteProviders(final String name) {
+        for (final SpriteProvider sp : spriteProviders) {
+            sp.init(name);
+        }
+    }
+
+    /**
+     * <p>
+     * Adds the region to all sprite providers.
+     * </p>
+     *
+     * @param region the region
+     * @param name the region name
+     */
+    private void addRegionToSpriteProviders(final Region region, final String name) {
+        for (final SpriteProvider sp : spriteProviders) {
+            sp.addRegion(region, name);
+        }
+    }
+
+    /**
+     * <p>
+     * Generates sprites from all sprite providers and add it to the given nut.
+     * </p>
+     *
+     * @param url the base URL
+     * @param heapId the HEAP id
+     * @param suffix the name suffix
+     * @param n the nut
+     * @param request the initial engine request
+     * @throws WuicException if generation fails
+     */
+    private void applySpriteProviders(final String url, final String heapId, final String suffix, final Nut n, final EngineRequest request)
+        throws WuicException {
+        for (final SpriteProvider sp : spriteProviders) {
+            final Nut nut = sp.getSprite(url, heapId, suffix);
+            final Engine chain = request.getChainFor(nut.getNutType());
+
+            if (chain != null) {
+                // We perform request with an unique workflow ID to not override cache entries
+                final String wid = String.valueOf(System.currentTimeMillis());
+                final List<Nut> parsed = chain.parse(new EngineRequest(wid, Arrays.asList(nut), request));
+                n.addReferencedNut(parsed.get(0));
+
+                // TODO : possible memory leak : cache engine don't know this workflow ID so it won't remove it when cache is invalidated
+            } else {
+                n.addReferencedNut(nut);
+            }
         }
     }
 

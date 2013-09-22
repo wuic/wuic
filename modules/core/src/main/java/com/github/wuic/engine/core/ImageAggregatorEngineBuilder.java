@@ -78,6 +78,6 @@ public class ImageAggregatorEngineBuilder extends AbstractEngineBuilder {
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
         return new CGImageAggregatorEngine((Boolean) property(ApplicationConfig.AGGREGATE),
                 (DimensionPacker) property(ApplicationConfig.PACKER_CLASS_NAME),
-                (SpriteProvider) property(ApplicationConfig.SPRITE_PROVIDER_CLASS_NAME));
+                (SpriteProvider[]) property(ApplicationConfig.SPRITE_PROVIDER_CLASS_NAME));
     }
 }

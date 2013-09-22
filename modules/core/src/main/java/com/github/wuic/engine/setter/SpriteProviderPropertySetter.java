@@ -40,8 +40,10 @@ package com.github.wuic.engine.setter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGCssSpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.util.PropertySetter;
 
 /**
@@ -49,11 +51,15 @@ import com.github.wuic.util.PropertySetter;
  * Setter for the {@link com.github.wuic.ApplicationConfig#SPRITE_PROVIDER_CLASS_NAME} property.
  * </p>
  *
+ * <p>
+ * Uris array is specified as a {@code String} containing each value separated by a '|' character.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public class SpriteProviderPropertySetter extends PropertySetter.PropertySetterOfObject {
+public class SpriteProviderPropertySetter extends PropertySetter<SpriteProvider[]> {
 
     /**
      * <p>
@@ -75,7 +81,8 @@ public class SpriteProviderPropertySetter extends PropertySetter.PropertySetterO
      * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
      */
     public SpriteProviderPropertySetter(final AbstractEngineBuilder b) {
-        this(b, "css");
+        this(b, null);
+        set("css");
     }
 
     /**
@@ -91,12 +98,31 @@ public class SpriteProviderPropertySetter extends PropertySetter.PropertySetterO
      */
     @Override
     protected void set(final Object value) {
-        if ("css".equals(value)) {
-            put(getPropertyKey(), new CGCssSpriteProvider());
-        } else if ("javascript".equals(value)) {
-            put(getPropertyKey(), new CGJavascriptSpriteProvider());
+        if (value == null) {
+            put(getPropertyKey(), value);
+        } else if (value instanceof String) {
+            final String[] strArray = value.toString().split("\\|");
+            final SpriteProvider[] sp = new SpriteProvider[strArray.length];
+            int cpt = 0;
+
+            for (final String o : strArray) {
+                if (o.equals("css")) {
+                    sp[cpt++] = new CGCssSpriteProvider();
+                } else if (o.equals("javascript")) {
+                    sp[cpt++] = new CGJavascriptSpriteProvider();
+                } else {
+                    throw new BadArgumentException(new IllegalArgumentException(
+                            String.format(
+                                    "Key '%s' is associated to a the value '%s' which is not a String which equals to css or javascript",
+                                    getPropertyKey(),
+                                    value)));
+                }
+            }
+
+            put(getPropertyKey(), sp);
         } else {
-            super.set(value);
+            throw new BadArgumentException(new IllegalArgumentException(
+                    String.format("Value '%s' associated to key %s must be an String", value, getPropertyKey())));
         }
     }
 }
