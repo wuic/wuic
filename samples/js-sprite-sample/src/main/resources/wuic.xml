@@ -82,6 +82,9 @@
 
     <workflows>
         <workflow id-prefix="js-" heap-id-pattern="img">
+            <without>
+                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
+            </without>
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
@@ -89,10 +92,12 @@
             </engine-chain>
         </workflow>
         <workflow id-prefix="js-" heap-id-pattern="cgsg-js">
+            <without>
+                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
+            </without>
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
             </engine-chain>
         </workflow>
     </workflows>
