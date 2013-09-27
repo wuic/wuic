@@ -109,7 +109,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
         // Return the same number of files
         final List<Nut> retval = new ArrayList<Nut>(request.getNuts().size());
         

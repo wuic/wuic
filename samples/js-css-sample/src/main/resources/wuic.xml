@@ -14,6 +14,19 @@
             </properties>
         </nut-dao-builder>
     </nut-dao-builders>
+    <engine-builders>
+        <engine-builder id="wuicDefaultTextAggregatorEngineBuilder" type="TextAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.aggregate">true</property>
+            </properties>
+        </engine-builder>
+
+        <engine-builder id="wuicDefaultYuiCompressorCssEngineBuilder" type="YuiCompressorCssEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.compress">true</property>
+            </properties>
+        </engine-builder>
+    </engine-builders>
     <heaps>
         <heap id="collapsible-js" dao-builder-id="httpResourceFactoryBuilder">
             <nut-path>jquery-1.9.1.js</nut-path>

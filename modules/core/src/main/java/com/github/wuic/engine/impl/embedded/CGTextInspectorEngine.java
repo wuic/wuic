@@ -103,7 +103,7 @@ public abstract class CGTextInspectorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
         // Will contains both heap's nuts eventually modified or extracted nuts.
         final List<Nut> retval = new ArrayList<Nut>();
 
@@ -219,16 +219,17 @@ public abstract class CGTextInspectorEngine extends Engine {
 
             // If nut name is null, it means that nothing has been changed by the inspector
             if (nutName != null) {
-                List<Nut> res = new ArrayList<Nut>(request.getHeap().getNutDao().create(nutName).keySet());
+                // TODO : fix => nut's location could be empty because it is not specified in a recursive call
+                final List<Nut> res = new ArrayList<Nut>(request.getHeap().getNutDao().create(nutName).keySet());
 
                 // Process nut
                 //if (getNext() != null) {
-                    // TODO : inspection fails when file is compressed => need to improve regex usage to uncomment this
-                    //res = getNext().parse(new EngineRequest(res, request));
+                     // TODO : inspection fails when file is compressed => need to improve regex usage to uncomment this
+                //    res = getNext().parse(new EngineRequest(res, request));
                 //}
 
                 // Add the nut and inspect it recursively if it's a CSS path
-                for (Nut r : res) {
+                for (final Nut r : res) {
                     Nut inspected = r;
 
                     if (r.getNutType().equals(NutType.CSS)) {
@@ -254,6 +255,7 @@ public abstract class CGTextInspectorEngine extends Engine {
      * @param nut the nut to configure
      */
     private void configureExtracted(final Nut nut) {
+        // TODO : is it really required ? Why ???
         nut.setAggregatable(Boolean.FALSE);
         nut.setTextCompressible(nut.getNutType().isText());
         nut.setBinaryCompressible(!nut.getNutType().isText());

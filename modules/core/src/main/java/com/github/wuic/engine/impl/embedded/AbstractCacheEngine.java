@@ -100,7 +100,7 @@ public abstract class AbstractCacheEngine extends Engine {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
         List<Nut> retval = null;

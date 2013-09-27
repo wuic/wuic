@@ -42,6 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +97,11 @@ public final class EngineRequest {
     private Map<NutType, ? extends Engine> chains;
 
     /**
+     * {@link EngineType} that should be skipped during workflow execution.
+     */
+    private EngineType[] skip;
+
+    /**
      * <p>
      * Builds a new {@code EngineRequest} with some nuts specific, a specified context path to be used and a workflow ID.
      * </p>
@@ -103,13 +109,15 @@ public final class EngineRequest {
      * @param wId the workflow ID
      * @param n the nuts to be parsed
      * @param other the request to copy
+     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
-    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other) {
+    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final EngineType ... toSkip) {
         nuts = n;
         contextPath = other.getContextPath();
         heap = other.getHeap();
         chains = other.chains;
         workflowId = wId;
+        skip = toSkip;
     }
 
     /**
@@ -126,6 +134,8 @@ public final class EngineRequest {
         heap = other.getHeap();
         chains = other.chains;
         workflowId = other.workflowId;
+        skip = other.skip;
+
     }
 
     /**
@@ -145,6 +155,7 @@ public final class EngineRequest {
         heap = g;
         chains = c;
         workflowId = wid;
+        skip = new EngineType[0];
     }
 
     /**
@@ -203,5 +214,17 @@ public final class EngineRequest {
         final Engine retval = chains.get(nutType);
         log.warn("No chain exists for the heap '{}' and the nut type {}.", heap.getId(), nutType.name());
         return retval;
+    }
+
+    /**
+     * <p>
+     * Indicates if a engine of the given type should skip its treatment when this request is submitted.
+     * </p>
+     *
+     * @param engineType the {@link EngineType}
+     * @return {@code true} if treatment should be skipped, {@code false} otherwise.
+     */
+    public boolean shouldSkip(final EngineType engineType) {
+        return CollectionUtils.indexOf(engineType, skip) != -1;
     }
 }

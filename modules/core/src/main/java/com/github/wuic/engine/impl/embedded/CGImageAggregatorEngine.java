@@ -108,7 +108,7 @@ public class CGImageAggregatorEngine extends Engine {
      */
     public CGImageAggregatorEngine(final Boolean aggregate, final DimensionPacker<Nut> packer, final SpriteProvider[] sp) {
         doAggregation = aggregate;
-        spriteProviders = sp;
+        spriteProviders = Arrays.copyOf(sp, sp.length);
         dimensionPacker = packer;
     }
     
@@ -116,7 +116,7 @@ public class CGImageAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
         // Only used if sprite provider is not null
         int spriteCpt = 0;
 
@@ -255,12 +255,9 @@ public class CGImageAggregatorEngine extends Engine {
             final Engine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                // We perform request with an unique workflow ID to not override cache entries
-                final String wid = String.valueOf(System.currentTimeMillis());
-                final List<Nut> parsed = chain.parse(new EngineRequest(wid, Arrays.asList(nut), request));
+                // We perform request by skipping cache to not override cache entry with the given heap ID as key
+                final List<Nut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, EngineType.CACHE));
                 n.addReferencedNut(parsed.get(0));
-
-                // TODO : possible memory leak : cache engine don't know this workflow ID so it won't remove it when cache is invalidated
             } else {
                 n.addReferencedNut(nut);
             }

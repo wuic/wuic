@@ -165,21 +165,17 @@ public abstract class Engine implements Comparable<Engine> {
         return retval.getFirst();
     }
 
+
     /**
      * <p>
-     * Parses the given files and returns the result of this operation.
-     * </p>
-     * 
-     * <p>
-     * Should throw an {@link com.github.wuic.exception.wrapper.BadArgumentException} the files type is not
-     * supported by this {@link Engine}.
+     * Internal method that parses eventually called by {@link Engine#parse(EngineRequest)} method during its invocation.
      * </p>
      *
      * @param request the request with files to parse
      * @return the parsed files
-     * @throws com.github.wuic.exception.wrapper.StreamException if any kind of I/O error occurs
+     * @throws WuicException if any kind of error occurs
      */
-    public abstract List<Nut> parse(EngineRequest request) throws WuicException;
+    protected abstract List<Nut> internalParse(final EngineRequest request) throws WuicException;
 
     /**
      * <p>
@@ -254,5 +250,37 @@ public abstract class Engine implements Comparable<Engine> {
     @Override
     public final int compareTo(final Engine other) {
         return getEngineType().compareTo(other.getEngineType());
+    }
+
+    /**
+     * <p>
+     * Parses the given files and returns the result of this operation.
+     * </p>
+     *
+     * <p>
+     * Should throw an {@link com.github.wuic.exception.wrapper.BadArgumentException} the files type is not
+     * supported by this {@link Engine}.
+     * </p>
+     *
+     * @param request the request with files to parse
+     * @return the parsed files
+     * @throws WuicException if any kind of error occurs
+     */
+    public List<Nut> parse(final EngineRequest request) throws WuicException {
+
+        // Skip this engine parsing
+        if (request.shouldSkip(getEngineType())) {
+
+            // Go to next engine if present
+            if (getNext() != null) {
+                return getNext().parse(request);
+            } else {
+                // Nothing to do
+                return request.getNuts();
+            }
+        } else {
+            // Delegate to subclass
+            return internalParse(request);
+        }
     }
 }

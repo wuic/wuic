@@ -87,7 +87,7 @@ public class CGTextAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> parse(final EngineRequest request)
+    public List<Nut> internalParse(final EngineRequest request)
             throws WuicException {
 
         // Do nothing if the configuration says that no aggregation should be done
