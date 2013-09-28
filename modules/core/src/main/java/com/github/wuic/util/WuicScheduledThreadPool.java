@@ -118,7 +118,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * @param delay the delay between executions
      * @return an object which gives control over scheduled executions
      */
-    public synchronized ScheduledFuture<?> executeEveryTimeInSeconds(final Runnable job, final long delay) {
+    public synchronized ScheduledFuture<?> executeEveryTimeInSeconds(final Runnable job, final int delay) {
         return pool.scheduleWithFixedDelay(new ExceptionLogger(job), delay, delay, TimeUnit.SECONDS);
     }
 

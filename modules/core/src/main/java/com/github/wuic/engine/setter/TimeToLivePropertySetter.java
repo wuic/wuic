@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,73 +36,53 @@
  */
 
 
-package com.github.wuic.engine.impl.embedded;
+package com.github.wuic.engine.setter;
 
-import com.github.wuic.nut.Nut;
-
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.util.PropertySetter;
 
 /**
  * <p>
- * This {@link com.github.wuic.engine.Engine engine} reads from a {@link java.util.Map} kept in memory
- * the nuts associated to a workflow to be processed.
+ * Setter for the {@link com.github.wuic.ApplicationConfig#TIME_TO_LIVE} property.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public class MemoryMapCacheEngine extends ScheduledCacheEngine {
-
-    /**
-     * Memory map.
-     */
-    private Map<String, List<Nut>> cache;
+public class TimeToLivePropertySetter extends PropertySetter.PropertySetterOfInteger {
 
     /**
      * <p>
-     * Builds a new engine.
+     * Creates a new instance with a specific default value.
      * </p>
      *
-     * @param work if cache should be activated or not
-     * @param timeToLiveSeconds the time this cache could live
+     * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
+     * @param defaultValue the default value
      */
-    public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds) {
-        super(timeToLiveSeconds, work);
-        cache = new HashMap<String, List<Nut>>();
+    public TimeToLivePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
+        // Prevent NumberFormatException by validating the parameter in 'set(Object)' method
+        super(b, -1);
+        set(defaultValue);
+    }
+
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param b the {@link AbstractEngineBuilder} which needs to be configured
+     */
+    public TimeToLivePropertySetter(final AbstractEngineBuilder b) {
+        this(b, -1);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        cache.put(workflowId, nuts);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeFromCache(final String workflowId) {
-        cache.remove(workflowId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        return cache.get(workflowId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearCache() {
-        this.cache.clear();
+    public String getPropertyKey() {
+        return ApplicationConfig.TIME_TO_LIVE;
     }
 }

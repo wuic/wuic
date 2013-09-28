@@ -140,6 +140,11 @@ public interface ApplicationConfig {
     String CACHE = "c.g.wuic.engine.cache";
 
     /**
+     * Indicates the time to live for a cache.
+     */
+    String TIME_TO_LIVE = "c.g.wuic.engine.timeToLive";
+
+    /**
      * <p>
      * Indicates a particular
      * </p>

@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,73 +36,68 @@
  */
 
 
-package com.github.wuic.engine.impl.embedded;
+package com.github.wuic.test.engine;
 
+import com.github.wuic.engine.impl.embedded.ScheduledCacheEngine;
 import com.github.wuic.nut.Nut;
+import junit.framework.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
- * This {@link com.github.wuic.engine.Engine engine} reads from a {@link java.util.Map} kept in memory
- * the nuts associated to a workflow to be processed.
+ * {@link ScheduledCacheEngine} tests.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public class MemoryMapCacheEngine extends ScheduledCacheEngine {
+@RunWith(JUnit4.class)
+public class ScheduledCacheTest {
 
     /**
-     * Memory map.
-     */
-    private Map<String, List<Nut>> cache;
-
-    /**
-     * <p>
-     * Builds a new engine.
-     * </p>
+     * Checks that scheduled clear works.
      *
-     * @param work if cache should be activated or not
-     * @param timeToLiveSeconds the time this cache could live
+     * @throws Exception if test fails
      */
-    public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds) {
-        super(timeToLiveSeconds, work);
-        cache = new HashMap<String, List<Nut>>();
-    }
+    @Test
+    public void scheduledClearCacheTest() throws Exception {
+        final CountDownLatch count = new CountDownLatch(2);
+        final ScheduledCacheEngine cache = new ScheduledCacheEngine(1, true) {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        cache.put(workflowId, nuts);
-    }
+            /**
+             * {@inheritDoc}
+             */
+            @Override protected void clearCache() {
+                count.countDown();
+            }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeFromCache(final String workflowId) {
-        cache.remove(workflowId);
-    }
+            /**
+             * {@inheritDoc}
+             */
+            @Override public void putToCache(String workflowId, List<Nut> nuts) { }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        return cache.get(workflowId);
-    }
+            /**
+             * {@inheritDoc}
+             */
+            @Override public void removeFromCache(String workflowId) { }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearCache() {
-        this.cache.clear();
+            /**
+             * {@inheritDoc}
+             */
+            @Override public List<Nut> getFromCache(String workflowId) { return null; }
+        };
+
+        count.await(1500, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(1, count.getCount());
+        cache.setTimeToLive(-1);
+        count.await(1, TimeUnit.SECONDS);
+        Assert.assertEquals(1, count.getCount());
     }
 }

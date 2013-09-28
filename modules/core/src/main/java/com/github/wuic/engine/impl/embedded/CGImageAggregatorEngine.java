@@ -255,8 +255,11 @@ public class CGImageAggregatorEngine extends Engine {
             final Engine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                // We perform request by skipping cache to not override cache entry with the given heap ID as key
-                final List<Nut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, EngineType.CACHE));
+                /*
+                 * We perform request by skipping cache to not override cache entry with the given heap ID as key.
+                 * We also skip inspection because this is not necessary to detect references to this image
+                 */
+                final List<Nut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, EngineType.CACHE, EngineType.INSPECTOR));
                 n.addReferencedNut(parsed.get(0));
             } else {
                 n.addReferencedNut(nut);

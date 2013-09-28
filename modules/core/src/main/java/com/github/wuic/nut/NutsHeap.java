@@ -176,6 +176,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         // Keep order with a linked data structure
         this.nuts = new LinkedHashMap<Nut, Long>();
 
+        log.info("Checking files for heap '{}'", id);
+
         for (final String path : paths) {
             nuts.putAll(nutDao.create(path));
             nutDao.observe(path, this);

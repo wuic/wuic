@@ -126,7 +126,7 @@ public abstract class AbstractCacheEngine extends Engine {
                     }
                 }
 
-                log.debug("Caching nut with {}", key);
+                log.debug("Caching nut with key '{}'", key);
                 putToCache(key, toCache);
 
                 retval = toCache;

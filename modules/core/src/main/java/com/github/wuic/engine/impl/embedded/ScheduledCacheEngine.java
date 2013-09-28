@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -38,71 +38,73 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.nut.Nut;
+import com.github.wuic.util.WuicScheduledThreadPool;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.Future;
 
 /**
  * <p>
- * This {@link com.github.wuic.engine.Engine engine} reads from a {@link java.util.Map} kept in memory
- * the nuts associated to a workflow to be processed.
+ * This abstract engine is able to clear its cache in a particular interleave.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public class MemoryMapCacheEngine extends ScheduledCacheEngine {
+public abstract class ScheduledCacheEngine extends AbstractCacheEngine implements Runnable {
 
     /**
-     * Memory map.
+     * Help to know when a polling operation is done.
      */
-    private Map<String, List<Nut>> cache;
+    private Future<?> clearCacheResult;
 
     /**
      * <p>
-     * Builds a new engine.
+     * Creates a new instance.
      * </p>
      *
-     * @param work if cache should be activated or not
-     * @param timeToLiveSeconds the time this cache could live
+     * @param timeToLiveSeconds time to live in seconds for this cache
+     * @param cache if cache is activated or not
      */
-    public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds) {
-        super(timeToLiveSeconds, work);
-        cache = new HashMap<String, List<Nut>>();
+    public ScheduledCacheEngine(final int timeToLiveSeconds, final Boolean cache) {
+        super(cache);
+        setTimeToLive(timeToLiveSeconds);
+    }
+
+    /**
+     * <p>
+     * Schedules the time to live for this cache. If the specified value is a positive number, a thread will be executed
+     * at the specified interleave to clear the cache. Otherwise, any scheduled operation will be canceled.
+     * </p>
+     *
+     * @param timeToLiveSeconds new time to live of cache in seconds
+     */
+    public final synchronized void setTimeToLive(final int timeToLiveSeconds) {
+
+        // Stop current scheduling
+        if (clearCacheResult != null) {
+            clearCacheResult.cancel(false);
+            clearCacheResult = null;
+        }
+
+        // Create new scheduling if necessary
+        if (timeToLiveSeconds > 0) {
+            clearCacheResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, timeToLiveSeconds);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        cache.put(workflowId, nuts);
+    public void run() {
+        clearCache();
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Clears this cache.
+     * </p>
      */
-    @Override
-    public void removeFromCache(final String workflowId) {
-        cache.remove(workflowId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        return cache.get(workflowId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearCache() {
-        this.cache.clear();
-    }
+    protected abstract void clearCache();
 }
