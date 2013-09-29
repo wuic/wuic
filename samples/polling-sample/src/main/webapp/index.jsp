@@ -4,6 +4,8 @@
 <%@ page import="java.io.InputStream" %>
 <%@ page import="com.github.wuic.sample.polling.servlet.InitJavascriptFileListener" %>
 <%@ page import="java.io.File" %>
+<%@ page import="javax.xml.bind.JAXBContext" %>
+<%@ page import="com.github.wuic.xml.XmlWuicBean" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <html>
     <head>
@@ -43,7 +45,18 @@
                 is updated and the cache is toggled on/off regarding the checkbox value ('on' by default).
             </p>
             <label for="cache">Caching property in polled wuic.xml :</label>
-            <input type="checkbox" id="cache" name="cache" checked="true" /><br />
+            <input type="checkbox" id="cache" name="cache"<%
+                try {
+                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    final JAXBContext ctx = JAXBContext.newInstance(XmlWuicBean.class);
+                    final File file = new File(InitJavascriptFileListener.DIRECTORY_PATH, "wuic.xml");
+                    final XmlWuicBean bean = (XmlWuicBean) ctx.createUnmarshaller().unmarshal(file);
+                    final Boolean cache = Boolean.parseBoolean(bean.getEngineBuilders().get(0).getProperties().get(0).getValue());
+                    out.print(cache ? " checked" : "");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            %> /><br />
             <input type="submit" />
         </form>
     </body>
