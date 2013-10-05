@@ -58,7 +58,7 @@ import javax.servlet.jsp.tagext.TagSupport;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.0
  */
 public class WuicTag extends TagSupport {

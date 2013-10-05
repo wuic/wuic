@@ -55,7 +55,7 @@ import com.github.wuic.nut.Nut;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.2.0
  */
 public interface SpriteProvider {

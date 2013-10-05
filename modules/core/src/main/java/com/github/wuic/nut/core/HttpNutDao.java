@@ -57,7 +57,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public class HttpNutDao extends AbstractNutDao {

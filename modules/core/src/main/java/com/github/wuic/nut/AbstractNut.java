@@ -50,7 +50,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.0
  */
 public abstract class AbstractNut implements Nut {

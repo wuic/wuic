@@ -52,7 +52,7 @@ import java.io.InputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.1
  */
 public class FilePathNut extends AbstractNut {

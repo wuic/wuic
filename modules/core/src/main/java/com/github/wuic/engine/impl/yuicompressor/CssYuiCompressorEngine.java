@@ -60,7 +60,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {

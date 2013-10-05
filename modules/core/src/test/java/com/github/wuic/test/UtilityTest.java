@@ -50,7 +50,12 @@ import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+
+import java.util.Map;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -59,7 +64,7 @@ import java.util.regex.Pattern;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.4
  */
 @RunWith(JUnit4.class)

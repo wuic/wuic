@@ -73,7 +73,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {

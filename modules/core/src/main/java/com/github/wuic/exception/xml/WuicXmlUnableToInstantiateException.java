@@ -47,7 +47,7 @@ import com.github.wuic.exception.UnableToInstantiateException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.4
  */
 public class WuicXmlUnableToInstantiateException extends WuicXmlReadException {

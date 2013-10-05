@@ -62,7 +62,7 @@ import java.util.PriorityQueue;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.2.3
  */
 public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {

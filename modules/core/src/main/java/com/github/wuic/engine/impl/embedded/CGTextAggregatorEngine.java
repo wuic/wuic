@@ -62,7 +62,7 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
+ * @version 1.8
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends Engine {

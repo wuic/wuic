@@ -53,7 +53,7 @@ import net.sf.ehcache.Element;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
+ * @version 1.8
  * @since 0.1.1
  */
 public class EhCacheEngine extends AbstractCacheEngine {

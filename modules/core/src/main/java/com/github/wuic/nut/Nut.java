@@ -56,7 +56,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.1.1
  */
 public interface Nut extends Serializable {

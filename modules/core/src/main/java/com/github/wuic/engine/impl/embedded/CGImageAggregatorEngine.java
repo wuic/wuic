@@ -72,7 +72,7 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.2.0
  */
 public class CGImageAggregatorEngine extends Engine {
