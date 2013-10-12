@@ -55,6 +55,11 @@ public final class NumberUtils {
     public static final int TWO = 2;
 
     /**
+     * Six. Use this constant to evict checkstyle issue.
+     */
+    public static final int SIX = 6;
+
+    /**
      * One thousand. Use this constant to evict checkstyle issue.
      */
     public static final int ONE_THOUSAND = 1000;

@@ -38,6 +38,8 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 
 import java.util.regex.Matcher;
@@ -50,7 +52,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.3
  */
 public interface LineInspector {
@@ -73,13 +75,12 @@ public interface LineInspector {
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
      * @param groupPath the absolute path to the group
-     * @param nutLocation the location of the current nut
      * @param dao the DAO to use when we need to create nut
-     * @return the nut name that was referenced in the matching text, {@code null} if the inspector did not perform any change
+     * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
+     * @throws StreamException if an I/O error occurs
      */
-    String appendTransformation(Matcher matcher,
-                                StringBuilder replacement,
-                                String groupPath,
-                                String nutLocation,
-                                NutDao dao);
+    Nut appendTransformation(Matcher matcher,
+                             StringBuilder replacement,
+                             String groupPath,
+                             NutDao dao) throws StreamException;
 }

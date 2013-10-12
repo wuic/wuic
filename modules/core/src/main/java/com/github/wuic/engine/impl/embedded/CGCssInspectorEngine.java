@@ -46,11 +46,11 @@ import java.util.List;
 
 /**
  * <p>
- * This engines parses CSS files thanks to a {@link CGCssImportLineInspector} and a {@link CGCssBackgroundUrlLineInspector}.
+ * This engines parses CSS files thanks to a {@link CGCssUrlLineInspector}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 public class CGCssInspectorEngine extends CGTextInspectorEngine {
@@ -64,7 +64,7 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
      * @param charset inspected files charset
      */
     public CGCssInspectorEngine(final Boolean inspect, final String charset) {
-        super(inspect, charset, new CGCssImportLineInspector(), new CGCssBackgroundUrlLineInspector());
+        super(inspect, charset, new CGCssUrlLineInspector());
     }
 
     /**
