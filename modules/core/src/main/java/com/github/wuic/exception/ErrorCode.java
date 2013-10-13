@@ -139,6 +139,11 @@ public interface ErrorCode {
     long ENGINE_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
 
     /**
+     * Indicates that the {@link com.github.wuic.engine.impl.embedded.StaticEngine} did not found a retrieved workflow.
+     */
+    long STATIC_WORKFLOW_NOT_FOUND = 19860606204L;
+
+    /**
      * <p>
      * Gets the error code.
      * </p>

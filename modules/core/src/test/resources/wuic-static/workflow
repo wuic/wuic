@@ -1,0 +1,3 @@
+http://foo.com/statics/script.js .js
+http://foo.com/statics/script.css .css
+http://foo.com/statics/another-script?timestamp=4000 .css
