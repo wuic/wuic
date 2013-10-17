@@ -2,10 +2,12 @@
 
 <wuic polling-interleave-seconds="10">
     <nut-dao-builders>
-        <nut-dao-builder id="diskNutDao" type="DiskNutDaoBuilder">
+        <nut-dao-builder id="s3NutDao" type="S3NutDaoBuilder">
             <properties>
-                <property key="c.g.wuic.dao.basePathAsSystemProperty">true</property>
-                <property key="c.g.wuic.dao.basePath">wuic.dir</property>
+                <property key="c.g.wuic.dao.cloudBucket">bucket-wuic-test</property>
+                <property key="c.g.wuic.dao.basePath">wuic/test/</property>
+                <property key="c.g.wuic.dao.login">AKIAI55G6YJTFIHN6VYQ</property>
+                <property key="c.g.wuic.dao.password">NauotrQ/yAPqkLR1PWRFDY2DhnMzonZyBwSkvztw</property>
                 <property key="c.g.wuic.dao.pollingInterleave">10</property>
             </properties>
         </nut-dao-builder>
@@ -20,8 +22,8 @@
     </engine-builders>
 
     <heaps>
-        <heap id="apps-js" dao-builder-id="diskNutDao">
-            <nut-path>nut-polling-sample.js</nut-path>
+        <heap id="apps-js" dao-builder-id="s3NutDao">
+            <nut-path>style.css</nut-path>
         </heap>
     </heaps>
 </wuic>

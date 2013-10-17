@@ -38,11 +38,13 @@
 
 package com.github.wuic.nut.s3;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.github.wuic.NutType;
+import com.github.wuic.exception.PollingOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
@@ -53,6 +55,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -64,10 +69,15 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.3
+ * @version 1.4
  * @since 0.3.3
  */
 public class S3NutDao extends AbstractNutDao {
+
+    /**
+     * Expected format when retrieved last modification date.
+     */
+    private static final DateFormat MODIFICATION_TIME_FORMAT = new SimpleDateFormat("yyyyMMddhhmmss");
 
     /**
      * Logger.
@@ -237,7 +247,19 @@ public class S3NutDao extends AbstractNutDao {
      */
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
-        throw new UnsupportedOperationException();
+        try {
+            // Connect if necessary
+            connect();
+
+            log.info("Polling S3 nut '{}'", path);
+            final ObjectMetadata objectMetadata = amazonS3Client.getObjectMetadata(bucketName, path);
+            final String response = objectMetadata.getLastModified().toString();
+            log.info("Last modification response : {}", response);
+
+            return objectMetadata.getLastModified().getTime();
+        } catch (AmazonClientException ase) {
+            throw new StreamException(new IOException(ase));
+        }
     }
 
     /**
