@@ -190,6 +190,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final String ext = p.substring(index);
             final NutType type = NutType.getNutTypeForExtension(ext);
             final Nut res = accessFor(p, type);
+            res.setProxyUri(proxyUriFor(res));
 
             // Poll only if polling interleave is enabled
             retval.put(res, getPollingInterleave() != -1 ? getLastUpdateTimestampFor(p) : -1L);

@@ -83,7 +83,7 @@ public class StaticEngine extends Engine {
     /**
      * File pattern.
      */
-    private static final String STATIC_WORKFLOW_FILE = "/wuic-static/%s";
+    public static final String STATIC_WORKFLOW_FILE = "/wuic-static/%s";
 
     /**
      * Pattern that matches a key/value pair pattern. One key/value pair per line is detected.

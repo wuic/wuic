@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,94 +36,95 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.engine.impl.embedded;
 
-import javax.xml.bind.annotation.*;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.engine.Engine;
+
 import java.util.List;
+
+import com.github.wuic.engine.EngineRequest;
 
 /**
  * <p>
- * Represents a builder (engine, DAO) in wuic.xml file.
+ * This {@link Engine engine} is an abstraction for aggregation nut aggregation.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.0
+ * @version 1.0
+ * @since 0.4.1
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class XmlBuilderBean {
+public abstract class AbstractAggregatorEngine extends Engine {
 
     /**
-     * The builder's ID.
+     * Activate aggregation or not.
      */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The builder's type.
-     */
-    @XmlAttribute(name = "type")
-    private String type;
-
-    /**
-     * All the builder's properties.
-     */
-    @XmlElementWrapper(name = "properties")
-    @XmlElement(name = "property")
-    private List<XmlPropertyBean> properties;
+    private Boolean doAggregation;
 
     /**
      * <p>
-     * Gets the ID.
+     * Builds the engine.
      * </p>
      *
-     * @return the ID
+     * @param aggregate activate aggregation or not
      */
-    public String getId() {
-        return id;
+    public AbstractAggregatorEngine(final Boolean aggregate)  {
+        this.doAggregation = aggregate;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final List<Nut> internalParse(final EngineRequest request)
+            throws WuicException {
+
+        // Do nothing if the configuration says that no aggregation should be done
+        if (!works()) {
+            return request.getNuts();
+        }
+
+        final List<Nut> retval = aggregationParse(request);
+
+        // Compute proxy URIs
+        for (final Nut nut : retval) {
+            nut.setProxyUri(request.getHeap().getNutDao().proxyUriFor(nut));
+        }
+
+        // Call next engine in chain
+        if (getNext() != null) {
+            return getNext().parse(new EngineRequest(retval, request));
+        } else {
+            return retval;
+        }
     }
 
     /**
      * <p>
-     * Gets the builder's type.
+     * Do aggregation parsing.
      * </p>
      *
-     * @return the type
+     * @param request the request
+     * @return the aggregated nuts
+     * @throws WuicException if an error occurs
      */
-    public String getType() {
-        return type;
+    protected abstract List<Nut> aggregationParse(EngineRequest request) throws WuicException ;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return doAggregation;
     }
 
     /**
-     * <p>
-     * Gets the properties.
-     * </p>
-     *
-     * @return the properties
+     * {@inheritDoc}
      */
-    public List<XmlPropertyBean> getProperties() {
-        return properties;
-    }
-
-    /**
-     * <p>
-     * Sets the ID.
-     * </p>
-     *
-     * @param id the ID
-     */
-    public void setId(final String id) {
-        this.id = id;
-    }
-
-    /**
-     * <p>
-     * Sets the type.
-     * </p>
-     *
-     * @param type the type
-     */
-    public void setType(final String type) {
-        this.type = type;
+    @Override
+    public final EngineType getEngineType() {
+        return EngineType.AGGREGATOR;
     }
 }

@@ -175,7 +175,15 @@ public class CGCssUrlLineInspector implements LineInspector {
 
             if (!nuts.isEmpty()) {
                 retval = nuts.iterator().next();
-                replacement.append(IOUtils.mergePath("/", heapPath, retval.getName()));
+
+                // Use proxy URI if DAO provide it
+                final String proxy = retval.getProxyUri();
+
+                if (proxy == null) {
+                    replacement.append(IOUtils.mergePath("/", heapPath, retval.getName()));
+                } else {
+                    replacement.append(proxy);
+                }
             } else {
                 log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
                 replacement.append(referencedPath);

@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public abstract class CGAbstractCompressorEngine extends Engine {
@@ -116,8 +116,10 @@ public abstract class CGAbstractCompressorEngine extends Engine {
         // Compress only if needed
         if (works()) {
             // Compress each path
-            for (Nut nut : request.getNuts()) {
-                retval.add(compress(nut));
+            for (final Nut nut : request.getNuts()) {
+                final Nut compress = compress(nut);
+                compress.setProxyUri(request.getHeap().getNutDao().proxyUriFor(compress));
+                retval.add(compress);
             }
         } else {
             retval.addAll(request.getNuts());

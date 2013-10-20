@@ -58,7 +58,7 @@ import javax.servlet.jsp.tagext.TagSupport;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.0
  */
 public class WuicTag extends TagSupport {
@@ -88,8 +88,15 @@ public class WuicTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         try {
-            // Get the files group
-            final WuicFacade facade = ((WuicFacade) pageContext.getServletContext().getAttribute("WUIC_FACADE"));
+            // Get the facade
+            WuicFacade facade = ((WuicFacade) pageContext.getServletContext().getAttribute("WUIC_FACADE"));
+
+            // Facade could be null when servlet failed to create it or when we don't use the servlet module
+            if (facade == null) {
+                WuicServlet.servletContext(pageContext.getServletContext());
+                facade = WuicFacade.newInstance("");
+                pageContext.getServletContext().setAttribute("WUIC_FACADE", facade);
+            }
 
             if (facade == null) {
                 throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
@@ -109,6 +116,14 @@ public class WuicTag extends TagSupport {
         return SKIP_BODY;
     }
 
+    /**
+     * <p>
+     * Writes the import statement in HTML into the output stream for the given nut.
+     * </p>
+     *
+     * @param nut the nut to import
+     * @throws IOException if an I/O error occurs
+     */
     private void writeScriptImport(final Nut nut) throws IOException {
         switch (nut.getNutType()) {
             case CSS :
@@ -175,11 +190,17 @@ public class WuicTag extends TagSupport {
      * @return the url
      */
     private String getUrl(final Nut nut) {
-        return IOUtils.mergePath("/",
-                WuicServlet.servletContext().getContextPath(),
-                WuicServlet.servletMapping(),
-                pageName,
-                nut.getName());
+        if (nut.getProxyUri() != null) {
+            return nut.getProxyUri();
+        } else if (nut.getName().startsWith("http://")) {
+            return nut.getName();
+        } else {
+            return IOUtils.mergePath("/",
+                    WuicServlet.servletContext().getContextPath(),
+                    WuicServlet.servletMapping() ==  null ? "" : WuicServlet.servletMapping(),
+                    pageName,
+                    nut.getName());
+        }
     }
 
     /**

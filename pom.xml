@@ -8,6 +8,7 @@
     <modules>
         <module>modules</module>
         <module>samples</module>
+        <module>plugins</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -272,6 +273,8 @@
         <gpg.version>1.1</gpg.version>
         <surefire-plugin.version>2.14.1</surefire-plugin.version>
         <source-plugin.version>2.1.2</source-plugin.version>
+        <maven.version>2.0</maven.version>
+        <maven-plugin.version>3.2</maven-plugin.version>
     </properties>
 	
 </project>

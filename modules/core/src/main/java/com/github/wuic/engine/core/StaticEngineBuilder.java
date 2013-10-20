@@ -36,94 +36,38 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.engine.core;
 
-import javax.xml.bind.annotation.*;
-import java.util.List;
+import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.impl.embedded.StaticEngine;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
  * <p>
- * Represents a builder (engine, DAO) in wuic.xml file.
+ * This builder creates an engine that caches with a memory map.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.0
+ * @version 1.0
+ * @since 0.4.1
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class XmlBuilderBean {
-
-    /**
-     * The builder's ID.
-     */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The builder's type.
-     */
-    @XmlAttribute(name = "type")
-    private String type;
-
-    /**
-     * All the builder's properties.
-     */
-    @XmlElementWrapper(name = "properties")
-    @XmlElement(name = "property")
-    private List<XmlPropertyBean> properties;
+public class StaticEngineBuilder extends AbstractEngineBuilder {
 
     /**
      * <p>
-     * Gets the ID.
+     * Builds a new instance.
      * </p>
-     *
-     * @return the ID
      */
-    public String getId() {
-        return id;
+    public StaticEngineBuilder() {
+        super();
     }
 
     /**
-     * <p>
-     * Gets the builder's type.
-     * </p>
-     *
-     * @return the type
+     * {@inheritDoc}
      */
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * <p>
-     * Gets the properties.
-     * </p>
-     *
-     * @return the properties
-     */
-    public List<XmlPropertyBean> getProperties() {
-        return properties;
-    }
-
-    /**
-     * <p>
-     * Sets the ID.
-     * </p>
-     *
-     * @param id the ID
-     */
-    public void setId(final String id) {
-        this.id = id;
-    }
-
-    /**
-     * <p>
-     * Sets the type.
-     * </p>
-     *
-     * @param type the type
-     */
-    public void setType(final String type) {
-        this.type = type;
+    @Override
+    protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
+        return new StaticEngine();
     }
 }

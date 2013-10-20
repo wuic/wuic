@@ -304,6 +304,17 @@ public class WuicServlet extends HttpServlet {
     public static ServletContext servletContext() {
         return servletContext;
     }
+
+    /**
+     * <p>
+     * Sets the {@code ServletContext}.
+     * </p>
+     *
+     * @param sc the new servlet context
+     */
+    public static void servletContext(final ServletContext sc) {
+        servletContext = sc;
+    }
     
     /**
      * <p>

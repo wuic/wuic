@@ -18,6 +18,7 @@
         <module>js-sprite-sample</module>
         <module>css-sprite-sample</module>
         <module>polling-sample</module>
+        <module>build-time-sample</module>
     </modules>
 
     <dependencyManagement>

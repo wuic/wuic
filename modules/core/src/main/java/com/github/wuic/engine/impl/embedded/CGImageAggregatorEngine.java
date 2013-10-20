@@ -72,20 +72,15 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.2.0
  */
-public class CGImageAggregatorEngine extends Engine {
+public class CGImageAggregatorEngine extends AbstractAggregatorEngine {
 
     /**
      * The path name when images are aggregated.
      */
     public static final String AGGREGATION_NAME = "aggregate.png";
-
-    /**
-     * Activate aggregation or not.
-     */
-    private Boolean doAggregation;
 
     /**
      * The sprite provider.
@@ -107,7 +102,7 @@ public class CGImageAggregatorEngine extends Engine {
      * @param sp the provider which generates sprites
      */
     public CGImageAggregatorEngine(final Boolean aggregate, final DimensionPacker<Nut> packer, final SpriteProvider[] sp) {
-        doAggregation = aggregate;
+        super(aggregate);
         spriteProviders = Arrays.copyOf(sp, sp.length);
         dimensionPacker = packer;
     }
@@ -116,7 +111,7 @@ public class CGImageAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    public List<Nut> aggregationParse(final EngineRequest request) throws WuicException {
         // Only used if sprite provider is not null
         int spriteCpt = 0;
 
@@ -323,24 +318,8 @@ public class CGImageAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return doAggregation;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public List<NutType> getNutTypes() {
         return Arrays.asList(NutType.PNG);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.AGGREGATOR;
     }
 
     /**
