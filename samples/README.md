@@ -17,7 +17,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
     <tr>
         <td>js-css-sample</td>
         <td>
-            The webapp embeds the [JQuery UI](http://jqueryui.com/resources/download/jquery-ui-1.10.2.zip) archive.
+            The webapp embeds the <a href="http://jqueryui.com/resources/download/jquery-ui-1.10.2.zip">JQuery UI</a> archive.
             All the demos have been copied into the '/using-wuic' path to show how to integrate them with WUIC.
             This way, you can see how you can embed uncompressed framework resources and configure a 'production' mode
             using WUIC. Think how it would be useful to disable compression to debug when your application raises an
@@ -33,8 +33,8 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
     <tr>
         <td>js-sprite-sample</td>
         <td>
-            The sample includes the [cgSceneGraph](http://gwennaelbuchet.github.io/cgSceneGraph/) framework. It
-            demonstrates how to include a set of images aggregated and loaded with sprite in Javascript. The demo
+            The sample includes the <a href="http://gwennaelbuchet.github.io/cgSceneGraph/">cgSceneGraph</a> framework.
+            It demonstrates how to include a set of images aggregated and loaded with sprite in Javascript. The demo
             just displays the different images using sprites.
         </td>
         <td>
