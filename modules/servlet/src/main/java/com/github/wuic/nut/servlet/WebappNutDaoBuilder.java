@@ -40,11 +40,11 @@ package com.github.wuic.nut.servlet;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.setter.*;
 import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.core.DiskNutDao;
-import com.github.wuic.servlet.WuicServlet;
 
 /**
  * <p>
@@ -92,6 +92,6 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
      * @return the absolute path
      */
     protected String processBasePath(final String value) {
-        return WuicServlet.servletContext().getRealPath(value);
+        return WuicJeeContext.getServletContext().getRealPath(value);
     }
 }

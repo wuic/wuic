@@ -19,6 +19,7 @@
         <module>css-sprite-sample</module>
         <module>polling-sample</module>
         <module>build-time-sample</module>
+        <module>thymeleaf-sample</module>
     </modules>
 
     <dependencyManagement>

@@ -78,3 +78,16 @@ Breaking changes :
 ##### v0.3.5 #####
 
 Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.5&page=1&state=open
+
+##### v0.4.0 #####
+
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.4.0&page=1&state=open
+
+##### v0.4.1 #####
+
+Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.4.1&page=1&state=open
+
+Breaking changes :
+- wuic-tag artifact no more depends on wuic-servlet artifact so if you want to serve statics, you need to explicitly declares the wuic-servlet dependency
+- web.xml : all 'init-param' for WUIC servlet need now to be declared as context-param
+- web.xml : the 'com.github.wuic.jee.WuicServletContextListener' class needs to be declared as listener

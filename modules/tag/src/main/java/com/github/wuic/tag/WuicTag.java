@@ -40,10 +40,10 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.servlet.WuicServlet;
+import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
@@ -89,23 +89,11 @@ public class WuicTag extends TagSupport {
     public int doStartTag() throws JspException {
         try {
             // Get the facade
-            WuicFacade facade = ((WuicFacade) pageContext.getServletContext().getAttribute("WUIC_FACADE"));
-
-            // Facade could be null when servlet failed to create it or when we don't use the servlet module
-            if (facade == null) {
-                WuicServlet.servletContext(pageContext.getServletContext());
-                facade = WuicFacade.newInstance("");
-                pageContext.getServletContext().setAttribute("WUIC_FACADE", facade);
-            }
-
-            if (facade == null) {
-                throw new BadArgumentException(new IllegalArgumentException("WuicFacade is null, seems the WuicServlet did not initialized successfully."));
-            }
-
+            final WuicFacade facade = WuicJeeContext.getWuicFacade();
             final List<Nut> nuts = facade.runWorkflow(pageName);
 
             for (final Nut nut : nuts) {
-                writeScriptImport(nut);
+                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), pageName)));
             }
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
@@ -114,93 +102,6 @@ public class WuicTag extends TagSupport {
         }
         
         return SKIP_BODY;
-    }
-
-    /**
-     * <p>
-     * Writes the import statement in HTML into the output stream for the given nut.
-     * </p>
-     *
-     * @param nut the nut to import
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeScriptImport(final Nut nut) throws IOException {
-        switch (nut.getNutType()) {
-            case CSS :
-                pageContext.getOut().println(cssImport(nut));
-                break;
-
-            case JAVASCRIPT :
-                pageContext.getOut().println(javascriptImport(nut));
-                break;
-
-            default :
-                // TODO : think about an effective way to define nuts which should be imported
-                if (nut.getReferencedNuts() != null) {
-                    for (final Nut ref : nut.getReferencedNuts()) {
-                        writeScriptImport(ref);
-                    }
-                }
-        }
-    }
-
-    /**
-     * <p>
-     * Generates import for CSS script.
-     * </p>
-     * 
-     * @param nut the CSS nut
-     * @return the import
-     */
-    private String cssImport(final Nut nut) {
-        final StringBuilder retval = new StringBuilder();
-        
-        retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-        retval.append(getUrl(nut));
-        retval.append("\" />");
-        
-        return retval.toString();
-    }
-    
-    /**
-     * <p>
-     * Generates import for Javascript script.
-     * </p>
-     * 
-     * @param nut the Javascript nut
-     * @return the import
-     */
-    private String javascriptImport(final Nut nut) {
-        final StringBuilder retval = new StringBuilder();
-        
-        retval.append("<script type=\"text/javascript");
-        retval.append("\" src=\"");
-        retval.append(getUrl(nut));
-        retval.append("\"></script>");
-        
-        return retval.toString();
-    }
-    
-    /**
-     * <p>
-     * Generates the URL to use to access to the given nut.
-     * </p>
-     * 
-     * @param nut the nut
-     * @return the url
-     */
-    private String getUrl(final Nut nut) {
-        if (nut.getProxyUri() != null) {
-            return nut.getProxyUri();
-        } else if (nut.getName().startsWith("http://")) {
-            return nut.getName();
-        } else {
-            return IOUtils.mergePath("/",
-                    WuicServlet.servletContext().getContextPath(),
-                    WuicServlet.servletMapping() ==  null ? "" : WuicServlet.servletMapping(),
-                    pageName,
-                    nut.getName());
-        }
     }
 
     /**

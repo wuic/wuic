@@ -16,18 +16,6 @@
         <description>WUIC servlet</description>
         <servlet-name>wuic</servlet-name>
         <servlet-class>com.github.wuic.servlet.WuicServlet</servlet-class>
-        <init-param>
-            <param-name>c.g.w.wuicContextPath</param-name>
-            <param-value>/wuic/</param-value>
-        </init-param>
-        <init-param>
-            <param-name>c.g.w.wuicXmlPath</param-name>
-            <param-value>wuic.xml</param-value>
-        </init-param>
-        <init-param>
-            <param-name>c.g.w.wuicXmlPathAsSystemProperty</param-name>
-            <param-value>true</param-value>
-        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -35,14 +23,30 @@
         <servlet-name>save</servlet-name>
         <url-pattern>/save/*</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>wuic</servlet-name>
         <url-pattern>/wuic/*</url-pattern>
     </servlet-mapping>
-    
+
+    <!-- WUIC's parameters -->
+    <context-param>
+        <param-name>c.g.w.wuicContextPath</param-name>
+        <param-value>/wuic/</param-value>
+    </context-param>
+    <context-param>
+        <param-name>c.g.w.wuicXmlPath</param-name>
+        <param-value>wuic.xml</param-value>
+    </context-param>
+    <context-param>
+        <param-name>c.g.w.wuicXmlPathAsSystemProperty</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
     <listener>
         <listener-class>com.github.wuic.sample.polling.servlet.InitJavascriptFileListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>com.github.wuic.jee.WuicServletContextListener</listener-class>
     </listener>
 
 </web-app>

@@ -38,11 +38,13 @@
 
 package com.github.wuic.servlet;
 
-import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
@@ -50,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -58,8 +59,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,39 +78,9 @@ import java.util.regex.Pattern;
 public class WuicServlet extends HttpServlet {
 
     /**
-     * WUIC's facade attribute name.
-     */
-    public static final String WUIC_FACADE_ATTRIBUTE = "WUIC_FACADE";
-
-    /**
-     * Init parameter which indicates the WUIC context path.
-     */
-    public static final String WUIC_SERVLET_CONTEXT_PARAM = "c.g.w.wuicContextPath";
-
-    /**
-     * Init parameter which indicates the WUIC xml file.
-     */
-    public static final String WUIC_SERVLET_XML_PATH_PARAM = "c.g.w.wuicXmlPath";
-
-    /**
-     * Init parameter which indicates that the WUIC context path is a system property.
-     */
-    public static final String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.w.wuicXmlPathAsSystemProperty";
-
-    /**
      * Serial version UID.
      */
     private static final long serialVersionUID = -7678202861072625737L;
-
-    /**
-     * The servlet context detected when this servlet was initialized.
-     */
-    private static ServletContext servletContext;
-    
-    /**
-     * The servlet mapping.
-     */
-    private static String servletMapping;
 
     /**
      * The logger.
@@ -145,43 +114,19 @@ public class WuicServlet extends HttpServlet {
      */
     @Override
     public void init(final ServletConfig config) throws ServletException {
-        servletContext = config.getServletContext();
-        servletMapping = config.getInitParameter(WUIC_SERVLET_CONTEXT_PARAM);
-
-        // Context where nuts will be exposed
-        final String wuicCp = IOUtils.mergePath("/", servletContext().getContextPath(), servletMapping());
-
-        log.info("WUIC's full context path is {}", wuicCp);
-
-        try {
-            final String wuicXmlPath = config.getInitParameter(WUIC_SERVLET_XML_PATH_PARAM);
-            final WuicFacade facade;
-
-            // Choose specific location for XML file
-            if (wuicXmlPath == null) {
-                facade = WuicFacade.newInstance(wuicCp);
-            } else {
-                if (Boolean.parseBoolean(config.getInitParameter(WUIC_SERVLET_XML_SYS_PROP_PARAM))) {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)));
-                } else {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath));
-                }
-            }
-
-            config.getServletContext().setAttribute(WUIC_FACADE_ATTRIBUTE, facade);
-        } catch (WuicException we) {
-            throw new ServletException("Unable to initialize WuicServlet", we);
-        } catch (MalformedURLException mue) {
-            throw new ServletException("Unable to initialize WuicServlet", mue);
-        }
-
         // Build expected URL pattern
         final StringBuilder patternBuilder = new StringBuilder();
+        final String key = WuicServletContextListener.WUIC_SERVLET_CONTEXT_PARAM;
+        final String servletMapping = config.getServletContext().getInitParameter(key);
+
+        if (servletMapping == null) {
+            throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
+        }
 
         // Starts with servlet mapping
-        patternBuilder.append(Pattern.quote(servletMapping()));
+        patternBuilder.append(Pattern.quote(servletMapping));
 
-        if (!servletMapping().endsWith("/")) {
+        if (!servletMapping.endsWith("/")) {
             patternBuilder.append("/");
         }
 
@@ -234,7 +179,7 @@ public class WuicServlet extends HttpServlet {
             throws WuicException {
 
         // Get the nuts workflow
-        final List<Nut> nuts = getWuicFacade().runWorkflow(workflowId);
+        final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
         final Nut nut = getNut(nuts, nutName);
         InputStream is = null;
 
@@ -281,49 +226,5 @@ public class WuicServlet extends HttpServlet {
         }
 
         return null;
-    }
-
-    /**
-     * <p>
-     * Gets the WUIC's facade from the servlet context.
-     * </p>
-     *
-     * @return the WUIC's facade
-     */
-    public WuicFacade getWuicFacade() {
-        return (WuicFacade) getServletContext().getAttribute(WUIC_FACADE_ATTRIBUTE);
-    }
-
-    /**
-     * <p>
-     * Returns the {@code ServletContext}.
-     * </p>
-     * 
-     * @return the servlet context
-     */
-    public static ServletContext servletContext() {
-        return servletContext;
-    }
-
-    /**
-     * <p>
-     * Sets the {@code ServletContext}.
-     * </p>
-     *
-     * @param sc the new servlet context
-     */
-    public static void servletContext(final ServletContext sc) {
-        servletContext = sc;
-    }
-    
-    /**
-     * <p>
-     * Returns the first servlet mapping for this servlet.
-     * </p>
-     * 
-     * @return the servlet mapping
-     */
-    public static String servletMapping() {
-        return servletMapping;
     }
 }

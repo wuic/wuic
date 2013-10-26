@@ -27,7 +27,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             </b>
         </td>
         <td>
-             YuiCompressor Javascript & CSS minification support. EhCache support.
+             YuiCompressor Javascript & CSS minification support. EhCache support. Script aggregation.
         </td>
     </tr>
     <tr>
@@ -38,7 +38,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             just displays the different images using sprites.
         </td>
         <td>
-             YuiCompressor Javascript minification support. EhCache support. JS sprites. Image aggregation.
+             YuiCompressor Javascript minification support. EhCache support. JS sprites. Image aggregation. Script aggregation.
         </td>
     </tr>
     <tr>
@@ -52,12 +52,33 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         </td>
     </tr>
     <tr>
+        <td>thymeleaf-sample</td>
+        <td>
+            With a modified demo from <a herf="http://datatables.net/">datatable</a> project, this samples shows how you
+            can use the thymeleaf dialect and its import processor.
+        </td>
+        <td>
+             Thymeleaf support. Memory Cache. Script aggregation.
+        </td>
+    </tr>
+    <tr>
         <td>polling-sample</td>
         <td>
             Demonstrates how WUIC can poll both configuration files and nuts and refresh them at runtime.
         </td>
         <td>
              Memory Cache. Configuration polling. Nut polling.
+        </td>
+    </tr>
+    <tr>
+        <td>build-time-sample</td>
+        <td>
+            This sample shows how you can process nuts with WUIC when you build your project with maven and not on the fly.
+            The application is based on a demo from the famous <a href="https://github.com/madebymany/sir-trevor-js">Sir Trejor</a>
+            project.
+        </td>
+        <td>
+             Plugin 'static-helper-maven-plugin' for maven.
         </td>
     </tr>
 </table>

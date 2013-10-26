@@ -193,4 +193,15 @@ public final class WuicFacade {
     public Set<String> workflowIds() {
         return context.workflowIds();
     }
+
+    /**
+     * <p>
+     * Returns the context path.
+     * </p>
+     *
+     * @return context path
+     */
+    public String getContextPath() {
+        return contextPath;
+    }
 }

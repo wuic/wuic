@@ -22,6 +22,8 @@
         <module>ssh</module>
         <module>aws-s3</module>
         <module>google-storage</module>
+        <module>thymeleaf</module>
+        <module>jee</module>
     </modules>
 
     <dependencyManagement>
@@ -106,13 +108,6 @@
                 <groupId>javax.servlet.jsp</groupId>
                 <artifactId>jsp-api</artifactId>
                 <version>${jsp-api.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>${servlet-api.version}</version>
                 <scope>provided</scope>
             </dependency>
 
