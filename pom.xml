@@ -271,6 +271,7 @@
         <mockito.version>1.9.5</mockito.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
+        <thymeleaf-version>2.0.19</thymeleaf-version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>

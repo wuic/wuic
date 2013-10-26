@@ -125,6 +125,13 @@
                 <version>${jsch-version}</version>
             </dependency>
 
+            <!-- Thymeleaf support -->
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf</artifactId>
+                <version>${thymeleaf-version}</version>
+            </dependency>
+
             <!-- AWS SDK -->
             <dependency>
                 <groupId>com.amazonaws</groupId>
