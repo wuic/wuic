@@ -185,7 +185,7 @@ public class S3NutDao extends AbstractNutDao {
         try {
             final String finalSuffix =  path.equals("") ? "" : "/";
             connect();
-            objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(path + finalSuffix).withDelimiter("/"));
+            objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(IOUtils.mergePath(path.substring(1), finalSuffix)).withDelimiter("/"));
         } catch (AmazonServiceException ase) {
             throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s for nut key : %s", bucketName, path), ase));
         }
@@ -260,6 +260,24 @@ public class S3NutDao extends AbstractNutDao {
         } catch (AmazonClientException ase) {
             throw new StreamException(new IOException(ase));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void save(final Nut nut) {
+        // TODO : implement S3 upload
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean saveSupported() {
+        // TODO : return true once save() is implemented
+        return false;
     }
 
     /**
