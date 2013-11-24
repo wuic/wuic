@@ -23,8 +23,7 @@
 
         <dependency>
             <groupId>com.github.wuic</groupId>
-            <artifactId>wuic-aws-s3</artifactId>
-            <version>0.4.0</version>
+            <artifactId>wuic-tag</artifactId>
         </dependency>
 
         <!-- JS & CSS compression -->
