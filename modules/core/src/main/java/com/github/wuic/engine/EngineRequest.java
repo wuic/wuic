@@ -61,7 +61,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.0
  */
 public final class EngineRequest {
@@ -117,7 +117,8 @@ public final class EngineRequest {
         heap = other.getHeap();
         chains = other.chains;
         workflowId = wId;
-        skip = toSkip;
+        skip = new EngineType[toSkip.length];
+        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
     }
 
     /**
@@ -135,7 +136,39 @@ public final class EngineRequest {
         chains = other.chains;
         workflowId = other.workflowId;
         skip = other.skip;
+    }
 
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some nuts specific and a specified heap to be used.
+     * </p>
+     *
+     * @param n the nuts to be parsed
+     * @param h the heap
+     * @param other the request to copy
+     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
+     */
+    public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
+        nuts = n;
+        contextPath = other.getContextPath();
+        heap = h;
+        chains = other.chains;
+        workflowId = other.workflowId;
+        skip = new EngineType[toSkip.length];
+        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some nuts specific and a specified heap to be used.
+     * </p>
+     *
+     * @param n the nuts to be parsed
+     * @param h the heap
+     * @param other the request to copy
+     */
+    public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other) {
+        this(n, h, other, other.skip);
     }
 
     /**

@@ -69,7 +69,7 @@ import java.util.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 public abstract class AbstractCacheEngine extends Engine {
@@ -158,9 +158,10 @@ public abstract class AbstractCacheEngine extends Engine {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
             final Nut bytes = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            bytes.setProxyUri(nut.getProxyUri());
 
             if (nut.getReferencedNuts() != null) {
-                for (Nut ref : nut.getReferencedNuts()) {
+                for (final Nut ref : nut.getReferencedNuts()) {
                     bytes.addReferencedNut(toByteArrayNut(ref));
                 }
             }

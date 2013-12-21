@@ -2,12 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<groupId>com.github.wuic</groupId>
 	<artifactId>web-ui-compressor</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.1.RC1</version>
     <modelVersion>4.0.0</modelVersion>
 
     <modules>
         <module>modules</module>
         <module>samples</module>
+        <module>plugins</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -86,6 +87,13 @@
                 <groupId>net.sf.ehcache</groupId>
                 <artifactId>ehcache-core</artifactId>
                 <version>${ehcache-core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>${servlet-api.version}</version>
+                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -263,6 +271,7 @@
         <mockito.version>1.9.5</mockito.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
+        <thymeleaf-version>2.0.19</thymeleaf-version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>
@@ -272,6 +281,8 @@
         <gpg.version>1.1</gpg.version>
         <surefire-plugin.version>2.14.1</surefire-plugin.version>
         <source-plugin.version>2.1.2</source-plugin.version>
+        <maven.version>2.0</maven.version>
+        <maven-plugin.version>3.2</maven-plugin.version>
     </properties>
 	
 </project>

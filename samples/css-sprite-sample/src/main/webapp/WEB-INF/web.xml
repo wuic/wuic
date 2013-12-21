@@ -9,10 +9,6 @@
         <description>WUIC servlet</description>
         <servlet-name>wuic</servlet-name>
         <servlet-class>com.github.wuic.servlet.WuicServlet</servlet-class>
-        <init-param>
-            <param-name>c.g.w.wuicContextPath</param-name>
-            <param-value>/wuic/</param-value>
-        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -21,4 +17,12 @@
         <url-pattern>/wuic/*</url-pattern>
     </servlet-mapping>
 
+    <context-param>
+        <param-name>c.g.w.wuicContextPath</param-name>
+        <param-value>/wuic/</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>com.github.wuic.jee.WuicServletContextListener</listener-class>
+    </listener>
 </web-app>

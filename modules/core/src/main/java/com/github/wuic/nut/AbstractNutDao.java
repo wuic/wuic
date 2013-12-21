@@ -61,7 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.1
  */
 public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {
@@ -190,6 +190,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final String ext = p.substring(index);
             final NutType type = NutType.getNutTypeForExtension(ext);
             final Nut res = accessFor(p, type);
+            res.setProxyUri(proxyUriFor(res));
 
             // Poll only if polling interleave is enabled
             retval.put(res, getPollingInterleave() != -1 ? getLastUpdateTimestampFor(p) : -1L);
@@ -245,6 +246,99 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         // Will stop any scheduled operation
         if (getPollingInterleave() != -1) {
             setPollingInterleave(-1);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NutDao withRootPath(final String rootPath) {
+        return new WithRootPathNutDao(rootPath);
+    }
+
+    /**
+     * <p>
+     * This class represents a modification of the the enclosing class behavior when the {@link NutDao#create(String)}
+     * method is called. Each time this method is called, the given path is prefixed by a root path.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.1
+     */
+    private final class WithRootPathNutDao implements NutDao {
+
+        /**
+         * Root path.
+         */
+        private String rootPath;
+
+        /**
+         * <p>
+         * Creates a new instance.
+         * </p>
+         *
+         * @param rp the root path.
+         */
+        private WithRootPathNutDao(final String rp) {
+            rootPath = rp;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+            AbstractNutDao.this.observe(realPath, listeners);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Map<Nut, Long> create(final String path) throws StreamException {
+            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String proxyUriFor(final Nut nut) {
+            return AbstractNutDao.this.proxyUriFor(nut);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void save(final Nut nut) {
+            AbstractNutDao.this.save(nut);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean saveSupported() {
+            return AbstractNutDao.this.saveSupported();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void shutdown() {
+            AbstractNutDao.this.shutdown();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutDao withRootPath(final String rp) {
+            return new WithRootPathNutDao(IOUtils.mergePath(rootPath, rp));
         }
     }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="testClasspathNutDaoBuilder" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/sir-trevor</property>
+                <property key="c.g.wuic.dao.regex">true</property>
+                <property key="c.g.wuic.dao.proxyUris">http://localhost:8080/</property>
+            </properties>
+        </nut-dao-builder>
+    </nut-dao-builders>
+
+    <heaps>
+        <heap id="js" dao-builder-id="testClasspathNutDaoBuilder">
+            <nut-path>public/javascripts/.*.js</nut-path>
+            <nut-path>dist/.*.js</nut-path>
+        </heap>
+        <heap id="css" dao-builder-id="testClasspathNutDaoBuilder">
+            <nut-path>.*.css</nut-path>
+        </heap>
+    </heaps>
+</wuic>

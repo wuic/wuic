@@ -64,7 +64,7 @@ import java.util.*;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public class NutsHeap implements NutDaoListener, HeapListener {
@@ -107,7 +107,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * Listeners.
      */
-    private Set<HeapListener> listeners;
+    private final Set<HeapListener> listeners;
 
     /**
      * The ID identifying this heap.
@@ -118,6 +118,24 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Heap composition.
      */
     private NutsHeap[] composition;
+
+
+    /**
+     * <p>
+     * Builds a heap by copy.
+     * </p>
+     *
+     * @param other the heap to copy
+     */
+    public NutsHeap(final NutsHeap other) {
+        this.id = other.id;
+        this.listeners = other.listeners;
+        this.composition = other.composition;
+        this.nutDao = other.nutDao;
+        this.nuts = other.nuts;
+        this.nutType = other.nutType;
+        this.paths = other.paths;
+    }
 
     /**
      * <p>
@@ -268,6 +286,17 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     public NutDao getNutDao() {
         return nutDao;
+    }
+
+    /**
+     * <p>
+     * Sets the {@link NutDao}.
+     * </p>
+     *
+     * @param dao the DAO
+     */
+    public void setNutDao(final NutDao dao) {
+        nutDao = dao;
     }
 
     /**

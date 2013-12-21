@@ -39,7 +39,6 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
-import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
@@ -62,15 +61,10 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.8
+ * @version 1.9
  * @since 0.1.0
  */
-public class CGTextAggregatorEngine extends Engine {
-
-    /**
-     * Activate aggregation or not.
-     */
-    private Boolean doAggregation;
+public class CGTextAggregatorEngine extends AbstractAggregatorEngine {
 
     /**
      * <p>
@@ -80,15 +74,14 @@ public class CGTextAggregatorEngine extends Engine {
      * @param aggregate activate aggregation or not
      */
     public CGTextAggregatorEngine(final Boolean aggregate) {
-        this.doAggregation = aggregate;
+        super(aggregate);
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request)
-            throws WuicException {
+    public List<Nut> aggregationParse(final EngineRequest request) throws WuicException {
 
         // Do nothing if the configuration says that no aggregation should be done
         if (!works()) {
@@ -160,23 +153,7 @@ public class CGTextAggregatorEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return doAggregation;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public List<NutType> getNutTypes() {
         return Arrays.asList(NutType.CSS, NutType.JAVASCRIPT);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.AGGREGATOR;
     }
 }

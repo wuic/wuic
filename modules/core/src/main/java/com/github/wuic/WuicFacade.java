@@ -45,6 +45,7 @@ import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.NumberUtils;
@@ -180,5 +181,27 @@ public final class WuicFacade {
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
+    }
+
+    /**
+     * <p>
+     * Returns the workflow IDs.
+     * </p>
+     *
+     * @return the IDs
+     */
+    public Set<String> workflowIds() {
+        return context.workflowIds();
+    }
+
+    /**
+     * <p>
+     * Returns the context path.
+     * </p>
+     *
+     * @return context path
+     */
+    public String getContextPath() {
+        return contextPath;
     }
 }

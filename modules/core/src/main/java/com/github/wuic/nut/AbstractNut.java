@@ -50,7 +50,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.0
  */
 public abstract class AbstractNut implements Nut {
@@ -89,6 +89,11 @@ public abstract class AbstractNut implements Nut {
      * Returns all the referenced nuts.
      */
     private List<Nut> referencedNuts;
+
+    /**
+     * The proxy URI.
+     */
+    private String proxyUri;
 
     /**
      * <p>
@@ -228,6 +233,23 @@ public abstract class AbstractNut implements Nut {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public String getProxyUri() {
+        return proxyUri;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setProxyUri(final String uri) {
+        this.proxyUri = uri;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         return getClass().getSimpleName() + "[" + nutName + "]";
     }
@@ -235,6 +257,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(final Object other) {
         if (other instanceof AbstractNut) {
             return ((AbstractNut) other).nutName.equals(nutName);
@@ -246,6 +269,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         return nutName.hashCode();
     }

@@ -48,7 +48,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public interface NutDao {
@@ -118,4 +118,14 @@ public interface NutDao {
      * </p>
      */
     void shutdown();
+
+    /**
+     * <p>
+     * Returns an instance that prefixes any nut name to be created with the given root path.
+     * </p>
+     *
+     * @param rootPath the root path
+     * @return the enclosed instance
+     */
+    NutDao withRootPath(String rootPath);
 }

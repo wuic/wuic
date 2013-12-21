@@ -38,8 +38,11 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
@@ -47,6 +50,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +68,7 @@ import java.util.regex.Pattern;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.4
  */
 @RunWith(JUnit4.class)
@@ -179,5 +183,53 @@ public class UtilityTest extends WuicTest {
         first.add("c");
         diff = CollectionUtils.difference(first, second);
         Assert.assertTrue(diff.isEmpty());
+    }
+
+    /**
+     * Test javascript import.
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void htmlJavascriptImportTest() throws IOException {
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getName()).thenReturn("foo.js");
+        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").indexOf("\"myPath/foo.js\"") != -1);
+    }
+
+    /**
+     * Test CSS import.
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void htmlCssImportTest() throws IOException {
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getName()).thenReturn("foo.css");
+        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").indexOf("\"myPath/foo.css\"") != -1);
+    }
+
+    /**
+     * Test URL generation.
+     */
+    @Test
+    public void getUrltTest() {
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+
+        // Served nut
+        Mockito.when(nut.getName()).thenReturn("foo.css");
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("myPath/foo.css") != -1);
+
+        // Absolute path
+        Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("http:/domain.fr/foo.css") != -1);
+
+        // Proxy path
+        Mockito.when(nut.getProxyUri()).thenReturn("http://proxy.fr/foo.css");
+        Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("http://proxy.fr/foo.css") != -1);
     }
 }

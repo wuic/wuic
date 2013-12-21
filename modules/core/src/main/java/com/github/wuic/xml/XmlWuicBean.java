@@ -38,10 +38,7 @@
 
 package com.github.wuic.xml;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.*;
 
 import java.util.List;
 
@@ -51,13 +48,12 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 @XmlRootElement(name = "wuic")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class XmlWuicBean {
-
-    // TODO : include here an attribute to specify a static context ?
 
     /**
      * Polling interleave in seconds.
@@ -146,5 +142,27 @@ public class XmlWuicBean {
      */
     public List<XmlWorkflowBean> getWorkflows() {
         return workflows;
+    }
+
+    /**
+     * <p>
+     * Sets the workflows.
+     * </p>
+     *
+     * @param workflowList the new list
+     */
+    public void setWorkflows(final List<XmlWorkflowBean> workflowList) {
+        workflows = workflowList;
+    }
+
+    /**
+     * <p>
+     * Sets the engine builders.
+     * </p>
+     *
+     * @param engineBuilders the new builders
+     */
+    public void setEngineBuilders(final List<XmlBuilderBean> engineBuilders) {
+        this.engineBuilders = engineBuilders;
     }
 }

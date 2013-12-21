@@ -41,10 +41,12 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.util.IOUtils;
 
@@ -53,6 +55,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -64,10 +67,15 @@ import java.util.regex.Matcher;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 public abstract class CGTextInspectorEngine extends Engine {
+
+    /**
+     * Engines types that will be skipped when processing referenced nuts.
+     */
+    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.AGGREGATOR, EngineType.CACHE, EngineType.INSPECTOR };
 
     /**
      * The inspectors of each line
@@ -150,11 +158,13 @@ public abstract class CGTextInspectorEngine extends Engine {
 
             // Reads each line and keep the transformations in memory
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            final List<Nut> referencednuts = new ArrayList<Nut>();
+            final List<Nut> referencedNuts = new ArrayList<Nut>();
 
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
-                    line = inspectLine(line, nutLocation, request, inspector, referencednuts);
+                    final NutsHeap heap = new NutsHeap(request.getHeap());
+                    heap.setNutDao(request.getHeap().getNutDao().withRootPath(nutLocation));
+                    line = inspectLine(line, request, inspector, referencedNuts, heap);
                 }
 
                 os.write((line + "\n").getBytes());
@@ -168,7 +178,7 @@ public abstract class CGTextInspectorEngine extends Engine {
             inspected.setBinaryCompressible(nut.isBinaryCompressible());
 
             // Also add all the referenced nuts
-            for (Nut ref : referencednuts) {
+            for (Nut ref : referencedNuts) {
                 inspected.addReferencedNut(ref);
             }
 
@@ -190,18 +200,18 @@ public abstract class CGTextInspectorEngine extends Engine {
      * </p>
      *
      * @param line the line to be inspected
-     * @param nutLocation the location of the nut
      * @param request the initial request
      * @param inspector the inspector to use
-     * @param referencednuts the collection where any referenced nut identified by the method will be added
+     * @param referencedNuts the collection where any referenced nut identified by the method will be added
+     * @param nutsHeap the heap wrapping the DAO to use
      * @throws WuicException if an I/O error occurs while reading
      * @return the given line eventually transformed
      */
     protected String inspectLine(final String line,
-                                 final String nutLocation,
                                  final EngineRequest request,
                                  final LineInspector inspector,
-                                 final List<Nut> referencednuts)
+                                 final List<Nut> referencedNuts,
+                                 final NutsHeap nutsHeap)
             throws WuicException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
@@ -212,32 +222,30 @@ public abstract class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final String nutName = inspector.appendTransformation(matcher, replacement,
-                    IOUtils.mergePath(request.getContextPath(), request.getHeap().getId()),
-                    nutLocation, request.getHeap().getNutDao());
+            final Nut nut = inspector.appendTransformation(matcher, replacement,
+                    IOUtils.mergePath(request.getContextPath(), request.getHeap().getId()), nutsHeap.getNutDao());
             matcher.appendReplacement(retval, replacement.toString());
 
             // If nut name is null, it means that nothing has been changed by the inspector
-            if (nutName != null) {
-                // TODO : fix => nut's location could be empty because it is not specified in a recursive call
-                final List<Nut> res = new ArrayList<Nut>(request.getHeap().getNutDao().create(nutName).keySet());
+            if (nut != null) {
+                List<Nut> res = Arrays.asList(nut);
 
                 // Process nut
-                //if (getNext() != null) {
-                     // TODO : inspection fails when file is compressed => need to improve regex usage to uncomment this
-                //    res = getNext().parse(new EngineRequest(res, request));
-                //}
+                final Engine engine = request.getChainFor(nut.getNutType());
+                if (engine != null) {
+                    res = engine.parse(new EngineRequest(res, nutsHeap, request, SKIPPED_ENGINE));
+                }
 
                 // Add the nut and inspect it recursively if it's a CSS path
                 for (final Nut r : res) {
                     Nut inspected = r;
 
                     if (r.getNutType().equals(NutType.CSS)) {
-                        inspected = inspect(r, request);
+                        inspected = inspect(r, new EngineRequest(res, request));
                     }
 
                     configureExtracted(inspected);
-                    referencednuts.add(inspected);
+                    referencedNuts.add(inspected);
                 }
             }
         }

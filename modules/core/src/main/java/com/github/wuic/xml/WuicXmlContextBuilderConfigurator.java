@@ -41,6 +41,7 @@ package com.github.wuic.xml;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
@@ -87,10 +88,14 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
      * @param wuicXml the wuic.xml file URL
      * @throws JAXBException if an context can't be initialized
      */
-    public WuicXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException {
+    public WuicXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException, WuicXmlReadException {
         xmlFile = wuicXml;
         final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
         unmarshaller = jc.createUnmarshaller();
+
+        if (wuicXml == null) {
+            throw new WuicXmlReadException("XML configuration URL for WUIC is null", new IllegalArgumentException());
+        }
     }
 
     /**
@@ -111,7 +116,7 @@ public class WuicXmlContextBuilderConfigurator extends ContextBuilderConfigurato
             }
 
             // The heaps
-            for (XmlHeapBean heap : xml.getHeaps()) {
+            for (final XmlHeapBean heap : xml.getHeaps()) {
                 final String[] paths = heap.getNutPaths() == null ? new String[0] : heap.getNutPaths().toArray(new String[heap.getNutPaths().size()]);
                 final String[] nested = configureNestedHeap(ctxBuilder, heap);
                 final String[] referenced = getReferencedHeap(heap);

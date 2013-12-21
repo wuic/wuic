@@ -17,7 +17,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
     <tr>
         <td>js-css-sample</td>
         <td>
-            The webapp embeds the [JQuery UI](http://jqueryui.com/resources/download/jquery-ui-1.10.2.zip) archive.
+            The webapp embeds the <a href="http://jqueryui.com/resources/download/jquery-ui-1.10.2.zip">JQuery UI</a> archive.
             All the demos have been copied into the '/using-wuic' path to show how to integrate them with WUIC.
             This way, you can see how you can embed uncompressed framework resources and configure a 'production' mode
             using WUIC. Think how it would be useful to disable compression to debug when your application raises an
@@ -27,18 +27,18 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             </b>
         </td>
         <td>
-             YuiCompressor Javascript & CSS minification support. EhCache support.
+             YuiCompressor Javascript & CSS minification support. EhCache support. Script aggregation.
         </td>
     </tr>
     <tr>
         <td>js-sprite-sample</td>
         <td>
-            The sample includes the [cgSceneGraph](http://gwennaelbuchet.github.io/cgSceneGraph/) framework. It
-            demonstrates how to include a set of images aggregated and loaded with sprite in Javascript. The demo
+            The sample includes the <a href="http://gwennaelbuchet.github.io/cgSceneGraph/">cgSceneGraph</a> framework.
+            It demonstrates how to include a set of images aggregated and loaded with sprite in Javascript. The demo
             just displays the different images using sprites.
         </td>
         <td>
-             YuiCompressor Javascript minification support. EhCache support. JS sprites. Image aggregation.
+             YuiCompressor Javascript minification support. EhCache support. JS sprites. Image aggregation. Script aggregation.
         </td>
     </tr>
     <tr>
@@ -52,12 +52,33 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         </td>
     </tr>
     <tr>
+        <td>thymeleaf-sample</td>
+        <td>
+            With a modified demo from <a herf="http://datatables.net/">datatable</a> project, this samples shows how you
+            can use the thymeleaf dialect and its import processor.
+        </td>
+        <td>
+             Thymeleaf support. Memory Cache. Script aggregation.
+        </td>
+    </tr>
+    <tr>
         <td>polling-sample</td>
         <td>
             Demonstrates how WUIC can poll both configuration files and nuts and refresh them at runtime.
         </td>
         <td>
              Memory Cache. Configuration polling. Nut polling.
+        </td>
+    </tr>
+    <tr>
+        <td>build-time-sample</td>
+        <td>
+            This sample shows how you can process nuts with WUIC when you build your project with maven and not on the fly.
+            The application is based on a demo from the famous <a href="https://github.com/madebymany/sir-trevor-js">Sir Trevor</a>
+            project.
+        </td>
+        <td>
+             Plugin 'static-helper-maven-plugin' for maven.
         </td>
     </tr>
 </table>

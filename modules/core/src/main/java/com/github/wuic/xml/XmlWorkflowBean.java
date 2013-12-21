@@ -38,9 +38,7 @@
 
 package com.github.wuic.xml;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.*;
 
 import java.util.List;
 
@@ -50,9 +48,10 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class XmlWorkflowBean {
 
     /**
@@ -158,5 +157,49 @@ public class XmlWorkflowBean {
      */
     public Boolean getUseDefaultEngines() {
         return useDefaultEngines == null ? Boolean.TRUE : useDefaultEngines;
+    }
+
+    /**
+     * <p>
+     * Sets the engine builder IDs.
+     * </p>
+     *
+     * @param engineBuilderIds the IDs
+     */
+    public void setEngineBuilderIds(final List<String> engineBuilderIds) {
+        this.engineBuilderIds = engineBuilderIds;
+    }
+
+    /**
+     * <p>
+     * Sets the use of default engines.
+     * </p>
+     *
+     * @param useDefaultEngines the use of default engines
+     */
+    public void setUseDefaultEngines(final Boolean useDefaultEngines) {
+        this.useDefaultEngines = useDefaultEngines;
+    }
+
+    /**
+     * <p>
+     * Sets the heap ID pattern.
+     * </p>
+     *
+     * @param heapIdPattern the pattern
+     */
+    public void setHeapIdPattern(final String heapIdPattern) {
+        this.heapIdPattern = heapIdPattern;
+    }
+
+    /**
+     * <p>
+     * Sets the ID prefix.
+     * </p>
+     *
+     * @param idPrefix the new ID prefix
+     */
+    public void setIdPrefix(final String idPrefix) {
+        this.idPrefix = idPrefix;
     }
 }

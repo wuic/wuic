@@ -5,19 +5,21 @@
     <parent>
         <groupId>com.github.wuic</groupId>
         <artifactId>web-ui-compressor</artifactId>
-        <version>0.4.0</version>
+        <version>0.4.1.RC1</version>
     </parent>
 
     <groupId>com.github.wuic.samples</groupId>
     <artifactId>wuic-samples</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.0</version>
+    <version>0.4.1.RC1</version>
 
     <modules>
         <module>js-css-sample</module>
         <module>js-sprite-sample</module>
         <module>css-sprite-sample</module>
         <module>polling-sample</module>
+        <module>build-time-sample</module>
+        <module>thymeleaf-sample</module>
     </modules>
 
     <dependencyManagement>

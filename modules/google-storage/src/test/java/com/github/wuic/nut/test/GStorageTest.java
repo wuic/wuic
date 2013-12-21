@@ -41,6 +41,7 @@ package com.github.wuic.nut.test;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
 import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
+import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
@@ -68,7 +69,7 @@ import static org.mockito.Mockito.when;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.1
+ * @version 1.2
  * @since 0.3.3
  */
 @RunWith(JUnit4.class)
@@ -87,6 +88,7 @@ public class GStorageTest {
         final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
         nuts.put(new ByteArrayNut(array, "cloud.css", NutType.CSS), -1L);
         when(nutsHeap.getNuts()).thenReturn(nuts.keySet());
+        when(nutsHeap.getNutDao()).thenReturn(mock(NutDao.class));
 
         final Engine compressor = new CssYuiCompressorEngine(true, "UTF-8", -1);
         final Engine cacheEngine = new EhCacheEngine(false, null);
@@ -99,7 +101,7 @@ public class GStorageTest {
         Assert.assertFalse(group.isEmpty());
         InputStream is;
 
-        for (Nut res : group) {
+        for (final Nut res : group) {
             is = res.openStream();
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();

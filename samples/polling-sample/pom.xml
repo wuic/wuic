@@ -5,7 +5,7 @@
     <parent>
         <artifactId>wuic-samples</artifactId>
         <groupId>com.github.wuic.samples</groupId>
-        <version>0.4.0</version>
+        <version>0.4.1.RC1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -17,8 +17,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
-            <version>${servlet-api.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

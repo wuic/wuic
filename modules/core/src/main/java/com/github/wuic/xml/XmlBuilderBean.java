@@ -38,9 +38,7 @@
 
 package com.github.wuic.xml;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
 /**
@@ -49,9 +47,10 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class XmlBuilderBean {
 
     /**
@@ -104,5 +103,27 @@ public class XmlBuilderBean {
      */
     public List<XmlPropertyBean> getProperties() {
         return properties;
+    }
+
+    /**
+     * <p>
+     * Sets the ID.
+     * </p>
+     *
+     * @param id the ID
+     */
+    public void setId(final String id) {
+        this.id = id;
+    }
+
+    /**
+     * <p>
+     * Sets the type.
+     * </p>
+     *
+     * @param type the type
+     */
+    public void setType(final String type) {
+        this.type = type;
     }
 }

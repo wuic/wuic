@@ -56,7 +56,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.1.1
  */
 public interface Nut extends Serializable {
@@ -178,4 +178,22 @@ public interface Nut extends Serializable {
      * @return the referenced nuts, {@code null} if no nut is referenced
      */
     List<Nut> getReferencedNuts();
+
+    /**
+     * <p>
+     * Sets a proxy URI that allow to access the nut through another way.
+     * </p>
+     *
+     * @param uri the proxy uri
+     */
+    void setProxyUri(String uri);
+
+    /**
+     * <p>
+     * Gets the proxy URI.
+     * </p>
+     *
+     * @return the proxy URI, {@code null} if no proxy URI is set
+     */
+    String getProxyUri();
 }

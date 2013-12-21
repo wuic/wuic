@@ -141,4 +141,15 @@ public class Context implements Observer {
         contextBuilder.deleteObserver(this);
         upToDate = false;
     }
+
+    /**
+     * <p>
+     * Returns the workflow IDs.
+     * </p>
+     *
+     * @return the IDs
+     */
+    public Set<String> workflowIds() {
+        return workflowMap.keySet();
+    }
 }
