@@ -74,7 +74,7 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         <td>build-time-sample</td>
         <td>
             This sample shows how you can process nuts with WUIC when you build your project with maven and not on the fly.
-            The application is based on a demo from the famous <a href="https://github.com/madebymany/sir-trevor-js">Sir Trejor</a>
+            The application is based on a demo from the famous <a href="https://github.com/madebymany/sir-trevor-js">Sir Trevor</a>
             project.
         </td>
         <td>
