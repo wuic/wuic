@@ -189,7 +189,6 @@ public class WuicServlet extends HttpServlet {
                 response.setContentType(nut.getNutType().getMimeType());
                 is = nut.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
-                is = null;
             } catch (IOException ioe) {
                 throw new StreamException(ioe);
             } finally {
@@ -211,9 +210,11 @@ public class WuicServlet extends HttpServlet {
      */
     private Nut getNut(final List<Nut> nuts, final String nutName) {
         // Iterates the nuts to find the requested element
-        for (Nut nut : nuts) {
+        for (final Nut nut : nuts) {
+            final String parsedName = nut.getName().replace("../", "");
+
             // Nut found : write the stream and return
-            if (nut.getName().equals(nutName) || ("/" + nut.getName()).equals(nutName)) {
+            if (parsedName.equals(nutName) || ("/" + parsedName).equals(nutName) || parsedName.equals("/" + nutName)) {
                 return nut;
             } else if (nut.getReferencedNuts() != null) {
                 // Find in referenced nuts

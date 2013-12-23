@@ -13,10 +13,13 @@
 
         <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
         <wuic:html-import pageName="apps-js" />
+        <wuic:html-import pageName="apps-css" />
     </head>
     <body>
-        <h1>In this sample, see how cache could be invalidated when polling operations detects an update</h1>
-
+        <h1 class="wuic">Polling sample</h1>
+        <h2>
+            In this sample, see how cache could be invalidated when polling operations detects an update
+        </h2>
         <p>
             This code is loaded through WUIC :
             <ul>

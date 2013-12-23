@@ -60,6 +60,83 @@ public final class StringUtils {
 
     /**
      * <p>
+     * Simplifies the given string representation of a path by removing substring like '/foo/bar/../dir' by '/foo/dir',
+     * considering the '..' substring as a reference to the parent path and the {@link IOUtils#STD_SEPARATOR} as separator.
+     * </p>
+     *
+     * @param toSimplify the path to simplify
+     * @return the simplified path, {@code null} if it is not possible to simplify
+     * @see StringUtils#simplifyPathWithDoubleDot(String, String)
+     */
+    public static String simplifyPathWithDoubleDot(final String toSimplify) {
+        return simplifyPathWithDoubleDot(toSimplify, IOUtils.STD_SEPARATOR);
+    }
+
+    /**
+     * <p>
+     * Simplifies the given string representation of a path by removing substring like '/foo/bar/../dir' by '/foo/dir',
+     * considering the '..' substring as a reference to the parent path. In this case, the path separator must be '/'.
+     * Not that the separator must not contain regex keywords.
+     * </p>
+     *
+     * <p>
+     * If a parent path is not found in the string, then {@code null} is returned. For instance, '../bar' can't be
+     * simplified.
+     * </p>
+     *
+     * @param toSimplify the path to simplify
+     * @param separator the path separator
+     * @return the simplified path, {@code null} if it is not possible to simplify
+     */
+    public static String simplifyPathWithDoubleDot(final String toSimplify, final String separator) {
+        final String[] exploded = toSimplify.split(separator);
+
+        // Manage "/foo/bar/" vs "/foo/bar" case
+        final StringBuilder retval = new StringBuilder(toSimplify.endsWith(separator) ? separator : "");
+        int countSkip = 0;
+
+        for (int i = exploded.length - 1; i >= 0; i--) {
+            final String path = exploded[i];
+
+            if (path.isEmpty()) {
+                // No parent to be read : return null
+                if (i == 0 && countSkip > 0) {
+                    return null;
+                } else {
+                    continue;
+                }
+            }
+
+            // Parent path reference detected : could be simplified
+            if ("..".equals(path)) {
+                countSkip++;
+            } else if (countSkip > 0) {
+                countSkip--;
+
+                if (retval.indexOf(separator) != separator.length() - 1) {
+                    retval.insert(0, separator);
+                }
+            } else {
+                retval.insert(0, path).insert(0, separator);
+            }
+
+            // We must know the parent
+            if (countSkip > i) {
+                // We don't know the parent : return null
+                return null;
+            }
+        }
+
+        // Manage "bar/foo/" vs "bar/foo" case
+        if (!toSimplify.startsWith(separator)) {
+            retval.delete(0, separator.length());
+        }
+
+        return retval.toString();
+    }
+
+    /**
+     * <p>
      * Removes all trailing {@code String} at the beginning and at the end of the specified {@code String}.
      * </p>
      *

@@ -75,6 +75,30 @@ import java.util.regex.Pattern;
 public class UtilityTest extends WuicTest {
 
     /**
+     * Test path simplification method.
+     */
+    @Test
+    public void simplifyPathTest() {
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo"), "/foo");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo/"), "/foo/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/../foo"), "foo");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/../foo/"), "foo/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo/file"), "/foo/file");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo/file/"), "/foo/file/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/../foo/file"), "foo/file");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/../foo/file/"), "foo/file/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/foo/../.."), "/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/foo/../../"), "/");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/foo/../../path/../file"), "file");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/foo/../bar/../baz"), "/baz");
+        Assert.assertNull(StringUtils.simplifyPathWithDoubleDot("bar/foo/../../../"));
+        Assert.assertNull(StringUtils.simplifyPathWithDoubleDot(".."));
+        Assert.assertNull(StringUtils.simplifyPathWithDoubleDot("/../"));
+        Assert.assertNull(StringUtils.simplifyPathWithDoubleDot("../foo"));
+        Assert.assertNull(StringUtils.simplifyPathWithDoubleDot("foo/../bar/../../path"));
+    }
+
+    /**
      * Test string merge.
      */
     @Test
@@ -89,6 +113,7 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(StringUtils.merge(new String[] {":", ":foo:", ":oof", }, ":"), ":foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[] {":", "foo:", ":oof:", }, ":"), ":foo:oof:");
         Assert.assertEquals(StringUtils.merge(new String[] {"/opt", "data", }, "/"), "/opt/data");
+        Assert.assertEquals(StringUtils.merge(new String[] {"http://", "server:80", "", "root" }, "/"), "http://server:80/root");
     }
 
     /**
@@ -195,7 +220,7 @@ public class UtilityTest extends WuicTest {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").indexOf("\"myPath/foo.js\"") != -1);
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/foo.js\""));
     }
 
     /**
@@ -208,7 +233,7 @@ public class UtilityTest extends WuicTest {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").indexOf("\"myPath/foo.css\"") != -1);
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/foo.css\""));
     }
 
     /**
@@ -221,15 +246,15 @@ public class UtilityTest extends WuicTest {
 
         // Served nut
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("myPath/foo.css") != -1);
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("myPath/foo.css"));
 
         // Absolute path
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("http:/domain.fr/foo.css") != -1);
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("http:/domain.fr/foo.css"));
 
         // Proxy path
         Mockito.when(nut.getProxyUri()).thenReturn("http://proxy.fr/foo.css");
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").indexOf("http://proxy.fr/foo.css") != -1);
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("http://proxy.fr/foo.css"));
     }
 }

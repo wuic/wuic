@@ -1,0 +1,5 @@
+@import "../css/file.css";
+
+.test {
+    background: url("../image/file.png");
+}

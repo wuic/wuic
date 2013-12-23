@@ -171,7 +171,7 @@ public class CGCssUrlLineInspector implements LineInspector {
             replacement.append(referencedPath);
         } else {
             // Extract the nut
-            final Set<Nut> nuts = dao.create(referencedPath).keySet();
+            final Set<Nut> nuts = dao.create(referencedPath, NutDao.PathFormat.RELATIVE_FILE).keySet();
 
             if (!nuts.isEmpty()) {
                 retval = nuts.iterator().next();
@@ -180,7 +180,7 @@ public class CGCssUrlLineInspector implements LineInspector {
                 final String proxy = retval.getProxyUri();
 
                 if (proxy == null) {
-                    replacement.append(IOUtils.mergePath("/", heapPath, retval.getName()));
+                    replacement.append(IOUtils.mergePath("/", heapPath, retval.getName().replace("../", "a/../")));
                 } else {
                     replacement.append(proxy);
                 }

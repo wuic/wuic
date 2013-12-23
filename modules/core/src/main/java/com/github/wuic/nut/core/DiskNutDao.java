@@ -128,8 +128,7 @@ public class DiskNutDao extends AbstractNutDao {
     @Override
     public List<String> listNutsPaths(final String pattern) throws StreamException {
         init();
-        final Pattern compiled = Pattern.compile(regularExpression ? pattern :  Pattern.quote(pattern));
-
+        final Pattern compiled = Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern));
         return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), compiled);
     }
 

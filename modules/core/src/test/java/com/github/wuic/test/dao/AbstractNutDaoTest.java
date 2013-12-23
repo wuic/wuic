@@ -286,7 +286,7 @@ public class AbstractNutDaoTest {
 
                         dao.setPollingInterleave(2);
                         dao.getPollingInterleave();
-                        dao.computeRealPaths("");
+                        dao.computeRealPaths("", NutDao.PathFormat.ANY);
                         dao.proxyUriFor(nut);
                     } catch (Exception e) {
                         e.printStackTrace();

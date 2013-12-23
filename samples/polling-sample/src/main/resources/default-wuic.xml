@@ -9,6 +9,12 @@
                 <property key="c.g.wuic.dao.pollingInterleave">10</property>
             </properties>
         </nut-dao-builder>
+
+        <nut-dao-builder id="cssNutDao" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/css</property>
+            </properties>
+        </nut-dao-builder>
     </nut-dao-builders>
 
     <engine-builders>
@@ -22,6 +28,9 @@
     <heaps>
         <heap id="apps-js" dao-builder-id="diskNutDao">
             <nut-path>nut-polling-sample.js</nut-path>
+        </heap>
+        <heap id="apps-css" dao-builder-id="cssNutDao">
+            <nut-path>style.css</nut-path>
         </heap>
     </heaps>
 </wuic>

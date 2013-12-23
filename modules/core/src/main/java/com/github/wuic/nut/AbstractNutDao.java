@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.PollingScheduler;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,23 +173,60 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     }
 
     /**
+     * <p>
+     * Computes the {@link NutType} for the given path.
+     * </p>
+     *
+     * @param path the path
+     * @return the {@link NutType}, {@code null} if no extension exists
+     */
+    private NutType getNutType(final String path) {
+        final int index = path.lastIndexOf('.');
+
+        if (index < 0) {
+            log.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
+            return null;
+        }
+
+        final String ext = path.substring(index);
+        return NutType.getNutTypeForExtension(ext);
+    }
+
+    /**
+     * <p>
+     * Computes the absolute path of the given path relative to the DAO's base path.
+     * </p>
+     *
+     * @param relativePath the relative path
+     * @return the absolute path
+     */
+    protected String absolutePathOf(final String relativePath) {
+        return StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), relativePath));
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public Map<Nut, Long> create(final String pathName) throws StreamException {
-        final List<String> pathNames = computeRealPaths(pathName);
+    public Map<Nut, Long> create(final String path) throws StreamException {
+        return AbstractNutDao.this.create(path, PathFormat.ANY);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<Nut, Long> create(final String pathName, final PathFormat format) throws StreamException {
+        final List<String> pathNames = computeRealPaths(pathName, format);
         final Map<Nut, Long> retval = new HashMap<Nut, Long>(pathNames.size());
 
         for (final String p : pathNames) {
-            final int index = p.lastIndexOf('.');
+            final NutType type = getNutType(p);
 
-            if (index < 0) {
-                log.warn(String.format("'%s' does not contains any extension, ignoring nut", p));
+            if (type == null) {
                 continue;
             }
 
-            final String ext = p.substring(index);
-            final NutType type = NutType.getNutTypeForExtension(ext);
             final Nut res = accessFor(p, type);
             res.setProxyUri(proxyUriFor(res));
 
@@ -305,6 +343,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
+        public Map<Nut, Long> create(final String path, final PathFormat format) throws StreamException {
+            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), format);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public String proxyUriFor(final Nut nut) {
             return AbstractNutDao.this.proxyUriFor(nut);
         }
@@ -349,18 +395,51 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param pathName the path access
+     * @param format the path format
      * @return the resulting real paths
      * @throws StreamException if an I/O error occurs when creating the nut
      */
-    public List<String> computeRealPaths(final String pathName) throws StreamException {
-        final List<String> paths = listNutsPaths(pathName);
-        final List<String> retval = new ArrayList<String>(paths.size());
+    public List<String> computeRealPaths(final String pathName, final PathFormat format) throws StreamException {
+        if (!format.canBeRegex()) {
+            /*final String simple = StringUtils.simplifyPathWithDoubleDot(pathName);
 
-        for (String p : paths) {
-            retval.add(p);
+            if (simple == null) {
+                log.warn("Unable to create nut with path '{}', it must be relative to a parent path under base path '{}'",
+                        pathName, basePath);
+                return Collections.emptyList();
+            }
+
+            final String path = StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), simple));*/
+            final NutType type = getNutType(pathName);
+
+            // No type computable, ignore the path
+            /*if (type == null) {
+                return Collections.emptyList();
+            } */
+
+            try {
+                // Will raise an exception if path does not exists
+                // TODO : would be better to call an 'exists' method instead of raising an exception
+                accessFor(pathName, type);
+
+                // Nut can be raised, return its path
+                return Arrays.asList(pathName);
+            } catch (StreamException e) {
+                log.warn("'{}' can't be loaded ignoring it. Absolute path is '{}'", pathName, absolutePathOf(pathName), e);
+
+                // Nut can't be raised
+                return Collections.emptyList();
+            }
+        } else {
+            final List<String> paths = listNutsPaths(pathName);
+            final List<String> retval = new ArrayList<String>(paths.size());
+
+            for (String p : paths) {
+                retval.add(p);
+            }
+
+            return retval;
         }
-
-        return retval;
     }
 
     /**

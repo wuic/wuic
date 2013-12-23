@@ -48,10 +48,59 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public interface NutDao {
+
+    /**
+     * <p>
+     * This enumeration specifies formats of path specified to create {@link Nut nuts}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.2
+     */
+    enum PathFormat {
+
+        /**
+         * Any format. We don't know anything of the format.
+         */
+        ANY(Boolean.TRUE),
+
+        /**
+         * Relative file format.
+         */
+        RELATIVE_FILE(Boolean.FALSE);
+
+        /**
+         * Could represent a regex or not.
+         */
+        private Boolean regex;
+
+        /**
+         * <p>
+         * Builds a new enum thanks to given flag.
+         * </p>
+         *
+         * @param r {@code true} is the value could corresponds to a regex, {@code false} otherwise
+         */
+        private PathFormat(final Boolean r) {
+            regex = r;
+        }
+
+        /**
+         * <p>
+         * Indicates if this format could corresponds to a regex.
+         * </p>
+         *
+         * @return {@code true} is the value could corresponds to a regex, {@code false} otherwise
+         */
+        public Boolean canBeRegex() {
+            return regex;
+        }
+    };
 
     /**
      * <p>
@@ -67,16 +116,34 @@ public interface NutDao {
 
     /**
      * <p>
-     * Creates a list of {@link Nut nuts} thanks to the given path. Each nut will be associated to a timestamp value
-     * associated to the last update. If no polling interleave is set in the DAO, no polling should be performed here
-     * and the nut should be associated to the value -1.
+     * Creates a list of {@link Nut nuts} thanks to the given path considered as represented in any format.
      * </p>
      *
      * @param path the path representing the location of the nut(s)
      * @return the created nut(s)
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
+     * @see NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)
      */
     Map<Nut, Long> create(String path) throws StreamException;
+
+
+    /**
+     * <p>
+     * Creates a list of {@link Nut nuts} thanks to the given path. Each nut will be associated to a timestamp value
+     * associated to the last update. If no polling interleave is set in the DAO, no polling should be performed here
+     * and the nut should be associated to the value -1.
+     * </p>
+     *
+     * <p>
+     * A {@link PathFormat} also gives information on the format used in the string representation of the given path.
+     * </p>
+     *
+     * @param path the path representing the location of the nut(s)
+     * @param format the path format
+     * @return the created nut(s)
+     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
+     */
+    Map<Nut, Long> create(String path, PathFormat format) throws StreamException;
 
     /**
      * <p>

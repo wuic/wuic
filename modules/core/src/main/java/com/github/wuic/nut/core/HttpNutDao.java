@@ -43,6 +43,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public class HttpNutDao extends AbstractNutDao {
@@ -91,13 +92,13 @@ public class HttpNutDao extends AbstractNutDao {
             builder.append(":").append(port);
         }
 
-        builder.append("/").append(path).append(path.isEmpty() ? "" : "/");
+        builder.append("/");
 
         baseUrl = builder.toString();
     }
 
     @Override
-    protected List<String> listNutsPaths(String pattern) throws StreamException {
+    protected List<String> listNutsPaths(final String pattern) throws StreamException {
         // Finding nuts with a regex through HTTP protocol is tricky
         // Until this feature is implemented, we only expect pattern that represent a real nut
         return Arrays.asList(pattern);
@@ -108,7 +109,7 @@ public class HttpNutDao extends AbstractNutDao {
      */
     @Override
     public Nut accessFor(final String realPath, final NutType type) throws StreamException {
-        final String url = IOUtils.mergePath(baseUrl, realPath);
+        final String url = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
         log.debug("Opening HTTP access for {}", url);
 
         try {
@@ -123,7 +124,7 @@ public class HttpNutDao extends AbstractNutDao {
      */
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
-        final String url = IOUtils.mergePath(baseUrl, path);
+        final String url = IOUtils.mergePath(baseUrl, getBasePath(), path);
         log.debug("Polling HTTP nut for {}", url);
 
         try {
@@ -137,6 +138,6 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     public String toString() {
-        return String.format("%s with base URL %s", getClass().getName(), baseUrl);
+        return String.format("%s with base URL %s", getClass().getName(), IOUtils.mergePath(baseUrl, getBasePath()));
     }
 }

@@ -38,13 +38,18 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.Context;
+import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +59,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,7 +70,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.1
  */
 @RunWith(JUnit4.class)
@@ -81,7 +88,7 @@ public class CssInspectorTest {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
-        Mockito.when(dao.create(Mockito.anyString())).thenAnswer(new Answer<Object>() {
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 
             /**
              * {@inheritDoc}
@@ -135,5 +142,26 @@ public class CssInspectorTest {
         final EngineRequest request = new EngineRequest("wid", "cp", heap, new HashMap<NutType, Engine>());
         engine.parse(request);
         Assert.assertEquals(createCount.get(), 12);
+    }
+
+    /**
+     * Test when file is referenced with '../'
+     */
+    @Test
+    public void parentRefTest() throws Exception {
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
+        final Context ctx = builder.build();
+
+        // ../ refers a file inside base directory hierarchy
+        List<Nut> group = ctx.process("css-inner", "");
+        Assert.assertEquals(1, group.size());
+        Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
+
+        // ../ refers a file outside base directory hierarchy
+        group = ctx.process("css-outer", "");
+        Assert.assertEquals(1, group.size());
+        Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
     }
 }

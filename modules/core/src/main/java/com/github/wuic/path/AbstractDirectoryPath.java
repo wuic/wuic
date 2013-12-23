@@ -90,7 +90,15 @@ public abstract class AbstractDirectoryPath extends SimplePath implements Direct
         String child = children[0];
         log.debug("Current directory path is {}", getAbsolutePath());
         log.debug("Going to build child {}", child);
-        Path retval = buildChild(child);
+
+        Path retval;
+
+        // Double dot case
+        if ("..".equals(child)) {
+            retval = getParent();
+        } else {
+            retval = buildChild(child);
+        }
 
         if (children.length > 1) {
             final String remaining = IOUtils.mergePath(Arrays.copyOfRange(children, 1, children.length));
