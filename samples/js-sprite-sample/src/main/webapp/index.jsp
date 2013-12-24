@@ -30,7 +30,7 @@
           var root = new CGSGNode(0, 0, 0, 0);
           CGSG.sceneGraph.addNode(root, null);
 
-          //Create the Node Image Factory with his specific groupId
+          //Create the Node Image Factory with his specific heapId
           var imageFactory = new WUICCGSGNodeImageFactory("img");
 
           //get the map between imgUrl and spriteUrl

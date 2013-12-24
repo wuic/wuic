@@ -15,7 +15,7 @@
         </heap>
     </heaps>
     <workflows>
-        <workflow id-prefix="img-" heap-id-pattern="img">
+        <workflow id-prefix="sprite-" heap-id-pattern="img">
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultImageAggregatorEngineBuilder</engine-builder-id>

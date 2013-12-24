@@ -60,10 +60,15 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
+
+    /**
+     * Constant name.
+     */
+    private static final String JS_CONSTANT = "WUIC_SPRITE";
 
     /**
      * {@inheritDoc}
@@ -74,12 +79,11 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
-        final String jsName = createJsName(heapId);
         jsBuilder.append("if (!");
-        jsBuilder.append(jsName);
+        jsBuilder.append(JS_CONSTANT);
         jsBuilder.append(") {");
         jsBuilder.append("var ");
-        jsBuilder.append(jsName);
+        jsBuilder.append(JS_CONSTANT);
         jsBuilder.append(" = {};");
         jsBuilder.append("}");
 
@@ -87,9 +91,9 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             final Region reg = regions.get(name);
             
             // Instruction that affect the new object to the WUIC_SPRITE constant
-            jsBuilder.append(jsName);
+            jsBuilder.append(JS_CONSTANT);
             jsBuilder.append("['");
-            jsBuilder.append(name.replace("\'", "\\'"));
+            jsBuilder.append(convertAllowedName(heapId, name));
             jsBuilder.append("'] = {x : \"");
             jsBuilder.append(reg.getxPosition());
             jsBuilder.append("\", y : \"");
@@ -106,17 +110,5 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
         // Make a nut and return it
         final byte[] bytes = jsBuilder.toString().getBytes();
         return new ByteArrayNut(bytes, "sprites" + nutNameSuffix + ".js", NutType.JAVASCRIPT);
-    }
-
-    /**
-     * <p>
-     * Computes the WUIC javascript constant name for the given ID.
-     * </p>
-     *
-     * @param groupId the group ID
-     * @return the JS name to use
-     */
-    private String createJsName(final String groupId) {
-        return "WUIC_SPRITE_" + groupId.toUpperCase().replaceAll("\\W", "_");
     }
 }

@@ -50,7 +50,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public abstract class CGAbstractSpriteProvider implements SpriteProvider {
@@ -89,5 +89,34 @@ public abstract class CGAbstractSpriteProvider implements SpriteProvider {
     public void init(final String imageName) {
         regions.clear();
         image = imageName;
+    }
+
+    /**
+     * <p>
+     * Unified method to use to compute allowed name in sprite declaration.
+     * </p>
+     *
+     * <p>
+     * First of all, the heap ID is concatenated with the name separated by an underscore. The extension and parent path
+     * of the name will be removed. Finally, any character which is not a letter (in upper or lower case) will be replaced
+     * by an "underscore".
+     * </p>
+     *
+     * @param name the name to use in sprite
+     * @return the name usable in sprites
+     */
+    public String convertAllowedName(final String heapId, final String name) {
+        // Class name is based on the name without the directory section and the path extension
+        final int start = name.lastIndexOf('/') + 1;
+        final int last = name.lastIndexOf('.');
+
+        // Build the string
+        final StringBuilder retval = new StringBuilder();
+        retval.append(heapId);
+        retval.append("_");
+        retval.append(name.substring(start, last > start ? last : name.length()));
+
+        // Replace non letter characters
+        return retval.toString().replaceAll("[^a-zA-Z]", "_");
     }
 }

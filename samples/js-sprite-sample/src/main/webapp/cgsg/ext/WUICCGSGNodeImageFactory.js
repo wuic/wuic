@@ -1,20 +1,23 @@
 /**
- * this class represent an Image Factory for WUIC
+ * this class represent an Image Factory for WUIC.
  */
 var WUICCGSGNodeImageFactory = CGSGObject.extend ({
 
     initialize : function (groupId) {
-        this.wuicData = eval("WUIC_SPRITE_" + groupId.toUpperCase());
+        this.groupId = groupId.replace(/[^a-zA-Z]/g, '_');
         this.imgMap = new CGSGMap();
+        var file, sprite;
 
-        for (var file in this.wuicData) {
-            var sprite = this.wuicData[file];
-            this.imgMap.addOrReplace(file, sprite.url);
+        for (file in WUIC_SPRITE) {
+            if (WUIC_SPRITE.hasOwnProperty(file) && file.substring(0, this.groupId.length) == this.groupId) {
+                sprite = WUIC_SPRITE[file];
+                this.imgMap.addOrReplace(file, sprite.url);
+            }
         }
     },
 
     create : function(name, data) {
-        var sprite = this.wuicData[name];
+        var sprite = WUIC_SPRITE[name];
 
         // Create image thanks to the provided sprite
         var img = this.buildNode(data, sprite.url);
