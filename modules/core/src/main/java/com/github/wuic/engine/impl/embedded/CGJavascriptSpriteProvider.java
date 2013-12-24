@@ -60,7 +60,7 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
@@ -89,7 +89,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             // Instruction that affect the new object to the WUIC_SPRITE constant
             jsBuilder.append(jsName);
             jsBuilder.append("['");
-            jsBuilder.append(name.replace("\'", "\\'"));
+            jsBuilder.append(convertAllowedName(name));
             jsBuilder.append("'] = {x : \"");
             jsBuilder.append(reg.getxPosition());
             jsBuilder.append("\", y : \"");
@@ -117,6 +117,6 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * @return the JS name to use
      */
     private String createJsName(final String groupId) {
-        return "WUIC_SPRITE_" + groupId.toUpperCase().replaceAll("\\W", "_");
+        return "WUIC_SPRITE_" + convertAllowedName(groupId.toUpperCase());
     }
 }

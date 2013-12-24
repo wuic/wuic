@@ -50,7 +50,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.3.1
  */
 public abstract class CGAbstractSpriteProvider implements SpriteProvider {
@@ -89,5 +89,22 @@ public abstract class CGAbstractSpriteProvider implements SpriteProvider {
     public void init(final String imageName) {
         regions.clear();
         image = imageName;
+    }
+
+    /**
+     * <p>
+     * Unified method to use to compute allowed name in sprite declaration. Any character which is not a letter (in
+     * upper or lower case) will be replaced by a "_". Moreover, any extension and parent path will be also ignored.
+     * </p>
+     *
+     *
+     * @param name the name to use in sprite
+     * @return the name usable in sprites
+     */
+    public String convertAllowedName(final String name) {
+        // Class name is based on the name without the directory section and the path extension
+        final int start = name.lastIndexOf('/') + 1;
+        final int last = name.lastIndexOf('.');
+        return name.substring(start, last > start ? last : name.length()).replaceAll("[^a-zA-Z]", "_");
     }
 }

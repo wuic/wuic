@@ -51,7 +51,7 @@ import com.github.wuic.util.IOUtils;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
@@ -66,11 +66,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
-
-            // Class name is based on the name without the directory section and the path extension
-            final int start = name.lastIndexOf('/') + 1;
-            final int last = name.lastIndexOf('.');
-            final String className = name.substring(start, last > start ? last : name.length());
+            final String className = convertAllowedName(name);
 
             // Define region within the image
             cssBuilder.append(".wuic_");
