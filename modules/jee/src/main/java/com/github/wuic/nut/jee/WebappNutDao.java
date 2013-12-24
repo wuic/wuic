@@ -36,48 +36,69 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.nut.jee;
 
+import com.github.wuic.NutType;
+import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.IOUtils;
+import com.github.wuic.jee.path.WebappDirectoryPathFactory;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.core.DiskNutDao;
+import com.github.wuic.nut.core.PathNutDao;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.Path;
+import com.github.wuic.util.IOUtils;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.NutDao} implementation for disk accesses.
+ * A {@link com.github.wuic.nut.NutDao} implementation for webapp accesses.
  * </p>
  *
  * <p>
- * The DAO is based on the {@link DirectoryPath} from the path API designed for WUIC.
+ * If the war exploded, then path could be retrieved with file system access through {@link DiskNutDao}. However, if the
+ * packaged war is used, then we have a more limited access to files. For instance, time stamp is not available on the
+ * file so we will always return '-1' for polling.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.2
  */
-public class DiskNutDao extends PathNutDao {
+public class WebappNutDao extends PathNutDao {
+
+    /**
+     * The context to use to retrieve resources.
+     */
+    private ServletContext context;
 
     /**
      * <p>
      * Builds a new instance with a base directory.
      * </p>
      *
+     * <p>
+     * Package access because build logic should be dedicated to the builder inside the same package.
+     * </p>
+     *
+     * @param ctx the servlet context
      * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      */
-    public DiskNutDao(final String base,
-                      final Boolean basePathAsSysProp,
-                      final String[] proxies,
-                      final int pollingSeconds,
-                      final Boolean regex) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex);
+    public WebappNutDao(final ServletContext ctx,
+                        final String base,
+                        final String[] proxies,
+                        final int pollingSeconds,
+                        final Boolean regex) {
+        // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
+        super(base, false, proxies, pollingSeconds, regex);
+        context = ctx;
     }
 
     /**
@@ -85,7 +106,7 @@ public class DiskNutDao extends PathNutDao {
      */
     @Override
     protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
+        final Path file = IOUtils.buildPath(getBasePath(), new WebappDirectoryPathFactory(context));
 
         if (file instanceof DirectoryPath) {
             return DirectoryPath.class.cast(file);

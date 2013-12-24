@@ -40,8 +40,9 @@ package com.github.wuic.util;
 
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.core.FsDirectoryPath;
+import com.github.wuic.path.DirectoryPathFactory;
 import com.github.wuic.path.Path;
+import com.github.wuic.path.core.FsDirectoryPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -334,14 +335,16 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Returns a hierarchy of {@link Path paths} represented by the given {@code String}.
+     * Returns a hierarchy of {@link Path paths} represented by the given {@code String}. The given {@link DirectoryPathFactory}
+     * is used to create directories.
      * </p>
      *
      * @param path the path hierarchy
+     * @param factory the factory.
      * @return the last {@link Path} of the hierarchy with its parent
      * @throws IOException if any I/O error occurs
      */
-    public static Path buildPath(final String path) throws IOException {
+    public static Path buildPath(final String path, final DirectoryPathFactory factory) throws IOException {
         LOG.debug("Build path for '{}'", path);
 
         // Always use '/' separator, even on windows
@@ -350,8 +353,8 @@ public final class IOUtils {
 
         // Build the root => force the path to / if its empty
         final String root = tree[0];
-        DirectoryPath retval = new FsDirectoryPath(root.isEmpty() && path.startsWith(IOUtils.STD_SEPARATOR) ?
-                IOUtils.STD_SEPARATOR : root, null);
+        final DirectoryPath retval =
+                factory.create(root.isEmpty() && path.startsWith(IOUtils.STD_SEPARATOR) ? IOUtils.STD_SEPARATOR : root);
 
         // Build child path
         if (tree.length > 1) {
@@ -360,5 +363,19 @@ public final class IOUtils {
         } else {
             return retval;
         }
+    }
+
+    /**
+     * <p>
+     * Returns a hierarchy of {@link Path paths} represented by the given {@code String}.
+     * Uses a {@link FsDirectoryPathFactory} to create instances.
+     * </p>
+     *
+     * @param path the path hierarchy
+     * @return the last {@link Path} of the hierarchy with its parent
+     * @throws IOException if any I/O error occurs
+     */
+    public static Path buildPath(final String path) throws IOException {
+        return buildPath(path, new FsDirectoryPathFactory());
     }
 }

@@ -67,8 +67,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * Abstract servlet which initializes the servlet context and the servlet mapping
- * used for WUIC.
+ * Servlet which initializes the servlet context and the servlet mapping used for WUIC.
  * </p>
  *
  * @author Guillaume DROUET
@@ -123,7 +122,7 @@ public class WuicServlet extends HttpServlet {
             throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
         }
 
-        // Starts with servlet mapping
+        // Starts with nut mapping
         patternBuilder.append(Pattern.quote(servletMapping));
 
         if (!servletMapping.endsWith("/")) {

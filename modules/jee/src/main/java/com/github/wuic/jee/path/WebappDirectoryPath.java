@@ -36,62 +36,89 @@
  */
 
 
-package com.github.wuic.nut.servlet;
+package com.github.wuic.jee.path;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.jee.WuicJeeContext;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.setter.*;
-import com.github.wuic.nut.AbstractNutDaoBuilder;
-import com.github.wuic.nut.core.DiskNutDao;
+import com.github.wuic.path.AbstractDirectoryPath;
+import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.Path;
+import com.github.wuic.util.IOUtils;
+
+import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.util.Set;
 
 /**
  * <p>
- * Builder for nut access on disk.
+ * Represents a directory in the war file.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.0
+ * @version 1.0
+ * @since 0.4.2
  */
-public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
+public class WebappDirectoryPath extends AbstractDirectoryPath {
+
+    /**
+     * The servlet context.
+     */
+    private ServletContext context;
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
+     *
+     * @param name the name
+     * @param parent the parent
+     * @param context the servlet context used to create children
      */
-    public WebappNutDaoBuilder() {
-        super();
-        addPropertySetter(new BasePathPropertySetter(this, "."),
-                new BasePathAsSysPropPropertySetter(this),
-                new ProxyUrisPropertySetter(this),
-                new PollingInterleavePropertySetter(this),
-                new RegexPropertySetter(this));
+    public WebappDirectoryPath(final String name, final DirectoryPath parent, final ServletContext context) {
+        super(name, parent);
+        this.context = context;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NutDao internalBuild() throws BuilderPropertyNotSupportedException {
-        return new DiskNutDao(processBasePath((String) property(ApplicationConfig.BASE_PATH)),
-                (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
-                (String[]) property(ApplicationConfig.PROXY_URIS),
-                (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
-                (Boolean) property(ApplicationConfig.REGEX));
+    protected Path buildChild(final String child) throws IOException {
+        final String absoluteParent = getAbsolutePath();
+        final String absoluteChild = IOUtils.mergePath(absoluteParent, child);
+
+        // If child is a directory, it will ends with a '/' and won't be match the absolute child path in returned set
+        if (context.getResourcePaths(absoluteParent).contains(absoluteChild)) {
+            return new WebappFilePath(child, this, context);
+        } else {
+            return new WebappDirectoryPath(child, this, context);
+        }
     }
 
     /**
-     * <p>
-     * Making absolute the given path which is expected to be relative to the webapp directory.
-     * </p>
-     *
-     * @param value the relative path
-     * @return the absolute path
+     * {@inheritDoc}
      */
-    protected String processBasePath(final String value) {
-        return WuicJeeContext.getServletContext().getRealPath(value);
+    @Override
+    @SuppressWarnings("unchecked")
+    public String[] list() throws IOException {
+        final String absolutePath = getAbsolutePath();
+        final int index = absolutePath.length() + 1;
+        final Set<String> res = context.getResourcePaths(getAbsolutePath());
+        final String[] retval = new String[res.size()];
+        int i = 0;
+
+        for (final String path : res) {
+            // Removes the parent path part
+            retval[i++] = path.substring(index);
+        }
+
+        return retval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getLastUpdate() throws IOException {
+        // In JEE, war is can't be reached so we are not able to get last timestamp
+        return -1L;
     }
 }

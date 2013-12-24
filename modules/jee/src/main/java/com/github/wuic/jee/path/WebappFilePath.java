@@ -36,61 +36,60 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.jee.path;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.Path;
+import com.github.wuic.path.FilePath;
+import com.github.wuic.path.core.SimplePath;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.NutDao} implementation for disk accesses.
- * </p>
- *
- * <p>
- * The DAO is based on the {@link DirectoryPath} from the path API designed for WUIC.
+ * Represents a file in the war file.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.2
  */
-public class DiskNutDao extends PathNutDao {
+public class WebappFilePath extends SimplePath implements FilePath {
+
+    /**
+     * Servlet context.
+     */
+    private ServletContext context;
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Creates a new instance.
      * </p>
      *
-     * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxies the proxies URIs in front of the nut
-     * @param regex if the path should be considered as a regex or not
+     * @param n the name
+     * @param dp the parent
+     * @param context the servlet context used to access nut's stream
      */
-    public DiskNutDao(final String base,
-                      final Boolean basePathAsSysProp,
-                      final String[] proxies,
-                      final int pollingSeconds,
-                      final Boolean regex) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex);
+    public WebappFilePath(final String n, final DirectoryPath dp, final ServletContext context) {
+        super(n, dp);
+        this.context = context;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
+    public long getLastUpdate() throws IOException {
+        // In JEE, war is can't be reached so we are not able to get last timestamp
+        return -1L;
+    }
 
-        if (file instanceof DirectoryPath) {
-            return DirectoryPath.class.cast(file);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream openStream() throws IOException {
+        return context.getResourceAsStream(getAbsolutePath());
     }
 }

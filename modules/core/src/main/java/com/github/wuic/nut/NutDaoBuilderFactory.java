@@ -68,7 +68,7 @@ public final class NutDaoBuilderFactory extends AbstractBuilderFactory<NutDaoBui
             ClasspathNutDaoBuilder.class.getName(),
             DiskNutDaoBuilder.class.getName(),
             HttpNutDaoBuilder.class.getName(),
-            "com.github.wuic.nut.servlet.WebappNutDaoBuilder",
+            "com.github.wuic.nut.jee.WebappNutDaoBuilder",
             "com.github.wuic.nut.ftp.FtpNutDaoBuilder",
             "com.github.wuic.nut.ssh.SshNutDaoBuilder",
             "com.github.wuic.nut.gstorage.GStorageNutDaoBuilder",

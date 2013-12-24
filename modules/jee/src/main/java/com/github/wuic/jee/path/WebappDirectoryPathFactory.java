@@ -36,61 +36,44 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.jee.path;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.Path;
+import com.github.wuic.path.DirectoryPathFactory;
 
-import java.io.IOException;
+import javax.servlet.ServletContext;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.NutDao} implementation for disk accesses.
- * </p>
- *
- * <p>
- * The DAO is based on the {@link DirectoryPath} from the path API designed for WUIC.
+ * {@link DirectoryPathFactory} in charge of creating new {@link WebappDirectoryPath}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.2
  */
-public class DiskNutDao extends PathNutDao {
+public class WebappDirectoryPathFactory implements DirectoryPathFactory {
+
+    /**
+     * The servlet context used by any created {@link WebappDirectoryPath}.
+     */
+    private ServletContext context;
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Creates a new instance.
      * </p>
      *
-     * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxies the proxies URIs in front of the nut
-     * @param regex if the path should be considered as a regex or not
+     * @param ctx the servlet context used to create {@link WebappDirectoryPath}
      */
-    public DiskNutDao(final String base,
-                      final Boolean basePathAsSysProp,
-                      final String[] proxies,
-                      final int pollingSeconds,
-                      final Boolean regex) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex);
+    public WebappDirectoryPathFactory(final ServletContext ctx) {
+        context = ctx;
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
-
-        if (file instanceof DirectoryPath) {
-            return DirectoryPath.class.cast(file);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
-        }
+    public DirectoryPath create(final String path) {
+        return new WebappDirectoryPath(path, null, context);
     }
 }

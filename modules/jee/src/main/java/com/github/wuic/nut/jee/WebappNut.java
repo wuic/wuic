@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,62 +35,64 @@
  * licenses."
  */
 
+package com.github.wuic.nut.jee;
 
-package com.github.wuic.nut.core;
+import com.github.wuic.NutType;
+import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.nut.AbstractNut;
+import com.github.wuic.path.FilePath;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.IOUtils;
-import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.Path;
-
-import java.io.IOException;
+import javax.servlet.ServletContext;
+import java.io.InputStream;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.NutDao} implementation for disk accesses.
- * </p>
- *
- * <p>
- * The DAO is based on the {@link DirectoryPath} from the path API designed for WUIC.
+ * Represents a nut on the path system provided or to be managed by the WUIC framework. Thanks to
+ * {@link FilePath}, the nut could also be a ZIP entry.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.2
  */
-public class DiskNutDao extends PathNutDao {
+public class WebappNut extends AbstractNut {
+
+    /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * The servlet context which can open stream.
+     */
+    private ServletContext context;
+
+    /**
+     * Path in webapp.
+     */
+    private String path;
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Builds a new {@code Nut} based on a context and path.
      * </p>
      *
-     * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxies the proxies URIs in front of the nut
-     * @param regex if the path should be considered as a regex or not
+     * @param ctx the context path
+     * @param p the path
+     * @param name the nut name
+     * @param ft the path type
      */
-    public DiskNutDao(final String base,
-                      final Boolean basePathAsSysProp,
-                      final String[] proxies,
-                      final int pollingSeconds,
-                      final Boolean regex) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex);
+    public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft) {
+        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        context = ctx;
+        path = p;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
-
-        if (file instanceof DirectoryPath) {
-            return DirectoryPath.class.cast(file);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
-        }
+    public InputStream openStream() throws NutNotFoundException {
+        return context.getResourceAsStream(path);
     }
 }
