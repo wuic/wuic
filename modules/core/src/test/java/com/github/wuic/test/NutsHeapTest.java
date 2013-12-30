@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 @RunWith(JUnit4.class)
@@ -248,5 +248,20 @@ public class NutsHeapTest {
         }
     }
 
-
+    /**
+     * Test case when illegal name is used.
+     *
+     * @throws StreamException if test fails
+     */
+    @Test
+    public void illegalNameTest() throws StreamException {
+        try {
+            final MockNutDao dao = new MockNutDao(-1);
+            dao.mockPaths.put("hey.js", 1L);
+            new NutsHeap(Arrays.asList(".*"), dao, "foo" + NutsHeap.ID_SEPARATOR +".js");
+            Assert.fail();
+        } catch (BadArgumentException be) {
+            // normal behavior
+        }
+    }
 }

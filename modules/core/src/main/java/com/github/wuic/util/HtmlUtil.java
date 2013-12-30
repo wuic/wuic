@@ -38,6 +38,7 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.Nut;
 
 import java.io.IOException;
@@ -75,16 +76,7 @@ public final class HtmlUtil {
                 return javascriptImport(nut, workflowContextPath);
 
             default :
-
-                final StringBuilder builder = new StringBuilder();
-
-                if (nut.getReferencedNuts() != null) {
-                    for (final Nut ref : nut.getReferencedNuts()) {
-                        builder.append(writeScriptImport(ref, workflowContextPath));
-                    }
-                }
-
-                return builder.toString();
+                throw new BadArgumentException(new IllegalArgumentException("Nut's entry point must be a Javascript or a CSS file"));
         }
     }
 

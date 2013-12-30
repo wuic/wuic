@@ -401,21 +401,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     public List<String> computeRealPaths(final String pathName, final PathFormat format) throws StreamException {
         if (!format.canBeRegex()) {
-            /*final String simple = StringUtils.simplifyPathWithDoubleDot(pathName);
-
-            if (simple == null) {
-                log.warn("Unable to create nut with path '{}', it must be relative to a parent path under base path '{}'",
-                        pathName, basePath);
-                return Collections.emptyList();
-            }
-
-            final String path = StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), simple));*/
             final NutType type = getNutType(pathName);
-
-            // No type computable, ignore the path
-            /*if (type == null) {
-                return Collections.emptyList();
-            } */
 
             try {
                 // Will raise an exception if path does not exists

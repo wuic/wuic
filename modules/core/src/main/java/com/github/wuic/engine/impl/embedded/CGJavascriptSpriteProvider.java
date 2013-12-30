@@ -79,13 +79,13 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
-        jsBuilder.append("if (!");
+        jsBuilder.append("if (typeof(");
         jsBuilder.append(JS_CONSTANT);
-        jsBuilder.append(") {");
-        jsBuilder.append("var ");
+        jsBuilder.append(") === 'undefined') {\n");
+        jsBuilder.append("\tvar ");
         jsBuilder.append(JS_CONSTANT);
-        jsBuilder.append(" = {};");
-        jsBuilder.append("}");
+        jsBuilder.append(" = {};\n");
+        jsBuilder.append("}\n");
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
@@ -94,17 +94,17 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append(JS_CONSTANT);
             jsBuilder.append("['");
             jsBuilder.append(convertAllowedName(heapId, name));
-            jsBuilder.append("'] = {x : \"");
+            jsBuilder.append("'] = {\n\tx : \"");
             jsBuilder.append(reg.getxPosition());
-            jsBuilder.append("\", y : \"");
+            jsBuilder.append("\",\n\ty : \"");
             jsBuilder.append(reg.getyPosition());
-            jsBuilder.append("\", w : \"");
+            jsBuilder.append("\",\n\tw : \"");
             jsBuilder.append(reg.getWidth());
-            jsBuilder.append("\", h : \"");
+            jsBuilder.append("\",\n\th : \"");
             jsBuilder.append(reg.getHeight());
-            jsBuilder.append("\", url : \"");
+            jsBuilder.append("\",\n\turl : \"");
             jsBuilder.append(IOUtils.mergePath("/", url, image));
-            jsBuilder.append("\"};");
+            jsBuilder.append("\"\n};\n");
         }
 
         // Make a nut and return it

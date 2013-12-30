@@ -70,6 +70,11 @@ import java.util.*;
 public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
+     * The separator used to refer multiple HEAP in a {@code String}. Can't be used in HEAP's ID declaration.
+     */
+    public static final String ID_SEPARATOR = "|";
+
+    /**
      * Message's template displayed when no nut has been found.
      */
     private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic nuts";
@@ -158,6 +163,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     final NutDao theNutDao,
                     final String heapId,
                     final NutsHeap ... heaps) throws StreamException {
+        if (heapId.contains(ID_SEPARATOR)) {
+            throw new BadArgumentException(new IllegalArgumentException(
+                    String.format("Heap's ID can't contain the reserved work '%s' : %s", ID_SEPARATOR, heapId)));
+        }
+
         this.id = heapId;
         this.paths = pathsList;
         this.nutDao = theNutDao;

@@ -39,7 +39,6 @@
 package com.github.wuic.nut.core;
 
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.Path;

@@ -44,7 +44,7 @@ import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
@@ -177,7 +177,7 @@ public class HttpTest extends WuicTest {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-http.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-http.xml")).configure(builder);
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));

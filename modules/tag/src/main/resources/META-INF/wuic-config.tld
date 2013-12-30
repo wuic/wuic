@@ -2,16 +2,13 @@
 <taglib version="2.1" xmlns="http://java.sun.com/xml/ns/javaee"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
-    <display-name>Web UI Compressor</display-name>
+    <display-name>Web UI Compressor XML Configuration</display-name>
     <tlib-version>1.0.0</tlib-version>
-	<short-name>wuic</short-name>
-	<uri>http://www.github.com/wuic</uri>
+	<short-name>wuic-xml-conf</short-name>
+	<uri>http://www.github.com/wuic/xml-conf</uri>
 	<tag>
-		<name>html-import</name>
-		<tag-class>com.github.wuic.tag.WuicTag</tag-class>
-		<body-content>empty</body-content>
-		<attribute>
-			<name>workflowIds</name>
-		</attribute>
+		<name>xml-configuration</name>
+		<tag-class>com.github.wuic.tag.WuicXmlConfigurationTag</tag-class>
+		<body-content>tagdependent</body-content>
 	</tag>
 </taglib>

@@ -3,9 +3,19 @@
   <head>
     <title>Sample JS sprites (with cgSceneGraph)</title>
 
+      <%@ taglib prefix="wuic-conf" uri="http://www.github.com/wuic/xml-conf" %>
+      <wuic-conf:xml-configuration>
+          <wuic>
+              <heaps>
+                  <heap id="img" dao-builder-id="imgSourceRootProvider">
+                      <nut-path>.*.png</nut-path>
+                  </heap>
+              </heaps>
+          </wuic>
+      </wuic-conf:xml-configuration>
+
       <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
-      <wuic:html-import pageName="js-img" />
-      <wuic:html-import pageName="js-cgsg-js" />
+      <wuic:html-import workflowIds="js-cgsg-js|js-img" />
   </head>
   <body>
 

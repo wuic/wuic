@@ -56,7 +56,7 @@ import java.net.URL;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.1
  */
 public class WuicServletContextListener implements ServletContextListener {
@@ -77,6 +77,11 @@ public class WuicServletContextListener implements ServletContextListener {
     public static final String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.w.wuicXmlPathAsSystemProperty";
 
     /**
+     * Init parameter which indicates to use or not context builder configurators which inject default DAOs and engines.
+     */
+    public static final String WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS = "c.g.w.useDefaultContextBuilderConfigurators";
+
+    /**
      * The logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -95,17 +100,20 @@ public class WuicServletContextListener implements ServletContextListener {
         log.info("WUIC's full context path is {}", wuicCp);
 
         try {
+            final String useDefaultConfStr = sce.getServletContext().getInitParameter(WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS);
+            final Boolean useDefaultConf = useDefaultConfStr == null ? Boolean.TRUE : Boolean.parseBoolean(useDefaultConfStr);
+
             final String wuicXmlPath = sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_PATH_PARAM);
             final WuicFacade facade;
 
             // Choose specific location for XML file
             if (wuicXmlPath == null) {
-                facade = WuicFacade.newInstance(wuicCp);
+                facade = WuicFacade.newInstance(wuicCp, useDefaultConf);
             } else {
                 if (Boolean.parseBoolean(sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_SYS_PROP_PARAM))) {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)));
+                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)), useDefaultConf);
                 } else {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath));
+                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath), useDefaultConf);
                 }
             }
 

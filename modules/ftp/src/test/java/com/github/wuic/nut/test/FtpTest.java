@@ -42,7 +42,7 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
@@ -137,7 +137,7 @@ public class FtpTest {
     public void ftpTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final List<Nut> group = builder.build().process("css-imagecss-image", "");
 
         Assert.assertFalse(group.isEmpty());

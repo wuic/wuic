@@ -393,13 +393,13 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the heap ID
-     * @param heapIds the composition of heaps
+     * @param workflowIds the composition of heaps
      * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
      * @throws StreamException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws StreamException {
+    public ContextBuilder heap(final String id, final String ndbId, final String[] workflowIds, final String ... path) throws StreamException {
         NutDao dao = null;
 
         // Will override existing element
@@ -421,10 +421,10 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Composition detected, collected nested and referenced heaps
-        if (heapIds != null && heapIds.length != 0) {
+        if (workflowIds != null && workflowIds.length != 0) {
             final List<NutsHeap> composition = new ArrayList<NutsHeap>();
 
-            for (final String regex : heapIds) {
+            for (final String regex : workflowIds) {
                 composition.addAll(getNutsHeap(regex));
             }
 

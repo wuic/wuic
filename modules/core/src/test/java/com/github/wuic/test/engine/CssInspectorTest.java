@@ -48,8 +48,7 @@ import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,8 +58,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -151,7 +148,7 @@ public class CssInspectorTest {
     public void parentRefTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy

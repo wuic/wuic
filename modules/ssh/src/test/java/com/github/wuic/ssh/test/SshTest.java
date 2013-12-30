@@ -45,7 +45,7 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import com.jcraft.jsch.JSchException;
 import junit.framework.Assert;
 import org.apache.sshd.SshServer;
@@ -166,7 +166,7 @@ public class SshTest {
     public void sshTest() throws JSchException, IOException, InterruptedException, WuicException, JAXBException {
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context facade = builder.build();
         final List<Nut> group = facade.process("css-imagecss-image", "");
 

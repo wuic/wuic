@@ -48,11 +48,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -88,7 +89,7 @@ public class CoreTest extends WuicTest {
     public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder();
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
@@ -135,7 +136,7 @@ public class CoreTest extends WuicTest {
 
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-css.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-css.xml")).configure(builder);
         final Context ctx = builder.build();
 
         Long loadTime = System.currentTimeMillis() - startTime;
@@ -171,7 +172,7 @@ public class CoreTest extends WuicTest {
     public void jsSpriteTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder();
-        new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
@@ -180,7 +181,7 @@ public class CoreTest extends WuicTest {
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
 
-        final Iterator<Nut> it = group.get(0).getReferencedNuts().iterator();
+        final Iterator<Nut> it = Arrays.asList(group.get(0)).iterator();
         int i = 0;
 
         while (it.hasNext()) {

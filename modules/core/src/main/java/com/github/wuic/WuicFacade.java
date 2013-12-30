@@ -39,17 +39,20 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.net.URL;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.util.NumberUtils;
-import com.github.wuic.xml.WuicXmlContextBuilderConfigurator;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,37 +92,19 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * Builds a new {@link WuicFacade}.
-     * </p>
-     *
-     * @param cp the context path where the files will be exposed
-     * @throws WuicException if the 'wuic.xml' path is not well configured
-     */
-    private WuicFacade(final String cp) throws WuicException {
-        this(WuicFacade.class.getResource("/wuic.xml"), cp);
-    }
-
-    /**
-     * <p>
      * Builds a new {@link WuicFacade} for a particular wuic.xml path .
      * </p>
      *
-     * @param wuicXmlPath the wuic.xml location URL
      * @param cp the context path where the files will be exposed
+     * @param contextBuilderConfigurators configurators to be used on the builder
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
-    private WuicFacade(final URL wuicXmlPath, final String cp) throws WuicException {
+    private WuicFacade(final String cp,
+                       final ContextBuilderConfigurator ... contextBuilderConfigurators)
+            throws WuicException {
         builder = new ContextBuilder();
-
-        try {
-            // TODO : create flag to not use default configuration
-            new NutDaoBuilderFactory().newContextBuilderConfigurator().configure(builder);
-            new EngineBuilderFactory().newContextBuilderConfigurator().configure(builder);
-            new WuicXmlContextBuilderConfigurator(wuicXmlPath).configure(builder);
-            context = builder.build();
-        } catch (JAXBException je) {
-            throw new WuicXmlReadException("unable to load wuic.xml", je) ;
-        }
+        configure(contextBuilderConfigurators);
+        context = builder.build();
         contextPath = cp;
     }
 
@@ -130,11 +115,13 @@ public final class WuicFacade {
      * </p>
      *
      * @param contextPath the context where the nuts will be exposed
+     * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @return the unique instance
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
-    public static synchronized WuicFacade newInstance(final String contextPath) throws WuicException {
-        return newInstance(contextPath, null);
+    public static synchronized WuicFacade newInstance(final String contextPath, final Boolean useDefaultConfigurator)
+            throws WuicException {
+        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator);
     }
 
     /**
@@ -144,21 +131,56 @@ public final class WuicFacade {
      * </p>
      *
      * @param wuicXmlPath the specific wuic.xml path URL (could be {@code null}
+     * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @param contextPath the context where the nuts will be exposed
      * @return the unique instance
      *
      */
-    public static synchronized WuicFacade newInstance(final String contextPath, final URL wuicXmlPath) throws WuicException {
-        if (wuicXmlPath != null) {
-            return new WuicFacade(wuicXmlPath, contextPath);
-        } else {
-            return new WuicFacade(contextPath);
+    public static synchronized WuicFacade newInstance(final String contextPath,
+                                                      final URL wuicXmlPath,
+                                                      final Boolean useDefaultConfigurator) throws WuicException {
+        try {
+            if (wuicXmlPath != null) {
+                if (useDefaultConfigurator) {
+                    return new WuicFacade(contextPath,
+                            new NutDaoBuilderFactory().newContextBuilderConfigurator(),
+                            new EngineBuilderFactory().newContextBuilderConfigurator(),
+                            new FileXmlContextBuilderConfigurator(wuicXmlPath));
+                } else {
+                    return new WuicFacade(contextPath,
+                            new FileXmlContextBuilderConfigurator(wuicXmlPath));
+                }
+            } else  if (useDefaultConfigurator) {
+                return new WuicFacade(contextPath,
+                        new NutDaoBuilderFactory().newContextBuilderConfigurator(),
+                        new EngineBuilderFactory().newContextBuilderConfigurator());
+            } else {
+                return new WuicFacade(contextPath);
+            }
+        } catch (JAXBException je) {
+            throw new WuicXmlReadException("unable to load wuic.xml", je) ;
+        }
+    }
+
+    /**
+     * <p>
+     * Configures the internal builder with the given configurators. All settings associated to each configurator tag
+     * are cleared before (re)configuration.
+     * </p>
+     *
+     * @param configurators the configurators
+     * @throws StreamException if an I/O error occurs
+     */
+    public synchronized void configure(final ContextBuilderConfigurator... configurators) throws StreamException {
+        for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
+            builder.clearTag(contextBuilderConfigurator.getTag());
+            contextBuilderConfigurator.configure(builder);
         }
     }
     
     /**
      * <p>
-     * Gets the nuts processed by the workflow identified by the given ID.
+     * Gets the nuts processed by the given workflow identified by the specified ID.
      * </p>
      * 
      * @param id the workflow ID
@@ -175,8 +197,22 @@ public final class WuicFacade {
             context = builder.build();
         }
 
-        // Parse the nuts
-        final List<Nut> retval = context.process(id, contextPath);
+        // TODO : move this code to context#process(String, String) method
+        final String[] composition = id.split(Pattern.quote(NutsHeap.ID_SEPARATOR));
+        final List<Nut> retval;
+
+        if (composition.length > 1) {
+            final List<Nut> nuts = new ArrayList<Nut>();
+
+            for (final String wId : composition) {
+                nuts.addAll(context.process(wId, contextPath));
+            }
+
+            retval = CompositeNut.mergeNuts(nuts);
+        } else {
+            // Parse the nuts
+            retval = context.process(id, contextPath);
+        }
 
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

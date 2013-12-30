@@ -12,8 +12,8 @@
         <title>Polling sample</title>
 
         <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
-        <wuic:html-import pageName="apps-js" />
-        <wuic:html-import pageName="apps-css" />
+        <wuic:html-import workflowIds="apps-js" />
+        <wuic:html-import workflowIds="apps-css" />
     </head>
     <body>
         <h1 class="wuic">Polling sample</h1>

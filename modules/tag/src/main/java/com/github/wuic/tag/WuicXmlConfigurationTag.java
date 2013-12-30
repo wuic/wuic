@@ -40,28 +40,24 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicJeeContext;
-import com.github.wuic.nut.Nut;
-import com.github.wuic.util.HtmlUtil;
-import com.github.wuic.util.IOUtils;
-
-import java.io.IOException;
-import java.util.List;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+import javax.xml.bind.JAXBException;
 
 /**
  * <p>
- * This tag writes the scripts of the page specified to it attributes.
+ * This tag evaluates the XML configuration described in the body-content and injects it to the global configuration.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
- * @since 0.1.0
+ * @version 1.0
+ * @since 0.4.2
  */
-public class WuicTag extends TagSupport {
+public class WuicXmlConfigurationTag extends BodyTagSupport {
 
     /**
      * Serial version UID.
@@ -69,60 +65,36 @@ public class WuicTag extends TagSupport {
     private static final long serialVersionUID = 4305181623848741300L;
 
     /**
-     * The page name.
-     */
-    private String workflowIds;
-    
-    /**
      * <p>
      * Includes according to the page name.
      * </p>
-     * 
+     *
      * <p>
      * Only CSS and Javascript files could be imported.
      * </p>
-     * 
+     *
+     * <p>
+     * Can creates heaps on the fly based on given body content.
+     * </p>
+     *
      * @throws JspException if an I/O error occurs
-     * @return the {@code SKIP_BODY} code
      */
     @Override
-    public int doStartTag() throws JspException {
+    public int doAfterBody() throws JspException {
         try {
             // Get the facade
             final WuicFacade facade = WuicJeeContext.getWuicFacade();
-            final List<Nut> nuts = facade.runWorkflow(workflowIds);
 
-            for (final Nut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowIds)));
-            }
-        } catch (IOException ioe) {
-            throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
+            // Let's load the wuic.xml file and configure the builder with it
+            final BodyContent content = getBodyContent();
+            facade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString()));
+            content.clearBody();
         } catch (WuicException we) {
             throw new JspException(we);
+        } catch (JAXBException se) {
+            throw new JspException("Body content is not a valid XML describing heap or heaps", se);
         }
-        
+
         return SKIP_BODY;
-    }
-
-    /**
-     * <p>
-     * Returns the workflow IDs.
-     * </p>
-     * 
-     * @return the page name
-     */
-    public String getWorkflowIds() {
-        return workflowIds;
-    }
-
-    /**
-     * <p>
-     * Sets the workflow IDs.
-     * </p>
-     * 
-     * @param page the workflow IDs
-     */
-    public void setWorkflowIds(final String page) {
-        this.workflowIds = page;
     }
 }

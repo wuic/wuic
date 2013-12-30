@@ -50,7 +50,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.3.0
  */
 public abstract class AbstractNut implements Nut {
@@ -63,7 +63,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * The path name.
      */
-    private String nutName;
+    protected String nutName;
 
     /**
      * Text compressible or not.
@@ -94,6 +94,17 @@ public abstract class AbstractNut implements Nut {
      * The proxy URI.
      */
     private String proxyUri;
+
+    /**
+     * <p>
+     * Creates a new instance by copying the given {@link Nut}.
+     * </p>
+     *
+     * @param other the nut to copy
+     */
+    protected AbstractNut(final Nut other) {
+        this(other.getName(), other.getNutType(), other.isBinaryCompressible(), other.isTextCompressible(), other.isCacheable(), other.isAggregatable());
+    }
 
     /**
      * <p>
@@ -218,7 +229,6 @@ public abstract class AbstractNut implements Nut {
         if (referencedNuts.contains(referenced)) {
             referencedNuts.remove(referenced);
         }
-
         referencedNuts.add(referenced);
     }
 

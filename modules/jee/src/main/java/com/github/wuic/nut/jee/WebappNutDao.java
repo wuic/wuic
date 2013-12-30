@@ -38,12 +38,8 @@
 
 package com.github.wuic.nut.jee;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.path.WebappDirectoryPathFactory;
-import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.core.DiskNutDao;
 import com.github.wuic.nut.core.PathNutDao;
 import com.github.wuic.path.DirectoryPath;
@@ -52,7 +48,6 @@ import com.github.wuic.util.IOUtils;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * <p>

@@ -200,7 +200,7 @@ public class WuicXmlTest {
         EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
 
         // Load configuration
-        final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-full.xml"));
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-full.xml"));
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
     }
@@ -316,7 +316,7 @@ public class WuicXmlTest {
 
         // File required default configuration
         NutDaoBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
         builder.build().process("simpleWorkflowsimpleHeap", "");
     }
@@ -339,7 +339,7 @@ public class WuicXmlTest {
         IOUtils.copyStream(full.openStream(), new FileOutputStream(tmp));
 
         // Load configuration
-        final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(tmp.toURI().toURL());
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(tmp.toURI().toURL());
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
         Context ctx = builder.build();
@@ -376,7 +376,7 @@ public class WuicXmlTest {
         EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
 
         // Load configuration
-        final ContextBuilderConfigurator cfg = new WuicXmlContextBuilderConfigurator(getClass().getResource("/wuic-heap-composition.xml"));
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-heap-composition.xml"));
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
         final Context ctx = builder.build();

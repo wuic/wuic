@@ -59,6 +59,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,7 +151,9 @@ public class WuicServlet extends HttpServlet {
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
-                writeNut(matcher.group(1), matcher.group(NumberUtils.TWO), response);
+                writeNut(URLDecoder.decode(matcher.group(1), "UTF-8"),
+                        URLDecoder.decode(matcher.group(NumberUtils.TWO), "UTF-8"),
+                        response);
             } catch (WuicException we) {
                 log.error("Unable to retrieve nut", we);
 
@@ -188,6 +191,7 @@ public class WuicServlet extends HttpServlet {
                 response.setContentType(nut.getNutType().getMimeType());
                 is = nut.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
+                response.getOutputStream().flush();
             } catch (IOException ioe) {
                 throw new StreamException(ioe);
             } finally {

@@ -97,6 +97,11 @@ public class Context implements Observer {
      * Processes a workflow and returns the resulting nuts.
      * </p>
      *
+     * <p>
+     * It is possible to specify the execution of many workflow and the creation of an associated composition by separating
+     * each workflow in the given {@code String} by the reserved {@link com.github.wuic.nut.NutsHeap#ID_SEPARATOR separator}.
+     * </p>
+     *
      * @param workflowId the workflow ID
      * @param contextPath the context path where nuts will be referenced
      * @return the resulting nuts
@@ -104,6 +109,7 @@ public class Context implements Observer {
      */
     public List<Nut> process(final String workflowId, final String contextPath) throws WuicException {
         final Workflow workflow = workflowMap.get(workflowId);
+        final List<Nut> retval = new ArrayList<Nut>();
 
         if (workflow == null) {
             throw new WorkflowNotFoundException(workflowId);
@@ -113,10 +119,12 @@ public class Context implements Observer {
         final Engine chain = request.getChainFor(workflow.getHeap().getNutType());
 
         if (chain == null) {
-            return new ArrayList<Nut>(workflow.getHeap().getNuts());
+            retval.addAll(workflow.getHeap().getNuts());
         } else {
-            return chain.parse(request);
+            retval.addAll(chain.parse(request));
         }
+
+        return retval;
     }
 
     /**

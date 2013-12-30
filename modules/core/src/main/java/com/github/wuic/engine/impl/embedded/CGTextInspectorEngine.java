@@ -178,7 +178,7 @@ public abstract class CGTextInspectorEngine extends Engine {
             inspected.setBinaryCompressible(nut.isBinaryCompressible());
 
             // Also add all the referenced nuts
-            for (Nut ref : referencedNuts) {
+            for (final Nut ref : referencedNuts) {
                 inspected.addReferencedNut(ref);
             }
 

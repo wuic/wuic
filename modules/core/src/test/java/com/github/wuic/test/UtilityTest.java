@@ -41,6 +41,7 @@ package com.github.wuic.test;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
@@ -73,6 +74,67 @@ import java.util.regex.Pattern;
  */
 @RunWith(JUnit4.class)
 public class UtilityTest extends WuicTest {
+
+    /**
+     * Test when nuts with same name are merged.
+     */
+    @Test
+    public void mergeNutTest() {
+        final Nut first = Mockito.mock(Nut.class);
+        final Nut second = Mockito.mock(Nut.class);
+        final Nut third = Mockito.mock(Nut.class);
+        final Nut fourth = Mockito.mock(Nut.class);
+        final Nut fifth = Mockito.mock(Nut.class);
+        final List<Nut> input = Arrays.asList(first, second, third, fourth, fifth);
+
+        Mockito.when(first.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(second.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(third.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(fourth.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(fifth.getNutType()).thenReturn(NutType.CSS);
+
+        Mockito.when(first.getName()).thenReturn("foo.js");
+        Mockito.when(second.getName()).thenReturn("foo.css");
+        Mockito.when(third.getName()).thenReturn("bar.js");
+        Mockito.when(fourth.getName()).thenReturn("bar.js");
+        Mockito.when(fifth.getName()).thenReturn("baz.css");
+
+        List<Nut> output = CompositeNut.mergeNuts(input);
+
+        Assert.assertEquals(4, output.size());
+        Assert.assertEquals("foo.js", output.get(0).getName());
+        Assert.assertEquals("foo.css", output.get(1).getName());
+        Assert.assertEquals("2bar.js", output.get(2).getName());
+        Assert.assertEquals("baz.css", output.get(3).getName());
+
+        Mockito.when(first.getName()).thenReturn("foo.js");
+        Mockito.when(second.getName()).thenReturn("foo.css");
+        Mockito.when(third.getName()).thenReturn("bar.js");
+        Mockito.when(fourth.getName()).thenReturn("bar2.js");
+        Mockito.when(fifth.getName()).thenReturn("baz.css");
+
+        output = CompositeNut.mergeNuts(input);
+
+        Assert.assertEquals(5, output.size());
+        Assert.assertEquals("foo.js", output.get(0).getName());
+        Assert.assertEquals("foo.css", output.get(1).getName());
+        Assert.assertEquals("bar.js", output.get(2).getName());
+        Assert.assertEquals("bar2.js", output.get(3).getName());
+        Assert.assertEquals("baz.css", output.get(4).getName());
+
+        Mockito.when(first.getName()).thenReturn("foo.js");
+        Mockito.when(second.getName()).thenReturn("foo.js");
+        Mockito.when(third.getName()).thenReturn("bar.js");
+        Mockito.when(fourth.getName()).thenReturn("baz.css");
+        Mockito.when(fifth.getName()).thenReturn("baz.css");
+
+        output = CompositeNut.mergeNuts(input);
+
+        Assert.assertEquals(3, output.size());
+        Assert.assertEquals("0foo.js", output.get(0).getName());
+        Assert.assertEquals("bar.js", output.get(1).getName());
+        Assert.assertEquals("3baz.css", output.get(2).getName());
+    }
 
     /**
      * Test path simplification method.

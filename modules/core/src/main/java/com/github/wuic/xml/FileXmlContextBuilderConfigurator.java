@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,93 +36,74 @@
  */
 
 
-package com.github.wuic.tag;
+package com.github.wuic.xml;
 
-import com.github.wuic.WuicFacade;
-import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.jee.WuicJeeContext;
-import com.github.wuic.nut.Nut;
-import com.github.wuic.util.HtmlUtil;
-import com.github.wuic.util.IOUtils;
+import com.github.wuic.exception.xml.WuicXmlReadException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.util.List;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import java.net.URL;
 
 /**
  * <p>
- * This tag writes the scripts of the page specified to it attributes.
+ * Represents a configurator based on XML read from an {@link URL}. Polling is supported thanks to the modification date
+ * provided by the {@link URL} object.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
- * @since 0.1.0
+ * @version 1.0
+ * @since 0.4.2
  */
-public class WuicTag extends TagSupport {
+public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
 
     /**
-     * Serial version UID.
+     * The {@link java.net.URL} pointing to the wuic.xml file.
      */
-    private static final long serialVersionUID = 4305181623848741300L;
+    private URL xmlFile;
 
     /**
-     * The page name.
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param wuicXml the wuic.xml file URL
+     * @throws javax.xml.bind.JAXBException if an context can't be initialized
      */
-    private String workflowIds;
-    
+    public FileXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException, WuicXmlReadException {
+        if (wuicXml == null) {
+            throw new WuicXmlReadException("XML configuration URL for WUIC is null", new IllegalArgumentException());
+        }
+
+        xmlFile = wuicXml;
+    }
+
     /**
-     * <p>
-     * Includes according to the page name.
-     * </p>
-     * 
-     * <p>
-     * Only CSS and Javascript files could be imported.
-     * </p>
-     * 
-     * @throws JspException if an I/O error occurs
-     * @return the {@code SKIP_BODY} code
+     * {@inheritDoc}
      */
     @Override
-    public int doStartTag() throws JspException {
+    public String getTag() {
+        return xmlFile.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
         try {
-            // Get the facade
-            final WuicFacade facade = WuicJeeContext.getWuicFacade();
-            final List<Nut> nuts = facade.runWorkflow(workflowIds);
-
-            for (final Nut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowIds)));
-            }
+            return xmlFile.openConnection().getLastModified();
         } catch (IOException ioe) {
-            throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
-        } catch (WuicException we) {
-            throw new JspException(we);
+            throw new StreamException(ioe);
         }
-        
-        return SKIP_BODY;
     }
 
     /**
-     * <p>
-     * Returns the workflow IDs.
-     * </p>
-     * 
-     * @return the page name
+     * {@inheritDoc}
      */
-    public String getWorkflowIds() {
-        return workflowIds;
-    }
-
-    /**
-     * <p>
-     * Sets the workflow IDs.
-     * </p>
-     * 
-     * @param page the workflow IDs
-     */
-    public void setWorkflowIds(final String page) {
-        this.workflowIds = page;
+    @Override
+    protected XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
+        return (XmlWuicBean) unmarshaller.unmarshal(xmlFile);
     }
 }

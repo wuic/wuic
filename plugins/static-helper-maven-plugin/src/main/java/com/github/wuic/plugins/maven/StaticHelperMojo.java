@@ -218,7 +218,7 @@ public class StaticHelperMojo extends AbstractMojo {
 
             // Load wuic.xml file and create facade
             final File xmlFile = new File(project.getBasedir(), xml);
-            final WuicFacade facade = WuicFacade.newInstance("", xmlFile.toURI().toURL());
+            final WuicFacade facade = WuicFacade.newInstance("", xmlFile.toURI().toURL(), Boolean.TRUE);
 
             // Now write each workflow result to disk with its description file
             for (final String wId : facade.workflowIds()) {

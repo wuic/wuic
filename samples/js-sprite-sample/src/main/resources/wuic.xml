@@ -17,12 +17,14 @@
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
             </properties>
         </engine-builder>
+        <engine-builder id="wuicDefaultYuiCompressorJavascriptEngineBuilder" type="YuiCompressorJavascriptEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.compress">false</property>
+            </properties>
+        </engine-builder>
     </engine-builders>
 
     <heaps>
-        <heap id="img" dao-builder-id="imgSourceRootProvider">
-            <nut-path>.*.png</nut-path>
-        </heap>
         <heap id="cgsg-js" dao-builder-id="appSourceRootProvider">
             <nut-path>cgsg/utils/util.array.js</nut-path>
             <nut-path>cgsg/utils/class.class.js</nut-path>
@@ -78,9 +80,21 @@
             <nut-path>cgsg/class.view.js</nut-path>
             <nut-path>cgsg/ext/WUICCGSGNodeImageFactory.js</nut-path>
         </heap>
+        <heap id="img" dao-builder-id="imgSourceRootProvider">
+            <nut-path>.*.png</nut-path>
+        </heap>
     </heaps>
 
     <workflows>
+        <workflow id-prefix="js-" heap-id-pattern="cgsg-js">
+            <without>
+                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
+            </without>
+            <engine-chain>
+                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow>
         <workflow id-prefix="js-" heap-id-pattern="img">
             <without>
                 <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
@@ -89,15 +103,6 @@
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
                 <engine-builder-id>jsSprite</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id-prefix="js-" heap-id-pattern="cgsg-js">
-            <without>
-                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
-            </without>
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
             </engine-chain>
         </workflow>
     </workflows>
