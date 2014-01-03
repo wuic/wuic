@@ -52,7 +52,7 @@ import com.github.wuic.nut.setter.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.0
  */
 public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
