@@ -72,17 +72,6 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
 
     /**
      * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    public WuicXmlConfigurationTag() {
-        final String multiple = WuicJeeContext.getInitParameter(
-                WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
-        this.multiple = Boolean.parseBoolean(multiple);
-    }
-
-    /**
-     * <p>
      * Includes according to the page name.
      * </p>
      *
@@ -98,6 +87,12 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
      */
     @Override
     public int doAfterBody() throws JspException {
+        if (multiple == null) {
+            final String m = WuicJeeContext.getInitParameter(
+                    WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
+            this.multiple = Boolean.parseBoolean(m);
+        }
+
         try {
             // Get the facade
             final WuicFacade facade = WuicJeeContext.getWuicFacade();

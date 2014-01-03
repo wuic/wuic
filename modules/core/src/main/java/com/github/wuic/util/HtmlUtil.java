@@ -38,7 +38,6 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.Nut;
 
 import java.io.IOException;
@@ -54,6 +53,9 @@ import java.io.IOException;
  */
 public final class HtmlUtil {
 
+    /**
+     * Utility class. Hide default constructor.
+     */
     private HtmlUtil() {
 
     }
@@ -76,7 +78,7 @@ public final class HtmlUtil {
                 return javascriptImport(nut, workflowContextPath);
 
             default :
-                throw new BadArgumentException(new IllegalArgumentException("Nut's entry point must be a Javascript or a CSS file"));
+                return "";
         }
     }
 

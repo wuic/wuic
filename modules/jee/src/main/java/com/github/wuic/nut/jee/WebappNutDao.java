@@ -40,7 +40,6 @@ package com.github.wuic.nut.jee;
 
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.jee.path.WebappDirectoryPathFactory;
-import com.github.wuic.nut.core.DiskNutDao;
 import com.github.wuic.nut.core.PathNutDao;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.Path;
@@ -55,9 +54,9 @@ import java.io.IOException;
  * </p>
  *
  * <p>
- * If the war exploded, then path could be retrieved with file system access through {@link DiskNutDao}. However, if the
- * packaged war is used, then we have a more limited access to files. For instance, time stamp is not available on the
- * file so we will always return '-1' for polling.
+ * If the war exploded, then path could be retrieved with file system access through {@link com.github.wuic.path.FilePath}.
+ * However, if the packaged war is used, then we have a more limited access to files. For instance, time stamp is not
+ * available on the file so we will always return '-1' for polling.
  * </p>
  *
  * @author Guillaume DROUET

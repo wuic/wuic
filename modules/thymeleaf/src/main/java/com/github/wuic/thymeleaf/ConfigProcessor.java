@@ -78,9 +78,9 @@ public class ConfigProcessor extends AbstractRemovalElementProcessor {
      */
     public ConfigProcessor() {
         super("config");
-        final String multiple = WuicJeeContext.getInitParameter(
+        final String m = WuicJeeContext.getInitParameter(
                 WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
-        this.multiple = Boolean.parseBoolean(multiple);
+        this.multiple = Boolean.parseBoolean(m);
     }
 
     /**

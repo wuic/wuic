@@ -40,7 +40,6 @@ package com.github.wuic.nut.jee;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
-import com.github.wuic.path.FilePath;
 
 import javax.servlet.ServletContext;
 import java.io.InputStream;
@@ -48,7 +47,7 @@ import java.io.InputStream;
 /**
  * <p>
  * Represents a nut on the path system provided or to be managed by the WUIC framework. Thanks to
- * {@link FilePath}, the nut could also be a ZIP entry.
+ * {@link com.github.wuic.path.FilePath}, the nut could also be a ZIP entry.
  * </p>
  *
  * @author Guillaume DROUET
