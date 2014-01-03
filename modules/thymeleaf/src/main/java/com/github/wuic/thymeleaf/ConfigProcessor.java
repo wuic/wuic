@@ -1,3 +1,4 @@
+
 /*
  * "Copyright (c) 2013   Capgemini Technology Services (hereinafter "Capgemini")
  *
@@ -38,48 +39,75 @@
 
 package com.github.wuic.thymeleaf;
 
-import org.thymeleaf.dialect.AbstractDialect;
-import org.thymeleaf.processor.IProcessor;
+import com.github.wuic.WuicFacade;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
+import org.thymeleaf.Arguments;
+import org.thymeleaf.dom.Element;
+import org.thymeleaf.processor.element.AbstractRemovalElementProcessor;
+import org.thymeleaf.util.DOMUtils;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.xml.bind.JAXBException;
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * <p>
- * The thymeleaf dialect for WUIC. Actually creates the only one "import" processor.
+ * This processor evaluates the XML configuration described in the first element child and injects it to the global
+ * configuration.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.1
+ * @version 1.0
+ * @since 0.4.2
  */
-public class WuicDialect extends AbstractDialect {
+public class ConfigProcessor extends AbstractRemovalElementProcessor {
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Builds a new instance.
+     * </p>
      */
-    @Override
-    public String getPrefix() {
-        return "wuic";
+    public ConfigProcessor() {
+        super("config");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isLenient() {
-        return false;
+    protected boolean getRemoveElementAndChildren(final Arguments arguments, final Element element) {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Set<IProcessor> getProcessors() {
-        final Set<IProcessor> processors = new HashSet<IProcessor>();
-        processors.add(new ImportProcessor());
-        processors.add(new ConfigProcessor());
-        return processors;
+    protected boolean removeHostElementIfChildNotRemoved(final Arguments arguments, final Element element) {
+        try {
+            // Get the facade
+            final WuicFacade facade = WuicJeeContext.getWuicFacade();
+
+            // Let's load the wuic.xml file and configure the builder with it
+            final Reader reader = new StringReader(DOMUtils.getHtml5For(element.getFirstElementChild()));
+            facade.configure(new ReaderXmlContextBuilderConfigurator(reader, toString()));
+
+            return false;
+        } catch (WuicException we) {
+            throw new BadArgumentException(new IllegalArgumentException(we));
+        } catch (JAXBException se) {
+            throw new BadArgumentException(new IllegalArgumentException("First DOM child is not a valid XML to describe WUIC configuration", se));
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getPrecedence() {
+        return 0;
+    }
 }

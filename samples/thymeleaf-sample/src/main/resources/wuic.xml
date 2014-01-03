@@ -10,11 +10,6 @@
     </nut-dao-builders>
 
     <heaps>
-        <heap id="datatable-js" dao-builder-id="nutDaoBuilder">
-            <nut-path>media/js/jquery.js</nut-path>
-            <nut-path>media/js/jquery.dataTables.js</nut-path>
-            <nut-path>sample/scroller/media/js/dataTables.scroller.js</nut-path>
-        </heap>
         <heap id="datatable-css" dao-builder-id="nutDaoBuilder">
             <nut-path>.*.css</nut-path>
         </heap>

@@ -92,7 +92,7 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
         } catch (WuicException we) {
             throw new JspException(we);
         } catch (JAXBException se) {
-            throw new JspException("Body content is not a valid XML describing heap or heaps", se);
+            throw new JspException("Body content is not a valid XML to describe WUIC configuration", se);
         }
 
         return SKIP_BODY;

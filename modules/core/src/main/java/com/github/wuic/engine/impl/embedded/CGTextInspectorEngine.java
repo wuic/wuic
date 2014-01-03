@@ -153,7 +153,7 @@ public abstract class CGTextInspectorEngine extends Engine {
         String line;
 
         try {
-            // Read the path line per line
+            // Read the nut line per line
             br = new BufferedReader(new InputStreamReader(nut.openStream(), charset));
 
             // Reads each line and keep the transformations in memory
