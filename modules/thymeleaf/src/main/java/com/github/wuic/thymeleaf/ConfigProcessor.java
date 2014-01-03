@@ -43,6 +43,7 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.thymeleaf.Arguments;
 import org.thymeleaf.dom.Element;
@@ -66,12 +67,20 @@ import java.io.StringReader;
 public class ConfigProcessor extends AbstractRemovalElementProcessor {
 
     /**
+     * If multiple configurations should be performed by this processor or not.
+     */
+    private Boolean multiple;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public ConfigProcessor() {
         super("config");
+        final String multiple = WuicJeeContext.getInitParameter(
+                WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
+        this.multiple = Boolean.parseBoolean(multiple);
     }
 
     /**
@@ -93,13 +102,14 @@ public class ConfigProcessor extends AbstractRemovalElementProcessor {
 
             // Let's load the wuic.xml file and configure the builder with it
             final Reader reader = new StringReader(DOMUtils.getHtml5For(element.getFirstElementChild()));
-            facade.configure(new ReaderXmlContextBuilderConfigurator(reader, toString()));
+            facade.configure(new ReaderXmlContextBuilderConfigurator(reader, toString(), multiple));
 
             return false;
         } catch (WuicException we) {
             throw new BadArgumentException(new IllegalArgumentException(we));
         } catch (JAXBException se) {
-            throw new BadArgumentException(new IllegalArgumentException("First DOM child is not a valid XML to describe WUIC configuration", se));
+            throw new BadArgumentException(new IllegalArgumentException(
+                    "First DOM element child is not a valid XML to describe WUIC configuration", se));
         }
     }
 

@@ -94,12 +94,13 @@ public class ImportProcessor extends AbstractAttrProcessor {
 
         try {
             // Split the value to identify each declared workflow
-            final String[] workflowArray = element.getAttributeValue(attributeName).split("\\|");
+            //final String[] workflowArray = element.getAttributeValue(attributeName).split("\\|");
             int cpt = 0;
 
-            for (final String workflow : workflowArray) {
+            //for (final String workflow : workflowArray) {
 
                 // Process nuts
+            final String workflow = element.getAttributeValue(attributeName);
                 final List<Nut> nuts = facade.runWorkflow(workflow);
 
                 // Insert import statements into the top
@@ -107,7 +108,7 @@ public class ImportProcessor extends AbstractAttrProcessor {
                     final String path = IOUtils.mergePath(facade.getContextPath(), workflow);
                     element.insertChild(cpt++, new Macro(HtmlUtil.writeScriptImport(nut, path)));
                 }
-            }
+            //}
         } catch (WuicException we) {
             log.error("WUIC import processor has failed", we);
         } catch (IOException ioe) {

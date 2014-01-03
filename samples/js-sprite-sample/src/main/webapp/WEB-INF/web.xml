@@ -25,4 +25,9 @@
     <listener>
         <listener-class>com.github.wuic.jee.WuicServletContextListener</listener-class>
     </listener>
+
+    <context-param>
+        <param-name>c.g.w.wuicMultipleConfigInTagSupport</param-name>
+        <param-value>false</param-value>
+    </context-param>
 </web-app>

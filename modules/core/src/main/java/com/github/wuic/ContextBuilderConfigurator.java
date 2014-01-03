@@ -43,6 +43,9 @@ import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * <p>
  * A configurator configures {@link ContextBuilder}. It's is called by a WUIC bootstrap in charge of {@link Context}
@@ -60,6 +63,12 @@ import org.slf4j.LoggerFactory;
 public abstract class ContextBuilderConfigurator extends PollingScheduler<ContextBuilderConfigurator> {
 
     /**
+     * Sets of tags representing the configurator to ignore when {@link ContextBuilderConfigurator#configure(ContextBuilder)}
+     * is invoked.
+     */
+    private static final Set<String> IGNORE_TAGS = new HashSet<String>();
+
+    /**
      * The logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -73,6 +82,43 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * Last update timestamp.
      */
     private Long timestamp;
+
+    /**
+     * Only one configuration with the configurator tag could occurs if this flag is {@code true}.
+     */
+    private Boolean multipleConfigurations;
+
+    /**
+     * <p>
+     * Sets the flag allowing or not multiple configurations.
+     * </p>
+     *
+     * @param flag the new value
+     */
+    public void setMultipleConfigurations(final Boolean flag) {
+        multipleConfigurations = flag;
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     */
+    protected ContextBuilderConfigurator() {
+        this(Boolean.TRUE);
+    }
+
+    /**
+     * <p>
+     * Builds a configurator with a flag indicating to configure or not anything if a configuration with its tag has
+     * been done before.
+     * </p>
+     *
+     * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
+     */
+    protected ContextBuilderConfigurator(final Boolean multiple) {
+       multipleConfigurations = multiple;
+    }
 
     /**
      * {@inheritDoc}
@@ -103,11 +149,22 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * the {@link com.github.wuic.ContextBuilderConfigurator#getTag()} method.
      * </p>
      *
+     * <p>
+     * All settings associated to each configurator tag are cleared before (re)configuration.
+     * </p>
+     *
      * @param ctxBuilder the builder
      * @throws StreamException if I/O error occurs when start polling
      */
     public void configure(final ContextBuilder ctxBuilder) throws StreamException {
+        // Do not run multiple times configurators with the same tags
+        if (!multipleConfigurations && !IGNORE_TAGS.add(getTag())) {
+            log.info("Configuration with tag {} has been already performed, ignoring", getTag());
+            return;
+        }
+
         try {
+            ctxBuilder.clearTag(getTag());
             ctxBuilder.tag(getTag());
 
             // Update polling

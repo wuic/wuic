@@ -74,9 +74,14 @@ public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfig
      *
      * @param r the reader to XML
      * @param t the tag
-     * @throws javax.xml.bind.JAXBException if an context can't be initialized
+     * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
+     * @throws JAXBException if an context can't be initialized
+     * @throws WuicXmlReadException if the XML is not well formed
      */
-    public ReaderXmlContextBuilderConfigurator(final Reader r, final String t) throws JAXBException, WuicXmlReadException {
+    public ReaderXmlContextBuilderConfigurator(final Reader r, final String t, final Boolean multiple)
+            throws JAXBException, WuicXmlReadException {
+        super(multiple);
+
         if (r == null) {
             throw new WuicXmlReadException("XML configuration reader for WUIC is null", new IllegalArgumentException());
         }

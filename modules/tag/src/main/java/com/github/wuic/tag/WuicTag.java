@@ -72,7 +72,7 @@ public class WuicTag extends TagSupport {
      * The page name.
      */
     private String workflowIds;
-    
+
     /**
      * <p>
      * Includes according to the page name.

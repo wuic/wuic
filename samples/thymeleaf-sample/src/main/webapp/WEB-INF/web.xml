@@ -35,4 +35,9 @@
         <param-name>c.g.w.wuicContextPath</param-name>
         <param-value>/wuic</param-value>
     </context-param>
+
+    <context-param>
+        <param-name>c.g.w.wuicMultipleConfigInTagSupport</param-name>
+        <param-value>false</param-value>
+    </context-param>
 </web-app>

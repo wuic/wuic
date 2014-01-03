@@ -74,14 +74,31 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      */
     private Unmarshaller unmarshaller;
 
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @throws JAXBException if an context can't be initialized
+     * @throws WuicXmlReadException if the XML is not well formed
+     */
+    public XmlContextBuilderConfigurator() throws JAXBException, WuicXmlReadException {
+        this(Boolean.TRUE);
+    }
+
+
     /**
      * <p>
      * Creates a new instance.
      * </p>
      *
+     * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      * @throws JAXBException if an context can't be initialized
+     * @throws WuicXmlReadException if the XML is not well formed
      */
-    public XmlContextBuilderConfigurator() throws JAXBException, WuicXmlReadException {
+    public XmlContextBuilderConfigurator(final Boolean multiple) throws JAXBException, WuicXmlReadException {
+        super(multiple);
         final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
         unmarshaller = jc.createUnmarshaller();
 

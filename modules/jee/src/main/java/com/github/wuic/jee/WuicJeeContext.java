@@ -73,6 +73,21 @@ public final class WuicJeeContext {
 
     /**
      * <p>
+     * Returns the init-parameter in the {@link ServletContext}. If the value is {@code null}, then the specified default
+     * value is returned.
+     * </p>
+     *
+     * @param key the init-parameter key
+     * @param ifNull the default value
+     * @return the value associated to the key, default value if {@code null}
+     */
+    public static String getInitParameter(final String key, final String ifNull) {
+        final String retval = getServletContext().getInitParameter(key);
+        return retval == null ? ifNull : retval;
+    }
+
+    /**
+     * <p>
      * Gets the {@link WuicFacade}. If the facade is {@link null}, then an exception will be thrown.
      * </p>
      *

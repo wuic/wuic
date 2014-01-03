@@ -164,8 +164,7 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * Configures the internal builder with the given configurators. All settings associated to each configurator tag
-     * are cleared before (re)configuration.
+     * Configures the internal builder with the given configurators.
      * </p>
      *
      * @param configurators the configurators
@@ -173,7 +172,6 @@ public final class WuicFacade {
      */
     public synchronized void configure(final ContextBuilderConfigurator... configurators) throws StreamException {
         for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
-            builder.clearTag(contextBuilderConfigurator.getTag());
             contextBuilderConfigurator.configure(builder);
         }
     }
