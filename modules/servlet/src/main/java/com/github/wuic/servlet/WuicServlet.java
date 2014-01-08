@@ -72,7 +72,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.8
+ * @version 1.9
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
@@ -130,8 +130,8 @@ public class WuicServlet extends HttpServlet {
             patternBuilder.append("/");
         }
 
-        // Followed by the workflow ID a slash and finally the page name
-        patternBuilder.append("([^/]*)/(.*)");
+        // Followed by the workflow ID, a slash, its version timestamp, a new slash and finally the page name
+        patternBuilder.append("([^/]*)/(\\d*/.*)");
 
         urlPattern = Pattern.compile(patternBuilder.toString());
 
@@ -147,7 +147,7 @@ public class WuicServlet extends HttpServlet {
         final Matcher matcher = urlPattern.matcher(request.getRequestURI());
 
         if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
-            response.getWriter().println("URL pattern. Expected [workflowId]/[nutName]");
+            response.getWriter().println("Expected URL pattern: [workflowId]/[timestamp]/[nutName]");
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
@@ -189,6 +189,10 @@ public class WuicServlet extends HttpServlet {
         if (nut != null) {
             try {
                 response.setContentType(nut.getNutType().getMimeType());
+
+                // We set a far expiration date because we assume that polling will change the timestamp in path
+                response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
+
                 is = nut.openStream();
                 IOUtils.copyStream(is, response.getOutputStream());
                 response.getOutputStream().flush();

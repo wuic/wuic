@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
+ * @version 1.8
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)
@@ -199,7 +199,8 @@ public class CoreTest extends WuicTest {
                 log.info(content);
                 final int start = content.indexOf("url : \"") + 8;
                 final int end = content.indexOf("/aggregate.png");
-                final String imageGroup = content.substring(start, end);
+                String imageGroup = content.substring(start, end);
+                imageGroup = imageGroup.substring(0, imageGroup.lastIndexOf('/'));
                 group = facade.process(imageGroup, "");
 
                 writeToDisk(group.get(0).getReferencedNuts().get(0), "aggregate.png");

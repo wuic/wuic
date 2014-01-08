@@ -53,7 +53,7 @@ import java.util.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.2
  */
 public class CompositeNut extends AbstractNut {
@@ -74,7 +74,7 @@ public class CompositeNut extends AbstractNut {
     public CompositeNut(final List<Nut> composition, final String prefixName) {
         super(composition.get(0));
         compositionList = composition;
-        nutName = prefixName + nutName;
+        nutName = new StringBuilder(nutName).insert(nutName.lastIndexOf('/') + 1, prefixName).toString();
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
         for (int i = 1; i < composition.size(); i++) {

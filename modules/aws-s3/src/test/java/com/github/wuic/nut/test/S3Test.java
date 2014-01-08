@@ -61,6 +61,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -76,7 +77,7 @@ import static org.mockito.Mockito.when;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 @RunWith(JUnit4.class)
@@ -119,6 +120,9 @@ public class S3Test {
 
         // Build client mock
         final AmazonS3Client client = mock(AmazonS3Client.class);
+        final ObjectMetadata metadata = mock(ObjectMetadata.class);
+        when(metadata.getLastModified()).thenReturn(new Date());
+        when(client.getObjectMetadata(anyString(), anyString())).thenReturn(metadata);
         when(dao.initClient()).thenReturn(client);
 
         // List returned by client

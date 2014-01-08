@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {
@@ -92,10 +92,10 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * Builds a new instance.
      * </p>
      *
-     * @param base prefix for all paths (a {@link BadArgumentException} is thrown is {@code null}
+     * @param base              prefix for all paths (a {@link BadArgumentException} is thrown is {@code null}
      * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param proxies proxy URIs serving the nut
-     * @param pollingSeconds interleave in seconds for polling feature (-1 to disable)
+     * @param proxies           proxy URIs serving the nut
+     * @param pollingSeconds    interleave in seconds for polling feature (-1 to disable)
      */
     public AbstractNutDao(final String base,
                           final Boolean basePathAsSysProp,
@@ -120,54 +120,71 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         // Keep in this set all listeners that told that they don't want to be notified until the end of the operation
         final Set<NutDaoListener> exclusions = new HashSet<NutDaoListener>();
 
+        // Keep all paths already retrieved associated to their pattern
+        final Map<String, List<String>> nutsPathByPattern = new HashMap<String, List<String>>();
+
+        // We keep all timestamps already retrieved for each path
+        final Map<String, Long> timestamps = new HashMap<String, Long>();
+
         synchronized (getNutObservers()) {
 
             // Poll each nut's path
-            for (final Map.Entry<String, ? extends Polling> entry : getNutObservers().entrySet()) {
-                final String nut = entry.getKey();
+            for (final Map.Entry<NutDaoListener, ? extends Polling> entry : getNutObservers().entrySet()) {
+                final NutDaoListener listener = entry.getKey();
                 final Polling pollingData = entry.getValue();
 
-                try {
-                    final Set<String> paths = new HashSet<String>(listNutsPaths(pollingData.getPattern()));
-                    Map<String, Long> timestamps = null;
+                    final Set<String> nutPathsToPoll = new LinkedHashSet<String>();
 
-                    // Notifies listeners
-                    for (final NutDaoListener o : pollingData.getListeners()) {
-                        final boolean excluded = exclusions.contains(o);
+                    for (final String pattern : pollingData.getPatterns()) {
+                        List<String> nutPaths = nutsPathByPattern.get(pattern);
 
-                        // Not already excluded and asks for exclusion
-                        if (!excluded && !o.polling(paths)) {
-                            exclusions.add(o);
-                        } else if (!excluded) {
-
-                            // Timestamps not already retrieved
-                            if (timestamps == null) {
-                                timestamps = new HashMap<String, Long>(paths.size());
-
-                                for (final String path : paths) {
-                                    final Long timestamp = getLastUpdateTimestampFor(path);
-                                    timestamps.put(path, timestamp);
-
-                                    // Stop notifying
-                                    if (!o.nutPolled(this, path, timestamp)) {
-                                        exclusions.add(o);
-                                        break;
-                                    }
-                                }
-                            } else {
-                                for (final Map.Entry<String, Long> pathEntry : timestamps.entrySet()) {
-                                    // Stop notifying
-                                    if (!o.nutPolled(this, pathEntry.getKey(), pathEntry.getValue())) {
-                                        exclusions.add(o);
-                                        break;
-                                    }
-                                }
+                        try {
+                            if (nutPaths == null) {
+                                nutPaths = listNutsPaths(pattern);
+                                nutsPathByPattern.put(pattern, nutPaths);
                             }
+
+                            nutPathsToPoll.addAll(nutPaths);
+                        } catch (StreamException se) {
+                            log.error("Unable to list path for {}", pattern, se);
                         }
                     }
-                } catch (StreamException se) {
-                    log.error(String.format("Unable to poll nut %s", nut), se);
-                }
+
+                    // Notify listener
+                    final boolean excluded = exclusions.contains(listener);
+
+                    // Not already excluded and asks for exclusion
+                    if (!excluded && !listener.polling(nutPathsToPoll)) {
+                        exclusions.add(listener);
+                    } else if (!excluded) {
+                        for (final String path : nutPathsToPoll) {
+                            Long timestamp = timestamps.get(path);
+
+                            // Timestamps not already retrieved
+                            if (timestamp == null) {
+                                try {
+                                    timestamp = getLastUpdateTimestampFor(path);
+                                    timestamps.put(path, timestamp);
+                                } catch (StreamException se) {
+                                    log.error("Unable to poll nut {}", path, se);
+                                }
+                            }
+
+                            // Stop notifying
+                            if (!listener.nutPolled(this, path, timestamp)) {
+                                exclusions.add(listener);
+                                break;
+                            }
+                        }
+                    } /*else {
+                        for (final Map.Entry<String, Long> pathEntry : timestamps.entrySet()) {
+                            // Stop notifying
+                            if (!o.nutPolled(this, pathEntry.getKey(), pathEntry.getValue())) {
+                                exclusions.add(o);
+                                break;
+                            }
+                        }
+                    }*/
             }
         }
     }
@@ -230,8 +247,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final Nut res = accessFor(p, type);
             res.setProxyUri(proxyUriFor(res));
 
-            // Poll only if polling interleave is enabled
-            retval.put(res, getPollingInterleave() != -1 ? getLastUpdateTimestampFor(p) : -1L);
+            retval.put(res, getLastUpdateTimestampFor(p));
         }
 
         return retval;
@@ -395,7 +411,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param pathName the path access
-     * @param format the path format
+     * @param format   the path format
      * @return the resulting real paths
      * @throws StreamException if an I/O error occurs when creating the nut
      */
@@ -445,7 +461,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param pattern the pattern
-     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs while reading nuts
+     * @throws com.github.wuic.exception.wrapper.StreamException
+     *          if any I/O error occurs while reading nuts
      */
     protected abstract List<String> listNutsPaths(String pattern) throws StreamException;
 
@@ -455,9 +472,10 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param realPath the real path to use to access the nut
-     * @param type the path's type
+     * @param type     the path's type
      * @return the {@link Nut}
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while creating access
+     * @throws com.github.wuic.exception.wrapper.StreamException
+     *          if an I/O error occurs while creating access
      */
     protected abstract Nut accessFor(String realPath, NutType type) throws StreamException;
 

@@ -64,7 +64,7 @@ import java.util.*;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.1.0
  */
 public class NutsHeap implements NutDaoListener, HeapListener {
@@ -327,6 +327,23 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     }
 
     /**
+     * <p>
+     * Gets all the nuts of this heap associated to their timestamp version.
+     * </p>
+     *
+     * @return the nuts
+     */
+    public Map<Nut, Long> getNutsWithTimestamp() {
+        final Map<Nut, Long> retval = new LinkedHashMap<Nut, Long>(nuts);
+
+        for (final NutsHeap c : composition) {
+            retval.putAll(c.getNutsWithTimestamp());
+        }
+
+        return retval;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -338,7 +355,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         }
 
         // Paths have not changed if different is empty, otherwise we notify listeners
-        return CollectionUtils.difference(current, paths).isEmpty() || notifyListeners();
+        if (!CollectionUtils.difference(current, paths).isEmpty()) {
+            return notifyListeners();
+        } else {
+            return true;
+        }
     }
 
     /**

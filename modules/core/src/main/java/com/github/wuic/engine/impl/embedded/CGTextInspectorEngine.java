@@ -67,7 +67,7 @@ import java.util.regex.Matcher;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.3
  */
 public abstract class CGTextInspectorEngine extends Engine {
@@ -222,8 +222,8 @@ public abstract class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final Nut nut = inspector.appendTransformation(matcher, replacement,
-                    IOUtils.mergePath(request.getContextPath(), request.getHeap().getId()), nutsHeap.getNutDao());
+            final String absolutePath = IOUtils.mergePath(request.getContextPath(), request.getHeap().getId(), request.getTimestampVersion());
+            final Nut nut = inspector.appendTransformation(matcher, replacement, absolutePath, nutsHeap.getNutDao());
             matcher.appendReplacement(retval, replacement.toString());
 
             // If nut name is null, it means that nothing has been changed by the inspector

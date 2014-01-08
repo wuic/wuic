@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Collections;
 import java.util.concurrent.Future;
 
 /**
@@ -55,7 +54,7 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  * @param <T> the type of listener
  */
@@ -77,15 +76,15 @@ public abstract class PollingScheduler<T> implements Runnable {
     private Future<?> pollingResult;
 
     /**
-     * All observers per nut.
+     * All observers per listener.
      */
-    private final Map<String, Polling> nutObservers;
+    private final Map<T, Polling> nutObservers;
 
     /**
      * Creates a new instance.
      */
     public PollingScheduler() {
-        nutObservers = new HashMap<String, Polling>();
+        nutObservers = new HashMap<T, Polling>();
     }
 
     /**
@@ -99,11 +98,16 @@ public abstract class PollingScheduler<T> implements Runnable {
      */
     public final void observe(final String pattern, final T ... listeners) throws StreamException {
         synchronized (getNutObservers()) {
-            final Polling polling = getNutObservers().containsKey(pattern)
-                    ? getNutObservers().get(pattern) : new Polling(pattern);
+            for (final T listener : listeners) {
+                Polling polling = getNutObservers().get(listener);
 
-            polling.addListeners(listeners);
-            nutObservers.put(pattern, polling);
+                if (polling == null) {
+                    polling = new Polling(listener);
+                    nutObservers.put(listener, polling);
+                }
+
+                polling.addPattern(pattern);
+            }
         }
     }
 
@@ -114,7 +118,7 @@ public abstract class PollingScheduler<T> implements Runnable {
      *
      * @return the observers
      */
-    public Map<String, ? extends Polling> getNutObservers() {
+    public Map<T, ? extends Polling> getNutObservers() {
         return nutObservers;
     }
 
@@ -171,47 +175,47 @@ public abstract class PollingScheduler<T> implements Runnable {
 
     /**
      * <p>
-     * This class represents a polling information. It's composed of a pattern matching the desired nuts and a set of
-     * listeners to be notified when a nut has been polled.
+     * This class represents a polling information. It's composed of a listener to be notified polling is performed and
+     * a set of patterns matching the desired nuts.
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.0
      */
     public class Polling {
 
         /**
-         * Listeners.
+         * Listener.
          */
-        private Set<T> listeners;
+        private T listener;
 
         /**
-         * The pattern.
+         * The patterns.
          */
-        private String pattern;
+        private Set<String> patterns;
 
         /**
          * <p>
          * Creates a new instance.
          * </p>
          *
-         * @param p the pattern matching the nuts to test
+         * @param l the listener to be notified
          */
-        public Polling(final String p) {
-            listeners = new HashSet<T>();
-            pattern = p;
+        public Polling(final T l) {
+            listener = l;
+            patterns = new HashSet<String>();
         }
 
         /**
          * <p>
-         * Gets the pattern.
+         * Gets the patterns.
          * </p>
          *
-         * @return the pattern
+         * @return the patterns
          */
-        public String getPattern() {
-            return pattern;
+        public Set<String> getPatterns() {
+            return patterns;
         }
 
         /**
@@ -219,21 +223,21 @@ public abstract class PollingScheduler<T> implements Runnable {
          * Adds all the specified listeners.
          * </p>
          *
-         * @param listener the array to add
+         * @param pattern a new pattern matching the desired nuts
          */
-        public void addListeners(final T ... listener) {
-            Collections.addAll(listeners, listener);
+        public void addPattern(final String pattern) {
+            patterns.add(pattern);
         }
 
         /**
          * <p>
-         * Gets the listeners.
+         * Gets the listener.
          * </p>
          *
-         * @return the listeners
+         * @return the listener
          */
-        public Set<T> getListeners() {
-            return listeners;
+        public T getListener() {
+            return listener;
         }
     }
 }

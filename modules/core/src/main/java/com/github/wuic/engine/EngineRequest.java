@@ -40,7 +40,6 @@ package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.CollectionUtils;
 import org.slf4j.Logger;
@@ -61,7 +60,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.0
  */
 public final class EngineRequest {
@@ -102,6 +101,11 @@ public final class EngineRequest {
     private EngineType[] skip;
 
     /**
+     * The timestamp version.
+     */
+    private String timestampVersion;
+
+    /**
      * <p>
      * Builds a new {@code EngineRequest} with some nuts specific, a specified context path to be used and a workflow ID.
      * </p>
@@ -112,30 +116,32 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final EngineType ... toSkip) {
-        nuts = n;
-        contextPath = other.getContextPath();
-        heap = other.getHeap();
-        chains = other.chains;
-        workflowId = wId;
-        skip = new EngineType[toSkip.length];
-        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
+        this(wId, other.contextPath, other.timestampVersion, other.heap, n, other.chains, toSkip);
     }
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some nuts specific and a specified context path to be used.
+     * Builds a new {@code EngineRequest} with some specific nuts and a specified context path to be used.
      * </p>
      *
      * @param n the nuts to be parsed
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final EngineRequest other) {
-        nuts = n;
-        contextPath = other.getContextPath();
-        heap = other.getHeap();
-        chains = other.chains;
-        workflowId = other.workflowId;
-        skip = other.skip;
+        this(other.workflowId, other.contextPath, other.timestampVersion, other.heap, n, other.chains, other.skip);
+    }
+
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with a specific timestamp identifying nuts version path.
+     * </p>
+     *
+     * @param timestampVersion the specific timestamp version
+     * @param other the request to copy
+     */
+    public EngineRequest(final String timestampVersion, final EngineRequest other) {
+        this(other.workflowId, other.contextPath, timestampVersion, other.heap, other.nuts, other.chains, other.skip);
     }
 
     /**
@@ -149,13 +155,7 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
-        nuts = n;
-        contextPath = other.getContextPath();
-        heap = h;
-        chains = other.chains;
-        workflowId = other.workflowId;
-        skip = new EngineType[toSkip.length];
-        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
+        this(other.workflowId, other.contextPath, other.timestampVersion, h, n, other.chains, toSkip);
     }
 
     /**
@@ -168,27 +168,58 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other) {
-        this(n, h, other, other.skip);
+        this(other.workflowId, other.contextPath, other.timestampVersion, h, n, other.chains, other.skip);
     }
+
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with a heap, engines chains and a specified context path to be used.
+     * Builds a new {@code EngineRequest} with a timestamp version which equals to 0 and the nuts retrieved from the specified
+     * heap.
      * </p>
      *
      * @param wid the workflow ID
      * @param cp the context root where the generated nuts should be exposed
-     * @param g the heap
+     * @param h the heap
      * @param c the engine chains
-     * @throws StreamException if an I/O error occurs while getting nuts
+     * @param toSkip some engine types to skip
      */
-    public EngineRequest(final String wid, final String cp, final NutsHeap g, final Map<NutType, ? extends Engine> c) throws StreamException {
-        nuts = new ArrayList<Nut>(g.getNuts());
+    public EngineRequest(final String wid,
+                         final String cp,
+                         final NutsHeap h,
+                         final Map<NutType, ? extends Engine> c,
+                         final EngineType ... toSkip) {
+        this(wid, cp, "", h, new ArrayList<Nut>(h.getNuts()), c, toSkip);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter.
+     * </p>
+     *
+     * @param wid the workflow ID
+     * @param cp the context root where the generated nuts should be exposed
+     * @param tsVersion a timestamp version for nuts
+     * @param h the heap
+     * @param c the engine chains
+     * @param n the nuts.
+     * @param toSkip some engine types to skip
+     */
+    public EngineRequest(final String wid,
+                         final String cp,
+                         final String tsVersion,
+                         final NutsHeap h,
+                         final List<Nut> n,
+                         final Map<NutType, ? extends Engine> c,
+                         final EngineType ... toSkip) {
+        nuts = new ArrayList<Nut>(n);
         contextPath = cp;
-        heap = g;
+        heap = h;
         chains = c;
         workflowId = wid;
-        skip = new EngineType[0];
+        timestampVersion = tsVersion;
+        skip = new EngineType[toSkip.length];
+        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
     }
 
     /**
@@ -233,6 +264,17 @@ public final class EngineRequest {
      */
     public String getWorkflowId() {
         return workflowId;
+    }
+
+    /**
+     * <p>
+     * Gets the timestamp version.
+     * </p>
+     *
+     * @return the timestamp version
+     */
+    public String getTimestampVersion() {
+        return timestampVersion;
     }
 
     /**

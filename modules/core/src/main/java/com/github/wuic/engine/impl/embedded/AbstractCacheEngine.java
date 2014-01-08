@@ -69,7 +69,7 @@ import java.util.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.0
  */
 public abstract class AbstractCacheEngine extends Engine {
@@ -114,15 +114,27 @@ public abstract class AbstractCacheEngine extends Engine {
                 log.info("Nuts for heap '{}' found in cache", key);
                 retval = value;
             } else if (getNext() != null) {
+                // Get the most recent nut's timestamp has version identifier
+                Long max = 0L;
+                final Collection<Long> timestamps = request.getHeap().getNutsWithTimestamp().values();
+
+                for (final Long ts : timestamps) {
+                    if (ts.compareTo(max) > 0) {
+                        max = ts;
+                    }
+                }
+
+                final String prefix = String.valueOf(max);
+
                 // Observe and invalidate the cache when updates are notified
                 request.getHeap().addObserver(new InvalidateCache(key));
 
-                final List<Nut> nuts = getNext().parse(request);
+                final List<Nut> nuts = getNext().parse(new EngineRequest(prefix, request));
                 final List<Nut> toCache = new ArrayList<Nut>(nuts.size());
 
                 for (final Nut nut : nuts) {
                     if (nut.isCacheable()) {
-                        toCache.add(toByteArrayNut(nut));
+                        toCache.add(toByteArrayNut(nut, prefix));
                     }
                 }
 
@@ -150,19 +162,19 @@ public abstract class AbstractCacheEngine extends Engine {
      * @return the byte array nut
      * @throws com.github.wuic.exception.WuicException if an I/O error occurs
      */
-    private Nut toByteArrayNut(final Nut nut) throws WuicException {
+    private Nut toByteArrayNut(final Nut nut, final String prefixPath) throws WuicException {
         InputStream is = null;
 
         try {
             is = nut.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
-            final Nut bytes = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            final Nut bytes = new ByteArrayNut(os.toByteArray(), IOUtils.mergePath(prefixPath, nut.getName()), nut.getNutType());
             bytes.setProxyUri(nut.getProxyUri());
 
             if (nut.getReferencedNuts() != null) {
                 for (final Nut ref : nut.getReferencedNuts()) {
-                    bytes.addReferencedNut(toByteArrayNut(ref));
+                    bytes.addReferencedNut(toByteArrayNut(ref, prefixPath));
                 }
             }
 
