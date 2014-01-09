@@ -43,6 +43,7 @@ import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
  * path when retrieved nuts, a set of proxies URIs and a polling feature.
  * </p>
- *
+ * <p/>
  * <p>
  * The class is designed to be thread safe.
  * </p>
@@ -115,6 +116,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     public void run() {
+        // Log duration
+        final Long start = System.currentTimeMillis();
         log.info("Running polling operation for {}", toString());
 
         // Keep in this set all listeners that told that they don't want to be notified until the end of the operation
@@ -133,60 +136,55 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 final NutDaoListener listener = entry.getKey();
                 final Polling pollingData = entry.getValue();
 
-                    final Set<String> nutPathsToPoll = new LinkedHashSet<String>();
+                final Set<String> nutPathsToPoll = new LinkedHashSet<String>();
 
-                    for (final String pattern : pollingData.getPatterns()) {
-                        List<String> nutPaths = nutsPathByPattern.get(pattern);
+                for (final String pattern : pollingData.getPatterns()) {
+                    List<String> nutPaths = nutsPathByPattern.get(pattern);
 
-                        try {
-                            if (nutPaths == null) {
-                                nutPaths = listNutsPaths(pattern);
-                                nutsPathByPattern.put(pattern, nutPaths);
+                    try {
+                        if (nutPaths == null) {
+                            nutPaths = listNutsPaths(pattern);
+                            nutsPathByPattern.put(pattern, nutPaths);
+                        }
+
+                        nutPathsToPoll.addAll(nutPaths);
+                    } catch (StreamException se) {
+                        log.error("Unable to list path for {}", pattern, se);
+                    }
+                }
+
+                // Notify listener
+                final boolean excluded = exclusions.contains(listener);
+
+                // Not already excluded and asks for exclusion
+                if (!excluded && !listener.polling(nutPathsToPoll)) {
+                    exclusions.add(listener);
+                } else if (!excluded) {
+                    for (final String path : nutPathsToPoll) {
+                        Long timestamp = timestamps.get(path);
+
+                        // Timestamps not already retrieved
+                        if (timestamp == null) {
+                            try {
+                                timestamp = getLastUpdateTimestampFor(path);
+                                timestamps.put(path, timestamp);
+                            } catch (StreamException se) {
+                                log.error("Unable to poll nut {}", path, se);
                             }
+                        }
 
-                            nutPathsToPoll.addAll(nutPaths);
-                        } catch (StreamException se) {
-                            log.error("Unable to list path for {}", pattern, se);
+                        // Stop notifying
+                        if (!listener.nutPolled(this, path, timestamp)) {
+                            exclusions.add(listener);
+                            break;
                         }
                     }
-
-                    // Notify listener
-                    final boolean excluded = exclusions.contains(listener);
-
-                    // Not already excluded and asks for exclusion
-                    if (!excluded && !listener.polling(nutPathsToPoll)) {
-                        exclusions.add(listener);
-                    } else if (!excluded) {
-                        for (final String path : nutPathsToPoll) {
-                            Long timestamp = timestamps.get(path);
-
-                            // Timestamps not already retrieved
-                            if (timestamp == null) {
-                                try {
-                                    timestamp = getLastUpdateTimestampFor(path);
-                                    timestamps.put(path, timestamp);
-                                } catch (StreamException se) {
-                                    log.error("Unable to poll nut {}", path, se);
-                                }
-                            }
-
-                            // Stop notifying
-                            if (!listener.nutPolled(this, path, timestamp)) {
-                                exclusions.add(listener);
-                                break;
-                            }
-                        }
-                    } /*else {
-                        for (final Map.Entry<String, Long> pathEntry : timestamps.entrySet()) {
-                            // Stop notifying
-                            if (!o.nutPolled(this, pathEntry.getKey(), pathEntry.getValue())) {
-                                exclusions.add(o);
-                                break;
-                            }
-                        }
-                    }*/
+                }
             }
         }
+
+        log.info("Polling operation for {} run in {} seconds", getClass().getName(),
+                (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
     }
 
     /**
