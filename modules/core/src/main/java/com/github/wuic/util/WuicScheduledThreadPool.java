@@ -58,7 +58,7 @@ import java.util.concurrent.ScheduledFuture;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 public final class WuicScheduledThreadPool extends Thread {
@@ -126,6 +126,15 @@ public final class WuicScheduledThreadPool extends Thread {
      * {@inheritDoc}
      */
     public void run() {
+        shutdown();
+    }
+
+    /**
+     * <p>
+     * Stops the pool.
+     * </p>
+     */
+    public void shutdown() {
         pool.shutdownNow();
     }
 

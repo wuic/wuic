@@ -42,6 +42,7 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,7 @@ import java.net.URL;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.1
  */
 public class WuicServletContextListener implements ServletContextListener {
@@ -137,5 +138,6 @@ public class WuicServletContextListener implements ServletContextListener {
     public void contextDestroyed(final ServletContextEvent sce) {
         WuicJeeContext.setFacade(null);
         WuicJeeContext.setContext(null);
+        WuicScheduledThreadPool.getInstance().shutdown();
     }
 }
