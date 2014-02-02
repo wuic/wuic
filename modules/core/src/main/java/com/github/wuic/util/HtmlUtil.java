@@ -136,7 +136,7 @@ public final class HtmlUtil {
         } else if (nut.getName().startsWith("http://")) {
             return nut.getName();
         } else {
-            return IOUtils.mergePath(workflowContextPath, nut.getName());
+            return IOUtils.mergePath(workflowContextPath, nut.getVersionNumber().toString(), nut.getName());
         }
     }
 }

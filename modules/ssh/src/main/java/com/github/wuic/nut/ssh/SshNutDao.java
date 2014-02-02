@@ -48,6 +48,7 @@ import com.github.wuic.util.IOUtils;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -178,7 +179,7 @@ public class SshNutDao extends AbstractNutDao {
             channel.cd(getBasePath());
             final ByteArrayOutputStream os = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             channel.get(path, os);
-            return new ByteArrayNut(os.toByteArray(), path, type);
+            return new ByteArrayNut(os.toByteArray(), path, type, new BigInteger(getLastUpdateTimestampFor(path).toString()));
         } catch (JSchException je) {
             throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
         } catch (SftpException se) {

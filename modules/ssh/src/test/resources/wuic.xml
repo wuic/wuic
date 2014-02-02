@@ -18,12 +18,15 @@
             <nut-path>junit*.css</nut-path>
 		</heap>
 	</heaps>
-    <workflows>
-        <workflow id-prefix="css-image" heap-id-pattern="css-image">
+    <workflow-templates>
+        <workflow-template id="tpl">
             <engine-chain>
                 <engine-builder-id>wuicDefaultYuiCompressorCssEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
             </engine-chain>
-        </workflow>
+        </workflow-template>
+    </workflow-templates>
+    <workflows>
+        <workflow id-prefix="css-image" workflow-template-id="tpl" heap-id-pattern="css-image" />
     </workflows>
 </wuic>

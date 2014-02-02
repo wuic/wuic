@@ -131,7 +131,7 @@ public class WuicServlet extends HttpServlet {
         }
 
         // Followed by the workflow ID, a slash, its version timestamp, a new slash and finally the page name
-        patternBuilder.append("([^/]*)/(\\d*/.*)");
+        patternBuilder.append("([^/]*)/-?\\d*/?(.*)");
 
         urlPattern = Pattern.compile(patternBuilder.toString());
 

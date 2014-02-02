@@ -71,7 +71,7 @@ public class WuicTag extends TagSupport {
     /**
      * The page name.
      */
-    private String workflowIds;
+    private String workflowId;
 
     /**
      * <p>
@@ -90,10 +90,15 @@ public class WuicTag extends TagSupport {
         try {
             // Get the facade
             final WuicFacade facade = WuicJeeContext.getWuicFacade();
-            final List<Nut> nuts = facade.runWorkflow(workflowIds);
+
+            if (WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()) {
+                facade.clearTag(workflowId);
+            }
+
+            final List<Nut> nuts = facade.runWorkflow(workflowId);
 
             for (final Nut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowIds)));
+                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowId)));
             }
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
@@ -111,8 +116,8 @@ public class WuicTag extends TagSupport {
      * 
      * @return the page name
      */
-    public String getWorkflowIds() {
-        return workflowIds;
+    public String getWorkflowId() {
+        return workflowId;
     }
 
     /**
@@ -122,7 +127,7 @@ public class WuicTag extends TagSupport {
      * 
      * @param page the workflow IDs
      */
-    public void setWorkflowIds(final String page) {
-        this.workflowIds = page;
+    public void setWorkflowId(final String page) {
+        this.workflowId = page;
     }
 }

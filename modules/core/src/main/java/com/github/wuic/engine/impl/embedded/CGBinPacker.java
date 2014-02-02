@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.Dimension;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -128,7 +127,7 @@ public final class CGBinPacker<T> implements Comparator<T>, DimensionPacker<T> {
         dataQueue.addAll(dataMap.keySet());
     
         // There is one region for each dimension
-        final Map<Region, T> retval = new HashMap<Region, T>(dataMap.size());
+        final Map<Region, T> retval = new LinkedHashMap<Region, T>(dataMap.size());
         
         Dimension dim;
 

@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.embedded.ScheduledCacheEngine;
 import com.github.wuic.nut.Nut;
 import junit.framework.Assert;
@@ -81,17 +82,17 @@ public class ScheduledCacheTest {
             /**
              * {@inheritDoc}
              */
-            @Override public void putToCache(String workflowId, List<Nut> nuts) { }
+            @Override public void putToCache(EngineRequest.Key request, List<Nut> nuts) { }
 
             /**
              * {@inheritDoc}
              */
-            @Override public void removeFromCache(String workflowId) { }
+            @Override public void removeFromCache(EngineRequest.Key request) { }
 
             /**
              * {@inheritDoc}
              */
-            @Override public List<Nut> getFromCache(String workflowId) { return null; }
+            @Override public List<Nut> getFromCache(EngineRequest.Key request) { return null; }
         };
 
         count.await(1500, TimeUnit.MILLISECONDS);

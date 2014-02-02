@@ -129,7 +129,7 @@ public class JavascriptYuiCompressorEngine extends CGAbstractCompressorEngine {
                                          final Boolean verb,
                                          final Boolean keepSemiColons,
                                          final Boolean obfuscate) {
-        super(compress);
+        super(compress, ".min");
         charset = cs;
         lineBreakPos = lbp;
         disableOptimization = disableOptim;

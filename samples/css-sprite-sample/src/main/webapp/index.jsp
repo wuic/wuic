@@ -4,7 +4,7 @@
     <title>Sample CSS sprites</title>
 
       <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
-      <wuic:html-import workflowIds="sprite-img" />
+      <wuic:html-import workflowId="img" />
   </head>
   <body>
     <h2>Monitor your network traffic in your browser to see that only one image is loaded !</h2>

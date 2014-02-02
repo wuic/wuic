@@ -70,19 +70,9 @@ import java.util.*;
 public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
-     * The separator used to refer multiple HEAP in a {@code String}. Can't be used in HEAP's ID declaration.
-     */
-    public static final String ID_SEPARATOR = "|";
-
-    /**
      * Message's template displayed when no nut has been found.
      */
     private static final String EMPTY_PATH_MESSAGE = "Path(s) %s retrieved with %s don't correspond to any physic nuts";
-
-    /**
-     * Message's template displayed when the extensions of nuts path is not correct.
-     */
-    private static final String BAD_EXTENSIONS_MESSAGE = "Bad extension for nut %s associated to the NutType %s";
 
     /**
      * The logger.
@@ -95,9 +85,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     private List<String> paths;
 
     /**
-     * The nut type.
+     * The nut types.
      */
-    private NutType nutType;
+    private Set<NutType> nutTypes;
 
     /**
      * The nut DAO.
@@ -124,6 +114,10 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     private NutsHeap[] composition;
 
+    /**
+     * All the nuts created through through heap.
+     */
+    private Set<String> created;
 
     /**
      * <p>
@@ -138,8 +132,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.composition = other.composition;
         this.nutDao = other.nutDao;
         this.nuts = other.nuts;
-        this.nutType = other.nutType;
+        this.nutTypes = other.nutTypes;
         this.paths = other.paths;
+        this.created = other.created;
     }
 
     /**
@@ -163,17 +158,129 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     final NutDao theNutDao,
                     final String heapId,
                     final NutsHeap ... heaps) throws StreamException {
-        if (heapId.contains(ID_SEPARATOR)) {
-            throw new BadArgumentException(new IllegalArgumentException(
-                    String.format("Heap's ID can't contain the reserved work '%s' : %s", ID_SEPARATOR, heapId)));
-        }
-
         this.id = heapId;
         this.paths = pathsList;
         this.nutDao = theNutDao;
         this.listeners = new HashSet<HeapListener>();
         this.composition = heaps;
+        this.nutTypes = new HashSet<NutType>();
+        this.created = new HashSet<String>();
         checkFiles();
+    }
+
+    /**
+     * <p>
+     * Finds the {@link NutDao} that created this nut.
+     * </p>
+     *
+     * @param nut the nut
+     * @return the nut's DAO, {@code null} if not found
+     */
+    public NutDao findDaoFor(final Nut nut) {
+        final NutDao retval = recursiveFindDaoFor(nut);
+
+        if (retval == null) {
+            log.warn("Did not found any NutDao for nut {} inside heap {}", nut, this);
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Finds the {@link NutDao} that created this nut recursively through the composition.
+     * </p>
+     *
+     * @param nut the nut
+     * @return the nut's DAO, {@code null} if not found
+     */
+    private NutDao recursiveFindDaoFor(final Nut nut) {
+        // Heap has its own DAO, check inside first
+        if (hasCreated(nut)) {
+            return getNutDao();
+        }
+
+        // Search inside composition recursively
+        for (final NutsHeap heap : getComposition()) {
+            final NutDao retval = heap.recursiveFindDaoFor(nut);
+
+            if (retval != null) {
+                return retval;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link NutDao} of this {@link NutsHeap}. Caution, don't use its method like
+     * {@link NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)}, {@link NutDao#proxyUriFor(Nut)} or
+     * {@link NutDao#withRootPath(String)} but to the corresponding proxy methods in this class which check if the
+     * {@link NutDao} to actually use is not in one of the {@link NutsHeap heaps} that compose this {@link NutsHeap}.
+     * </p>
+     *
+     * @return the {@link NutDao}
+     */
+    public NutDao getNutDao() {
+        return nutDao;
+    }
+
+    /**
+     * <p>
+     * Delegates method of {@link NutDao#proxyUriFor(Nut)}. The DAO is picked from heap or its composition.
+     * </p>
+     *
+     * @param nut the nut
+     * @return the proxy URI
+     */
+    public String proxyUriFor(final Nut nut) {
+        final NutDao dao = findDaoFor(nut);
+        return dao != null ? dao.proxyUriFor(nut) : null;
+    }
+
+    /**
+     * <p>
+     * Delegates method of {@link NutDao#withRootPath(String)}. The DAO is picked from heap or its composition.
+     * </p>
+     *
+     * @param nut the root nut
+     * @param rootPath the path
+     * @return the proxy DAO
+     */
+    public NutDao withRootPath(final String rootPath, final Nut nut) {
+        final NutDao dao = findDaoFor(nut);
+        return dao != null ? dao.withRootPath(rootPath) : null;
+    }
+
+    /**
+     * <p>
+     * Delegates method of {@link NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)}.
+     * The DAO is picked from heap or its composition.
+     * </p>
+     *
+     * @param nut the root nut
+     * @param path the nut path to create
+     * @param pathFormat the format
+     * @return the new nut
+     * @throws StreamException if any I/O error occurs
+     */
+    public Map<Nut, Long> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws StreamException {
+        final NutDao dao = findDaoFor(nut);
+        final Map<Nut, Long> retval;
+
+        if (dao != null) {
+            retval = dao.create(path, pathFormat);
+            nutDao.observe(path, this);
+
+            for (final Nut n : retval.keySet()) {
+                created.add(n.getName());
+            }
+        } else {
+            retval = Collections.emptyMap();
+        }
+
+        return retval;
     }
 
     /**
@@ -206,9 +313,16 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
         log.info("Checking files for heap '{}'", id);
 
-        for (final String path : paths) {
-            nuts.putAll(nutDao.create(path));
-            nutDao.observe(path, this);
+        if (paths != null) {
+            for (final String path : paths) {
+                final Map<Nut, Long> res = nutDao.create(path);
+                nuts.putAll(res);
+                nutDao.observe(path, this);
+
+                for (final Nut nut : res.keySet()) {
+                    created.add(nut.getName());
+                }
+            }
         }
 
         // Non null assertion
@@ -224,8 +338,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         checkExtension(nuts.keySet());
 
         // Also check other heaps and observe them
-        for (final NutsHeap heap : composition) {
-            checkExtension(heap.nuts.keySet());
+        for (final NutsHeap heap : getComposition()) {
             heap.addObserver(this);
         }
     }
@@ -238,30 +351,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param toCheck set to check.
      */
     private void checkExtension(final Set<Nut> toCheck) {
-        for (final Nut res : toCheck) {
-            // Extract name to be test
-            final String nut = res.getName();
-
-            Boolean valid = Boolean.FALSE;
-
-            // Apply test for each possible extension
-            for (final NutType nt : NutType.values()) {
-                for (final String extension : nt.getExtensions()) {
-                    if (nut.endsWith(extension)) {
-                        if (nutType == null) {
-                            nutType = nt;
-                        }
-
-                        valid = nt.equals(nutType);
-                    }
-                }
-            }
-
-            // The path has not one of the possible extension : throw an IAE
-            if (!valid) {
-                final String message = String.format(BAD_EXTENSIONS_MESSAGE, nut, nutType);
-                throw new BadArgumentException(new IllegalArgumentException(message));
-            }
+        for (final Nut nut : toCheck) {
+            nutTypes.add(NutType.getNutTypeForExtension(nut.getName().substring(nut.getName().lastIndexOf('.'))));
         }
     }
 
@@ -278,24 +369,13 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Gets the {@link NutType}.
+     * Gets the {@link NutType} types.
      * </p>
      * 
-     * @return the type
+     * @return the types
      */
-    public NutType getNutType() {
-        return nutType;
-    }
-
-    /**
-     * <p>
-     * Gets the {@link NutDao}.
-     * </p>
-     * 
-     * @return the nut DAO
-     */
-    public NutDao getNutDao() {
-        return nutDao;
+    public Set<NutType> getNutTypes() {
+        return nutTypes;
     }
 
     /**
@@ -319,7 +399,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public Set<Nut> getNuts() {
         final Set<Nut> retval = new LinkedHashSet<Nut>(nuts.keySet());
 
-        for (final NutsHeap c : composition) {
+        for (final NutsHeap c : getComposition()) {
             retval.addAll(c.getNuts());
         }
 
@@ -336,7 +416,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public Map<Nut, Long> getNutsWithTimestamp() {
         final Map<Nut, Long> retval = new LinkedHashMap<Nut, Long>(nuts);
 
-        for (final NutsHeap c : composition) {
+        for (final NutsHeap c : getComposition()) {
             retval.putAll(c.getNutsWithTimestamp());
         }
 
@@ -354,11 +434,175 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             current.add(nut.getName());
         }
 
-        // Paths have not changed if different is empty, otherwise we notify listeners
-        if (!CollectionUtils.difference(current, paths).isEmpty()) {
-            return notifyListeners();
-        } else {
-            return true;
+        // Paths have not changed if difference is empty, otherwise we notify listeners
+        boolean retval = CollectionUtils.difference(current, paths).isEmpty();
+
+        if (!retval) {
+            retval = notifyListeners();
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Creates a new iterator on the {@link Nut nuts}.
+     * </p>
+     *
+     * @return the iterator
+     * @see NutsHeapIterator
+     * @see CompositeIterator
+     */
+    public Iterator<List<Nut>> iterator() {
+        return new CompositeIterator();
+    }
+
+    /**
+     * <p>
+     * Indicates if this {@link NutsHeap} has created thanks to its own DAO a {@link Nut}. The methods search for the
+     * original nut if the specified nut is a generated one.
+     * </p>
+     *
+     * @param nut the nut
+     * @return {@code true} if heap has created a {@link Nut} with this path, {@code false} otherwise
+     */
+    public Boolean hasCreated(final Nut nut) {
+        Nut refOrigin = nut;
+
+        while (refOrigin.getOriginalNuts() != null && !refOrigin.getOriginalNuts().isEmpty()) {
+            refOrigin = refOrigin.getOriginalNuts().get(0);
+        }
+
+        return created.contains(refOrigin.getName());
+    }
+
+    /**
+     * <p>
+     * Internal class that allow to iterate on this {@link NutsHeap heap} but also on the {@link NutsHeap heaps} composing it.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.3
+     */
+    private final class CompositeIterator implements Iterator<List<Nut>> {
+
+        /**
+         * The current index of the iterator inside the composition.
+         */
+        private int index;
+
+        /**
+         * The actual iterator.
+         */
+        private Iterator<List<Nut>> delegate;
+
+        /**
+         * Builds a new instance.
+         */
+        CompositeIterator() {
+            delegate = new NutsHeapIterator();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            while (!delegate.hasNext() && index < composition.length) {
+                delegate = composition[index++].iterator();
+            }
+
+            return delegate.hasNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> next() {
+            return delegate.next();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * <p>
+     * Internal class which helps iterating on all its {@link Nut nuts} including its composition. The {@link Nut nuts}
+     * are read and returned by sequence of elements having the same {@link NutType}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.3
+     */
+    private final class NutsHeapIterator implements Iterator<List<Nut>> {
+
+        /**
+         * Iterator.
+         */
+        private Iterator<Nut> iterator;
+
+        /**
+         * Next element.
+         */
+        private Nut next;
+
+        /**
+         * <p>
+         * Builds a new instance by initializing the iterator.
+         * </p>
+         */
+        NutsHeapIterator() {
+            iterator = getNutsWithTimestamp().keySet().iterator();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> next() {
+            if (next == null) {
+                next = iterator.next();
+            }
+
+            final LinkedList<Nut> retval = new LinkedList<Nut>();
+            retval.add(next);
+
+            while (iterator.hasNext()) {
+                next = iterator.next();
+
+                if (next.getNutType().equals(retval.getLast().getNutType())) {
+                    retval.add(next);
+                } else {
+                    return retval;
+                }
+            }
+
+            return retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -376,6 +620,17 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         }
 
         return true;
+    }
+
+    /**
+     * <p>
+     * Returns the {@link NutsHeap heaps} that compose this instance.
+     * </p>
+     *
+     * @return this composition
+     */
+    public final NutsHeap[] getComposition() {
+        return composition == null ? new NutsHeap[0] : composition;
     }
 
     /**

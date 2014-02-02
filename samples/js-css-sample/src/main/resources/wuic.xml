@@ -129,8 +129,8 @@
         </heap>
     </heaps>
     
-    <workflows>
-        <workflow id-prefix="" heap-id-pattern=".*-js">
+    <workflow-templates>
+        <workflow-template id="tpl">
             <without>
                 <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
             </without>
@@ -139,16 +139,10 @@
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
             </engine-chain>
-        </workflow>
-        <workflow id-prefix="" heap-id-pattern=".*-css">
-            <without>
-                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
-            </without>
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorCssEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultTextAggregatorEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="" workflow-template-id="tpl" heap-id-pattern=".*-js" />
     </workflows>
 </wuic>

@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -109,11 +110,23 @@ public class HttpNutDao extends AbstractNutDao {
      */
     @Override
     public Nut accessFor(final String realPath, final NutType type) throws StreamException {
-        final String url = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
-        log.debug("Opening HTTP access for {}", url);
+        final String p = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
+        log.debug("Opening HTTP access for {}", p);
 
         try {
-            return new HttpNut(realPath, new URL(url), type);
+            final URL url = new URL(p);
+            return new HttpNut(realPath, url, type, new BigInteger(getLastUpdateTimestampFor(url).toString()));
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * Gets the 'LastModified' header from the given URL.
+     */
+    private Long getLastUpdateTimestampFor(final URL url) throws StreamException {
+        try {
+            return url.openConnection().getLastModified();
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -128,7 +141,7 @@ public class HttpNutDao extends AbstractNutDao {
         log.debug("Polling HTTP nut for {}", url);
 
         try {
-            return new URL(url).openConnection().getLastModified();
+            return getLastUpdateTimestampFor(new URL(url));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

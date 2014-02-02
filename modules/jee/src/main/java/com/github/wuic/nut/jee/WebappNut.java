@@ -43,6 +43,7 @@ import com.github.wuic.nut.AbstractNut;
 
 import javax.servlet.ServletContext;
 import java.io.InputStream;
+import java.math.BigInteger;
 
 /**
  * <p>
@@ -80,9 +81,10 @@ public class WebappNut extends AbstractNut {
      * @param p the path
      * @param name the nut name
      * @param ft the path type
+     * @param versionNumber the nuts's version number
      */
-    public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft) {
-        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+    public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft, final BigInteger versionNumber) {
+        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, versionNumber);
         context = ctx;
         path = p;
     }

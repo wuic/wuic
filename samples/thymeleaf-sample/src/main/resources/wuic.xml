@@ -8,10 +8,4 @@
             </properties>
         </nut-dao-builder>
     </nut-dao-builders>
-
-    <heaps>
-        <heap id="datatable-css" dao-builder-id="nutDaoBuilder">
-            <nut-path>.*.css</nut-path>
-        </heap>
-    </heaps>
 </wuic>

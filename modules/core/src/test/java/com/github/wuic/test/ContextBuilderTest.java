@@ -63,6 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,6 +134,7 @@ public class ContextBuilderTest {
         when(mockNutOne.isCacheable()).thenReturn(true);
         when(mockNutOne.isBinaryCompressible()).thenReturn(true);
         when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
+        when(mockNutOne.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         mockNutTwo = mock(Nut.class);
         when(mockNutTwo.getName()).thenReturn("test.js");
@@ -142,6 +144,7 @@ public class ContextBuilderTest {
         when(mockNutTwo.isCacheable()).thenReturn(true);
         when(mockNutTwo.isBinaryCompressible()).thenReturn(true);
         when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
+        when(mockNutTwo.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         // Prepare DAO mock
         mockDao = mock(NutDao.class);
@@ -192,12 +195,13 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow-", "heap", new String[]{"engine"})
+                .template("tpl", new String[]{"engine"})
+                .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build();
 
         // Should be aggregated now
-        Assert.assertTrue(context.process("workflow-heap", "").size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap").size() == 1);
     }
 
     /**
@@ -213,11 +217,12 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow-", "heap", new String[]{"engine"}, null, false)
+                .template("tpl", new String[]{"engine"}, null, false)
+                .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("workflow-heap", "").size() > 1);
+        Assert.assertTrue(context.process("", "workflow-heap").size() > 1);
     }
 
     /**
@@ -238,10 +243,11 @@ public class ContextBuilderTest {
                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                .engineBuilder(defaultName, new TextAggregatorEngineBuilder(), props)
-               .workflow("workflow-", "heap", new String[]{defaultName})
+               .template("tpl", new String[]{defaultName})
+               .workflow("workflow-", true, "heap", "tpl")
                .releaseTag();
 
-        Assert.assertTrue(builder.build().process("workflow-heap", "").size() > 1);
+        Assert.assertTrue(builder.build().process("", "workflow-heap").size() > 1);
     }
 
     /**
@@ -258,12 +264,13 @@ public class ContextBuilderTest {
                 .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow-", "heap-.*", new String[]{"engine"})
+                .template("tpl", new String[]{"engine"})
+                .workflow("workflow-", true, "heap-.*", "tpl")
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("workflow-heap-one", "").size() == 1);
-        Assert.assertTrue(context.process("workflow-heap-two", "").size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap-one").size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap-two").size() == 1);
     }
 
 
@@ -281,12 +288,13 @@ public class ContextBuilderTest {
                 .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow-", "heap-one", new String[]{"engine"})
+                .template("tpl", new String[]{"engine"})
+                .workflow("workflow-", true, "heap-one", "tpl")
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("workflow-heap-one", "").size() == 1);
-        Assert.assertTrue(context.process("heap-two", "").size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap-one").size() == 1);
+        Assert.assertTrue(context.process("", "heap-two").size() == 1);
     }
 
     /**
@@ -301,11 +309,12 @@ public class ContextBuilderTest {
                 .tag("test")
                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .workflow("workflow-", "heap", new String[] {}, null, false)
+                .template("tpl", new String[] {}, null, false)
+                .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("workflow-heap", "").size() > 1);
+        Assert.assertTrue(context.process("", "workflow-heap").size() > 1);
     }
 
     /**
@@ -335,7 +344,8 @@ public class ContextBuilderTest {
                     .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                     .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                     .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                    .workflow("workflow", "heap", new String[]{"engine"}, "dao")
+                    .template("tpl", new String[]{"engine"}, "dao")
+                    .workflow("workflow", true, "heap", "tpl")
                     .releaseTag()
                     .build();
         } catch (Exception e) {
@@ -348,7 +358,8 @@ public class ContextBuilderTest {
                 .nutDaoBuilder("store", mockStoreBuilder, new HashMap<String, Object>())
                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                .workflow("workflow", "heap", new String[]{"engine"}, "store")
+                .template("tpl", new String[]{"engine"}, "store")
+                .workflow("workflow", true, "heap", "tpl")
                 .releaseTag()
                 .build();
     }
@@ -366,9 +377,10 @@ public class ContextBuilderTest {
                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
                 .releaseTag()
                 .tag("tag")
-                .workflow("workflow-", "heap", new String[]{"engine"})
+                .template("tpl", new String[]{"engine"})
+                .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag();
-        builder.build().process("workflow-heap", "");
+        builder.build().process("", "workflow-heap");
 
         try {
             builder.clearTag("tag").build().process("workflow-heap", "");
@@ -378,10 +390,11 @@ public class ContextBuilderTest {
         }
 
         builder.tag("test")
-                .workflow("workflow-", "heap", new String[]{"engine"})
+                .template("tpl", new String[]{"engine"})
+                .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build()
-                .process("workflow-heap", "");
+                .process("", "workflow-heap");
 
         try {
             builder.clearTag("test").build().process("workflow-heap", "");
@@ -423,7 +436,8 @@ public class ContextBuilderTest {
                             .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                             .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                             .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                            .workflow("workflow", "heap", new String[]{"engine"})
+                            .template("tpl", new String[]{"engine"})
+                            .workflow("workflow", true, "heap", "tpl")
                             .releaseTag()
                             .build();
                     } catch (Exception e) {
@@ -442,7 +456,8 @@ public class ContextBuilderTest {
                                 .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
                                 .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
                                 .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
-                                .workflow("workflow", "heap", new String[]{"engine"})
+                                .template("tpl", new String[]{"engine"})
+                                .workflow("workflow", true, "heap", "tpl")
                                 .releaseTag()
                                 .build();
                     } catch (Exception e) {

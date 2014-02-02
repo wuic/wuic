@@ -85,7 +85,7 @@ public class CssYuiCompressorEngine extends CGAbstractCompressorEngine {
      * @param lbp the line break position
      */
     public CssYuiCompressorEngine(final Boolean compress, final String cs, final Integer lbp) {
-        super(compress);
+        super(compress, ".min");
         charset = cs;
         lineBreakPos = lbp;
     }

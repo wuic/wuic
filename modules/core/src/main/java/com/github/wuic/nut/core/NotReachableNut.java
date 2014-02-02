@@ -43,6 +43,7 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 
 /**
  * <p>
@@ -71,7 +72,8 @@ public class NotReachableNut extends AbstractNut {
      * @param heapId the nut's heap
      */
     public NotReachableNut(final String name, final NutType nutType, final String heapId) {
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
+        // TODO : provide timestamp
+        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, new BigInteger("0"));
         heap = heapId;
     }
 

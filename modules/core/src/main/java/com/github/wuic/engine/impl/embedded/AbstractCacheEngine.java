@@ -47,13 +47,10 @@ import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -106,40 +103,26 @@ public abstract class AbstractCacheEngine extends Engine {
         List<Nut> retval = null;
 
         if (works()) {
-            final String key = request.getWorkflowId();
-            final List<Nut> value = getFromCache(key);
+            final List<Nut> value = getFromCache(request.newKey());
 
             // Nuts exist in doCache, returns them
             if (value != null) {
-                log.info("Nuts for heap '{}' found in cache", key);
+                log.info("Nuts for request '{}' found in cache", request);
                 retval = value;
             } else if (getNext() != null) {
-                // Get the most recent nut's timestamp has version identifier
-                Long max = 0L;
-                final Collection<Long> timestamps = request.getHeap().getNutsWithTimestamp().values();
+                request.getHeap().addObserver(new InvalidateCache(request.newKey()));
 
-                for (final Long ts : timestamps) {
-                    if (ts.compareTo(max) > 0) {
-                        max = ts;
-                    }
-                }
-
-                final String prefix = String.valueOf(max);
-
-                // Observe and invalidate the cache when updates are notified
-                request.getHeap().addObserver(new InvalidateCache(key));
-
-                final List<Nut> nuts = getNext().parse(new EngineRequest(prefix, request));
+                final List<Nut> nuts = getNext().parse(new EngineRequest(request));
                 final List<Nut> toCache = new ArrayList<Nut>(nuts.size());
 
                 for (final Nut nut : nuts) {
                     if (nut.isCacheable()) {
-                        toCache.add(toByteArrayNut(nut, prefix));
+                        toCache.add(ByteArrayNut.toByteArrayNut(nut));
                     }
                 }
 
-                log.debug("Caching nut with key '{}'", key);
-                putToCache(key, toCache);
+                log.debug("Caching nut with key '{}'", request);
+                putToCache(request.newKey(), toCache);
 
                 retval = toCache;
             }
@@ -151,37 +134,6 @@ public abstract class AbstractCacheEngine extends Engine {
         log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
-    }
-
-    /**
-     * <p>
-     * Converts the given nut and its referenced nuts into nuts wrapping an in memory byte array.
-     * </p>
-     *
-     * @param nut the nut to convert
-     * @return the byte array nut
-     * @throws com.github.wuic.exception.WuicException if an I/O error occurs
-     */
-    private Nut toByteArrayNut(final Nut nut, final String prefixPath) throws WuicException {
-        InputStream is = null;
-
-        try {
-            is = nut.openStream();
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            IOUtils.copyStream(is, os);
-            final Nut bytes = new ByteArrayNut(os.toByteArray(), IOUtils.mergePath(prefixPath, nut.getName()), nut.getNutType());
-            bytes.setProxyUri(nut.getProxyUri());
-
-            if (nut.getReferencedNuts() != null) {
-                for (final Nut ref : nut.getReferencedNuts()) {
-                    bytes.addReferencedNut(toByteArrayNut(ref, prefixPath));
-                }
-            }
-
-            return bytes;
-        } finally {
-            IOUtils.close(is);
-        }
     }
 
     /**
@@ -210,32 +162,32 @@ public abstract class AbstractCacheEngine extends Engine {
 
     /**
      * <p>
-     * Puts the given list of nuts associated to the specified workflow ID to the cache.
+     * Puts the given list of nuts associated to the specified request to the cache.
      * </p>
      *
-     * @param workflowId the workflow ID
+     * @param request the request key
      * @param nuts the nuts
      */
-    public abstract void putToCache(String workflowId, List<Nut> nuts);
+    public abstract void putToCache(EngineRequest.Key request, List<Nut> nuts);
 
     /**
      * <p>
-     * Removes the given list of nuts associated to the specified workflow ID from the cache.
+     * Removes the given list of nuts associated to the specified request from the cache.
      * </p>
      *
-     * @param workflowId the workflow ID
+     * @param request request key
      */
-    public abstract void removeFromCache(String workflowId);
+    public abstract void removeFromCache(EngineRequest.Key request);
 
     /**
      * <p>
-     * Gets the list of nuts associated to the specified workflow ID from the cache.
+     * Gets the list of nuts associated to the specified request from the cache.
      * </p>
      *
-     * @param workflowId the workflow ID
+     * @param request the request key
      * @return the list of nuts
      */
-    public abstract List<Nut> getFromCache(String workflowId);
+    public abstract List<Nut> getFromCache(final EngineRequest.Key request);
 
     /**
      * <p>
@@ -250,19 +202,19 @@ public abstract class AbstractCacheEngine extends Engine {
     private final class InvalidateCache implements HeapListener {
 
         /**
-         * The workflow ID as cache key.
+         * The request key as cache key.
          */
-        private String workflowId;
+        private EngineRequest.Key key;
 
         /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param wid the cache key
+         * @param k the request key
          */
-        private InvalidateCache(final String wid) {
-            workflowId = wid;
+        private InvalidateCache(final EngineRequest.Key k) {
+            key = k;
         }
 
         /**
@@ -270,7 +222,7 @@ public abstract class AbstractCacheEngine extends Engine {
          */
         @Override
         public void nutUpdated(final NutsHeap heap) {
-            removeFromCache(workflowId);
+            removeFromCache(key);
         }
     }
 }

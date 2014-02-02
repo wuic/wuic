@@ -65,7 +65,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.1
  */
 public class ImportProcessor extends AbstractAttrProcessor {
@@ -92,23 +92,21 @@ public class ImportProcessor extends AbstractAttrProcessor {
         // Get the facade
         final WuicFacade facade = WuicJeeContext.getWuicFacade();
 
+        final String workflow = element.getAttributeValue(attributeName);
+
+        if (WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()) {
+            facade.clearTag(workflow);
+        }
+
         try {
-            // Split the value to identify each declared workflow
-            //final String[] workflowArray = element.getAttributeValue(attributeName).split("\\|");
             int cpt = 0;
+            final List<Nut> nuts = facade.runWorkflow(workflow);
 
-            //for (final String workflow : workflowArray) {
-
-                // Process nuts
-            final String workflow = element.getAttributeValue(attributeName);
-                final List<Nut> nuts = facade.runWorkflow(workflow);
-
-                // Insert import statements into the top
-                for (final Nut nut : nuts) {
-                    final String path = IOUtils.mergePath(facade.getContextPath(), workflow);
-                    element.insertChild(cpt++, new Macro(HtmlUtil.writeScriptImport(nut, path)));
-                }
-            //}
+            // Insert import statements into the top
+            for (final Nut nut : nuts) {
+                final String path = IOUtils.mergePath(facade.getContextPath(), workflow);
+                element.insertChild(cpt++, new Macro(HtmlUtil.writeScriptImport(nut, path)));
+            }
         } catch (WuicException we) {
             log.error("WUIC import processor has failed", we);
         } catch (IOException ioe) {

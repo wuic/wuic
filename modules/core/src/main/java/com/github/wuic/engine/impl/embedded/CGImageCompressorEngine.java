@@ -68,7 +68,7 @@ public class CGImageCompressorEngine extends CGAbstractCompressorEngine {
      * @param compress activate compression or not
      */
     public CGImageCompressorEngine(final Boolean compress) {
-       super(compress);
+       super(compress, "");
     }
 
     /**

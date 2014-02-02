@@ -48,8 +48,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.mockito.Mockito.when;
 
 /**
  * <p>
@@ -110,6 +113,8 @@ public class NutsHeapTest {
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut retval = Mockito.mock(Nut.class);
             Mockito.when(retval.getName()).thenReturn(realPath);
+            Mockito.when(retval.getVersionNumber()).thenReturn(new BigInteger("1"));
+
             return retval;
         }
 
@@ -215,7 +220,7 @@ public class NutsHeapTest {
     }
 
     /**
-     * Test when bad extensions are defined.
+     * Test when different extensions are defined.
      *
      * @throws StreamException if test fails
      */
@@ -224,13 +229,7 @@ public class NutsHeapTest {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("hey.js", 1L);
         dao.mockPaths.put("hey.css", 1L);
-
-        try {
-            new NutsHeap(Arrays.asList(""), dao, "");
-            Assert.fail();
-        } catch (BadArgumentException be) {
-            // normal behavior
-        }
+        new NutsHeap(Arrays.asList(""), dao, "");
     }
 
     /**
@@ -242,23 +241,6 @@ public class NutsHeapTest {
     public void noPathTest() throws StreamException {
         try {
             new NutsHeap(Arrays.asList(""), new MockNutDao(-1), "");
-            Assert.fail();
-        } catch (BadArgumentException be) {
-            // normal behavior
-        }
-    }
-
-    /**
-     * Test case when illegal name is used.
-     *
-     * @throws StreamException if test fails
-     */
-    @Test
-    public void illegalNameTest() throws StreamException {
-        try {
-            final MockNutDao dao = new MockNutDao(-1);
-            dao.mockPaths.put("hey.js", 1L);
-            new NutsHeap(Arrays.asList(".*"), dao, "foo" + NutsHeap.ID_SEPARATOR +".js");
             Assert.fail();
         } catch (BadArgumentException be) {
             // normal behavior

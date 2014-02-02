@@ -31,8 +31,8 @@
         </heap>
     </heaps>
 
-    <workflows>
-        <workflow id-prefix="defaultWorkflow" heap-id-pattern="defaultHeap">
+    <workflow-templates>
+        <workflow-template id="defaultWorkflowTemplate">
             <store-to>
                 <dao-builder-id>defaultDao</dao-builder-id>
             </store-to>
@@ -40,13 +40,18 @@
                 <engine-builder-id>defaultEngine</engine-builder-id>
                 <engine-builder-id>anotherEngine</engine-builder-id>
             </engine-chain>
-        </workflow>
+        </workflow-template>
 
-        <workflow id-prefix="defaultWorkflow" heap-id-pattern="anotherHeap">
+        <workflow-template id="anotherWorkflowTemplate">
             <engine-chain>
                 <engine-builder-id>defaultEngine</engine-builder-id>
                 <engine-builder-id>anotherEngine</engine-builder-id>
             </engine-chain>
-        </workflow>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="defaultWorkflow" workflow-template-id="defaultWorkflowTemplate" heap-id-pattern="defaultHeap" />
+        <workflow id-prefix="defaultWorkflow" workflow-template-id="anotherWorkflowTemplate" heap-id-pattern="anotherHeap" />
     </workflows>
 </wuic>

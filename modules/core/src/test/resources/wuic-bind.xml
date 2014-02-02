@@ -9,18 +9,23 @@
     </nut-dao-builders>
 
     <heaps>
-        <heap id="simpleHeap" dao-builder-id="defaultDao">
-            <nut-path>css/jquery-ui.css</nut-path>
+        <heap id="first" dao-builder-id="defaultDao">
+            <nut-path>css/simple.css</nut-path>
+        </heap>
+
+        <heap id="two" dao-builder-id="defaultDao">
+            <nut-path>css/nested.css</nut-path>
         </heap>
     </heaps>
 
     <workflow-templates>
-        <workflow-template id="simpleWorkflow">
+        <workflow-template id="workflow-template">
             <engine-chain />
         </workflow-template>
     </workflow-templates>
 
     <workflows>
-        <workflow id-prefix="simpleWorkflow" workflow-template-id="simpleWorkflow" heap-id-pattern="simpleHeap" />
+        <workflow id="bind" workflow-template-id="workflow-template" heap-id-pattern=".*" />
     </workflows>
+
 </wuic>

@@ -90,7 +90,7 @@ public abstract class AbstractAggregatorEngine extends Engine {
 
         // Compute proxy URIs
         for (final Nut nut : retval) {
-            nut.setProxyUri(request.getHeap().getNutDao().proxyUriFor(nut));
+            nut.setProxyUri(request.getHeap().proxyUriFor(nut));
         }
 
         // Call next engine in chain

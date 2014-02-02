@@ -83,7 +83,14 @@ public class XmlWuicBean {
     private List<XmlHeapBean> heaps;
 
     /**
-     * Some workflow definitions.
+     * Some workflow template definitions.
+     */
+    @XmlElementWrapper(name = "workflow-templates")
+    @XmlElement(name = "workflow-template")
+    private List<XmlWorkflowTemplateBean> workflowTemplates;
+
+    /**
+     * Some binding definitions.
      */
     @XmlElementWrapper(name = "workflows")
     @XmlElement(name = "workflow")
@@ -140,8 +147,31 @@ public class XmlWuicBean {
      *
      * @return the workflows
      */
+    public List<XmlWorkflowTemplateBean> getWorkflowTemplates() {
+        return workflowTemplates;
+    }
+
+    /**
+     * <p>
+     * Gets the binding between heap and workflow.
+     * </p>
+     *
+     * @return the binding
+     */
     public List<XmlWorkflowBean> getWorkflows() {
         return workflows;
+    }
+
+
+    /**
+     * <p>
+     * Sets the workflow templates.
+     * </p>
+     *
+     * @param workflowTemplatesList the new list
+     */
+    public void setWorkflowTemplates(final List<XmlWorkflowTemplateBean> workflowTemplatesList) {
+        workflowTemplates = workflowTemplatesList;
     }
 
     /**

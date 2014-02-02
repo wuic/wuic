@@ -2,10 +2,11 @@
 
 <wuic>
     <nut-dao-builders>
-        <nut-dao-builder id="imgSourceRootProvider" type="ClasspathNutDaoBuilder">
+        <nut-dao-builder id="imgSourceRootProvider" type="WebappNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.regex">true</property>
                 <property key="c.g.wuic.dao.basePath">/img</property>
+                <property key="c.g.wuic.dao.pollingInterleave">10</property>
             </properties>
         </nut-dao-builder>
         <nut-dao-builder id="appSourceRootProvider" type="WebappNutDaoBuilder">
@@ -25,7 +26,12 @@
         </engine-builder>
         <engine-builder id="wuicDefaultYuiCompressorJavascriptEngineBuilder" type="YuiCompressorJavascriptEngineBuilder">
             <properties>
-                <property key="c.g.wuic.engine.compress">false</property>
+                <property key="c.g.wuic.engine.compress">true</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="wuicDefaultTextAggregatorEngineBuilder" type="TextAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.aggregate">true</property>
             </properties>
         </engine-builder>
     </engine-builders>
@@ -79,17 +85,8 @@
         </heap>
     </heaps>
 
-    <workflows>
-        <workflow id-prefix="js-" heap-id-pattern="cgsg-js">
-            <without>
-                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
-            </without>
-            <engine-chain>
-                <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-            </engine-chain>
-        </workflow>
-        <workflow id-prefix="js-" heap-id-pattern="img">
+    <workflow-templates>
+        <workflow-template id="tpl">
             <without>
                 <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
             </without>
@@ -98,6 +95,6 @@
                 <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
                 <engine-builder-id>jsSprite</engine-builder-id>
             </engine-chain>
-        </workflow>
-    </workflows>
+        </workflow-template>
+    </workflow-templates>
 </wuic>

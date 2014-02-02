@@ -131,7 +131,7 @@ public class CGTextAggregatorEngine extends AbstractAggregatorEngine {
         }
 
         // Create the a nut containing all the aggregated nuts
-        final Nut aggregate = new ByteArrayNut(target.toByteArray(), nutName, nutType);
+        final Nut aggregate = new ByteArrayNut(target.toByteArray(), nutName, nutType, request.getNuts());
 
         // Eventually add some extracted referenced nuts
         if (!referencedNuts.isEmpty()) {

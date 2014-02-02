@@ -13,6 +13,17 @@
                 <property key="c.g.wuic.dao.regex">true</property>
             </properties>
         </nut-dao-builder>
+        <nut-dao-builder id="imgSourceRootProvider" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/</property>
+                <property key="c.g.wuic.dao.regex">true</property>
+            </properties>
+        </nut-dao-builder>
+        <nut-dao-builder id="cssSourceRootProvider" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/css</property>
+            </properties>
+        </nut-dao-builder>
     </nut-dao-builders>
 
     <engine-builders>
@@ -67,16 +78,36 @@
             <nut-path>cgsg/type.scenegraph.js</nut-path>
             <nut-path>cgsg/type.scene.js</nut-path>
 		</heap>
+        <heap id="css-image" dao-builder-id="imgSourceRootProvider">
+            <nut-path>images/.*.png</nut-path>
+        </heap>
+        <heap id="css-scripts" dao-builder-id="cssSourceRootProvider">
+            <nut-path>jquery-ui.css</nut-path>
+            <nut-path>jquery.ui.all.css</nut-path>
+        </heap>
 	</heaps>
 
-    <workflows>
-        <workflow id-prefix="js-image" heap-id-pattern="js-image">
+    <workflow-templates>
+        <workflow-template id="js-image">
             <engine-chain>
                 <engine-builder-id>jsSprite</engine-builder-id>
             </engine-chain>
-        </workflow>
-        <workflow id-prefix="util-js" heap-id-pattern="util-js">
+        </workflow-template>
+        <workflow-template id="util-js">
             <engine-chain />
-        </workflow>
+        </workflow-template>
+        <workflow-template id="css-image">
+            <engine-chain />
+        </workflow-template>
+        <workflow-template id="css-scripts">
+            <engine-chain />
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="js-image" workflow-template-id="js-image" heap-id-pattern="js-image" />
+        <workflow id-prefix="util-js" workflow-template-id="util-js" heap-id-pattern="util-js" />
+        <workflow id-prefix="css-image" workflow-template-id="css-image" heap-id-pattern="css-image" />
+        <workflow id-prefix="css-scripts" workflow-template-id="css-image" heap-id-pattern="css-scripts" />
     </workflows>
 </wuic>

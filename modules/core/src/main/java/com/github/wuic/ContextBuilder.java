@@ -41,6 +41,7 @@ package com.github.wuic;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.core.*;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.engine.EngineBuilder;
@@ -155,9 +156,14 @@ public class ContextBuilder extends Observable {
         private Map<String, EngineBuilder> engineMap = new HashMap<String, EngineBuilder>();
 
         /**
-         * All {@link NutsHeap heap} associated to their ID.
+         * All {@link NutsHeap heaps} associated to their ID.
          */
         private Map<String, NutsHeap> nutsHeaps = new HashMap<String, NutsHeap>();
+
+        /**
+         * All {@link WorkflowTemplate templates} associated to their ID.
+         */
+        private Map<String, WorkflowTemplate> templates = new HashMap<String, WorkflowTemplate>();
 
         /**
          * All {@link Workflow workflows} associated to their ID.
@@ -206,6 +212,17 @@ public class ContextBuilder extends Observable {
          */
         public Map<String, Workflow> getWorkflowMap() {
             return workflowMap;
+        }
+
+        /**
+         * <p>
+         * Gets the {@link WorkflowTemplate} associated to an ID.
+         * </p>
+         *
+         * @return the map
+         */
+        public Map<String, WorkflowTemplate> getTemplateMap() {
+            return templates;
         }
     }
 
@@ -393,13 +410,13 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the heap ID
-     * @param workflowIds the composition of heaps
+     * @param heapIds the heaps composition
      * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
      * @throws StreamException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String[] workflowIds, final String ... path) throws StreamException {
+    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws StreamException {
         NutDao dao = null;
 
         // Will override existing element
@@ -407,12 +424,12 @@ public class ContextBuilder extends Observable {
             s.getNutsHeaps().remove(id);
 
             // Find DAO
-            if (dao == null) {
+            if (ndbId != null && dao == null) {
                 dao = s.getNutDaoMap().get(ndbId);
             }
         }
 
-        if (dao == null) {
+        if (dao == null && path.length != 0) {
             final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
                     ndbId, NutDaoBuilder.class.getName());
             throw new BadArgumentException(new IllegalArgumentException(msg));
@@ -421,10 +438,10 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Composition detected, collected nested and referenced heaps
-        if (workflowIds != null && workflowIds.length != 0) {
+        if (heapIds != null && heapIds.length != 0) {
             final List<NutsHeap> composition = new ArrayList<NutsHeap>();
 
-            for (final String regex : workflowIds) {
+            for (final String regex : heapIds) {
                 composition.addAll(getNutsHeap(regex));
             }
 
@@ -472,19 +489,38 @@ public class ContextBuilder extends Observable {
         return this;
     }
 
+
     /**
      * <p>
-     * Creates a new workflow. Any nut processing will be done through an existing workflow.
+     * Builds a new template with no exclusion and default engine usages.
+     * </p>
+     *
+     * @param id the template's id
+     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
+     * @param daos the DAO
+     * @return this {@link ContextBuilder}
+     * @throws StreamException if an I/O error occurs
+     * @see ContextBuilder#template(String, String[], String[], Boolean, String...)
+     */
+    public ContextBuilder template(final String id,
+                                   final String[] ebIds,
+                                   final String ... daos) throws StreamException {
+        return template(id, ebIds, null, Boolean.TRUE, daos);
+    }
+
+    /**
+     * <p>
+     * Creates a new workflow template.
      * </p>
      *
      * <p>
-     * A workflow consists to chain a set of engines produced by the specified {@link com.github.wuic.engine.EngineBuilder builders}
-     * with a {@link com.github.wuic.nut.NutsHeap heap} as data to be processed. There is a chain for each possible {@link NutType}.
-     * A chain that processes a particular {@link NutType} of {@link com.github.wuic.nut.Nut} is composed of {@link Engine}
-     * ordered by type. All engines specified in parameter as array are simply organized following those two criteria to
-     * create the chains. Moreover, default engines could be injected in the chain to perform common operations to be done
-     * on nuts. If an {@link com.github.wuic.engine.EngineBuilder} is specified in a chain while it is injected
-     * by default, then the configuration of the given builder will overrides the default one.
+     * The template consists to chain a set of engines produced by the specified {@link com.github.wuic.engine.EngineBuilder builders}.
+     * There is a chain for each possible {@link NutType}. A chain that processes a particular {@link NutType} of
+     * {@link com.github.wuic.nut.Nut} is composed of {@link Engine engines} ordered by type. All engines specified in
+     * parameter as array are simply organized following those two criteria to create the chains. Moreover, default engines
+     * could be injected in the chain to perform common operations to be done on nuts. If an {@link com.github.wuic.engine.EngineBuilder}
+     * is specified in a chain while it is injected by default, then the configuration of the given builder will overrides
+     * the default one.
      * </p>
      *
      * <p>
@@ -502,26 +538,24 @@ public class ContextBuilder extends Observable {
      * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are :
      *  <ul>
      *      <li>Unknown {@link EngineBuilder} ID</li>
-     *      <li>Unknown {@link NutsHeap} ID</li>
      *      <li>Unknown {@link NutDaoBuilder} ID</li>
      *      <li>A {@link NutDao} does not supports {@link NutDao#save(com.github.wuic.nut.Nut)} method</li>
      *  </ul>
      * </p>
      *
-     * @param prefixId the prefix of workflow ID
-     * @param heapIdPattern the regex matching the heap IDs that needs to be processed
+     * @param id the template's id
      * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
      * @param ebIdsExclusion some default builder to be excluded in the chain
      * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
+     * @throws StreamException if an I/O error occurs
      */
-    public ContextBuilder workflow(final String prefixId,
-                                   final String heapIdPattern,
+    public ContextBuilder template(final String id,
                                    final String[] ebIds,
                                    final String[] ebIdsExclusion,
                                    final Boolean includeDefaultEngines,
-                                   final String ... ndbIds) {
+                                   final String ... ndbIds) throws StreamException {
         final ContextSetting setting = getSetting();
 
         // Retrieve each DAO associated to all provided IDs
@@ -540,13 +574,6 @@ public class ContextBuilder extends Observable {
             }
 
             nutDaos[i] = dao;
-        }
-
-        // Retrieve HEAP
-        final List<NutsHeap> heaps = getNutsHeap(heapIdPattern);
-
-        if (heaps.isEmpty()) {
-            throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
         }
 
         // Retrieve each engine associated to all provided IDs and heap them by nut type
@@ -573,45 +600,89 @@ public class ContextBuilder extends Observable {
             }
         }
 
-
-        for (NutsHeap heap : heaps) {
-            final String id = prefixId + heap.getId();
-
-            // Will override existing element
-            for (ContextSetting s : taggedSettings.values()) {
-                s.getWorkflowMap().remove(id);
-            }
-
-            setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
-        }
+        setting.getTemplateMap().put(id, new WorkflowTemplate(chains, nutDaos));
 
         taggedSettings.put(currentTag, setting);
         setChanged();
-        notifyObservers(prefixId);
+        notifyObservers(id);
 
         return this;
     }
 
     /**
      * <p>
-     * Creates a new workflow by injecting default {@link Engine engines}.
+     * Creates a new workflow. Any nut processing will be done through an existing workflow.
      * </p>
      *
      * <p>
-     * See {@link ContextBuilder#workflow(String, String, String[], String[], Boolean, String...)} for full documentation.
+     * A workflow is based on a {@link WorkflowTemplate} with a specified ID.
      * </p>
      *
-     * @param id the workflow ID
-     * @param heapId the regex matching the heap IDs that needs to be processed
-     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
-     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
+     * <p>
+     * The {@link NutsHeap heap} to be used is represented by a regex. The forEachHeap parameter indicates if only one
+     * workflow should be created having as {@link NutsHeap heap} a composition of all heaps matching the pattern. If the
+     * parameter is {@code false}, then a workflow is created for each matching {@link NutsHeap}. In this case, the workflow
+     * ID will be the concatenation if the given identifier and the heap's ID.
+     * </p>
+     *
+     * <p>
+     * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are :
+     *  <ul>
+     *      <li>Unknown {@link NutsHeap} ID</li>
+     *  </ul>
+     * </p>
+     *
+     * @param identifier the identifier used to build the workflow ID, is the prefix if create one for each heap
+     * @param forEachHeap {@code true} if a dedicated workflow must be created for each matching heap, {@code false} for a composition
+     * @param heapIdPattern the regex matching the heap IDs that needs to be processed
      * @return this {@link ContextBuilder}
+     * @throws StreamException if an I/O error occurs
+     * @throws WorkflowTemplateNotFoundException if the specified template ID does not exists
      */
-    public ContextBuilder workflow(final String id,
-                                   final String heapId,
-                                   final String[] ebIds,
-                                   final String ... ndbIds) {
-        return workflow(id, heapId, ebIds, null, Boolean.TRUE, ndbIds);
+    public ContextBuilder workflow(final String identifier,
+                                   final Boolean forEachHeap,
+                                   final String heapIdPattern,
+                                   final String workflowTemplateId)
+            throws StreamException, WorkflowTemplateNotFoundException {
+        final ContextSetting setting = getSetting();
+
+        final WorkflowTemplate template = getWorkflowTemplate(workflowTemplateId);
+
+        if (template == null) {
+            throw new WorkflowTemplateNotFoundException(workflowTemplateId);
+        }
+
+        final Map<NutType, ? extends Engine> chains = template.getChains();
+        final NutDao[] nutDaos = template.getStores();
+
+        // Retrieve HEAP
+        final List<NutsHeap> heaps = getNutsHeap(heapIdPattern);
+
+        if (heaps.isEmpty()) {
+            throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
+        }
+
+        if (forEachHeap) {
+            for (final NutsHeap heap : heaps) {
+                final String id = identifier + heap.getId();
+
+                // Will override existing element
+                for (final ContextSetting s : taggedSettings.values()) {
+                    s.getWorkflowMap().remove(id);
+                }
+
+                setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
+            }
+        } else {
+            final NutsHeap[] array = heaps.toArray(new NutsHeap[heaps.size()]);
+            setting.getWorkflowMap().put(identifier, new Workflow(chains, new NutsHeap(null, null, heapIdPattern, array)));
+        }
+
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers(identifier);
+
+        return this;
     }
 
     /**
@@ -655,7 +726,7 @@ public class ContextBuilder extends Observable {
                 }
 
                 // No workflow has been found : create a default with the heap ID as ID
-                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE, null), heap, heap.getNutDao()));
+                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE, null), heap));
             }
 
             return new Context(this, workflowMap);
@@ -825,6 +896,25 @@ public class ContextBuilder extends Observable {
         }
 
         return null;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link WorkflowTemplate} associated to the given ID.
+     * </p>
+     *
+     * @param id the ID
+     * @return the matching {@link WorkflowTemplate template}
+     */
+    private WorkflowTemplate getWorkflowTemplate(final String id) {
+        final Iterator<ContextSetting> it = taggedSettings.values().iterator();
+        WorkflowTemplate retval = null;
+
+        while (it.hasNext() && retval == null) {
+            retval = it.next().getTemplateMap().get(id);
+        }
+
+        return retval;
     }
 
     /**

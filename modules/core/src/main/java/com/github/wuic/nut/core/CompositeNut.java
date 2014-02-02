@@ -74,7 +74,7 @@ public class CompositeNut extends AbstractNut {
     public CompositeNut(final List<Nut> composition, final String prefixName) {
         super(composition.get(0));
         compositionList = composition;
-        nutName = new StringBuilder(nutName).insert(nutName.lastIndexOf('/') + 1, prefixName).toString();
+        setNutName(new StringBuilder(getName()).insert(getName().lastIndexOf('/') + 1, prefixName).toString());
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
         for (int i = 1; i < composition.size(); i++) {
@@ -199,7 +199,7 @@ public class CompositeNut extends AbstractNut {
                     return retval;
                 }
             } catch (NutNotFoundException nnfe) {
-                    throw new IOException(nnfe);
+                throw new IOException(nnfe);
             }
         }
     }

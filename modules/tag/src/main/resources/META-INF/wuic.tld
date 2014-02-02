@@ -11,7 +11,7 @@
 		<tag-class>com.github.wuic.tag.WuicTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
-			<name>workflowIds</name>
+			<name>workflowId</name>
 		</attribute>
 	</tag>
 </taglib>

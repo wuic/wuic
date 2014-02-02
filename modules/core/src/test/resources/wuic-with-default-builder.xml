@@ -6,9 +6,13 @@
         </heap>
     </heaps>
 
-    <workflows>
-        <workflow id-prefix="simpleWorkflow" heap-id-pattern="simpleHeap">
+    <workflow-templates>
+        <workflow-template id="simpleWorkflowTemplate">
             <engine-chain />
-        </workflow>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="simpleWorkflow" workflow-template-id="simpleWorkflowTemplate"  heap-id-pattern="simpleHeap" />
     </workflows>
 </wuic>

@@ -41,7 +41,6 @@ package com.github.wuic.nut.test;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
 import com.github.wuic.engine.impl.yuicompressor.CssYuiCompressorEngine;
-import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
@@ -56,9 +55,12 @@ import org.junit.runners.JUnit4;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Arrays;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,7 +71,7 @@ import static org.mockito.Mockito.when;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 @RunWith(JUnit4.class)
@@ -84,11 +86,10 @@ public class GStorageTest {
     public void gStorageTest() throws Exception {
         final NutsHeap nutsHeap = mock(NutsHeap.class);
         final byte[] array = ".cloud { text-align : justify;}".getBytes();
-        when(nutsHeap.getNutType()).thenReturn(NutType.CSS);
+        when(nutsHeap.getNutTypes()).thenReturn(new HashSet<NutType>(Arrays.asList(NutType.CSS)));
         final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
-        nuts.put(new ByteArrayNut(array, "cloud.css", NutType.CSS), -1L);
+        nuts.put(new ByteArrayNut(array, "cloud.css", NutType.CSS, new BigInteger("1")), -1L);
         when(nutsHeap.getNuts()).thenReturn(nuts.keySet());
-        when(nutsHeap.getNutDao()).thenReturn(mock(NutDao.class));
 
         final Engine compressor = new CssYuiCompressorEngine(true, "UTF-8", -1);
         final Engine cacheEngine = new EhCacheEngine(false, null);

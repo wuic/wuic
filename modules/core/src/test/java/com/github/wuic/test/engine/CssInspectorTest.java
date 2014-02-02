@@ -58,6 +58,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -85,6 +86,8 @@ public class CssInspectorTest {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
+        final Engine engine = new CGCssInspectorEngine(true, "UTF-8");
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 
             /**
@@ -97,16 +100,18 @@ public class CssInspectorTest {
                 Mockito.when(nut.getName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
                 Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
                 Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+                Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+
                 retval.put(nut, -1L);
                 return retval;
             }
         });
-        final Engine engine = new CGCssInspectorEngine(true, "UTF-8");
-        final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.getId()).thenReturn("heap");
-        final Set<Nut> nuts = new HashSet<Nut>();
+        Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
+        Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
+        final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
         final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getName()).thenAnswer(new Answer<Object>() {
 
@@ -118,7 +123,7 @@ public class CssInspectorTest {
                 return createCount.get() + ".css";
             }
         });
-        nuts.add(nut);
+        nuts.put(nut, 1L);
 
         final StringBuilder builder = new StringBuilder();
         builder.append("@import url(\"jquery.ui.core.css\");");
@@ -135,8 +140,11 @@ public class CssInspectorTest {
         builder.append("@import /* some comments */ url(\"jquery.ui.spinner.css\");");
 
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
-        Mockito.when(heap.getNuts()).thenReturn(nuts);
-        final EngineRequest request = new EngineRequest("wid", "cp", heap, new HashMap<NutType, Engine>());
+        Mockito.when(heap.getNuts()).thenReturn(nuts.keySet());
+        Mockito.when(heap.getNutsWithTimestamp()).thenReturn(nuts);
+        Mockito.when(heap.getNutDao()).thenReturn(dao);
+        Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
+        final EngineRequest request = new EngineRequest("wid", "cp", new NutsHeap(null, dao, "heap", heap), new HashMap<NutType, Engine>());
         engine.parse(request);
         Assert.assertEquals(createCount.get(), 12);
     }
@@ -152,12 +160,12 @@ public class CssInspectorTest {
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
-        List<Nut> group = ctx.process("css-inner", "");
+        List<Nut> group = ctx.process("", "css-inner");
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
-        group = ctx.process("css-outer", "");
+        group = ctx.process("", "css-outer");
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
     }

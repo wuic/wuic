@@ -41,7 +41,9 @@ package com.github.wuic.xml;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.exception.xml.WuicXmlWorkflowIdentifierException;
 import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
@@ -74,7 +76,6 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      */
     private Unmarshaller unmarshaller;
 
-
     /**
      * <p>
      * Builds a new instance.
@@ -86,7 +87,6 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
     public XmlContextBuilderConfigurator() throws JAXBException, WuicXmlReadException {
         this(Boolean.TRUE);
     }
-
 
     /**
      * <p>
@@ -147,37 +147,83 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
     /**
      * <p>
+     * Configures the given builder with the template in the specified bean.
+     * </p>
+     *
+     * @param xml the bean
+     * @param ctxBuilder the builder
+     * @throws WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
+     * @throws WuicXmlWorkflowIdentifierException if the workflow is badly defined
+     * @throws StreamException if any I/O error occurs
+     */
+    public static void configureTemplates(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
+            throws WorkflowTemplateNotFoundException, WuicXmlWorkflowIdentifierException, StreamException {
+        if (xml.getWorkflowTemplates() == null) {
+            return;
+        }
+
+        // Create each template
+        for (final XmlWorkflowTemplateBean template : xml.getWorkflowTemplates()) {
+
+            // DAO where we can store process result is optional
+            if (template.getDaoBuilderIds() == null) {
+                ctxBuilder.template(template.getId(),
+                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
+                        template.getWithoutEngineBuilderIds() == null ?
+                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
+                        template.getUseDefaultEngines());
+            } else {
+                ctxBuilder.template(template.getId(),
+                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
+                        template.getWithoutEngineBuilderIds() == null ?
+                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
+                        template.getUseDefaultEngines(),
+                        template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
+            }
+        }
+    }
+
+    /**
+     * <p>
      * Configures the given builder with the specified bean.
      * </p>
      *
      * @param xml the bean
      * @param ctxBuilder the builder
+     * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
+     * @throws WuicXmlWorkflowIdentifierException if the workflow is badly defined
+     * @throws StreamException if any I/O error occurs
      */
-    public static void configureWorkflow(final XmlWuicBean xml, final ContextBuilder ctxBuilder) {
+    public static void configureWorkflow(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
+            throws WorkflowTemplateNotFoundException, WuicXmlWorkflowIdentifierException, StreamException {
         if (xml.getWorkflows() == null) {
             return;
         }
 
         // Some additional DAOs where process result is saved
         for (final XmlWorkflowBean workflow : xml.getWorkflows()) {
+            if (!(workflow.getId() == null && workflow.getIdPrefix() != null
+                    || workflow.getId() != null && workflow.getIdPrefix() == null)) {
+                throw new WuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());
+            }
+
+            final Boolean forEachHeap = workflow.getId() == null;
 
             // DAO where we can store process result is optional
-            if (workflow.getDaoBuilderIds() == null) {
-                ctxBuilder.workflow(workflow.getIdPrefix(),
+            ctxBuilder.workflow(forEachHeap ? workflow.getIdPrefix() : workflow.getId(),
+                    forEachHeap,
+                    workflow.getHeapIdPattern(),
+                    workflow.getWorkflowTemplateId());
+            /*} else {
+                ctxBuilder.workflow(forEachHeap ? workflow.getIdPrefix() : workflow.getId(),
+                        forEachHeap,
                         workflow.getHeapIdPattern(),
-                        workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
-                        workflow.getWithoutEngineBuilderIds() == null ?
-                                null : workflow.getWithoutEngineBuilderIds().toArray(new String[workflow.getWithoutEngineBuilderIds().size()]),
-                        workflow.getUseDefaultEngines());
-            } else {
-                ctxBuilder.workflow(workflow.getIdPrefix(),
-                        workflow.getHeapIdPattern(),
-                        workflow.getEngineBuilderIds().toArray(new String[workflow.getEngineBuilderIds().size()]),
-                        workflow.getWithoutEngineBuilderIds() == null ?
-                                null : workflow.getWithoutEngineBuilderIds().toArray(new String[workflow.getWithoutEngineBuilderIds().size()]),
-                        workflow.getUseDefaultEngines(),
-                        workflow.getDaoBuilderIds().toArray(new String[workflow.getDaoBuilderIds().size()]));
-            }
+                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
+                        template.getWithoutEngineBuilderIds() == null ?
+                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
+                        template.getUseDefaultEngines(),
+                        template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
+            }*/
         }
     }
 
@@ -192,23 +238,26 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
             // The DAOs
             if (xml.getDaoBuilders() != null) {
-                for (XmlBuilderBean dao : xml.getDaoBuilders()) {
+                for (final XmlBuilderBean dao : xml.getDaoBuilders()) {
                     ctxBuilder.nutDaoBuilder(dao.getId(), NutDaoBuilderFactory.getInstance().create(dao.getType()), extractProperties(dao));
                 }
             }
 
             // The heaps
-            for (final XmlHeapBean heap : xml.getHeaps()) {
-                configureHeap(ctxBuilder, heap);
+            if (xml.getHeaps() != null) {
+                for (final XmlHeapBean heap : xml.getHeaps()) {
+                    configureHeap(ctxBuilder, heap);
+                }
             }
 
             // The engines
             if (xml.getEngineBuilders() != null) {
-                for (XmlBuilderBean engine : xml.getEngineBuilders()) {
+                for (final XmlBuilderBean engine : xml.getEngineBuilders()) {
                     ctxBuilder.engineBuilder(engine.getId(), EngineBuilderFactory.getInstance().create(engine.getType()), extractProperties(engine));
                 }
             }
 
+            configureTemplates(xml, ctxBuilder);
             configureWorkflow(xml, ctxBuilder);
 
             return xml.getPollingInterleaveSeconds();
@@ -220,6 +269,10 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             throw new BadArgumentException(new IllegalArgumentException(bpnse));
         } catch (StreamException se) {
             throw new BadArgumentException(new IllegalArgumentException(se));
+        } catch (WorkflowTemplateNotFoundException wxwtnfe) {
+            throw new BadArgumentException(new IllegalArgumentException(wxwtnfe));
+        } catch (WuicXmlWorkflowIdentifierException wxwie) {
+            throw new BadArgumentException(new IllegalArgumentException(wxwie));
         }
     }
 

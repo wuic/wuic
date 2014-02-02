@@ -50,6 +50,7 @@ import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -119,10 +120,28 @@ public abstract class PathNutDao extends AbstractNutDao {
             final Path p = baseDirectory.getChild(realPath);
 
             if (p instanceof FilePath) {
-                return new FilePathNut(FilePath.class.cast(p), realPath, type);
+                final FilePath fp = FilePath.class.cast(p);
+                return new FilePathNut(fp, realPath, type, new BigInteger(getLastUpdateTimestampFor(fp).toString()));
             } else {
                 throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
             }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * <p>
+     * Gets the last update timestamp of the given {@link Path}.
+     * </p>
+     *
+     * @param path the path
+     * @return the last timestamp
+     * @throws StreamException if any I/O error occurs
+     */
+    private Long getLastUpdateTimestampFor(final Path path) throws StreamException {
+        try {
+            return path.getLastUpdate();
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -134,7 +153,7 @@ public abstract class PathNutDao extends AbstractNutDao {
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
         try {
-            return baseDirectory.getChild(path).getLastUpdate();
+            return getLastUpdateTimestampFor(baseDirectory.getChild(path));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

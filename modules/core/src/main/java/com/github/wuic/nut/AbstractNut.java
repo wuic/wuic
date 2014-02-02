@@ -40,6 +40,9 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +66,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * The path name.
      */
-    protected String nutName;
+    private String nutName;
 
     /**
      * Text compressible or not.
@@ -96,19 +99,32 @@ public abstract class AbstractNut implements Nut {
     private String proxyUri;
 
     /**
+     * The original nuts.
+     */
+    private List<Nut> originalNuts;
+
+    /**
+     * The nut's version number.
+     */
+    private BigInteger versionNumber;
+
+    /**
      * <p>
      * Creates a new instance by copying the given {@link Nut}.
      * </p>
      *
-     * @param other the nut to copy
+     * @param o the nut to copy
      */
-    protected AbstractNut(final Nut other) {
-        this(other.getName(), other.getNutType(), other.isBinaryCompressible(), other.isTextCompressible(), other.isCacheable(), other.isAggregatable());
+    protected AbstractNut(final Nut o) {
+        this(o.getName(),o.getNutType(), o.isBinaryCompressible(), o.isTextCompressible(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
+        referencedNuts = o.getReferencedNuts();
+        originalNuts = o.getOriginalNuts();
     }
 
     /**
      * <p>
-     * Creates a new instance.
+     * Creates a new instance. The nut is actually an original nut because constructor provides a version number of this
+     * nut without any original nuts.
      * </p>
      *
      * @param name the nut's name
@@ -117,8 +133,54 @@ public abstract class AbstractNut implements Nut {
      * @param tc text compressible or not
      * @param c cacheable or not
      * @param a aggregatable or not
+     * @param o the original nuts
      */
-    protected AbstractNut(final String name, final NutType ft, final Boolean bc, final Boolean tc, final Boolean c, final Boolean a) {
+    protected AbstractNut(final String name,
+                          final NutType ft,
+                          final Boolean bc,
+                          final Boolean tc,
+                          final Boolean c,
+                          final Boolean a,
+                          final List<Nut> o) {
+        this(name, ft, bc, tc, c, a, new BigInteger("0"));
+        originalNuts = o;
+
+        // Computes a hash based on each original hash
+        try {
+            final MessageDigest md = MessageDigest.getInstance("MD5");
+
+            for (final Nut original : originalNuts) {
+                md.update(original.getVersionNumber().toString().getBytes());
+            }
+
+            versionNumber = new BigInteger(md.digest());
+        } catch (NoSuchAlgorithmException nsae) {
+            // should never occurs
+            throw new IllegalStateException(nsae);
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a new instance. The nut is actually an original nut because constructor provides a version number of this
+     * nut without any original nuts.
+     * </p>
+     *
+     * @param name the nut's name
+     * @param ft the nut's type
+     * @param bc binary compressible or not
+     * @param tc text compressible or not
+     * @param c cacheable or not
+     * @param a aggregatable or not
+     * @param v version number
+     */
+    protected AbstractNut(final String name,
+                          final NutType ft,
+                          final Boolean bc,
+                          final Boolean tc,
+                          final Boolean c,
+                          final Boolean a,
+                          final BigInteger v) {
         if (ft == null) {
             throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
         }
@@ -134,6 +196,19 @@ public abstract class AbstractNut implements Nut {
         cacheable = c;
         aggregatable = a;
         referencedNuts = null;
+        originalNuts = null;
+        versionNumber = v;
+    }
+
+    /**
+     * <p>
+     * Sets the nut name.
+     * </p>
+     *
+     * @param nutName the name
+     */
+    protected final void setNutName(final String nutName) {
+        this.nutName = nutName;
     }
 
     /**
@@ -260,8 +335,24 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
+    public List<Nut> getOriginalNuts() {
+        return originalNuts;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BigInteger getVersionNumber() {
+        return versionNumber;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + nutName + "]";
+        return getClass().getSimpleName() + "[" + getName() + "] - v" + getVersionNumber();
     }
 
     /**

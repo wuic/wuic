@@ -46,11 +46,8 @@ import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.net.URL;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
@@ -106,6 +103,17 @@ public final class WuicFacade {
         configure(contextBuilderConfigurators);
         context = builder.build();
         contextPath = cp;
+    }
+
+    /**
+     * <p>
+     * Clears the given tag in the {@link ContextBuilder}.
+     * </p>
+     *
+     * @param tag the tag to clear
+     */
+    public synchronized void clearTag(final String tag) {
+        builder.clearTag(tag);
     }
 
     /**
@@ -195,22 +203,7 @@ public final class WuicFacade {
             context = builder.build();
         }
 
-        // TODO : move this code to context#process(String, String) method
-        final String[] composition = id.split(Pattern.quote(NutsHeap.ID_SEPARATOR));
-        final List<Nut> retval;
-
-        if (composition.length > 1) {
-            final List<Nut> nuts = new ArrayList<Nut>();
-
-            for (final String wId : composition) {
-                nuts.addAll(context.process(wId, contextPath));
-            }
-
-            retval = CompositeNut.mergeNuts(nuts);
-        } else {
-            // Parse the nuts
-            retval = context.process(id, contextPath);
-        }
+        final List<Nut> retval = new ArrayList<Nut>(context.process(contextPath, id));
 
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 

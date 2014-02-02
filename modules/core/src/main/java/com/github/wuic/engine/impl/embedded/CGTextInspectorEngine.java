@@ -163,15 +163,15 @@ public abstract class CGTextInspectorEngine extends Engine {
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
                     final NutsHeap heap = new NutsHeap(request.getHeap());
-                    heap.setNutDao(request.getHeap().getNutDao().withRootPath(nutLocation));
-                    line = inspectLine(line, request, inspector, referencedNuts, heap);
+                    heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut));
+                    line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
                 }
 
                 os.write((line + "\n").getBytes());
             }
 
             // Create and add the inspected nut with its transformations
-            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), Arrays.asList(nut));
             inspected.setCacheable(nut.isCacheable());
             inspected.setAggregatable(nut.isAggregatable());
             inspected.setTextCompressible(nut.isTextCompressible());
@@ -204,6 +204,7 @@ public abstract class CGTextInspectorEngine extends Engine {
      * @param inspector the inspector to use
      * @param referencedNuts the collection where any referenced nut identified by the method will be added
      * @param nutsHeap the heap wrapping the DAO to use
+     * @param original the inspected nut
      * @throws WuicException if an I/O error occurs while reading
      * @return the given line eventually transformed
      */
@@ -211,7 +212,8 @@ public abstract class CGTextInspectorEngine extends Engine {
                                  final EngineRequest request,
                                  final LineInspector inspector,
                                  final List<Nut> referencedNuts,
-                                 final NutsHeap nutsHeap)
+                                 final NutsHeap nutsHeap,
+                                 final Nut original)
             throws WuicException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
@@ -222,8 +224,9 @@ public abstract class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final String absolutePath = IOUtils.mergePath(request.getContextPath(), request.getHeap().getId(), request.getTimestampVersion());
-            final Nut nut = inspector.appendTransformation(matcher, replacement, absolutePath, nutsHeap.getNutDao());
+            final String absolutePath = IOUtils.mergePath(request.getContextPath(), request.getHeap().getId(),
+                    original.getVersionNumber().toString());
+            final Nut nut = inspector.appendTransformation(matcher, replacement, absolutePath, nutsHeap, original);
             matcher.appendReplacement(retval, replacement.toString());
 
             // If nut name is null, it means that nothing has been changed by the inspector

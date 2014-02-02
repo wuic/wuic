@@ -46,6 +46,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.xml.XmlBuilderBean;
 import com.github.wuic.xml.XmlWorkflowBean;
+import com.github.wuic.xml.XmlWorkflowTemplateBean;
 import com.github.wuic.xml.XmlWuicBean;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -171,11 +172,21 @@ public class StaticHelperMojo extends AbstractMojo {
 
         // Override workflow definition
         final String staticEngineName = "wuic" + StaticEngineBuilder.class.getSimpleName();
+        final String workflowTemplateId = staticEngineName + "Template";
+        final XmlWorkflowTemplateBean template = new XmlWorkflowTemplateBean();
+        template.setEngineBuilderIds(Arrays.asList(staticEngineName));
+        template.setUseDefaultEngines(Boolean.FALSE);
+        template.setId(workflowTemplateId);
+
+        if (bean.getWorkflowTemplates() != null) {
+            bean.getWorkflowTemplates().add(template);
+        } else {
+            bean.setWorkflowTemplates(Arrays.asList(template));
+        }
+
         final XmlWorkflowBean workflow = new XmlWorkflowBean();
-        workflow.setEngineBuilderIds(Arrays.asList(staticEngineName));
         workflow.setHeapIdPattern(".*");
-        workflow.setUseDefaultEngines(Boolean.FALSE);
-        workflow.setIdPrefix("");
+        workflow.setWorkflowTemplateId(workflowTemplateId);
 
         if (bean.getWorkflows() != null) {
             bean.getWorkflows().add(workflow);

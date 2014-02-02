@@ -63,20 +63,10 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
-public class Workflow {
-
-    /**
-     * All chains for each {@link NutType}.
-     */
-    private Map<NutType, ? extends Engine> chains;
-
-    /**
-     * DAO where processing result will be saved.
-     */
-    private NutDao[] stores;
+public class Workflow extends WorkflowTemplate {
 
     /**
      * The heap to be processed.
@@ -93,20 +83,8 @@ public class Workflow {
      * @param store the DAO stores
      */
     public Workflow(final Map<NutType, ? extends Engine> c, final NutsHeap h, final NutDao ... store) {
-        chains = c;
+        super(c, store);
         heap = h;
-        stores = store;
-    }
-
-    /**
-     * <p>
-     * Gets the chains.
-     * </p>
-     *
-     * @return the chains
-     */
-    public Map<NutType, ? extends Engine> getChains() {
-        return chains;
     }
 
     /**
@@ -118,16 +96,5 @@ public class Workflow {
      */
     public NutsHeap getHeap() {
         return heap;
-    }
-
-    /**
-     * <p>
-     * Gets the DAO stores.
-     * </p>
-     *
-     * @return the stores
-     */
-    public NutDao[] getStores() {
-        return stores;
     }
 }

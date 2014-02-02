@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.Nut;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
     /**
      * Memory map.
      */
-    private Map<String, List<Nut>> cache;
+    private Map<EngineRequest.Key, List<Nut>> cache;
 
     /**
      * <p>
@@ -71,31 +72,31 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      */
     public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds) {
         super(timeToLiveSeconds, work);
-        cache = new HashMap<String, List<Nut>>();
+        cache = new HashMap<EngineRequest.Key, List<Nut>>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        cache.put(workflowId, nuts);
+    public void putToCache(final EngineRequest.Key request, final List<Nut> nuts) {
+        cache.put(request, nuts);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void removeFromCache(final String workflowId) {
-        cache.remove(workflowId);
+    public void removeFromCache(final EngineRequest.Key request) {
+        cache.remove(request);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        return cache.get(workflowId);
+    public List<Nut> getFromCache(final EngineRequest.Key request) {
+        return cache.get(request);
     }
 
     /**

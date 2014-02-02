@@ -2,15 +2,16 @@
     <wuic:config>
         <wuic>
             <heaps>
-                <heap id="datatable-js" dao-builder-id="nutDaoBuilder">
+                <heap id="datatable" dao-builder-id="nutDaoBuilder">
                     <nut-path>media/js/jquery.js</nut-path>
                     <nut-path>media/js/jquery.dataTables.js</nut-path>
                     <nut-path>sample/scroller/media/js/dataTables.scroller.js</nut-path>
+                    <nut-path>.*.css</nut-path>
                 </heap>
             </heaps>
         </wuic>
     </wuic:config>
-	<head wuic:import="datatable-css|datatable-js">
+	<head wuic:import="datatable">
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<link rel="shortcut icon" type="image/ico" href="http://www.datatables.net/favicon.ico" />
 		

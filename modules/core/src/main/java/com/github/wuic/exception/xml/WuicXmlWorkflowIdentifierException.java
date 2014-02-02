@@ -36,57 +36,38 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.exception.xml;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.net.URL;
+import com.github.wuic.exception.ErrorCode;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.Nut} implementation for HTTP accesses.
+ * Thrown a workflow does not reference one and only one of both 'idPrefix' and 'id' attributes.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.3
  */
-public class HttpNut extends AbstractNut {
-
-    /**
-     * The nut URL.
-     */
-    private URL nutUrl;
+public class WuicXmlWorkflowIdentifierException extends WuicXmlException {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Builds a new exception.
      * </p>
      *
-     * @param name the name
-     * @param url the URL
-     * @param nutType the path type
-     * @param version the version
+     * @param id the ID
+     * @param idPrefix the ID prefix
      */
-    public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
-        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
-        nutUrl = url;
+    public WuicXmlWorkflowIdentifierException(final String idPrefix, final String id) {
+        super(String.format("The workflow must reference one and only one of the attributes idPrefix (%s) and id (%s)", idPrefix, id));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return nutUrl.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    public long getErrorCode() {
+        return ErrorCode.WORKFLOW_IDENTIFIER;
     }
 }

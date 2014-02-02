@@ -71,9 +71,8 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 
@@ -168,6 +167,7 @@ public class WuicXmlTest {
                 when(retval.saveSupported()).thenReturn(true);
                 when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
                 when(nut.isAggregatable()).thenReturn(true);
+                when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
             } catch (StreamException se) {
                 Assert.fail();
             } catch (NutNotFoundException se) {
@@ -225,14 +225,14 @@ public class WuicXmlTest {
         Assert.assertNotNull(xml.getHeaps());
         Assert.assertNotNull(xml.getEngineBuilders());
         Assert.assertNotNull(xml.getDaoBuilders());
-        Assert.assertNotNull(xml.getWorkflows());
+        Assert.assertNotNull(xml.getWorkflowTemplates());
         Assert.assertNotNull(xml.getPollingInterleaveSeconds());
 
         // Number of elements
         Assert.assertEquals(NumberUtils.TWO, xml.getHeaps().size());
         Assert.assertEquals(NumberUtils.TWO, xml.getEngineBuilders().size());
         Assert.assertEquals(NumberUtils.TWO, xml.getDaoBuilders().size());
-        Assert.assertEquals(NumberUtils.TWO, xml.getWorkflows().size());
+        Assert.assertEquals(NumberUtils.TWO, xml.getWorkflowTemplates().size());
 
         // Heap field
         for (XmlHeapBean heap : xml.getHeaps()) {
@@ -284,13 +284,12 @@ public class WuicXmlTest {
             }
         }
 
-        // Workflow field
-        for (int i = 0; i < xml.getWorkflows().size(); i++) {
-            final XmlWorkflowBean workflow = xml.getWorkflows().get(i);
+        // Workflow template field
+        for (int i = 0; i < xml.getWorkflowTemplates().size(); i++) {
+            final XmlWorkflowTemplateBean workflow = xml.getWorkflowTemplates().get(i);
 
-            Assert.assertNotNull(workflow.getIdPrefix());
+            Assert.assertNotNull(workflow.getId());
             Assert.assertNotNull(workflow.getEngineBuilderIds());
-            Assert.assertNotNull(workflow.getHeapIdPattern());
 
             if (i == 1) {
                 Assert.assertNull(workflow.getDaoBuilderIds());
@@ -300,6 +299,14 @@ public class WuicXmlTest {
             Assert.assertNotNull(workflow.getDaoBuilderIds());
             Assert.assertEquals(NumberUtils.TWO, workflow.getEngineBuilderIds().size());
             Assert.assertEquals(1, workflow.getDaoBuilderIds().size());
+        }
+
+        for (int i = 0; i < xml.getWorkflows().size(); i++) {
+            final XmlWorkflowBean workflow = xml.getWorkflows().get(i);
+
+            Assert.assertNotNull(workflow.getWorkflowTemplateId());
+            Assert.assertNotNull(workflow.getIdPrefix());
+            Assert.assertNotNull(workflow.getHeapIdPattern());
         }
     }
 
@@ -318,7 +325,7 @@ public class WuicXmlTest {
         NutDaoBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
-        builder.build().process("simpleWorkflowsimpleHeap", "");
+        builder.build().process("", "simpleWorkflowsimpleHeap");
     }
 
     /**
@@ -356,12 +363,48 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("simpleWorkflowsimpleHeap", "");
+        ctx.process("", "simpleWorkflowsimpleHeap");
 
         // Remove test file
         tmp.delete();
     }
 
+    /**
+     * Tests a wuic.xml file referencing binding.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void bindTest() throws Exception {
+
+        // Add custom DAO and engine required
+        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
+        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+
+        // Load configuration
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-bind.xml"));
+        final ContextBuilder builder = new ContextBuilder();
+        cfg.configure(builder);
+        final Context ctx = builder.build();
+
+        // Process implicit workflow with composed heaps
+        ctx.process("", "bind");
+    }
+
+    /**
+     * <p>
+     * Tests XML configuration throw a reader.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void readerTest() throws Exception {
+        final Reader reader = new FileReader(new File(getClass().getResource("/wuic-basic.xml").getFile()));
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilder builder = new ContextBuilder();
+        cfg.configure(builder);
+    }
 
     /**
      * Tests a wuic.xml file referencing composed heaps.
@@ -382,11 +425,10 @@ public class WuicXmlTest {
         final Context ctx = builder.build();
 
         // Process implicit workflow with composed heaps
-        ctx.process("simple", "");
-        ctx.process("nested", "");
-        ctx.process("referenced", "");
-        ctx.process("both", "");
-        ctx.process("full", "");
-
+        ctx.process("", "simple");
+        ctx.process("", "nested");
+        ctx.process("", "referenced");
+        ctx.process("", "both");
+        ctx.process("", "full");
     }
 }

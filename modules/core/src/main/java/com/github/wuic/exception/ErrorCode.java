@@ -144,6 +144,16 @@ public interface ErrorCode {
     long STATIC_WORKFLOW_NOT_FOUND = 19860606204L;
 
     /**
+     * Indicates that a workflow template has not been found.
+     */
+    long WORKFLOW_TEMPLATE_NOT_FOUND = 19860606205L;
+
+    /**
+     * Indicates that a workflow doesn't define one and only one of its 'id' and 'idPrefix' attributes.
+     */
+    long WORKFLOW_IDENTIFIER = 19860606206L;
+
+    /**
      * <p>
      * Gets the error code.
      * </p>

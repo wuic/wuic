@@ -65,10 +65,54 @@ public final class WuicJeeContext {
     private static ServletContext servletContext;
 
     /**
+     * All init-paremeters.
+     */
+    private static InitParams initParams;
+
+    /**
      * Default constructor.
      */
     private WuicJeeContext() {
 
+    }
+
+    /**
+     * <p>
+     * Class created for convenience providing init-params used to configure WUIC.
+     * </p>
+     *
+     * @version 1.0
+     * @since 0.4.3
+     */
+    public static final class InitParams {
+
+        /**
+         * Multiple configuration or not.
+         */
+        private static Boolean multiple;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        private InitParams() {
+            // Get init-parameter
+            final String m = getInitParameter(WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
+            multiple = Boolean.parseBoolean(m);
+        }
+
+        /**
+         * <p>
+         * Returns the init-parameter value associated to key
+         * {@link WuicServletContextListener#WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT}.
+         * </p>
+         *
+         * @return the parsed {@code Boolean} associated to the value ({@code true} by default).
+         */
+        public Boolean wuicServletMultipleConfInTagSupport() {
+            return multiple;
+        }
     }
 
     /**
@@ -81,9 +125,20 @@ public final class WuicJeeContext {
      * @param ifNull the default value
      * @return the value associated to the key, default value if {@code null}
      */
-    public static String getInitParameter(final String key, final String ifNull) {
+    private static String getInitParameter(final String key, final String ifNull) {
         final String retval = getServletContext().getInitParameter(key);
         return retval == null ? ifNull : retval;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link InitParams parameters}.
+     * </p>
+     *
+     * @return the init-params
+     */
+    public static InitParams initParams() {
+        return initParams;
     }
 
     /**
@@ -128,6 +183,7 @@ public final class WuicJeeContext {
      */
     static void setContext(final ServletContext sc) {
         servletContext = sc;
+        initParams = new InitParams();
     }
 
     /**

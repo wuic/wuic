@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width">
 
     <%@ taglib prefix="wuic" uri="http://www.github.com/wuic" %>
-    <wuic:html-import workflowIds="css" />
+    <wuic:html-import workflowId="css" />
 </head>
 <body>
 <form>
@@ -19,7 +19,7 @@
     <textarea class="sir-trevor" name="content"></textarea>
 </form>
 
-<wuic:html-import workflowIds="js" />
+<wuic:html-import workflowId="js" />
 
 <script type="text/javascript" charset="utf-8">
     $(function(){

@@ -40,11 +40,18 @@ package com.github.wuic.nut.core;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNut;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -69,16 +76,141 @@ public class ByteArrayNut extends AbstractNut {
     
     /**
      * <p>
-     * Builds a new {@code Nut} based on a given byte array.
+     * Builds a new {@code Nut} transformed nut based on a given byte array.
      * </p>
      * 
      * @param bytes the byte array
+     * @param name the nut name
+     * @param nt the {@link NutType}
+     * @param originalNuts the original nuts
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType ft) {
-        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<Nut> originalNuts) {
+        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, originalNuts);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
-    
+
+    /**
+     * <p>
+     * Builds a new {@code Nut} transformed nut based on a {@code null} byte array.
+     * </p>
+     *
+     * @param name the nut name
+     * @param nt the {@link NutType}
+     * @param originalNuts the original nuts
+     */
+    public ByteArrayNut(final String name, final NutType nt, final List<Nut> originalNuts) {
+        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, originalNuts);
+        byteArray = null;
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code Nut} original nut based on a given byte array.
+     * </p>
+     *
+     * @param bytes the byte array
+     * @param name the nut name
+     * @param nt the {@link NutType}
+     * @param version the version number
+     */
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final BigInteger version) {
+        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
+        byteArray = Arrays.copyOf(bytes, bytes.length);
+    }
+
+    /**
+     * <p>
+     * Builds a copy of given original {@code Nut} and puts its content into a memory byte array.
+     * </p>
+     *
+     * @param nut the original nut
+     * @throws NutNotFoundException if original {@link Nut} is wrongly built
+     * @throws StreamException if content fails to be copied
+     */
+    public ByteArrayNut(final Nut nut) throws NutNotFoundException, StreamException {
+        super(nut);
+
+        InputStream is = null;
+
+        try {
+            is = nut.openStream();
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            IOUtils.copyStream(is, os);
+            setBytes(os.toByteArray());
+        } finally {
+            IOUtils.close(is);
+        }
+    }
+
+    /**
+     * <p>
+     * Converts the given nuts list and its referenced nuts into nuts wrapping an in memory byte array.
+     * </p>
+     *
+     * @return the byte array nut
+     * @throws StreamException if an I/O error occurs
+     * @throws NutNotFoundException if given nut not normally created
+     */
+    public static List<Nut> toByteArrayNut(final List<Nut> nuts) throws StreamException, NutNotFoundException {
+        final List<Nut> retval = new ArrayList<Nut>(nuts.size());
+
+        for (final Nut nut : nuts) {
+            retval.add(toByteArrayNut(nut));
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Converts the given nut and its referenced nuts into nuts wrapping an in memory byte array.
+     * </p>
+     *
+     * @return the byte array nut
+     * @throws StreamException if an I/O error occurs
+     * @throws NutNotFoundException if given nut not normally created
+     */
+    public static Nut toByteArrayNut(final Nut nut) throws StreamException, NutNotFoundException {
+        InputStream is = null;
+
+        try {
+            is = nut.openStream();
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            IOUtils.copyStream(is, os);
+            final Nut bytes;
+
+            // This is an original nut
+            if (nut.getOriginalNuts() == null) {
+                bytes = new ByteArrayNut(nut);
+            } else {
+                bytes = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), toByteArrayNut(nut.getOriginalNuts()));
+            }
+
+            bytes.setProxyUri(nut.getProxyUri());
+
+            if (nut.getReferencedNuts() != null) {
+                for (final Nut ref : nut.getReferencedNuts()) {
+                    bytes.addReferencedNut(toByteArrayNut(ref));
+                }
+            }
+
+            return bytes;
+        } finally {
+            IOUtils.close(is);
+        }
+    }
+
+    /**
+     * <p>
+     * Sets the given array as byte array content.
+     * </p>
+     *
+     * @param bytes the bytes
+     */
+    public void setBytes(final byte[] bytes) {
+        byteArray = Arrays.copyOf(bytes, bytes.length);
+    }
+
     /**
      * {@inheritDoc}
      */

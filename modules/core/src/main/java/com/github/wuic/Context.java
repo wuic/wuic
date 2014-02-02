@@ -42,7 +42,8 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.*;
+import com.github.wuic.nut.core.CompositeNut;
 
 import java.util.*;
 
@@ -94,12 +95,8 @@ public class Context implements Observer {
 
     /**
      * <p>
-     * Processes a workflow and returns the resulting nuts.
-     * </p>
-     *
-     * <p>
-     * It is possible to specify the execution of many workflow and the creation of an associated composition by separating
-     * each workflow in the given {@code String} by the reserved {@link com.github.wuic.nut.NutsHeap#ID_SEPARATOR separator}.
+     * Processes a workflow and returns the resulting nuts. If no workflow is associated to the given ID, then an
+     * exception will be thrown.
      * </p>
      *
      * @param workflowId the workflow ID
@@ -107,24 +104,41 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    public List<Nut> process(final String workflowId, final String contextPath) throws WuicException {
+    public List<Nut> process(final String contextPath, final String workflowId) throws WuicException {
         final Workflow workflow = workflowMap.get(workflowId);
-        final List<Nut> retval = new ArrayList<Nut>();
 
         if (workflow == null) {
             throw new WorkflowNotFoundException(workflowId);
-        }
-
-        final EngineRequest request = new EngineRequest(workflowId, contextPath, workflow.getHeap(), workflow.getChains());
-        final Engine chain = request.getChainFor(workflow.getHeap().getNutType());
-
-        if (chain == null) {
-            retval.addAll(workflow.getHeap().getNuts());
         } else {
-            retval.addAll(chain.parse(request));
+            return process(contextPath, workflowId, workflow);
+        }
+    }
+
+    /**
+     * <p>
+     * Processes a workflow with its associated ID and returns the resulting nuts.
+     * </p>
+     *
+     * @param wId the workflow ID
+     * @param contextPath the context path where nuts will be referenced
+     * @return the resulting nuts
+     * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
+     */
+    public List<Nut> process(final String contextPath, final String wId, final Workflow workflow) throws WuicException {
+        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getChains());
+        final List<Nut> retval = new ArrayList<Nut>();
+
+        final Iterator<List<Nut>> it = workflow.getHeap().iterator();
+
+        // We parse a request for each sequence of nuts having the same type
+        while (it.hasNext()) {
+            final List<Nut> nuts = it.next();
+            final Engine chain = request.getChainFor(nuts.get(0).getNutType());
+            retval.addAll(chain == null ? nuts : chain.parse(new EngineRequest(nuts, request)));
         }
 
-        return retval;
+        // Merges all nuts with same type (for instance two 'aggregate.js' nuts will be wrapped by one composite nut
+        return CompositeNut.mergeNuts(retval);
     }
 
     /**

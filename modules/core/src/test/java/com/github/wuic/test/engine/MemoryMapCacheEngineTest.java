@@ -35,58 +35,56 @@
  * licenses."
  */
 
+package com.github.wuic.test.engine;
 
-package com.github.wuic.nut.core;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
+import com.github.wuic.nut.Nut;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.net.URL;
+import java.util.Arrays;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.Nut} implementation for HTTP accesses.
+ * {@link MemoryMapCacheEngineTest} test.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.3
  */
-public class HttpNut extends AbstractNut {
+@RunWith(JUnit4.class)
+public class MemoryMapCacheEngineTest {
 
     /**
-     * The nut URL.
-     */
-    private URL nutUrl;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
+     * Add an element then clears the cache.
      *
-     * @param name the name
-     * @param url the URL
-     * @param nutType the path type
-     * @param version the version
+     * @throws Exception if test fails
      */
-    public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
-        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
-        nutUrl = url;
+    @Test
+    public void addThenClearTest() throws Exception {
+        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1);
+        engine.putToCache(req, Arrays.asList(Mockito.mock(Nut.class)));
+        engine.clearCache();
+        Assert.assertNull(engine.getFromCache(req));
     }
 
     /**
-     * {@inheritDoc}
+     * Add an element then removes the cache.
+     *
+     * @throws Exception if test fails
      */
-    @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return nutUrl.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    @Test
+    public void addThenRemoveTest() throws Exception {
+        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1);
+        engine.putToCache(req, Arrays.asList(Mockito.mock(Nut.class)));
+        engine.removeFromCache(req);
+        Assert.assertNull(engine.getFromCache(req));
     }
 }

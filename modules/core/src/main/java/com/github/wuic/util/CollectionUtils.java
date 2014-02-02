@@ -120,6 +120,18 @@ public final class CollectionUtils {
 
     /**
      * <p>
+     * Just the varargs version of {@link Arrays#deepHashCode(Object[])}
+     * </p>
+     *
+     * @param objects the array to compute hash code
+     * @return the hash code returned by {@link Arrays#deepHashCode(Object[])}
+     */
+    public static int deepHashCode(final Object ... objects) {
+        return Arrays.deepHashCode(objects);
+    }
+
+    /**
+     * <p>
      * Gets the index of a targetted element in a specified array.
      * </p>
      *

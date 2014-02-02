@@ -48,12 +48,14 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -119,6 +121,8 @@ public class AbstractNutDaoTest {
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut mock = mock(Nut.class);
             when(mock.getName()).thenReturn(realPath);
+            when(mock.getVersionNumber()).thenReturn(new BigInteger("1"));
+
             return mock;
         }
 
@@ -261,6 +265,7 @@ public class AbstractNutDaoTest {
         final AbstractNutDao dao = new MockNutDaoTest(1);
         final Nut nut = mock(Nut.class);
         when(nut.getName()).thenReturn("mock");
+        when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         for (int i = 0; i < 750; i++) {
             new Thread(new Runnable() {

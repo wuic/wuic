@@ -1,102 +1,117 @@
 ##### v0.2.0 #####
 
-Enhancements :
+Enhancements:
 - Provide image aggregation capability
 
 ##### v0.2.1 #####
 
-Bug fixes :
+Bug fixes:
 - Escape \t, \r and \n characters when compressing javascript files
 - Include \n between files when aggregating files without compression 
 
 ##### v0.2.2 #####
 
-Bug fixes :
+Bug fixes:
 - Provide a WuicEhCacheProvider interface to not have to add an ehcache.xml for
 WUIC and evict memory leaks in tomcat when using multiple webapps with one
 ehcache.xml per application
 
-Enhancements :
+Enhancements:
 - WuicTag generates URL with pattern /[groupId]/?file=[fileId] to enhance URL
 readability in FF console
 
 ##### v0.2.3 #####
 
-Bug fixes :
+Bug fixes:
 - Stream opened to write temporary files were never closed
 
-Enhancements :
+Enhancements:
 - First bin packing algorithm for image aggregation from Jakes Gordon explanations
 
 ##### v0.3.0 #####
 
-Enhancements :
-- #4 : Add a sample application
-- #5 : Split the project in different maven module
-- #6 : Make the project eligible for maven central
-- #8 : Possibility to disable embedded cache
-- InputStreamWuicResource : create a WuicResource based on an InputStream
+Enhancements:
+- #4: Add a sample application
+- #5: Split the project in different maven module
+- #6: Make the project eligible for maven central
+- #8: Possibility to disable embedded cache
+- InputStreamWuicResource: create a WuicResource based on an InputStream
 - New SourceRootProvider implementations allowing default access to resources exposed through webapp and classpath
 
 ##### v0.3.1 #####
 
-Tracked issues :
+Tracked issues:
 - https://github.com/gdrouet/wuic/issues?labels=0.3.1&page=1&state=closed
 
 ##### v0.3.2 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.2&page=1&state=closed
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.2&page=1&state=closed
 
-Not tracked issues :
+Not tracked issues:
 - ClasspathWuicResource not use java.class.path system's property anymore due to its limitations, use a new base path property instead.
 
-Breaking changes :
+Breaking changes:
 - You need to explicitly import YUICompressor and EHCache in your pom.xml
 
 ##### v0.3.3 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
 
-Not tracked issues :
+Not tracked issues:
 - Each time a steam's resource is retrieved, we look up for it, which increase the overhead. This look up is now done only one time when the resource is created.
 
-Breaking changes :
-- 'file' parameter not supported anymore in URL pattern, use this one instead : /[groupId]/[fileName]
+Breaking changes:
+- 'file' parameter not supported anymore in URL pattern, use this one instead: /[groupId]/[fileName]
 
 ##### v0.3.4 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
 
-Not tracked issues :
+Not tracked issues:
 - More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"
 - When YUICompressor is used, temporary file was created. Now everything is done in memory for better performances
 - Resource path needed to ends with a supported file extension even if it was a regex. Test is now performed on physical resources and allows to indicates path like .*
 
-Breaking changes :
+Breaking changes:
 - Disk resource (including webapp and classpath) completely reviewed including regex support. See wiki to see clear explanations about how it now works.
 
 ##### v0.3.5 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.3.5&page=1&state=open
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.5&page=1&state=open
 
 ##### v0.4.0 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.4.0&page=1&state=open
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.0&page=1&state=open
 
 ##### v0.4.1 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.4.1&page=1&state=open
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.1&page=1&state=open
 
-Breaking changes :
+Breaking changes:
 - wuic-tag artifact no more depends on wuic-servlet artifact so if you want to serve statics, you need to explicitly declares the wuic-servlet dependency
-- web.xml : all 'init-param' for WUIC servlet need now to be declared as context-param
-- web.xml : the 'com.github.wuic.jee.WuicServletContextListener' class needs to be declared as listener
+- web.xml: all 'init-param' for WUIC servlet need now to be declared as context-param
+- web.xml: the 'com.github.wuic.jee.WuicServletContextListener' class needs to be declared as listener
 
 ##### v0.4.2 #####
 
-Tracked issues : https://github.com/gdrouet/wuic/issues?labels=0.4.2&page=1&state=open
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.2&page=1&state=open
 
-Breaking changes :
+Breaking changes:
 - Sprite names for both Javascript and CSS support are now computed differently. See the FAQ
 - In JSP tag, 'pageName' attribute has been renamed to 'workflowIds'
 - Heap ID can't contain the reserved keyword '|'
+
+##### v0.4.3 #####
+
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.3&page=1&state=open
+
+Not tracked issues:
+- Timestamp included in the URL to invalidate cache has been now replaced by a MD5 hash which is more efficient because
+its includes all names and all timestamps of request nuts
+- A heap could now refer nuts of any type to simplify configurations
+- JS/CSS sample now fixed with possibility to omit version in URL
+
+Breaking changes:
+- In JSP tag, 'workflowIds' attribute has been renamed to 'workflowId'
+- Multiple workflow are not imported with '|' separator anymore
+- XML statements for workflow creation have been refactored: create a template and use this templates to create a workflow

@@ -138,7 +138,7 @@ public class FtpTest {
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
-        final List<Nut> group = builder.build().process("css-imagecss-image", "");
+        final List<Nut> group = builder.build().process("", "css-imagecss-image");
 
         Assert.assertFalse(group.isEmpty());
         InputStream is;
@@ -148,6 +148,5 @@ public class FtpTest {
             Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
             is.close();
         }
-
     }
 }

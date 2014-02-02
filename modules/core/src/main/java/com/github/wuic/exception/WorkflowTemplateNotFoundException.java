@@ -36,57 +36,38 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.exception;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.net.URL;
+import com.github.wuic.exception.ErrorCode;
+import com.github.wuic.exception.xml.WuicXmlException;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.Nut} implementation for HTTP accesses.
+ * Thrown when a workflow references a template that does not exists.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.3
  */
-public class HttpNut extends AbstractNut {
-
-    /**
-     * The nut URL.
-     */
-    private URL nutUrl;
+public class WorkflowTemplateNotFoundException extends WuicXmlException {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Builds a new exception.
      * </p>
      *
-     * @param name the name
-     * @param url the URL
-     * @param nutType the path type
-     * @param version the version
+     * @param id the ID not found
      */
-    public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
-        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
-        nutUrl = url;
+    public WorkflowTemplateNotFoundException(final String id) {
+        super(String.format("Unable to find workflow ID '%s'", id));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return nutUrl.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    public long getErrorCode() {
+        return ErrorCode.WORKFLOW_TEMPLATE_NOT_FOUND;
     }
 }

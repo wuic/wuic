@@ -63,7 +63,8 @@ import java.net.URL;
 public class WuicServletContextListener implements ServletContextListener {
 
     /**
-     * Init parameter which indicates if configurations injected by tag supports (JSP, Thymeleaf, etc) are possible or not.
+     * Init parameter which indicates if configurations injected by tag supports (JSP, Thymeleaf, etc) should be done
+     * each time a page is processed or not.
      */
     public static final String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = "c.g.w.wuicMultipleConfigInTagSupport";
 

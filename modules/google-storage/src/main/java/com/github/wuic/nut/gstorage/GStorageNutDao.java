@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,7 +72,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 public class GStorageNutDao extends AbstractNutDao {
@@ -246,7 +247,7 @@ public class GStorageNutDao extends AbstractNutDao {
             storageObject.executeMediaAndDownloadTo(baos);
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type);
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

@@ -43,7 +43,6 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.jee.WuicJeeContext;
-import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.thymeleaf.Arguments;
 import org.thymeleaf.dom.Element;
@@ -61,15 +60,10 @@ import java.io.StringReader;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.2
  */
 public class ConfigProcessor extends AbstractRemovalElementProcessor {
-
-    /**
-     * If multiple configurations should be performed by this processor or not.
-     */
-    private Boolean multiple;
 
     /**
      * <p>
@@ -78,9 +72,6 @@ public class ConfigProcessor extends AbstractRemovalElementProcessor {
      */
     public ConfigProcessor() {
         super("config");
-        final String m = WuicJeeContext.getInitParameter(
-                WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
-        this.multiple = Boolean.parseBoolean(m);
     }
 
     /**
@@ -102,7 +93,8 @@ public class ConfigProcessor extends AbstractRemovalElementProcessor {
 
             // Let's load the wuic.xml file and configure the builder with it
             final Reader reader = new StringReader(DOMUtils.getHtml5For(element.getFirstElementChild()));
-            facade.configure(new ReaderXmlContextBuilderConfigurator(reader, toString(), multiple));
+            facade.configure(new ReaderXmlContextBuilderConfigurator(reader, toString(),
+                    WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()));
 
             return false;
         } catch (WuicException we) {

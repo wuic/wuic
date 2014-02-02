@@ -45,6 +45,8 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.util.IOUtils;
 
+import java.util.List;
+
 /**
  * <p>
  * This class provides sprite throughout javascript language. The javascript path
@@ -74,8 +76,9 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix)
+    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
+        final ByteArrayNut retval = new ByteArrayNut("sprites" + nutNameSuffix + ".js", NutType.JAVASCRIPT, originals);
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
@@ -103,12 +106,13 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
             jsBuilder.append("\",\n\th : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\",\n\turl : \"");
-            jsBuilder.append(IOUtils.mergePath("/", url, image));
+            jsBuilder.append(IOUtils.mergePath("/", url, retval.getVersionNumber().toString(), image));
             jsBuilder.append("\"\n};\n");
         }
 
-        // Make a nut and return it
-        final byte[] bytes = jsBuilder.toString().getBytes();
-        return new ByteArrayNut(bytes, "sprites" + nutNameSuffix + ".js", NutType.JAVASCRIPT);
+        // Make a byte array and return nut wrapper
+        retval.setBytes(jsBuilder.toString().getBytes());
+
+        return retval;
     }
 }

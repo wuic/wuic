@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.impl.ehcache;
 
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
 import com.github.wuic.nut.Nut;
 
@@ -80,24 +81,24 @@ public class EhCacheEngine extends AbstractCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final String workflowId, final List<Nut> nuts) {
-        ehCache.put(new Element(workflowId, nuts));
+    public void putToCache(final EngineRequest.Key request, final List<Nut> nuts) {
+        ehCache.put(new Element(request, nuts));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void removeFromCache(final String workflowId) {
-        ehCache.remove(workflowId);
+    public void removeFromCache(final EngineRequest.Key request) {
+        ehCache.remove(request);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getFromCache(final String workflowId) {
-        final Element el = ehCache.get(workflowId);
+    public List<Nut> getFromCache(final EngineRequest.Key request) {
+        final Element el = ehCache.get(request);
         return el == null ? null : (List<Nut>) el.getObjectValue();
     }
 }

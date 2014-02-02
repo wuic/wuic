@@ -45,6 +45,8 @@ import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 
+import java.util.List;
+
 /**
  * <p>
  * This {@link com.github.wuic.engine.SpriteProvider} generates CSS code to represent the sprites.
@@ -60,13 +62,14 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix)
+    public Nut getSprite(final String url, final String workflowId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
+        final ByteArrayNut retval = new ByteArrayNut("sprites" + nutNameSuffix + ".css", NutType.CSS, originals);
         final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {
             final Region reg = regions.get(name);
-            final String className = convertAllowedName(heapId, name);
+            final String className = convertAllowedName(workflowId, name);
 
             // Define region within the image
             cssBuilder.append(".");
@@ -84,7 +87,8 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append("px;}");
         }
 
-        // Make a nut and return it
-        return new ByteArrayNut(cssBuilder.toString().getBytes(), "sprites" + nutNameSuffix + ".css", NutType.CSS);
+        // Make a byte array and return wrapper nut
+        retval.setBytes(cssBuilder.toString().getBytes());
+        return retval;
     }
 }

@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -65,7 +66,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.4
+ * @version 1.5
  * @since 0.3.3
  */
 public class S3NutDao extends AbstractNutDao {
@@ -226,7 +227,7 @@ public class S3NutDao extends AbstractNutDao {
             IOUtils.copyStream(s3ObjectInputStream, baos);
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type);
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
         } finally {
             // Close S3Object stream
             IOUtils.close(s3ObjectInputStream);

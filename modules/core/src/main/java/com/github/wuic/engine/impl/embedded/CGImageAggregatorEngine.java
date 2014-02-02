@@ -120,7 +120,7 @@ public class CGImageAggregatorEngine extends AbstractAggregatorEngine {
             // If a sprite provider exists, compute one nut for each image and link them
             if (spriteProviders.length > 0) {
                 final List<Nut> retval = new ArrayList<Nut>();
-                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId(), request.getTimestampVersion());
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Calculate type and dimensions of the final image
                 for (final Nut n : request.getNuts()) {
@@ -191,10 +191,10 @@ public class CGImageAggregatorEngine extends AbstractAggregatorEngine {
                 throw new StreamException(ioe);
             }
 
-            Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG);
+            Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, request.getNuts());
 
             if (spriteProviders.length > 0) {
-                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId(), request.getTimestampVersion());
+                final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
                 // Process referenced nut
                 res = applySpriteProviders(url, request.getHeap().getId(), String.valueOf(spriteCpt), res, request);
@@ -252,7 +252,7 @@ public class CGImageAggregatorEngine extends AbstractAggregatorEngine {
         Nut retval = null;
 
         for (final SpriteProvider sp : spriteProviders) {
-            Nut nut = sp.getSprite(url, heapId, suffix);
+            Nut nut = sp.getSprite(url, request.getWorkflowId(), suffix, Arrays.asList(n));
             final Engine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {

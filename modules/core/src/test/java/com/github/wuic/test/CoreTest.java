@@ -95,7 +95,7 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<Nut> group = facade.process("util-jsutil-js", "");
+        List<Nut> group = facade.process("", "util-jsutil-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -109,7 +109,7 @@ public class CoreTest extends WuicTest {
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.process("util-jsutil-js", "");
+        group = facade.process("", "util-jsutil-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -136,13 +136,13 @@ public class CoreTest extends WuicTest {
 
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-css.xml")).configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context ctx = builder.build();
 
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        List<Nut> group = ctx.process("css-imagecss-image", "");
+        List<Nut> group = ctx.process("", "css-imagecss-image");
         int i = 0;
 
         for (Nut res : group) {
@@ -152,7 +152,7 @@ public class CoreTest extends WuicTest {
             writeToDisk(res, i++ + "sprite.css");
         }
 
-        group = ctx.process("css-scriptscss-scripts", "");
+        group = ctx.process("", "css-scriptscss-scripts");
         i = 0;
 
         for (Nut res : group) {
@@ -176,7 +176,7 @@ public class CoreTest extends WuicTest {
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<Nut> group = facade.process("js-imagejs-image", "");
+        List<Nut> group = facade.process("", "js-imagejs-image");
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
@@ -201,7 +201,7 @@ public class CoreTest extends WuicTest {
                 final int end = content.indexOf("/aggregate.png");
                 String imageGroup = content.substring(start, end);
                 imageGroup = imageGroup.substring(0, imageGroup.lastIndexOf('/'));
-                group = facade.process(imageGroup, "");
+                group = facade.process("", imageGroup);
 
                 writeToDisk(group.get(0).getReferencedNuts().get(0), "aggregate.png");
             } finally {

@@ -36,57 +36,57 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.test.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
-import java.net.URL;
+import java.util.Arrays;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.Nut} implementation for HTTP accesses.
+ * {@link CompositeNutTest} tests.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.3
  */
-public class HttpNut extends AbstractNut {
+@RunWith(JUnit4.class)
+public class CompositeNutTest {
 
     /**
-     * The nut URL.
-     */
-    private URL nutUrl;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
+     * Nominal test.
      *
-     * @param name the name
-     * @param url the URL
-     * @param nutType the path type
-     * @param version the version
+     * @throws Exception if test fails
      */
-    public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
-        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
-        nutUrl = url;
-    }
+    @Test
+    public void compositeTest() throws Exception {
+        final Nut n1 = Mockito.mock(Nut.class);
+        Mockito.when(n1.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
+        Mockito.when(n1.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(n1.getName()).thenReturn("n1.css");
+        Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
+        Mockito.when(n1.getVersionNumber()).thenReturn(new BigInteger("1"));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return nutUrl.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+        final Nut n2 = Mockito.mock(Nut.class);
+        Mockito.when(n2.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
+        Mockito.when(n2.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(n2.getName()).thenReturn("n2.css");
+        Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
+        Mockito.when(n2.getVersionNumber()).thenReturn(new BigInteger("1"));
+
+        final Nut composite = new CompositeNut(Arrays.asList(n1, n2), "composite");
+        IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
 }

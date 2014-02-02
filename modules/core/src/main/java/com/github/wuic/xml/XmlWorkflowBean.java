@@ -40,22 +40,26 @@ package com.github.wuic.xml;
 
 import javax.xml.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * <p>
  * This class corresponds to the XML representation of a {@link com.github.wuic.Workflow}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.0
+ * @version 1.0
+ * @since 0.4.3
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class XmlWorkflowBean {
 
     /**
-     * The ID prefix.
+     * The workflow ID.
+     */
+    @XmlAttribute(name = "id")
+    private String id;
+
+    /**
+     * The workflow prefix for ID.
      */
     @XmlAttribute(name = "id-prefix")
     private String idPrefix;
@@ -67,38 +71,17 @@ public class XmlWorkflowBean {
     private String heapIdPattern;
 
     /**
-     * Include default engine.
+     * The workflow ID to copy.
      */
-    @XmlAttribute(name = "use-default-engines")
-    private Boolean useDefaultEngines;
-
-    /**
-     * The list of engine builders ID.
-     */
-    @XmlElementWrapper(name = "engine-chain")
-    @XmlElement(name = "engine-builder-id")
-    private List<String> engineBuilderIds;
-
-    /**
-     * The list of default engine builders ID to exclude.
-     */
-    @XmlElementWrapper(name = "without")
-    @XmlElement(name = "engine-builder-id")
-    private List<String> withoutEngineBuilderIds;
-
-    /**
-     * Some DAO where to store process result.
-     */
-    @XmlElementWrapper(name = "store-to")
-    @XmlElement(name = "dao-builder-id")
-    private List<String> daoBuilderIds;
+    @XmlAttribute(name = "workflow-template-id")
+    private String workflowTemplateId;
 
     /**
      * <p>
-     * Gets the ID.
+     * Gets the ID prefix (id attribute should be {@code null}).
      * </p>
      *
-     * @return the ID identifying the workflow
+     * @return the string prefixing the workflow ID
      */
     public String getIdPrefix() {
         return idPrefix;
@@ -106,35 +89,13 @@ public class XmlWorkflowBean {
 
     /**
      * <p>
-     * Gets the DAO builders ID.
+     * Gets the ID (idPrefix attribute should be {@code null}).
      * </p>
      *
-     * @return the IDs identifying the builder's DAO to use when storing process result
+     * @return the ID identifying the workflow
      */
-    public List<String> getDaoBuilderIds() {
-        return daoBuilderIds;
-    }
-
-    /**
-     * <p>
-     * Gets the engine builders ID.
-     * </p>
-     *
-     * @return the IDs identifying the builder's engine to use to process nuts
-     */
-    public List<String> getEngineBuilderIds() {
-        return engineBuilderIds;
-    }
-
-    /**
-     * <p>
-     * Gets the engine builders ID to be excluded.
-     * </p>
-     *
-     * @return the IDs identifying the builder's engine to exclude
-     */
-    public List<String> getWithoutEngineBuilderIds() {
-        return withoutEngineBuilderIds;
+    public String getId() {
+        return id;
     }
 
     /**
@@ -150,56 +111,34 @@ public class XmlWorkflowBean {
 
     /**
      * <p>
-     * Indicates if the chain should include default engines.
+     * Sets the heap ID.
      * </p>
      *
-     * @return {@code true} if we include default engines or if value is {@code null}, {@link false} otherwise
+     * @param pattern the heap ID pattern
      */
-    public Boolean getUseDefaultEngines() {
-        return useDefaultEngines == null ? Boolean.TRUE : useDefaultEngines;
+    public void setHeapIdPattern(final String pattern) {
+        heapIdPattern = pattern;
     }
 
     /**
      * <p>
-     * Sets the engine builder IDs.
+     * Sets the workflow template ID.
      * </p>
      *
-     * @param engineBuilderIds the IDs
+     * @param tplId the workflow template ID
      */
-    public void setEngineBuilderIds(final List<String> engineBuilderIds) {
-        this.engineBuilderIds = engineBuilderIds;
+    public void setWorkflowTemplateId(final String tplId) {
+        workflowTemplateId = tplId;
     }
 
     /**
      * <p>
-     * Sets the use of default engines.
+     * Gets the workflow ID.
      * </p>
      *
-     * @param useDefaultEngines the use of default engines
+     * @return the workflow ID
      */
-    public void setUseDefaultEngines(final Boolean useDefaultEngines) {
-        this.useDefaultEngines = useDefaultEngines;
-    }
-
-    /**
-     * <p>
-     * Sets the heap ID pattern.
-     * </p>
-     *
-     * @param heapIdPattern the pattern
-     */
-    public void setHeapIdPattern(final String heapIdPattern) {
-        this.heapIdPattern = heapIdPattern;
-    }
-
-    /**
-     * <p>
-     * Sets the ID prefix.
-     * </p>
-     *
-     * @param idPrefix the new ID prefix
-     */
-    public void setIdPrefix(final String idPrefix) {
-        this.idPrefix = idPrefix;
+    public String getWorkflowTemplateId() {
+        return workflowTemplateId;
     }
 }

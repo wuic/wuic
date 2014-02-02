@@ -56,6 +56,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -86,6 +87,12 @@ public class UtilityTest extends WuicTest {
         final Nut fourth = Mockito.mock(Nut.class);
         final Nut fifth = Mockito.mock(Nut.class);
         final List<Nut> input = Arrays.asList(first, second, third, fourth, fifth);
+
+        Mockito.when(first.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(second.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(third.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(fourth.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(fifth.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         Mockito.when(first.getNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(second.getNutType()).thenReturn(NutType.CSS);
@@ -281,8 +288,9 @@ public class UtilityTest extends WuicTest {
     public void htmlJavascriptImportTest() throws IOException {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
+        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/foo.js\""));
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.js\""));
     }
 
     /**
@@ -295,7 +303,8 @@ public class UtilityTest extends WuicTest {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/foo.css\""));
+        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.css\""));
     }
 
     /**
@@ -305,10 +314,11 @@ public class UtilityTest extends WuicTest {
     public void getUrltTest() {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         // Served nut
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("myPath/foo.css"));
+        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("myPath/1/foo.css"));
 
         // Absolute path
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");

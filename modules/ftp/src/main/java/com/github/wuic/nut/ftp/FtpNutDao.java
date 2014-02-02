@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -243,7 +244,7 @@ public class FtpNutDao extends AbstractNutDao {
             }
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type);
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

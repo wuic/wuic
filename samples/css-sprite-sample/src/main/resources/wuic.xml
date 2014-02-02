@@ -14,12 +14,18 @@
             <nut-path>.*.png</nut-path>
         </heap>
     </heaps>
-    <workflows>
-        <workflow id-prefix="sprite-" heap-id-pattern="img">
+    <workflow-templates>
+        <workflow-template id="tpl">
+            <without>
+                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
+            </without>
             <engine-chain>
                 <engine-builder-id>wuicDefaultEhCacheEngineBuilder</engine-builder-id>
                 <engine-builder-id>wuicDefaultImageAggregatorEngineBuilder</engine-builder-id>
             </engine-chain>
-        </workflow>
+        </workflow-template>
+    </workflow-templates>
+    <workflows>
+        <workflow id="img" workflow-template-id="tpl" heap-id-pattern="img" />
     </workflows>
 </wuic>

@@ -43,6 +43,7 @@ import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -196,4 +197,24 @@ public interface Nut extends Serializable {
      * @return the proxy URI, {@code null} if no proxy URI is set
      */
     String getProxyUri();
+
+    /**
+     * <p>
+     * Returns an {@code Long} indicating the version of this nut. This helps to deal with content updates.
+     * </p>
+     *
+     * @return the nut's version
+     */
+    BigInteger getVersionNumber();
+
+    /**
+     * <p>
+     * When this nut is the result of the transformation of another one, then it is actually a processed nut. This returns
+     * a list of original nuts that have been transformed to obtain this nut. When this nut is actually an non-transformed
+     * one, say an original nut, then the returned value should be {@link null}.
+     * </p>
+     *
+     * @return the original nuts of this nut, {@code null} if this nut is actually original
+     */
+    List<Nut> getOriginalNuts();
 }

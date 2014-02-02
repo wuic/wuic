@@ -42,6 +42,7 @@ import com.github.wuic.engine.LineInspector;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
@@ -132,7 +133,8 @@ public class CGCssUrlLineInspector implements LineInspector {
     public Nut appendTransformation(final Matcher matcher,
                                     final StringBuilder replacement,
                                     final String heapPath,
-                                    final NutDao dao) throws StreamException {
+                                    final NutsHeap heap,
+                                    final Nut originalNut) throws StreamException {
         // Search the right group
         int i = 0;
         int groupIndex;
@@ -171,7 +173,7 @@ public class CGCssUrlLineInspector implements LineInspector {
             replacement.append(referencedPath);
         } else {
             // Extract the nut
-            final Set<Nut> nuts = dao.create(referencedPath, NutDao.PathFormat.RELATIVE_FILE).keySet();
+            final Set<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE).keySet();
 
             if (!nuts.isEmpty()) {
                 retval = nuts.iterator().next();

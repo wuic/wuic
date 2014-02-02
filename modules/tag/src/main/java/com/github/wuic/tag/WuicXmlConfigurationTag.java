@@ -41,7 +41,6 @@ package com.github.wuic.tag;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicJeeContext;
-import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 
 import javax.servlet.jsp.JspException;
@@ -66,11 +65,6 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
     private static final long serialVersionUID = 4305181623848741300L;
 
     /**
-     * If multiple configurations should be performed by this processor or not.
-     */
-    private Boolean multiple;
-
-    /**
      * <p>
      * Includes according to the page name.
      * </p>
@@ -87,19 +81,14 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
      */
     @Override
     public int doAfterBody() throws JspException {
-        if (multiple == null) {
-            final String m = WuicJeeContext.getInitParameter(
-                    WuicServletContextListener.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
-            this.multiple = Boolean.parseBoolean(m);
-        }
-
         try {
             // Get the facade
             final WuicFacade facade = WuicJeeContext.getWuicFacade();
 
             // Let's load the wuic.xml file and configure the builder with it
             final BodyContent content = getBodyContent();
-            facade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString(), multiple));
+            facade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString(),
+                    WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()));
             content.clearBody();
         } catch (WuicException we) {
             throw new JspException(we);

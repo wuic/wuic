@@ -19,17 +19,24 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="heaps" minOccurs="1">
+            <xs:element name="heaps" minOccurs="0">
                 <xs:complexType>
                     <xs:sequence>
                         <xs:element name="heap" type="xmlHeapBean" minOccurs="1" maxOccurs="unbounded"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
+            <xs:element name="workflow-templates" minOccurs="0">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="workflow-template" type="xmlWorkflowTemplateBean" minOccurs="1" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:element>
             <xs:element name="workflows" minOccurs="0">
                 <xs:complexType>
                     <xs:sequence>
-                        <xs:element name="workflow" type="xmlWorkflowBean" minOccurs="1" maxOccurs="unbounded"/>
+                        <xs:element name="workflow" type="workflowBean" minOccurs="1" maxOccurs="unbounded"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
@@ -72,10 +79,10 @@
             <xs:element name="heap" type="xmlHeapBean" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="id" type="xs:string" use="required"/>
-        <xs:attribute name="dao-builder-id" type="xs:string" use="required"/>
+        <xs:attribute name="dao-builder-id" type="xs:string" use="optional"/>
     </xs:complexType>
 
-    <xs:complexType name="xmlWorkflowBean">
+    <xs:complexType name="xmlWorkflowTemplateBean">
         <xs:sequence>
             <xs:element name="store-to" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
@@ -89,8 +96,7 @@
             <xs:element name="engine-chain" type="engineList" minOccurs="1" maxOccurs="unbounded">
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="id-prefix" type="xs:string" use="required"/>
-        <xs:attribute name="heap-id-pattern" type="xs:string" use="required"/>
+        <xs:attribute name="id" type="xs:string" use="required"/>
         <xs:attribute name="use-default-engines" type="xs:boolean"/>
     </xs:complexType>
 
@@ -104,6 +110,13 @@
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="workflowBean">
+        <xs:attribute name="id" type="xs:string" use="optional"/>
+        <xs:attribute name="id-prefix" type="xs:string" use="optional"/>
+        <xs:attribute name="heap-id-pattern" type="xs:string" use="required"/>
+        <xs:attribute name="workflow-template-id" type="xs:string" use="required"/>
     </xs:complexType>
 </xs:schema>
 

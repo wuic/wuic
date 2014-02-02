@@ -40,6 +40,8 @@ package com.github.wuic.engine;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 
+import java.util.List;
+
 /**
  * <p>
  * This interface represents a type of object which provides sprite generation
@@ -83,12 +85,13 @@ public interface SpriteProvider {
      * </p>
      * 
      * @param url of the final image
-     * @param heapId the group ID
+     * @param workflowId the workflow ID
      * @param nutNameSuffix the suffix to append to the sprite nut name
+     * @param originals the original nuts
      * @return a nut representing the sprite path
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    Nut getSprite(String url, String heapId, String nutNameSuffix) throws StreamException;
+    Nut getSprite(String url, String workflowId, String nutNameSuffix, List<Nut> originals) throws StreamException;
 
     /**
      * <p>

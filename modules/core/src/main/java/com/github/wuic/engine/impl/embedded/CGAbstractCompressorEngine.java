@@ -48,6 +48,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
@@ -83,6 +84,11 @@ public abstract class CGAbstractCompressorEngine extends Engine {
     private Boolean doCompression;
 
     /**
+     * The extension prefix used to compute new nut name after compression.
+     */
+    private String renameExtensionPrefix;
+
+    /**
      * <p>
      * Compress a stream (the source) into a target. The target is overridden if
      * it already exists.
@@ -100,9 +106,11 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * </p>
      *
      * @param compress activate compression or not
+     * @param rnp the extension prefix used to compute new nut name after compression.
      */
-    public CGAbstractCompressorEngine(final Boolean compress) {
+    public CGAbstractCompressorEngine(final Boolean compress, final String rnp) {
         doCompression = compress;
+        renameExtensionPrefix = rnp;
     }
 
     /**
@@ -118,7 +126,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             // Compress each path
             for (final Nut nut : request.getNuts()) {
                 final Nut compress = compress(nut);
-                compress.setProxyUri(request.getHeap().getNutDao().proxyUriFor(compress));
+                compress.setProxyUri(request.getHeap().proxyUriFor(compress));
                 retval.add(compress);
             }
         } else {
@@ -161,8 +169,12 @@ public abstract class CGAbstractCompressorEngine extends Engine {
             // Do compression
             compress(is, os);
 
+            // Build new name
+            final StringBuilder nameBuilder = new StringBuilder(nut.getName());
+            nameBuilder.insert(nut.getName().lastIndexOf('.'), renameExtensionPrefix);
+
             // Now create nut
-            final Nut res = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType());
+            final Nut res = new ByteArrayNut(os.toByteArray(), nameBuilder.toString(), nut.getNutType(), Arrays.asList(nut));
             res.setAggregatable(nut.isAggregatable());
             res.setBinaryCompressible(nut.isBinaryCompressible());
             res.setTextCompressible(nut.isTextCompressible());
