@@ -37,9 +37,14 @@
 
 /**
  * <p>
- * This package defines required implementation for {@link com.github.wuic.nut.Nut} stored in a FTP server.
+ * Package where {@link com.github.wuic.engine.Engine engines} and their {@link com.github.wuic.engine.EngineBuilder builers}
+ * implementations are defined for core module.
+ * </p>
+ *
+ * <p>
+ * Engines for image/Text aggregation, sprite computation, caching and CSS inspection are supported here.
  * </p>
  *
  * @author Guillaume DROUET
  */
-package com.github.wuic.nut.ftp;
+package com.github.wuic.engine.core;

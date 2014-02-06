@@ -35,11 +35,14 @@
  * licenses."
  */
 
+
 /**
  * <p>
- * This package defines required implementation for {@link com.github.wuic.nut.Nut} stored in a FTP server.
+ * This package defines basic stuff to implement the {@link com.github.wuic.engine.EngineBuilder}. It
+ * provides {@link com.github.wuic.util.PropertySetter setters} which can configure in a very extensible
+ * way the the {@link com.github.wuic.engine.AbstractEngineBuilder}.
  * </p>
  *
  * @author Guillaume DROUET
  */
-package com.github.wuic.nut.ftp;
+package com.github.wuic.engine.setter;
