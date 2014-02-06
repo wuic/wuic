@@ -1,5 +1,5 @@
 /*
- * "Copyright (c) 2013   Capgemini Technology Services (hereinafter "Capgemini")
+ * "Copyright (c) 2014   Capgemini Technology Services (hereinafter "Capgemini")
  *
  * License/Terms of Use
  * Permission is hereby granted, free of charge and for the term of intellectual
@@ -103,14 +103,15 @@ public abstract class AbstractCacheEngine extends Engine {
         List<Nut> retval = null;
 
         if (works()) {
-            final List<Nut> value = getFromCache(request.newKey());
+            final EngineRequest.Key key = request.newKey();
+            final List<Nut> value = getFromCache(key);
 
             // Nuts exist in doCache, returns them
             if (value != null) {
                 log.info("Nuts for request '{}' found in cache", request);
                 retval = value;
             } else if (getNext() != null) {
-                request.getHeap().addObserver(new InvalidateCache(request.newKey()));
+                request.getHeap().addObserver(new InvalidateCache(key));
 
                 final List<Nut> nuts = getNext().parse(new EngineRequest(request));
                 final List<Nut> toCache = new ArrayList<Nut>(nuts.size());
@@ -122,7 +123,7 @@ public abstract class AbstractCacheEngine extends Engine {
                 }
 
                 log.debug("Caching nut with key '{}'", request);
-                putToCache(request.newKey(), toCache);
+                putToCache(key, toCache);
 
                 retval = toCache;
             }
