@@ -69,7 +69,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * <p>
@@ -77,7 +76,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)

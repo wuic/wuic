@@ -161,8 +161,8 @@ public class WuicXmlTest {
                 final Nut nut = mock(Nut.class);
                 when(nut.getNutType()).thenReturn(NutType.CSS);
                 when(nut.getName()).thenReturn("foo.css");
-                final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
-                nuts.put(nut, -1L);
+                final List<Nut> nuts = new ArrayList<Nut>();
+                nuts.add(nut);
                 when(retval.create(anyString())).thenReturn(nuts);
                 when(retval.saveSupported()).thenReturn(true);
                 when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));

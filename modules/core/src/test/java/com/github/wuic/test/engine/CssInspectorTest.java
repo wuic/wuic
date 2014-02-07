@@ -68,7 +68,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.1
  */
 @RunWith(JUnit4.class)
@@ -109,7 +109,7 @@ public class CssInspectorTest {
         Mockito.when(heap.getId()).thenReturn("heap");
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
-        final Map<Nut, Long> nuts = new HashMap<Nut, Long>();
+        final List<Nut> nuts = new ArrayList<Nut>();
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
@@ -123,7 +123,7 @@ public class CssInspectorTest {
                 return createCount.get() + ".css";
             }
         });
-        nuts.put(nut, 1L);
+        nuts.add(nut);
 
         final StringBuilder builder = new StringBuilder();
         builder.append("@import url(\"jquery.ui.core.css\");");
@@ -140,8 +140,7 @@ public class CssInspectorTest {
         builder.append("@import /* some comments */ url(\"jquery.ui.spinner.css\");");
 
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
-        Mockito.when(heap.getNuts()).thenReturn(nuts.keySet());
-        Mockito.when(heap.getNutsWithTimestamp()).thenReturn(nuts);
+        Mockito.when(heap.getNuts()).thenReturn(nuts);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
         final EngineRequest request = new EngineRequest("wid", "cp", new NutsHeap(null, dao, "heap", heap), new HashMap<NutType, Engine>());

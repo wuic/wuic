@@ -64,9 +64,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -149,12 +147,12 @@ public class ContextBuilderTest {
         // Prepare DAO mock
         mockDao = mock(NutDao.class);
 
-        final Map<Nut, Long> nutsOne = new HashMap<Nut, Long>();
-        nutsOne.put(mockNutOne, -1L);
+        final List<Nut> nutsOne = new ArrayList<Nut>();
+        nutsOne.add(mockNutOne);
         when(mockDao.create(mockNutOne.getName())).thenReturn(nutsOne);
 
-        final Map<Nut, Long> nutTwo = new HashMap<Nut, Long>();
-        nutTwo.put(mockNutTwo, -1L);
+        final List<Nut> nutTwo = new ArrayList<Nut>();
+        nutTwo.add(mockNutTwo);
         when(mockDao.create(mockNutTwo.getName())).thenReturn(nutTwo);
         when(mockDao.saveSupported()).thenReturn(false);
         mockStore = mock(NutDao.class);

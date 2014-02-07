@@ -46,6 +46,7 @@ import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -95,9 +96,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     private NutDao nutDao;
 
     /**
-     * The nuts corresponding to the paths associated to their last update.
+     * The nuts corresponding to the paths.
      */
-    private Map<Nut, Long> nuts;
+    private List<Nut> nuts;
 
     /**
      * Listeners.
@@ -265,19 +266,19 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @return the new nut
      * @throws StreamException if any I/O error occurs
      */
-    public Map<Nut, Long> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws StreamException {
+    public List<Nut> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws StreamException {
         final NutDao dao = findDaoFor(nut);
-        final Map<Nut, Long> retval;
+        final List<Nut> retval;
 
         if (dao != null) {
             retval = dao.create(path, pathFormat);
             nutDao.observe(path, this);
 
-            for (final Nut n : retval.keySet()) {
+            for (final Nut n : retval) {
                 created.add(n.getName());
             }
         } else {
-            retval = Collections.emptyMap();
+            retval = Collections.emptyList();
         }
 
         return retval;
@@ -309,17 +310,17 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     private void checkFiles() throws StreamException {
         // Keep order with a linked data structure
-        this.nuts = new LinkedHashMap<Nut, Long>();
+        this.nuts = new ArrayList<Nut>();
 
         log.info("Checking files for heap '{}'", id);
 
         if (paths != null) {
             for (final String path : paths) {
-                final Map<Nut, Long> res = nutDao.create(path);
-                nuts.putAll(res);
+                final List<Nut> res = nutDao.create(path);
+                nuts.addAll(res);
                 nutDao.observe(path, this);
 
-                for (final Nut nut : res.keySet()) {
+                for (final Nut nut : res) {
                     created.add(nut.getName());
                 }
             }
@@ -335,7 +336,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         }
 
         // Check the extension of each path : all of them must share the same nut type
-        checkExtension(nuts.keySet());
+        checkExtension(nuts);
 
         // Also check other heaps and observe them
         for (final NutsHeap heap : getComposition()) {
@@ -350,7 +351,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      *
      * @param toCheck set to check.
      */
-    private void checkExtension(final Set<Nut> toCheck) {
+    private void checkExtension(final Collection<Nut> toCheck) {
         for (final Nut nut : toCheck) {
             nutTypes.add(NutType.getNutTypeForExtension(nut.getName().substring(nut.getName().lastIndexOf('.'))));
         }
@@ -396,28 +397,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      *
      * @return the nuts
      */
-    public Set<Nut> getNuts() {
-        final Set<Nut> retval = new LinkedHashSet<Nut>(nuts.keySet());
+    public List<Nut> getNuts() {
+        final List<Nut> retval = new ArrayList<Nut>(nuts);
 
         for (final NutsHeap c : getComposition()) {
             retval.addAll(c.getNuts());
-        }
-
-        return retval;
-    }
-
-    /**
-     * <p>
-     * Gets all the nuts of this heap associated to their timestamp version.
-     * </p>
-     *
-     * @return the nuts
-     */
-    public Map<Nut, Long> getNutsWithTimestamp() {
-        final Map<Nut, Long> retval = new LinkedHashMap<Nut, Long>(nuts);
-
-        for (final NutsHeap c : getComposition()) {
-            retval.putAll(c.getNutsWithTimestamp());
         }
 
         return retval;
@@ -430,7 +414,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public boolean polling(final Set<String> paths) {
         final Set<String> current = new HashSet<String>();
 
-        for (final Nut nut : nuts.keySet()) {
+        for (final Nut nut : nuts) {
             current.add(nut.getName());
         }
 
@@ -561,7 +545,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
          * </p>
          */
         NutsHeapIterator() {
-            iterator = getNutsWithTimestamp().keySet().iterator();
+            iterator = getNuts().iterator();
         }
 
         /**
@@ -611,9 +595,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     @Override
     public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
-        for (final Map.Entry<Nut, Long> entry : nuts.entrySet()) {
+        for (final Nut nut : nuts) {
             // Nut has changed
-            if (entry.getKey().getName().equals(path) && !entry.getValue().equals(timestamp)) {
+            if (nut.getName().equals(path) && !nut.getVersionNumber().equals(new BigInteger(timestamp.toString()))) {
                 // We don't need to be notified anymore
                 return notifyListeners();
             }

@@ -40,7 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.exception.wrapper.StreamException;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * <p>
@@ -48,7 +48,7 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public interface NutDao {
@@ -100,7 +100,7 @@ public interface NutDao {
         public Boolean canBeRegex() {
             return regex;
         }
-    };
+    }
 
     /**
      * <p>
@@ -124,14 +124,12 @@ public interface NutDao {
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
      * @see NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)
      */
-    Map<Nut, Long> create(String path) throws StreamException;
+    List<Nut> create(String path) throws StreamException;
 
 
     /**
      * <p>
-     * Creates a list of {@link Nut nuts} thanks to the given path. Each nut will be associated to a timestamp value
-     * associated to the last update. If no polling interleave is set in the DAO, no polling should be performed here
-     * and the nut should be associated to the value -1.
+     * Creates a list of {@link Nut nuts} thanks to the given path.
      * </p>
      *
      * <p>
@@ -143,7 +141,7 @@ public interface NutDao {
      * @return the created nut(s)
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
      */
-    Map<Nut, Long> create(String path, PathFormat format) throws StreamException;
+    List<Nut> create(String path, PathFormat format) throws StreamException;
 
     /**
      * <p>

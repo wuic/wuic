@@ -223,7 +223,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public Map<Nut, Long> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws StreamException {
         return AbstractNutDao.this.create(path, PathFormat.ANY);
     }
 
@@ -231,9 +231,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public Map<Nut, Long> create(final String pathName, final PathFormat format) throws StreamException {
+    public List<Nut> create(final String pathName, final PathFormat format) throws StreamException {
         final List<String> pathNames = computeRealPaths(pathName, format);
-        final Map<Nut, Long> retval = new HashMap<Nut, Long>(pathNames.size());
+        final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
         for (final String p : pathNames) {
             final NutType type = getNutType(p);
@@ -245,7 +245,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             final Nut res = accessFor(p, type);
             res.setProxyUri(proxyUriFor(res));
 
-            retval.put(res, getLastUpdateTimestampFor(p));
+            retval.add(res);
         }
 
         return retval;
@@ -349,7 +349,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public Map<Nut, Long> create(final String path) throws StreamException {
+        public List<Nut> create(final String path) throws StreamException {
             return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path));
         }
 
@@ -357,7 +357,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public Map<Nut, Long> create(final String path, final PathFormat format) throws StreamException {
+        public List<Nut> create(final String path, final PathFormat format) throws StreamException {
             return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), format);
         }
 

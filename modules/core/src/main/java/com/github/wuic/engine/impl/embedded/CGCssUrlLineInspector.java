@@ -48,7 +48,7 @@ import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,7 +59,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.3
  */
 public class CGCssUrlLineInspector implements LineInspector {
@@ -173,7 +173,7 @@ public class CGCssUrlLineInspector implements LineInspector {
             replacement.append(referencedPath);
         } else {
             // Extract the nut
-            final Set<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE).keySet();
+            final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
 
             if (!nuts.isEmpty()) {
                 retval = nuts.iterator().next();

@@ -51,8 +51,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -78,7 +78,7 @@ public class StaticEngineTest {
     public void staticExistingWorkflowTest() throws WuicException {
         final StaticEngine engine = new StaticEngine();
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        Mockito.when(heap.getNuts()).thenReturn(new HashSet<Nut>());
+        Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
         List<Nut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, Engine>()));
@@ -105,7 +105,7 @@ public class StaticEngineTest {
     public void staticWorkflowNotFoundTest() throws WuicException {
         final StaticEngine engine = new StaticEngine();
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        Mockito.when(heap.getNuts()).thenReturn(new HashSet<Nut>());
+        Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         try {
             engine.parse(new EngineRequest("foo", "", heap, new HashMap<NutType, Engine>()));
