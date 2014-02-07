@@ -10,7 +10,7 @@ import java.io.InputStream;
 
 /**
  * <p>
- * This {@link com.github.wuic.path.FilePath} represented a path on the path system.
+ * This {@link com.github.wuic.path.FilePath} represents a path on the path system.
  * </p>
  *
  * @author Guillaume DROUET

@@ -40,7 +40,7 @@ package com.github.wuic.engine;
 
 /**
  * <p>
- * A contract to allow WUIC users to specify their own concrete cache to user.
+ * A contract to allow WUIC users to specify their own concrete cache to use.
  * </p>
  * 
  * @author Guillaume DROUET

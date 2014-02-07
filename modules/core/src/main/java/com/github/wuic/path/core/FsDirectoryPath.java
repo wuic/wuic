@@ -51,7 +51,7 @@ import java.io.IOException;
 
 /**
  * <p>
- * This {@link com.github.wuic.path.DirectoryPath} represented a directory on the path system.
+ * This {@link com.github.wuic.path.DirectoryPath} representes a directory on the path system.
  * </p>
  *
  * @author Guillaume DROUET

@@ -47,7 +47,7 @@ import java.util.Map;
 /**
  * <p>
  * Abstract implementation of what is a {@link GenericBuilder}. It is composed of a set of {@link PropertySetter} used
- * to configure it before to call the {@link com.github.wuic.util.GenericBuilder#build()} method/
+ * to configure it before to call the {@link com.github.wuic.util.GenericBuilder#build()} method.
  * </p>
  *
  * @author Guillaume DROUET
