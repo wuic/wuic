@@ -38,7 +38,6 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.xml.WuicXmlException;
 
 /**
@@ -60,7 +59,7 @@ public class WorkflowTemplateNotFoundException extends WuicXmlException {
      * @param id the ID not found
      */
     public WorkflowTemplateNotFoundException(final String id) {
-        super(String.format("Unable to find workflow ID '%s'", id));
+        super(String.format("Unable to find workflow template ID '%s'", id));
     }
 
     /**
