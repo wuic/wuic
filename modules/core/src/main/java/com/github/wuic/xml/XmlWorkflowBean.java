@@ -46,7 +46,7 @@ import javax.xml.bind.annotation.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.3
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -85,6 +85,17 @@ public class XmlWorkflowBean {
      */
     public String getIdPrefix() {
         return idPrefix;
+    }
+
+    /**
+     * <p>
+     * Sets the prefix ID.
+     * </p>
+     *
+     * @param prefix the prefix ID
+     */
+    public void setIdPrefix(final String prefix) {
+        idPrefix = prefix;
     }
 
     /**

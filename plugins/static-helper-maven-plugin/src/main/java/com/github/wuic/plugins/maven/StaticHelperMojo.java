@@ -187,6 +187,7 @@ public class StaticHelperMojo extends AbstractMojo {
         final XmlWorkflowBean workflow = new XmlWorkflowBean();
         workflow.setHeapIdPattern(".*");
         workflow.setWorkflowTemplateId(workflowTemplateId);
+        workflow.setIdPrefix("");
 
         if (bean.getWorkflows() != null) {
             bean.getWorkflows().add(workflow);
