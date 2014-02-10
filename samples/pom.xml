@@ -5,13 +5,13 @@
     <parent>
         <groupId>com.github.wuic</groupId>
         <artifactId>web-ui-compressor</artifactId>
-        <version>0.4.3-SNAPSHOT</version>
+        <version>0.4.3.RC1</version>
     </parent>
 
     <groupId>com.github.wuic.samples</groupId>
     <artifactId>wuic-samples</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.3-SNAPSHOT</version>
+    <version>0.4.3.RC1</version>
 
     <modules>
         <module>js-css-sample</module>
