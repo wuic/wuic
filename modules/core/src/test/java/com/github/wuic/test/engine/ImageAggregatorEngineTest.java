@@ -36,89 +36,88 @@
  */
 
 
-package com.github.wuic.engine.impl.embedded;
+package com.github.wuic.test.engine;
 
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.exception.WuicException;
+import com.github.wuic.Context;
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.engine.Engine;
 
 import java.util.List;
 
-import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * This {@link Engine engine} is an abstraction for aggregation nut aggregation.
+ * This class tests {@link com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.1
+ * @version 1.0
+ * @since 0.4.3
  */
-public abstract class AbstractAggregatorEngine extends Engine {
+@RunWith(JUnit4.class)
+public class ImageAggregatorEngineTest {
 
     /**
-     * Activate aggregation or not.
+     * Tested context.
      */
-    private Boolean doAggregation;
+    private Context ctx;
 
     /**
      * <p>
-     * Builds the engine.
+     * Creates the context.
      * </p>
      *
-     * @param aggregate activate aggregation or not
+     * @throws Exception if context can't be created
      */
-    public AbstractAggregatorEngine(final Boolean aggregate)  {
-        this.doAggregation = aggregate;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final List<Nut> internalParse(final EngineRequest request)
-            throws WuicException {
-        final List<Nut> retval = aggregationParse(request);
-
-        // Compute proxy URIs
-        for (final Nut nut : retval) {
-            nut.setProxyUri(request.getHeap().proxyUriFor(nut));
-        }
-
-        // Call next engine in chain
-        if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
-        } else {
-            return retval;
-        }
+    @Before
+    public void context() throws Exception {
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-sprite.xml")).configure(builder);
+        ctx = builder.build();
     }
 
     /**
      * <p>
-     * Do aggregation parsing.
+     * Tests engine when aggregation is enabled.
      * </p>
      *
-     * @param request the request
-     * @return the aggregated nuts
-     * @throws WuicException if an error occurs
+     * @throws Exception if test fails
      */
-    protected abstract List<Nut> aggregationParse(EngineRequest request) throws WuicException ;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean works() {
-        return doAggregation;
+    @Test
+    public void withoutAggregation() throws Exception {
+        final List<Nut> nuts = ctx.process("", "jsSpriteNotAggregate");
+        Assert.assertEquals(3, nuts.size());
+        assertOneReference(nuts);
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Tests engine when aggregation is disabled.
+     * </p>
+     *
+     * @throws Exception if test fails
      */
-    @Override
-    public final EngineType getEngineType() {
-        return EngineType.AGGREGATOR;
+    @Test
+    public void withAggregation() throws Exception {
+        final List<Nut> nuts = ctx.process("", "cssSpriteAggregate");
+        Assert.assertEquals(1, nuts.size());
+        assertOneReference(nuts);
+
+
+    }
+
+    private void assertOneReference(final List<Nut> nuts) {
+        for (final Nut n : nuts) {
+            Assert.assertNotNull(n.getReferencedNuts());
+            Assert.assertEquals(1, n.getReferencedNuts().size());
+        }
     }
 }

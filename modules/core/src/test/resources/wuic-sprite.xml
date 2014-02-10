@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<wuic>
+
+    <nut-dao-builders>
+        <nut-dao-builder id="dao" type="ClasspathNutDaoBuilder" />
+    </nut-dao-builders>
+
+    <engine-builders>
+        <engine-builder id="jsSpriteNotAggregate" type="ImageAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
+                <property key="c.g.wuic.engine.aggregate">false</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="cssSpriteAggregate" type="ImageAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.spriteProviderClassName">css</property>
+                <property key="c.g.wuic.engine.aggregate">true</property>
+            </properties>
+        </engine-builder>
+    </engine-builders>
+
+    <heaps>
+        <heap id="imageHeap" dao-builder-id="dao">
+            <nut-path>images/reject-block.png</nut-path>
+            <nut-path>images/reject-major.png</nut-path>
+            <nut-path>images/reject-warn.png</nut-path>
+        </heap>
+    </heaps>
+
+    <workflow-templates>
+        <workflow-template use-default-engines="false" id="jsSpriteNotAggregate">
+            <engine-chain>
+                <engine-builder-id>jsSpriteNotAggregate</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+        <workflow-template use-default-engines="false" id="cssSpriteAggregate">
+            <engine-chain>
+                <engine-builder-id>cssSpriteAggregate</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id="jsSpriteNotAggregate" workflow-template-id="jsSpriteNotAggregate" heap-id-pattern="imageHeap" />
+        <workflow id="cssSpriteAggregate" workflow-template-id="cssSpriteAggregate" heap-id-pattern="imageHeap" />
+    </workflows>
+</wuic>

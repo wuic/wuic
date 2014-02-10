@@ -436,10 +436,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      *
      * @return the iterator
      * @see NutsHeapIterator
-     * @see CompositeIterator
      */
     public Iterator<List<Nut>> iterator() {
-        return new CompositeIterator();
+        return new NutsHeapIterator();
     }
 
     /**
@@ -459,63 +458,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         }
 
         return created.contains(refOrigin.getName());
-    }
-
-    /**
-     * <p>
-     * Internal class that allow to iterate on this {@link NutsHeap heap} but also on the {@link NutsHeap heaps} composing it.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.3
-     */
-    private final class CompositeIterator implements Iterator<List<Nut>> {
-
-        /**
-         * The current index of the iterator inside the composition.
-         */
-        private int index;
-
-        /**
-         * The actual iterator.
-         */
-        private Iterator<List<Nut>> delegate;
-
-        /**
-         * Builds a new instance.
-         */
-        CompositeIterator() {
-            delegate = new NutsHeapIterator();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean hasNext() {
-            while (!delegate.hasNext() && index < composition.length) {
-                delegate = composition[index++].iterator();
-            }
-
-            return delegate.hasNext();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Nut> next() {
-            return delegate.next();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 
     /**

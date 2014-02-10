@@ -135,9 +135,7 @@ public class CGImageAggregatorEngine extends AbstractAggregatorEngine {
                         addRegionToSpriteProviders(new Region(0, 0, buff.getWidth() - 1, buff.getHeight() - 1), n.getName());
 
                         // Process referenced nut
-                        applySpriteProviders(url, request.getHeap().getId(), String.valueOf(spriteCpt++), n, request);
-
-                        retval.add(n);
+                        retval.add(applySpriteProviders(url, request.getHeap().getId(), String.valueOf(spriteCpt++), n, request));
                     } catch (IOException ioe) {
                         throw new StreamException(ioe);
                     } finally {
