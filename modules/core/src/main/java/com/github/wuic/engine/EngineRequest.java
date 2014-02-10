@@ -51,9 +51,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
+
 /**
  * <p>
  * This class represents a request to be indicated to an engine.
@@ -104,6 +104,11 @@ public final class EngineRequest {
      * {@link EngineType} that should be skipped during workflow execution.
      */
     private EngineType[] skip;
+
+    /**
+     * The key generated for the request.
+     */
+    private Key key;
 
     /**
      * <p>
@@ -292,15 +297,19 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Creates a new key that identifies this request.
+     * Creates a new key that identifies this request if {@code null} and return it.
      * </p>
      *
-     * @return the new key
+     * @return the key
      * @throws NutNotFoundException if nuts of this request are not correctly built
      * @throws StreamException if I/O error occurs
      */
-    public Key newKey() throws NutNotFoundException, StreamException {
-        return new Key(workflowId, nuts);
+    public Key getKey() throws NutNotFoundException, StreamException {
+        if (key == null) {
+            key = new Key(workflowId, nuts);
+        }
+
+        return key;
     }
 
     /**
@@ -351,9 +360,8 @@ public final class EngineRequest {
         public boolean equals(final Object other) {
             if (other instanceof Key) {
                 final Key request = (Key) other;
-                final Set<String> diff = new HashSet<String>(nuts);
-                diff.retainAll(request.nuts);
-                return workflowId.equals(request.workflowId) && diff.size() == nuts.size();
+                return workflowId.equals(request.workflowId)
+                        && CollectionUtils.difference(new HashSet<String>(nuts), new HashSet<String>(request.nuts)).isEmpty();
             } else {
                 return false;
             }

@@ -6,14 +6,12 @@
             <properties>
                 <property key="c.g.wuic.dao.regex">true</property>
                 <property key="c.g.wuic.dao.basePath">/img</property>
-                <property key="c.g.wuic.dao.pollingInterleave">10</property>
             </properties>
         </nut-dao-builder>
         <nut-dao-builder id="appSourceRootProvider" type="WebappNutDaoBuilder">
             <properties>
                 <property key="c.g.wuic.dao.regex">true</property>
                 <property key="c.g.wuic.dao.basePath">/cgsg</property>
-                <property key="c.g.wuic.dao.pollingInterleave">10</property>
             </properties>
         </nut-dao-builder>
     </nut-dao-builders>

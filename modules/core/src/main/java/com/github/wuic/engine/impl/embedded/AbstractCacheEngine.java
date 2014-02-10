@@ -103,7 +103,7 @@ public abstract class AbstractCacheEngine extends Engine {
         List<Nut> retval = null;
 
         if (works()) {
-            final EngineRequest.Key key = request.newKey();
+            final EngineRequest.Key key = request.getKey();
             final List<Nut> value = getFromCache(key);
 
             // Nuts exist in doCache, returns them
