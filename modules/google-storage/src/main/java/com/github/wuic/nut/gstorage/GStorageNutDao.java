@@ -258,7 +258,14 @@ public class GStorageNutDao extends AbstractNutDao {
      */
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
-        throw new UnsupportedOperationException();
+        log.info("Polling GStorage nut '{}'", path);
+        try {
+            final String response = storage.objects().get(bucketName, path).execute().getMd5Hash();
+            log.info("Last MD5 response : {}", response);
+            return storage.objects().get(bucketName, path).execute().getGeneration();
+        } catch (final IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**
