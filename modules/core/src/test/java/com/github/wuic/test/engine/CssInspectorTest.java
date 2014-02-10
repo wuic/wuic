@@ -95,14 +95,14 @@ public class CssInspectorTest {
              */
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                final Map<Nut, Long> retval = new HashMap<Nut, Long>();
+                final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
                 Mockito.when(nut.getName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
                 Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
                 Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
 
-                retval.put(nut, -1L);
+                retval.add(nut);
                 return retval;
             }
         });

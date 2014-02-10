@@ -52,8 +52,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.mockito.Mockito.when;
-
 /**
  * <p>
  * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
@@ -113,7 +111,7 @@ public class NutsHeapTest {
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut retval = Mockito.mock(Nut.class);
             Mockito.when(retval.getName()).thenReturn(realPath);
-            Mockito.when(retval.getVersionNumber()).thenReturn(new BigInteger("1"));
+            Mockito.when(retval.getVersionNumber()).thenReturn(new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
 
             return retval;
         }

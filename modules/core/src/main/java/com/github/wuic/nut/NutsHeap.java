@@ -422,6 +422,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         boolean retval = CollectionUtils.difference(current, paths).isEmpty();
 
         if (!retval) {
+            log.info("Nut(s) added and/or removed in heap {}", id);
             retval = notifyListeners();
         }
 
