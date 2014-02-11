@@ -496,7 +496,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
          */
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            return iterator.hasNext() || next != null;
         }
 
         /**
@@ -510,12 +510,15 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
             final LinkedList<Nut> retval = new LinkedList<Nut>();
             retval.add(next);
+            next = null;
 
+            // Iterate until the engine type change
             while (iterator.hasNext()) {
                 next = iterator.next();
 
                 if (next.getNutType().equals(retval.getLast().getNutType())) {
                     retval.add(next);
+                    next = null;
                 } else {
                     return retval;
                 }
