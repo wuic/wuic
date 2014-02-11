@@ -53,7 +53,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.1
  */
 public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
@@ -75,7 +75,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
             cssBuilder.append(".");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(IOUtils.mergePath("/", url, image));
+            cssBuilder.append(IOUtils.mergePath("/", url, retval.getVersionNumber().toString(), image));
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
