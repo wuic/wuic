@@ -142,7 +142,7 @@ public abstract class AbstractNut implements Nut {
                           final Boolean c,
                           final Boolean a,
                           final List<Nut> o) {
-        this(name, ft, bc, tc, c, a, new BigInteger("0"));
+        this(name, ft, bc, tc, c, a, BigInteger.ZERO);
         originalNuts = o;
 
         // Computes a hash based on each original hash

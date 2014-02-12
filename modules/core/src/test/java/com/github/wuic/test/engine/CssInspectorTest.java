@@ -125,27 +125,40 @@ public class CssInspectorTest {
         });
         nuts.add(nut);
 
-        final StringBuilder builder = new StringBuilder();
-        builder.append("@import url(\"jquery.ui.core.css\");");
-        builder.append("@import \"jquery.ui.accordion.css\";");
-        builder.append("@import 'jquery.ui.autocomplete.css';");
-        builder.append("@import url('jquery.ui.button.css');");
-        builder.append("@import \"jquery.ui.datepicker.css\";");
-        builder.append("@import 'jquery.ui.dialog.css';");
-        builder.append("@import url(  \"jquery.ui.menu.css\");");
-        builder.append("background: url(\"sprite.png\");");
-        builder.append("background: url(sprite2.png);");
-        builder.append("background: url('sprite3.png');");
-        builder.append("background: #FFF url('sprite4.png');");
-        builder.append("@import /* some comments */ url(\"jquery.ui.spinner.css\");");
+        String[][] collection = new String[][] {
+            new String[] {"@import url(\"%s\")", "jquery.ui.core.css"},
+                new String[] {"@import \"jquery.ui.accordion.css\";", "jquery.ui.core.css"},
+                new String[] {"@import 'jquery.ui.autocomplete.css';", "jquery.ui.core.css"},
+                new String[] {"@import url('jquery.ui.button.css');", "jquery.ui.core.css"},
+                new String[] {"@import \"jquery.ui.datepicker.css\";", "jquery.ui.core.css"},
+                new String[] {"@import 'jquery.ui.dialog.css';", "jquery.ui.core.css"},
+                new String[] {"@import url(  \"jquery.ui.menu.css\");", "jquery.ui.core.css"},
+                new String[] {"background: url(\"sprite.png\");", "jquery.ui.core.css"},
+                new String[] {"background: url(sprite2.png);", "jquery.ui.core.css"},
+                new String[] {"background: url('sprite3.png');", "jquery.ui.core.css"},
+                new String[] {"background: #FFF url('sprite4.png');", "jquery.ui.core.css"},
+                new String[] {"@import /* some comments */ url(\"jquery.ui.spinner.css\");", "jquery.ui.core.css"},
+        };
 
+        final StringBuilder builder = new StringBuilder();
+        final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
         Mockito.when(heap.getNuts()).thenReturn(nuts);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
-        final EngineRequest request = new EngineRequest("wid", "cp", new NutsHeap(null, dao, "heap", heap), new HashMap<NutType, Engine>());
+        int create = 0;
+
+        for (final String[] c : collection) {
+            final String rule = c[0];
+            final String path = c[1];
+            h.create(Mockito.mock(Nut.class), path, NutDao.PathFormat.ANY);
+            builder.append(String.format(rule, path));
+            create++;
+        }
+
+        final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, Engine>());
         engine.parse(request);
-        Assert.assertEquals(createCount.get(), 12);
+        Assert.assertEquals(createCount.get(), create);
     }
 
     /**

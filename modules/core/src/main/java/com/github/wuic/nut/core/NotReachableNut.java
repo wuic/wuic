@@ -73,7 +73,7 @@ public class NotReachableNut extends AbstractNut {
      */
     public NotReachableNut(final String name, final NutType nutType, final String heapId) {
         // TODO : provide timestamp
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, new BigInteger("0"));
+        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, BigInteger.ZERO);
         heap = heapId;
     }
 

@@ -134,12 +134,14 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nuts = other.nuts;
         this.nutTypes = other.nutTypes;
         this.paths = other.paths;
-        this.created = other.created;
+        this.created = other.created != null ? other.created : new HashSet<String>();
 
-        this.composition = new NutsHeap[other.composition.length];
+        if (other.composition != null) {
+            this.composition = new NutsHeap[other.composition.length];
 
-        for (int i = 0; i < this.composition.length; i++) {
-            composition[i] = new NutsHeap(other.composition[i]);
+            for (int i = 0; i < this.composition.length; i++) {
+                composition[i] = new NutsHeap(other.composition[i]);
+            }
         }
     }
 
