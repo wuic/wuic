@@ -3,13 +3,13 @@
     <parent>
         <groupId>com.github.wuic</groupId>
         <artifactId>web-ui-compressor</artifactId>
-        <version>0.4.3.RC2</version>
+        <version>0.4.3.RC3</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-modules</artifactId>
-    <version>0.4.3.RC2</version>
+    <version>0.4.3.RC3</version>
     <packaging>pom</packaging>
     <name>wuic-modules</name>
     <url>http://gdrouet.github.io/wuic/</url>
