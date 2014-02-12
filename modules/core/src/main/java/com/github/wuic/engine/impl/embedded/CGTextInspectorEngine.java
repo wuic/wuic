@@ -163,7 +163,7 @@ public abstract class CGTextInspectorEngine extends Engine {
             while ((line = br.readLine()) != null) {
                 for (LineInspector inspector : lineInspectors) {
                     final NutsHeap heap = new NutsHeap(request.getHeap());
-                    heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut));
+                    heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut), nut);
                     line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
                 }
 

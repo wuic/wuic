@@ -130,12 +130,17 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public NutsHeap(final NutsHeap other) {
         this.id = other.id;
         this.listeners = other.listeners;
-        this.composition = other.composition;
         this.nutDao = other.nutDao;
         this.nuts = other.nuts;
         this.nutTypes = other.nutTypes;
         this.paths = other.paths;
         this.created = other.created;
+
+        this.composition = new NutsHeap[other.composition.length];
+
+        for (int i = 0; i < this.composition.length; i++) {
+            composition[i] = new NutsHeap(other.composition[i]);
+        }
     }
 
     /**
@@ -178,7 +183,20 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @return the nut's DAO, {@code null} if not found
      */
     public NutDao findDaoFor(final Nut nut) {
-        final NutDao retval = recursiveFindDaoFor(nut);
+        final NutsHeap retval = findHeapFor(nut);
+        return retval == null ? null : retval.getNutDao();
+    }
+
+    /**
+     * <p>
+     * Finds the {@link NutsHeap} that created this nut.
+     * </p>
+     *
+     * @param nut the nut
+     * @return the nut's HEAP, {@code null} if not found
+     */
+    public NutsHeap findHeapFor(final Nut nut) {
+        final NutsHeap retval = recursiveFindHeapFor(nut);
 
         if (retval == null) {
             log.warn("Did not found any NutDao for nut {} inside heap {}", nut, this);
@@ -189,21 +207,21 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Finds the {@link NutDao} that created this nut recursively through the composition.
+     * Finds the {@link NutsHeap} that created this nut recursively through the composition.
      * </p>
      *
      * @param nut the nut
      * @return the nut's DAO, {@code null} if not found
      */
-    private NutDao recursiveFindDaoFor(final Nut nut) {
+    private NutsHeap recursiveFindHeapFor(final Nut nut) {
         // Heap has its own DAO, check inside first
         if (hasCreated(nut)) {
-            return getNutDao();
+            return this;
         }
 
         // Search inside composition recursively
         for (final NutsHeap heap : getComposition()) {
-            final NutDao retval = heap.recursiveFindDaoFor(nut);
+            final NutsHeap retval = heap.recursiveFindHeapFor(nut);
 
             if (retval != null) {
                 return retval;
@@ -381,13 +399,18 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Sets the {@link NutDao}.
+     * Sets the {@link NutDao} for the heap that created the specified {@link NutDao}.
      * </p>
      *
      * @param dao the DAO
+     * @param nut the created nut
      */
-    public void setNutDao(final NutDao dao) {
-        nutDao = dao;
+    public void setNutDao(final NutDao dao, final Nut nut) {
+        final NutsHeap heap = findHeapFor(nut);
+
+        if (heap != null) {
+            heap.nutDao = dao;
+        }
     }
 
     /**

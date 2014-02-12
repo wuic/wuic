@@ -15,8 +15,12 @@
     </nut-dao-builders>
 
     <heaps>
+        <heap id="compo" dao-builder-id="innerConf">
+            <nut-path>css/file.css</nut-path>
+        </heap>
         <heap id="inner" dao-builder-id="innerConf">
             <nut-path>deep/deep.css</nut-path>
+            <heap-id>compo</heap-id>
         </heap>
         <heap id="outer" dao-builder-id="outerConf">
             <nut-path>deep.css</nut-path>

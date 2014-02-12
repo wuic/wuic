@@ -161,7 +161,7 @@ public class CssInspectorTest {
         // ../ refers a file inside base directory hierarchy
         List<Nut> group = ctx.process("", "css-inner");
         Assert.assertEquals(1, group.size());
-        Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
+        Assert.assertEquals(3, group.get(0).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
         group = ctx.process("", "css-outer");
