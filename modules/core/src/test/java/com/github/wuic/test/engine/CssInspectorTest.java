@@ -162,7 +162,9 @@ public class CssInspectorTest {
     }
 
     /**
-     * Test when file is referenced with '../'
+     * Test when file is referenced with '../'.
+     *
+     * @throws Exception if test fails
      */
     @Test
     public void parentRefTest() throws Exception {
@@ -180,5 +182,21 @@ public class CssInspectorTest {
         group = ctx.process("", "css-outer");
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
+    }
+
+    /**
+     * <p>
+     * Tests a workflow built on top of a composition.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void compositionByWorkflowTest() throws Exception {
+        final ContextBuilder builder = new ContextBuilder();
+        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
+        final Context ctx = builder.build();
+        ctx.process("", "composite");
     }
 }

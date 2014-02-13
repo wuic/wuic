@@ -287,15 +287,15 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @throws StreamException if any I/O error occurs
      */
     public List<Nut> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws StreamException {
-        final NutDao dao = findDaoFor(nut);
+        final NutsHeap heap = findHeapFor(nut);
         final List<Nut> retval;
 
-        if (dao != null) {
-            retval = dao.create(path, pathFormat);
-            nutDao.observe(path, this);
+        if (heap != null && heap.getNutDao() != null) {
+            retval = heap.getNutDao().create(path, pathFormat);
+            heap.getNutDao().observe(path, this);
 
             for (final Nut n : retval) {
-                created.add(n.getName());
+                heap.created.add(n.getName());
             }
         } else {
             retval = Collections.emptyList();

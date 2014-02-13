@@ -35,5 +35,6 @@
 
     <workflows>
         <workflow id-prefix="css-" workflow-template-id="tpl" heap-id-pattern=".*" />
+        <workflow id="composite" workflow-template-id="tpl" heap-id-pattern=".*" />
     </workflows>
 </wuic>
