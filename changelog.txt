@@ -111,6 +111,7 @@ its includes all names and all timestamps of request nuts
 - A heap could now refer nuts of any type to simplify configurations
 - JS/CSS sample now fixed with possibility to omit version in URL
 - Image sprite generation was broken when aggregation is disabled
+- Many issues fixed around compositions
 
 Breaking changes:
 - In JSP tag, 'workflowIds' attribute has been renamed to 'workflowId'

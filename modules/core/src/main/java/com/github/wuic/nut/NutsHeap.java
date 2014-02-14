@@ -295,7 +295,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             heap.getNutDao().observe(path, this);
 
             for (final Nut n : retval) {
-                heap.created.add(n.getName());
+                heap.getCreated().add(n.getName());
             }
         } else {
             retval = Collections.emptyList();
@@ -316,6 +316,17 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         synchronized (listeners) {
             this.listeners.add(listener);
         }
+    }
+
+    /**
+     * <p>
+     * Returns all the paths used to create a nut through this heap (and not through its composition).
+     * </p>
+     *
+     * @return the created paths
+     */
+    public Set<String> getCreated() {
+        return created;
     }
 
     /**
@@ -341,7 +352,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                 nutDao.observe(path, this);
 
                 for (final Nut nut : res) {
-                    created.add(nut.getName());
+                    getCreated().add(nut.getName());
                 }
             }
         }
@@ -482,7 +493,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             refOrigin = refOrigin.getOriginalNuts().get(0);
         }
 
-        return created.contains(refOrigin.getName());
+        return getCreated().contains(refOrigin.getName());
     }
 
     /**

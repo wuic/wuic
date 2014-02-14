@@ -146,6 +146,7 @@ public class CssInspectorTest {
         Mockito.when(heap.getNuts()).thenReturn(nuts);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
+        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
         int create = 0;
 
         for (final String[] c : collection) {
