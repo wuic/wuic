@@ -50,7 +50,6 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.util.IOUtils;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -149,24 +148,19 @@ public abstract class CGTextInspectorEngine extends Engine {
         final String name = nut.getName();
         final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
 
-        BufferedReader br = null;
-        String line;
+        InputStreamReader isr = null;
 
         try {
-            // Read the nut line per line
-            br = new BufferedReader(new InputStreamReader(nut.openStream(), charset));
-
-            // Reads each line and keep the transformations in memory
+            // Reads as a line and keep the transformations in memory
+            isr = new InputStreamReader(nut.openStream(), charset);
+            String line = IOUtils.readString(isr);
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             final List<Nut> referencedNuts = new ArrayList<Nut>();
 
-            while ((line = br.readLine()) != null) {
-                for (LineInspector inspector : lineInspectors) {
-                    final NutsHeap heap = new NutsHeap(request.getHeap());
-                    heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut), nut);
-                    line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
-                }
-
+            for (final LineInspector inspector : lineInspectors) {
+                final NutsHeap heap = new NutsHeap(request.getHeap());
+                heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut), nut);
+                line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
                 os.write((line + "\n").getBytes());
             }
 
@@ -186,7 +180,7 @@ public abstract class CGTextInspectorEngine extends Engine {
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         } finally {
-            IOUtils.close(br);
+            IOUtils.close(isr);
         }
     }
 

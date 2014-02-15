@@ -55,9 +55,24 @@ public final class NumberUtils {
     public static final int TWO = 2;
 
     /**
+     * Three. Use this constant to evict checkstyle issue.
+     */
+    public static final int THREE = 3;
+
+    /**
+     * Four. Use this constant to evict checkstyle issue.
+     */
+    public static final int FOUR = 4;
+
+    /**
      * Six. Use this constant to evict checkstyle issue.
      */
     public static final int SIX = 6;
+
+    /**
+     * Height. Use this constant to evict checkstyle issue.
+     */
+    public static final int HEIGHT = 8;
 
     /**
      * One thousand. Use this constant to evict checkstyle issue.
