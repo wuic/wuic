@@ -86,7 +86,7 @@ public class CGCssUrlLineInspector implements LineInspector {
      * OR
      *
      * <ul>
-     * <li>stating with @import</li>
+     * <li>starting with @import</li>
      * <li>followed by a set of characters with the term 'url' inside them</li>
      * <li>followed by a '('</li>
      * <li>followed by a set of characters</li>
@@ -102,15 +102,16 @@ public class CGCssUrlLineInspector implements LineInspector {
      * </ul>
      */
     private static final Pattern CSS_URL_PATTERN = Pattern.compile(
-            String.format("(?:@import.*?(%s|%s))|(?:background.*?(%s))", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX));
+            String.format("(/\\*(?:.|[\\n\\r])*?\\*/)|((?:@import.*?(%s|%s))|(?:background.*?(%s)))", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX));
 
     /**
      * Three groups could contain the name, test the second one if first returns null.
      */
-    private static final int [] GROUP_INDEXES = new int[] {
-            NumberUtils.SIX, // background case
-            NumberUtils.TWO, // import with url case
-            1,               // import without url case
+    private static final int[] GROUP_INDEXES = new int[] {
+        8, // background case
+        4, // import with url case
+        3, // import without url case
+        1  // comment case
     };
 
     /**
@@ -140,15 +141,25 @@ public class CGCssUrlLineInspector implements LineInspector {
         int groupIndex;
         String rawPath;
         Nut retval = null;
+        String group = matcher.group();
+
+        // in comment, ignoring
+        if (matcher.group(1) != null)  {
+            replacement.append(group);
+            return null;
+        }
 
         do {
             groupIndex = GROUP_INDEXES[i++];
             rawPath = matcher.group(groupIndex);
         } while (rawPath == null && i < GROUP_INDEXES.length);
 
+        if (group.isEmpty()) {
+            group = matcher.group(NumberUtils.TWO);
+        }
+
         // Compute once operations performed multiple times
         final int start = matcher.start(groupIndex) - matcher.start();
-        final String group = matcher.group();
         String referencedPath = rawPath;
 
         // Quotes must be removed

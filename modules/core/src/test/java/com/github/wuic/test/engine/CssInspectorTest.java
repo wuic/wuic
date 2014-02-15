@@ -109,6 +109,7 @@ public class CssInspectorTest {
         Mockito.when(heap.getId()).thenReturn("heap");
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
+        final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
         final List<Nut> nuts = new ArrayList<Nut>();
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
@@ -120,42 +121,48 @@ public class CssInspectorTest {
              */
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return createCount.get() + ".css";
+                final String retval = createCount.get() + ".css";
+                h.getCreated().add(retval);
+                return retval;
+
             }
         });
         nuts.add(nut);
 
         String[][] collection = new String[][] {
             new String[] {"@import url(\"%s\")", "jquery.ui.core.css"},
-                new String[] {"@import \"jquery.ui.accordion.css\";", "jquery.ui.core.css"},
-                new String[] {"@import 'jquery.ui.autocomplete.css';", "jquery.ui.core.css"},
-                new String[] {"@import url('jquery.ui.button.css');", "jquery.ui.core.css"},
-                new String[] {"@import \"jquery.ui.datepicker.css\";", "jquery.ui.core.css"},
-                new String[] {"@import 'jquery.ui.dialog.css';", "jquery.ui.core.css"},
-                new String[] {"@import url(  \"jquery.ui.menu.css\");", "jquery.ui.core.css"},
-                new String[] {"background: url(\"sprite.png\");", "jquery.ui.core.css"},
-                new String[] {"background: url(sprite2.png);", "jquery.ui.core.css"},
-                new String[] {"background: url('sprite3.png');", "jquery.ui.core.css"},
-                new String[] {"background: #FFF url('sprite4.png');", "jquery.ui.core.css"},
-                new String[] {"@import /* some comments */ url(\"jquery.ui.spinner.css\");", "jquery.ui.core.css"},
+                new String[] {"@import \"%s\";", "jquery.ui.accordion.css"},
+                new String[] {"@import '%s';", "jquery.ui.autocomplete.css"},
+                new String[] {"@import url('%s');", "jquery.ui.button.css"},
+                new String[] {"@import \"%s\";", "jquery.ui.datepicker.css"},
+                new String[] {"@import '%s';", "jquery.ui.dialog.css"},
+                new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
+                new String[] {"background: url(\"%s\");", "sprite.png"},
+                new String[] {"background: url(%s);", "sprite2.png"},
+                new String[] {"background: url('%s');", "sprite3.png"},
+                new String[] {"background: #FFF url('%s');", "sprite4.png"},
+                new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
         };
 
         final StringBuilder builder = new StringBuilder();
-        final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
-        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
-        Mockito.when(heap.getNuts()).thenReturn(nuts);
-        Mockito.when(heap.getNutDao()).thenReturn(dao);
-        Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
-        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
         int create = 0;
 
         for (final String[] c : collection) {
             final String rule = c[0];
             final String path = c[1];
-            h.create(Mockito.mock(Nut.class), path, NutDao.PathFormat.ANY);
             builder.append(String.format(rule, path));
             create++;
         }
+
+        // ignore comments
+        builder.append("/*background: url('sprite5.png');*/");
+        builder.append("/*background:\n url('sprite6.png');*/");
+
+        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
+        Mockito.when(heap.getNuts()).thenReturn(nuts);
+        Mockito.when(heap.getNutDao()).thenReturn(dao);
+        Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
+        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
 
         final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, Engine>());
         engine.parse(request);
