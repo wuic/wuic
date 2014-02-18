@@ -341,6 +341,25 @@ public class ContextBuilder extends Observable {
         }
     }
 
+    /*
+
+    TODO: #84
+
+    public class ContextNutDaoBuilder {
+
+        public ContextNutDaoBuilder(final String id, final String type) {
+
+        }
+
+        public ContextNutDaoBuilder property(final String key, final Object value) {
+            return this;
+        }
+
+        public ContextBuilder toContext() {
+            return ContextBuilder.this;
+        }
+    }*/
+
     /**
      * <p>
      * Add a new {@link com.github.wuic.nut.NutDaoBuilder} identified by the specified ID.
