@@ -41,7 +41,6 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -70,11 +69,6 @@ import java.util.regex.Matcher;
  * @since 0.3.3
  */
 public abstract class CGTextInspectorEngine extends Engine {
-
-    /**
-     * Engines types that will be skipped when processing referenced nuts.
-     */
-    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.AGGREGATOR, EngineType.CACHE, EngineType.INSPECTOR };
 
     /**
      * The inspectors of each line
@@ -218,22 +212,11 @@ public abstract class CGTextInspectorEngine extends Engine {
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final String absolutePath = IOUtils.mergePath(request.getContextPath(), request.getHeap().getId(),
-                    original.getVersionNumber().toString());
-            final Nut nut = inspector.appendTransformation(matcher, replacement, absolutePath, nutsHeap, original);
+            final List<Nut> res = inspector.appendTransformation(matcher, replacement, request, nutsHeap, original);
             matcher.appendReplacement(retval, replacement.toString());
 
-            // If nut name is null, it means that nothing has been changed by the inspector
-            if (nut != null) {
-                List<Nut> res = Arrays.asList(nut);
-
-                // Process nut
-                final Engine engine = request.getChainFor(nut.getNutType());
-                if (engine != null) {
-                    res = engine.parse(new EngineRequest(res, nutsHeap, request, SKIPPED_ENGINE));
-                }
-
-                // Add the nut and inspect it recursively if it's a CSS path
+            // Add the nut and inspect it recursively if it's a CSS path
+            if (res != null) {
                 for (final Nut r : res) {
                     Nut inspected = r;
 

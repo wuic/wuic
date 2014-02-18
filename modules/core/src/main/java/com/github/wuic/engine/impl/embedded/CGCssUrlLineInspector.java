@@ -38,8 +38,11 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
@@ -48,6 +51,7 @@ import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,6 +67,11 @@ import java.util.regex.Pattern;
  * @since 0.3.3
  */
 public class CGCssUrlLineInspector implements LineInspector {
+
+    /**
+     * Engines types that will be skipped when processing referenced nuts.
+     */
+    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.AGGREGATOR, EngineType.CACHE, EngineType.INSPECTOR };
 
     /**
      * Possible value for CSS file name.
@@ -131,16 +140,15 @@ public class CGCssUrlLineInspector implements LineInspector {
      * {@inheritDoc}
      */
     @Override
-    public Nut appendTransformation(final Matcher matcher,
-                                    final StringBuilder replacement,
-                                    final String heapPath,
-                                    final NutsHeap heap,
-                                    final Nut originalNut) throws StreamException {
+    public List<Nut> appendTransformation(final Matcher matcher,
+                                          final StringBuilder replacement,
+                                          final EngineRequest request,
+                                          final NutsHeap heap,
+                                          final Nut originalNut) throws WuicException {
         // Search the right group
         int i = 0;
         int groupIndex;
         String rawPath;
-        Nut retval = null;
         String group = matcher.group();
 
         // in comment, ignoring
@@ -178,6 +186,8 @@ public class CGCssUrlLineInspector implements LineInspector {
         // Write path to nut
         replacement.append("\"");
 
+        List<Nut> res = null;
+
         // Don't change nut if absolute
         if (isAbsolute) {
             log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut DAO.", referencedPath);
@@ -187,13 +197,27 @@ public class CGCssUrlLineInspector implements LineInspector {
             final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
 
             if (!nuts.isEmpty()) {
-                retval = nuts.iterator().next();
+                final Nut nut = nuts.iterator().next();
+
+                // If nut name is null, it means that nothing has been changed by the inspector
+                res = Arrays.asList(nut);
+
+                // Process nut
+                final Engine engine = request.getChainFor(nut.getNutType());
+                if (engine != null) {
+                    res = engine.parse(new EngineRequest(res, heap, request, SKIPPED_ENGINE));
+                }
 
                 // Use proxy URI if DAO provide it
-                final String proxy = retval.getProxyUri();
+                final String proxy = nut.getProxyUri();
 
                 if (proxy == null) {
-                    replacement.append(IOUtils.mergePath("/", heapPath, retval.getName().replace("../", "a/../")));
+                    replacement.append(IOUtils.mergePath(
+                            "/",
+                            request.getContextPath(),
+                            request.getWorkflowId(),
+                            originalNut.getVersionNumber().toString(),
+                            (res.isEmpty() ? nut : res.get(0)).getName().replace("../", "a/../")));
                 } else {
                     replacement.append(proxy);
                 }
@@ -207,6 +231,6 @@ public class CGCssUrlLineInspector implements LineInspector {
         replacement.append(group.substring(start + matcher.group(groupIndex).length()));
 
         // Return null means we don't change the original nut
-        return retval;
+        return res;
     }
 }

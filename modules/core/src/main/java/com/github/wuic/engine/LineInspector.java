@@ -38,10 +38,12 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,15 +76,15 @@ public interface LineInspector {
      *
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
-     * @param groupPath the absolute path to the group
+     * @param request the request that orders this transformation
      * @param heap use when we need to create nut
      * @param originalNut the original nut
      * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
-     * @throws StreamException if an I/O error occurs
+     * @throws WuicException if an exception occurs
      */
-    Nut appendTransformation(Matcher matcher,
-                             StringBuilder replacement,
-                             String groupPath,
-                             NutsHeap heap,
-                             Nut originalNut) throws StreamException;
+    List<Nut> appendTransformation(Matcher matcher,
+                                   StringBuilder replacement,
+                                   EngineRequest request,
+                                   NutsHeap heap,
+                                   Nut originalNut) throws WuicException;
 }

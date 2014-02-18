@@ -117,3 +117,10 @@ Breaking changes:
 - In JSP tag, 'workflowIds' attribute has been renamed to 'workflowId'
 - Multiple workflow are not imported with '|' separator anymore
 - XML statements for workflow creation have been refactored: create a template and use this templates to create a workflow
+
+##### v0.4.4 #####
+
+Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.4&page=1&state=open
+
+Breaking changes:
+- Any script with name that contains '.min' extension won't be compress

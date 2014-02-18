@@ -150,7 +150,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * @throws WuicException if an I/O error occurs
      */
     private Nut compress(final Nut nut) throws WuicException {
-        if (!nut.isTextCompressible()) {
+        if (!nut.isTextCompressible() || nut.getName().indexOf(renameExtensionPrefix) != -1) {
             return nut;
         }
 
