@@ -84,14 +84,17 @@ public class WebappNutDao extends PathNutDao {
      * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+
      */
     public WebappNutDao(final ServletContext ctx,
                         final String base,
                         final String[] proxies,
                         final int pollingSeconds,
-                        final Boolean regex) {
+                        final Boolean regex,
+                        final Boolean contentBasedVersionNumber) {
         // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
-        super(base, false, proxies, pollingSeconds, regex);
+        super(base, false, proxies, pollingSeconds, regex, contentBasedVersionNumber);
         context = ctx;
     }
 

@@ -72,7 +72,8 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
                 new LoginPropertySetter(this, null),
                 new PasswordPropertySetter(this, ""),
                 new BucketPropertySetter(this, ""),
-                new RegexPropertySetter(this));
+                new RegexPropertySetter(this),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -88,6 +89,7 @@ public class S3NutDaoBuilder extends AbstractNutDaoBuilder {
                 (String) property(ApplicationConfig.CLOUD_BUCKET),
                 (String) property(ApplicationConfig.LOGIN),
                 (String) property(ApplicationConfig.PASSWORD),
-                (Boolean) property(ApplicationConfig.REGEX));
+                (Boolean) property(ApplicationConfig.REGEX),
+                (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

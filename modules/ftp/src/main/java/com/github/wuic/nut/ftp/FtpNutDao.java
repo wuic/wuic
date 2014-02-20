@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -129,6 +129,8 @@ public class FtpNutDao extends AbstractNutDao {
      * @param proxies proxy URIs serving the nut
      * @param pollingSeconds interleave in seconds for polling feature (-1 to disable)
      * @param regex consider path as regex or not
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+
      */
     public FtpNutDao(final Boolean ftps,
                      final String host,
@@ -139,8 +141,9 @@ public class FtpNutDao extends AbstractNutDao {
                      final String pwd,
                      final String[] proxies,
                      final int pollingSeconds,
-                     final Boolean regex) {
-        super(path, basePathAsSysProp, proxies, pollingSeconds);
+                     final Boolean regex,
+                     final Boolean contentBasedVersionNumber) {
+        super(path, basePathAsSysProp, proxies, pollingSeconds, contentBasedVersionNumber);
         ftpClient = ftps ? new FTPSClient(Boolean.TRUE) : new FTPClient();
         hostName = host;
         userName = user;
@@ -244,7 +247,7 @@ public class FtpNutDao extends AbstractNutDao {
             }
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, getVersionNumber(realPath));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -312,6 +315,24 @@ public class FtpNutDao extends AbstractNutDao {
     public Boolean saveSupported() {
         // TODO : return true once save() is implemented
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path) throws StreamException {
+        try {
+            // Connect if necessary
+            connect();
+
+            ftpClient.changeWorkingDirectory(getBasePath());
+
+            // Download path
+            return ftpClient.retrieveFileStream(path);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 
     /**

@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.exception.wrapper.StreamException;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -193,4 +194,15 @@ public interface NutDao {
      * @return the enclosed instance
      */
     NutDao withRootPath(String rootPath);
+
+    /**
+     * <p>
+     * Opens the stream for the given path.
+     * </p>
+     *
+     * @param path the path to access
+     * @return the stream
+     * @throws StreamException if stream could not be opened
+     */
+    InputStream newInputStream(String path) throws StreamException;
 }

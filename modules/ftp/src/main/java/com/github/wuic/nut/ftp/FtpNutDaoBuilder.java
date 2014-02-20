@@ -75,7 +75,8 @@ public class FtpNutDaoBuilder extends AbstractNutDaoBuilder {
                 new RegexPropertySetter(this),
                 new LoginPropertySetter(this),
                 new PasswordPropertySetter(this),
-                new SecretProtocolPropertySetter(this));
+                new SecretProtocolPropertySetter(this),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -93,6 +94,7 @@ public class FtpNutDaoBuilder extends AbstractNutDaoBuilder {
                 (String) property(ApplicationConfig.PASSWORD),
                 (String[]) property(ApplicationConfig.PROXY_URIS),
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
-                (Boolean) property(ApplicationConfig.REGEX));
+                (Boolean) property(ApplicationConfig.REGEX),
+                (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

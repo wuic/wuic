@@ -36,62 +36,51 @@
  */
 
 
-package com.github.wuic.nut.core;
+package com.github.wuic.nut.setter;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.util.IOUtils;
-import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.Path;
-
-import java.io.IOException;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.nut.AbstractNutDaoBuilder;
+import com.github.wuic.util.PropertySetter;
 
 /**
  * <p>
- * A {@link com.github.wuic.nut.NutDao} implementation for disk accesses.
- * </p>
- *
- * <p>
- * The DAO is based on the {@link DirectoryPath} from the path API designed for WUIC.
+ * Setter for the {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.1
+ * @version 1.0
+ * @since 0.4.4
  */
-public class DiskNutDao extends PathNutDao {
+public class ContentBasedVersionNumberPropertySetter extends PropertySetter.PropertySetterOfBoolean {
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Creates a new instance with a specific default value.
      * </p>
      *
-     * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
-     * @param proxies the proxies URIs in front of the nut
-     * @param regex if the path should be considered as a regex or not
-     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
+     * @param defaultValue the default value
      */
-    public DiskNutDao(final String base,
-                      final Boolean basePathAsSysProp,
-                      final String[] proxies,
-                      final int pollingSeconds,
-                      final Boolean regex,
-                      final Boolean contentBasedVersionNumber) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber);
+    public ContentBasedVersionNumberPropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
+        super(b, defaultValue);
+    }
+
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
+     */
+    public ContentBasedVersionNumberPropertySetter(final AbstractNutDaoBuilder b) {
+        this(b, false);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
-
-        if (file instanceof DirectoryPath) {
-            return DirectoryPath.class.cast(file);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
-        }
+    public String getPropertyKey() {
+        return ApplicationConfig.CONTENT_BASED_VERSION_NUMBER;
     }
 }

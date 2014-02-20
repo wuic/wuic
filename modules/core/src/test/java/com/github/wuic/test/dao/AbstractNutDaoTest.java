@@ -48,13 +48,14 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -102,7 +103,19 @@ public class AbstractNutDaoTest {
          * @param pollingSeconds polling interleave
          */
         private MockNutDaoTest(final int pollingSeconds) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds);
+            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, false);
+            age = System.currentTimeMillis();
+        }
+
+        /**
+         * <p>
+         * Creates a new instance.
+         * </p>
+         *
+         * @param contentBasedVersionNumber use version number computed from content
+         */
+        private MockNutDaoTest(final Boolean contentBasedVersionNumber) {
+            super("/", false, new String[] { "1", "2", "3", "4", }, -1, contentBasedVersionNumber);
             age = System.currentTimeMillis();
         }
 
@@ -139,6 +152,42 @@ public class AbstractNutDaoTest {
 
             return age;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public InputStream newInputStream(final String path) throws StreamException {
+            final AtomicInteger bits = new AtomicInteger(4000);
+
+            return new InputStream() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public int read() throws IOException {
+                    return bits.decrementAndGet();
+                }
+            };
+        }
+    }
+
+    /**
+     * Test version number computation.
+     *
+     * @throws Exception e
+     */
+    @Test
+    public void versionNumberTest() throws Exception  {
+        final NutDao first = new MockNutDaoTest(true);
+        final NutDao second = new MockNutDaoTest(true);
+        final NutDao third = new MockNutDaoTest(false);
+        final NutDao fourth = new MockNutDaoTest(false);
+
+        Assert.assertEquals(first.create("").get(0).getVersionNumber(), second.create("").get(0).getVersionNumber());
+        Assert.assertNotSame(second.create("").get(0).getVersionNumber(), third.create("").get(0).getVersionNumber());
+        Assert.assertEquals(third.create("").get(0).getVersionNumber(), fourth.create("").get(0).getVersionNumber());
     }
 
     /**

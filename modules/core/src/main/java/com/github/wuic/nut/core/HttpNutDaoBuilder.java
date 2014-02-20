@@ -42,12 +42,8 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.nut.NutDao;
 
-import com.github.wuic.nut.setter.BasePathPropertySetter;
-import com.github.wuic.nut.setter.BasePathAsSysPropPropertySetter;
+import com.github.wuic.nut.setter.*;
 import com.github.wuic.nut.AbstractNutDaoBuilder;
-import com.github.wuic.nut.setter.ServerDomainPropertySetter;
-import com.github.wuic.nut.setter.SecretProtocolPropertySetter;
-import com.github.wuic.nut.setter.ServerPortPropertySetter;
 
 /**
  * <p>
@@ -71,7 +67,9 @@ public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {
                 new BasePathAsSysPropPropertySetter(this),
                 new ServerDomainPropertySetter(this),
                 new ServerPortPropertySetter(this),
-                new SecretProtocolPropertySetter(this));
+                new SecretProtocolPropertySetter(this),
+                new PollingInterleavePropertySetter(this),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -83,6 +81,8 @@ public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {
                 (String) property(ApplicationConfig.SERVER_DOMAIN),
                 (Integer) property(ApplicationConfig.SERVER_PORT),
                 (String) property(ApplicationConfig.BASE_PATH),
-                (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP));
+                (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
+                (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
+                (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

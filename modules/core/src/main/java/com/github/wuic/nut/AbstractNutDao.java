@@ -49,6 +49,11 @@ import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -89,6 +94,11 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     private final AtomicInteger nextProxyIndex;
 
     /**
+     * Computes the version number from content or on timestamp.
+     */
+    private Boolean contentBasedVersionNumber;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -97,11 +107,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interleave in seconds for polling feature (-1 to disable)
+     * @param contentBasedHash  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public AbstractNutDao(final String base,
                           final Boolean basePathAsSysProp,
                           final String[] proxies,
-                          final int pollingSeconds) {
+                          final int pollingSeconds,
+                          final Boolean contentBasedHash) {
         if (base == null) {
             throw new BadArgumentException(new IllegalArgumentException("Base path can't be null"));
         }
@@ -109,6 +121,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         basePath = IOUtils.mergePath("/", basePathAsSysProp ? System.getProperty(base) : base);
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
+        contentBasedVersionNumber = contentBasedHash;
         setPollingInterleave(pollingSeconds);
     }
 
@@ -185,6 +198,49 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
         log.info("Polling operation for {} run in {} seconds", getClass().getName(),
                 (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+    }
+
+    /**
+     * <p>
+     * Gets the version number for the {@link Nut} the given path.
+     * </p>
+     *
+     * <p>
+     * If the {@link AbstractNutDao#contentBasedVersionNumber} value related to
+     * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
+     * to compute the hash value. Howeber, it uses the last modification timestamp.
+     * </p>
+     *
+     * @param path the nut's path
+     * @return the version number
+     * @throws StreamException if version number could not be computed
+     */
+    protected BigInteger getVersionNumber(final String path) throws StreamException {
+        if (contentBasedVersionNumber) {
+            InputStream is = null;
+
+            try {
+                is = newInputStream(path);
+                final MessageDigest md = MessageDigest.getInstance("MD5");
+                final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
+                int offset;
+
+                while ((offset = is.read(buffer)) != -1) {
+                    md.update(buffer, 0, offset);
+                }
+
+                return new BigInteger(md.digest());
+            } catch (NoSuchAlgorithmException nsae) {
+                // should never occurs
+                throw new IllegalStateException(nsae);
+            } catch (IOException ioe) {
+                throw new StreamException(ioe);
+            } finally {
+                IOUtils.close(is);
+            }
+        } else {
+            return new BigInteger(getLastUpdateTimestampFor(path).toString());
+        }
     }
 
     /**
@@ -399,6 +455,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         @Override
         public NutDao withRootPath(final String rp) {
             return new WithRootPathNutDao(IOUtils.mergePath(rootPath, rp));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public InputStream newInputStream(final String path) throws StreamException {
+            return AbstractNutDao.this.newInputStream(path);
         }
     }
 

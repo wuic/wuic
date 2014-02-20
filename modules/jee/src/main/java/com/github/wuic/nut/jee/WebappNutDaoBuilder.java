@@ -68,7 +68,8 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
                 new BasePathAsSysPropPropertySetter(this),
                 new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
-                new RegexPropertySetter(this));
+                new RegexPropertySetter(this),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -95,13 +96,15 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
                     false,
                     (String[]) property(ApplicationConfig.PROXY_URIS),
                     (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
-                    (Boolean) property(ApplicationConfig.REGEX));
+                    (Boolean) property(ApplicationConfig.REGEX),
+                    (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
         } else {
             return new WebappNutDao(WuicJeeContext.getServletContext(),
                     basePath,
                     (String[]) property(ApplicationConfig.PROXY_URIS),
                     (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
-                    (Boolean) property(ApplicationConfig.REGEX));
+                    (Boolean) property(ApplicationConfig.REGEX),
+                    (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
         }
     }
 }

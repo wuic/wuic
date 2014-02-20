@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,6 +119,7 @@ public class GStorageNutDao extends AbstractNutDao {
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxyUris the proxies URIs in front of the nut
      * @param keyFile the private key path location
+     * @param contentBasedVersionNumber {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public GStorageNutDao(final String path,
                           final Boolean basePathAsSysProp,
@@ -126,8 +127,9 @@ public class GStorageNutDao extends AbstractNutDao {
                           final Integer pollingInterleave,
                           final String bucket,
                           final String accountId,
-                          final String keyFile) {
-        super(path, basePathAsSysProp, proxyUris, pollingInterleave);
+                          final String keyFile,
+                          final Boolean contentBasedVersionNumber) {
+        super(path, basePathAsSysProp, proxyUris, pollingInterleave, contentBasedVersionNumber);
         bucketName = bucket;
         privateKeyFile = keyFile;
         serviceAccountId = accountId;
@@ -247,7 +249,7 @@ public class GStorageNutDao extends AbstractNutDao {
             storageObject.executeMediaAndDownloadTo(baos);
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, getVersionNumber(realPath));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -286,7 +288,21 @@ public class GStorageNutDao extends AbstractNutDao {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return String.format("%s with base path %s", getClass().getName(), getBasePath());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path) throws StreamException {
+        try {
+            // Try to get a Storage object
+            return storage.objects().get(bucketName, path).executeMediaAsInputStream();
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
     }
 }

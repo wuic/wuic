@@ -50,7 +50,7 @@ import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -89,13 +89,15 @@ public abstract class PathNutDao extends AbstractNutDao {
      * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public PathNutDao(final String base,
                       final Boolean basePathAsSysProp,
                       final String[] proxies,
                       final int pollingSeconds,
-                      final Boolean regex) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds);
+                      final Boolean regex,
+                      final Boolean contentBasedVersionNumber) {
+        super(base, basePathAsSysProp, proxies, pollingSeconds, contentBasedVersionNumber);
         regularExpression = regex;
     }
 
@@ -121,7 +123,7 @@ public abstract class PathNutDao extends AbstractNutDao {
 
             if (p instanceof FilePath) {
                 final FilePath fp = FilePath.class.cast(p);
-                return new FilePathNut(fp, realPath, type, new BigInteger(getLastUpdateTimestampFor(fp).toString()));
+                return new FilePathNut(fp, realPath, type, getVersionNumber(realPath));
             } else {
                 throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
             }
@@ -199,6 +201,26 @@ public abstract class PathNutDao extends AbstractNutDao {
             } catch (IOException ioe) {
                 throw new StreamException(ioe);
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path) throws StreamException {
+        init();
+
+        try {
+            final Path p = baseDirectory.getChild(path);
+
+            if (p instanceof FilePath) {
+                return FilePath.class.cast(p).openStream();
+            } else {
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
+            }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         }
     }
 

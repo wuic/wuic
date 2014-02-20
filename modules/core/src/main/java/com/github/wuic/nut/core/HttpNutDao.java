@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -84,9 +84,17 @@ public class HttpNutDao extends AbstractNutDao {
      * @param port the HTTP server port
      * @param path the base path where nuts are provided
      * @param basePathAsSysProp {@code true} if the base path is a system property
+     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
-    public HttpNutDao(final Boolean https, final String domain, final Integer port, final String path, final Boolean basePathAsSysProp) {
-        super(path, basePathAsSysProp, null, -1);
+    public HttpNutDao(final Boolean https,
+                      final String domain,
+                      final Integer port,
+                      final String path,
+                      final Boolean basePathAsSysProp,
+                      final int pollingSeconds,
+                      final Boolean contentBasedVersionNumber) {
+        super(path, basePathAsSysProp, null, pollingSeconds, contentBasedVersionNumber);
         final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
 
         if (port != null) {
@@ -115,7 +123,7 @@ public class HttpNutDao extends AbstractNutDao {
 
         try {
             final URL url = new URL(p);
-            return new HttpNut(realPath, url, type, new BigInteger(getLastUpdateTimestampFor(url).toString()));
+            return new HttpNut(realPath, url, type, getVersionNumber(p));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -142,6 +150,18 @@ public class HttpNutDao extends AbstractNutDao {
 
         try {
             return getLastUpdateTimestampFor(new URL(url));
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(String path) throws StreamException {
+        try {
+            return new URL(path).openStream();
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

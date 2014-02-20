@@ -74,7 +74,8 @@ public class ClasspathNutDaoBuilder extends DiskNutDaoBuilder {
                 new BasePathAsSysPropPropertySetter(this),
                 new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
-                new RegexPropertySetter(this));
+                new RegexPropertySetter(this),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -106,6 +107,7 @@ public class ClasspathNutDaoBuilder extends DiskNutDaoBuilder {
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
                 (String[]) property(ApplicationConfig.PROXY_URIS),
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
-                (Boolean) property(ApplicationConfig.REGEX));
+                (Boolean) property(ApplicationConfig.REGEX),
+                (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

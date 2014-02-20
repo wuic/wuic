@@ -116,7 +116,7 @@ public class S3Test {
     @Test
     public void s3Test() throws Exception {
         // Create a real object and mock its initClient method
-        final S3NutDao dao = spy(new S3NutDao("/path", false, null, -1, "wuic", "login", "pwd", false));
+        final S3NutDao dao = spy(new S3NutDao("/path", false, null, -1, "wuic", "login", "pwd", false, false));
 
         // Build client mock
         final AmazonS3Client client = mock(AmazonS3Client.class);

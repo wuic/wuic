@@ -134,6 +134,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Tells the DAO to computes version number not with the last modification timestamp but with the whole content.
+     * </p>
+     */
+    String CONTENT_BASED_VERSION_NUMBER = "c.g.wuic.dao.contentBasedVersionNumber";
+
+    /**
+     * <p>
      * Indicates if the engine should cache or not.
      * </p>
      */
@@ -146,7 +153,7 @@ public interface ApplicationConfig {
 
     /**
      * <p>
-     * Indicates a particular
+     * Indicates a particular {@link com.github.wuic.engine.CacheProvider} implementation.
      * </p>
      */
     String CACHE_PROVIDER_CLASS = "c.g.wuic.engine.cacheProviderClass";

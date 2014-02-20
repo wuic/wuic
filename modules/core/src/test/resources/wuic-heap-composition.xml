@@ -39,4 +39,14 @@
             </heap>
         </heap>
     </heaps>
+
+    <workflow-templates>
+        <workflow-template id="tpl">
+            <engine-chain />
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="" workflow-template-id="tpl" heap-id-pattern=".*"></workflow>
+    </workflows>
 </wuic>

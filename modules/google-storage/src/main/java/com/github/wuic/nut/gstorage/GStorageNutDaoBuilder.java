@@ -71,7 +71,8 @@ public class GStorageNutDaoBuilder extends AbstractNutDaoBuilder {
                 new BasePathAsSysPropPropertySetter(this),
                 new LoginPropertySetter(this, null),
                 new PasswordPropertySetter(this, ""),
-                new BucketPropertySetter(this, ""));
+                new BucketPropertySetter(this, ""),
+                new ContentBasedVersionNumberPropertySetter(this));
     }
 
     /**
@@ -87,6 +88,7 @@ public class GStorageNutDaoBuilder extends AbstractNutDaoBuilder {
                 (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
                 (String) property(ApplicationConfig.CLOUD_BUCKET),
                 (String) property(ApplicationConfig.LOGIN),
-                (String) property(ApplicationConfig.PASSWORD));
+                (String) property(ApplicationConfig.PASSWORD),
+                (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

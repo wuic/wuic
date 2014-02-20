@@ -6,6 +6,7 @@
             <properties>
                 <property key="c.g.wuic.dao.basePath">/img</property>
                 <property key="c.g.wuic.dao.regex">true</property>
+                <property key="c.g.wuic.dao.contentBasedVersionNumber">true</property>
             </properties>
         </nut-dao-builder>
     </nut-dao-builders>

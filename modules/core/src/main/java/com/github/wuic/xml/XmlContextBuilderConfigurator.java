@@ -332,7 +332,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      */
     private ContextBuilder.ContextGenericBuilder extractProperties(final XmlBuilderBean bean,
                                                                   final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
-        if (bean.getProperties() != null) {
+        if (bean.getProperties() == null) {
             return contextGenericBuilder;
         } else {
             for (final XmlPropertyBean propertyBean : bean.getProperties()) {

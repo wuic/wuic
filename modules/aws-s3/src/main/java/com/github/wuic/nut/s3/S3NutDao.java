@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -114,6 +114,7 @@ public class S3NutDao extends AbstractNutDao {
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxyUris the proxies URIs in front of the nut
      * @param regex consider path as regex or not
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public S3NutDao(final String path,
                     final Boolean basePathAsSysProp,
@@ -122,8 +123,9 @@ public class S3NutDao extends AbstractNutDao {
                     final String bucket,
                     final String accessKey,
                     final String secretKey,
-                    final Boolean regex) {
-        super(path, basePathAsSysProp, proxyUris, pollingInterleave);
+                    final Boolean regex,
+                    final Boolean contentBasedVersionNumber) {
+        super(path, basePathAsSysProp, proxyUris, pollingInterleave, contentBasedVersionNumber);
         bucketName = bucket;
         login = accessKey;
         password = secretKey;
@@ -227,7 +229,7 @@ public class S3NutDao extends AbstractNutDao {
             IOUtils.copyStream(s3ObjectInputStream, baos);
 
             // Create nut
-            return new ByteArrayNut(baos.toByteArray(), realPath, type, new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
+            return new ByteArrayNut(baos.toByteArray(), realPath, type, getVersionNumber(realPath));
         } finally {
             // Close S3Object stream
             IOUtils.close(s3ObjectInputStream);
@@ -270,6 +272,19 @@ public class S3NutDao extends AbstractNutDao {
     public Boolean saveSupported() {
         // TODO : return true once save() is implemented
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path) throws StreamException {
+        try {
+            connect();
+            return amazonS3Client.getObject(bucketName, path).getObjectContent();
+        } catch (AmazonServiceException ase) {
+            throw new StreamException(new IOException(String.format("Can't get S3Object on bucket %s  for nut key : %s", bucketName, path), ase));
+        }
     }
 
     /**

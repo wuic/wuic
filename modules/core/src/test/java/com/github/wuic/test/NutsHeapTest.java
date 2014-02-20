@@ -48,6 +48,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -93,7 +94,7 @@ public class NutsHeapTest {
          * @param pollingSeconds polling interleave
          */
         MockNutDao(final int pollingSeconds) {
-            super("/", false, null, pollingSeconds);
+            super("/", false, null, pollingSeconds, false);
         }
 
         /**
@@ -122,6 +123,14 @@ public class NutsHeapTest {
         @Override
         protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
             return mockPaths.get(path);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public InputStream newInputStream(String path) throws StreamException {
+            return null;
         }
     }
 

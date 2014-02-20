@@ -39,7 +39,6 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 

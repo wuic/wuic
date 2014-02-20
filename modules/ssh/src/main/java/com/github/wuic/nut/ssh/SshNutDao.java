@@ -48,7 +48,7 @@ import com.github.wuic.util.IOUtils;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-import java.math.BigInteger;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -70,6 +70,11 @@ import com.jcraft.jsch.SftpException;
  * @since 0.3.1
  */
 public class SshNutDao extends AbstractNutDao {
+
+    /**
+     * SFTP channel usage.
+     */
+    private static final String SFTP_CHANNEL = "sftp";
 
     /**
      * The SSH session.
@@ -94,6 +99,7 @@ public class SshNutDao extends AbstractNutDao {
      * @param pwd the password (will be ignored if user is {@code null})
      * @param pollingInterleave the interleave for polling operations in seconds (-1 to deactivate)
      * @param proxyUris the proxies URIs in front of the nut
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public SshNutDao(final Boolean regex,
                      final String host,
@@ -103,8 +109,9 @@ public class SshNutDao extends AbstractNutDao {
                      final String user,
                      final String pwd,
                      final String[] proxyUris,
-                     final int pollingInterleave) {
-        super(path, basePathAsSysProp, proxyUris, pollingInterleave);
+                     final int pollingInterleave,
+                     final Boolean contentBasedVersionNumber) {
+        super(path, basePathAsSysProp, proxyUris, pollingInterleave, contentBasedVersionNumber);
         regularExpression = regex;
 
         final JSch jsch = new JSch();
@@ -143,7 +150,7 @@ public class SshNutDao extends AbstractNutDao {
             connect();
 
             if (regularExpression) {
-                final ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+                final ChannelSftp channel = (ChannelSftp) session.openChannel(SFTP_CHANNEL);
                 channel.connect();
                 channel.cd(getBasePath());
                 final List<ChannelSftp.LsEntry> list = channel.ls(pattern);
@@ -179,7 +186,7 @@ public class SshNutDao extends AbstractNutDao {
             channel.cd(getBasePath());
             final ByteArrayOutputStream os = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             channel.get(path, os);
-            return new ByteArrayNut(os.toByteArray(), path, type, new BigInteger(getLastUpdateTimestampFor(path).toString()));
+            return new ByteArrayNut(os.toByteArray(), path, type, getVersionNumber(path));
         } catch (JSchException je) {
             throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
         } catch (SftpException se) {
@@ -224,7 +231,33 @@ public class SshNutDao extends AbstractNutDao {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return String.format("%s with base path %s", getClass().getName(), getBasePath());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path) throws StreamException {
+        ChannelSftp channel = null;
+
+        try {
+            connect();
+
+            channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+            channel.cd(getBasePath());
+            return channel.get(path);
+        } catch (JSchException je) {
+            throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
+        } catch (SftpException se) {
+            throw new StreamException(new IOException("An SSH FTP error prevent remote file loading", se));
+        } finally {
+            if (channel != null) {
+                channel.disconnect();
+            }
+        }
     }
 }
