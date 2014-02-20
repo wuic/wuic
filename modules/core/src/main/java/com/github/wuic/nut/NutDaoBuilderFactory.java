@@ -48,8 +48,6 @@ import com.github.wuic.nut.core.DiskNutDaoBuilder;
 import com.github.wuic.nut.core.HttpNutDaoBuilder;
 import com.github.wuic.util.AbstractBuilderFactory;
 
-import java.util.HashMap;
-
 /**
  * <p>
  * Factory for {@link NutDaoBuilder}.
@@ -131,7 +129,7 @@ public final class NutDaoBuilderFactory extends AbstractBuilderFactory<NutDaoBui
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final String type : NutDaoBuilderFactory.this.knownTypes()) {
-                    ctxBuilder.nutDaoBuilder(ID_PREFIX + type, create(type), new HashMap<String, Object>());
+                    ctxBuilder.contextNutDaoBuilder(ID_PREFIX + type, type).toContext();
                 }
             // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {

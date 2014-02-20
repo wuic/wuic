@@ -40,11 +40,9 @@ package com.github.wuic.xml;
 
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
-import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.exception.xml.WuicXmlWorkflowIdentifierException;
-import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
@@ -57,8 +55,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
@@ -239,7 +235,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             // The DAOs
             if (xml.getDaoBuilders() != null) {
                 for (final XmlBuilderBean dao : xml.getDaoBuilders()) {
-                    ctxBuilder.nutDaoBuilder(dao.getId(), NutDaoBuilderFactory.getInstance().create(dao.getType()), extractProperties(dao));
+                    extractProperties(dao, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
                 }
             }
 
@@ -253,7 +249,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             // The engines
             if (xml.getEngineBuilders() != null) {
                 for (final XmlBuilderBean engine : xml.getEngineBuilders()) {
-                    ctxBuilder.engineBuilder(engine.getId(), EngineBuilderFactory.getInstance().create(engine.getType()), extractProperties(engine));
+                    extractProperties(engine, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
                 }
             }
 
@@ -327,24 +323,24 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
     /**
      * <p>
-     * Extracts from the given bean a {@link Map} of properties.
+     * Extracts from the given bean some properties to inject to the specified builder.
      * </p>
      *
      * @param bean the bean
-     * @return the {@link Map} associating the property ID to its value
+     * @param contextGenericBuilder the context generic builder
+     * @return the {@link ContextBuilder.ContextGenericBuilder} associating each property ID to its value
      */
-    private Map<String, Object> extractProperties(final XmlBuilderBean bean) {
-        if (bean.getProperties() == null) {
-            return new HashMap<String, Object>();
+    private ContextBuilder.ContextGenericBuilder extractProperties(final XmlBuilderBean bean,
+                                                                  final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
+        if (bean.getProperties() != null) {
+            return contextGenericBuilder;
         } else {
-            final Map<String, Object> retval = new HashMap<String, Object>(bean.getProperties().size());
-
             for (final XmlPropertyBean propertyBean : bean.getProperties()) {
-                retval.put(propertyBean.getKey(), propertyBean.getValue());
+                contextGenericBuilder.property(propertyBean.getKey(), propertyBean.getValue());
             }
-
-            return retval;
         }
+
+        return contextGenericBuilder;
     }
 
     /**

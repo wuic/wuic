@@ -44,10 +44,8 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.*;
 import com.github.wuic.engine.core.TextAggregatorEngineBuilder;
-import com.github.wuic.exception.WorkflowNotFoundException;
-import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.NutDaoBuilder;
+import com.github.wuic.exception.*;
+import com.github.wuic.nut.*;
 
 import com.github.wuic.util.AbstractBuilderFactory;
 import junit.framework.Assert;
@@ -79,105 +77,167 @@ import java.util.*;
 public class ContextBuilderTest {
 
     /**
-     * A nut.
+     * Foo JS.
      */
-    private Nut mockNutOne;
+    private static final String NUT_NAME_ONE = "foo.js";
 
     /**
-     * Another nut.
+     * Test JS.
      */
-    private Nut mockNutTwo;
+    private static final String NUT_NAME_TWO = "test.js";
 
     /**
-     * A dao.
+     * <p>
+     * Mocked DAO builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
      */
-    private NutDao mockDao;
+    public static final class MockEngineBuilder extends AbstractEngineBuilder {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
+            final Engine engine = mock(Engine.class);
+
+            // Prepare Engine mock
+            when(engine.getNutTypes()).thenReturn(Arrays.asList(NutType.JAVASCRIPT));
+            when(engine.getEngineType()).thenReturn(EngineType.AGGREGATOR);
+            try {
+                when(engine.parse(any(EngineRequest.class))).thenAnswer(new Answer<Object>() {
+                    @Override
+                    public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                        return ((EngineRequest) invocationOnMock.getArguments()[0]).getNuts();
+                    }
+                });
+            } catch (WuicException e) {
+                throw new IllegalStateException(e);
+            }
+
+            // Prepare Engine builder mock
+            return engine;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void throwPropertyNotSupportedException(final String key) throws EngineBuilderPropertyNotSupportedException {
+
+        }
+    }
 
     /**
-     * A store.
+     * <p>
+     * Mocked DAO builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
      */
-    private NutDao mockStore;
+    public static final class MockDaoBuilder extends AbstractNutDaoBuilder {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected NutDao internalBuild() throws BuilderPropertyNotSupportedException {
+            try {
+                // Prepare Nut mock
+                final Nut mockNutOne = mock(Nut.class);
+                when(mockNutOne.getName()).thenReturn("foo.js");
+                when(mockNutOne.getNutType()).thenReturn(NutType.JAVASCRIPT);
+                when(mockNutOne.isAggregatable()).thenReturn(true);
+                when(mockNutOne.isTextCompressible()).thenReturn(true);
+                when(mockNutOne.isCacheable()).thenReturn(true);
+                when(mockNutOne.isBinaryCompressible()).thenReturn(true);
+                when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
+                when(mockNutOne.getVersionNumber()).thenReturn(new BigInteger("1"));
+
+                final Nut mockNutTwo = mock(Nut.class);
+                when(mockNutTwo.getName()).thenReturn("test.js");
+                when(mockNutTwo.getNutType()).thenReturn(NutType.JAVASCRIPT);
+                when(mockNutTwo.isAggregatable()).thenReturn(true);
+                when(mockNutTwo.isTextCompressible()).thenReturn(true);
+                when(mockNutTwo.isCacheable()).thenReturn(true);
+                when(mockNutTwo.isBinaryCompressible()).thenReturn(true);
+                when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
+                when(mockNutTwo.getVersionNumber()).thenReturn(new BigInteger("1"));
+
+                // Prepare DAO mock
+                final NutDao mockDao = mock(NutDao.class);
+
+
+                final List<Nut> nutsOne = new ArrayList<Nut>();
+                nutsOne.add(mockNutOne);
+                when(mockDao.create(ContextBuilderTest.NUT_NAME_ONE)).thenReturn(nutsOne);
+
+                final List<Nut> nutTwo = new ArrayList<Nut>();
+                nutTwo.add(mockNutTwo);
+                when(mockDao.create(NUT_NAME_TWO)).thenReturn(nutTwo);
+                when(mockDao.saveSupported()).thenReturn(false);
+                final NutDao mockStore = mock(NutDao.class);
+                when(mockStore.saveSupported()).thenReturn(true);
+
+                // Prepare DAO builder mock
+                return mockDao;
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void throwPropertyNotSupportedException(final String key) throws NutDaoBuilderPropertyNotSupportedException {
+        }
+    }
 
     /**
-     * A DAO builder.
+     * <p>
+     * Mocked store DAO builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
      */
-    private NutDaoBuilder mockDaoBuilder;
+    public static final class MockStoreDaoBuilder extends AbstractNutDaoBuilder {
 
-    /**
-     * A DAO builder that could be a store.
-     */
-    private NutDaoBuilder mockStoreBuilder;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected NutDao internalBuild() throws BuilderPropertyNotSupportedException {
+            final NutDao mockStore = mock(NutDao.class);
+            when(mockStore.saveSupported()).thenReturn(true);
 
-    /**
-     * An engine.
-     */
-    private Engine mockEngine;
+            // Prepare DAO builder mock
+            return mockStore;
+        }
 
-    /**
-     * An engine builder.
-     */
-    private EngineBuilder mockEngineBuilder;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void throwPropertyNotSupportedException(final String key) throws NutDaoBuilderPropertyNotSupportedException {
+        }
+    }
 
     /**
      * Create some mocked object.
      */
     @Before
     public void prepareMocks() throws Exception {
-        // Prepare Nut mock
-        mockNutOne = mock(Nut.class);
-        when(mockNutOne.getName()).thenReturn("foo.js");
-        when(mockNutOne.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutOne.isAggregatable()).thenReturn(true);
-        when(mockNutOne.isTextCompressible()).thenReturn(true);
-        when(mockNutOne.isCacheable()).thenReturn(true);
-        when(mockNutOne.isBinaryCompressible()).thenReturn(true);
-        when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
-        when(mockNutOne.getVersionNumber()).thenReturn(new BigInteger("1"));
-
-        mockNutTwo = mock(Nut.class);
-        when(mockNutTwo.getName()).thenReturn("test.js");
-        when(mockNutTwo.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutTwo.isAggregatable()).thenReturn(true);
-        when(mockNutTwo.isTextCompressible()).thenReturn(true);
-        when(mockNutTwo.isCacheable()).thenReturn(true);
-        when(mockNutTwo.isBinaryCompressible()).thenReturn(true);
-        when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
-        when(mockNutTwo.getVersionNumber()).thenReturn(new BigInteger("1"));
-
-        // Prepare DAO mock
-        mockDao = mock(NutDao.class);
-
-        final List<Nut> nutsOne = new ArrayList<Nut>();
-        nutsOne.add(mockNutOne);
-        when(mockDao.create(mockNutOne.getName())).thenReturn(nutsOne);
-
-        final List<Nut> nutTwo = new ArrayList<Nut>();
-        nutTwo.add(mockNutTwo);
-        when(mockDao.create(mockNutTwo.getName())).thenReturn(nutTwo);
-        when(mockDao.saveSupported()).thenReturn(false);
-        mockStore = mock(NutDao.class);
-        when(mockStore.saveSupported()).thenReturn(true);
-
-        // Prepare DAO builder mock
-        mockDaoBuilder = mock(NutDaoBuilder.class);
-        when(mockDaoBuilder.build()).thenReturn(mockDao);
-        mockStoreBuilder = mock(NutDaoBuilder.class);
-        when(mockStoreBuilder.build()).thenReturn(mockStore);
-
-        // Prepare Engine mock
-        mockEngine = mock(Engine.class);
-        when(mockEngine.getNutTypes()).thenReturn(Arrays.asList(NutType.JAVASCRIPT));
-        when(mockEngine.getEngineType()).thenReturn(EngineType.AGGREGATOR);
-        when(mockEngine.parse(any(EngineRequest.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return ((EngineRequest) invocationOnMock.getArguments()[0]).getNuts();
-            }
-        });
-
-        // Prepare Engine builder mock
-        mockEngineBuilder = mock(EngineBuilder.class);
-        when(mockEngineBuilder.build()).thenReturn(mockEngine);
+        NutDaoBuilderFactory.getInstance().addBuilderClass(MockStoreDaoBuilder.class.getName());
+        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
+        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
     }
 
     /**
@@ -190,9 +250,11 @@ public class ContextBuilderTest {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .template("tpl", new String[]{"engine"})
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
@@ -212,9 +274,11 @@ public class ContextBuilderTest {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .template("tpl", new String[]{"engine"}, null, false)
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
@@ -231,16 +295,17 @@ public class ContextBuilderTest {
     @Test
     public void overrideDefaultEnginesTest() throws Exception {
         final String defaultName = AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName();
-        final Map<String, Object> props = new HashMap<String, Object>();
-        props.put(ApplicationConfig.AGGREGATE, false);
 
         // Typical use : no exception should be thrown
         final ContextBuilder builder = new ContextBuilder();
         EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
         builder.tag("test")
-               .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-               .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-               .engineBuilder(defaultName, new TextAggregatorEngineBuilder(), props)
+               .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+               .toContext()
+               .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+               .contextEngineBuilder(defaultName, TextAggregatorEngineBuilder.class.getSimpleName())
+               .property(ApplicationConfig.AGGREGATE, false)
+               .toContext()
                .template("tpl", new String[]{defaultName})
                .workflow("workflow-", true, "heap", "tpl")
                .releaseTag();
@@ -258,10 +323,12 @@ public class ContextBuilderTest {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap-one", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .heap("heap-two", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .template("tpl", new String[]{"engine"})
                 .workflow("workflow-", true, "heap-.*", "tpl")
                 .releaseTag()
@@ -282,10 +349,12 @@ public class ContextBuilderTest {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap-one", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .heap("heap-two", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap-one", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .heap("heap-two", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .template("tpl", new String[]{"engine"})
                 .workflow("workflow-", true, "heap-one", "tpl")
                 .releaseTag()
@@ -305,8 +374,9 @@ public class ContextBuilderTest {
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
                 .template("tpl", new String[] {}, null, false)
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
@@ -339,9 +409,11 @@ public class ContextBuilderTest {
         try {
             new ContextBuilder()
                     .tag("test")
-                    .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                    .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                    .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                    .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                    .toContext()
+                    .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                    .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                    .toContext()
                     .template("tpl", new String[]{"engine"}, "dao")
                     .workflow("workflow", true, "heap", "tpl")
                     .releaseTag()
@@ -352,10 +424,13 @@ public class ContextBuilderTest {
 
         new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .nutDaoBuilder("store", mockStoreBuilder, new HashMap<String, Object>())
-                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .contextNutDaoBuilder("store", MockStoreDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .template("tpl", new String[]{"engine"}, "store")
                 .workflow("workflow", true, "heap", "tpl")
                 .releaseTag()
@@ -370,9 +445,11 @@ public class ContextBuilderTest {
     public void testClearTag() throws Exception {
         final ContextBuilder builder = new ContextBuilder()
                 .tag("test")
-                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
                 .releaseTag()
                 .tag("tag")
                 .template("tpl", new String[]{"engine"})
@@ -408,7 +485,7 @@ public class ContextBuilderTest {
     @Test
     public void unTaggedUsageTest() {
         try {
-            new ContextBuilder().nutDaoBuilder("dao", mock(NutDaoBuilder.class), new HashMap<String, Object>());
+            new ContextBuilder().contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName()).toContext();
         } catch (Exception e) {
             // Normal behavior
         }
@@ -431,9 +508,11 @@ public class ContextBuilderTest {
                 public void run() {
                     try {
                         builder.tag("test")
-                            .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                            .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                            .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                            .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                            .toContext()
+                            .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                            .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                            .toContext()
                             .template("tpl", new String[]{"engine"})
                             .workflow("workflow", true, "heap", "tpl")
                             .releaseTag()
@@ -451,9 +530,11 @@ public class ContextBuilderTest {
                 public void run() {
                     try {
                         builder.tag("foo")
-                                .nutDaoBuilder("dao", mockDaoBuilder, new HashMap<String, Object>())
-                                .heap("heap", "dao", mockNutOne.getName(), mockNutTwo.getName())
-                                .engineBuilder("engine", mockEngineBuilder, new HashMap<String, Object>())
+                                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                                .toContext()
+                                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                                .toContext()
                                 .template("tpl", new String[]{"engine"})
                                 .workflow("workflow", true, "heap", "tpl")
                                 .releaseTag()

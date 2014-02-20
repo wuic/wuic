@@ -46,8 +46,6 @@ import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.AbstractBuilderFactory;
 
-import java.util.HashMap;
-
 /**
  * <p>
  * Factory for {@link com.github.wuic.engine.EngineBuilder}.
@@ -130,7 +128,7 @@ public final class EngineBuilderFactory extends AbstractBuilderFactory<EngineBui
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final String type : EngineBuilderFactory.this.knownTypes()) {
-                    ctxBuilder.engineBuilder(ID_PREFIX + type, create(type), new HashMap<String, Object>());
+                    ctxBuilder.contextEngineBuilder(ID_PREFIX + type, type).toContext();
                 }
                 // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {

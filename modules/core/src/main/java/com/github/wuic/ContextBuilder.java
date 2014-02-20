@@ -39,14 +39,17 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.engine.core.*;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
+import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.AbstractBuilderFactory;
 import com.github.wuic.util.CollectionUtils;
@@ -341,24 +344,187 @@ public class ContextBuilder extends Observable {
         }
     }
 
-    /*
+    /**
+     * <p>
+     * Inner class to configure a generic component.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    public abstract class ContextGenericBuilder {
 
-    TODO: #84
+        /**
+         * The ID.
+         */
+        protected String id;
 
-    public class ContextNutDaoBuilder {
+        /**
+         * The properties.
+         */
+        protected Map<String, Object> properties;
 
-        public ContextNutDaoBuilder(final String id, final String type) {
-
+        /**
+         * <p>
+         * Builds a new component identified by the given ID.
+         * </p>
+         *
+         * @param id the ID
+         * @throws UnableToInstantiateException if underlying class could not be instantiated
+         */
+        public ContextGenericBuilder(final String id) throws UnableToInstantiateException {
+            this.id = id;
+            this.properties = new HashMap<String, Object>();
         }
 
-        public ContextNutDaoBuilder property(final String key, final Object value) {
+        /***
+         * <p>
+         * Configures the given property.
+         * </p>
+         *
+         * @param key the property key
+         * @param value the property value
+         * @return this
+         */
+        public abstract ContextGenericBuilder property(String key, Object value);
+
+        /**
+         * <p>
+         * Injects in the enclosing builder the component with its settings and return it.
+         * </p>
+         *
+         * @return the enclosing builder
+         * @throws BuilderPropertyNotSupportedException if a previously configured property is not supported
+         */
+        public abstract ContextBuilder toContext() throws BuilderPropertyNotSupportedException;
+    }
+
+    /**
+     * <p>
+     * Inner class to configure a engine builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    public class ContextEngineBuilder extends ContextGenericBuilder {
+
+        /**
+         * The builder.
+         */
+        private EngineBuilder engineBuilder;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param id the builder ID
+         * @param type the builder type
+         * @throws UnableToInstantiateException if underlying class could not be instantiated
+         */
+        public ContextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
+            super(id);
+            this.engineBuilder = EngineBuilderFactory.getInstance().create(type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextEngineBuilder property(final String key, final Object value) {
+            properties.put(key, value);
             return this;
         }
 
-        public ContextBuilder toContext() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+            engineBuilder(id, engineBuilder, properties);
             return ContextBuilder.this;
         }
-    }*/
+    }
+
+    /**
+     * <p>
+     * Inner class to configure a DAO builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    public class ContextNutDaoBuilder extends ContextGenericBuilder {
+
+        /**
+         * The builder.
+         */
+        private NutDaoBuilder nutDaoBuilder;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param id the builder ID
+         * @param type the builder type
+         * @throws UnableToInstantiateException if underlying class could not be instantiated
+         */
+        public ContextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
+            super(id);
+            this.nutDaoBuilder = NutDaoBuilderFactory.getInstance().create(type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextNutDaoBuilder property(final String key, final Object value) {
+            properties.put(key, value);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+            nutDaoBuilder(id, nutDaoBuilder, properties);
+            return ContextBuilder.this;
+        }
+    }
+
+    /**
+     * <p>
+     * Returns a new context DAO builder.
+     * </p>
+     *
+     * @param id the final builder's ID
+     * @param type the final builder's type
+     * @return the specific context builder
+     * @throws UnableToInstantiateException if underlying class could not be instantiated
+     */
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
+        return new ContextNutDaoBuilder(id, type);
+    }
+
+    /**
+     * <p>
+     * Returns a new context engine builder.
+     * </p>
+     *
+     * @param id the final builder's ID
+     * @param type the final builder's type
+     * @return the specific context builder
+     * @throws UnableToInstantiateException if underlying class could not be instantiated
+     */
+    public ContextEngineBuilder contextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
+        return new ContextEngineBuilder(id, type);
+    }
 
     /**
      * <p>
@@ -375,7 +541,7 @@ public class ContextBuilder extends Observable {
      * @return this {@link ContextBuilder}
      * @throws com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException if a property is not supported by the builder
      */
-    public ContextBuilder nutDaoBuilder(final String id,
+    private ContextBuilder nutDaoBuilder(final String id,
                                         final NutDaoBuilder daoBuilder,
                                         final Map<String, Object> properties)
                                         throws BuilderPropertyNotSupportedException {
@@ -489,9 +655,9 @@ public class ContextBuilder extends Observable {
      * @return this {@link ContextBuilder}
      * @throws BuilderPropertyNotSupportedException if a property is not supported
      */
-    public ContextBuilder engineBuilder(final String id,
-                                        final EngineBuilder engineBuilder,
-                                        final Map<String, Object> properties)
+    private ContextBuilder engineBuilder(final String id,
+                                         final EngineBuilder engineBuilder,
+                                         final Map<String, Object> properties)
             throws BuilderPropertyNotSupportedException {
         final ContextSetting setting = getSetting();
 
@@ -739,7 +905,7 @@ public class ContextBuilder extends Observable {
             heapLoop :
             for (final NutsHeap heap : heapMap.values()) {
                 for (final Workflow workflow : workflowMap.values()) {
-                    if (workflow.getHeap().equals(heap)) {
+                    if (workflow.getHeap().containsHeap(heap)) {
                         continue heapLoop;
                     }
                 }
