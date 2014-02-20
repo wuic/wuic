@@ -498,6 +498,31 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
+     * Indicates if the given heap equals to this heap or any heap of its composition. The equality if evaluated
+     * recusrively through the composition.
+     * </p>
+     *
+     * @param heap the heap to compare
+     * @return {@code true} if its equals to this heap or to a heap of its composition
+     */
+    public boolean containsHeap(final NutsHeap heap) {
+        if (equals(heap)) {
+            return true;
+        } else {
+            if (composition != null) {
+                for (final NutsHeap h : composition) {
+                    if (h.containsHeap(heap)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * <p>
      * Internal class which helps iterating on all its {@link Nut nuts} including its composition. The {@link Nut nuts}
      * are read and returned by sequence of elements having the same {@link NutType}.
      * </p>
