@@ -38,7 +38,8 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.HeadEngine;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.nut.NutDao;
 
 import java.util.Map;
@@ -54,10 +55,12 @@ import java.util.Map;
  */
 public class WorkflowTemplate {
 
+    private HeadEngine head;
+
     /**
      * All chains for each {@link com.github.wuic.NutType}.
      */
-    private Map<NutType, ? extends Engine> chains;
+    private Map<NutType, ? extends NodeEngine> chains;
 
     /**
      * DAO where processing result will be saved.
@@ -72,9 +75,14 @@ public class WorkflowTemplate {
      * @param c the chains
      * @param store the DAO stores
      */
-    public WorkflowTemplate(final Map<NutType, ? extends Engine> c, final NutDao... store) {
+    public WorkflowTemplate(final HeadEngine h, final Map<NutType, ? extends NodeEngine> c, final NutDao... store) {
         chains = c;
         stores = store;
+        head = h;
+    }
+
+    public HeadEngine getHead() {
+        return head;
     }
 
     /**
@@ -84,7 +92,7 @@ public class WorkflowTemplate {
      *
      * @return the chains
      */
-    public Map<NutType, ? extends Engine> getChains() {
+    public Map<NutType, ? extends NodeEngine> getChains() {
         return chains;
     }
 

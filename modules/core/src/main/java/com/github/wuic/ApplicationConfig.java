@@ -160,6 +160,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Specify the best effort mode.
+     * </p>
+     */
+    String BEST_EFFORT = "c.g.wuic.engine.bestEffort";
+
+    /**
+     * <p>
      * Indicates if the engine should compress or not.
      * </p>
      */
@@ -236,4 +243,11 @@ public interface ApplicationConfig {
      * </p>
      */
     String CHARSET = "c.g.wuic.engine.charset";
+
+    /**
+     * <p>
+     * Indicates the context builder.
+     * </p>
+     */
+    String CONTEXT_BUILDER = "c.g.wuic.contextBuilder";
 }

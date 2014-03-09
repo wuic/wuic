@@ -17,7 +17,7 @@
     </nut-dao-builders>
 
     <engine-builders>
-        <engine-builder id="jsSprite" type="ImageAggregatorEngineBuilder">
+        <engine-builder id="jsSprite" type="SpriteInspectorEngineBuilder">
             <properties>
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
             </properties>
@@ -30,6 +30,11 @@
         <engine-builder id="wuicDefaultTextAggregatorEngineBuilder" type="TextAggregatorEngineBuilder">
             <properties>
                 <property key="c.g.wuic.engine.aggregate">true</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="wuicDefaultEhCacheEngineBuilder" type="EhCacheEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.bestEffort">false</property>
             </properties>
         </engine-builder>
     </engine-builders>

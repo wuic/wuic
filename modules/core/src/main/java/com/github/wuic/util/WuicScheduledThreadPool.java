@@ -41,10 +41,7 @@ package com.github.wuic.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.*;
 
 /**
  * <p>
@@ -123,6 +120,18 @@ public final class WuicScheduledThreadPool extends Thread {
     }
 
     /**
+     * <p>
+     * Executes as soon as possible the given job and returns the related {@link Future}.
+     * </p>
+     *
+     * @param job the job to execute
+     * @return the future result
+     */
+    public synchronized <T> Future<T> executeAsap(final Callable<T> job) {
+        return pool.submit(new CallExceptionLogger(job));
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void run() {
@@ -174,6 +183,47 @@ public final class WuicScheduledThreadPool extends Thread {
                 delegate.run();
             } catch (Exception e) {
                 log.error("A thread execution has failed in WUIC", e);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Logs any exception which occurs when running a delegated {@link Callable}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private final class CallExceptionLogger<T> implements Callable<T> {
+
+        /**
+         * Wrapped callable.
+         */
+        private Callable<T> delegate;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param c the callable
+         */
+        private CallExceptionLogger(final Callable<T> c) {
+            delegate = c;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public T call() {
+            try {
+                return delegate.call();
+            } catch (Exception e) {
+                log.error("A thread execution has failed in WUIC", e);
+                return null;
             }
         }
     }

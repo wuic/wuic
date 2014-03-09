@@ -77,6 +77,11 @@ public class SshNutDao extends AbstractNutDao {
     private static final String SFTP_CHANNEL = "sftp";
 
     /**
+     * Common exception message.
+     */
+    private static final String CANNOT_LOAD_MESSAGE = "Can't load the file remotely with SSH FTP";
+
+    /**
      * The SSH session.
      */
     private Session session;
@@ -181,14 +186,14 @@ public class SshNutDao extends AbstractNutDao {
         try {
             connect();
 
-            channel = (ChannelSftp) session.openChannel("sftp");
+            channel = (ChannelSftp) session.openChannel(SFTP_CHANNEL);
             channel.connect();
             channel.cd(getBasePath());
             final ByteArrayOutputStream os = new ByteArrayOutputStream(IOUtils.WUIC_BUFFER_LEN);
             channel.get(path, os);
             return new ByteArrayNut(os.toByteArray(), path, type, getVersionNumber(path));
         } catch (JSchException je) {
-            throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
+            throw new StreamException(new IOException(CANNOT_LOAD_MESSAGE, je));
         } catch (SftpException se) {
             throw new StreamException(new IOException("An SSH FTP error prevent remote file loading", se));
         } finally {
@@ -204,14 +209,14 @@ public class SshNutDao extends AbstractNutDao {
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
         try {
-            final ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            final ChannelSftp channel = (ChannelSftp) session.openChannel(SFTP_CHANNEL);
             channel.connect();
             channel.cd(getBasePath());
             return (long) channel.stat(path).getMTime();
         } catch (JSchException je) {
-            throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
+            throw new StreamException(new IOException(CANNOT_LOAD_MESSAGE, je));
         } catch (SftpException se) {
-            throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", se));
+            throw new StreamException(new IOException(CANNOT_LOAD_MESSAGE, se));
         }
     }
 
@@ -246,12 +251,12 @@ public class SshNutDao extends AbstractNutDao {
         try {
             connect();
 
-            channel = (ChannelSftp) session.openChannel("sftp");
+            channel = (ChannelSftp) session.openChannel(SFTP_CHANNEL);
             channel.connect();
             channel.cd(getBasePath());
             return channel.get(path);
         } catch (JSchException je) {
-            throw new StreamException(new IOException("Can't load the file remotely with SSH FTP", je));
+            throw new StreamException(new IOException(CANNOT_LOAD_MESSAGE, je));
         } catch (SftpException se) {
             throw new StreamException(new IOException("An SSH FTP error prevent remote file loading", se));
         } finally {

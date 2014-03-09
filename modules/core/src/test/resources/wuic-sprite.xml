@@ -8,14 +8,22 @@
     <engine-builders>
         <engine-builder id="jsSpriteNotAggregate" type="ImageAggregatorEngineBuilder">
             <properties>
-                <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
                 <property key="c.g.wuic.engine.aggregate">false</property>
             </properties>
         </engine-builder>
-        <engine-builder id="cssSpriteAggregate" type="ImageAggregatorEngineBuilder">
+        <engine-builder id="cssAggregate" type="ImageAggregatorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.aggregate">true</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="spriteInspector" type="SpriteInspectorEngineBuilder">
             <properties>
                 <property key="c.g.wuic.engine.spriteProviderClassName">css</property>
-                <property key="c.g.wuic.engine.aggregate">true</property>
+            </properties>
+        </engine-builder>
+        <engine-builder id="JSspriteInspector" type="SpriteInspectorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
             </properties>
         </engine-builder>
     </engine-builders>
@@ -32,11 +40,13 @@
         <workflow-template use-default-engines="false" id="jsSpriteNotAggregate">
             <engine-chain>
                 <engine-builder-id>jsSpriteNotAggregate</engine-builder-id>
+                <engine-builder-id>JSspriteInspector</engine-builder-id>
             </engine-chain>
         </workflow-template>
         <workflow-template use-default-engines="false" id="cssSpriteAggregate">
             <engine-chain>
-                <engine-builder-id>cssSpriteAggregate</engine-builder-id>
+                <engine-builder-id>cssAggregate</engine-builder-id>
+                <engine-builder-id>spriteInspector</engine-builder-id>
             </engine-chain>
         </workflow-template>
     </workflow-templates>

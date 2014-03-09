@@ -167,7 +167,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     final String heapId,
                     final NutsHeap ... heaps) throws StreamException {
         this.id = heapId;
-        this.paths = pathsList;
+        this.paths = pathsList == null ? new ArrayList<String>() : new ArrayList<String>(pathsList);
         this.nutDao = theNutDao;
         this.listeners = new HashSet<HeapListener>();
         this.composition = heaps;
@@ -380,7 +380,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Checks the extension of the given set. Makes sure that all nuts share the same type.
      * </p>
      *
-     * @param toCheck set to check.
+     * @param toCheck set to check
      */
     private void checkExtension(final Collection<Nut> toCheck) {
         for (final Nut nut : toCheck) {
@@ -467,18 +467,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Creates a new iterator on the {@link Nut nuts}.
-     * </p>
-     *
-     * @return the iterator
-     * @see NutsHeapIterator
-     */
-    public Iterator<List<Nut>> iterator() {
-        return new NutsHeapIterator();
-    }
-
-    /**
-     * <p>
      * Indicates if this {@link NutsHeap} has created thanks to its own DAO a {@link Nut}. The methods search for the
      * original nut if the specified nut is a generated one.
      * </p>
@@ -518,82 +506,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             }
 
             return false;
-        }
-    }
-
-    /**
-     * <p>
-     * Internal class which helps iterating on all its {@link Nut nuts} including its composition. The {@link Nut nuts}
-     * are read and returned by sequence of elements having the same {@link NutType}.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.3
-     */
-    private final class NutsHeapIterator implements Iterator<List<Nut>> {
-
-        /**
-         * Iterator.
-         */
-        private Iterator<Nut> iterator;
-
-        /**
-         * Next element.
-         */
-        private Nut next;
-
-        /**
-         * <p>
-         * Builds a new instance by initializing the iterator.
-         * </p>
-         */
-        NutsHeapIterator() {
-            iterator = getNuts().iterator();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext() || next != null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Nut> next() {
-            if (next == null) {
-                next = iterator.next();
-            }
-
-            final LinkedList<Nut> retval = new LinkedList<Nut>();
-            retval.add(next);
-            next = null;
-
-            // Iterate until the engine type change
-            while (iterator.hasNext()) {
-                next = iterator.next();
-
-                if (next.getNutType().equals(retval.getLast().getNutType())) {
-                    retval.add(next);
-                    next = null;
-                } else {
-                    return retval;
-                }
-            }
-
-            return retval;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
     }
 

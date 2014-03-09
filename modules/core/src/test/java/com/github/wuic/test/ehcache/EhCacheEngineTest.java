@@ -43,6 +43,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.EhCacheEngineBuilder;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
 import com.github.wuic.engine.impl.ehcache.WuicEhcacheProvider;
@@ -111,16 +112,14 @@ public class EhCacheEngineTest {
 
     /**
      * <p>
-     * Creates a a chain composed of the given cache engine and a second mocked engine that increment a counter each time
-     * itrs parse method is invoked.
+     * Creates a mocked engine that increments a counter each time its parse method is invoked.
      * </p>
      *
-     * @param cache the cache engine
-     * @return the chain including the mock
+     * @return the mock
      * @throws WuicException if test fails
      */
-    private Engine chainWithMock(final Engine cache) throws WuicException {
-        final Engine mock = Mockito.mock(Engine.class);
+    private NodeEngine mock() throws WuicException {
+        final NodeEngine mock = Mockito.mock(NodeEngine.class);
         Mockito.when(mock.getEngineType()).thenReturn(EngineType.INSPECTOR);
         Mockito.when(mock.parse(Mockito.any(EngineRequest.class))).then(new Answer<Object>() {
 
@@ -130,11 +129,11 @@ public class EhCacheEngineTest {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
                 count.incrementAndGet();
-                return new ArrayList<Nut>();
+                return ((EngineRequest)invocationOnMock.getArguments()[0]).getNuts();
             }
         });
 
-        return Engine.chain(cache, mock);
+        return mock;
     }
 
     /**
@@ -144,11 +143,19 @@ public class EhCacheEngineTest {
      */
     @Test
     public void cacheTest() throws Exception {
-        final Engine chain = chainWithMock(new EhCacheEngineBuilder().build());
+        final EhCacheEngineBuilder builder = new EhCacheEngineBuilder();
+        final Engine e = builder.build();
+        final NodeEngine chain = mock();
+        final Map<NutType, NodeEngine> map = new HashMap<NutType, NodeEngine>();
+        map.put(NutType.CSS, chain);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getName()).thenReturn("foo.css");
+        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
+        e.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(1, count.get());
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        e.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(1, count.get());
     }
 
@@ -161,11 +168,11 @@ public class EhCacheEngineTest {
     public void noCacheTest() throws Exception {
         final EhCacheEngineBuilder builder = new EhCacheEngineBuilder();
         builder.property(ApplicationConfig.CACHE, false);
-        final Engine chain = chainWithMock(builder.build());
+        final Engine chain = mock();
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, NodeEngine>()));
         Assert.assertEquals(1, count.get());
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, NodeEngine>()));
         Assert.assertEquals(2, count.get());
     }
 
@@ -177,7 +184,11 @@ public class EhCacheEngineTest {
      */
     @Test
     public void invalidateCacheTest() throws Exception {
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getName()).thenReturn("foo.js");
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
+        Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final List<HeapListener> listeners = new ArrayList<HeapListener>();
 
         Mockito.doAnswer(new Answer() {
@@ -195,19 +206,21 @@ public class EhCacheEngineTest {
         final EhCacheEngineBuilder builder = new EhCacheEngineBuilder();
         builder.property(ApplicationConfig.CACHE_PROVIDER_CLASS, CacheFactory.class.getName());
         final EhCacheEngine cache = (EhCacheEngine) builder.build();
-        final Engine chain = chainWithMock(cache);
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        final Map<NutType, NodeEngine> map = new HashMap<NutType, NodeEngine>();
+        map.put(NutType.JAVASCRIPT, mock());
+
+        cache.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(1, count.get());
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        cache.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(1, count.get());
         Assert.assertEquals(listeners.size(), 1);
 
         // Invalidate cache
         listeners.get(0).nutUpdated(heap);
 
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        cache.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(2, count.get());
-        chain.parse(new EngineRequest("", "", heap, new HashMap<NutType, Engine>()));
+        cache.parse(new EngineRequest("", "", heap, map));
         Assert.assertEquals(2, count.get());
     }
 }

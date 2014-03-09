@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -221,7 +220,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
             try {
                 is = newInputStream(path);
-                final MessageDigest md = MessageDigest.getInstance("MD5");
+                final MessageDigest md = IOUtils.newMessageDigest();
                 final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
                 int offset;
 
@@ -230,9 +229,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 }
 
                 return new BigInteger(md.digest());
-            } catch (NoSuchAlgorithmException nsae) {
-                // should never occurs
-                throw new IllegalStateException(nsae);
             } catch (IOException ioe) {
                 throw new StreamException(ioe);
             } finally {

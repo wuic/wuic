@@ -75,6 +75,21 @@ public final class NumberUtils {
     public static final int HEIGHT = 8;
 
     /**
+     * Thirteen. Use this constant to evict checkstyle issue.
+     */
+    public static final int THIRTEEN = 13;
+
+    /**
+     * Fourteen. Use this constant to evict checkstyle issue.
+     */
+    public static final int FOURTEEN = 14;
+
+    /**
+     * Sixteen. Use this constant to evict checkstyle issue.
+     */
+    public static final int SIXTEEN = 16;
+
+    /**
      * One thousand. Use this constant to evict checkstyle issue.
      */
     public static final int ONE_THOUSAND = 1000;

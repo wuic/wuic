@@ -42,6 +42,7 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
+import com.github.wuic.engine.setter.BestEffortPropertySetter;
 import com.github.wuic.engine.setter.CachePropertySetter;
 import com.github.wuic.engine.setter.TimeToLivePropertySetter;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
@@ -64,7 +65,9 @@ public class MemoryMapCacheEngineBuilder extends AbstractEngineBuilder {
      */
     public MemoryMapCacheEngineBuilder() {
         super();
-        addPropertySetter(new CachePropertySetter(this), new TimeToLivePropertySetter(this));
+        addPropertySetter(new CachePropertySetter(this),
+                new TimeToLivePropertySetter(this),
+                new BestEffortPropertySetter(this));
     }
 
     /**
@@ -72,6 +75,8 @@ public class MemoryMapCacheEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new MemoryMapCacheEngine((Boolean) property(ApplicationConfig.CACHE), (Integer) property(ApplicationConfig.TIME_TO_LIVE));
+        return new MemoryMapCacheEngine((Boolean) property(ApplicationConfig.CACHE),
+                (Integer) property(ApplicationConfig.TIME_TO_LIVE),
+                (Boolean) property(ApplicationConfig.BEST_EFFORT));
     }
 }

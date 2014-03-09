@@ -38,11 +38,11 @@
 
 package com.github.wuic.engine.impl.embedded;
 
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.engine.Engine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * This {@link Engine engine} defines the base treatments to execute when
+ * This {@link NodeEngine engine} defines the base treatments to execute when
  * compressing a set of files. It could be extended by different sub-classes
  * which provide compression support.
  * </p>
@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * @version 1.6
  * @since 0.1.0
  */
-public abstract class CGAbstractCompressorEngine extends Engine {
+public abstract class CGAbstractCompressorEngine extends NodeEngine {
  
     /**
      * Logger.
@@ -150,7 +150,7 @@ public abstract class CGAbstractCompressorEngine extends Engine {
      * @throws WuicException if an I/O error occurs
      */
     private Nut compress(final Nut nut) throws WuicException {
-        if (!nut.isTextCompressible() || nut.getName().indexOf(renameExtensionPrefix) != -1) {
+        if (!nut.isTextCompressible() || nut.getName().contains(renameExtensionPrefix)) {
             return nut;
         }
 

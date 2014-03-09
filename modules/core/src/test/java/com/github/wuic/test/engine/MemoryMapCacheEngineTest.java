@@ -38,6 +38,7 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
 import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
 import com.github.wuic.nut.Nut;
 import org.junit.Assert;
@@ -47,6 +48,8 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -68,8 +71,11 @@ public class MemoryMapCacheEngineTest {
     @Test
     public void addThenClearTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1);
-        engine.putToCache(req, Arrays.asList(Mockito.mock(Nut.class)));
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
+        final Map<String, Nut> nuts = new HashMap<String, Nut>();
+        nuts.put("", Mockito.mock(Nut.class));
+        AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
+        engine.putToCache(req, result);
         engine.clearCache();
         Assert.assertNull(engine.getFromCache(req));
     }
@@ -82,8 +88,11 @@ public class MemoryMapCacheEngineTest {
     @Test
     public void addThenRemoveTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1);
-        engine.putToCache(req, Arrays.asList(Mockito.mock(Nut.class)));
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
+        final Map<String, Nut> nuts = new HashMap<String, Nut>();
+        nuts.put("", Mockito.mock(Nut.class));
+        AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
+        engine.putToCache(req, result);
         engine.removeFromCache(req);
         Assert.assertNull(engine.getFromCache(req));
     }

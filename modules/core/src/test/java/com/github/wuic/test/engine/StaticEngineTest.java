@@ -41,6 +41,7 @@ package com.github.wuic.test.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.impl.embedded.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
@@ -81,7 +82,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
-        List<Nut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, Engine>()));
+        List<Nut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
         Assert.assertEquals(res.size(), 3);
 
         try {
@@ -92,7 +93,7 @@ public class StaticEngineTest {
         }
 
         // Test cache
-        res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, Engine>()));
+        res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
         Assert.assertEquals(res.size(), 3);
     }
 
@@ -108,7 +109,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         try {
-            engine.parse(new EngineRequest("foo", "", heap, new HashMap<NutType, Engine>()));
+            engine.parse(new EngineRequest("foo", "", heap, new HashMap<NutType, NodeEngine>()));
             Assert.fail();
         } catch (WuicException we) {
             // Normal behavior

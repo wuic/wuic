@@ -43,6 +43,7 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
@@ -115,7 +116,7 @@ public class WuicXmlTest {
          */
         @Override
         protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-            final Engine engine = mock(Engine.class);
+            final Engine engine = mock(NodeEngine.class);
             return engine;
         }
 

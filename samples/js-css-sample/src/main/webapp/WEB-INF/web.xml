@@ -21,7 +21,17 @@
         <param-name>c.g.w.wuicContextPath</param-name>
         <param-value>/wuic/</param-value>
     </context-param>
-    
+
+    <filter>
+        <filter-name>htmlParserFilter</filter-name>
+        <filter-class>com.github.wuic.servlet.HtmlParserFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>htmlParserFilter</filter-name>
+        <url-pattern>/jquery-ui-1.10.2/filter/*</url-pattern>
+    </filter-mapping>
+
     <listener>
         <listener-class>com.github.wuic.jee.WuicServletContextListener</listener-class>
     </listener>

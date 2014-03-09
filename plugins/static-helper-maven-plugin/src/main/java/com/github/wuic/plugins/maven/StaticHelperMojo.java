@@ -138,7 +138,7 @@ public class StaticHelperMojo extends AbstractMojo {
         final URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 
         try {
-            for (Resource artifact : (List<Resource>) project.getResources()) {
+            for (final Resource artifact : (List<Resource>) project.getResources()) {
                 getLog().info(artifact.getDirectory());
                 final Class urlClass = URLClassLoader.class;
                 final Method method = urlClass.getDeclaredMethod("addURL", URL.class);
@@ -203,11 +203,11 @@ public class StaticHelperMojo extends AbstractMojo {
         bean.setEngineBuilders(Arrays.asList(builder));
 
         // Write modifies configuration into the disk
-        final File temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
+        final File temp = File.createTempFile("tempXml", Long.toString(System.nanoTime()));
         final File outputXmlFile = new File(temp, "wuic.xml");
 
         if (!temp.delete() || !temp.mkdirs()) {
-            throw new IOException(String.format("Could not delete temp '%s' directory for transformed XML configuration file : '%s'",
+            throw new IOException(String.format("Could not delete temp '%s' directory for transformed XML configuration file: '%s'",
                     temp.getAbsolutePath(), "wuic.xml"));
         }
 
@@ -247,7 +247,7 @@ public class StaticHelperMojo extends AbstractMojo {
                     final List<Nut> nuts = facade.runWorkflow(wId);
 
                     for (final Nut nut : nuts) {
-                        write(nut, pw);
+                        write(nut, wId, pw);
                     }
                 } finally {
                     IOUtils.close(pw);
@@ -274,16 +274,17 @@ public class StaticHelperMojo extends AbstractMojo {
      * Writes the given net into the output directory.
      * </p>
      *
-     * @param nut            the nut to be written
+     * @param nut the nut to be written
+     * @param wId the workflow ID
      * @param workflowWriter the workflow print writer
      * @throws WuicException if WUIC fails
      * @throws FileNotFoundException if output directory can't be reached
      */
-    public void write(final Nut nut, final PrintWriter workflowWriter) throws WuicException, FileNotFoundException {
-        final String path = nut.getProxyUri() == null ? nut.getName() : nut.getProxyUri();
+    public void write(final Nut nut, final String wId, final PrintWriter workflowWriter) throws WuicException, FileNotFoundException {
+        final String path = nut.getProxyUri() == null ? IOUtils.mergePath(nut.getVersionNumber().toString(), nut.getName()) : nut.getProxyUri();
         workflowWriter.println(String.format("%s %s", path, nut.getNutType().getExtensions()[0]));
         final File file = new File(project.getBuild().getOutputDirectory().equals(output) ?
-                output : IOUtils.mergePath(project.getBuild().getDirectory(), output), nut.getName());
+                output : IOUtils.mergePath(project.getBuild().getDirectory(), output),  IOUtils.mergePath(wId, nut.getVersionNumber().toString(), nut.getName()));
 
         // Create if not exist
         if (file.getParentFile() != null && file.getParentFile().mkdirs()) {
@@ -295,7 +296,7 @@ public class StaticHelperMojo extends AbstractMojo {
         // Recursive call on referenced nuts
         if (nut.getReferencedNuts() != null) {
             for (final Nut ref : nut.getReferencedNuts()) {
-                write(ref, workflowWriter);
+                write(ref, wId, workflowWriter);
             }
         }
     }

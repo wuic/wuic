@@ -40,22 +40,19 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.engine.Engine;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
- * This {@link Engine engine} can aggregate all the specified files in one path.
+ * This {@link com.github.wuic.engine.NodeEngine engine} can aggregate all the specified files in one path.
  * Files are aggregated in the order of apparition in the given list. Note that
  * nothing will be done if {@link CGTextAggregatorEngine#doAggregation} flag is {@code false}.
  * </p>
@@ -88,59 +85,10 @@ public class CGTextAggregatorEngine extends AbstractAggregatorEngine {
             return request.getNuts();
         }
         
-        // In memory buffer for the aggregated nuts
-        final String nutName = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
-        final ByteArrayOutputStream target = new ByteArrayOutputStream();
-        
-        // Append each path
-        InputStream is = null;
-        NutType nutType = null;
-        final byte[] buffer = new byte[com.github.wuic.util.IOUtils.WUIC_BUFFER_LEN];
-
         final List<Nut> retval = new ArrayList<Nut>();
-        final List<Nut> referencedNuts = new ArrayList<Nut>();
-
-        // Aggregate each nut
-        for (final Nut nut : request.getNuts()) {
-            // Nut must be aggregatable
-            if (nut.isAggregatable()) {
-                try {
-                    nutType = nut.getNutType();
-                    is = nut.openStream();
-                    IOUtils.copyStream(is, target);
-
-                    // Begin content path writing on a new line when no compression is configured
-                    for (Engine previous = getPrevious(); previous != null; previous = previous.getPrevious()) {
-
-                        // Text compression is done before aggregation so it is a previous engine
-                        if (previous instanceof CGAbstractCompressorEngine && !previous.works()) {
-                            buffer[0] = '\n';
-                            target.write(buffer, 0, 1);
-                        }
-                    }
-
-                    if (nut.getReferencedNuts() != null) {
-                        referencedNuts.addAll(nut.getReferencedNuts());
-                    }
-                } finally {
-                    IOUtils.close(is);
-                }
-            } else {
-                retval.add(nut);
-            }
-        }
-
-        // Create the a nut containing all the aggregated nuts
-        final Nut aggregate = new ByteArrayNut(target.toByteArray(), nutName, nutType, request.getNuts());
-
-        // Eventually add some extracted referenced nuts
-        if (!referencedNuts.isEmpty()) {
-            for (final Nut ref : referencedNuts) {
-                aggregate.addReferencedNut(ref);
-            }
-        }
-
-        retval.add(aggregate);
+        final String name = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
+        retval.add(new CompositeNut(request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
+                request.getNuts().toArray(new Nut[request.getNuts().size()])));
 
         if (getNext() != null) {
             return getNext().parse(new EngineRequest(retval, request));

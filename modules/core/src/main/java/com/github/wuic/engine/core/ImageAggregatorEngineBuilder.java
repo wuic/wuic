@@ -42,11 +42,9 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.DimensionPacker;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine;
 import com.github.wuic.engine.setter.AggregatePropertySetter;
 import com.github.wuic.engine.setter.PackerPropertySetter;
-import com.github.wuic.engine.setter.SpriteProviderPropertySetter;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -67,7 +65,7 @@ public class ImageAggregatorEngineBuilder extends AbstractEngineBuilder {
      */
     public ImageAggregatorEngineBuilder() {
         super();
-        addPropertySetter(new AggregatePropertySetter(this), new PackerPropertySetter(this), new SpriteProviderPropertySetter(this));
+        addPropertySetter(new AggregatePropertySetter(this), new PackerPropertySetter(this));
     }
 
     /**
@@ -77,7 +75,6 @@ public class ImageAggregatorEngineBuilder extends AbstractEngineBuilder {
     @SuppressWarnings("unchecked")
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
         return new CGImageAggregatorEngine((Boolean) property(ApplicationConfig.AGGREGATE),
-                (DimensionPacker) property(ApplicationConfig.PACKER_CLASS_NAME),
-                (SpriteProvider[]) property(ApplicationConfig.SPRITE_PROVIDER_CLASS_NAME));
+                (DimensionPacker) property(ApplicationConfig.PACKER_CLASS_NAME));
     }
 }

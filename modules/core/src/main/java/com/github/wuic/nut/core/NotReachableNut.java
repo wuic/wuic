@@ -70,10 +70,10 @@ public class NotReachableNut extends AbstractNut {
      * @param name the nut name
      * @param nutType the nut type
      * @param heapId the nut's heap
+     * @param version the version number
      */
-    public NotReachableNut(final String name, final NutType nutType, final String heapId) {
-        // TODO : provide timestamp
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, BigInteger.ZERO);
+    public NotReachableNut(final String name, final NutType nutType, final String heapId, final BigInteger version) {
+        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, version);
         heap = heapId;
     }
 

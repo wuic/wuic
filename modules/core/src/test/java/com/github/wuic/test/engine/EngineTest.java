@@ -39,19 +39,17 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.SpriteProvider;
-import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
 import com.github.wuic.engine.impl.embedded.CGBinPacker;
-import com.github.wuic.engine.impl.embedded.CGCssSpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine;
 import com.github.wuic.engine.impl.embedded.CGImageCompressorEngine;
+import com.github.wuic.engine.impl.embedded.SpriteInspectorEngine;
 import com.github.wuic.nut.Nut;
 import junit.framework.Assert;
-import net.sf.ehcache.Cache;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 
 /**
  * <p>
@@ -66,76 +64,76 @@ import org.mockito.Mockito;
 public class EngineTest {
 
     /**
-     * Nominal test for {@link Engine#chain(com.github.wuic.engine.Engine...)}.
+     * Nominal test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
     @Test
     public void chainTest() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine3 = new CGImageCompressorEngine(false);
-        Engine chain = Engine.chain(engine1, engine2, engine3);
+        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine3 = new CGImageCompressorEngine(false);
+        final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
     }
 
     /**
-     * Test for {@link Engine#chain(com.github.wuic.engine.Engine...)} with null.
+     * Test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)} with null.
      */
     @Test
     public void chainTestWithNull() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine3 = new CGImageCompressorEngine(false);
-        Engine chain = Engine.chain(null, engine1, null, engine2, null, engine3);
+        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine3 = new CGImageCompressorEngine(false);
+        final NodeEngine chain = NodeEngine.chain(null, engine1, null, engine2, null, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
     }
 
     /**
-     * Union test for {@link Engine#chain(com.github.wuic.engine.Engine...)}.
+     * Union test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
     @Test
     public void chainUnionTest() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine3 = new CGImageCompressorEngine(false);
-        assertChainTest(Engine.chain(Engine.chain(engine1, engine2), Engine.chain(engine2, engine3)), engine1, engine2, engine3);
+        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine3 = new CGImageCompressorEngine(false);
+        assertChainTest(NodeEngine.chain(NodeEngine.chain(engine1, engine2), NodeEngine.chain(engine2, engine3)), engine1, engine2, engine3);
     }
 
     /**
-     * Chaining duplicate engines test for {@link Engine#chain(com.github.wuic.engine.Engine...)}.
+     * Chaining duplicate engines test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
     @Test
     public void chainDuplicateTest() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = engine1;
-        final Engine engine3 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine4 = new CGImageCompressorEngine(false);
-        assertChainTest(Engine.chain(engine1, engine2, engine3, engine4), engine2, engine3, engine4);
+        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = engine1;
+        final NodeEngine engine3 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine4 = new CGImageCompressorEngine(false);
+        assertChainTest(NodeEngine.chain(engine1, engine2, engine3, engine4), engine2, engine3, engine4);
     }
 
     /**
-     * Chaining engines with a replacement test for {@link Engine#chain(com.github.wuic.engine.Engine...)}.
+     * Chaining engines with a replacement test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
     @Test
     public void chainReplaceWithLast() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine3 = new CGImageCompressorEngine(false);
-        final Engine engine4 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine chain = Engine.chain(engine1, engine2, engine3);
-        assertChainTest(Engine.chain(chain, engine4), engine1, engine4, engine3);
+        final NodeEngine engine1 =new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine3 = new CGImageCompressorEngine(false);
+        final NodeEngine engine4 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
+        assertChainTest(NodeEngine.chain(chain, engine4), engine1, engine4, engine3);
     }
 
     /**
-     * Chaining with the first engine replaced test for {@link Engine#chain(com.github.wuic.engine.Engine...)}.
+     * Chaining with the first engine replaced test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
     @Test
     public void chainReplaceFirst() {
-        final Engine engine1 = new EhCacheEngine(false, Mockito.mock(Cache.class));
-        final Engine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        final Engine engine3 = new CGImageCompressorEngine(false);
-        final Engine engine4 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>(), new SpriteProvider[] {new CGCssSpriteProvider()});
-        Engine chain = Engine.chain(engine1, engine2, engine3);
-        chain = Engine.chain(engine4, chain);
+        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final NodeEngine engine2 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        final NodeEngine engine3 = new CGImageCompressorEngine(false);
+        final NodeEngine engine4 = new CGImageAggregatorEngine(false, new CGBinPacker<Nut>());
+        NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
+        chain = NodeEngine.chain(engine4, chain);
         assertChainTest(chain, engine1, engine2, engine3);
     }
 
@@ -149,7 +147,7 @@ public class EngineTest {
      * @param e2 second engine in chain
      * @param e3 third engine in chain
      */
-    private void assertChainTest(final Engine chain, final Engine e1, final Engine e2, final Engine e3) {
+    private void assertChainTest(final NodeEngine chain, final NodeEngine e1, final NodeEngine e2, final NodeEngine e3) {
         // Test null/not null assertion on next and previous
         Assert.assertNull(chain.getPrevious());
         Assert.assertNotNull(chain.getNext());

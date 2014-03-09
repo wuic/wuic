@@ -38,7 +38,8 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.HeadEngine;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
 
@@ -50,10 +51,11 @@ import java.util.Map;
  * </p>
  *
  * <p>
- * For each {@link NutType}, the workflow knows an {@link Engine engines} chain of responsibility. It's also linked
- * to a {@link NutsHeap heap} which should be processed by the chain which has the same {@link NutType}. The workflow
- * has one chain for each possible type to allow the {@link Engine} to invoke another with if one {@link com.github.wuic.nut.Nut}
- * references a {@link com.github.wuic.nut.Nut} with another {@link NutType}.
+ * For each {@link NutType}, the workflow knows a set of {@link NodeEngine engines} chain of responsibility. It's also
+ * linked to a {@link NutsHeap heap} which should be processed by the chain which has the same {@link NutType}. The workflow
+ * has one chain for each possible type to allow the {@link NodeEngine} to invoke another with if one {@link com.github.wuic.nut.Nut}
+ * references a {@link com.github.wuic.nut.Nut} with another {@link NutType}. Optionally, a {@link HeadEngine} could be
+ * set to delegate the chain invocation.
  * </p>
  *
  * <p>
@@ -81,9 +83,10 @@ public class Workflow extends WorkflowTemplate {
      * @param c the chains
      * @param h the heap
      * @param store the DAO stores
+     * @param head the head (could be {@code null})
      */
-    public Workflow(final Map<NutType, ? extends Engine> c, final NutsHeap h, final NutDao ... store) {
-        super(c, store);
+    public Workflow(final HeadEngine head, final Map<NutType, ? extends NodeEngine> c, final NutsHeap h, final NutDao ... store) {
+        super(head, c, store);
         heap = h;
     }
 

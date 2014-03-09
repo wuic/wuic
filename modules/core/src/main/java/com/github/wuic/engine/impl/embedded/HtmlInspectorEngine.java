@@ -1,0 +1,840 @@
+/*
+ * "Copyright (c) 2014   Capgemini Technology Services (hereinafter "Capgemini")
+ *
+ * License/Terms of Use
+ * Permission is hereby granted, free of charge and for the term of intellectual
+ * property rights on the Software, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to use, copy, modify and
+ * propagate free of charge, anywhere in the world, all or part of the Software
+ * subject to the following mandatory conditions:
+ *
+ * -   The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * Any failure to comply with the above shall automatically terminate the license
+ * and be construed as a breach of these Terms of Use causing significant harm to
+ * Capgemini.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
+ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of Capgemini shall not be used in
+ * advertising or otherwise to promote the use or other dealings in this Software
+ * without prior written authorization from Capgemini.
+ *
+ * These Terms of Use are subject to French law.
+ *
+ * IMPORTANT NOTICE: The WUIC software implements software components governed by
+ * open source software licenses (BSD and Apache) of which CAPGEMINI is not the
+ * author or the editor. The rights granted on the said software components are
+ * governed by the specific terms and conditions specified by Apache 2.0 and BSD
+ * licenses."
+ */
+
+
+package com.github.wuic.engine.impl.embedded;
+
+import com.github.wuic.NutType;
+import com.github.wuic.engine.*;
+import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.NutDaoListener;
+import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * <p>
+ * This engine is able to parse an HTML to collect all CSS and JS scripts, refer them through a heap and set
+ * reference to associated workflow URL in DOM.
+ * </p>
+ *
+ * <p>
+ * Some points have to be notified:
+ * </p>
+ *
+ * <ul>
+ *     <li>Observing collected nuts is not possible here so polling won't be perform to invalidate any cache.</li>
+ *     <li>Version number is based on content hash because this is the unique strategy that applies to inline scripts</li>
+ * </ul>
+ *
+ *
+ * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.4.4
+ */
+public class HtmlInspectorEngine extends NodeEngine {
+
+    /**
+     * We use a specific parser for each matched group. Store them in a TreeMap to ensure that lower groups will be tested before higher.
+     */
+    private static final Map<Integer, BiFunction<String, ProxyNutDao, String>> PARSERS = new TreeMap<Integer, BiFunction<String, ProxyNutDao, String>>() {
+        {
+            put(NumberUtils.SIX, new HrefParser());
+        }
+
+        {
+            put(NumberUtils.FOURTEEN, new DefaultParser());
+        }
+
+        {
+            put(1, new JsParser());
+        }
+
+        {
+            put(NumberUtils.THIRTEEN, new CssParser());
+        }
+    };
+
+    /**
+     * Engines types that will be skipped when processing referenced nuts.
+     */
+    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.CACHE, };
+
+    /**
+     * Regex that matches JS script import or JS declaration.
+     */
+    private static final String JS_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "script", "src");
+
+    /**
+     * Regex that matches CSS script import.
+     */
+    private static final String HREF_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>)(([^<]*</%1$s>)|([^/]*/>))?))", "link", "href");
+
+    /**
+     * Regex that matches CSS declaration.
+     */
+    private static final String CSS_SCRIPT_PATTERN = "(<style>.*?</style>)";
+
+    /**
+     * Regex that matches HTML comment.
+     */
+    private static final String HTML_COMMENT_PATTERN = "(<!--.*?-->)";
+
+    /**
+     * The entire regex that collects desired data.
+     */
+    private static final String REGEX = String.format("%s|%s|%s|%s", JS_SCRIPT_PATTERN, HREF_SCRIPT_PATTERN, CSS_SCRIPT_PATTERN, HTML_COMMENT_PATTERN);
+
+    /**
+     * The pattern that collects desired data
+     */
+    private static final Pattern PATTERN = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * Inspects or not.
+     */
+    private Boolean doInspection;
+
+    /**
+     * The charset of inspected file.
+     */
+    private String charset;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param inspect activate inspection or not
+     * @param cs files charset
+     */
+    public HtmlInspectorEngine(final Boolean inspect, final String cs) {
+        doInspection = inspect;
+        charset = cs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
+        // Will contains both heap's nuts eventually modified or extracted nuts.
+        final List<Nut> retval = new ArrayList<Nut>();
+
+        if (works()) {
+            for (final Nut nut : request.getNuts()) {
+
+                try {
+                    retval.add(transformHtml(nut, request.getContextPath(), request));
+                } catch (IOException ioe) {
+                   throw new StreamException(ioe);
+                }
+            }
+        }
+
+        if (getNext() != null) {
+            return getNext().parse(new EngineRequest(retval, request));
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Internal {@link com.github.wuic.nut.NutDao} class that maps particular path to a particular {@link Nut} when the
+     * {@link com.github.wuic.nut.NutDao#create(String)} method is invoked. If the path is not mapped, then a delegated
+     * DAO is called.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private static class ProxyNutDao implements NutDao {
+
+        /**
+         * The delegated DAO.
+         */
+        private NutDao delegate;
+
+        /**
+         * All mapped path to corresponding nut.
+         */
+        private Map<String, Nut> proxy;
+
+        /**
+         * The root path.
+         */
+        private String rootPath;
+
+        /**
+         * <p>
+         * Builds a new instance thanks to a delegated {@link NutDao}.
+         * </p>
+         *
+         * @param rootPath the root path that prefixes any rule
+         * @param delegate the delegated DAO
+         */
+        public ProxyNutDao(final String rootPath, final NutDao delegate) {
+            this.delegate = delegate;
+            this.proxy = new HashMap<String, Nut>();
+            this.rootPath = rootPath;
+        }
+
+        /**
+         * <p>
+         * Adds a mapping between a path and a nut.
+         * </p>
+         *
+         * @param path the path
+         * @param nut the nut returned when path is used
+         */
+        public void addRule(final String path, final Nut nut){
+            proxy.put(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path), nut);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+            // do not observe anything, feature not available here.
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> create(final String path) throws StreamException {
+            final Nut nut = proxy.get(path);
+            List<Nut> retval = Arrays.asList(nut);
+
+            // Nut not mapped, delegate call
+            if (nut == null) {
+                retval = delegate.create(path);
+            }
+
+            return retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> create(final String path, final PathFormat format) throws StreamException {
+            final Nut nut = proxy.get(path);
+            List<Nut> retval = Arrays.asList(nut);
+
+            // Nut not mapped, delegate call
+            if (nut == null) {
+                retval = delegate.create(path, format);
+            }
+
+            return retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String proxyUriFor(final Nut nut) {
+            return delegate.proxyUriFor(nut);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void save(final Nut nut) {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean saveSupported() {
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void shutdown() {
+            proxy.clear();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutDao withRootPath(final String rootPath) {
+            return delegate.withRootPath(rootPath);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public InputStream newInputStream(final String path) throws StreamException {
+            final Nut nut = proxy.get(path);
+
+            // Path not mapped, call delegate
+            if (nut == null) {
+                return delegate.newInputStream(path);
+            } else {
+                try {
+                    return nut.openStream();
+                } catch (NutNotFoundException nnfe) {
+                    throw new StreamException(new IOException(nnfe));
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * This abstract class is a base for script references.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private abstract static class ScriptParser implements BiFunction<String, ProxyNutDao, String> {
+
+        /**
+         * <p>
+         * Returns the token that refers the URL.
+         * </p>
+         *
+         * @return the token
+         */
+        protected abstract String urlToken();
+
+        /**
+         * <p>
+         * Returns the {@link NutType} of created nut.
+         * </p>
+         *
+         * @return the nut type
+         */
+        protected abstract NutType getNutType();
+
+        /**
+         * <p>
+         * Indicates if the parser should tries to read ant inline content.
+         * </p>
+
+         * @return {@link true} if inline content needs to be read, {@code false} otherwise
+         */
+        protected abstract Boolean readInlineIfTokenNotFound();
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String apply(final String s, final ProxyNutDao proxy) {
+            final String token = urlToken();
+            int index = token.isEmpty() ? -1 : s.indexOf(token) + token.length();
+
+            if (index != token.length() - 1) {
+                char c = s.charAt(index);
+                final String retval;
+
+                if (c == '\'' || c == '"') {
+                    retval = s.substring(index + 1, s.indexOf(c, index + 1));
+                } else {
+                    int end = s.indexOf(' ', index);
+
+                    // No space, search />
+                    if (end == -1) {
+                        end = s.indexOf('>', index);
+
+                        if (s.charAt(end - 1) == '/') {
+                            end--;
+                        }
+                    }
+                    retval = s.substring(index, end);
+                }
+
+                if (retval.startsWith("http://") || retval.startsWith("https://")) {
+                    return null;
+                } else {
+                    return retval;
+                }
+            } else if (readInlineIfTokenNotFound()) {
+                // Looking for content
+                final int start = s.indexOf('>') + 1;
+                final int end = s.indexOf('<', start - 1);
+                final byte[] content = s.substring(start, end).getBytes();
+
+                // Sign content
+                final MessageDigest md = IOUtils.newMessageDigest();
+                md.update(content);
+                final BigInteger id = new BigInteger(md.digest());
+
+                // Create nut
+                final NutType nt = getNutType();
+                final String retval = String.format("%s%s", id.toString(NumberUtils.SIXTEEN), nt.getExtensions()[0]);
+                proxy.addRule(retval, new ByteArrayNut(content, retval, nt, id));
+
+                return retval;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * This class parses links to JS scripts and inline JS scripts.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private static class JsParser extends ScriptParser {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String urlToken() {
+            return "src=";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean readInlineIfTokenNotFound() {
+            return Boolean.TRUE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutType getNutType() {
+            return NutType.JAVASCRIPT;
+        }
+    }
+
+    /**
+     * <p>
+     * This class parses links to CSS.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private static class HrefParser extends ScriptParser {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String urlToken() {
+            return "href=";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean readInlineIfTokenNotFound() {
+            return Boolean.FALSE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutType getNutType() {
+            return NutType.CSS;
+        }
+    }
+
+    /**
+     * <p>
+     * This class parses inline CSS.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private static class CssParser extends ScriptParser {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String urlToken() {
+            return "";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean readInlineIfTokenNotFound() {
+            return Boolean.TRUE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutType getNutType() {
+            return NutType.CSS;
+        }
+    }
+
+    /**
+     * <p>
+     * This class returns always {@link null}, telling the caller to not replace the parsed {@code String}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    private static class DefaultParser implements BiFunction<String, ProxyNutDao, String> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String apply(final String s, final ProxyNutDao proxyNutDao) {
+            return null;
+        }
+    }
+
+    /**
+     * <p>
+     * Provides information from collected data in a HTML content.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    public final class ParseInfo {
+
+        /**
+         * The heap generated during collect.
+         */
+        private NutsHeap heap;
+
+        /**
+         * All paths computed from captured statements.
+         */
+        private String[] paths;
+
+        /**
+         * Collected statements.
+         */
+        private List<String> capturedStatements;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param groups captured statements
+         * @param proxyNutDao the DAO to use when computing path from collected data
+         * @param rootPath the root path of content
+         * @throws StreamException if any I/O error occurs
+         */
+        private ParseInfo(final Map<String, Integer> groups, final ProxyNutDao proxyNutDao, final String rootPath)
+                throws StreamException {
+            final String[] groupPaths = new String[groups.size()];
+            this.capturedStatements = new ArrayList<String>(groups.keySet());
+
+            int cpt = 0;
+
+            // Gets the appropriate parser for each captured group according to their position and compute path
+            for (final Map.Entry<String, Integer> entry : groups.entrySet()) {
+                final String path = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao);
+
+                // Path is null, do not replace anything
+                if (path != null) {
+                    groupPaths[cpt++] = StringUtils.simplifyPathWithDoubleDot(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path));
+                } else {
+                    this.capturedStatements.remove(entry.getKey());
+                }
+            }
+
+            // No info have been collected
+            if (cpt == 0) {
+                return;
+            }
+
+            this.paths = new String[cpt];
+            System.arraycopy(groupPaths, 0, paths, 0, cpt);
+
+            final String heapId = new BigInteger(IOUtils.digest(paths)).toString(NumberUtils.SIXTEEN);
+            heap = new NutsHeap(Arrays.asList(this.paths), proxyNutDao, heapId);
+        }
+
+        /**
+         * <p>
+         * Gets the captured statement by parsing.
+         * </p>
+         *
+         * @return the statements
+         */
+        public List<String> getCapturedStatements() {
+            return capturedStatements;
+        }
+
+        /**
+         * <p>
+         * Returns the computed heap.
+         * </p>
+         *
+         * @return the heap
+         */
+        public NutsHeap getHeap() {
+            return heap;
+        }
+
+        /**
+         * <p>
+         * Add this info to the given list if and only if some statements have been captured
+         * </p>
+         *
+         * @param list the list
+         */
+        public void addTo(final List<ParseInfo> list) {
+            if (!capturedStatements.isEmpty()) {
+                list.add(this);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Parses the given HTML content and returns all the information collected during the operation.
+     * </p>
+     *
+     * <p>
+     * When a script is referenced, the given {@link NutDao} will be used to retrieve the corresponding {@link Nut}.
+     * </p>
+     *
+     * @param content the HTML content to parse
+     * @param dao the DAO
+     * @return the parsed HTML
+     * @throws WuicException if WUIC fails to configure context or process created workflow
+     */
+    private List<ParseInfo> parse(final String content, final NutDao dao, final String rootPath) throws WuicException {
+        // Create a proxy that maps inline scripts
+        final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
+
+        // Create the matcher from the given content, we will keep in an integer the end position of group that  previously matched
+        final Matcher matcher = PATTERN.matcher(content);
+        int previousGroupEnd = -1;
+
+        // All the paths we have currently collected
+        final Map<String, Integer> paths = new LinkedHashMap<String, Integer>();
+        final List<ParseInfo> retval = new ArrayList<ParseInfo>();
+
+        // Finds desired groups
+        while (matcher.find()) {
+
+            // There is something to parse
+            if (!matcher.group().trim().isEmpty()) {
+
+                /*
+                 * We've already matched some scripts and there is something (excluding comment and whitespace) between
+                 * the previous script and the script currently matched that implies that they should not be imported
+                 * together. Consequently, we create here a separate heap.
+                 */
+                if (previousGroupEnd != -1 && !content.substring(previousGroupEnd + 1, matcher.start()).trim().isEmpty()) {
+                    new ParseInfo(paths, proxy, rootPath).addTo(retval);
+                    paths.clear();
+                }
+
+                // Now find the appropriate parser
+                for (final Integer groupPosition : PARSERS.keySet()) {
+
+                    // Test value at the associated group position to find the appropriate parser
+                    if (matcher.group(groupPosition) != null) {
+                        paths.put(matcher.group(), groupPosition);
+                        break;
+                    }
+                }
+
+                previousGroupEnd = matcher.end();
+            }
+        }
+
+        // Create a heap for remaining paths
+        if (!paths.isEmpty()) {
+            new ParseInfo(paths, proxy, rootPath).addTo(retval);
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Transforms the given HTML content and returns the replacements done with the collected parse information.
+     * </p>
+     *
+     * @param nut the HTML content to parse
+     * @param request the request
+     * @return the nut wrapping parsed HTML
+     * @throws WuicException if WUIC fails to configure context or process created workflow
+     */
+    public Nut transformHtml(final Nut nut,
+                             final String contextPath,
+                             final EngineRequest request)
+            throws WuicException, IOException {
+        final long now = System.currentTimeMillis();
+        InputStream is = null;
+        final String content;
+
+        try {
+            is = nut.openStream();
+            content = IOUtils.readString(new InputStreamReader(is, charset));
+        } finally {
+            IOUtils.close(is);
+        }
+
+        final int endParent = nut.getName().lastIndexOf('/');
+        final String rootPath = endParent == -1 ? "" : nut.getName().substring(0, endParent);
+        final List<ParseInfo> parseInfoList = parse(content, request.getHeap().findDaoFor(nut), rootPath);
+
+        final StringBuilder transform = new StringBuilder(content);
+        int end = 0;
+        final List<Nut> referenced = new ArrayList<Nut>();
+
+        // A workflow have been created for each heap
+        for (final ParseInfo parseInfo : parseInfoList) {
+            // Render HTML for workflow result
+            final StringBuilder html = new StringBuilder();
+            final EngineRequest parseRequest = new EngineRequest(parseInfo.getHeap().getNuts(), parseInfo.getHeap(), request, SKIPPED_ENGINE);
+            final List<Nut> merged = HeadEngine.runChains(parseRequest, Boolean.FALSE);
+
+            for (final Nut n : merged) {
+                try {
+                    referenced.add(n);
+                    html.append(HtmlUtil.writeScriptImport(n, IOUtils.mergePath(contextPath, request.getWorkflowId()))).append("\r\n");
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                }
+            }
+
+            // Replace all captured statements with HTML generated from WUIC process
+            for (int i = 0; i < parseInfo.getCapturedStatements().size(); i++) {
+                final String toReplace = parseInfo.getCapturedStatements().get(i);
+                int start = transform.indexOf(toReplace, end);
+                end = start + toReplace.length();
+
+                // Add the WUIC result in place of the first statement
+                if (i == 0) {
+                    final String replacement = html.toString();
+                    transform.replace(start, end, replacement);
+                    end = start + replacement.length();
+                } else {
+                    transform.replace(start, end, "");
+                    end = start;
+                }
+            }
+        }
+
+        final Nut retval = new ByteArrayNut(transform.toString().getBytes(), nut.getName(), nut.getNutType(), nut.getVersionNumber());
+
+        for (final Nut ref : referenced) {
+            retval.addReferencedNut(ref);
+        }
+
+        logger.info("HTML transformation in {}ms", System.currentTimeMillis() - now);
+
+        return retval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.HTML);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.INSPECTOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return doInspection;
+    }
+}

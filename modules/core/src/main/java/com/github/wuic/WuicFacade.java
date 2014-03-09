@@ -75,7 +75,7 @@ public final class WuicFacade {
     /**
      * The context builder.
      */
-    private ContextBuilder builder;
+    private final ContextBuilder builder;
 
     /**
      * Context.
@@ -186,25 +186,38 @@ public final class WuicFacade {
     
     /**
      * <p>
-     * Gets the nuts processed by the given workflow identified by the specified ID.
+     * Gets the nut with the given path processed by the given workflow identified by the specified ID.
+     * </p>
+     *
+     * <p>
+     * The path should be used with the name of nuts returned when invoking {@link WuicFacade#runWorkflow(String)}.
      * </p>
      * 
+     * @param id the workflow ID
+     * @param path the requested path, {@code null} to retrieve all paths
+     * @return the processed nuts
+     * @throws WuicException if the context can't be processed
+     */
+    public synchronized Nut runWorkflow(final String id, final String path) throws WuicException {
+        final long start = beforeRunWorkflow(id);
+        final Nut retval = context.process(contextPath, id, path);
+        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Gets the nuts processed by the given workflow identified by the specified ID.
+     * </p>
+     *
      * @param id the workflow ID
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
     public synchronized List<Nut> runWorkflow(final String id) throws WuicException {
-        final long start = System.currentTimeMillis();
-
-        log.info("Getting nuts for workflow : {}", id);
-
-        // Update context if necessary
-        if (!context.isUpToDate()) {
-            context = builder.build();
-        }
-
+        final long start = beforeRunWorkflow(id);
         final List<Nut> retval = new ArrayList<Nut>(context.process(contextPath, id));
-
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -219,6 +232,28 @@ public final class WuicFacade {
      */
     public Set<String> workflowIds() {
         return context.workflowIds();
+    }
+
+    /**
+     * <p>
+     * Method called before running a workflow.
+     * </p>
+     *
+     * @param id the workflow to be run
+     * @return the timestamp as start time
+     * @throws WuicException
+     */
+    private long beforeRunWorkflow(final String id) {
+        final long start = System.currentTimeMillis();
+
+        log.info("Getting nuts for workflow : {}", id);
+
+        // Update context if necessary
+        if (!context.isUpToDate()) {
+            context = builder.build();
+        }
+
+        return start;
     }
 
     /**

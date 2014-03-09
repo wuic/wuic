@@ -70,6 +70,8 @@ public final class EngineBuilderFactory extends AbstractBuilderFactory<EngineBui
             ImageCompressorEngineBuilder.class.getName(),
             ImageAggregatorEngineBuilder.class.getName(),
             StaticEngineBuilder.class.getName(),
+            HtmlInspectorEngineBuilder.class.getName(),
+            SpriteInspectorEngineBuilder.class.getName(),
     };
 
     /**

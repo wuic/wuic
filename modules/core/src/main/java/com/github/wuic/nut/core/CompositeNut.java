@@ -61,7 +61,25 @@ public class CompositeNut extends AbstractNut {
     /**
      * The composition list.
      */
-    private List<Nut> compositionList;
+    private Nut[] compositionList;
+
+    /**
+     * The nut name.
+     */
+    private String name;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param composition the nuts of this composition
+     * @param specificName the name of the composition
+     */
+    public CompositeNut(final String specificName, final Nut ... composition) {
+        this(composition, "");
+        name = specificName;
+    }
 
     /**
      * <p>
@@ -71,20 +89,116 @@ public class CompositeNut extends AbstractNut {
      * @param composition the nuts of this composition
      * @param prefixName a prefix to add to the nut name
      */
-    public CompositeNut(final List<Nut> composition, final String prefixName) {
-        super(composition.get(0));
-        compositionList = composition;
+    public CompositeNut(final Nut[] composition, final String prefixName) {
+        super(composition[0]);
+        compositionList = new Nut[composition.length];
+        System.arraycopy(composition, 0, compositionList, 0, composition.length);
         setNutName(new StringBuilder(getName()).insert(getName().lastIndexOf('/') + 1, prefixName).toString());
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
-        for (int i = 1; i < composition.size(); i++) {
-            final Nut nut = composition.get(i);
+        for (int i = 1; i < composition.length; i++) {
+            final Nut nut = composition[i];
 
             if (nut.getReferencedNuts() != null) {
                 for (final Nut ref : nut.getReferencedNuts()) {
                     addReferencedNut(ref);
                 }
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getName() {
+        return name != null ? name : super.getName();
+    }
+
+    /**
+     * <p>
+     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(java.util.List)}.
+     * It ensures that every names will be unique in returned lists during the entire lifecycle of its instance.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.4
+     */
+    public static class Combiner {
+
+        /**
+         * The initial count of prefixes.
+         */
+        private int prefixCount;
+
+        /**
+         * The name already used.
+         */
+        private Set<String> names;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        public Combiner() {
+            prefixCount = 0;
+            names = new HashSet<String>();
+        }
+
+        /**
+         * <p>
+         * Merges the given nuts.
+         * </p>
+         *
+         * @param nuts the nuts to merge
+         * @return the merged nuts
+         * @see CompositeNut#mergeNuts(java.util.List)
+         */
+        public List<Nut> mergeNuts(final List<Nut> nuts) {
+            final List<Nut> retval = new ArrayList<Nut>(nuts.size());
+            int start = 0;
+            int end = 1;
+            String current = null;
+
+            for (final Iterator<Nut> it = nuts.iterator();;) {
+                final Nut nut = it.hasNext() ? it.next() : null;
+
+                // New sequence
+                if (nut != null && current == null) {
+                    current = nut.getName();
+                    // Nut name is the same as previous nut name, will be included in same composition
+                } else if (nut != null && current.equals(nut.getName())) {
+                    end++;
+                    // Nut name does not equals previous nut name, add previous composition
+                } else {
+                    final List<Nut> subList = nuts.subList(start, end);
+                    final Nut[] composition = subList.toArray(new Nut[subList.size()]);
+                    final String prefix;
+
+                    // Create the composition with a potential prefix to avoid duplicate
+                    if (names.add(composition[0].getName())) {
+                        prefix = "";
+                    } else {
+                        prefix = String.valueOf(prefixCount);
+                    }
+
+                    retval.add(new CompositeNut(composition, prefix));
+
+                    if (nut != null) {
+                        // New sequence
+                        current = nut.getName();
+                        start = end;
+                        prefixCount++;
+                        end++;
+                    } else {
+                        // End of iterator
+                        break;
+                    }
+                }
+            }
+
+            return retval;
         }
     }
 
@@ -97,53 +211,14 @@ public class CompositeNut extends AbstractNut {
      *
      * <p>
      * For instance, ['foo.js', 'foo.js', 'bar.css', 'baz.js', 'foo.js'] => ['0foo.js', 'bar.css', 'baz.js', 'foo.js']
-     * where the first element is a composition.
+     * where the first element is a composition and where "prefixCountStart" equals to 0.
      * </p>
      *
      * @param nuts the nuts to merge
      * @return a list containing all the nuts with some compositions
      */
     public static List<Nut> mergeNuts(final List<Nut> nuts) {
-        final List<Nut> retval = new ArrayList<Nut>(nuts.size());
-        int start = 0;
-        int end = 1;
-        String current = null;
-        Nut previous = null;
-
-        for (final Iterator<Nut> it = nuts.iterator();;) {
-            final Nut nut = it.hasNext() ? it.next() : null;
-
-            // New sequence
-            if (nut != null && current == null) {
-                current = nut.getName();
-            // Nut name is the same as previous nut name, will be included in same composition
-            } else if (nut != null && current.equals(nut.getName())) {
-                end++;
-            // Nut name does not equals previous nut name, add previous composition
-            } else {
-                // Manage case where composition has only one nut
-                if ((end - start) == 1) {
-                    retval.add(previous);
-                } else {
-                    // Many nuts in composition, create new object
-                    retval.add(new CompositeNut(nuts.subList(start, end), String.valueOf(start)));
-                }
-
-                if (nut != null) {
-                    // New sequence
-                    current = nut.getName();
-                    start = end;
-                    end++;
-                } else {
-                    // End of iterator
-                    break;
-                }
-            }
-
-            previous = nut;
-        }
-
-        return retval;
+        return new Combiner().mergeNuts(nuts);
     }
 
     /**
@@ -184,15 +259,15 @@ public class CompositeNut extends AbstractNut {
             try {
                 // First call
                 if (current == null) {
-                    current = CompositeNut.this.compositionList.get(index).openStream();
+                    current = CompositeNut.this.compositionList[index].openStream();
                 }
 
                 // Read the stream
                 final int retval = current.read();
 
                 // End of the stream, we can start reading the next stream
-                if (retval == -1 && index < CompositeNut.this.compositionList.size() - 1) {
-                    current = CompositeNut.this.compositionList.get(++index).openStream();
+                if (retval == -1 && index < CompositeNut.this.compositionList.length - 1) {
+                    current = CompositeNut.this.compositionList[++index].openStream();
                     return current.read();
                 // Stream not ended or no stream to read anymore
                 } else {

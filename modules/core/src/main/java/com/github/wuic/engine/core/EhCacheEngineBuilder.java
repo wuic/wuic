@@ -43,6 +43,7 @@ import com.github.wuic.engine.impl.ehcache.WuicEhcacheProvider;
 import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
+import com.github.wuic.engine.setter.BestEffortPropertySetter;
 import com.github.wuic.engine.setter.CachePropertySetter;
 import com.github.wuic.engine.setter.CacheProviderClassPropertySetter;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
@@ -66,7 +67,9 @@ public class EhCacheEngineBuilder extends AbstractEngineBuilder {
      */
     public EhCacheEngineBuilder() {
         super();
-        addPropertySetter(new CachePropertySetter(this), new CacheProviderClassPropertySetter(this));
+        addPropertySetter(new CachePropertySetter(this),
+                new CacheProviderClassPropertySetter(this),
+                new BestEffortPropertySetter(this));
     }
 
     /**
@@ -75,9 +78,10 @@ public class EhCacheEngineBuilder extends AbstractEngineBuilder {
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
         try {
+            final Object cacheProvider = Class.forName(property(ApplicationConfig.CACHE_PROVIDER_CLASS).toString()).newInstance();
             return new EhCacheEngine((Boolean) property(ApplicationConfig.CACHE),
-                    ((WuicEhcacheProvider) Class.forName(property(ApplicationConfig.CACHE_PROVIDER_CLASS).toString())
-                            .newInstance()).getCache());
+                    ((WuicEhcacheProvider) cacheProvider).getCache(),
+                    (Boolean) property(ApplicationConfig.BEST_EFFORT));
         } catch (InstantiationException ie) {
             throw new BadArgumentException(new IllegalArgumentException(ie));
         } catch (IllegalAccessException iae) {

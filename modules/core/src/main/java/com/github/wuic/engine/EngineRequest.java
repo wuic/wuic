@@ -48,11 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashSet;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * <p>
@@ -60,7 +56,7 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * The user which invokes {@link Engine#parse(EngineRequest)} should indicates in the parameter the nuts
+ * The user which invokes {@link NodeEngine#parse(EngineRequest)} should indicates in the parameter the nuts
  * to be parsed and the context path to use to expose the generated nuts.
  * </p>
  *
@@ -98,7 +94,7 @@ public final class EngineRequest {
     /**
      * The engine chains for each type.
      */
-    private Map<NutType, ? extends Engine> chains;
+    private Map<NutType, ? extends NodeEngine> chains;
 
     /**
      * {@link EngineType} that should be skipped during workflow execution.
@@ -111,6 +107,26 @@ public final class EngineRequest {
     private Key key;
 
     /**
+     * The prefix path of created nuts.
+     */
+    private String prefixCreatedNut;
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some specific nuts and a workflow ID.
+     * </p>
+     *
+     * @param wId the workflow ID
+     * @param n the nuts to be parsed
+     * @param other the request to copy
+     * @param pcn prefix created nut
+     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
+     */
+    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final String pcn, final EngineType ... toSkip) {
+        this(wId, other.contextPath, other.heap, n, other.chains, pcn, toSkip);
+    }
+
+    /**
      * <p>
      * Builds a new {@code EngineRequest} with some specific nuts and a workflow ID.
      * </p>
@@ -121,7 +137,20 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final EngineType ... toSkip) {
-        this(wId, other.contextPath, other.heap, n, other.chains, toSkip);
+        this(wId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, toSkip);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some specific nuts and a specified context path to be used.
+     * </p>
+     *
+     * @param n the nuts to be parsed
+     * @param other the request to copy
+     * @param toSkip the engines type to skip
+     */
+    public EngineRequest(final List<Nut> n, final EngineRequest other, final EngineType[] toSkip) {
+        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, toSkip);
     }
 
     /**
@@ -133,7 +162,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.skip);
+        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.skip);
     }
 
     /**
@@ -144,7 +173,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, other.nuts, other.chains, other.skip);
+        this(other.workflowId, other.contextPath, other.heap, other.nuts, other.chains, other.prefixCreatedNut, other.skip);
     }
 
     /**
@@ -158,7 +187,7 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, toSkip);
+        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, toSkip);
     }
 
     /**
@@ -171,7 +200,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, other.skip);
+        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.skip);
     }
 
     /**
@@ -189,9 +218,9 @@ public final class EngineRequest {
     public EngineRequest(final String wid,
                          final String cp,
                          final NutsHeap h,
-                         final Map<NutType, ? extends Engine> c,
+                         final Map<NutType, ? extends NodeEngine> c,
                          final EngineType ... toSkip) {
-        this(wid, cp, h, new ArrayList<Nut>(h.getNuts()), c, toSkip);
+        this(wid, cp, h, new ArrayList<Nut>(h.getNuts()), c, "", toSkip);
     }
 
     /**
@@ -203,22 +232,36 @@ public final class EngineRequest {
      * @param cp the context root where the generated nuts should be exposed
      * @param h the heap
      * @param c the engine chains
-     * @param n the nuts.
+     * @param n the nuts
+     * @param pcn prefix created nut
      * @param toSkip some engine types to skip
      */
     public EngineRequest(final String wid,
                          final String cp,
                          final NutsHeap h,
                          final List<Nut> n,
-                         final Map<NutType, ? extends Engine> c,
+                         final Map<NutType, ? extends NodeEngine> c,
+                         final String pcn,
                          final EngineType ... toSkip) {
         nuts = new ArrayList<Nut>(n);
         contextPath = cp;
         heap = h;
         chains = c;
         workflowId = wid;
+        prefixCreatedNut = pcn;
         skip = new EngineType[toSkip.length];
         System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
+    }
+
+    /**
+     * <p>
+     * Returns the prefix created nut
+     * </p>
+     *
+     * @return the created nut
+     */
+    public String getPrefixCreatedNut() {
+        return prefixCreatedNut;
     }
 
     /**
@@ -267,14 +310,26 @@ public final class EngineRequest {
 
     /**
      * <p>
+     * Creates a new iterator on the {@link Nut nuts}.
+     * </p>
+     *
+     * @return the iterator
+     * @see NutsIterator
+     */
+    public Iterator<List<Nut>> iterator() {
+        return new NutsIterator();
+    }
+
+    /**
+     * <p>
      * Gets the chains which can treat nuts of the given {@link NutType}.
      * </p>
      *
      * @param nutType the nut type
      * @return the chains that can treat this nut type
      */
-    public Engine getChainFor(final NutType nutType) {
-        final Engine retval = chains.get(nutType);
+    public NodeEngine getChainFor(final NutType nutType) {
+        final NodeEngine retval = chains.get(nutType);
 
         if (retval == null) {
             log.warn("No chain exists for the heap '{}' and the nut type {}.", heap.getId(), nutType.name());
@@ -310,6 +365,111 @@ public final class EngineRequest {
         }
 
         return key;
+    }
+
+    /**
+     * <p>
+     * Returns an array containing all items of {@link EngineRequest#skip} and also the specified types.
+     * </p>
+     *
+     * @param type the array to add
+     * @return the skipped engines including the parameter
+     */
+    public EngineType[] alsoSkip(final EngineType ... type) {
+        int length = skip.length;
+
+        for (final EngineType et : type) {
+            if (CollectionUtils.indexOf(et, skip) < 0) {
+                length++;
+            }
+        }
+
+        final EngineType[] retval = new EngineType[length];
+        System.arraycopy(skip, 0, retval, 0, skip.length);
+
+        for (final EngineType et : type) {
+            if (CollectionUtils.indexOf(et, skip) < 0) {
+                retval[--length] = et;
+            }
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Internal class which helps iterating on all its {@link Nut nuts}. The {@link Nut nuts}
+     * are read and returned by sequence of elements having the same {@link NutType}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.3
+     */
+    private final class NutsIterator implements Iterator<List<Nut>> {
+
+        /**
+         * Iterator.
+         */
+        private Iterator<Nut> iterator;
+
+        /**
+         * Next element.
+         */
+        private Nut next;
+
+        /**
+         * <p>
+         * Builds a new instance by initializing the iterator.
+         * </p>
+         */
+        NutsIterator() {
+            iterator = getNuts().iterator();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext() || next != null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> next() {
+            if (next == null) {
+                next = iterator.next();
+            }
+
+            final LinkedList<Nut> retval = new LinkedList<Nut>();
+            retval.add(next);
+            next = null;
+
+            // Iterate until the engine type change
+            while (iterator.hasNext()) {
+                next = iterator.next();
+
+                if (next.getNutType().equals(retval.getLast().getNutType())) {
+                    retval.add(next);
+                    next = null;
+                } else {
+                    return retval;
+                }
+            }
+
+            return retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**

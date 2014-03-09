@@ -63,6 +63,25 @@ public final class CollectionUtils {
 
     /**
      * <p>
+     * Returns an array without the element at given indexes.
+     * </p>
+     *
+     * @param source the source array
+     * @param target array to recopy (length should equals source.length - exclusions.length)
+     * @param exclusions the indexes to exclude (must appear in natural order)
+     */
+    public static <T> void without(T[] source, T[] target, final int ... exclusions) {
+        int cpt = 0;
+
+        for (int i = 0; i < source.length; i++) {
+            if (Arrays.binarySearch(exclusions, i) < 0) {
+                target[cpt++] = source[i];
+            }
+        }
+    }
+
+    /**
+     * <p>
      * Returns a {@code Map} that keep the orders of its keys.
      * </p>
      *

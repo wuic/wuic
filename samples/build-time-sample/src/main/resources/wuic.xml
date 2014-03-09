@@ -6,7 +6,18 @@
             <properties>
                 <property key="c.g.wuic.dao.basePath">/sir-trevor</property>
                 <property key="c.g.wuic.dao.regex">true</property>
-                <property key="c.g.wuic.dao.proxyUris">http://localhost:8080/</property>
+                <property key="c.g.wuic.dao.contentBasedVersionNumber">true</property>
+                <!--
+                    BROKEN
+                    property key="c.g.wuic.dao.proxyUris">http://localhost:8080/</property
+                 -->
+            </properties>
+        </nut-dao-builder>
+        <nut-dao-builder id="htmlClasspathNutDaoBuilder" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/sir-trevor</property>
+                <property key="c.g.wuic.dao.regex">true</property>
+                <property key="c.g.wuic.dao.contentBasedVersionNumber">true</property>
             </properties>
         </nut-dao-builder>
     </nut-dao-builders>
@@ -18,6 +29,9 @@
         </heap>
         <heap id="css" dao-builder-id="testClasspathNutDaoBuilder">
             <nut-path>.*.css</nut-path>
+        </heap>
+        <heap id="html" dao-builder-id="htmlClasspathNutDaoBuilder">
+            <nut-path>.*.html</nut-path>
         </heap>
     </heaps>
 </wuic>

@@ -39,14 +39,12 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.impl.embedded.ScheduledCacheEngine;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.engine.impl.embedded.*;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +68,7 @@ public class ScheduledCacheTest {
     @Test
     public void scheduledClearCacheTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(2);
-        final ScheduledCacheEngine cache = new ScheduledCacheEngine(1, true) {
+        final ScheduledCacheEngine cache = new ScheduledCacheEngine(1, true, false) {
 
             /**
              * {@inheritDoc}
@@ -82,7 +80,7 @@ public class ScheduledCacheTest {
             /**
              * {@inheritDoc}
              */
-            @Override public void putToCache(EngineRequest.Key request, List<Nut> nuts) { }
+            @Override public void putToCache(EngineRequest.Key request, CacheResult nuts) { }
 
             /**
              * {@inheritDoc}
@@ -92,7 +90,7 @@ public class ScheduledCacheTest {
             /**
              * {@inheritDoc}
              */
-            @Override public List<Nut> getFromCache(EngineRequest.Key request) { return null; }
+            @Override public CacheResult getFromCache(EngineRequest.Key request) { return null; }
         };
 
         count.await(1500, TimeUnit.MILLISECONDS);

@@ -38,15 +38,13 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.engine.*;
 import com.github.wuic.engine.core.*;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.engine.EngineBuilder;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutDaoBuilderFactory;
@@ -528,7 +526,32 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Add a new {@link com.github.wuic.nut.NutDaoBuilder} identified by the specified ID.
+     * Add a new {@link com.github.wuic.nut.NutDao} identified by the specified ID.
+     * </p>
+     *
+     * @param id the ID which identifies the builder in the context
+     * @param dao the dao associated to its ID
+     * @return this {@link ContextBuilder}
+     */
+    public ContextBuilder nutDao(final String id, final NutDao dao) {
+        final ContextSetting setting = getSetting();
+
+        // Will override existing element
+        for (ContextSetting s : taggedSettings.values()) {
+            s.nutDaoMap.remove(id);
+        }
+
+        setting.nutDaoMap.put(id, dao);
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers(id);
+
+        return this;
+    }
+
+    /**
+     * <p>
+     * Adds a new {@link com.github.wuic.nut.NutDaoBuilder} identified by the specified ID.
      * </p>
      *
      * <p>
@@ -542,9 +565,9 @@ public class ContextBuilder extends Observable {
      * @throws com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException if a property is not supported by the builder
      */
     private ContextBuilder nutDaoBuilder(final String id,
-                                        final NutDaoBuilder daoBuilder,
-                                        final Map<String, Object> properties)
-                                        throws BuilderPropertyNotSupportedException {
+                                         final NutDaoBuilder daoBuilder,
+                                         final Map<String, Object> properties)
+                                         throws BuilderPropertyNotSupportedException {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -762,7 +785,8 @@ public class ContextBuilder extends Observable {
         }
 
         // Retrieve each engine associated to all provided IDs and heap them by nut type
-        final Map<NutType, Engine> chains = createChains(includeDefaultEngines, ebIdsExclusion);
+        final Map<NutType, NodeEngine> chains = createChains(includeDefaultEngines, ebIdsExclusion);
+        HeadEngine head = null;
 
         for (final String ebId : ebIds) {
             // Create a different instance per chain
@@ -771,21 +795,27 @@ public class ContextBuilder extends Observable {
             if (engine == null) {
                 throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineBuilder.class.getName()));
             } else {
-                final List<NutType> nutTypes = engine.getNutTypes();
 
-                for (final NutType nt : nutTypes) {
-                    // Already exists
-                    if (chains.containsKey(nt)) {
-                        chains.put(nt, Engine.chain(chains.get(nt), newEngine(ebId)));
-                    } else {
-                        // Create first entry
-                        chains.put(nt, engine);
+                if (engine instanceof HeadEngine) {
+                    head = HeadEngine.class.cast(engine);
+                } else {
+                    final NodeEngine node = NodeEngine.class.cast(engine);
+                    final List<NutType> nutTypes = node.getNutTypes();
+
+                    for (final NutType nt : nutTypes) {
+                        // Already exists
+                        if (chains.containsKey(nt)) {
+                            chains.put(nt, NodeEngine.chain(chains.get(nt), NodeEngine.class.cast(newEngine(ebId))));
+                        } else {
+                            // Create first entry
+                            chains.put(nt, node);
+                        }
                     }
                 }
             }
         }
 
-        setting.getTemplateMap().put(id, new WorkflowTemplate(chains, nutDaos));
+        setting.getTemplateMap().put(id, new WorkflowTemplate(head, chains, nutDaos));
 
         taggedSettings.put(currentTag, setting);
         setChanged();
@@ -837,7 +867,7 @@ public class ContextBuilder extends Observable {
             throw new WorkflowTemplateNotFoundException(workflowTemplateId);
         }
 
-        final Map<NutType, ? extends Engine> chains = template.getChains();
+        final Map<NutType, ? extends NodeEngine> chains = template.getChains();
         final NutDao[] nutDaos = template.getStores();
 
         // Retrieve HEAP
@@ -856,11 +886,11 @@ public class ContextBuilder extends Observable {
                     s.getWorkflowMap().remove(id);
                 }
 
-                setting.getWorkflowMap().put(id, new Workflow(chains, heap, nutDaos));
+                setting.getWorkflowMap().put(id, new Workflow(template.getHead(), chains, heap, nutDaos));
             }
         } else {
             final NutsHeap[] array = heaps.toArray(new NutsHeap[heaps.size()]);
-            setting.getWorkflowMap().put(identifier, new Workflow(chains, new NutsHeap(null, null, heapIdPattern, array)));
+            setting.getWorkflowMap().put(identifier, new Workflow(template.getHead(), chains, new NutsHeap(null, null, heapIdPattern, array)));
         }
 
         taggedSettings.put(currentTag, setting);
@@ -911,7 +941,7 @@ public class ContextBuilder extends Observable {
                 }
 
                 // No workflow has been found : create a default with the heap ID as ID
-                workflowMap.put(heap.getId(), new Workflow(createChains(Boolean.TRUE, null), heap));
+                workflowMap.put(heap.getId(), new Workflow(createHead(Boolean.TRUE, null), createChains(Boolean.TRUE, null), heap));
             }
 
             return new Context(this, workflowMap);
@@ -931,18 +961,23 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions the default engines to exclude
      * @return the different chains
      */
-    private Map<NutType, Engine> createChains(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
-        final Map<NutType, Engine> chains = new HashMap<NutType, Engine>();
+    private Map<NutType, NodeEngine> createChains(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
+        final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         // Include default engines
         if (includeDefaultEngines) {
-            chains.put(NutType.CSS, Engine.chain(defaultCache(ebIdsExclusions), defaultTextAggregator(ebIdsExclusions), defaultCssInspector(ebIdsExclusions)));
-            chains.put(NutType.PNG, Engine.chain(defaultCache(ebIdsExclusions), defaultImageAggregator(ebIdsExclusions), defaultImageCompressor(ebIdsExclusions)));
-            chains.put(NutType.JAVASCRIPT, Engine.chain(defaultCache(ebIdsExclusions), defaultTextAggregator(ebIdsExclusions)));
+            chains.put(NutType.CSS, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions), defaultCssInspector(ebIdsExclusions)));
+            chains.put(NutType.PNG, NodeEngine.chain(defaultSpriteInspector(ebIdsExclusions), defaultImageAggregator(ebIdsExclusions), defaultImageCompressor(ebIdsExclusions)));
+            chains.put(NutType.JAVASCRIPT, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions)));
+            chains.put(NutType.HTML, NodeEngine.chain(defaultHtmlInspector(ebIdsExclusions)));
             // TODO : when created, include GZIP compressor
         }
 
         return chains;
+    }
+
+    private HeadEngine createHead(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
+        return includeDefaultEngines ? defaultCache(ebIdsExclusions) : null;
     }
 
     /**
@@ -953,17 +988,41 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultImageCompressor(final String[] ebIdsExclusions) {
+    private NodeEngine defaultImageCompressor(final String[] ebIdsExclusions) {
         final String name = AbstractBuilderFactory.ID_PREFIX + ImageCompressorEngineBuilder.class.getSimpleName();
 
         if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
         }
 
-        final Engine retval = newEngine(name);
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return new ImageCompressorEngineBuilder().build();
+            return NodeEngine.class.cast(new ImageCompressorEngineBuilder().build());
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default sprite inspector.
+     * </p>
+     *
+     * @param ebIdsExclusions exclusions
+     * @return the default engine
+     */
+    private NodeEngine defaultSpriteInspector(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + SpriteInspectorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
+
+        if (retval == null) {
+            return NodeEngine.class.cast(new SpriteInspectorEngineBuilder().build());
         } else {
             return retval;
         }
@@ -977,17 +1036,17 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultImageAggregator(final String[] ebIdsExclusions) {
+    private NodeEngine defaultImageAggregator(final String[] ebIdsExclusions) {
         final String name = AbstractBuilderFactory.ID_PREFIX + ImageAggregatorEngineBuilder.class.getSimpleName();
 
         if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
         }
 
-        final Engine retval = newEngine(name);
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return new ImageAggregatorEngineBuilder().build();
+            return NodeEngine.class.cast(new ImageAggregatorEngineBuilder().build());
         } else {
             return retval;
         }
@@ -1001,17 +1060,17 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultCssInspector(final String[] ebIdsExclusions) {
+    private NodeEngine defaultCssInspector(final String[] ebIdsExclusions) {
         final String name = AbstractBuilderFactory.ID_PREFIX + CssInspectorEngineBuilder.class.getSimpleName();
 
         if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
         }
 
-        final Engine retval = newEngine(name);
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return new CssInspectorEngineBuilder().build();
+            return NodeEngine.class.cast(new CssInspectorEngineBuilder().build());
         } else {
             return retval;
         }
@@ -1025,17 +1084,41 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions exclusions
      * @return the default engine
      */
-    private Engine defaultTextAggregator(final String[] ebIdsExclusions) {
+    private NodeEngine defaultTextAggregator(final String[] ebIdsExclusions) {
         final String name = AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName();
 
         if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
         }
 
-        final Engine retval = newEngine(name);
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return new TextAggregatorEngineBuilder().build();
+            return NodeEngine.class.cast(new TextAggregatorEngineBuilder().build());
+        } else {
+            return NodeEngine.class.cast(retval);
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default HTML inspector.
+     * </p>
+     *
+     * @param ebIdsExclusions exclusions
+     * @return the default engine
+     */
+    private NodeEngine defaultHtmlInspector(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + HtmlInspectorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
+
+        if (retval == null) {
+            return NodeEngine.class.cast(new HtmlInspectorEngineBuilder().build());
         } else {
             return retval;
         }
@@ -1049,17 +1132,17 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions exclusions
      * @return the default cache
      */
-    private Engine defaultCache(final String[] ebIdsExclusions) {
+    private HeadEngine defaultCache(final String[] ebIdsExclusions) {
         final String name = AbstractBuilderFactory.ID_PREFIX + MemoryMapCacheEngineBuilder.class.getSimpleName();
 
         if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
         }
 
-        final Engine retval = newEngine(name);
+        final HeadEngine retval = HeadEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return new MemoryMapCacheEngineBuilder().build();
+            return  HeadEngine.class.cast(new MemoryMapCacheEngineBuilder().build());
         } else {
             return retval;
         }

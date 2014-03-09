@@ -39,9 +39,9 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
-import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
@@ -68,7 +68,7 @@ import java.util.regex.Matcher;
  * @version 1.4
  * @since 0.3.3
  */
-public abstract class CGTextInspectorEngine extends Engine {
+public abstract class CGTextInspectorEngine extends NodeEngine {
 
     /**
      * The inspectors of each line
@@ -213,7 +213,9 @@ public abstract class CGTextInspectorEngine extends Engine {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
             final List<Nut> res = inspector.appendTransformation(matcher, replacement, request, nutsHeap, original);
-            matcher.appendReplacement(retval, replacement.toString());
+
+            // Evict special $ character
+            matcher.appendReplacement(retval, replacement.toString().replaceAll("\\$", ""));
 
             // Add the nut and inspect it recursively if it's a CSS path
             if (res != null) {

@@ -42,10 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.core.CompositeNut;
-import com.github.wuic.util.CollectionUtils;
-import com.github.wuic.util.HtmlUtil;
-import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.*;
 import com.github.wuic.path.DirectoryPath;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -57,11 +54,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -75,6 +68,32 @@ import java.util.regex.Pattern;
  */
 @RunWith(JUnit4.class)
 public class UtilityTest extends WuicTest {
+
+    /**
+     * <p>
+     * Test the nut research feature.
+     * </p>
+     */
+    @Test
+    public void searchNutTest() {
+        final Nut nut1 = Mockito.mock(Nut.class);
+        Mockito.when(nut1.getName()).thenReturn("../nut1");
+
+        final Nut nut2 = Mockito.mock(Nut.class);
+        Mockito.when(nut2.getName()).thenReturn("../nut2");
+
+        final Nut nut3 = Mockito.mock(Nut.class);
+        Mockito.when(nut3.getName()).thenReturn("nut3");
+        Mockito.when(nut3.getReferencedNuts()).thenReturn(Arrays.asList(nut1, nut2));
+
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut1, nut2, nut3), "nut1"));
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut1, nut2, nut3), "nut2"));
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut1, nut2, nut3), "nut3"));
+
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut3), "nut1"));
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut3), "nut2"));
+        Assert.assertNotNull(NutUtils.findByName(Arrays.asList(nut3), "nut3"));
+    }
 
     /**
      * Test when nuts with same name are merged.
@@ -111,7 +130,7 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
         Assert.assertEquals("foo.css", output.get(1).getName());
-        Assert.assertEquals("2bar.js", output.get(2).getName());
+        Assert.assertEquals("bar.js", output.get(2).getName());
         Assert.assertEquals("baz.css", output.get(3).getName());
 
         Mockito.when(first.getName()).thenReturn("foo.js");
@@ -138,9 +157,23 @@ public class UtilityTest extends WuicTest {
         output = CompositeNut.mergeNuts(input);
 
         Assert.assertEquals(3, output.size());
-        Assert.assertEquals("0foo.js", output.get(0).getName());
+        Assert.assertEquals("foo.js", output.get(0).getName());
         Assert.assertEquals("bar.js", output.get(1).getName());
-        Assert.assertEquals("3baz.css", output.get(2).getName());
+        Assert.assertEquals("baz.css", output.get(2).getName());
+
+        Mockito.when(first.getName()).thenReturn("foo.js");
+        Mockito.when(second.getName()).thenReturn("foo.js");
+        Mockito.when(third.getName()).thenReturn("bar.js");
+        Mockito.when(fourth.getName()).thenReturn("baz.css");
+        Mockito.when(fifth.getName()).thenReturn("foo.js");
+
+        output = CompositeNut.mergeNuts(input);
+
+        Assert.assertEquals(4, output.size());
+        Assert.assertEquals("foo.js", output.get(0).getName());
+        Assert.assertEquals("bar.js", output.get(1).getName());
+        Assert.assertEquals("baz.css", output.get(2).getName());
+        Assert.assertEquals("3foo.js", output.get(3).getName());
     }
 
     /**

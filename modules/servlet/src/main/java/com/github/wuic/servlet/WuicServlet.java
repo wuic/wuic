@@ -61,7 +61,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -181,8 +180,7 @@ public class WuicServlet extends HttpServlet {
             throws WuicException {
 
         // Get the nuts workflow
-        final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
-        final Nut nut = getNut(nuts, nutName);
+        final Nut nut = WuicJeeContext.getWuicFacade().runWorkflow(workflowId, nutName);
         InputStream is = null;
 
         // Nut found
@@ -204,35 +202,5 @@ public class WuicServlet extends HttpServlet {
         } else {
             throw new NutNotFoundException(nutName, workflowId);
         }
-    }
-
-    /**
-     * <p>
-     * Gets the nut with the specified name
-     * </p>
-     *
-     * @param nuts the nuts where the research
-     * @param nutName the name of the nut
-     * @return the nut corresponding to the name, {@code null} if nothing match
-     */
-    private Nut getNut(final List<Nut> nuts, final String nutName) {
-        // Iterates the nuts to find the requested element
-        for (final Nut nut : nuts) {
-            final String parsedName = nut.getName().replace("../", "");
-
-            // Nut found : write the stream and return
-            if (parsedName.equals(nutName) || ("/" + parsedName).equals(nutName) || parsedName.equals("/" + nutName)) {
-                return nut;
-            } else if (nut.getReferencedNuts() != null) {
-                // Find in referenced nuts
-                final Nut ref = getNut(nut.getReferencedNuts(), nutName);
-
-                if (ref != null) {
-                    return ref;
-                }
-            }
-        }
-
-        return null;
     }
 }

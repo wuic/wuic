@@ -102,7 +102,7 @@ public class ContextBuilderTest {
          */
         @Override
         protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-            final Engine engine = mock(Engine.class);
+            final NodeEngine engine = mock(NodeEngine.class);
 
             // Prepare Engine mock
             when(engine.getNutTypes()).thenReturn(Arrays.asList(NutType.JAVASCRIPT));

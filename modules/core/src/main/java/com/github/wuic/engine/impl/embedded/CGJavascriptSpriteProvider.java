@@ -78,7 +78,7 @@ public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {
     @Override
     public Nut getSprite(final String url, final String heapId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
-        final ByteArrayNut retval = new ByteArrayNut("sprites" + nutNameSuffix + ".js", NutType.JAVASCRIPT, originals);
+        final ByteArrayNut retval = new ByteArrayNut(nutNameSuffix + "sprites.js", NutType.JAVASCRIPT, originals);
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation

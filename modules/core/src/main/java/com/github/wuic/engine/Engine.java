@@ -35,31 +35,19 @@
  * licenses."
  */
 
+
 package com.github.wuic.engine;
 
-import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.Nut;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Deque;
-import java.util.Collections;
-
 
 /**
  * <p>
- * An engine is in charge to parse a set of files. They are generally able to
- * parse an unique kind of path {@link com.github.wuic.NutType type}.
- * </p>
- * 
- * <p>
- * WUIC framework consists of a set of {@link Engine} to be executed. They are
- * structured using the chain of responsibility design pattern. Each engine is
- * in charge of the execution of the next engine and could decide not to execute
- * it.
+ * An engine is in charge to parse a set of nuts. They are generally able to
+ * parse an unique kind of {@link com.github.wuic.NutType type} but the subclass could
+ * supports several types.
  * </p>
  *
  * <p>
@@ -73,120 +61,6 @@ import java.util.Collections;
 public abstract class Engine implements Comparable<Engine> {
 
     /**
-     * The next engine.
-     */
-    private Engine nextEngine;
-
-    /**
-     * Previous engine.
-     */
-    private Engine previousEngine;
-
-    /**
-     * <p>
-     * Link the given {@link Engine engines}. They will be linked respecting the order of the implied by their
-     * {@link Engine#getEngineType()}.
-     * </p>
-     *
-     * <p>
-     * If an {@link Engine} is already chained to other {@link Engine engines}, any engine won't be added
-     * as the next engine but to the end of the existing chain.
-     * </p>
-     *
-     * <p>
-     * If two different instances of the same class appear in the chain, then the first one will be replaced by the
-     * second one, keeping the original position.
-     * </p>
-     *
-     * @param engines the engines
-     * @return the first engine of the given array
-     */
-    public static Engine chain(final Engine ... engines) {
-        if (engines.length == 0) {
-            throw new BadArgumentException(new IllegalArgumentException(
-                    "A chain must be built with a non-empty array of engines"));
-        }
-
-        final List<Engine> flatten = new LinkedList<Engine>();
-        final Deque<Engine> retval = new LinkedList<Engine>();
-
-        // Flat the all the chains to improve data structure manipulations
-        for (final Engine engine : engines) {
-            Engine next = engine;
-
-            if (engine == null) {
-                continue;
-            }
-
-            do {
-                flatten.add(next);
-                next = next.nextEngine;
-            } while (next != null);
-        }
-
-        Collections.sort(flatten);
-
-        // Going to reorganize the chain to keep one instance per class
-        forLoop :
-        for (final Engine engine : flatten) {
-
-            // Descending iteration to keep duplicate instance on the right and not on the left
-            final ListIterator<Engine> it = flatten.listIterator(flatten.size());
-
-            for (;it.hasPrevious();) {
-                final Engine previous = it.previous();
-
-                // Already added in the chain, nothing to add
-                if (retval.contains(previous)) {
-                    break;
-                // Two instances of the same class, keep only one
-                } else if (engine.getClass().equals(previous.getClass())) {
-                    if (!retval.isEmpty()) {
-                        retval.getLast().setNext(previous);
-                    } else {
-                        // This is the head of the chain
-                        previous.previousEngine = null;
-                    }
-
-                    retval.add(previous);
-                    continue forLoop;
-                }
-            }
-
-            if (!retval.contains(engine)) {
-                if (!retval.isEmpty()) {
-                    retval.getLast().setNext(engine);
-                }
-
-                retval.add(engine);
-            }
-        }
-
-        return retval.getFirst();
-    }
-
-
-    /**
-     * <p>
-     * Internal method that parses eventually called by {@link Engine#parse(EngineRequest)} method during its invocation.
-     * </p>
-     *
-     * @param request the request with files to parse
-     * @return the parsed files
-     * @throws WuicException if any kind of error occurs
-     */
-    protected abstract List<Nut> internalParse(final EngineRequest request) throws WuicException;
-
-    /**
-     * <p>
-     * Gets the all {@link NutType types} supported by this engine.
-     * </p>
-     *
-     * @return the {@link NutType}
-     */
-    public abstract List<NutType> getNutTypes();
-
-    /**
      * <p>
      * Gets the type of engine.
      * </p>
@@ -197,64 +71,7 @@ public abstract class Engine implements Comparable<Engine> {
 
     /**
      * <p>
-     * Returns a flag indicating if the engine is configured to do something
-     * when {@link Engine#parse(EngineRequest)} is called or not.
-     * </p>
-     * 
-     * @return {@code true} is something will be done, {@code false} otherwise
-     */
-    public abstract Boolean works();
-    
-    /**
-     * <p>
-     * The next {@link Engine} to be execute din the chain of responsibility. If
-     * it is not set, then this {@link Engine} is the last one to be executed.
-     * </p>
-     * 
-     * @param next the next {@link Engine}
-     */
-    public void setNext(final Engine next) {
-        nextEngine = next;
-
-        if (nextEngine != null) {
-            nextEngine.previousEngine = this;
-        }
-    }
-    
-    /**
-     * <p>
-     * Returns the next engine previously set with {@link Engine#setNext(Engine)}
-     * method.
-     * </p>
-     * 
-     * @return the next {@link Engine}
-     */
-    public Engine getNext() {
-        return nextEngine;
-    }
-
-    /**
-     * <p>
-     * Returns the previous engine in the chain.
-     * </p>
-     *
-     * @return the previous {@link Engine}
-     */
-    public Engine getPrevious() {
-        return previousEngine;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final int compareTo(final Engine other) {
-        return getEngineType().compareTo(other.getEngineType());
-    }
-
-    /**
-     * <p>
-     * Parses the given files and returns the result of this operation.
+     * Parses the given nuts and returns the result of this operation.
      * </p>
      *
      * <p>
@@ -262,25 +79,37 @@ public abstract class Engine implements Comparable<Engine> {
      * supported by this {@link Engine}.
      * </p>
      *
-     * @param request the request with files to parse
-     * @return the parsed files
+     * @param request the request with nuts to parse
+     * @return the parsed nuts
      * @throws WuicException if any kind of error occurs
      */
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public abstract List<Nut> parse(EngineRequest request) throws WuicException;
 
-        // Skip this engine parsing
-        if (request.shouldSkip(getEngineType())) {
+    /**
+     * <p>
+     * Internal method that parses eventually called by {@link NodeEngine#parse(EngineRequest)} method during its invocation.
+     * </p>
+     *
+     * @param request the request with files to parse
+     * @return the parsed files
+     * @throws com.github.wuic.exception.WuicException if any kind of error occurs
+     */
+    protected abstract List<Nut> internalParse(EngineRequest request) throws WuicException;
 
-            // Go to next engine if present
-            if (getNext() != null) {
-                return getNext().parse(request);
-            } else {
-                // Nothing to do
-                return request.getNuts();
-            }
-        } else {
-            // Delegate to subclass
-            return internalParse(request);
-        }
+    /**
+     * <p>
+     * Returns a flag indicating if the engine is configured to do something or not.
+     * </p>
+     * 
+     * @return {@code true} is something will be done, {@code false} otherwise
+     */
+    public abstract Boolean works();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final int compareTo(final Engine other) {
+        return getEngineType().compareTo(other.getEngineType());
     }
 }

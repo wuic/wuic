@@ -39,9 +39,7 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.nut.Nut;
 
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -60,7 +58,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
     /**
      * Memory map.
      */
-    private Map<EngineRequest.Key, List<Nut>> cache;
+    private Map<EngineRequest.Key, CacheResult> cache;
 
     /**
      * <p>
@@ -69,17 +67,18 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      *
      * @param work if cache should be activated or not
      * @param timeToLiveSeconds the time this cache could live
+     * @param bestEffort enable best effort mode or not
      */
-    public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds) {
-        super(timeToLiveSeconds, work);
-        cache = new HashMap<EngineRequest.Key, List<Nut>>();
+    public MemoryMapCacheEngine(final Boolean work, final int timeToLiveSeconds, final Boolean bestEffort) {
+        super(timeToLiveSeconds, work, bestEffort);
+        cache = new HashMap<EngineRequest.Key, CacheResult>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final EngineRequest.Key request, final List<Nut> nuts) {
+    public void putToCache(final EngineRequest.Key request, final CacheResult nuts) {
         cache.put(request, nuts);
     }
 
@@ -95,7 +94,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getFromCache(final EngineRequest.Key request) {
+    public CacheResult getFromCache(final EngineRequest.Key request) {
         return cache.get(request);
     }
 

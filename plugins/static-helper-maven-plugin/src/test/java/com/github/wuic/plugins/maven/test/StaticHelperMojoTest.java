@@ -94,6 +94,7 @@ public class StaticHelperMojoTest {
         Mockito.when(build.getDirectory()).thenReturn(new File(System.getProperty("java.io.tmpdir"), "wuic-static-test").getAbsolutePath());
         Mockito.when(build.getOutputDirectory()).thenReturn("");
         Mockito.when(mavenProject.getBuild()).thenReturn(build);
+        Mockito.when(mavenProject.getBasedir()).thenReturn(new File("."));
         mojo.setMavenProject(mavenProject);
         final MavenProjectHelper helper = Mockito.mock(MavenProjectHelper.class);
         mojo.setProjectHelper(helper);
@@ -102,7 +103,8 @@ public class StaticHelperMojoTest {
         mojo.execute();
 
         // Verify
-        Assert.assertTrue(new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/aggregate.css").exists());
-        Assert.assertTrue(new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/aggregate.js").exists());
+        final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
+        Assert.assertTrue(new File(parent,"css").listFiles()[0].list()[0].equals("aggregate.css"));
+        Assert.assertTrue(new File(parent, "js").listFiles()[0].list()[0].equals("aggregate.js"));
     }
 }

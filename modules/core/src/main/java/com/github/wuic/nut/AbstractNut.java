@@ -35,14 +35,15 @@
  * licenses."
  */
 
+
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.util.IOUtils;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,18 +147,13 @@ public abstract class AbstractNut implements Nut {
         originalNuts = o;
 
         // Computes a hash based on each original hash
-        try {
-            final MessageDigest md = MessageDigest.getInstance("MD5");
+        final MessageDigest md = IOUtils.newMessageDigest();
 
-            for (final Nut original : originalNuts) {
-                md.update(original.getVersionNumber().toString().getBytes());
-            }
-
-            versionNumber = new BigInteger(md.digest());
-        } catch (NoSuchAlgorithmException nsae) {
-            // should never occurs
-            throw new IllegalStateException(nsae);
+        for (final Nut original : originalNuts) {
+            md.update(original.getVersionNumber().toString().getBytes());
         }
+
+        versionNumber = new BigInteger(md.digest());
     }
 
     /**
@@ -207,7 +203,7 @@ public abstract class AbstractNut implements Nut {
      *
      * @param nutName the name
      */
-    protected final void setNutName(final String nutName) {
+    public final void setNutName(final String nutName) {
         this.nutName = nutName;
     }
 

@@ -39,9 +39,9 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
-import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.StaticWorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -54,6 +54,7 @@ import com.github.wuic.util.NumberUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +79,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @since 0.4.1
  */
-public class StaticEngine extends Engine {
+public class StaticEngine extends NodeEngine {
 
     /**
      * File pattern.
@@ -133,7 +134,16 @@ public class StaticEngine extends Engine {
                 // Read each file associated to its type
                 while (matcher.find()) {
                     final NutType nutType = NutType.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
-                    retval.add(new NotReachableNut(matcher.group(1), nutType, request.getHeap().getId()));
+                    final String path = matcher.group(1);
+
+                    if (!path.contains("http://")) {
+                        final int versionDelimiterIndex = path.indexOf('/');
+                        final String name = path.substring(versionDelimiterIndex + 1);
+                        final BigInteger version = new BigInteger(path.substring(0, versionDelimiterIndex));
+                        retval.add(new NotReachableNut(name, nutType, request.getHeap().getId(), version));
+                    } else {
+                        retval.add(new NotReachableNut(path, nutType, request.getHeap().getId(), BigInteger.ZERO));
+                    }
                 }
 
                 retrievedWorkflow.put(fileName, retval);

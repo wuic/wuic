@@ -38,6 +38,8 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.util.CollectionUtils;
+
 /**
  * <p>
  * This enumeration describes the different kind of {@link Engine} that may exist.
@@ -46,7 +48,7 @@ package com.github.wuic.engine;
  * <p>
  * In a chain of responsibility, the {@link Engine engines} should be sorted following their {@link EngineType}.
  * Sorting could be performed with this {@link Comparable} implementation. This way, a chain will always as the same
- * behavior :
+ * behavior:
  * <ul>
  *     <li>See if result is already cached or not.</li>
  *     <li>Inspects all nuts and eventually transform them</li>
@@ -85,5 +87,29 @@ public enum EngineType {
     /**
      * Fifth type in a chain. Compress bytes.
      */
-    BINARY_COMPRESSION,
+    BINARY_COMPRESSION;
+
+    private EngineType(final EngineType ... requiredForBestEffort) {
+
+    }
+
+    /**
+     * <p>
+     * Returns all the {@link EngineType} without the specified one.
+     * </p>
+     *
+     * @param type the object to exclude
+     * @return the values without the given type
+     */
+    public static EngineType[] without(final EngineType ... type) {
+        final EngineType[] retval = new EngineType[values().length - type.length];
+        final int[] exclude = new int[type.length];
+
+        for (int i = 0; i < type.length; i++) {
+            exclude[i] = type[i].ordinal();
+        }
+
+        CollectionUtils.without(values(), retval, exclude);
+        return retval;
+    }
 }

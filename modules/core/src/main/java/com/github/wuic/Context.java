@@ -38,12 +38,13 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.HeadEngine;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.*;
-import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.util.NutUtils;
 
 import java.util.*;
 
@@ -105,12 +106,79 @@ public class Context implements Observer {
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
     public List<Nut> process(final String contextPath, final String workflowId) throws WuicException {
+        return process(contextPath, workflowId, getWorkflow(workflowId));
+    }
+
+    /**
+     * <p>
+     * Processes a workflow an returns the nut inside the result with a name that equals to the specified one.
+     * </p>
+     *
+     * @param contextPath the context path where nuts will be referenced
+     * @param wId the workflow ID
+     * @param path the nut name
+     * @return the nut corresponding to the nut name
+     * @throws WuicException if workflow fails to be processed
+     */
+    public Nut process(final String contextPath, final String wId, final String path) throws WuicException {
+        return process(contextPath, wId, getWorkflow(wId), path);
+    }
+
+    /**
+     * <p>
+     * Indicates if this context is up to date regarding the changes performed on the builder that built it.
+     * </p>
+     *
+     * @return {@code true} if this context is up to date, {@code false} if the builder has been modified since the
+     * context has been generated
+     */
+    public Boolean isUpToDate() {
+        return upToDate;
+    }
+
+    /**
+     * <p>
+     * Returns the workflow associated to the given ID
+     * </p>
+     *
+     * @param workflowId the ID
+     * @return the workflow that corresponds to the ID
+     * @throws WorkflowNotFoundException if no workflow is associated to the ID.
+     */
+    private Workflow getWorkflow(final String workflowId) throws WorkflowNotFoundException {
         final Workflow workflow = workflowMap.get(workflowId);
 
         if (workflow == null) {
             throw new WorkflowNotFoundException(workflowId);
         } else {
-            return process(contextPath, workflowId, workflow);
+            return workflow;
+        }
+    }
+
+    /**
+     * <p>
+     * Processes a workflow with its associated ID and returns the resulting nut associated to the given path.
+     * </p>
+     *
+     * @param wId the workflow ID
+     * @param contextPath the context path where nuts will be referenced
+     * @param path the path corresponding to desired nut
+     * @return the resulting nuts
+     * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
+     */
+    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path) throws WuicException {
+        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+
+        if (workflow.getHead() != null) {
+            return workflow.getHead().parse(request, path);
+        } else {
+            final Nut nut = NutUtils.findByName(HeadEngine.runChains(request, Boolean.FALSE), path);
+
+            if (nut != null) {
+                return nut;
+            }
+
+            throw new NutNotFoundException(path, wId);
         }
     }
 
@@ -124,33 +192,14 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    public List<Nut> process(final String contextPath, final String wId, final Workflow workflow) throws WuicException {
-        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getChains());
-        final List<Nut> retval = new ArrayList<Nut>();
+    private List<Nut> process(final String contextPath, final String wId, final Workflow workflow) throws WuicException {
+        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
 
-        final Iterator<List<Nut>> it = workflow.getHeap().iterator();
-
-        // We parse a request for each sequence of nuts having the same type
-        while (it.hasNext()) {
-            final List<Nut> nuts = it.next();
-            final Engine chain = request.getChainFor(nuts.get(0).getNutType());
-            retval.addAll(chain == null ? nuts : chain.parse(new EngineRequest(nuts, request)));
+        if (workflow.getHead() != null) {
+            return workflow.getHead().parse(request);
+        } else {
+           return HeadEngine.runChains(request, Boolean.FALSE);
         }
-
-        // Merges all nuts with same type (for instance two 'aggregate.js' nuts will be wrapped by one composite nut
-        return CompositeNut.mergeNuts(retval);
-    }
-
-    /**
-     * <p>
-     * Indicates if this context is up to date regarding the changes performed on the builder that built it.
-     * </p>
-     *
-     * @return {@code true} if this context is up to date, {@code false} if the builder has been modified since the
-     * context has been generated
-     */
-    public Boolean isUpToDate() {
-        return upToDate;
     }
 
     /**

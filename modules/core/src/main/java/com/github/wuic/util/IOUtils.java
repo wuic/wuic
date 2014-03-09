@@ -46,7 +46,6 @@ import com.github.wuic.path.core.FsDirectoryPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.io.Closeable;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -58,6 +57,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,6 +108,40 @@ public final class IOUtils {
      */
     private IOUtils() {
 
+    }
+
+    /**
+     * <p>
+     * Returns a new {@link MessageDigest} based on MD5 algorithm.
+     * </p>
+     *
+     * @return the message digest
+     */
+    public static MessageDigest newMessageDigest() {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException nsae) {
+            // Should never occur
+            throw new IllegalStateException(nsae);
+        }
+    }
+
+    /**
+     * <p>
+     * Digests each {@code String} in the given array and return the corresponding MD5 signature.
+     * </p>
+     *
+     * @param strings the string array
+     * @return the digested bytes
+     */
+    public static byte[] digest(final String ... strings) {
+        final MessageDigest md = newMessageDigest();
+
+        for (final String string : strings) {
+            md.update(string.getBytes());
+        }
+
+        return md.digest();
     }
 
     /**
@@ -210,12 +245,13 @@ public final class IOUtils {
      *
      * @param is the {@code InputStream}
      * @param os the {@code OutputStream}
+     * @return the content length
      * @throws com.github.wuic.exception.wrapper.StreamException in an I/O error occurs
      */
-    public static void copyStream(final InputStream is, final OutputStream os)
+    public static int copyStream(final InputStream is, final OutputStream os)
             throws StreamException {
         try {
-            copyStreamIoe(is, os);
+            return copyStreamIoe(is, os);
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -228,16 +264,21 @@ public final class IOUtils {
      *
      * @param is the {@code InputStream}
      * @param os the {@code OutputStream}
+     * @return the content length
      * @throws IOException in an I/O error occurs
      */
-    public static void copyStreamIoe(final InputStream is, final OutputStream os)
+    public static int copyStreamIoe(final InputStream is, final OutputStream os)
             throws IOException {
+        int retval = 0;
         int offset;
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
         while ((offset = is.read(buffer)) != -1) {
             os.write(buffer, 0, offset);
+            retval += offset - 1;
         }
+
+        return retval;
     }
 
     /**
@@ -314,7 +355,7 @@ public final class IOUtils {
             final List<String> retval = new ArrayList<String>();
 
             // Check each child path
-            for (String child : children) {
+            for (final String child : children) {
                 final Path path = parent.getChild(child);
                 final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
 

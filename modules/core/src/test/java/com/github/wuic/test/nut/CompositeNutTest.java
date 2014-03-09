@@ -86,7 +86,7 @@ public class CompositeNutTest {
         Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
         Mockito.when(n2.getVersionNumber()).thenReturn(new BigInteger("1"));
 
-        final Nut composite = new CompositeNut(Arrays.asList(n1, n2), "composite");
+        final Nut composite = new CompositeNut(Nut[].class.cast(Arrays.asList(n1, n2).toArray()), "composite");
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
 }

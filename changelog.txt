@@ -124,4 +124,5 @@ Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.4&page=1&state
 
 Breaking changes:
 - Any script with name that contains '.min' extension won't be compress
-- A heap not referenced by any workflow but inside the composed of a referenced heap won't have a default workflow
+- A heap not referenced by any workflow but inside the composition of a referenced heap won't have a default workflow
+- spriteProviderClassName must be now defined a SpriteInspectorEngineBuilder

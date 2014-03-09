@@ -62,7 +62,7 @@ import java.util.List;
  * @version 1.6
  * @since 0.2.0
  */
-public class ByteArrayNut extends AbstractNut {
+public final class ByteArrayNut extends AbstractNut {
 
     /**
      * Serial version UID.
@@ -166,6 +166,7 @@ public class ByteArrayNut extends AbstractNut {
      * Converts the given nut and its referenced nuts into nuts wrapping an in memory byte array.
      * </p>
      *
+     * @param nut the nut to convert
      * @return the byte array nut
      * @throws StreamException if an I/O error occurs
      * @throws NutNotFoundException if given nut not normally created
@@ -178,17 +179,18 @@ public class ByteArrayNut extends AbstractNut {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
             final Nut bytes;
+            final String name = IOUtils.mergePath(nut.getName());
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
-                bytes = new ByteArrayNut(nut);
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), nut.getVersionNumber());
             } else {
-                bytes = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), toByteArrayNut(nut.getOriginalNuts()));
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(nut.getOriginalNuts()));
             }
 
             bytes.setProxyUri(nut.getProxyUri());
 
-            if (nut.getReferencedNuts() != null) {
+            if (nut.getReferencedNuts() != null && nut.getReferencedNuts() != bytes.getReferencedNuts()) {
                 for (final Nut ref : nut.getReferencedNuts()) {
                     bytes.addReferencedNut(toByteArrayNut(ref));
                 }

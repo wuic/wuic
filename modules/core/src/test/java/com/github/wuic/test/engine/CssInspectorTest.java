@@ -44,6 +44,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
@@ -164,7 +165,7 @@ public class CssInspectorTest {
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
         Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
 
-        final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, Engine>());
+        final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
         engine.parse(request);
         Assert.assertEquals(createCount.get(), create);
     }

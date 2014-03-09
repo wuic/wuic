@@ -204,7 +204,7 @@ table.dataTable thead th.sorting {
 .sorting_desc_disabled {
 	background: url('images/sort_desc_disabled.png') no-repeat center right;
 }
- 
+
 table.display thead th:active,
 table.display thead td:active {
 	outline: none;

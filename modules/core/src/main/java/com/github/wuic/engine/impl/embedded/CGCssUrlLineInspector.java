@@ -38,10 +38,7 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.*;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
@@ -111,7 +108,7 @@ public class CGCssUrlLineInspector implements LineInspector {
      * </ul>
      */
     private static final Pattern CSS_URL_PATTERN = Pattern.compile(
-            String.format("(/\\*(?:.|[\\n\\r])*?\\*/)|((?:@import.*?(%s|%s))|(?:background.*?(%s)))", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX));
+            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background.*?(%s)))", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
 
     /**
      * Three groups could contain the name, test the second one if first returns null.
@@ -203,7 +200,7 @@ public class CGCssUrlLineInspector implements LineInspector {
                 res = Arrays.asList(nut);
 
                 // Process nut
-                final Engine engine = request.getChainFor(nut.getNutType());
+                final NodeEngine engine = request.getChainFor(nut.getNutType());
                 if (engine != null) {
                     res = engine.parse(new EngineRequest(res, heap, request, SKIPPED_ENGINE));
                 }
@@ -216,7 +213,7 @@ public class CGCssUrlLineInspector implements LineInspector {
                             "/",
                             request.getContextPath(),
                             request.getWorkflowId(),
-                            originalNut.getVersionNumber().toString(),
+                            nut.getVersionNumber().toString(),
                             (res.isEmpty() ? nut : res.get(0)).getName().replace("../", "a/../")));
                 } else {
                     replacement.append(proxy);

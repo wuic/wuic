@@ -59,7 +59,8 @@
                         <configuration>
                             <xml>src/main/resources/wuic.xml</xml>
                             <relocateTransformedXml>true</relocateTransformedXml>
-                            <output>${build.finalName}</output>
+                            <htmlRegex>.*.html</htmlRegex>
+                            <output>${project.build.finalName}</output>
                         </configuration>
                     </plugin>
                 </plugins>

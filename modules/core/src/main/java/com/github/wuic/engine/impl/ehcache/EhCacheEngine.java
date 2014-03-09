@@ -40,9 +40,6 @@ package com.github.wuic.engine.impl.ehcache;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
-import com.github.wuic.nut.Nut;
-
-import java.util.List;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
@@ -71,9 +68,10 @@ public class EhCacheEngine extends AbstractCacheEngine {
      *
      * @param work if cache should be activated or not
      * @param cache the cache to be wrapped
+     * @param bestEffort enable best effort mode or not
      */
-    public EhCacheEngine(final Boolean work, final Cache cache) {
-        super(work);
+    public EhCacheEngine(final Boolean work, final Cache cache, final Boolean bestEffort) {
+        super(work, bestEffort);
         ehCache = cache;
     }
 
@@ -81,7 +79,7 @@ public class EhCacheEngine extends AbstractCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final EngineRequest.Key request, final List<Nut> nuts) {
+    public void putToCache(final EngineRequest.Key request, final CacheResult nuts) {
         ehCache.put(new Element(request, nuts));
     }
 
@@ -97,8 +95,8 @@ public class EhCacheEngine extends AbstractCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getFromCache(final EngineRequest.Key request) {
+    public CacheResult getFromCache(final EngineRequest.Key request) {
         final Element el = ehCache.get(request);
-        return el == null ? null : (List<Nut>) el.getObjectValue();
+        return el == null ? null : (CacheResult) el.getObjectValue();
     }
 }

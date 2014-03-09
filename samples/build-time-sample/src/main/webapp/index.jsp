@@ -19,6 +19,7 @@
     <textarea class="sir-trevor" name="content"></textarea>
 </form>
 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <wuic:html-import workflowId="js" />
 
 <script type="text/javascript" charset="utf-8">

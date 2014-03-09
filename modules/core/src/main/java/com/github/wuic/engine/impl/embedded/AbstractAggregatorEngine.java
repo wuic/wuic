@@ -39,9 +39,9 @@
 package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.engine.Engine;
 
 import java.util.List;
 
@@ -49,14 +49,14 @@ import com.github.wuic.engine.EngineRequest;
 
 /**
  * <p>
- * This {@link Engine engine} is an abstraction for aggregation nut aggregation.
+ * This {@link NodeEngine engine} is an abstraction for aggregation nut aggregation.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.1
  * @since 0.4.1
  */
-public abstract class AbstractAggregatorEngine extends Engine {
+public abstract class AbstractAggregatorEngine extends NodeEngine {
 
     /**
      * Activate aggregation or not.

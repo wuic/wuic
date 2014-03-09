@@ -64,7 +64,7 @@ public class CGCssSpriteProvider extends CGAbstractSpriteProvider {
     @Override
     public Nut getSprite(final String url, final String workflowId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
-        final ByteArrayNut retval = new ByteArrayNut("sprites" + nutNameSuffix + ".css", NutType.CSS, originals);
+        final ByteArrayNut retval = new ByteArrayNut(nutNameSuffix + "sprites.css", NutType.CSS, originals);
         final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {

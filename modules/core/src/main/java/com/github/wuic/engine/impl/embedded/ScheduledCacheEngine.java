@@ -65,9 +65,10 @@ public abstract class ScheduledCacheEngine extends AbstractCacheEngine implement
      *
      * @param timeToLiveSeconds time to live in seconds for this cache
      * @param cache if cache is activated or not
+     * @param bestEffort enable best effort mode or not
      */
-    public ScheduledCacheEngine(final int timeToLiveSeconds, final Boolean cache) {
-        super(cache);
+    public ScheduledCacheEngine(final int timeToLiveSeconds, final Boolean cache, final Boolean bestEffort) {
+        super(cache, bestEffort);
         setTimeToLive(timeToLiveSeconds);
     }
 
