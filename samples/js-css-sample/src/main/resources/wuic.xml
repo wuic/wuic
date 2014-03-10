@@ -26,6 +26,12 @@
                 <property key="c.g.wuic.engine.compress">true</property>
             </properties>
         </engine-builder>
+
+        <engine-builder id="wuicDefaultMemoryMapCacheEngineBuilder" type="MemoryMapCacheEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.bestEffort">true</property>
+            </properties>
+        </engine-builder>
     </engine-builders>
     <heaps>
         <heap id="collapsible-js" dao-builder-id="httpResourceFactoryBuilder">

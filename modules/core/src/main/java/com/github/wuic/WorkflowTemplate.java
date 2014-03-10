@@ -81,6 +81,13 @@ public class WorkflowTemplate {
         head = h;
     }
 
+    /**
+     * <p>
+     * Gets the {@link HeadEngine} of this workflow.
+     * </p>
+     *
+     * @return the head, {@code null} is no engine has been set
+     */
     public HeadEngine getHead() {
         return head;
     }
