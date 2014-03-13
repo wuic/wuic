@@ -74,10 +74,14 @@ import java.util.regex.Pattern;
  *     try {
  *         // Create a context with some settings tagged as "custom"
  *         final Context ctx = contextBuilder.tag("custom")
- *                      .nutDaoBuilder("FtpNutDaoBuilder", daoBuilder, daoProps)
- *                      .heap("heap", "FtpNutDaoBuilder", "dark.js", "vador.js")
- *                      .engineBuilder("engineId", engineBuilder, engineProps)
- *                      .workflow("starwarsWorkflow", "heap", "engineId", true)
+ *                      .contextNutDaoBuilder("FtpNutDaoBuilder", "FtpNutDaoBuilder")
+ *                      .property("c.g.wuic.dao.basePath", "/statics)"
+ *                      .toContext()
+ *                      .heap("heap", "FtpNutDaoBuilder", "darth.js", "vader.js")
+ *                      .contextNutDaoBuilder("engineId", "TextAggregatorEngineBuilder")
+ *                      .toContext()
+ *                      .template("tpl", new String[]{"engineId"}, null, false)
+ *                      .workflow("starwarsWorkflow", true, "heap", "tpl")
  *                      .releaseTag()
  *                      .build();
  *         ctx.isUpToDate(); // returns true

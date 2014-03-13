@@ -210,16 +210,6 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
                     forEachHeap,
                     workflow.getHeapIdPattern(),
                     workflow.getWorkflowTemplateId());
-            /*} else {
-                ctxBuilder.workflow(forEachHeap ? workflow.getIdPrefix() : workflow.getId(),
-                        forEachHeap,
-                        workflow.getHeapIdPattern(),
-                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
-                        template.getWithoutEngineBuilderIds() == null ?
-                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
-                        template.getUseDefaultEngines(),
-                        template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
-            }*/
         }
     }
 
