@@ -294,12 +294,27 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void fileSearchInJarTest() throws IOException, StreamException {
-
-        // Part 2
         final String str = getClass().getResource("/jar").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
         IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
+    }
+
+    /**
+     * <p>
+     * Search with skipped files.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     * @throws StreamException if error occurs during research
+     */
+    @Test
+    public void fileSearchSkipStartWith() throws IOException, StreamException {
+        final String str = getClass().getResource("/skipped").toString();
+        final String baseDir = str.substring(str.indexOf(":/") + 1);
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final List<String> res = IOUtils.listFile(directoryPath, Pattern.compile(".*.js"), Arrays.asList("ignore"));
+        Assert.assertEquals(2, res.size());
     }
 
     /**

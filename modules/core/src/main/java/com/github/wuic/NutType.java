@@ -87,11 +87,11 @@ public enum NutType {
      */
     HTML(new String[] { ".html" }, "text/html", Boolean.FALSE);
 
+
     /**
      * The logger.
      */
-    private static final Logger log = LoggerFactory.getLogger(NutType.class);
-
+    private static final Logger LOG = LoggerFactory.getLogger(NutType.class);
     /**
      * Possible extensions.
      */
@@ -218,7 +218,7 @@ public enum NutType {
         final int index = path.lastIndexOf('.');
 
         if (index < 0) {
-            log.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
+            LOG.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
             return null;
         }
 

@@ -47,6 +47,8 @@ import com.github.wuic.util.IOUtils;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -96,6 +98,13 @@ public class WebappNutDao extends PathNutDao {
         // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
         super(base, false, proxies, pollingSeconds, regex, contentBasedVersionNumber);
         context = ctx;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected List<String> skipStartsWith() {
+        return Arrays.asList("WEB-INF");
     }
 
     /**

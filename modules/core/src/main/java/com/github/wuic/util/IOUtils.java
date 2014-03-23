@@ -328,7 +328,24 @@ public final class IOUtils {
      * @throws StreamException if any I/O error occurs
      */
     public static List<String> listFile(final DirectoryPath parent, final Pattern pattern) throws StreamException {
-        return listFile(parent, "", pattern);
+        return listFile(parent, "", pattern, CollectionUtils.EMPTY_STRING_LIST);
+    }
+
+    /**
+     * <p>
+     * Searches as specified in {@link #listFile(com.github.wuic.path.DirectoryPath, java.util.regex.Pattern)} with
+     * a list that contains all begin paths to ignore.
+     * </p>
+     *
+     * @param parent the directory
+     * @param pattern the pattern to filter files
+     * @param skipStartsWithList a list that contains all begin paths to ignore
+     * @return the matching files
+     * @throws StreamException if any I/O error occurs
+     */
+    public static List<String> listFile(final DirectoryPath parent, final Pattern pattern, final List<String> skipStartsWithList)
+            throws StreamException {
+        return listFile(parent, "", pattern, skipStartsWithList);
     }
 
     /**
@@ -340,22 +357,33 @@ public final class IOUtils {
      * @param parent the parent
      * @param relativePath the directory path relative to the parent
      * @param pattern the pattern which filters files
+     * @param skipStartsWithList a list that contains all begin paths to ignore
      * @return the matching files
      * @throws StreamException if any I/O error occurs
      */
-    public static List<String> listFile(final DirectoryPath parent, final String relativePath, final Pattern pattern) throws StreamException {
+    public static List<String> listFile(final DirectoryPath parent, final String relativePath, final Pattern pattern, final List<String> skipStartsWithList)
+            throws StreamException {
         try {
             final String[] children = parent.list();
             final List<String> retval = new ArrayList<String>();
 
             // Check each child path
+            childrenLoop:
             for (final String child : children) {
                 final Path path = parent.getChild(child);
                 final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
 
                 // Child is a directory, search recursively
                 if (path instanceof DirectoryPath) {
-                    retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, pattern));
+
+                    // Search recursively if and only if the beginning of the path if not in the excluding list
+                    for (final String skipStartWith : skipStartsWithList) {
+                        if (childRelativePath.startsWith(skipStartWith)) {
+                            continue childrenLoop;
+                        }
+                    }
+
+                    retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, pattern, skipStartsWithList));
                 // Files matches, return
                 } else if (pattern.matcher(childRelativePath).matches()) {
                     retval.add(childRelativePath);

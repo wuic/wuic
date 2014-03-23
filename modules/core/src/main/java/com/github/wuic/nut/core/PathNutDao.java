@@ -51,6 +51,7 @@ import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -102,13 +103,24 @@ public abstract class PathNutDao extends AbstractNutDao {
     }
 
     /**
+     * <p>
+     * Gets the beginning of path to be skipped during research. Should be overridden by subclass.
+     * </p>
+     *
+     * @return the list of beginning paths
+     */
+    protected List<String> skipStartsWith() {
+        return Collections.emptyList();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public List<String> listNutsPaths(final String pattern) throws StreamException {
         init();
         final Pattern compiled = Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern));
-        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), compiled);
+        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), compiled, skipStartsWith());
     }
 
     /**
