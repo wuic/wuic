@@ -241,7 +241,6 @@ public final class WuicFacade {
      *
      * @param id the workflow to be run
      * @return the timestamp as start time
-     * @throws WuicException
      */
     private long beforeRunWorkflow(final String id) {
         final long start = System.currentTimeMillis();
