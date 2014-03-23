@@ -285,6 +285,24 @@ public class UtilityTest extends WuicTest {
     }
 
     /**
+     * <p>
+     * Reads an archive with empty file. Issue #97.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     * @throws StreamException if error occurs during research
+     */
+    @Test
+    public void fileSearchInJarTest() throws IOException, StreamException {
+
+        // Part 2
+        final String str = getClass().getResource("/jar").toString();
+        final String baseDir = str.substring(str.indexOf(":/") + 1);
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
+    }
+
+    /**
      * Test difference between sets.
      */
     @Test

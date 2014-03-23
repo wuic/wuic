@@ -46,16 +46,7 @@ import com.github.wuic.path.core.FsDirectoryPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
+import java.io.*;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -313,6 +304,9 @@ public final class IOUtils {
             // Check that the path begins with magic number
             in = new DataInputStream(inputStream);
             return in.readInt() == ZIP_MAGIC_NUMBER;
+        } catch (EOFException oef) {
+            LOGGER.trace("File is not an archive, probably empty file", oef);
+            return Boolean.FALSE;
         } finally {
             close(in);
         }
