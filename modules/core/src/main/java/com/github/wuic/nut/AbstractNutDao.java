@@ -241,26 +241,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
-     * Computes the {@link NutType} for the given path.
-     * </p>
-     *
-     * @param path the path
-     * @return the {@link NutType}, {@code null} if no extension exists
-     */
-    private NutType getNutType(final String path) {
-        final int index = path.lastIndexOf('.');
-
-        if (index < 0) {
-            log.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
-            return null;
-        }
-
-        final String ext = path.substring(index);
-        return NutType.getNutTypeForExtension(ext);
-    }
-
-    /**
-     * <p>
      * Computes the absolute path of the given path relative to the DAO's base path.
      * </p>
      *
@@ -288,7 +268,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
         for (final String p : pathNames) {
-            final NutType type = getNutType(p);
+            final NutType type = NutType.getNutType(p);
 
             if (type == null) {
                 continue;
@@ -475,7 +455,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     public List<String> computeRealPaths(final String pathName, final PathFormat format) throws StreamException {
         if (!format.canBeRegex()) {
-            final NutType type = getNutType(pathName);
+            final NutType type = NutType.getNutType(pathName);
 
             try {
                 // Will raise an exception if path does not exists

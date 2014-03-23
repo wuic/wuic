@@ -41,6 +41,8 @@ package com.github.wuic;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -84,6 +86,11 @@ public enum NutType {
      * HTML files support.
      */
     HTML(new String[] { ".html" }, "text/html", Boolean.FALSE);
+
+    /**
+     * The logger.
+     */
+    private static final Logger log = LoggerFactory.getLogger(NutType.class);
 
     /**
      * Possible extensions.
@@ -161,7 +168,7 @@ public enum NutType {
      * Gets the engines that should be applied in best effort.
      * </p>
      *
-     * @return
+     * @return the mandatory types
      */
     public EngineType[] getRequiredForBestEffort() {
         return requiredForBestEffort;
@@ -197,5 +204,25 @@ public enum NutType {
         }
 
         throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any NutType", ext)));
+    }
+
+    /**
+     * <p>
+     * Computes the {@link NutType} for the given path.
+     * </p>
+     *
+     * @param path the path
+     * @return the {@link NutType}, {@code null} if no extension exists
+     */
+    public static NutType getNutType(final String path) {
+        final int index = path.lastIndexOf('.');
+
+        if (index < 0) {
+            log.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
+            return null;
+        }
+
+        final String ext = path.substring(index);
+        return getNutTypeForExtension(ext);
     }
 }
