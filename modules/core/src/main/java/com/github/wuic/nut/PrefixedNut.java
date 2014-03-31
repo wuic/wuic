@@ -42,7 +42,8 @@ import com.github.wuic.util.IOUtils;
 
 /**
  * <p>
- * This class wraps a {@link com.github.wuic.nut.Nut} that should be named with a particular prefix path.
+ * This class wraps a {@link com.github.wuic.nut.Nut} that should be named with a particular prefix. The prefix could be
+ * a path or not.
  * </p>
  *
  * @author Guillaume DROUET
@@ -62,11 +63,24 @@ public class PrefixedNut extends NutWrapper {
      * </p>
      *
      * @param nut the nut to wrap
+     * @param prefix the prefix
+     * @param asPath if the prefix is a path
+     */
+    public PrefixedNut(final Nut nut, final String prefix, final Boolean asPath) {
+        super(nut);
+        name = asPath ? IOUtils.mergePath(prefix, nut.getName()) : prefix + nut.getName();
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param nut the nut to wrap
      * @param prefixPath the prefix path
      */
     public PrefixedNut(final Nut nut, final String prefixPath) {
-        super(nut);
-        name = IOUtils.mergePath(prefixPath, nut.getName());
+        this(nut, prefixPath, Boolean.TRUE);
     }
 
     /**
