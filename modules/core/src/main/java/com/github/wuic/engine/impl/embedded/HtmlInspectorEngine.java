@@ -42,11 +42,9 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.*;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.NutDaoListener;
-import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.*;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.util.*;
 import org.slf4j.Logger;
@@ -390,6 +388,10 @@ public class HtmlInspectorEngine extends NodeEngine {
          */
         @Override
         public String apply(final String s, final ProxyNutDao proxy) {
+            if (s.contains("data-wuic-skip")) {
+                return null;
+            }
+
             final String token = urlToken();
             int index = token.isEmpty() ? -1 : s.indexOf(token) + token.length();
 
@@ -618,7 +620,14 @@ public class HtmlInspectorEngine extends NodeEngine {
 
                 // Path is null, do not replace anything
                 if (path != null) {
-                    groupPaths[cpt++] = StringUtils.simplifyPathWithDoubleDot(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path));
+                    final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
+                    final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+
+                    if (simplified == null) {
+                        throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                    }
+
+                    groupPaths[cpt++] = simplified;
                 } else {
                     this.capturedStatements.remove(entry.getKey());
                 }
@@ -778,8 +787,10 @@ public class HtmlInspectorEngine extends NodeEngine {
 
             for (final Nut n : merged) {
                 try {
-                    referenced.add(n);
-                    html.append(HtmlUtil.writeScriptImport(n, IOUtils.mergePath(contextPath, request.getWorkflowId()))).append("\r\n");
+                    // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
+                    final Nut renamed = new PrefixedNut(n, parseInfo.getHeap().getId(), Boolean.FALSE);
+                    referenced.add(renamed);
+                    html.append(HtmlUtil.writeScriptImport(renamed, IOUtils.mergePath(contextPath, request.getWorkflowId()))).append("\r\n");
                 } catch (IOException ioe) {
                     throw new StreamException(ioe);
                 }

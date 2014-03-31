@@ -61,7 +61,12 @@ public enum NutType {
      * Sprite path support.
      */
     //SPRITE(new String[] {".png", ".PNG"}, null, Boolean.TRUE),
-    
+
+    /**
+     * EOT path support.
+     */
+    //EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", Boolean.TRUE),
+
     /**
      * PNG path support.
      */
