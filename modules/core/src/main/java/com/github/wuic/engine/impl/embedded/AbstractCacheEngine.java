@@ -149,8 +149,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
-                long fifoo = System.currentTimeMillis();
-
                 final List<Nut> prefixed = new ArrayList<Nut>(request.getNuts().size());
 
                 for (final Nut nut : request.getNuts()) {
@@ -158,25 +156,13 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     prefixed.add(new PrefixedNut(nut, "best-effort"));
                 }
 
-                log.info("prefixed bytes in {}ms", (System.currentTimeMillis() - fifoo));
-
-                fifoo = System.currentTimeMillis();
-
                 retval = runChains(new EngineRequest(request.getWorkflowId(), prefixed, request, "best-effort"), Boolean.TRUE);
-
-                log.info("run chains {}ms", (System.currentTimeMillis() - fifoo));
-
-                fifoo = System.currentTimeMillis();
 
                 final Map<String, Nut> bestEffortResult = new HashMap<String, Nut>(retval.size());
 
                 for (final Nut nut : retval) {
                     bestEffortResult.put(nut.getName(), nut);
                 }
-
-                log.info("best effort result {}ms", (System.currentTimeMillis() - fifoo));
-
-                fifoo = System.currentTimeMillis();
 
                 // Get and create if not exists the job that parse nuts
                 synchronized (parsingBestEffort) {
@@ -186,8 +172,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                         parsingBestEffort.put(key, call);
                     }
                 }
-
-                log.info("create future in {}ms", (System.currentTimeMillis() - fifoo));
             } else {
                 // Not in best effort, we can wait for the end of the job
                 toCache = new ParseDefaultCall(request).call();
