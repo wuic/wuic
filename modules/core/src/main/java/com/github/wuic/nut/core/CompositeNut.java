@@ -42,6 +42,7 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 import com.github.wuic.nut.Nut;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -69,15 +70,21 @@ public class CompositeNut extends AbstractNut {
     private String name;
 
     /**
+     * The bytes between each stream.
+     */
+    private byte[] streamSeparator;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
      * @param composition the nuts of this composition
+     * @param separator the bytes between each stream, {@code null} if nothing
      * @param specificName the name of the composition
      */
-    public CompositeNut(final String specificName, final Nut ... composition) {
-        this(composition, "");
+    public CompositeNut(final String specificName, final byte[] separator, final Nut ... composition) {
+        this(composition, "", separator);
         name = specificName;
     }
 
@@ -88,9 +95,16 @@ public class CompositeNut extends AbstractNut {
      *
      * @param composition the nuts of this composition
      * @param prefixName a prefix to add to the nut name
+     * @param separator the bytes between each stream, {@code null} if nothing
      */
-    public CompositeNut(final Nut[] composition, final String prefixName) {
+    public CompositeNut(final Nut[] composition, final String prefixName, final byte[] separator) {
         super(composition[0]);
+
+        if (separator != null) {
+            streamSeparator = new byte[separator.length];
+            System.arraycopy(separator, 0, streamSeparator, 0, streamSeparator.length);
+        }
+
         compositionList = new Nut[composition.length];
         System.arraycopy(composition, 0, compositionList, 0, composition.length);
         setNutName(new StringBuilder(getName()).insert(getName().lastIndexOf('/') + 1, prefixName).toString());
@@ -183,7 +197,7 @@ public class CompositeNut extends AbstractNut {
                         prefix = String.valueOf(prefixCount);
                     }
 
-                    retval.add(new CompositeNut(composition, prefix));
+                    retval.add(new CompositeNut(composition, prefix, null));
 
                     if (nut != null) {
                         // New sequence
@@ -252,6 +266,11 @@ public class CompositeNut extends AbstractNut {
         private int index;
 
         /**
+         * Current stream is actually serving the {@link #streamSeparator} bytes.
+         */
+        private Boolean separating = Boolean.FALSE;
+
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -267,7 +286,16 @@ public class CompositeNut extends AbstractNut {
 
                 // End of the stream, we can start reading the next stream
                 if (retval == -1 && index < CompositeNut.this.compositionList.length - 1) {
-                    current = CompositeNut.this.compositionList[++index].openStream();
+
+                    // We have a stream separator to serve
+                    if (streamSeparator != null && !separating) {
+                        separating = Boolean.TRUE;
+                        current = new ByteArrayInputStream(streamSeparator);
+                    } else {
+                        separating = Boolean.FALSE;
+                        current = CompositeNut.this.compositionList[++index].openStream();
+                    }
+
                     return current.read();
                 // Stream not ended or no stream to read anymore
                 } else {

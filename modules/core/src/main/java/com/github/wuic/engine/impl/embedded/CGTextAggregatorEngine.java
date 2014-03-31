@@ -88,6 +88,7 @@ public class CGTextAggregatorEngine extends AbstractAggregatorEngine {
         final List<Nut> retval = new ArrayList<Nut>();
         final String name = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
         retval.add(new CompositeNut(request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
+                "\r\n".getBytes(),
                 request.getNuts().toArray(new Nut[request.getNuts().size()])));
 
         if (getNext() != null) {
