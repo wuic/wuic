@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 public interface LineInspector {

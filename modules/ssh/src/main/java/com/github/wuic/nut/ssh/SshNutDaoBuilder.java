@@ -52,7 +52,7 @@ import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public class SshNutDaoBuilder extends AbstractNutDaoBuilder {

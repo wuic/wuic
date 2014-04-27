@@ -72,7 +72,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.3
+ * @version 1.4
  * @since 0.3.3
  */
 public class GStorageNutDao extends AbstractNutDao {

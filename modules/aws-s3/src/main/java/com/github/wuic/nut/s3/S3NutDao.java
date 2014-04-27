@@ -66,7 +66,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.5
+ * @version 1.6
  * @since 0.3.3
  */
 public class S3NutDao extends AbstractNutDao {

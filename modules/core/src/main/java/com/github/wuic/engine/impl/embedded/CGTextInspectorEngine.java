@@ -65,7 +65,7 @@ import java.util.regex.Matcher;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.3
  */
 public abstract class CGTextInspectorEngine extends NodeEngine {

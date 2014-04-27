@@ -51,7 +51,7 @@ import com.github.wuic.nut.AbstractNutDaoBuilder;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.1
  */
 public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {

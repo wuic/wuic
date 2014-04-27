@@ -41,7 +41,12 @@ package com.github.wuic.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * <p>
@@ -55,7 +60,7 @@ import java.util.concurrent.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.0
  */
 public final class WuicScheduledThreadPool extends Thread {

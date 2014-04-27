@@ -58,7 +58,7 @@ import com.github.wuic.util.IOUtils;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.9
+ * @version 2.0
  * @since 0.1.0
  */
 public class CGTextAggregatorEngine extends AbstractAggregatorEngine {

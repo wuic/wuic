@@ -80,7 +80,7 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.4.0
  */
 public abstract class AbstractCacheEngine extends HeadEngine {

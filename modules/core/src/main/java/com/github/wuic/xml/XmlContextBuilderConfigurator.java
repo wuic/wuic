@@ -62,7 +62,7 @@ import java.net.URL;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.0
  */
 public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfigurator {

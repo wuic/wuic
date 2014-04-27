@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.1
  */
 public final class IOUtils {

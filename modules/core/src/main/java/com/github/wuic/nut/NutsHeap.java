@@ -65,7 +65,7 @@ import java.util.*;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.0
  */
 public class NutsHeap implements NutDaoListener, HeapListener {

@@ -65,7 +65,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.2
  */
 public abstract class PathNutDao extends AbstractNutDao {

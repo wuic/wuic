@@ -54,7 +54,7 @@ import java.util.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.2
  */
 public class CompositeNut extends AbstractNut {

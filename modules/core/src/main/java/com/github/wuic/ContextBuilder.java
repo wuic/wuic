@@ -104,7 +104,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {

@@ -59,7 +59,7 @@ import java.net.MalformedURLException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.1
  */
 @RunWith(JUnit4.class)

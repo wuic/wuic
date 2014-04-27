@@ -50,7 +50,7 @@ import java.util.HashMap;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 public class MemoryMapCacheEngine extends ScheduledCacheEngine {

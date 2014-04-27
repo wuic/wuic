@@ -62,7 +62,7 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
+ * @version 1.8
  * @since 0.2.0
  */
 public class CGJavascriptSpriteProvider extends CGAbstractSpriteProvider {

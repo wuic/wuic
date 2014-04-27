@@ -48,7 +48,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -61,7 +67,7 @@ import java.util.*;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.3.0
  */
 public final class EngineRequest {

@@ -52,7 +52,7 @@ import java.util.Arrays;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.1.0
  */
 public enum NutType {

@@ -42,7 +42,11 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.core.CompositeNut;
-import com.github.wuic.util.*;
+import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.HtmlUtil;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -54,7 +58,11 @@ import java.io.File;
 import java.io.IOException;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Map;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -63,7 +71,7 @@ import java.util.regex.Pattern;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.3.4
  */
 @RunWith(JUnit4.class)

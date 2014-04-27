@@ -66,7 +66,7 @@ import com.jcraft.jsch.SftpException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.1
  */
 public class SshNutDao extends AbstractNutDao {

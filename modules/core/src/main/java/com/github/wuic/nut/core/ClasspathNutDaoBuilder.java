@@ -58,7 +58,7 @@ import java.net.URL;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
+ * @version 1.5
  * @since 0.3.0
  */
 public class ClasspathNutDaoBuilder extends DiskNutDaoBuilder {

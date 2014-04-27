@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
+ * @version 1.7
  * @since 0.1.0
  */
 public abstract class CGAbstractCompressorEngine extends NodeEngine {

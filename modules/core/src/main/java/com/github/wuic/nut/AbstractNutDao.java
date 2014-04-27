@@ -67,7 +67,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
+ * @version 1.4
  * @since 0.3.1
  */
 public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {

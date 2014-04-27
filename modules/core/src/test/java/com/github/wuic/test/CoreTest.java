@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.8
+ * @version 1.9
  * @since 0.1.0
  */
 @RunWith(JUnit4.class)

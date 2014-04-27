@@ -52,7 +52,7 @@ import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
  * </p>
  *
  * @author Corentin AZELART
- * @version 1.2
+ * @version 1.3
  * @since 0.3.3
  */
 public class GStorageNutDaoBuilder extends AbstractNutDaoBuilder {
