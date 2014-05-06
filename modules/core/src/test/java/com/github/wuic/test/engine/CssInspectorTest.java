@@ -169,6 +169,85 @@ public class CssInspectorTest {
         engine.parse(request);
         Assert.assertEquals(createCount.get(), create);
     }
+    
+    /**
+     * <p>
+     * Test when @import with "data:" url.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void dataUrlTest() throws Exception {
+        final AtomicInteger createCount = new AtomicInteger(0);
+        final NutDao dao = Mockito.mock(NutDao.class);
+        Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
+        final Engine engine = new CGCssInspectorEngine(true, "UTF-8");
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                final List<Nut> retval = new ArrayList<Nut>();
+                final Nut nut = Mockito.mock(Nut.class);
+                Mockito.when(nut.getName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
+                Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+                Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+                Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+
+                retval.add(nut);
+                return retval;
+            }
+        });
+        Mockito.when(heap.getId()).thenReturn("heap");
+        Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
+        Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
+        final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
+        final List<Nut> nuts = new ArrayList<Nut>();
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getName()).thenAnswer(new Answer<Object>() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                final String retval = createCount.get() + ".css";
+                h.getCreated().add(retval);
+                return retval;
+
+            }
+        });
+        nuts.add(nut);
+
+        String[][] collection = new String[][] {
+            new String[] {"@import url(\"%s\");", "data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw=="},
+            new String[] {"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
+        };
+
+        final StringBuilder builder = new StringBuilder();
+
+        for (final String[] c : collection) {
+            final String rule = c[0];
+            final String path = c[1];
+            builder.append(String.format(rule, path));
+        }
+
+        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
+        Mockito.when(heap.getNuts()).thenReturn(nuts);
+        Mockito.when(heap.getNutDao()).thenReturn(dao);
+        Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
+        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
+
+        final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
+        List<Nut> parsedNuts = engine.parse(request);
+        Assert.assertEquals("Shouldn't create nuts for 'data:' urls.", createCount.get(), 0);
+    }
 
     /**
      * Test when file is referenced with '../'.
@@ -208,4 +287,6 @@ public class CssInspectorTest {
         final Context ctx = builder.build();
         ctx.process("", "composite");
     }
+    
+    
 }
