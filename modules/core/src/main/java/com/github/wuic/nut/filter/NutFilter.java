@@ -62,9 +62,8 @@ public interface NutFilter {
      * Depending of the implementation, the result could be the instance specified in parameter or a new one
      * </p>
      *
-     * @param heapId the heap ID
      * @param paths the paths to filter
      * @return the filtering result
      */
-    List<String> filterPaths(String heapId, List<String> paths);
+    List<String> filterPaths(List<String> paths);
 }

@@ -77,7 +77,7 @@ public class RegexRemoveNutFilter implements NutFilter {
      * {@inheritDoc}
      */
     @Override
-    public List<String> filterPaths(final String heapId, final List<String> paths) {
+    public List<String> filterPaths(final List<String> paths) {
         final List<String> retval = new ArrayList<String>();
 
         pathsLoop:

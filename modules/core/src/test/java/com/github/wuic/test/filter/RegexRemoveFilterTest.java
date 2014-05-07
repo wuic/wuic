@@ -68,7 +68,7 @@ public class RegexRemoveFilterTest {
     public void defaultBuilderTest() {
         final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
         final NutFilter f = b.build();
-        Assert.assertEquals(3, f.filterPaths("", Arrays.asList("a", "b", "c")).size());
+        Assert.assertEquals(3, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
 
     /**
@@ -80,7 +80,7 @@ public class RegexRemoveFilterTest {
     public void oneRegexBuilderTest() throws Exception {
         final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
         final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b").build());
-        Assert.assertEquals(2, f.filterPaths("", Arrays.asList("a", "b", "c")).size());
+        Assert.assertEquals(2, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
 
     /**
@@ -102,7 +102,7 @@ public class RegexRemoveFilterTest {
     public void twoRegexBuilderTest() throws Exception {
         final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
         final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\nc").build());
-        Assert.assertEquals(1, f.filterPaths("", Arrays.asList("a", "b", "c")).size());
+        Assert.assertEquals(1, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
 
     /**
@@ -114,6 +114,6 @@ public class RegexRemoveFilterTest {
     public void lineFeedRegexBuilderTest() throws Exception {
         final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
         final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\\nc").build());
-        Assert.assertEquals(0, f.filterPaths("", Arrays.asList("b\nc")).size());
+        Assert.assertEquals(0, f.filterPaths(Arrays.asList("b\nc")).size());
     }
 }

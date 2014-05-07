@@ -773,7 +773,7 @@ public class ContextBuilder extends Observable {
 
                 for (final ContextSetting s : taggedSettings.values()) {
                     for (final NutFilter filter : s.getNutFilterMap().values()) {
-                        pathList = filter.filterPaths(id, pathList);
+                        pathList = filter.filterPaths(pathList);
                     }
                 }
             }
