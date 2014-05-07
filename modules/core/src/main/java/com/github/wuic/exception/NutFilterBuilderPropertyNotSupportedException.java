@@ -38,7 +38,6 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.filter.NutFilterBuilder;
 
 /**

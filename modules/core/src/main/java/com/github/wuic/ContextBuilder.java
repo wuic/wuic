@@ -760,26 +760,8 @@ public class ContextBuilder extends Observable {
             }
         }
 
-        List<String> pathList;
-
-        if (path.length != 0) {
-            if (dao == null) {
-                final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
-                        ndbId, NutDaoBuilder.class.getName());
-                throw new BadArgumentException(new IllegalArgumentException(msg));
-            } else {
-                // Going to filter the list with all declared filters
-                pathList = CollectionUtils.newList(path);
-
-                for (final ContextSetting s : taggedSettings.values()) {
-                    for (final NutFilter filter : s.getNutFilterMap().values()) {
-                        pathList = filter.filterPaths(pathList);
-                    }
-                }
-            }
-        } else {
-            pathList = Arrays.asList();
-        }
+        // Check content and apply filters
+        final List<String> pathList = pathList(dao, ndbId, path);
 
         final ContextSetting setting = getSetting();
 
@@ -801,6 +783,45 @@ public class ContextBuilder extends Observable {
         notifyObservers(id);
 
         return this;
+    }
+
+    /**
+     * <p>
+     * This internal methods takes the declared paths specified in parameters, filters them and returns teh result.
+     * </p>
+     *
+     * <p>
+     * Also throws a {@link BadArgumentException} if their is at least one path while the specified DAO is {@code null}.
+     * </p>
+     *
+     * @param dao the {@link NutDao} that creates {@link com.github.wuic.nut.Nut} with given path
+     * @param ndbId the ID associated to the DAO
+     * @param path the paths that represent the {@link com.github.wuic.nut.Nut nuts}
+     * @return the filtered paths
+     */
+    private List<String> pathList(final NutDao dao, final String ndbId, final String ... path) {
+        List<String> pathList;
+
+        if (path.length != 0) {
+            if (dao == null) {
+                final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
+                        ndbId, NutDaoBuilder.class.getName());
+                throw new BadArgumentException(new IllegalArgumentException(msg));
+            } else {
+                // Going to filter the list with all declared filters
+                pathList = CollectionUtils.newList(path);
+
+                for (final ContextSetting s : taggedSettings.values()) {
+                    for (final NutFilter filter : s.getNutFilterMap().values()) {
+                        pathList = filter.filterPaths(pathList);
+                    }
+                }
+            }
+        } else {
+            pathList = Arrays.asList();
+        }
+
+        return pathList;
     }
 
     /**
@@ -834,7 +855,6 @@ public class ContextBuilder extends Observable {
 
         return this;
     }
-
 
     /**
      * <p>
