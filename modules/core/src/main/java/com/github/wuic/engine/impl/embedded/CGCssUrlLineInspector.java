@@ -189,6 +189,9 @@ public class CGCssUrlLineInspector implements LineInspector {
         if (isAbsolute) {
             log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut DAO.", referencedPath);
             replacement.append(referencedPath);
+        } else if (referencedPath.startsWith("data:")) { 
+            // Ignore "data:" URL
+            replacement.append(referencedPath);
         } else {
             // Extract the nut
             final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
