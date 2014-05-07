@@ -47,6 +47,7 @@ import com.github.wuic.engine.core.TextAggregatorEngineBuilder;
 import com.github.wuic.exception.*;
 import com.github.wuic.nut.*;
 
+import com.github.wuic.nut.filter.RegexRemoveNutFilterBuilder;
 import com.github.wuic.util.AbstractBuilderFactory;
 import junit.framework.Assert;
 import org.junit.Before;
@@ -286,6 +287,33 @@ public class ContextBuilderTest {
 
         Assert.assertTrue(context.process("", "workflow-heap").size() > 1);
     }
+
+    /**
+     * Test that uses filter.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void withFilterTest() throws Exception {
+        // Typical use : no exception should be thrown
+        final Context context = new ContextBuilder()
+                .tag("test")
+                .contextNutDaoBuilder("dao", MockDaoBuilder.class.getSimpleName())
+                .toContext()
+                .contextNutFilterBuilder("exclude", RegexRemoveNutFilterBuilder.class.getSimpleName())
+                .property(ApplicationConfig.REGEX_EXPRESSIONS, NUT_NAME_ONE)
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", MockEngineBuilder.class.getSimpleName())
+                .toContext()
+                .template("tpl", new String[]{"engine"}, null, false)
+                .workflow("workflow-", true, "heap", "tpl")
+                .releaseTag()
+                .build();
+
+        Assert.assertTrue(context.process("", "workflow-heap").size() == 1);
+    }
+
 
     /**
      * Test when a default engine is overridden.

@@ -49,6 +49,9 @@ import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutDaoBuilder;
 import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.filter.NutFilter;
+import com.github.wuic.nut.filter.NutFilterBuilder;
+import com.github.wuic.nut.filter.NutFilterBuilderFactory;
 import com.github.wuic.util.AbstractBuilderFactory;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.GenericBuilder;
@@ -79,6 +82,9 @@ import java.util.regex.Pattern;
  *                      .toContext()
  *                      .heap("heap", "FtpNutDaoBuilder", "darth.js", "vader.js")
  *                      .contextNutDaoBuilder("engineId", "TextAggregatorEngineBuilder")
+ *                      .toContext()
+ *                      .contextNutFilterBuilder("filterId", "RegexRemoveNutFilterBuilder")
+ *                      .property(ApplicationConfig.REGEX_EXPRESSION, "(.*)?reload.*")
  *                      .toContext()
  *                      .template("tpl", new String[]{"engineId"}, null, false)
  *                      .workflow("starwarsWorkflow", true, "heap", "tpl")
@@ -145,7 +151,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.0
      */
     private static class ContextSetting {
@@ -154,6 +160,11 @@ public class ContextBuilder extends Observable {
          * All {@link NutDao daos} associated to their builder ID.
          */
         private Map<String, NutDao> nutDaoMap = new HashMap<String, NutDao>();
+
+        /**
+         * All {@link NutFilter daos} associated to their builder ID.
+         */
+        private Map<String, NutFilter> nutFilterMap = new HashMap<String, NutFilter>();
 
         /**
          * All {@link EngineBuilder engines} associated to their ID.
@@ -185,6 +196,18 @@ public class ContextBuilder extends Observable {
         public Map<String, NutDao> getNutDaoMap() {
             return nutDaoMap;
         }
+
+        /**
+         * <p>
+         * Gets the {@link NutFilter} associated to an ID.
+         * </p>
+         *
+         * @return the map
+         */
+        public Map<String, NutFilter> getNutFilterMap() {
+            return nutFilterMap;
+        }
+
 
         /**
          * <p>
@@ -502,6 +525,55 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Inner class to configure a filter builder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.5
+     */
+    public class ContextNutFilterBuilder extends ContextGenericBuilder {
+
+        /**
+         * The builder.
+         */
+        private NutFilterBuilder nutFilterBuilder;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param id the builder ID
+         * @param type the builder type
+         * @throws UnableToInstantiateException if underlying class could not be instantiated
+         */
+        public ContextNutFilterBuilder(final String id, final String type) throws UnableToInstantiateException {
+            super(id);
+            this.nutFilterBuilder = NutFilterBuilderFactory.getInstance().create(type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextNutFilterBuilder property(final String key, final Object value) {
+            properties.put(key, value);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+            nutFilterBuilder(id, nutFilterBuilder, properties);
+            return ContextBuilder.this;
+        }
+    }
+
+    /**
+     * <p>
      * Returns a new context DAO builder.
      * </p>
      *
@@ -512,6 +584,20 @@ public class ContextBuilder extends Observable {
      */
     public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
         return new ContextNutDaoBuilder(id, type);
+    }
+
+    /**
+     * <p>
+     * Returns a new context filter builder.
+     * </p>
+     *
+     * @param id the final builder's ID
+     * @param type the final builder's type
+     * @return the specific context builder
+     * @throws UnableToInstantiateException if underlying class could not be instantiated
+     */
+    public ContextNutFilterBuilder contextNutFilterBuilder(final String id, final String type) throws UnableToInstantiateException {
+        return new ContextNutFilterBuilder(id, type);
     }
 
     /**
@@ -587,6 +673,39 @@ public class ContextBuilder extends Observable {
         return this;
     }
 
+    /**
+     * <p>
+     * Adds a new {@link com.github.wuic.nut.filter.NutFilterBuilder} identified by the specified ID.
+     * </p>
+     *
+     * <p>
+     * If some properties are not supported by the builder, then an exception will be thrown.
+     * </p>
+     *
+     * @param id the ID which identifies the builder in the context
+     * @param filterBuilder the builder associated to its ID
+     * @param properties the properties to use to configure the builder
+     * @return this {@link ContextBuilder}
+     * @throws com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException if a property is not supported by the builder
+     */
+    private ContextBuilder nutFilterBuilder(final String id,
+                                            final NutFilterBuilder filterBuilder,
+                                            final Map<String, Object> properties)
+            throws BuilderPropertyNotSupportedException {
+        final ContextSetting setting = getSetting();
+
+        // Will override existing element
+        for (ContextSetting s : taggedSettings.values()) {
+            s.nutFilterMap.remove(id);
+        }
+
+        setting.nutFilterMap.put(id, configure(filterBuilder, properties).build());
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers(id);
+
+        return this;
+    }
 
     /**
      * <p>
@@ -641,10 +760,25 @@ public class ContextBuilder extends Observable {
             }
         }
 
-        if (dao == null && path.length != 0) {
-            final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
-                    ndbId, NutDaoBuilder.class.getName());
-            throw new BadArgumentException(new IllegalArgumentException(msg));
+        List<String> pathList;
+
+        if (path.length != 0) {
+            if (dao == null) {
+                final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
+                        ndbId, NutDaoBuilder.class.getName());
+                throw new BadArgumentException(new IllegalArgumentException(msg));
+            } else {
+                // Going to filter the list with all declared filters
+                pathList = CollectionUtils.newList(path);
+
+                for (final ContextSetting s : taggedSettings.values()) {
+                    for (final NutFilter filter : s.getNutFilterMap().values()) {
+                        pathList = filter.filterPaths(id, pathList);
+                    }
+                }
+            }
+        } else {
+            pathList = Arrays.asList();
         }
 
         final ContextSetting setting = getSetting();
@@ -657,9 +791,9 @@ public class ContextBuilder extends Observable {
                 composition.addAll(getNutsHeap(regex));
             }
 
-            setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id, composition.toArray(new NutsHeap[composition.size()])));
+            setting.getNutsHeaps().put(id, new NutsHeap(pathList, dao, id, composition.toArray(new NutsHeap[composition.size()])));
         } else {
-            setting.getNutsHeaps().put(id, new NutsHeap(Arrays.asList(path), dao, id));
+            setting.getNutsHeaps().put(id, new NutsHeap(pathList, dao, id));
         }
 
         taggedSettings.put(currentTag, setting);
