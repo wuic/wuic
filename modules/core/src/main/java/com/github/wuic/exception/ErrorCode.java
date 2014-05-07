@@ -154,6 +154,12 @@ public interface ErrorCode {
     long WORKFLOW_IDENTIFIER = 19860606206L;
 
     /**
+     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
+     * {@link com.github.wuic.nut.filter.NutFilterBuilder}.
+     */
+    long NUT_FILTER_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606207L;
+
+    /**
      * <p>
      * Gets the error code.
      * </p>

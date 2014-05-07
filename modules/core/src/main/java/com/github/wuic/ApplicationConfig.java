@@ -246,6 +246,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Indicates all the regex expressions configured in a filter.
+     * </p>
+     */
+    String REGEX_EXPRESSIONS = "c.g.wuic.filter.regexExpressions";
+
+    /**
+     * <p>
      * Indicates the context builder.
      * </p>
      */
