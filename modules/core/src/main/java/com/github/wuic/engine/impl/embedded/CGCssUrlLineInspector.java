@@ -175,9 +175,6 @@ public class CGCssUrlLineInspector implements LineInspector {
         // Ignore absolute CSS
         final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
 
-        // Ignore data: URL
-        final Boolean isDataUrl = referencedPath.startsWith("data:");
-
         log.info("url statement found for nut {}", referencedPath);
 
         // Rewrite the statement from its beginning to the beginning of the nut name
@@ -192,7 +189,8 @@ public class CGCssUrlLineInspector implements LineInspector {
         if (isAbsolute) {
             log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut DAO.", referencedPath);
             replacement.append(referencedPath);
-        } else if (isDataUrl) { 
+        } else if (referencedPath.startsWith("data:")) { 
+            // Ignore "data:" URL
             replacement.append(referencedPath);
         } else {
             // Extract the nut

@@ -245,7 +245,7 @@ public class CssInspectorTest {
         Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
 
         final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
-        List<Nut> parsedNuts = engine.parse(request);
+        engine.parse(request);
         Assert.assertEquals("Shouldn't create nuts for 'data:' urls.", createCount.get(), 0);
     }
 
