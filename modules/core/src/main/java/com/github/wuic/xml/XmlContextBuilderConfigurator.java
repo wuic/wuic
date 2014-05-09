@@ -222,6 +222,13 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             // Let's load the wuic.xml file and configure the builder with it
             final XmlWuicBean xml = unmarshal(unmarshaller);
 
+            // The filters
+            if (xml.getFilterBuilders() != null) {
+                for (final XmlBuilderBean filter : xml.getFilterBuilders()) {
+                    extractProperties(filter, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
+                }
+            }
+
             // The DAOs
             if (xml.getDaoBuilders() != null) {
                 for (final XmlBuilderBean dao : xml.getDaoBuilders()) {
@@ -321,7 +328,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @return the {@link ContextBuilder.ContextGenericBuilder} associating each property ID to its value
      */
     private ContextBuilder.ContextGenericBuilder extractProperties(final XmlBuilderBean bean,
-                                                                  final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
+                                                                   final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
         if (bean.getProperties() == null) {
             return contextGenericBuilder;
         } else {

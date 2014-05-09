@@ -5,6 +5,13 @@
 
     <xs:complexType name="xmlWuicBean">
         <xs:sequence>
+            <xs:element name="nut-filter-builders" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="nut-filter-builder" type="xmlBuilderBean" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="nut-dao-builders" minOccurs="0">
                 <xs:complexType>
                     <xs:sequence>

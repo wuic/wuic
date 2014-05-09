@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<wuic>
+    <nut-filter-builders>
+        <nut-filter-builder id="regexRemoveNutFilter" type="RegexRemoveNutFilterBuilder">
+            <properties>
+                <property key="c.g.wuic.filter.regexExpressions">.*.css</property>
+            </properties>
+        </nut-filter-builder>
+    </nut-filter-builders>
+
+    <nut-dao-builders>
+        <nut-dao-builder id="defaultDao" type="ClasspathNutDaoBuilder" />
+    </nut-dao-builders>
+
+    <heaps>
+        <heap id="simpleHeap" dao-builder-id="defaultDao">
+            <nut-path>css/jquery.ui.dialog.css</nut-path>
+            <nut-path>cgsg/globals.js</nut-path>
+        </heap>
+    </heaps>
+
+    <workflow-templates>
+        <workflow-template id="simpleWorkflow">
+            <engine-chain />
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="simpleWorkflow" workflow-template-id="simpleWorkflow" heap-id-pattern="simpleHeap" />
+    </workflows>
+</wuic>

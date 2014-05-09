@@ -62,6 +62,13 @@ public class XmlWuicBean {
     private Integer pollingInterleaveSeconds;
 
     /**
+     * Some filter builders definitions.
+     */
+    @XmlElementWrapper(name = "nut-filter-builders")
+    @XmlElement(name = "nut-filter-builder")
+    private List<XmlBuilderBean> filterBuilders;
+
+    /**
      * Some DAO builders definitions.
      */
     @XmlElementWrapper(name = "nut-dao-builders")
@@ -105,6 +112,17 @@ public class XmlWuicBean {
      */
     public Integer getPollingInterleaveSeconds() {
         return pollingInterleaveSeconds == null ? -1 : pollingInterleaveSeconds;
+    }
+
+    /**
+     * <p>
+     * Gets the filter builders.
+     * </p>
+     *
+     * @return the builders
+     */
+    public List<XmlBuilderBean> getFilterBuilders() {
+        return filterBuilders;
     }
 
     /**

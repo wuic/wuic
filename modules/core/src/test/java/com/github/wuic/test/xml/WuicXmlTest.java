@@ -394,7 +394,7 @@ public class WuicXmlTest {
 
     /**
      * <p>
-     * Tests XML configuration throw a reader.
+     * Tests XML configuration through a reader.
      * </p>
      *
      * @throws Exception if test fails
@@ -405,6 +405,24 @@ public class WuicXmlTest {
         final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
+    }
+
+    /**
+     * <p>
+     * Tests XML configuration with filters.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void filterTest() throws Exception {
+        // Add custom DAO and engine required
+        final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilder builder = new ContextBuilder();
+        cfg.configure(builder);
+
+        Assert.assertEquals(1, builder.build().process("", "simpleWorkflowsimpleHeap").size());
     }
 
     /**
