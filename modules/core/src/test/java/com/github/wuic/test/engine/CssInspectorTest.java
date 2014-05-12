@@ -145,7 +145,7 @@ public class CssInspectorTest {
 
         final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
         engine.parse(request);
-        Assert.assertEquals(message, createCount.get(), count);
+        Assert.assertEquals(message, count, createCount.get());
     }
 
     /**
@@ -166,8 +166,8 @@ public class CssInspectorTest {
                 new String[] {"@import '%s';", "jquery.ui.dialog.css"},
                 new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
                 new String[] {"background: url(\"%s\");", "sprite.png"},
-                new String[] {"background: url(%s);", "sprite2.png"},
-                new String[] {"background: url('%s');", "sprite3.png"},
+                new String[] {"background: /* comment */ url(%s);", "sprite2.png"},
+                new String[] {"background:url('%s');", "sprite3.png"},
                 new String[] {"background: #FFF url('%s');", "sprite4.png"},
                 new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
         };
@@ -179,6 +179,40 @@ public class CssInspectorTest {
         builder.append("/*background:\n url('sprite6.png');*/");
 
         assertInspection(collection, builder, null, collection.length);
+    }
+
+    /**
+     * <p>
+     * Tests when @font-face is used?
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void fontUrlTest() throws Exception {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("a {\n" +
+                "  background: transparent;\n" +
+                "}\n" +
+                "a:active,\n" +
+                "a:hover {\n" +
+                "  outline: 0;\n" +
+                "}\n" +
+                "abbr[title] {\n" +
+                "  border-bottom: 1px dotted;\n" +
+                "}");
+        sb.append("@font-face {\nfont-family: 'Glyphicons Halflings';");
+
+        String[][] collection = new String[][] {
+                new String[] {"src: url(\"%s\");", "../fonts/glyphicons-halflings-regular.eot"},
+                new String[] {"src: url(\"%s\") format('embedded-opentype'),", "../fonts/glyphicons-halflings-regular.eot?#iefix"},
+                new String[] {"src: url(\"%s\") format('woff'),", "../fonts/glyphicons-halflings-regular.woff"},
+                new String[] {"src: url(\"%s\") format('truetype'),", "../fonts/glyphicons-halflings-regular.ttf"},
+                new String[] {"src: url(\"%s\") format('svg');}", "../fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular"},
+        };
+
+
+        assertInspection(collection, sb, "Must handle font URLs.", collection.length);
     }
     
     /**

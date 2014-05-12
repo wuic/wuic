@@ -38,7 +38,10 @@
 
 package com.github.wuic.engine.impl.embedded;
 
-import com.github.wuic.engine.*;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
@@ -48,7 +51,9 @@ import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +61,7 @@ import java.util.regex.Pattern;
 /**
  * <p>
  * This class inspects CSS files to extract nuts referenced with @import statement to process it. Then it adapts
- * the path of those processed nuts to be accessible when exposed to the browser through WUIC uri
+ * the path of those processed nuts to be accessible when exposed to the browser through WUIC uri.
  * </p>
  *
  * @author Guillaume DROUET
@@ -81,7 +86,7 @@ public class CGCssUrlLineInspector implements LineInspector {
     private static final String URL_REGEX = String.format("(?:url\\(\\s*(%s|[^)]*)\\s*\\))", STRING_LITERAL_REGEX);
 
     /**
-     * Finds the @import or background URL statements within CSS script. The pattern describes a string :
+     * Finds the @import, background URL or @font-face statements within CSS script. The pattern describes a string:
      * <ul>
      * <li>starting with @import</li>
      * <li>followed any set of characters</li>
@@ -106,9 +111,15 @@ public class CGCssUrlLineInspector implements LineInspector {
      * <li>followed by either a single quote or a double quote (optional)</li>
      * <li>followed by everything which does not contain a repetition of the quote previously found</li>
      * </ul>
+     *
+     * OR
+     * <ul>
+     * <li>Starting with @font-face</li>
+     * <li>followed by a string with '{' and ending with '}'</li>
+     * </ul>
      */
     private static final Pattern CSS_URL_PATTERN = Pattern.compile(
-            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background.*?(%s)))", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
+            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background[(/\\*(?:.)*?\\*/)\\s:\\w#]*?(%s).*?))|(?:@font-face.*?\\{.*?\\})", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
 
     /**
      * Three groups could contain the name, test the second one if first returns null.
@@ -159,18 +170,60 @@ public class CGCssUrlLineInspector implements LineInspector {
             rawPath = matcher.group(groupIndex);
         } while (rawPath == null && i < GROUP_INDEXES.length);
 
-        if (group.isEmpty()) {
-            group = matcher.group(NumberUtils.TWO);
+        // @font-face case
+        if (rawPath == null) {
+            final Pattern patternUrl = Pattern.compile(URL_REGEX);
+            final Matcher matcherUrl = patternUrl.matcher(matcher.group());
+            final List<Nut> retval = new ArrayList<Nut>();
+            final StringBuffer sb = new StringBuffer();
+
+            // Process each font URL inside the font rule
+            while (matcherUrl.find()) {
+                final StringBuilder replacementUrl = new StringBuilder();
+                retval.addAll(processData(new MatcherData(matcherUrl, 1), replacementUrl, request, heap, originalNut));
+                matcherUrl.appendReplacement(sb, replacementUrl.toString());
+            }
+
+            matcherUrl.appendTail(sb);
+            replacement.append(sb.toString());
+
+            return retval;
+        } else {
+            if (group.isEmpty()) {
+                group = matcher.group(NumberUtils.TWO);
+            }
+
+            return processData(new MatcherData(rawPath, matcher, groupIndex, group), replacement, request, heap, originalNut);
         }
+    }
+
+    /**
+     * <p>
+     * Process the given data to append the resulting URL to the specified {@link StringBuilder} and returns the extracted
+     * nuts.
+     * </p>
+     *
+     * @param data the data that contains matcher result
+     * @param replacement the replacement
+     * @param request the request
+     * @param heap the heap
+     * @param originalNut the original nut
+     * @return the extracted nuts
+     * @throws WuicException if processing fails
+     */
+    private List<Nut> processData(final MatcherData data,
+                                  final StringBuilder replacement,
+                                  final EngineRequest request,
+                                  final NutsHeap heap,
+                                  final Nut originalNut) throws WuicException {
+        final Matcher matcher = data.getMatcher();
+        final String rawPath = data.getGroupValue();
+        final int groupIndex = data.getGroupIndex();
+        final String group = data.getWrapper();
 
         // Compute once operations performed multiple times
         final int start = matcher.start(groupIndex) - matcher.start();
-        String referencedPath = rawPath;
-
-        // Quotes must be removed
-        if (referencedPath.charAt(0) == '\'' || referencedPath.charAt(0) == '"') {
-            referencedPath = referencedPath.substring(1, referencedPath.length() - 1);
-        }
+        String referencedPath = path(rawPath);
 
         // Ignore absolute CSS
         final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
@@ -183,15 +236,17 @@ public class CGCssUrlLineInspector implements LineInspector {
         // Write path to nut
         replacement.append("\"");
 
-        List<Nut> res = null;
+        List<Nut> res;
 
         // Don't change nut if absolute
         if (isAbsolute) {
             log.warn("{} is referenced as an absolute file and won't be processed by WUIC. You should only use relative URL reachable by nut DAO.", referencedPath);
             replacement.append(referencedPath);
-        } else if (referencedPath.startsWith("data:")) { 
+            res = Collections.emptyList();
+        } else if (referencedPath.startsWith("data:")) {
             // Ignore "data:" URL
             replacement.append(referencedPath);
+            res = Collections.emptyList();
         } else {
             // Extract the nut
             final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
@@ -224,6 +279,7 @@ public class CGCssUrlLineInspector implements LineInspector {
             } else {
                 log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
                 replacement.append(referencedPath);
+                res = Collections.emptyList();
             }
         }
 
@@ -232,5 +288,137 @@ public class CGCssUrlLineInspector implements LineInspector {
 
         // Return null means we don't change the original nut
         return res;
+    }
+
+    /**
+     * <p>
+     * Returns the nut path from the extracted path.
+     * </p>
+     *
+     * @param referencedPath the referenced path
+     * @return the path that could be retrieved from the dao
+     */
+    private String path(final String referencedPath) {
+        String retval = referencedPath;
+
+        // Quotes must be removed
+        if (retval.charAt(0) == '\'' || retval.charAt(0) == '"') {
+            retval = retval.substring(1, referencedPath.length() - 1);
+        }
+
+        // '?' or '#' could follow the extension
+        int cutIndex = retval.lastIndexOf('?');
+
+        if (cutIndex == -1) {
+            cutIndex = retval.lastIndexOf('#');
+        }
+
+        return cutIndex != -1 ? retval.substring(0, cutIndex) : retval;
+    }
+
+    /**
+     * <p>
+     * This class wraps the analysis of results provided by a {@link Matcher}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.5
+     */
+    private static class MatcherData {
+
+        /**
+         * The value extracted from the group that corresponds to a path.
+         */
+        private String groupValue;
+
+        /**
+         * The group index that delimit the beginning of the replacement.
+         */
+        private int groupIndex;
+
+        /**
+         * The whole {@code String} that wraps the path.
+         */
+        private String wrapper;
+
+        /**
+         * The matcher.
+         */
+        private Matcher matcher;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param groupValue the group value
+         * @param matcher the matcher
+         * @param groupIndex the group index
+         * @param wrapper the wrapper
+         */
+        private MatcherData(final String groupValue, final Matcher matcher, final int groupIndex, final String wrapper) {
+            this.groupValue = groupValue;
+            this.matcher = matcher;
+            this.groupIndex = groupIndex;
+            this.wrapper = wrapper;
+        }
+
+        /**
+         * <p>
+         * Builds a new instance with the matcher's group for the specified index as group value and the whole matcher's
+         * group as wrapper.
+         * </p>
+         *
+         * @param matcher the matcher
+         * @param groupIndex the group index
+         */
+        private MatcherData(final Matcher matcher, final int groupIndex) {
+            this(matcher.group(groupIndex), matcher, groupIndex, matcher.group());
+        }
+
+        /**
+         * <p>
+         * Gets the group value.
+         * </p>
+         *
+         * @return the value
+         */
+        private String getGroupValue() {
+            return groupValue;
+        }
+
+        /**
+         * <p>
+         * Gets the group index.
+         * </p>
+         *
+         * @return the index
+         */
+        private int getGroupIndex() {
+            return groupIndex;
+        }
+
+        /**
+         * <p>
+         * Gets the wrapper.
+         * </p>
+         *
+         * @return the wrapper
+         */
+        private String getWrapper() {
+            return wrapper;
+        }
+
+        /**
+         * <p>
+         * Gets the matcher.
+         * </p>
+         *
+         * @return the matcher
+         */
+        private Matcher getMatcher() {
+            return matcher;
+        }
     }
 }
