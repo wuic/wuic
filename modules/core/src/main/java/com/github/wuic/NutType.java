@@ -65,7 +65,32 @@ public enum NutType {
     /**
      * EOT path support.
      */
-    //EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", Boolean.TRUE),
+    EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", Boolean.TRUE),
+
+    /**
+     * EOT path support.
+     */
+    OTF(new String[] {".otf", ".OTF"}, "font/opentype", Boolean.TRUE),
+
+    /**
+     * TTF path support.
+     */
+    TTF(new String[] {".ttf", ".TTF"}, "application/octet-stream", Boolean.TRUE),
+
+    /**
+     * WOFF path support.
+     */
+    WOFF(new String[] {".woff", ".WOFF"}, "application/x-font-woff", Boolean.TRUE),
+
+    /**
+     * SVG path support.
+     */
+    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", Boolean.FALSE),
+
+    /**
+     * ICO file.
+     */
+    ICO(new String[] {".ico", ".ICO"}, "image/x-icon", Boolean.TRUE),
 
     /**
      * PNG path support.
@@ -91,7 +116,6 @@ public enum NutType {
      * HTML files support.
      */
     HTML(new String[] { ".html" }, "text/html", Boolean.FALSE);
-
 
     /**
      * The logger.
