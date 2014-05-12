@@ -14,6 +14,7 @@
     <version>0.4.5-SNAPSHOT</version>
 
     <modules>
+        <module>bootstrap3-sample</module>
         <module>js-css-sample</module>
         <module>js-sprite-sample</module>
         <module>css-sprite-sample</module>
