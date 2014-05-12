@@ -36,51 +36,44 @@
  */
 
 
-package com.github.wuic.engine.impl.embedded;
+package com.github.wuic.engine.core;
 
-import com.github.wuic.NutType;
-import com.github.wuic.engine.EngineType;
-
-import java.util.Arrays;
-import java.util.List;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.impl.embedded.JavascriptInspectorEngine;
+import com.github.wuic.engine.setter.CharsetPropertySetter;
+import com.github.wuic.engine.setter.InspectPropertySetter;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
  * <p>
- * This engines parses CSS files thanks to a {@link CGCssUrlLineInspector} and a {@link SourceMapLineInspector}.
+ * This builder creates engine that inspects and transforms CSS.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.3
+ * @version 1.0
+ * @since 0.4.5
  */
-public class CGCssInspectorEngine extends CGTextInspectorEngine {
+public class JavascriptInspectorEngineBuilder extends AbstractEngineBuilder {
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
-     *
-     * @param inspect activate inspection or not
-     * @param charset inspected files charset
      */
-    public CGCssInspectorEngine(final Boolean inspect, final String charset) {
-        super(inspect, charset, new CGCssUrlLineInspector());
-        addInspector(new SourceMapLineInspector(this));
+    public JavascriptInspectorEngineBuilder() {
+        super();
+        addPropertySetter(new InspectPropertySetter(this));
+        addPropertySetter(new CharsetPropertySetter(this));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.CSS);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
+    protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
+        return new JavascriptInspectorEngine((Boolean) property(ApplicationConfig.INSPECT),
+                ((String) property(ApplicationConfig.CHARSET)));
     }
 }

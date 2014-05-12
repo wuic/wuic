@@ -46,14 +46,14 @@ import java.util.List;
 
 /**
  * <p>
- * This engines parses CSS files thanks to a {@link CGCssUrlLineInspector} and a {@link SourceMapLineInspector}.
+ * This engines parses CSS files thanks to a {@link SourceMapLineInspector}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
- * @since 0.3.3
+ * @version 1.0
+ * @since 0.4.5
  */
-public class CGCssInspectorEngine extends CGTextInspectorEngine {
+public class JavascriptInspectorEngine extends CGTextInspectorEngine {
 
     /**
      * <p>
@@ -63,8 +63,8 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
      * @param inspect activate inspection or not
      * @param charset inspected files charset
      */
-    public CGCssInspectorEngine(final Boolean inspect, final String charset) {
-        super(inspect, charset, new CGCssUrlLineInspector());
+    public JavascriptInspectorEngine(final Boolean inspect, final String charset) {
+        super(inspect, charset);
         addInspector(new SourceMapLineInspector(this));
     }
 
@@ -73,7 +73,7 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.CSS);
+        return Arrays.asList(NutType.JAVASCRIPT);
     }
 
     /**

@@ -112,6 +112,12 @@ public enum NutType {
      */
     CSS(new String[] { ".css" }, "text/css", Boolean.FALSE),
 
+
+    /**
+     * MAP files support.
+     */
+    MAP(new String[] { ".map" }, "application/json", Boolean.FALSE),
+
     /**
      * HTML files support.
      */

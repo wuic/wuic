@@ -1126,7 +1126,7 @@ public class ContextBuilder extends Observable {
         if (includeDefaultEngines) {
             chains.put(NutType.CSS, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions), defaultCssInspector(ebIdsExclusions)));
             chains.put(NutType.PNG, NodeEngine.chain(defaultSpriteInspector(ebIdsExclusions), defaultImageAggregator(ebIdsExclusions), defaultImageCompressor(ebIdsExclusions)));
-            chains.put(NutType.JAVASCRIPT, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions)));
+            chains.put(NutType.JAVASCRIPT, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions), defaultJavascriptInspector(ebIdsExclusions)));
             chains.put(NutType.HTML, NodeEngine.chain(defaultHtmlInspector(ebIdsExclusions)));
             // TODO : when created, include GZIP compressor
         }
@@ -1229,6 +1229,30 @@ public class ContextBuilder extends Observable {
 
         if (retval == null) {
             return NodeEngine.class.cast(new CssInspectorEngineBuilder().build());
+        } else {
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a default javascript inspector.
+     * </p>
+     *
+     * @param ebIdsExclusions exclusions
+     * @return the default engine
+     */
+    private NodeEngine defaultJavascriptInspector(final String[] ebIdsExclusions) {
+        final String name = AbstractBuilderFactory.ID_PREFIX + JavascriptInspectorEngineBuilder.class.getSimpleName();
+
+        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
+            return null;
+        }
+
+        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
+
+        if (retval == null) {
+            return NodeEngine.class.cast(new JavascriptInspectorEngineBuilder().build());
         } else {
             return retval;
         }

@@ -47,6 +47,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -73,7 +74,7 @@ public abstract class CGTextInspectorEngine extends NodeEngine {
     /**
      * The inspectors of each line
      */
-    private LineInspector[] lineInspectors;
+    private List<LineInspector> lineInspectors;
 
     /**
      * Inspects or not.
@@ -95,9 +96,20 @@ public abstract class CGTextInspectorEngine extends NodeEngine {
      * @param inspectors the line inspectors to use
      */
     public CGTextInspectorEngine(final Boolean inspect, final String cs, final LineInspector... inspectors) {
-        lineInspectors = inspectors;
+        lineInspectors = CollectionUtils.newList(inspectors);
         doInspection = inspect;
         charset = cs;
+    }
+
+    /**
+     * <p>
+     * Adds a new inspector.
+     * </p>
+     *
+     * @param inspector the new inspector
+     */
+    public final void addInspector(final LineInspector inspector) {
+        lineInspectors.add(inspector);
     }
 
     /**
@@ -155,8 +167,9 @@ public abstract class CGTextInspectorEngine extends NodeEngine {
                 final NutsHeap heap = new NutsHeap(request.getHeap());
                 heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut), nut);
                 line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
-                os.write((line + "\n").getBytes());
             }
+
+            os.write((line + "\n").getBytes());
 
             // Create and add the inspected nut with its transformations
             final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), Arrays.asList(nut));

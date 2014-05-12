@@ -179,7 +179,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 }
 
                 if (!exists) {
-                    contextBuilder.tag(getClass().getName()).heap(workflowId, getClass().getName(), key).releaseTag().build();
+                    configureBuilder(contextBuilder, workflowId, key);
                 }
 
                 final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
@@ -198,6 +198,24 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 response.getOutputStream().print(content);
             }
         }
+    }
+
+    /**
+     * <p>
+     * Configures the given workflow in the specified context builder.
+     * </p>
+     *
+     * @param contextBuilder the builder
+     * @param workflowId the workflow
+     * @param path the path
+     * @throws StreamException if any I/O error occurs
+     */
+    protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path)
+            throws StreamException {
+        contextBuilder.tag(getClass().getName())
+                .heap(workflowId, getClass().getName(), path)
+                .releaseTag()
+                .build();
     }
 
     /**
