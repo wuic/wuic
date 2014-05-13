@@ -170,6 +170,7 @@ public class CssInspectorTest {
                 new String[] {"background:url('%s');", "sprite3.png"},
                 new String[] {"background: #FFF url('%s');", "sprite4.png"},
                 new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
+                new String[] {"background-image:url(%s);", "images/ui-icons_454545_256x240.png"},
         };
 
         final StringBuilder builder = new StringBuilder();

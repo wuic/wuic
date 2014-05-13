@@ -119,7 +119,7 @@ public class CGCssUrlLineInspector implements LineInspector {
      * </ul>
      */
     private static final Pattern CSS_URL_PATTERN = Pattern.compile(
-            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background[(/\\*(?:.)*?\\*/)\\s:\\w#]*?(%s).*?))|(?:@font-face.*?\\{.*?\\})", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
+            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background[(/\\*(?:.)*?\\*/)\\s:\\w#-]*?(%s).*?))|(?:@font-face.*?\\{.*?\\})", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
 
     /**
      * Three groups could contain the name, test the second one if first returns null.
