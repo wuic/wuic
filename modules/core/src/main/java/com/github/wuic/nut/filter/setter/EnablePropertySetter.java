@@ -36,77 +36,51 @@
  */
 
 
-package com.github.wuic.nut.filter;
+package com.github.wuic.nut.filter.setter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.nut.filter.AbstractNutFilterBuilder;
+import com.github.wuic.util.PropertySetter;
 
 /**
  * <p>
- * This filter can remove paths matching a regex.
+ * Setter for the {@link com.github.wuic.ApplicationConfig#ENABLE} property.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.5
+ * @since 0.4.8
  */
-public class RegexRemoveNutFilter implements NutFilter {
-
-    /**
-     * The compiled regex.
-     */
-    private List<Pattern> patterns;
-
-    /**
-     * If this filter is enabled.
-     */
-    private Boolean enable;
+public class EnablePropertySetter extends PropertySetter.PropertySetterOfBoolean {
 
     /**
      * <p>
-     * Builds a new instance. If a regex can't be compiled, a {@link java.util.regex.PatternSyntaxException} will be thrown.
+     * Creates a new instance with a specific default value.
      * </p>
      *
-     * @param enabled if the filter is acivated
-     * @param regex all the exclusion regex
+     * @param b the {@link AbstractNutFilterBuilder} which needs to be configured
+     * @param defaultValue the default value
      */
-    public RegexRemoveNutFilter(final Boolean enabled, final String ... regex) {
-        patterns = new ArrayList<Pattern>();
+    public EnablePropertySetter(final AbstractNutFilterBuilder b, final Object defaultValue) {
+        super(b, defaultValue);
+    }
 
-        for (final String r : regex) {
-            patterns.add(Pattern.compile(r));
-        }
-
-        enable = enabled;
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param b the {@link AbstractNutFilterBuilder} which needs to be configured
+     */
+    public EnablePropertySetter(final AbstractNutFilterBuilder b) {
+        this(b, true);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<String> filterPaths(final List<String> paths) {
-
-        // Disabled: do nothing
-        if (!enable) {
-            return paths;
-        }
-
-        final List<String> retval = new ArrayList<String>();
-
-        pathsLoop:
-        for (final String path : paths) {
-            for (final Pattern pattern : patterns) {
-
-                // Won't keep the path in returned list if it matches one of the pattern
-                if (pattern.matcher(path).matches()) {
-                    continue pathsLoop;
-                }
-            }
-
-            retval.add(path);
-        }
-
-        return retval;
+    public String getPropertyKey() {
+        return ApplicationConfig.ENABLE;
     }
 }

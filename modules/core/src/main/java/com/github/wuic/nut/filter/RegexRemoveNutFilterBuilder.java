@@ -40,6 +40,7 @@ package com.github.wuic.nut.filter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.nut.filter.setter.EnablePropertySetter;
 import com.github.wuic.nut.filter.setter.RegexExpressionsPropertySetter;
 
 /**
@@ -60,7 +61,7 @@ public class RegexRemoveNutFilterBuilder extends AbstractNutFilterBuilder {
      */
     public RegexRemoveNutFilterBuilder() {
         super();
-        addPropertySetter(new RegexExpressionsPropertySetter(this));
+        addPropertySetter(new RegexExpressionsPropertySetter(this), new EnablePropertySetter(this));
     }
 
     /**
@@ -68,6 +69,6 @@ public class RegexRemoveNutFilterBuilder extends AbstractNutFilterBuilder {
      */
     @Override
     public NutFilter internalBuild() throws BuilderPropertyNotSupportedException {
-        return new RegexRemoveNutFilter((String[]) property(ApplicationConfig.REGEX_EXPRESSIONS));
+        return new RegexRemoveNutFilter((Boolean) property(ApplicationConfig.ENABLE), (String[]) property(ApplicationConfig.REGEX_EXPRESSIONS));
     }
 }

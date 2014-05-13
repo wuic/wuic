@@ -253,6 +253,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Specify the filter activation.
+     * </p>
+     */
+    String ENABLE = "c.g.wuic.filter.enable";
+
+    /**
+     * <p>
      * Indicates the context builder.
      * </p>
      */

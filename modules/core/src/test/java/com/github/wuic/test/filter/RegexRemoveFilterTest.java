@@ -42,6 +42,7 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.RegexRemoveNutFilterBuilder;
+import com.github.wuic.util.GenericBuilder;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +82,20 @@ public class RegexRemoveFilterTest {
         final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
         final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b").build());
         Assert.assertEquals(2, f.filterPaths(Arrays.asList("a", "b", "c")).size());
+    }
+
+    /**
+     * Tests the builder in a disabled test.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void disabledTest() throws Exception {
+        final GenericBuilder b = new RegexRemoveNutFilterBuilder()
+                .property(ApplicationConfig.REGEX_EXPRESSIONS, "b")
+                .property(ApplicationConfig.ENABLE, false);
+        final NutFilter f = NutFilter.class.cast(b.build());
+        Assert.assertEquals(3, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
 
     /**
