@@ -212,10 +212,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      */
     protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path)
             throws StreamException {
-        contextBuilder.tag(getClass().getName())
-                .heap(workflowId, getClass().getName(), path)
-                .releaseTag()
-                .build();
+        try {
+            contextBuilder.tag(getClass().getName())
+                    .heap(workflowId, getClass().getName(), path)
+                    .releaseTag()
+                    .build();
+        } finally {
+            contextBuilder.releaseTag();
+        }
     }
 
     /**
