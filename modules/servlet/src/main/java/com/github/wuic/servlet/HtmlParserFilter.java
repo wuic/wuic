@@ -41,12 +41,15 @@ package com.github.wuic.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.NutType;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.core.ProxyNutDao;
 import com.github.wuic.nut.jee.WebappNutDaoBuilder;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
@@ -159,8 +162,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
         // There is some content to parse
         if (bytes.length > 0) {
-            final String content = new String(bytes);
-
             try {
                 final String key = ((HttpServletRequest) request).getRequestURI().substring(1);
                 final String workflowId;
@@ -179,7 +180,8 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 }
 
                 if (!exists) {
-                    configureBuilder(contextBuilder, workflowId, key);
+                    configureBuilder(contextBuilder, workflowId, key, bytes);
+                    contextBuilder.build();
                 }
 
                 final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
@@ -195,7 +197,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 }
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
-                response.getOutputStream().print(content);
+                response.getOutputStream().print(new String(bytes));
             }
         }
     }
@@ -210,13 +212,16 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @param path the path
      * @throws StreamException if any I/O error occurs
      */
-    protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path)
+    protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path, final byte[] content)
             throws StreamException {
         try {
+            final ProxyNutDao dao = new ProxyNutDao("", nutDao);
+            final String name = path.endsWith("/") ? (path + NutType.HTML.getExtensions()[0]) : path;
+            dao.addRule(path, new ByteArrayNut(content, name, NutType.HTML, new BigInteger(IOUtils.digest(content))));
+
             contextBuilder.tag(getClass().getName())
-                    .heap(workflowId, getClass().getName(), path)
-                    .releaseTag()
-                    .build();
+                    .nutDao(path, dao)
+                    .heap(workflowId, path, path);
         } finally {
             contextBuilder.releaseTag();
         }
