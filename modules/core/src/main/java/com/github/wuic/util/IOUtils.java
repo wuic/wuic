@@ -137,13 +137,32 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Digests each {@code byte} array in the given array and return the corresponding MD5 signature.
+     * </p>
+     *
+     * @param bytes the byte arrays
+     * @return the digested bytes
+     */
+    public static byte[] digest(final byte[] ... bytes) {
+        final MessageDigest md = newMessageDigest();
+
+        for (final byte[] byteArray : bytes) {
+            md.update(byteArray);
+        }
+
+        return md.digest();
+    }
+
+
+    /**
+     * <p>
      * Merges the given {@code String} array with the standard {@link IOUtils#STD_SEPARATOR separator}.
      * </p>
      *
      * @param paths the paths to be merged
      * @return the merged paths
      */
-    public static String mergePath(String ... paths) {
+    public static String mergePath(final String ... paths) {
         return StringUtils.merge(paths, STD_SEPARATOR);
     }
 
