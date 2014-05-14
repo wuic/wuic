@@ -40,12 +40,12 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
 import com.github.wuic.engine.*;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.*;
 import com.github.wuic.nut.core.ByteArrayNut;
+import com.github.wuic.nut.core.ProxyNutDao;
 import com.github.wuic.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,160 +188,6 @@ public class HtmlInspectorEngine extends NodeEngine {
             return getNext().parse(new EngineRequest(retval, request));
         } else {
             return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Internal {@link com.github.wuic.nut.NutDao} class that maps particular path to a particular {@link Nut} when the
-     * {@link com.github.wuic.nut.NutDao#create(String)} method is invoked. If the path is not mapped, then a delegated
-     * DAO is called.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.4
-     */
-    private static class ProxyNutDao implements NutDao {
-
-        /**
-         * The delegated DAO.
-         */
-        private NutDao delegate;
-
-        /**
-         * All mapped path to corresponding nut.
-         */
-        private Map<String, Nut> proxy;
-
-        /**
-         * The root path.
-         */
-        private String rootPath;
-
-        /**
-         * <p>
-         * Builds a new instance thanks to a delegated {@link NutDao}.
-         * </p>
-         *
-         * @param rootPath the root path that prefixes any rule
-         * @param delegate the delegated DAO
-         */
-        public ProxyNutDao(final String rootPath, final NutDao delegate) {
-            this.delegate = delegate;
-            this.proxy = new HashMap<String, Nut>();
-            this.rootPath = rootPath;
-        }
-
-        /**
-         * <p>
-         * Adds a mapping between a path and a nut.
-         * </p>
-         *
-         * @param path the path
-         * @param nut the nut returned when path is used
-         */
-        public void addRule(final String path, final Nut nut){
-            proxy.put(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path), nut);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
-            // do not observe anything, feature not available here.
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Nut> create(final String path) throws StreamException {
-            final Nut nut = proxy.get(path);
-            List<Nut> retval = Arrays.asList(nut);
-
-            // Nut not mapped, delegate call
-            if (nut == null) {
-                retval = delegate.create(path);
-            }
-
-            return retval;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Nut> create(final String path, final PathFormat format) throws StreamException {
-            final Nut nut = proxy.get(path);
-            List<Nut> retval = Arrays.asList(nut);
-
-            // Nut not mapped, delegate call
-            if (nut == null) {
-                retval = delegate.create(path, format);
-            }
-
-            return retval;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String proxyUriFor(final Nut nut) {
-            return delegate.proxyUriFor(nut);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void save(final Nut nut) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Boolean saveSupported() {
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void shutdown() {
-            proxy.clear();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public NutDao withRootPath(final String rootPath) {
-            return delegate.withRootPath(rootPath);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public InputStream newInputStream(final String path) throws StreamException {
-            final Nut nut = proxy.get(path);
-
-            // Path not mapped, call delegate
-            if (nut == null) {
-                return delegate.newInputStream(path);
-            } else {
-                try {
-                    return nut.openStream();
-                } catch (NutNotFoundException nnfe) {
-                    throw new StreamException(new IOException(nnfe));
-                }
-            }
         }
     }
 
