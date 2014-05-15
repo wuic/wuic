@@ -58,13 +58,24 @@ import com.github.wuic.nut.setter.*;
 public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
 
     /**
+     * Default base path when running an exploded war.
+     */
+    private static final String EXPLODED_BASE_PATH = ".";
+
+    /**
+     * Flags that indicates if war is exploded.
+     */
+    private final Boolean isExploded;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
      */
     public WebappNutDaoBuilder() {
         super();
-        addPropertySetter(new BasePathPropertySetter(this, "."),
+        isExploded = WuicJeeContext.getServletContext().getRealPath(EXPLODED_BASE_PATH) != null;
+        addPropertySetter(new BasePathPropertySetter(this, isExploded ? EXPLODED_BASE_PATH : "/"),
                 new BasePathAsSysPropPropertySetter(this),
                 new ProxyUrisPropertySetter(this),
                 new PollingInterleavePropertySetter(this),
@@ -81,7 +92,7 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
         String basePath = (String) property(ApplicationConfig.BASE_PATH);
 
         // Manage for DAO the case of base path in exploded context (file path)
-        if (WuicJeeContext.getServletContext().getRealPath(".") != null) {
+        if (isExploded) {
 
             // Manage for DAO the case of base path as system property first
             if ((Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP)) {

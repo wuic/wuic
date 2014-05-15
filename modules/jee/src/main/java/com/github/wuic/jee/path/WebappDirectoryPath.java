@@ -42,6 +42,7 @@ import com.github.wuic.path.AbstractDirectoryPath;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -99,15 +100,14 @@ public class WebappDirectoryPath extends AbstractDirectoryPath {
     @Override
     @SuppressWarnings("unchecked")
     public String[] list() throws IOException {
-        final String absolutePath = getAbsolutePath();
-        final int index = absolutePath.length() + 1;
         final Set<String> res = context.getResourcePaths(getAbsolutePath());
         final String[] retval = new String[res.size()];
         int i = 0;
 
         for (final String path : res) {
             // Removes the parent path part
-            retval[i++] = path.substring(index);
+            final int index = path.lastIndexOf('/', path.length() - NumberUtils.TWO);
+            retval[i++] = index == -1 ? path : path.substring(index + 1);
         }
 
         return retval;

@@ -434,7 +434,7 @@ public final class IOUtils {
         final String[] tree = absolutePath.split(IOUtils.STD_SEPARATOR);
 
         // Build the root => force the path to / if its empty
-        final String root = tree[0];
+        final String root = tree.length == 0 ? "/" : tree[0];
         final DirectoryPath retval =
                 factory.create(root.isEmpty() && path.startsWith(IOUtils.STD_SEPARATOR) ? IOUtils.STD_SEPARATOR : root);
 
