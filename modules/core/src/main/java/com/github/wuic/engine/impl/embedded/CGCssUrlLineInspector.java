@@ -357,7 +357,7 @@ public class CGCssUrlLineInspector implements LineInspector {
      * @version 1.0
      * @since 0.4.5
      */
-    private static class MatcherData {
+    private static final class MatcherData {
 
         /**
          * The value extracted from the group that corresponds to a path.
