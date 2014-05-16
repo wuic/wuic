@@ -290,7 +290,7 @@ public class StaticHelperMojo extends AbstractMojo {
         final String path = nut.getProxyUri() == null ? IOUtils.mergePath(nut.getVersionNumber().toString(), nut.getName()) : nut.getProxyUri();
         workflowWriter.println(String.format("%s %s", path, nut.getNutType().getExtensions()[0]));
         final File file = new File(project.getBuild().getOutputDirectory().equals(output) ?
-                output : IOUtils.mergePath(project.getBuild().getDirectory(), output),  IOUtils.mergePath(wId, nut.getVersionNumber().toString(), nut.getName()));
+                output : IOUtils.mergePath(project.getBuild().getDirectory(), output), IOUtils.mergePath(wId, nut.getVersionNumber().toString(), nut.getName()));
 
         // Create if not exist
         if (file.getParentFile() != null && file.getParentFile().mkdirs()) {
@@ -360,5 +360,16 @@ public class StaticHelperMojo extends AbstractMojo {
      */
     public void setOutput(final String output) {
         this.output = output;
+    }
+
+    /**
+     * <p>
+     * Sets the context path.
+     * </p>
+     *
+     * @param contextPath the context path
+     */
+    public void setContextPath(final String contextPath) {
+        this.contextPath = contextPath;
     }
 }

@@ -17,5 +17,8 @@
         <heap id="css" dao-builder-id="testClasspathNutDaoBuilder">
             <nut-path>.*.css</nut-path>
         </heap>
+        <heap id="html" dao-builder-id="testClasspathNutDaoBuilder">
+            <nut-path>index.html</nut-path>
+        </heap>
     </heaps>
 </wuic>

@@ -87,6 +87,7 @@ public class StaticHelperMojoTest {
         mojo.setRelocateTransformedXml(Boolean.TRUE);
         mojo.setXml(relative);
         mojo.setOutput("generated");
+        mojo.setContextPath("/");
 
         // Mock
         final MavenProject mavenProject = Mockito.mock(MavenProject.class);
