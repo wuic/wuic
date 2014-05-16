@@ -3,7 +3,10 @@
     <nut-filter-builders>
         <nut-filter-builder id="regexRemoveNutFilter" type="RegexRemoveNutFilterBuilder">
             <properties>
-                <property key="c.g.wuic.filter.regexExpressions">.*.css</property>
+                <property key="c.g.wuic.filter.regexExpressions">
+                    .*.js
+                    ref.css
+                </property>
             </properties>
         </nut-filter-builder>
     </nut-filter-builders>
@@ -17,6 +20,10 @@
             <nut-path>css/jquery.ui.dialog.css</nut-path>
             <nut-path>cgsg/globals.js</nut-path>
         </heap>
+
+        <heap id="refHeap" dao-builder-id="defaultDao">
+            <nut-path>html/index.html</nut-path>
+        </heap>
     </heaps>
 
     <workflow-templates>
@@ -26,6 +33,7 @@
     </workflow-templates>
 
     <workflows>
-        <workflow id-prefix="simpleWorkflow" workflow-template-id="simpleWorkflow" heap-id-pattern="simpleHeap" />
+        <workflow id-prefix="wf-" workflow-template-id="simpleWorkflow" heap-id-pattern="simpleHeap" />
+        <workflow id-prefix="wf-" workflow-template-id="simpleWorkflow" heap-id-pattern="refHeap" />
     </workflows>
 </wuic>

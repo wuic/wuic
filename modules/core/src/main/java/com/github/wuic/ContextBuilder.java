@@ -1060,6 +1060,23 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Gets the {@link NutFilter filters} currently configured in this builder.
+     * </p>
+     *
+     * @return the filters
+     */
+    public List<NutFilter> getFilters() {
+        final List<NutFilter> retval = new ArrayList<NutFilter>();
+
+        for (final ContextSetting setting : taggedSettings.values()) {
+            retval.addAll( setting.getNutFilterMap().values());
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
      * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.NutDaoBuilder} ID.
      * </p>
@@ -1134,6 +1151,15 @@ public class ContextBuilder extends Observable {
         return chains;
     }
 
+    /**
+     * <p>
+     * Creates the engine that will be the head of the chain of responsibility.
+     * </p>
+     *
+     * @param includeDefaultEngines if include default engines or not
+     * @param ebIdsExclusions the engines to exclude
+     * @return the {@link HeadEngine}
+     */
     private HeadEngine createHead(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
         return includeDefaultEngines ? defaultCache(ebIdsExclusions) : null;
     }
@@ -1156,7 +1182,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new ImageCompressorEngineBuilder().build());
+            return NodeEngine.class.cast(new ImageCompressorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1180,7 +1206,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new SpriteInspectorEngineBuilder().build());
+            return NodeEngine.class.cast(new SpriteInspectorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1204,7 +1230,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new ImageAggregatorEngineBuilder().build());
+            return NodeEngine.class.cast(new ImageAggregatorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1228,7 +1254,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new CssInspectorEngineBuilder().build());
+            return NodeEngine.class.cast(new CssInspectorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1252,7 +1278,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new JavascriptInspectorEngineBuilder().build());
+            return NodeEngine.class.cast(new JavascriptInspectorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1276,7 +1302,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new TextAggregatorEngineBuilder().build());
+            return NodeEngine.class.cast(new TextAggregatorEngineBuilder().contextBuilder(this).build());
         } else {
             return NodeEngine.class.cast(retval);
         }
@@ -1300,7 +1326,7 @@ public class ContextBuilder extends Observable {
         final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return NodeEngine.class.cast(new HtmlInspectorEngineBuilder().build());
+            return NodeEngine.class.cast(new HtmlInspectorEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1324,7 +1350,7 @@ public class ContextBuilder extends Observable {
         final HeadEngine retval = HeadEngine.class.cast(newEngine(name));
 
         if (retval == null) {
-            return  HeadEngine.class.cast(new MemoryMapCacheEngineBuilder().build());
+            return  HeadEngine.class.cast(new MemoryMapCacheEngineBuilder().contextBuilder(this).build());
         } else {
             return retval;
         }
@@ -1425,6 +1451,8 @@ public class ContextBuilder extends Observable {
         for (final Map.Entry entry : properties.entrySet()) {
             builder.property(String.valueOf(entry.getKey()), entry.getValue());
         }
+
+        builder.contextBuilder(this);
 
         return builder;
     }

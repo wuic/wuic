@@ -422,7 +422,34 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
 
-        Assert.assertEquals(1, builder.build().process("", "simpleWorkflowsimpleHeap").size());
+        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap").size());
+    }
+
+    /**
+     * <p>
+     * Tests XML configuration with filters for referenced nuts.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void filterDeepTest() throws Exception {
+        // Add custom DAO and engine required
+        final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilder builder = new ContextBuilder();
+        cfg.configure(builder);
+
+        final List<Nut> nuts = builder.build().process("", "wf-refHeap");
+
+        // Keep only css, remove JS files
+        Assert.assertEquals(1, nuts.size());
+        Assert.assertNotNull(nuts.get(0).getReferencedNuts());
+        Assert.assertEquals(2, nuts.get(0).getReferencedNuts().size());
+
+        // Assert that ref.css is removed
+        final List<Nut> ref = nuts.get(0).getReferencedNuts().get(1).getReferencedNuts();
+        Assert.assertTrue(ref == null || ref.isEmpty());
     }
 
     /**

@@ -49,6 +49,7 @@ import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -88,7 +89,7 @@ public class CssInspectorTest {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
-        final Engine engine = new CGCssInspectorEngine(true, "UTF-8");
+        final Engine engine = new CGCssInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8");
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 

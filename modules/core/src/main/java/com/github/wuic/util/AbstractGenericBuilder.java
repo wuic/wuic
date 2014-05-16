@@ -38,6 +38,7 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.ContextBuilder;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 
@@ -56,6 +57,11 @@ import java.util.Map;
  * @param <T> the type of built objects
  */
 public abstract class AbstractGenericBuilder<T> implements GenericBuilder<T> {
+
+    /**
+     * The {@link com.github.wuic.ContextBuilder} that provides the filters.
+     */
+    private ContextBuilder contextBuilder;
 
     /**
      * Managed by {@link PropertySetter}.
@@ -134,6 +140,23 @@ public abstract class AbstractGenericBuilder<T> implements GenericBuilder<T> {
         }
 
         throwPropertyNotSupportedException(key);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ContextBuilder contextBuilder() {
+        return contextBuilder;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public GenericBuilder contextBuilder(final ContextBuilder contextBuilder) {
+        this.contextBuilder = contextBuilder;
         return this;
     }
 

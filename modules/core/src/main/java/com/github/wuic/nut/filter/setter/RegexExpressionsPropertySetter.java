@@ -43,6 +43,9 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.filter.AbstractNutFilterBuilder;
 import com.github.wuic.util.PropertySetter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * <p>
  * Setter for the {@link com.github.wuic.ApplicationConfig#REGEX_EXPRESSIONS} property.
@@ -91,7 +94,14 @@ public class RegexExpressionsPropertySetter extends PropertySetter<String[]> {
         if (value == null) {
             put(getPropertyKey(), value);
         } else if (value instanceof String) {
-            put(getPropertyKey(), value.toString().split("\n"));
+            final String[] split = value.toString().split("\n");
+            final Set<String> trimmed = new HashSet<String>();
+
+            for (final String regex : split) {
+                trimmed.add(regex.trim());
+            }
+
+            put(getPropertyKey(), trimmed.toArray(new String[trimmed.size()]));
         } else {
             throw new BadArgumentException(new IllegalArgumentException(
                     String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));

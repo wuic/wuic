@@ -40,6 +40,7 @@ package com.github.wuic.engine.impl.embedded;
 
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.nut.filter.NutFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,11 +61,12 @@ public class CGCssInspectorEngine extends CGTextInspectorEngine {
      * Builds a new instance.
      * </p>
      *
+     * @param filters the nut filters
      * @param inspect activate inspection or not
      * @param charset inspected files charset
      */
-    public CGCssInspectorEngine(final Boolean inspect, final String charset) {
-        super(inspect, charset, new CGCssUrlLineInspector());
+    public CGCssInspectorEngine(final List<NutFilter> filters, final Boolean inspect, final String charset) {
+        super(inspect, charset, new CGCssUrlLineInspector(filters));
         addInspector(new SourceMapLineInspector(this));
     }
 

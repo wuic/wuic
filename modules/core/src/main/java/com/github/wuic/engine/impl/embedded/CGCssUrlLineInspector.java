@@ -46,6 +46,8 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.filter.NutFilter;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
@@ -135,6 +137,22 @@ public class CGCssUrlLineInspector implements LineInspector {
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * The filters to apply.
+     */
+    private List<NutFilter> nutFilters;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param filters the filters to apply
+     */
+    public CGCssUrlLineInspector(final List<NutFilter> filters) {
+        nutFilters = filters;
+    }
 
     /**
      * {@inheritDoc}
@@ -227,6 +245,20 @@ public class CGCssUrlLineInspector implements LineInspector {
 
         // Ignore absolute CSS
         final Boolean isAbsolute = referencedPath.startsWith("http://") || referencedPath.startsWith("/");
+
+        // Check filters
+        if (!isAbsolute) {
+             List<String> filtered = CollectionUtils.newList(referencedPath);
+
+            for (final NutFilter filter : nutFilters) {
+                filtered = filter.filterPaths(filtered);
+            }
+
+            // Removed
+            if (filtered.isEmpty()) {
+                return Collections.emptyList();
+            }
+        }
 
         log.info("url statement found for nut {}", referencedPath);
 

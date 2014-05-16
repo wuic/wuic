@@ -73,7 +73,8 @@ public class HtmlInspectorEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new HtmlInspectorEngine((Boolean) property(ApplicationConfig.INSPECT),
+        return new HtmlInspectorEngine(contextBuilder().getFilters(),
+                (Boolean) property(ApplicationConfig.INSPECT),
                 ((String) property(ApplicationConfig.CHARSET)));
     }
 }

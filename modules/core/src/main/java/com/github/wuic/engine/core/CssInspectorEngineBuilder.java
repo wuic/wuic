@@ -73,7 +73,8 @@ public class CssInspectorEngineBuilder extends AbstractEngineBuilder {
      */
     @Override
     protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-        return new CGCssInspectorEngine((Boolean) property(ApplicationConfig.INSPECT),
+        return new CGCssInspectorEngine(contextBuilder().getFilters(),
+                (Boolean) property(ApplicationConfig.INSPECT),
                 ((String) property(ApplicationConfig.CHARSET)));
     }
 }

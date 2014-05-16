@@ -46,6 +46,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.*;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.core.ProxyNutDao;
+import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,6 +144,11 @@ public class HtmlInspectorEngine extends NodeEngine {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
+     * The applied filters
+     */
+    private final List<NutFilter> nutFilters;
+
+    /**
      * Inspects or not.
      */
     private Boolean doInspection;
@@ -159,10 +165,12 @@ public class HtmlInspectorEngine extends NodeEngine {
      *
      * @param inspect activate inspection or not
      * @param cs files charset
+     * @param filters the nut filters to apply
      */
-    public HtmlInspectorEngine(final Boolean inspect, final String cs) {
+    public HtmlInspectorEngine(final List<NutFilter> filters, final Boolean inspect, final String cs) {
         doInspection = inspect;
         charset = cs;
+        nutFilters = filters;
     }
 
     /**
@@ -434,11 +442,6 @@ public class HtmlInspectorEngine extends NodeEngine {
         private NutsHeap heap;
 
         /**
-         * All paths computed from captured statements.
-         */
-        private String[] paths;
-
-        /**
          * Collected statements.
          */
         private List<String> capturedStatements;
@@ -484,11 +487,19 @@ public class HtmlInspectorEngine extends NodeEngine {
                 return;
             }
 
-            this.paths = new String[cpt];
+            // All paths computed from captured statements.
+            final String[] paths = new String[cpt];
             System.arraycopy(groupPaths, 0, paths, 0, cpt);
 
-            final String heapId = new BigInteger(IOUtils.digest(paths)).toString(NumberUtils.SIXTEEN);
-            heap = new NutsHeap(Arrays.asList(this.paths), proxyNutDao, heapId);
+            List<String> filteredPath = CollectionUtils.newList(paths);
+
+            for (final NutFilter filter : nutFilters) {
+                filteredPath = filter.filterPaths(filteredPath);
+            }
+
+            final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
+            final String heapId = new BigInteger(hash).toString(NumberUtils.SIXTEEN);
+            heap = new NutsHeap(filteredPath, proxyNutDao, heapId);
         }
 
         /**

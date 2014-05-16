@@ -55,6 +55,7 @@ import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.core.DiskNutDao;
+import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.test.ehcache.EhCacheEngineTest;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
@@ -65,6 +66,7 @@ import org.mockito.Mockito;
 
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -111,7 +113,7 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.CSS, new CGTextAggregatorEngine(true));
         chains.put(NutType.JAVASCRIPT, new CGTextAggregatorEngine(true));
         final EngineRequest request = new EngineRequest("workflow", "", heap, chains);
-        final List<Nut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
+        final List<Nut> nuts = new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8").parse(request);
 
         Assert.assertEquals(1, nuts.size());
 
@@ -165,7 +167,7 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
+        chains.put(NutType.HTML, new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8"));
         chains.put(NutType.JAVASCRIPT, new CGTextAggregatorEngine(true));
         chains.put(NutType.CSS, new CGTextAggregatorEngine(true));
 
@@ -231,7 +233,7 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
+        chains.put(NutType.HTML, new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8"));
 
         for (long i = countDownLatch.getCount(); i > 0; i--) {
             new Thread(new Runnable() {

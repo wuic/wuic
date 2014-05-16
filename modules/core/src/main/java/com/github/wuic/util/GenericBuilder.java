@@ -38,6 +38,7 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.ContextBuilder;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 
 /**
@@ -53,6 +54,25 @@ import com.github.wuic.exception.BuilderPropertyNotSupportedException;
  * @param <T> the built type
  */
 public interface GenericBuilder<T> {
+
+    /**
+     * <p>
+     * Gets the context builder
+     * </p>
+     *
+     * @return the context builder
+     */
+    ContextBuilder contextBuilder();
+
+    /**
+     * <p>
+     * Sets the context builder.
+     * </p>
+     *
+     * @param contextBuilder the context builder
+     * @return this
+     */
+    GenericBuilder contextBuilder(ContextBuilder contextBuilder);
 
     /**
      * <p>
