@@ -46,6 +46,7 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
@@ -298,13 +299,23 @@ public class CGCssUrlLineInspector implements LineInspector {
                 // Use proxy URI if DAO provide it
                 final String proxy = nut.getProxyUri();
 
+                final Nut resNut = res.isEmpty() ? null: res.get(0);
+                final Nut renamed;
+
+                if (resNut != null) {
+                    renamed = new CompositeNut(resNut.getName().replace("../", "a/../"), null, resNut);
+                    res.set(0, renamed);
+                } else {
+                    renamed = nut;
+                }
+
                 if (proxy == null) {
                     replacement.append(IOUtils.mergePath(
                             "/",
                             request.getContextPath(),
                             request.getWorkflowId(),
                             nut.getVersionNumber().toString(),
-                            (res.isEmpty() ? nut : res.get(0)).getName().replace("../", "a/../")));
+                            renamed.getName()));
                 } else {
                     replacement.append(proxy);
                 }

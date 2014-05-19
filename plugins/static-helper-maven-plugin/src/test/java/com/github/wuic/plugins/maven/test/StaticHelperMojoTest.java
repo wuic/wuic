@@ -105,7 +105,12 @@ public class StaticHelperMojoTest {
 
         // Verify
         final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
-        Assert.assertTrue(new File(parent,"css").listFiles()[0].list()[0].equals("aggregate.css"));
         Assert.assertTrue(new File(parent, "js").listFiles()[0].list()[0].equals("aggregate.js"));
+
+        Boolean found = Boolean.FALSE;
+        final File[] files = new File(parent,"css").listFiles();
+
+        for (int i = 0; i < files.length && !found; found = files[i++].list()[0].equals("aggregate.css"));
+        Assert.assertTrue(found);
     }
 }
