@@ -160,18 +160,19 @@ public class CssInspectorTest {
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][] {
             new String[] {"@import url(\"%s\")", "jquery.ui.core.css"},
-                new String[] {"@import \"%s\";", "jquery.ui.accordion.css"},
-                new String[] {"@import '%s';", "jquery.ui.autocomplete.css"},
-                new String[] {"@import url('%s');", "jquery.ui.button.css"},
-                new String[] {"@import \"%s\";", "jquery.ui.datepicker.css"},
-                new String[] {"@import '%s';", "jquery.ui.dialog.css"},
-                new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
-                new String[] {"background: url(\"%s\");", "sprite.png"},
-                new String[] {"background: /* comment */ url(%s);", "sprite2.png"},
-                new String[] {"background:url('%s');", "sprite3.png"},
-                new String[] {"background: #FFF url('%s');", "sprite4.png"},
-                new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
-                new String[] {"background-image:url(%s);", "images/ui-icons_454545_256x240.png"},
+            new String[] {"@import \"%s\";", "jquery.ui.accordion.css"},
+            new String[] {"@import '%s';", "jquery.ui.autocomplete.css"},
+            new String[] {"@import url('%s');", "jquery.ui.button.css"},
+            new String[] {"@import \"%s\";", "jquery.ui.datepicker.css"},
+            new String[] {"@import '%s';", "jquery.ui.dialog.css"},
+            new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
+            new String[] {"background: url(\"%s\");", "sprite.png"},
+            new String[] {"background: /* comment */ url(%s);", "sprite2.png"},
+            new String[] {"background:url('%s');", "sprite3.png"},
+            new String[] {"background: #FFF url('%s');", "sprite4.png"},
+            new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
+            new String[] {"background: #dadada/*{bgColorHover}*/ url(%s)/*{bgImgUrlHover}*/ 50/*{bgHoverXPos}*/ 50/*{bgHoverYPos}*/ repeat-x/*{bgHoverRepeat}*/;", "images/ui-bg_glass_75_dadada_1x400.png"},
+            new String[] {"background-image:url(%s);", "images/ui-icons_454545_256x240.png"},
         };
 
         final StringBuilder builder = new StringBuilder();
