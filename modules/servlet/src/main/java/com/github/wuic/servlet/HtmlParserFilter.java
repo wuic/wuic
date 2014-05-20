@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -113,6 +114,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private final Map<String, String> workflowIds;
 
     /**
+     * Indicates if the context is virtual.
+     */
+    private boolean virtualContextPath;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -129,6 +135,9 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         try {
             nutDao = createDao();
             WuicJeeContext.getWuicFacade().configure(this);
+
+            final ServletContext sc = WuicJeeContext.getServletContext();
+            virtualContextPath = !sc.getContextPath().isEmpty() && sc.getResourcePaths(sc.getContextPath()) == null;
         } catch (BuilderPropertyNotSupportedException bpnse) {
             throw new ServletException(bpnse);
         } catch (StreamException se) {
@@ -163,7 +172,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         // There is some content to parse
         if (bytes.length > 0) {
             try {
-                final String key = ((HttpServletRequest) request).getRequestURI().substring(1);
+                final String key;
+
+                if (virtualContextPath) {
+                    key = ((HttpServletRequest) request).getRequestURI().substring(1 + WuicJeeContext.getServletContext().getContextPath().length());
+                } else {
+                    key = ((HttpServletRequest) request).getRequestURI().substring(1);
+                }
+
                 final String workflowId;
                 Boolean exists;
 
