@@ -8,12 +8,12 @@
     <parent>
         <groupId>com.github.wuic.samples</groupId>
         <artifactId>wuic-samples</artifactId>
-        <version>0.4.5.RC3</version>
+        <version>0.4.5-SNAPSHOT</version>
     </parent>
 
     <groupId>com.github.wuic</groupId>
     <artifactId>wuic-sample-js-css</artifactId>
-    <version>0.4.5.RC3</version>
+    <version>0.4.5-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <dependencies>
