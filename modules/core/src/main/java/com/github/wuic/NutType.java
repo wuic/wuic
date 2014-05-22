@@ -58,9 +58,9 @@ import java.util.Arrays;
 public enum NutType {
 
     /**
-     * Sprite path support.
+     * HTML files support. Keep this as first enum to improve {@link #getNutTypeForMimeType(String)} often use for HTML.
      */
-    //SPRITE(new String[] {".png", ".PNG"}, null, Boolean.TRUE),
+    HTML(new String[] { ".html" }, "text/html", Boolean.FALSE),
 
     /**
      * EOT path support.
@@ -116,12 +116,7 @@ public enum NutType {
     /**
      * MAP files support.
      */
-    MAP(new String[] { ".map" }, "application/json", Boolean.FALSE),
-
-    /**
-     * HTML files support.
-     */
-    HTML(new String[] { ".html" }, "text/html", Boolean.FALSE);
+    MAP(new String[] { ".map" }, "application/json", Boolean.FALSE);
 
     /**
      * The logger.
@@ -223,11 +218,11 @@ public enum NutType {
      * </p>
      *
      * <p>
-     * Throws an {@code BadArgumentException} if the extension does not belongs to any path type
+     * Throws an {@code BadArgumentException} if the extension does not belongs to any path type.
      * </p>
      *
      * @param ext the extension
-     * @return the path type
+     * @return the nut type
      */
     public static NutType getNutTypeForExtension(final String ext) {
         for (final NutType nutType : NutType.values()) {
@@ -239,6 +234,24 @@ public enum NutType {
         }
 
         throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any NutType", ext)));
+    }
+
+    /**
+     * <p>
+     * Returns the {@link NutType} which the given mime type belongs to.
+     * </p>
+     *
+     * @param mimeType the mime type
+     * @return the nut type, {@code null} if nothing match
+     */
+    public static NutType getNutTypeForMimeType(final String mimeType) {
+        for (final NutType nutType : NutType.values()) {
+            if (nutType.getMimeType().equals(mimeType)) {
+                return nutType;
+            }
+        }
+
+        return null;
     }
 
     /**

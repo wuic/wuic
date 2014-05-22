@@ -172,14 +172,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         // There is some content to parse
         if (bytes.length > 0) {
             try {
-                final String key;
-
-                if (virtualContextPath) {
-                    key = ((HttpServletRequest) request).getRequestURI().substring(1 + WuicJeeContext.getServletContext().getContextPath().length());
-                } else {
-                    key = ((HttpServletRequest) request).getRequestURI().substring(1);
-                }
-
+                final String key = buildKey(HttpServletRequest.class.cast(request), HttpServletResponse.class.cast(response));
                 final String workflowId;
                 Boolean exists;
 
@@ -216,6 +209,47 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 response.getOutputStream().print(new String(bytes));
             }
         }
+    }
+
+    /**
+     * <p>
+     * Builds the key for cache from the request URI.
+     * </p>
+     *
+     * @param request the request
+     * @param response the response
+     * @return the key
+     */
+    private String buildKey(final HttpServletRequest request, final HttpServletResponse response) {
+        final StringBuilder keyBuilder = new StringBuilder();
+
+        // Ignore the context path if virtual
+        if (virtualContextPath) {
+            keyBuilder.append(request.getRequestURI().substring(1 + WuicJeeContext.getServletContext().getContextPath().length()));
+        } else {
+            keyBuilder.append(request.getRequestURI().substring(1));
+        }
+
+        final NutType nutType = NutType.getNutTypeForMimeType(response.getContentType());
+
+        // Check that key ends with valid extension
+        if (nutType == null) {
+            logger.warn(String.format("%s is not a supported mime type. URI must ends with a supported extension.", response.getContentType()));
+        } else {
+            for (final String ext : nutType.getExtensions()) {
+                final int index = keyBuilder.lastIndexOf(ext);
+
+                // Good extension already set
+                if (keyBuilder.length() - ext.length() == index) {
+                    return keyBuilder.toString();
+                }
+            }
+
+            // No valid extension set, force one
+            keyBuilder.append(nutType.getExtensions()[0]);
+        }
+
+        return keyBuilder.toString();
     }
 
     /**
