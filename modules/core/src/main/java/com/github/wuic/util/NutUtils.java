@@ -72,7 +72,7 @@ public final class NutUtils {
      * @return the nut, {@code null} if not found
      */
     public static Nut findByName(final Nut nut, final String nutName) {
-        final String parsedName = nut.getName().replace("../", "");
+        String parsedName = StringUtils.simplifyPathWithDoubleDot(nut.getName());
 
         // Nut found : write the stream and return
         if (parsedName.equals(nutName) || ("/" + parsedName).equals(nutName) || parsedName.equals("/" + nutName)) {
