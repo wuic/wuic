@@ -189,6 +189,9 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void simplifyPathTest() {
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("./foo"), "foo");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/./foo"), "/bar/foo");
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/./foo/."), "/bar/foo");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo"), "/foo");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/../foo/"), "/foo/");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("bar/../foo"), "foo");

@@ -105,6 +105,8 @@ public final class StringUtils {
                 } else {
                     continue;
                 }
+            } else if (".".equals(path)) {
+                continue;
             }
 
             // Parent path reference detected : could be simplified
