@@ -217,6 +217,22 @@ public class CssInspectorTest {
 
         assertInspection(collection, sb, "Must handle font URLs.", collection.length);
     }
+
+    /**
+     * <p>
+     * Test when sourceMappingURL is used.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void sourceMappingUrlTest() throws Exception {
+        String[][] collection = new String[][] {
+                new String[] {"//sourceMappingURL=%s", "sourcemap.js.map"},
+        };
+
+        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length);
+    }
     
     /**
      * <p>

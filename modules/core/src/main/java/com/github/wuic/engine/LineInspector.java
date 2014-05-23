@@ -41,7 +41,10 @@ package com.github.wuic.engine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.util.IOUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +59,80 @@ import java.util.regex.Pattern;
  * @version 1.3
  * @since 0.3.3
  */
-public interface LineInspector {
+public abstract class LineInspector {
+
+    /**
+     * The pattern.
+     */
+    private Pattern pattern;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param p the pattern.
+     */
+    public LineInspector(final Pattern p) {
+        pattern = p;
+    }
+
+    /**
+     * <p>
+     * Manages the given nut that corresponds to the specified referenced path and append the transformation with proper
+     * path.
+     * </p>
+     *
+     * @param nut the nut retrieved with path
+     * @param replacement the string builder to append
+     * @param request the engine request
+     * @param heap the heap that contains the original nut
+     * @param skippedEngine the engine to skip when processing resulting nuts
+     * @return the processed nuts specified in parameter
+     * @throws WuicException if processing fails
+     */
+    public static List<Nut> manageAppend(final Nut nut,
+                                         final StringBuilder replacement,
+                                         final EngineRequest request,
+                                         final NutsHeap heap,
+                                         final EngineType ... skippedEngine) throws WuicException {
+        List<Nut> res;
+
+        // If nut name is null, it means that nothing has been changed by the inspector
+        res = Arrays.asList(nut);
+
+        // Process nut
+        final NodeEngine engine = request.getChainFor(nut.getNutType());
+        if (engine != null) {
+            res = engine.parse(new EngineRequest(res, heap, request, skippedEngine));
+        }
+
+        // Use proxy URI if DAO provide it
+        final String proxy = nut.getProxyUri();
+
+        final Nut resNut = res.isEmpty() ? null: res.get(0);
+        final Nut renamed;
+
+        if (resNut != null) {
+            renamed = new CompositeNut(resNut.getName().replace("../", "a/../"), null, resNut);
+            res.set(0, renamed);
+        } else {
+            renamed = nut;
+        }
+
+        if (proxy == null) {
+            replacement.append(IOUtils.mergePath(
+                    "/",
+                    request.getContextPath(),
+                    request.getWorkflowId(),
+                    nut.getVersionNumber().toString(),
+                    renamed.getName()));
+        } else {
+            replacement.append(proxy);
+        }
+
+        return res;
+    }
 
     /**
      * <p>
@@ -65,7 +141,9 @@ public interface LineInspector {
      *
      * @return the pattern to use
      */
-    Pattern getPattern();
+    public final Pattern getPattern() {
+        return pattern;
+    }
 
     /**
      * <p>
@@ -81,9 +159,9 @@ public interface LineInspector {
      * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
      * @throws WuicException if an exception occurs
      */
-    List<Nut> appendTransformation(Matcher matcher,
-                                   StringBuilder replacement,
-                                   EngineRequest request,
-                                   NutsHeap heap,
-                                   Nut originalNut) throws WuicException;
+    public abstract List<Nut> appendTransformation(Matcher matcher,
+                                                   StringBuilder replacement,
+                                                   EngineRequest request,
+                                                   NutsHeap heap,
+                                                   Nut originalNut) throws WuicException;
 }

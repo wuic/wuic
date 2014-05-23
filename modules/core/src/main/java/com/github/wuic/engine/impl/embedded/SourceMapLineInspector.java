@@ -46,11 +46,9 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -66,7 +64,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @since 0.4.5
  */
-public class SourceMapLineInspector implements LineInspector {
+public class SourceMapLineInspector extends LineInspector {
 
     /**
      * Logger.
@@ -86,15 +84,8 @@ public class SourceMapLineInspector implements LineInspector {
      * @param enclosingEngine the engine that uses this injector
      */
     public SourceMapLineInspector(final NodeEngine enclosingEngine) {
+        super(Pattern.compile("sourceMappingURL=([^\\s]*)"));
         engine = enclosingEngine;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Pattern getPattern() {
-        return Pattern.compile("sourceMappingURL=([^\\s]*)");
     }
 
     /**
@@ -122,30 +113,14 @@ public class SourceMapLineInspector implements LineInspector {
         // Extract the nut
         final String referencedPath = matcher.group(1);
         final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
-        List<Nut> res = new ArrayList<Nut>();
+        final List<Nut> res;
 
         if (!nuts.isEmpty()) {
-            final Nut nut = nuts.iterator().next();
-
-            // Use proxy URI if DAO provide it
-            final String proxy = nut.getProxyUri();
-            replacement.append("sourceMappingURL=");
-
-            if (proxy == null) {
-                replacement.append(IOUtils.mergePath(
-                        "/",
-                        request.getContextPath(),
-                        request.getWorkflowId(),
-                        nut.getVersionNumber().toString(),
-                        nut.getName().replace("../", "a/../")));
-            } else {
-                replacement.append(proxy);
-            }
-
-            res.add(nut);
+            res = manageAppend(nuts.iterator().next(), replacement, request, heap);
         } else {
             log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
             replacement.append(matcher.group());
+            res = Collections.emptyList();
         }
 
         return res;

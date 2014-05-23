@@ -41,21 +41,17 @@ package com.github.wuic.engine.impl.embedded;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
-import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.core.CompositeNut;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -71,7 +67,7 @@ import java.util.regex.Pattern;
  * @version 1.5
  * @since 0.3.3
  */
-public class CGCssUrlLineInspector implements LineInspector {
+public class CGCssUrlLineInspector extends LineInspector {
 
     /**
      * Engines types that will be skipped when processing referenced nuts.
@@ -152,15 +148,8 @@ public class CGCssUrlLineInspector implements LineInspector {
      * @param filters the filters to apply
      */
     public CGCssUrlLineInspector(final List<NutFilter> filters) {
+        super(CSS_URL_PATTERN);
         nutFilters = filters;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Pattern getPattern() {
-        return CSS_URL_PATTERN;
     }
 
     /**
@@ -284,45 +273,12 @@ public class CGCssUrlLineInspector implements LineInspector {
             // Extract the nut
             final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
 
-            if (!nuts.isEmpty()) {
-                final Nut nut = nuts.iterator().next();
-
-                // If nut name is null, it means that nothing has been changed by the inspector
-                res = Arrays.asList(nut);
-
-                // Process nut
-                final NodeEngine engine = request.getChainFor(nut.getNutType());
-                if (engine != null) {
-                    res = engine.parse(new EngineRequest(res, heap, request, SKIPPED_ENGINE));
-                }
-
-                // Use proxy URI if DAO provide it
-                final String proxy = nut.getProxyUri();
-
-                final Nut resNut = res.isEmpty() ? null: res.get(0);
-                final Nut renamed;
-
-                if (resNut != null) {
-                    renamed = new CompositeNut(resNut.getName().replace("../", "a/../"), null, resNut);
-                    res.set(0, renamed);
-                } else {
-                    renamed = nut;
-                }
-
-                if (proxy == null) {
-                    replacement.append(IOUtils.mergePath(
-                            "/",
-                            request.getContextPath(),
-                            request.getWorkflowId(),
-                            nut.getVersionNumber().toString(),
-                            renamed.getName()));
-                } else {
-                    replacement.append(proxy);
-                }
-            } else {
+            if (nuts.isEmpty()) {
                 log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
                 replacement.append(referencedPath);
                 res = Collections.emptyList();
+            } else {
+                res = manageAppend(nuts.iterator().next(), replacement, request, heap, SKIPPED_ENGINE);
             }
         }
 
