@@ -85,10 +85,10 @@ public class UtilityTest extends WuicTest {
     @Test
     public void searchNutTest() {
         final Nut nut1 = Mockito.mock(Nut.class);
-        Mockito.when(nut1.getName()).thenReturn("../nut1");
+        Mockito.when(nut1.getName()).thenReturn("./nut1");
 
         final Nut nut2 = Mockito.mock(Nut.class);
-        Mockito.when(nut2.getName()).thenReturn("../nut2");
+        Mockito.when(nut2.getName()).thenReturn("nut2/.");
 
         final Nut nut3 = Mockito.mock(Nut.class);
         Mockito.when(nut3.getName()).thenReturn("nut3");
