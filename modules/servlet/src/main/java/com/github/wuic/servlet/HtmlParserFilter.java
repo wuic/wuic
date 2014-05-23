@@ -119,12 +119,18 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private boolean virtualContextPath;
 
     /**
+     * The charset used to write the response.
+     */
+    private final String charset;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public HtmlParserFilter() {
         workflowIds = new HashMap<String, String>();
+        charset = System.getProperty("file.encoding");
     }
 
     /**
@@ -164,6 +170,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
+        response.setCharacterEncoding(charset);
         final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper((HttpServletResponse) response);
 
         chain.doFilter(request, wrapper);
@@ -197,10 +204,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 InputStream is = null;
 
                 try {
-                    is = nuts.get(0).openStream();
+                    final Nut nut = nuts.get(0);
+                    is = nut.openStream();
                     final String body = IOUtils.readString(new InputStreamReader(is));
                     response.setContentLength(body.length());
-                    response.getOutputStream().print(body);
+                    response.getWriter().print(body);
                 } finally {
                     IOUtils.close(is);
                 }

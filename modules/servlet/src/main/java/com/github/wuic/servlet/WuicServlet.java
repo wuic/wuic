@@ -97,6 +97,11 @@ public class WuicServlet extends HttpServlet {
     private Map<Long, Integer> errorCodeToHttpCode;
 
     /**
+     * The charset used to write the response.
+     */
+    private final String charset;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -106,6 +111,8 @@ public class WuicServlet extends HttpServlet {
 
         errorCodeToHttpCode.put(ErrorCode.NUT_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
         errorCodeToHttpCode.put(ErrorCode.WORKFLOW_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
+
+        charset = System.getProperty("file.encoding");
     }
 
     /**
@@ -186,6 +193,7 @@ public class WuicServlet extends HttpServlet {
         // Nut found
         if (nut != null) {
             try {
+                response.setCharacterEncoding(charset);
                 response.setContentType(nut.getNutType().getMimeType());
 
                 // We set a far expiration date because we assume that polling will change the timestamp in path
