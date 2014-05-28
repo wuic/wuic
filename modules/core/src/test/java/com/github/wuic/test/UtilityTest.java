@@ -406,4 +406,19 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
         Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("http://proxy.fr/foo.css"));
     }
+
+    /**
+     * Tests nut type identification.
+     */
+    @Test
+    public void getByMimeTypeTest() {
+        NutType nutType = NutType.getNutTypeForMimeType("text/html;charset=UTF-8");
+        Assert.assertEquals(nutType, NutType.HTML);
+
+        nutType = NutType.getNutTypeForMimeType("text/html");
+        Assert.assertEquals(nutType, NutType.HTML);
+
+        nutType = NutType.getNutTypeForMimeType("bad-mime-type");
+        Assert.assertNull(nutType);
+    }
 }

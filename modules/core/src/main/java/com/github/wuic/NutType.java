@@ -245,9 +245,13 @@ public enum NutType {
      * @return the nut type, {@code null} if nothing match
      */
     public static NutType getNutTypeForMimeType(final String mimeType) {
+        final String[] split = mimeType.split(";");
+
         for (final NutType nutType : NutType.values()) {
-            if (nutType.getMimeType().equals(mimeType)) {
-                return nutType;
+            for (final String s : split) {
+                if (nutType.getMimeType().equals(s)) {
+                    return nutType;
+                }
             }
         }
 
