@@ -68,6 +68,11 @@
     <!-- Engines dependencies need to be explicitly imported by the user -->
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.googlecode.htmlcompressor</groupId>
+                <artifactId>htmlcompressor</artifactId>
+                <version>${htmlcompressor.version}</version>
+            </dependency>
 
             <!-- For engine and samples using YUICompressor -->
             <dependency>
@@ -269,6 +274,7 @@
 		<servlet-api.version>2.5</servlet-api.version>
 		<junit.version>4.8.2</junit.version>
         <mockito.version>1.9.5</mockito.version>
+        <htmlcompressor.version>1.5.2</htmlcompressor.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
         <thymeleaf-version>2.0.19</thymeleaf-version>
