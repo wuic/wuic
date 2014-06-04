@@ -72,6 +72,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -143,7 +144,13 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             WuicJeeContext.getWuicFacade().configure(this);
 
             final ServletContext sc = WuicJeeContext.getServletContext();
-            virtualContextPath = !sc.getContextPath().isEmpty() && sc.getResourcePaths(sc.getContextPath()) == null;
+
+            if (!sc.getContextPath().isEmpty()) {
+                final Set resourcePaths = sc.getResourcePaths(sc.getContextPath());
+                virtualContextPath = resourcePaths == null || resourcePaths.isEmpty();
+            } else {
+                virtualContextPath = false;
+            }
         } catch (BuilderPropertyNotSupportedException bpnse) {
             throw new ServletException(bpnse);
         } catch (StreamException se) {
