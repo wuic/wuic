@@ -135,6 +135,79 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseWrap
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDateHeader(final String name, final long date) {
+        if (!skipHeader(name)) {
+            super.setDateHeader(name, date);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIntHeader(final String name, final int value) {
+        if (!skipHeader(name)) {
+            super.setIntHeader(name, value);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addHeader(final String name, String value) {
+        if (!skipHeader(name)) {
+            super.addHeader(name, value);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setHeader(final String name, String value) {
+        if (!skipHeader(name)) {
+            super.setHeader(name, value);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addDateHeader(final String name, final long date) {
+        if (!skipHeader(name)) {
+            super.addDateHeader(name, date);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addIntHeader(final String name, final int value) {
+        if (!skipHeader(name)) {
+            super.addIntHeader(name, value);
+        }
+    }
+
+    /**
+     * <p>
+     * Currently skips 'Last-Modified' and 'ETag' header to evict 304 (not modified) status. This WUIC, servlet filter
+     * will always serve an up to date content.
+     * </p>
+     *
+     * @param name the header name
+     * @return {@code false} if header should be set, {@code true otherwise}
+     */
+    private boolean skipHeader(final String name) {
+        return "last-modified".equalsIgnoreCase(name) || "etag".equalsIgnoreCase(name);
+    }
+
+    /**
      * <p>
      * Gets the byte array.
      * </p>
