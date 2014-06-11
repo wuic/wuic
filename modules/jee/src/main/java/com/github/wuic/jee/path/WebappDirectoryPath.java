@@ -43,6 +43,8 @@ import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -58,6 +60,11 @@ import java.util.Set;
  * @since 0.4.2
  */
 public class WebappDirectoryPath extends AbstractDirectoryPath {
+
+    /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * The servlet context.
@@ -85,9 +92,13 @@ public class WebappDirectoryPath extends AbstractDirectoryPath {
     protected Path buildChild(final String child) throws IOException {
         final String absoluteParent = getAbsolutePath();
         final String absoluteChild = IOUtils.mergePath(absoluteParent, child);
+        final Set paths = context.getResourcePaths(absoluteParent);
 
+        if (paths == null) {
+            logger.warn("Path {} in {} was not found in webapp directory path.", absoluteParent, absoluteChild);
+            return null;
         // If child is a directory, it will ends with a '/' and won't be match the absolute child path in returned set
-        if (context.getResourcePaths(absoluteParent).contains(absoluteChild)) {
+        } else if (paths.contains(absoluteChild)) {
             return new WebappFilePath(child, this, context);
         } else {
             return new WebappDirectoryPath(child, this, context);

@@ -100,7 +100,7 @@ public abstract class AbstractDirectoryPath extends SimplePath implements Direct
             retval = buildChild(child);
         }
 
-        if (children.length > 1) {
+        if (retval != null && children.length > 1) {
             final String remaining = IOUtils.mergePath(Arrays.copyOfRange(children, 1, children.length));
 
             if (retval instanceof DirectoryPath) {
