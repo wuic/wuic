@@ -14,6 +14,14 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
         <td>Description</td>
         <td>Features demonstrated</td>
     </tr>
+        <td>bootstrap3-sample</td>
+        <td>
+            This sample embeds the bootstrap3 samples and applies the Servlet filter provided by WUIC.
+        </td>
+        <td>
+             YuiCompressor Javascript & CSS minification support. Script aggregation. Servlet filter.
+        </td>
+    </tr>
     <tr>
         <td>js-css-sample</td>
         <td>
@@ -25,9 +33,11 @@ Some samples are currently available on the 'SNAPSHOT' branche. However, you can
             <b>
                 NOTE : work in progress! Already integrated the different 'accordion', 'addClass', 'animate', 'autocomplete', 'button', 'datepicker' demos.
             </b>
+
+            You can also see how the servlet filter works under the path '/jquery-ui-1.10.2/filter'.
         </td>
         <td>
-             YuiCompressor Javascript & CSS minification support. EhCache support. Script aggregation.
+             YuiCompressor Javascript & CSS minification support. EhCache support. Script aggregation. Servlet filter.
         </td>
     </tr>
     <tr>
