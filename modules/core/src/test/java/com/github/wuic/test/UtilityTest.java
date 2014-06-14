@@ -305,10 +305,13 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void fileSearchInJarTest() throws IOException, StreamException {
-        final String str = getClass().getResource("/jar").toString();
+        final String resolve = "/META-INF/resources/webjars";
+        String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
+        str.substring(0, str.lastIndexOf('/', str.length() - resolve.length() - 1));
+
         final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
-        IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
+        IOUtils.listFile(directoryPath, Pattern.compile(".*.js"));
     }
 
     /**
