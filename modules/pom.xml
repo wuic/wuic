@@ -12,17 +12,12 @@
     <version>0.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>wuic-modules</name>
-    <url>http://gdrouet.github.io/wuic/</url>
+    <url>http://wuic.github.io</url>
 
     <modules>
         <module>core</module>
         <module>tag</module>
         <module>servlet</module>
-        <module>ftp</module>
-        <module>ssh</module>
-        <module>aws-s3</module>
-        <module>google-storage</module>
-        <module>thymeleaf</module>
         <module>jee</module>
     </modules>
 
@@ -49,28 +44,6 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <!-- Embed FTP server for tests -->
-            <dependency>
-                <groupId>org.apache.ftpserver</groupId>
-                <artifactId>ftpserver-core</artifactId>
-                <version>${ftpserver.version}</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <!-- SSH support for embedded server in tests -->
-            <dependency>
-                <groupId>org.apache.sshd</groupId>
-                <artifactId>sshd-core</artifactId>
-                <version>${sshd-version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -101,64 +74,6 @@
                 <artifactId>jetty-servlets</artifactId>
                 <version>${jetty8-version}</version>
                 <scope>test</scope>
-            </dependency>
-
-            <!-- J2EE APIs are always provided -->
-            <dependency>
-                <groupId>javax.servlet.jsp</groupId>
-                <artifactId>jsp-api</artifactId>
-                <version>${jsp-api.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <!-- FTP protocol support -->
-            <dependency>
-                <groupId>commons-net</groupId>
-                <artifactId>commons-net</artifactId>
-                <version>${commons-net.version}</version>
-            </dependency>
-
-            <!-- SSH protocol support -->
-            <dependency>
-                <groupId>com.jcraft</groupId>
-                <artifactId>jsch</artifactId>
-                <version>${jsch-version}</version>
-            </dependency>
-
-            <!-- Thymeleaf support -->
-            <dependency>
-                <groupId>org.thymeleaf</groupId>
-                <artifactId>thymeleaf</artifactId>
-                <version>${thymeleaf-version}</version>
-            </dependency>
-
-            <!-- AWS SDK -->
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk</artifactId>
-                <version>${aws-java-sdk.version}</version>
-            </dependency>
-
-            <!-- Google OAuth and Storage support -->
-            <dependency>
-                <groupId>com.google.apis</groupId>
-                <artifactId>google-api-services-storage</artifactId>
-                <version>${google-api-services-storage.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.http-client</groupId>
-                <artifactId>google-http-client</artifactId>
-                <version>${google-http-client.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.http-client</groupId>
-                <artifactId>google-http-client-jackson2</artifactId>
-                <version>${google-http-client-jackson2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.collections</groupId>
-                <artifactId>google-collections</artifactId>
-                <version>${google-collections.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

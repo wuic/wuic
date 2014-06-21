@@ -7,13 +7,11 @@
 
     <modules>
         <module>modules</module>
-        <module>samples</module>
-        <module>plugins</module>
     </modules>
     <packaging>pom</packaging>
 
 	<name>Web UI compressor</name>
-    <url>http://gdrouet.github.io/wuic/</url>
+    <url>http://wuic.github.io</url>
 	<description>
   		Tool providing support on images, JS and CSS compression within the webapps of the projects
   	</description>
@@ -22,21 +20,21 @@
     <licenses>
         <license>
             <name>WUIC license</name>
-            <url>https://github.com/gdrouet/wuic/blob/master/LICENSE.md</url>
+            <url>https://github.com/wuic/wuic/blob/master/LICENSE.md</url>
             <distribution>repo</distribution>
             <comments>MIT, Apache 2.0</comments>
         </license>
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/gdrouet/wuic.git</connection>
-        <developerConnection>scm:git:git@github.com:gdrouet/wuic.git</developerConnection>
-        <url>http://github.com/gdrouet/wuic</url>
+        <connection>scm:git:git://github.com/wuic/wuic.git</connection>
+        <developerConnection>scm:git:git@github.com:wuic/wuic.git</developerConnection>
+        <url>http://github.com/wuic/wuic</url>
     </scm>
 
     <issueManagement>
         <system>Github</system>
-        <url>https://github.com/gdrouet/wuic/issues</url>
+        <url>https://github.com/wuic/wuic/issues</url>
     </issueManagement>
 
 	<developers>
@@ -94,10 +92,18 @@
                 <version>${ehcache-core.version}</version>
             </dependency>
 
+            <!-- J2EE APIs are always provided -->
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
                 <version>${servlet-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet.jsp</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>${jsp-api.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
@@ -258,18 +264,9 @@
         <!-- build information -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java-source.version>1.6</java-source.version>
-        <sonar.version>3.1</sonar.version>
+        <sonar.version>4.3.1</sonar.version>
 
         <!-- dependencies libraries -->
-        <google-api-services-storage.version>v1beta2-rev3-1.15.0-rc</google-api-services-storage.version>
-        <google-http-client.version>1.15.0-rc</google-http-client.version>
-        <google-http-client-jackson2.version>1.13.1-beta</google-http-client-jackson2.version>
-        <google-collections.version>1.0-rc5</google-collections.version>
-        <aws-java-sdk.version>1.4.3</aws-java-sdk.version>
-        <jsch-version>0.1.48</jsch-version>
-        <sshd-version>0.8.0</sshd-version>
-        <ftpserver.version>1.0.6</ftpserver.version>
-        <commons-net.version>3.2</commons-net.version>
 		<jsp-api.version>2.2</jsp-api.version>
 		<servlet-api.version>2.5</servlet-api.version>
 		<junit.version>4.8.2</junit.version>
@@ -277,7 +274,6 @@
         <htmlcompressor.version>1.5.2</htmlcompressor.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
-        <thymeleaf-version>2.0.19</thymeleaf-version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>
@@ -287,8 +283,6 @@
         <gpg.version>1.1</gpg.version>
         <surefire-plugin.version>2.14.1</surefire-plugin.version>
         <source-plugin.version>2.1.2</source-plugin.version>
-        <maven.version>2.0</maven.version>
-        <maven-plugin.version>3.2</maven-plugin.version>
     </properties>
 	
 </project>
