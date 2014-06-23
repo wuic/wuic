@@ -32,18 +32,6 @@
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
             </properties>
         </engine-builder>
-
-        <engine-builder id="wuicDefaultYuiCompressorJavascriptEngineBuilder" type="YuiCompressorJavascriptEngineBuilder">
-            <properties>
-                <property key="c.g.wuic.engine.compress">true</property>
-            </properties>
-        </engine-builder>
-
-        <engine-builder id="wuicDefaultYuiCompressorCssEngineBuilder" type="YuiCompressorCssEngineBuilder">
-            <properties>
-                <property key="c.g.wuic.engine.compress">true</property>
-            </properties>
-        </engine-builder>
     </engine-builders>
 
 	<heaps>
@@ -103,7 +91,6 @@
         <workflow-template id="js-image">
             <engine-chain>
                 <engine-builder-id>jsSprite</engine-builder-id>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
             </engine-chain>
         </workflow-template>
         <workflow-template id="util-js">
@@ -113,9 +100,7 @@
             <engine-chain />
         </workflow-template>
         <workflow-template id="css-scripts">
-            <engine-chain>
-                <engine-builder-id>wuicDefaultYuiCompressorJavascriptEngineBuilder</engine-builder-id>
-            </engine-chain>
+            <engine-chain/>
         </workflow-template>
     </workflow-templates>
 

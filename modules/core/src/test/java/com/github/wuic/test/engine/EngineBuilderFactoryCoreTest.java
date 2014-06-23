@@ -95,20 +95,4 @@ public class EngineBuilderFactoryCoreTest {
     public void testCreateCssInspectorBuilder() throws UnableToInstantiateException {
         Assert.assertNotNull(EngineBuilderFactory.getInstance().create(CssInspectorEngineBuilder.class.getSimpleName()));
     }
-
-    /**
-     * Test for CSS YUICompressor.
-     */
-    @Test
-    public void testCreateCssYuiCompressorBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(EngineBuilderFactory.getInstance().create(YuiCompressorCssEngineBuilder.class.getSimpleName()));
-    }
-
-    /**
-     * Test for Javascript YUICompressor.
-     */
-    @Test
-    public void testCreateJavascriptYuiCompressorBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(EngineBuilderFactory.getInstance().create(YuiCompressorJavascriptEngineBuilder.class.getSimpleName()));
-    }
 }
