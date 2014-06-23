@@ -43,9 +43,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.engine.core.EhCacheEngineBuilder;
 import com.github.wuic.engine.core.MemoryMapCacheEngineBuilder;
-import com.github.wuic.engine.impl.ehcache.EhCacheEngine;
 import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
 import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
 import com.github.wuic.engine.impl.embedded.HtmlInspectorEngine;
@@ -56,7 +54,6 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.core.ByteArrayNut;
 import com.github.wuic.nut.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
-import com.github.wuic.test.ehcache.EhCacheEngineTest;
 import com.github.wuic.util.IOUtils;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -182,23 +179,6 @@ public class HtmlInspectorEngineTest {
         System.out.print(res);
         Assert.assertTrue(Pattern.compile(REGEX, Pattern.DOTALL).matcher(res).matches());
     }
-
-    /**
-     * <p>
-     * EhCache support test for head engine.
-     * </p>
-     *
-     * @throws Exception if test fails
-     */
-    @Test
-    public void ehCacheSupportTest() throws Exception {
-        final EhCacheEngineBuilder builder = new EhCacheEngineBuilder();
-        builder.property(ApplicationConfig.CACHE_PROVIDER_CLASS, EhCacheEngineTest.CacheFactory.class.getName())
-                .property(ApplicationConfig.BEST_EFFORT, true);
-        final EhCacheEngine cache = (EhCacheEngine) builder.build();
-        concurrencyTest(cache);
-    }
-
 
     /**
      * <p>

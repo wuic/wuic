@@ -73,14 +73,6 @@ public class EngineBuilderFactoryCoreTest {
     }
 
     /**
-     * Test for EhCache.
-     */
-    @Test
-    public void testCreateEhCacheBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(EngineBuilderFactory.getInstance().create(EhCacheEngineBuilder.class.getSimpleName()));
-    }
-
-    /**
      * Test for image compression.
      */
     @Test
