@@ -83,7 +83,7 @@ public class WebappNutDao extends PathNutDao {
      *
      * @param ctx the servlet context
      * @param base the directory where we have to look up
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
+     * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp

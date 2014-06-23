@@ -105,7 +105,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param base              prefix for all paths (a {@link BadArgumentException} is thrown is {@code null}
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
-     * @param pollingSeconds    interleave in seconds for polling feature (-1 to disable)
+     * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
      * @param contentBasedHash  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public AbstractNutDao(final String base,
@@ -121,7 +121,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
         contentBasedVersionNumber = contentBasedHash;
-        setPollingInterleave(pollingSeconds);
+        setPollingInterval(pollingSeconds);
     }
 
     /**
@@ -328,8 +328,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         log.info("Shutdown DAO {}", getClass().getName());
 
         // Will stop any scheduled operation
-        if (getPollingInterleave() != -1) {
-            setPollingInterleave(-1);
+        if (getPollingInterval() != -1) {
+            setPollingInterval(-1);
         }
     }
 

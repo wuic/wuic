@@ -227,7 +227,7 @@ public class WuicXmlTest {
         Assert.assertNotNull(xml.getEngineBuilders());
         Assert.assertNotNull(xml.getDaoBuilders());
         Assert.assertNotNull(xml.getWorkflowTemplates());
-        Assert.assertNotNull(xml.getPollingInterleaveSeconds());
+        Assert.assertNotNull(xml.getPollingIntervalSeconds());
 
         // Number of elements
         Assert.assertEquals(NumberUtils.TWO, xml.getHeaps().size());

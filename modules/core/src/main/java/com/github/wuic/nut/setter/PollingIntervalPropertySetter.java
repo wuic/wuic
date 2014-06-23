@@ -44,14 +44,14 @@ import com.github.wuic.util.PropertySetter;
 
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#POLLING_INTERLEAVE} property.
+ * Setter for the {@link com.github.wuic.ApplicationConfig#POLLING_INTERVAL} property.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.0
  */
-public class PollingInterleavePropertySetter extends PropertySetter.PropertySetterOfInteger {
+public class PollingIntervalPropertySetter extends PropertySetter.PropertySetterOfInteger {
 
     /**
      * <p>
@@ -61,7 +61,7 @@ public class PollingInterleavePropertySetter extends PropertySetter.PropertySett
      * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
      * @param defaultValue the default value
      */
-    public PollingInterleavePropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
+    public PollingIntervalPropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
         // Prevent NumberFormatException by validating the parameter in 'set(Object)' method
         super(b, -1);
         set(defaultValue);
@@ -74,7 +74,7 @@ public class PollingInterleavePropertySetter extends PropertySetter.PropertySett
      *
      * @param b the {@link AbstractNutDaoBuilder} which needs to be configured
      */
-    public PollingInterleavePropertySetter(final AbstractNutDaoBuilder b) {
+    public PollingIntervalPropertySetter(final AbstractNutDaoBuilder b) {
         this(b, -1);
     }
 
@@ -83,6 +83,6 @@ public class PollingInterleavePropertySetter extends PropertySetter.PropertySett
      */
     @Override
     public String getPropertyKey() {
-        return ApplicationConfig.POLLING_INTERLEAVE;
+        return ApplicationConfig.POLLING_INTERVAL;
     }
 }

@@ -84,7 +84,7 @@ public class HttpNutDao extends AbstractNutDao {
      * @param port the HTTP server port
      * @param path the base path where nuts are provided
      * @param basePathAsSysProp {@code true} if the base path is a system property
-     * @param pollingSeconds the interleave for polling operations in seconds (-1 to deactivate)
+     * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      */
     public HttpNutDao(final Boolean https,

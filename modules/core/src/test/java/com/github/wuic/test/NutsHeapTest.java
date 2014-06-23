@@ -91,7 +91,7 @@ public class NutsHeapTest {
          * Builds an instance.
          * </p>
          *
-         * @param pollingSeconds polling interleave
+         * @param pollingSeconds polling interval
          */
         MockNutDao(final int pollingSeconds) {
             super("/", false, null, pollingSeconds, false);

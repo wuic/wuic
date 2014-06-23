@@ -78,7 +78,7 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
         addPropertySetter(new BasePathPropertySetter(this, isExploded ? EXPLODED_BASE_PATH : "/"),
                 new BasePathAsSysPropPropertySetter(this),
                 new ProxyUrisPropertySetter(this),
-                new PollingInterleavePropertySetter(this),
+                new PollingIntervalPropertySetter (this),
                 new RegexPropertySetter(this),
                 new ContentBasedVersionNumberPropertySetter(this));
     }
@@ -106,14 +106,14 @@ public class WebappNutDaoBuilder extends AbstractNutDaoBuilder {
             return new DiskNutDao(basePath,
                     false,
                     (String[]) property(ApplicationConfig.PROXY_URIS),
-                    (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
+                    (Integer) property(ApplicationConfig.POLLING_INTERVAL),
                     (Boolean) property(ApplicationConfig.REGEX),
                     (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
         } else {
             return new WebappNutDao(WuicJeeContext.getServletContext(),
                     basePath,
                     (String[]) property(ApplicationConfig.PROXY_URIS),
-                    (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
+                    (Integer) property(ApplicationConfig.POLLING_INTERVAL),
                     (Boolean) property(ApplicationConfig.REGEX),
                     (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
         }

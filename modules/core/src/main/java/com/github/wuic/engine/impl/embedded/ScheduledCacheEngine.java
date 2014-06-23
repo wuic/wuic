@@ -44,7 +44,7 @@ import java.util.concurrent.Future;
 
 /**
  * <p>
- * This abstract engine is able to clear its cache in a particular interleave.
+ * This abstract engine is able to clear its cache in a particular interval.
  * </p>
  *
  * @author Guillaume DROUET
@@ -75,7 +75,7 @@ public abstract class ScheduledCacheEngine extends AbstractCacheEngine implement
     /**
      * <p>
      * Schedules the time to live for this cache. If the specified value is a positive number, a thread will be executed
-     * at the specified interleave to clear the cache. Otherwise, any scheduled operation will be canceled.
+     * at the specified interval to clear the cache. Otherwise, any scheduled operation will be canceled.
      * </p>
      *
      * @param timeToLiveSeconds new time to live of cache in seconds

@@ -68,7 +68,7 @@ public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {
                 new ServerDomainPropertySetter(this),
                 new ServerPortPropertySetter(this),
                 new SecretProtocolPropertySetter(this),
-                new PollingInterleavePropertySetter(this),
+                new PollingIntervalPropertySetter(this),
                 new ContentBasedVersionNumberPropertySetter(this));
     }
 
@@ -82,7 +82,7 @@ public class HttpNutDaoBuilder extends AbstractNutDaoBuilder {
                 (Integer) property(ApplicationConfig.SERVER_PORT),
                 (String) property(ApplicationConfig.BASE_PATH),
                 (Boolean) property(ApplicationConfig.BASE_PATH_AS_SYS_PROP),
-                (Integer) property(ApplicationConfig.POLLING_INTERLEAVE),
+                (Integer) property(ApplicationConfig.POLLING_INTERVAL),
                 (Boolean) property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER));
     }
 }

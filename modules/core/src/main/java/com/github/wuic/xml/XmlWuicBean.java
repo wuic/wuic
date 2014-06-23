@@ -56,10 +56,10 @@ import java.util.List;
 public class XmlWuicBean {
 
     /**
-     * Polling interleave in seconds.
+     * Polling interval in seconds.
      */
-    @XmlAttribute(name = "polling-interleave-seconds")
-    private Integer pollingInterleaveSeconds;
+    @XmlAttribute(name = "polling-interval-seconds")
+    private Integer pollingIntervalSeconds;
 
     /**
      * Some filter builders definitions.
@@ -105,13 +105,13 @@ public class XmlWuicBean {
 
     /**
      * <p>
-     * Gets the polling interleave. If value is not filled in wuic.xml, returns -1.
+     * Gets the polling interval. If value is not filled in wuic.xml, returns -1.
      * </p>
      *
-     * @return the interleave
+     * @return the interval
      */
-    public Integer getPollingInterleaveSeconds() {
-        return pollingInterleaveSeconds == null ? -1 : pollingInterleaveSeconds;
+    public Integer getPollingIntervalSeconds() {
+        return pollingIntervalSeconds == null ? -1 : pollingIntervalSeconds;
     }
 
     /**

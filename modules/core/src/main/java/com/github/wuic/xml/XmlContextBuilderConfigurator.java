@@ -253,7 +253,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             configureTemplates(xml, ctxBuilder);
             configureWorkflow(xml, ctxBuilder);
 
-            return xml.getPollingInterleaveSeconds();
+            return xml.getPollingIntervalSeconds();
         } catch (JAXBException je) {
             throw new BadArgumentException(new IllegalArgumentException(je));
         } catch (UnableToInstantiateException utiae) {

@@ -100,7 +100,7 @@ public class AbstractNutDaoTest {
          * Creates a new instance.
          * </p>
          *
-         * @param pollingSeconds polling interleave
+         * @param pollingSeconds polling interval
          */
         private MockNutDaoTest(final int pollingSeconds) {
             super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, false);
@@ -260,7 +260,7 @@ public class AbstractNutDaoTest {
         });
 
         Thread.sleep(1500L);
-        dao.setPollingInterleave(-1);
+        dao.setPollingInterval(-1);
         Thread.sleep(2500L);
         Assert.assertEquals(count.intValue(), 1);
     }
@@ -338,8 +338,8 @@ public class AbstractNutDaoTest {
                             }
                         });
 
-                        dao.setPollingInterleave(2);
-                        dao.getPollingInterleave();
+                        dao.setPollingInterval(2);
+                        dao.getPollingInterval();
                         dao.computeRealPaths("", NutDao.PathFormat.ANY);
                         dao.proxyUriFor(nut);
                     } catch (Exception e) {

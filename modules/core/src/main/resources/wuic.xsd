@@ -48,7 +48,7 @@
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
-        <xs:attribute name="polling-interleave-seconds" type="xs:int"/>
+        <xs:attribute name="polling-interval-seconds" type="xs:int"/>
     </xs:complexType>
 
     <xs:complexType name="xmlBuilderBean">

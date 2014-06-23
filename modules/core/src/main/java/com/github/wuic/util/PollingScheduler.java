@@ -66,9 +66,9 @@ public abstract class PollingScheduler<T> implements Runnable {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * Polling interleave in seconds (-1 to disable).
+     * Polling interval in seconds (-1 to disable).
      */
-    private int pollingInterleave;
+    private int pollingInterval;
 
     /**
      * Help to know when a polling operation is done.
@@ -124,25 +124,25 @@ public abstract class PollingScheduler<T> implements Runnable {
 
     /**
      * <p>
-     * Returns the polling interleave.
+     * Returns the polling interval.
      * </p>
      *
-     * @return the polling interleave
+     * @return the polling interval
      */
-    public final int getPollingInterleave() {
-        return pollingInterleave;
+    public final int getPollingInterval() {
+        return pollingInterval;
     }
 
     /**
      * <p>
-     * Defines a new polling interleave. If current polling operation are currently processed, then they are not interrupted
+     * Defines a new polling interval. If current polling operation are currently processed, then they are not interrupted
      * and a new scheduling is created if the given value is a positive number. If the value is not positive, then no
      * polling will occur.
      * </p>
      *
-     * @param interleaveSeconds interleave in seconds
+     * @param intervalSeconds interval in seconds
      */
-    public final synchronized void setPollingInterleave(final int interleaveSeconds) {
+    public final synchronized void setPollingInterval(final int intervalSeconds) {
 
         // Stop current scheduling
         if (pollingResult != null) {
@@ -151,12 +151,12 @@ public abstract class PollingScheduler<T> implements Runnable {
             pollingResult = null;
         }
 
-        pollingInterleave = interleaveSeconds;
+        pollingInterval = intervalSeconds;
 
         // Create new scheduling if necessary
-        if (pollingInterleave > 0) {
-            log.info("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterleave);
-            pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterleave);
+        if (pollingInterval > 0) {
+            log.info("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterval);
+            pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterval);
         } else {
             log.info("Won't perform any polling operation for {}", getClass().getName());
         }

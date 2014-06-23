@@ -69,9 +69,9 @@ public interface ApplicationConfig {
     String BASE_PATH_AS_SYS_PROP = "c.g.wuic.dao.basePathAsSystemProperty";
 
     /**
-     * Polling interleave for nuts refresher.
+     * Polling interval for nuts refresher.
      */
-    String POLLING_INTERLEAVE = "c.g.wuic.dao.pollingInterleave";
+    String POLLING_INTERVAL = "c.g.wuic.dao.pollingInterval";
 
     /**
      * Boolean which indicates if path are evaluated as regex or not.

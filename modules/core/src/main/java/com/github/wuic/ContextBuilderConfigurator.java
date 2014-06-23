@@ -139,7 +139,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
                 log.info("Unable to poll configuration", se);
             }
         } else {
-            log.warn("Polling interleave is set to {} seconds but no context builder is polled", getPollingInterleave());
+            log.warn("Polling interval is set to {} seconds but no context builder is polled", getPollingInterval());
         }
     }
 
@@ -170,7 +170,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
             // Update polling
             final int polling = internalConfigure(ctxBuilder);
             pollingContextBuilder = polling > 0 ? ctxBuilder : null;
-            setPollingInterleave(polling);
+            setPollingInterval(polling);
 
             if (polling != -1) {
                 timestamp = getLastUpdateTimestampFor(getClass().getName());
@@ -192,7 +192,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      *
      * <p>
      * To activate polling on this configurator, this method should returns a positive integer representing the polling
-     * interleave in seconds.
+     * interval in seconds.
      * </p>
      *
      * @param ctxBuilder the builder
