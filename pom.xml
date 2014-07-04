@@ -92,10 +92,10 @@
                 <version>${ehcache-core.version}</version>
             </dependency>
 
-            <!-- J2EE APIs are always provided -->
+            <!-- JEE APIs are always provided -->
             <dependency>
                 <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
+                <artifactId>javax.servlet-api</artifactId>
                 <version>${servlet-api.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -137,7 +137,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>javax.servlet</groupId>
-                        <artifactId>servlet-api</artifactId>
+                        <artifactId>javax.servlet-api</artifactId>
                         <version>${servlet-api.version}</version>
                     </dependency>
                 </dependencies>
@@ -268,12 +268,11 @@
 
         <!-- dependencies libraries -->
 		<jsp-api.version>2.2</jsp-api.version>
-		<servlet-api.version>2.5</servlet-api.version>
-		<junit.version>4.8.2</junit.version>
-        <mockito.version>1.9.5</mockito.version>
+		<servlet-api.version>3.1-b02</servlet-api.version>
         <htmlcompressor.version>1.5.2</htmlcompressor.version>
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
+        <mockito.version>1.9.5</mockito.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>

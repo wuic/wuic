@@ -9,13 +9,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.wuic</groupId>
     <artifactId>wuic-jee</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
 
         <dependency>

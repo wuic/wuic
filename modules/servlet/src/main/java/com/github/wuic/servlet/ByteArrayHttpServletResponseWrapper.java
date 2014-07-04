@@ -39,6 +39,7 @@
 package com.github.wuic.servlet;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.ByteArrayOutputStream;
@@ -89,6 +90,21 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseWrap
         @Override
         public void write(final int param) throws IOException {
             baos.write(param);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean canWrite() {
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setWriteListener(final WriteListener writeListener) {
         }
     }
 
