@@ -1,0 +1,14 @@
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="dao" type="ClasspathNutDaoBuilder">
+            <properties>
+                <property key="c.g.wuic.dao.basePath">/servletTest</property>
+            </properties>
+        </nut-dao-builder>
+    </nut-dao-builders>
+    <heaps>
+        <heap id="heap" dao-builder-id="dao">
+            <nut-path>aggregate-me.css</nut-path>
+        </heap>
+    </heaps>
+</wuic>
