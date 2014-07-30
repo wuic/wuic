@@ -38,6 +38,7 @@
 
 package com.github.wuic.servlet.test;
 
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.util.IOUtils;
@@ -60,7 +61,7 @@ import java.io.InputStreamReader;
  * @since 0.5.0
  */
 @RunWith(JUnit4.class)
-@WuicRunnerConfiguration(installFilter = SkipIssue123.class, webApplicationPath = "/servletTest")
+@WuicRunnerConfiguration(installFilter = SkipIssue123.class, webApplicationPath = "/servletTest", installListener = WuicServletContextListener.class)
 public class HtmlParserFilterTest {
 
     /**

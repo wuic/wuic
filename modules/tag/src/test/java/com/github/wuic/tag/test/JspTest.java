@@ -38,6 +38,7 @@
 
 package com.github.wuic.tag.test;
 
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicRunnerConfiguration;
@@ -60,7 +61,7 @@ import java.io.InputStreamReader;
  * @since 0.5.0
  */
 @RunWith(JUnit4.class)
-@WuicRunnerConfiguration(webApplicationPath = "/jspTest", installServlet = WuicServlet.class)
+@WuicRunnerConfiguration(webApplicationPath = "/jspTest", installServlet = WuicServlet.class, installListener = WuicServletContextListener.class)
 public class JspTest {
 
     /**

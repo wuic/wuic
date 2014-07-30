@@ -38,11 +38,15 @@
 
 package com.github.wuic.servlet.test;
 
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -50,7 +54,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import javax.xml.bind.JAXBException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
 
 /**
@@ -63,7 +69,7 @@ import java.io.StringReader;
  * @since 0.5.0
  */
 @RunWith(JUnit4.class)
-@WuicRunnerConfiguration(webApplicationPath = "/servletTest", installServlet = WuicServlet.class)
+@WuicRunnerConfiguration(webApplicationPath = "/servletTest", installServlet = WuicServlet.class, installListener = WuicServletContextListener.class)
 public class WuicServletTest {
 
     /**
@@ -76,7 +82,28 @@ public class WuicServletTest {
      * XML configuration.
      */
     @Rule
-    public WuicConfiguration configuration = new WuicConfiguration();
+    public WuicConfiguration configuration = new WuicConfiguration() {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void clearConfiguration() {
+            WuicJeeContext.getWuicFacade().clearTag(getClass().getName());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
+            try {
+                WuicJeeContext.getWuicFacade().configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+            } catch (WuicException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
 
     /**
      * <p>

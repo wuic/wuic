@@ -38,14 +38,17 @@
 
 package com.github.wuic.jee.test;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.nut.jee.WebappNutDaoBuilder;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -53,6 +56,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import javax.xml.bind.JAXBException;
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -65,7 +70,7 @@ import java.util.List;
  * @since 0.3.0
  */
 @RunWith(JUnit4.class)
-@WuicRunnerConfiguration(webApplicationPath = "/jeeTest")
+@WuicRunnerConfiguration(webApplicationPath = "/jeeTest", installListener = WuicServletContextListener.class)
 public class JeeTest {
 
     /**
@@ -74,12 +79,32 @@ public class JeeTest {
     @ClassRule
     public static com.github.wuic.test.Server server = new Server();
 
-
     /**
      * XML configuration.
      */
     @Rule
-    public WuicConfiguration configuration = new WuicConfiguration();
+    public WuicConfiguration configuration = new WuicConfiguration() {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void clearConfiguration() {
+            WuicJeeContext.getWuicFacade().clearTag(getClass().getName());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
+            try {
+                WuicJeeContext.getWuicFacade().configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+            } catch (WuicException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
 
     /**
      * Tests that {@code ServletContext} is set.
@@ -103,6 +128,5 @@ public class JeeTest {
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());
         Assert.assertEquals("index.html", nuts.get(0).getName());
-
     }
 }

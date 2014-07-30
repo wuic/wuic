@@ -273,6 +273,8 @@
 		<yuicompressor.version>2.3.6</yuicompressor.version>
 		<ehcache-core.version>2.5.3</ehcache-core.version>
         <mockito.version>1.9.5</mockito.version>
+        <ecj.version>4.3.1</ecj.version>
+        <el.version>3.0-b01</el.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>
