@@ -38,6 +38,8 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.AnnotationProcessor;
+import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
@@ -46,9 +48,10 @@ import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.ReflectionsAnnotationScanner;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -57,12 +60,14 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 
+import java.lang.annotation.Annotation;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
@@ -423,5 +428,34 @@ public class UtilityTest extends WuicTest {
 
         nutType = NutType.getNutTypeForMimeType("bad-mime-type");
         Assert.assertNull(nutType);
+    }
+
+    /**
+     * Default annotation scanner test.
+     */
+    @Test
+    public void defaultAnnotationScannerTest() {
+        final AnnotationScanner s = new ReflectionsAnnotationScanner();
+        final AtomicInteger count = new AtomicInteger();
+        s.scan("com", new AnnotationProcessor() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Class<? extends Annotation> requiredAnnotation() {
+                return RunWith.class;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void handle(final Class<?> annotatedType) {
+               count.incrementAndGet();
+            }
+        });
+
+        Assert.assertNotEquals(0, count.intValue());
     }
 }
