@@ -139,6 +139,12 @@ public interface ErrorCode {
     long ENGINE_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
 
     /**
+     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
+     * {@link com.github.wuic.config.AbstractGenericBuilder}.
+     */
+    long BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
+
+    /**
      * Indicates that the {@link com.github.wuic.engine.impl.embedded.StaticEngine} did not found a retrieved workflow.
      */
     long STATIC_WORKFLOW_NOT_FOUND = 19860606204L;

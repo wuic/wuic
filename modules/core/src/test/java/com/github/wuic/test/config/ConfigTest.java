@@ -36,51 +36,84 @@
  */
 
 
-package com.github.wuic.engine.setter;
+package com.github.wuic.test.config;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.util.GenericBuilder;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
- * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
- * </p>
+ * Configuration API tests.
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
+@RunWith(JUnit4.class)
+public class ConfigTest {
 
     /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
+     * The factory.
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
+    private static ObjectBuilderFactory<I> factory;
+
+    /**
+     * Initializes the factory.
+     */
+    @BeforeClass
+    public static void scan() {
+        factory = new ObjectBuilderFactory<I>(IService.class, "com.github.wuic.test");
     }
 
     /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
+     * Tests a default build.
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
+    @Test
+    public void builderDefaultValueTest() {
+        final GenericBuilder<I> b = factory.create("MyService");
+        final I i = b.build();
+
+        Assert.assertEquals(MyService.class, i.getClass());
+        Assert.assertEquals(1, MyService.class.cast(i).foo);
     }
 
     /**
-     * {@inheritDoc}
+     * Tests a build with a property not set by default.
+     *
+     * @throws Exception if test fails
      */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
+    @Test
+    public void builderSpecificValueTest() throws Exception {
+        final GenericBuilder<I> b = factory.create("MyService");
+        b.property("int", 2);
+        final I i = b.build();
+
+        Assert.assertEquals(MyService.class, i.getClass());
+        Assert.assertEquals(2, MyService.class.cast(i).foo);
+    }
+
+    /**
+     * Tests a build with an unknown property.
+     *
+     * @throws Exception if test succeed
+     */
+    @Test(expected = BuilderPropertyNotSupportedException.class)
+    public void builderBadPropertyTest() throws Exception {
+        final GenericBuilder<I> b = factory.create("MyService");
+        b.property("bar", 2);
+    }
+
+    /**
+     * Tests bad usage detection.
+     */
+    @Test
+    public void badServiceTest() {
+        Assert.assertNull(factory.create("MyBadService"));
+        Assert.assertNull(factory.create("MyInnerBadService"));
     }
 }

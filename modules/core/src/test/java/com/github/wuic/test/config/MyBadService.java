@@ -36,51 +36,81 @@
  */
 
 
-package com.github.wuic.engine.setter;
+package com.github.wuic.test.config;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.IntegerConfigParam;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
- * </p>
+ * Bad configured and annotated service.
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
+@IService
+public class MyBadService implements I {
 
     /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
+     * Some unsupported config annotation.
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
+    @Target({ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @interface UnsupportedAnnotation {
+
     }
 
     /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
+     * Not annotated constructor. Will be ignored.
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
+    public MyBadService() {
+
     }
 
     /**
-     * {@inheritDoc}
+     * Constructor without config annotation.
+     *
+     * @param i not annotated parameter
      */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
+    @ConfigConstructor
+    public MyBadService(final int i) {
+
+    }
+
+    /**
+     * Constructor with an unsupported config annotation.
+     *
+     * @param s the parameter annotated with unsupported annotation
+     */
+    @ConfigConstructor
+    public MyBadService(@UnsupportedAnnotation final String s) {
+
+    }
+
+    /**
+     * Constructor with one parameter not annotated.
+     *
+     * @param i not annotated
+     * @param j annotated
+     */
+    @ConfigConstructor
+    public MyBadService(final int i,
+                        @IntegerConfigParam(defaultValue = 1, propertyKey = "foo") final int j) {
+
+    }
+
+    /**
+     * An inner class annotated with service annotation will be rejected.
+     */
+    @IService
+    public static class MyInnerBadService implements I {
+
     }
 }

@@ -36,51 +36,105 @@
  */
 
 
-package com.github.wuic.engine.setter;
+package com.github.wuic.config;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
+ * This annotation marks a parameter in a constructor annotated with {@link ConfigConstructor}
+ * that sets a integer value.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
+@Target({ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface IntegerConfigParam {
 
     /**
      * <p>
-     * Creates a new instance with a specific default value.
+     * A {@link ConfigParam} that handles {@link IntegerConfigParam}.
      * </p>
      *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
+    public class ConfigParamImpl implements ConfigParam {
+
+        /**
+         * The configuration parameter.
+         */
+        private IntegerConfigParam configParam;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param configParam the annotation
+         */
+        public ConfigParamImpl(final IntegerConfigParam configParam) {
+            this.configParam = configParam;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Class<? extends PropertySetter> setter() {
+            return configParam.setter();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object defaultValue() {
+            return configParam.defaultValue();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String propertyKey() {
+            return configParam.propertyKey();
+        }
     }
 
     /**
      * <p>
-     * Creates a new instance.
+     * Gets the property key for this parameter.
      * </p>
      *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
+     * @return the property key.
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
+    String propertyKey();
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Gets the {@link PropertySetter}.
+     * </p>
+     *
+     * @return the setter
      */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
-    }
+    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfInteger.Adapter.class;
+
+    /**
+     * <p>
+     * Gets the default value.
+     * </p>
+     *
+     * @return the value
+     */
+    int defaultValue();
 }

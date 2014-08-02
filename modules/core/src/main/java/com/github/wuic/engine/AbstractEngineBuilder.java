@@ -39,8 +39,8 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.EngineBuilderPropertyNotSupportedException;
-import com.github.wuic.util.PropertySetter;
-import com.github.wuic.util.AbstractGenericBuilder;
+import com.github.wuic.config.PropertySetter;
+import com.github.wuic.config.AbstractGenericBuilder;
 
 /**
  * <p>
@@ -58,7 +58,7 @@ public abstract class AbstractEngineBuilder extends AbstractGenericBuilder<Engin
      * Builds a new {@link EngineBuilder} with specific property setters.
      * </p>
      *
-     * @param setters the specific {@link com.github.wuic.util.PropertySetter setters}
+     * @param setters the specific {@link com.github.wuic.config.PropertySetter setters}
      */
     protected AbstractEngineBuilder(final PropertySetter... setters) {
         super(setters);

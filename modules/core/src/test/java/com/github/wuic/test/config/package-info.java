@@ -35,52 +35,11 @@
  * licenses."
  */
 
-
-package com.github.wuic.engine.setter;
-
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
-
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
+ * Test package for the config API under package 'com.github.wuic.config'.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.4.0
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
-    }
-}
+package com.github.wuic.test.config;

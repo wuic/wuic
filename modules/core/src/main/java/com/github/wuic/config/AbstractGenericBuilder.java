@@ -36,18 +36,19 @@
  */
 
 
-package com.github.wuic.util;
+package com.github.wuic.config;
 
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.util.GenericBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * <p>
- * Abstract implementation of what is a {@link GenericBuilder}. It is composed of a set of {@link PropertySetter} used
+ * Abstract implementation of what is a {@link com.github.wuic.util.GenericBuilder}. It is composed of a set of {@link PropertySetter} used
  * to configure it before to call the {@link com.github.wuic.util.GenericBuilder#build()} method.
  * </p>
  *
@@ -94,6 +95,25 @@ public abstract class AbstractGenericBuilder<T> implements GenericBuilder<T> {
      */
     public Map<String, Object> getProperties() {
         return properties;
+    }
+
+    /**
+     * <p>
+     * Returns an array with one property for each {@link PropertySetter}. If the property
+     * is not set, then the default value is returned.
+     * </p>
+     *
+     * @return the properties
+     */
+    public Object[] getAllProperties() {
+        final Object[] retval = new Object[propertySetters.length];
+
+        for (int i = 0; i < retval.length; i++) {
+            final PropertySetter setter = propertySetters[i];
+            retval[i] = setter.get();
+        }
+
+        return retval;
     }
 
     /**

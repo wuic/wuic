@@ -36,51 +36,41 @@
  */
 
 
-package com.github.wuic.engine.setter;
+package com.github.wuic.test.config;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.IntegerConfigParam;
+import com.github.wuic.config.ObjectConfigParam;
+import com.github.wuic.config.StringConfigParam;
 
 /**
- * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
- * </p>
+ * Annotated service.
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
+@IService
+public class MyService implements I {
+
+    /**
+     * Configured property.
+     */
+    final int foo;
 
     /**
      * <p>
-     * Creates a new instance with a specific default value.
+     * Builder.
      * </p>
      *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
+     * @param i configured property
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
+    @ConfigConstructor
+    public MyService(@IntegerConfigParam(propertyKey = "int", defaultValue = 1) int i,
+                     @StringConfigParam(propertyKey = "str", defaultValue = "string") String s,
+                     @ObjectConfigParam(propertyKey = "obj", defaultValue = "java.lang.Object") Object o,
+                     @BooleanConfigParam(propertyKey = "bool", defaultValue = true) boolean b) {
+        this.foo = i;
     }
 }

@@ -36,51 +36,26 @@
  */
 
 
-package com.github.wuic.engine.setter;
+package com.github.wuic.engine;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
+ * This annotation marks a {@link com.github.wuic.engine.Engine} implementation that must be discovered
+ * during classpath scanning.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
-    }
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface EngineService {
 }

@@ -44,7 +44,7 @@ import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGCssSpriteProvider;
 import com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.util.PropertySetter;
+import com.github.wuic.config.PropertySetter;
 
 /**
  * <p>

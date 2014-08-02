@@ -35,52 +35,21 @@
  * licenses."
  */
 
-
-package com.github.wuic.engine.setter;
-
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
-
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
+ * This package contains all the API elements to make objects configurable. A configurable object provides
+ * a constructor annotated with {@link com.github.wuic.config.ConfigConstructor}. Each parameter of this
+ * constructor is annotated with a configuration parameter annotation:
+ * <ul>
+ *     <li>{@link com.github.wuic.config.ObjectConfigParam}</li>
+ *     <li>{@link com.github.wuic.config.BooleanConfigParam}</li>
+ *     <li>{@link com.github.wuic.config.StringConfigParam}</li>
+ *     <li>{@link com.github.wuic.config.IntegerConfigParam}</li>
+ * </ul>
  * </p>
  *
+ * The object could be discovered over the classpath with an {@link com.github.wuic.config.ObjectBuilderFactory}.
+ *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.4.0
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
-    }
-}
+package com.github.wuic.config;

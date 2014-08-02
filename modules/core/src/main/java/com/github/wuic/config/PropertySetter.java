@@ -36,9 +36,10 @@
  */
 
 
-package com.github.wuic.util;
+package com.github.wuic.config;
 
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.util.NumberUtils;
 
 /**
  * <p>
@@ -64,6 +65,11 @@ public abstract class PropertySetter<T> {
     private AbstractGenericBuilder<?> builder;
 
     /**
+     * The property key.
+     */
+    private String propertyKey;
+
+    /**
      * <p>
      * Creates a new instance with a specific default value.
      * </p>
@@ -76,6 +82,27 @@ public abstract class PropertySetter<T> {
         put(getPropertyKey(), defaultValue);
     }
 
+    /**
+     * <p>
+     * Builds a new instance. Fields can be initialized with {@link #init(AbstractGenericBuilder, String, Object)}.
+     * </p>
+     */
+    public PropertySetter() {
+    }
+
+    /**
+     * <p>
+     * Initializes this instance.
+     * </p>
+     *
+     * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
+     * @param defaultValue the default value
+     */
+    public void init(final AbstractGenericBuilder<?> b, final String propertyKey, final Object defaultValue) {
+        builder = b;
+        this.propertyKey = propertyKey;
+        put(getPropertyKey(), defaultValue);
+    }
     /**
      * <p>
      * Puts internally the given value into the builder's properties.
@@ -135,7 +162,9 @@ public abstract class PropertySetter<T> {
      *
      * @return the property key
      */
-    public abstract String getPropertyKey();
+    public String getPropertyKey() {
+        return propertyKey;
+    }
 
     /**
      * <p>
@@ -167,6 +196,27 @@ public abstract class PropertySetter<T> {
         protected void set(final Object value) {
             put(getPropertyKey(), value == null ? null : String.valueOf(value));
         }
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        public PropertySetterOfString() {
+
+        }
+
+        /**
+         * <p>
+         * Adapter class for generic purpose.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.0
+         */
+        public static class Adapter extends PropertySetterOfString {
+        }
     }
 
     /**
@@ -178,7 +228,7 @@ public abstract class PropertySetter<T> {
      * @version 1.0
      * @since 0.4.0
      */
-    public abstract static class PropertySetterOfInteger extends PropertySetter<Boolean> {
+    public abstract static class PropertySetterOfInteger extends PropertySetter<Integer> {
 
         /**
          * <p>
@@ -190,6 +240,15 @@ public abstract class PropertySetter<T> {
          */
         public PropertySetterOfInteger(final AbstractGenericBuilder b, final Object defaultValue) {
             super(b, defaultValue == null ? null : Integer.parseInt(defaultValue.toString()));
+        }
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        public PropertySetterOfInteger() {
+
         }
 
         /**
@@ -209,6 +268,19 @@ public abstract class PropertySetter<T> {
                     throw new BadArgumentException(new NumberFormatException(String.format("Key '%s' must be an Integer", getPropertyKey())));
                 }
             }
+        }
+
+        /**
+         * <p>
+         * Adapter class for generic purpose.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.0
+         */
+        public static class Adapter extends PropertySetterOfInteger {
+
         }
     }
 
@@ -236,11 +308,32 @@ public abstract class PropertySetter<T> {
         }
 
         /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        public PropertySetterOfBoolean() {
+
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         protected void set(final Object value) {
             put(getPropertyKey(), value == null ? null : Boolean.valueOf(value.toString()));
+        }
+
+        /**
+         * <p>
+         * Adapter class for generic purpose.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.0
+         */
+        public static class Adapter extends PropertySetterOfBoolean {
         }
     }
 
@@ -273,6 +366,15 @@ public abstract class PropertySetter<T> {
         }
 
         /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        public PropertySetterOfObject() {
+
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -286,6 +388,18 @@ public abstract class PropertySetter<T> {
             } catch (InstantiationException ie) {
                 throw new BadArgumentException(new IllegalArgumentException(ie));
             }
+        }
+
+        /**
+         * <p>
+         * Adapter class for generic purpose.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.0
+         */
+        public static class Adapter extends PropertySetterOfObject {
         }
     }
 }

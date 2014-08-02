@@ -36,51 +36,43 @@
  */
 
 
-package com.github.wuic.engine.setter;
-
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.config.PropertySetter;
+package com.github.wuic.config;
 
 /**
  * <p>
- * Setter for the {@link com.github.wuic.ApplicationConfig#AGGREGATE} property.
+ * This interface helps to expose only one API for all configuration annotation that share the methods.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5
  */
-public class AggregatePropertySetter extends PropertySetter.PropertySetterOfBoolean {
+public interface ConfigParam {
 
     /**
      * <p>
-     * Creates a new instance with a specific default value.
+     * Gets the {@link PropertySetter}.
      * </p>
      *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
+     * @return the setter
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
+    Class<? extends PropertySetter> setter();
 
     /**
      * <p>
-     * Creates a new instance.
+     * Gets the default value.
      * </p>
      *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
+     * @return the default value
      */
-    public AggregatePropertySetter(final AbstractEngineBuilder b) {
-        this(b, true);
-    }
+    Object defaultValue();
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Gets the property key for this parameter.
+     * </p>
+     *
+     * @return the property key
      */
-    @Override
-    public String getPropertyKey() {
-        return ApplicationConfig.AGGREGATE;
-    }
+    String propertyKey();
 }

@@ -40,7 +40,7 @@ package com.github.wuic.engine.setter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.util.PropertySetter;
+import com.github.wuic.config.PropertySetter;
 
 /**
  * <p>

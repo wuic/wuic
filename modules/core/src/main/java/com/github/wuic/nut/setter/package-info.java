@@ -39,7 +39,7 @@
 /**
  * <p>
  * This package defines basic stuff to implement the {@link com.github.wuic.nut.NutDaoBuilder}. It
- * provides {@link com.github.wuic.util.PropertySetter setters} which can configure in a very extensible
+ * provides {@link com.github.wuic.config.PropertySetter setters} which can configure in a very extensible
  * way the the {@link com.github.wuic.nut.AbstractNutDaoBuilder}.
  * </p>
  *

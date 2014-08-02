@@ -39,8 +39,8 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException;
-import com.github.wuic.util.PropertySetter;
-import com.github.wuic.util.AbstractGenericBuilder;
+import com.github.wuic.config.PropertySetter;
+import com.github.wuic.config.AbstractGenericBuilder;
 
 /**
  * <p>
@@ -58,7 +58,7 @@ public abstract class AbstractNutDaoBuilder extends AbstractGenericBuilder<NutDa
      * Builds a new {@link com.github.wuic.nut.NutDaoBuilder} with specific property setters.
      * </p>
      *
-     * @param setters the specific {@link com.github.wuic.util.PropertySetter setters}
+     * @param setters the specific {@link com.github.wuic.config.PropertySetter setters}
      */
     protected AbstractNutDaoBuilder(final PropertySetter... setters) {
         super(setters);

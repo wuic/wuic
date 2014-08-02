@@ -41,7 +41,7 @@ package com.github.wuic.nut.filter.setter;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.filter.AbstractNutFilterBuilder;
-import com.github.wuic.util.PropertySetter;
+import com.github.wuic.config.PropertySetter;
 
 import java.util.HashSet;
 import java.util.Set;

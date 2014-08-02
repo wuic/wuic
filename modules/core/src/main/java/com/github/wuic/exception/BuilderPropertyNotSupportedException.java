@@ -68,4 +68,35 @@ public abstract class BuilderPropertyNotSupportedException extends WuicException
     public BuilderPropertyNotSupportedException(final String key, final Class<? extends GenericBuilder> builderClass) {
         super(String.format("%s is not a property which is supported by the %s", key, builderClass.getName()));
     }
+
+    /**
+     * <p>
+     * Adapter class for generic purpose.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public static class Adapter extends BuilderPropertyNotSupportedException {
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param klasey the unsupported property
+         */
+        public Adapter(final String key) {
+            super(key, GenericBuilder.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public long getErrorCode() {
+            return BUILDER_PROPERTY_NOT_SUPPORTED;
+        }
+    }
 }

@@ -57,7 +57,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
-import com.github.wuic.util.PropertySetter;
+import com.github.wuic.config.PropertySetter;
 import com.github.wuic.xml.*;
 import org.junit.Assert;
 import org.junit.Test;
