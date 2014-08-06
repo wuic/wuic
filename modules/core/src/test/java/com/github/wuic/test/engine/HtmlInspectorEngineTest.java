@@ -40,22 +40,23 @@ package com.github.wuic.test.engine;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.engine.core.MemoryMapCacheEngineBuilder;
-import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
-import com.github.wuic.engine.impl.embedded.CGTextAggregatorEngine;
-import com.github.wuic.engine.impl.embedded.HtmlInspectorEngine;
-import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
+import com.github.wuic.engine.core.AbstractCacheEngine;
+import com.github.wuic.engine.core.TextAggregatorEngine;
+import com.github.wuic.engine.core.HtmlInspectorEngine;
+import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.nut.core.DiskNutDao;
-import com.github.wuic.nut.filter.NutFilter;
+import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.dao.core.DiskNutDao;
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -63,7 +64,6 @@ import org.mockito.Mockito;
 
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -107,10 +107,10 @@ public class HtmlInspectorEngineTest {
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false);
         final NutsHeap heap = new NutsHeap(Arrays.asList("index.html"), dao, "heap");
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.CSS, new CGTextAggregatorEngine(true));
-        chains.put(NutType.JAVASCRIPT, new CGTextAggregatorEngine(true));
+        chains.put(NutType.CSS, new TextAggregatorEngine(true));
+        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
         final EngineRequest request = new EngineRequest("workflow", "", heap, chains);
-        final List<Nut> nuts = new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8").parse(request);
+        final List<Nut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
 
         Assert.assertEquals(1, nuts.size());
 
@@ -119,9 +119,15 @@ public class HtmlInspectorEngineTest {
         Assert.assertTrue(Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
     }
 
+    /**
+     * <p>
+     * Tests the best effort support.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
     @Test
     public void bestEffortTest() throws Exception {
-
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -164,9 +170,9 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8"));
-        chains.put(NutType.JAVASCRIPT, new CGTextAggregatorEngine(true));
-        chains.put(NutType.CSS, new CGTextAggregatorEngine(true));
+        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
+        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
+        chains.put(NutType.CSS, new TextAggregatorEngine(true));
 
         List<Nut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
         String res = IOUtils.readString(new InputStreamReader(nuts.get(0).openStream()));
@@ -189,7 +195,8 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void memoryMapSupportTest() throws Exception {
-        final MemoryMapCacheEngineBuilder builder = new MemoryMapCacheEngineBuilder();
+        final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, MemoryMapCacheEngine.class);
+        final ObjectBuilder<Engine> builder = factory.create("MemoryMapCacheEngineBuilder");
         builder.property(ApplicationConfig.BEST_EFFORT, true);
         final MemoryMapCacheEngine cache = (MemoryMapCacheEngine) builder.build();
         concurrencyTest(cache);
@@ -213,7 +220,7 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8"));
+        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
 
         for (long i = countDownLatch.getCount(); i > 0; i--) {
             new Thread(new Runnable() {

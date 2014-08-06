@@ -39,8 +39,10 @@
 package com.github.wuic.jee;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.nut.dao.jee.WebappNutDaoBuilderInspector;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
@@ -112,15 +114,16 @@ public class WuicServletContextListener implements ServletContextListener {
 
             final String wuicXmlPath = sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_PATH_PARAM);
             final WuicFacade facade;
+            final ObjectBuilderInspector inspector = new WebappNutDaoBuilderInspector(sce.getServletContext());
 
             // Choose specific location for XML file
             if (wuicXmlPath == null) {
-                facade = WuicFacade.newInstance(wuicCp, useDefaultConf);
+                facade = WuicFacade.newInstance(wuicCp, useDefaultConf, inspector);
             } else {
                 if (Boolean.parseBoolean(sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_SYS_PROP_PARAM))) {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)), useDefaultConf);
+                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)), useDefaultConf, inspector);
                 } else {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath), useDefaultConf);
+                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath), useDefaultConf, inspector);
                 }
             }
 

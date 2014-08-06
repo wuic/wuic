@@ -58,4 +58,29 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface EngineService {
+
+    /**
+     * Default package to scan for this service.
+     */
+    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.engine";
+
+    /**
+     * <p>
+     * Indicates to the {@link com.github.wuic.ContextBuilder} that this service should injected or not to any new
+     * default workflow.
+     * </p>
+     *
+     * @return {@code true} if inject by default, {@code false} otherwise
+     */
+    boolean injectDefaultToWorkflow();
+
+    /**
+     * <p>
+     * Indicates if this service provides a core engine.
+     * Default value must not be changed by WUIC extension.
+     * </p>
+     *
+     * @return {@code true} if this is a core engine, {@code false} otherwise
+     */
+    boolean isCoreEngine() default false;
 }

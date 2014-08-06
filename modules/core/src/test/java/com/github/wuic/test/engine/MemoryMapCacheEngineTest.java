@@ -38,8 +38,8 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.impl.embedded.AbstractCacheEngine;
-import com.github.wuic.engine.impl.embedded.MemoryMapCacheEngine;
+import com.github.wuic.engine.core.AbstractCacheEngine;
+import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.nut.Nut;
 import org.junit.Assert;
 import org.junit.Test;

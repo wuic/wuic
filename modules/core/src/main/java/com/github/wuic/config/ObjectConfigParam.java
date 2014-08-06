@@ -127,7 +127,7 @@ public @interface ObjectConfigParam {
      *
      * @return the setter
      */
-    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfObject.Adapter.class;
+    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfObject.class;
 
     /**
      * <p>

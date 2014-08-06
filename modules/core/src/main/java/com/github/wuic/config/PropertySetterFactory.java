@@ -123,7 +123,7 @@ public enum PropertySetterFactory {
      * @throws UnableToInstantiateException if the {@link PropertySetter} could not be instantiated
      */
     @SuppressWarnings("unchecked")
-    public <T> PropertySetter<T> create(final AbstractGenericBuilder<T> builder, final Annotation annotation)
+    public <T> PropertySetter<T> create(final AbstractObjectBuilder<T> builder, final Annotation annotation)
             throws UnableToInstantiateException {
         // Check if the parameter is annotated with a supported annotation
         for (final Entry<Class<? extends Annotation>, Constructor<? extends ConfigParam>> entry : annotations.entrySet()) {
@@ -135,6 +135,7 @@ public enum PropertySetterFactory {
                     retval.init(builder, configParam.propertyKey(), configParam.defaultValue());
                     return retval;
                 } catch (InstantiationException ie) {
+                    logger.error("Cannot instantiate PropertySetter. Make sure it provides a default constructor.");
                     throw new UnableToInstantiateException(ie);
                 } catch (IllegalAccessException iae) {
                     throw new UnableToInstantiateException(iae);

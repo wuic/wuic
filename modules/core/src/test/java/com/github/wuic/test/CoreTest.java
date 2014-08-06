@@ -40,7 +40,7 @@ package com.github.wuic.test;
 
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
-import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.WuicFacade;
 import com.github.wuic.nut.Nut;
 
 import java.io.File;
@@ -54,8 +54,8 @@ import java.util.List;
 
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -88,14 +88,12 @@ public class CoreTest extends WuicTest {
     @Test
     public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final ContextBuilder builder = new ContextBuilder();
-        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
-        final Context facade = builder.build();
+        final WuicFacade facade = WuicFacade.newInstance("", getClass().getResource("/wuic.xml"), false);
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<Nut> group = facade.process("", "util-jsutil-js");
+        List<Nut> group = facade.runWorkflow("util-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -109,7 +107,7 @@ public class CoreTest extends WuicTest {
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.process("", "util-jsutil-js");
+        group = facade.runWorkflow("util-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -133,27 +131,18 @@ public class CoreTest extends WuicTest {
     public void cssTest() throws Exception {
         // TODO : WUIC currently supports only one configuration per NutType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
-
-        final ContextBuilder builder = new ContextBuilder();
-        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
-        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
-        final Context ctx = builder.build();
-
+        final WuicFacade facade = WuicFacade.newInstance("", getClass().getResource("/wuic.xml"), true);
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        List<Nut> group = ctx.process("", "css-imagecss-image");
+        final Nut nut = facade.runWorkflow("css-image", "aggregate.css");
+        is = nut.openStream();
+        Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
+        is.close();
+        writeToDisk(nut, "sprite.css");
+
+        List<Nut> group = facade.runWorkflow("css-scripts");
         int i = 0;
-
-        for (Nut res : group) {
-            is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
-            writeToDisk(res, i++ + "sprite.css");
-        }
-
-        group = ctx.process("", "css-scriptscss-scripts");
-        i = 0;
 
         for (Nut res : group) {
             is = res.openStream();
@@ -171,12 +160,12 @@ public class CoreTest extends WuicTest {
     @Test
     public void jsSpriteTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final ContextBuilder builder = new ContextBuilder();
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic.xml")).configure(builder);
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<Nut> group = facade.process("", "js-imagejs-image");
+        List<Nut> group = facade.process("", "js-image");
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());

@@ -70,7 +70,7 @@ public enum EngineType {
     CACHE,
 
     /**
-     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.NutDao}.
+     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.dao.NutDao}.
      */
     INSPECTOR,
 

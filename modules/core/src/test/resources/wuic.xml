@@ -27,7 +27,7 @@
     </nut-dao-builders>
 
     <engine-builders>
-        <engine-builder id="jsSprite" type="SpriteInspectorEngineBuilder">
+        <engine-builder id="wuicDefaultSpriteInspectorEngineBuilder" type="SpriteInspectorEngineBuilder">
             <properties>
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
             </properties>
@@ -86,28 +86,4 @@
             <nut-path>jquery.ui.all.css</nut-path>
         </heap>
 	</heaps>
-
-    <workflow-templates>
-        <workflow-template id="js-image">
-            <engine-chain>
-                <engine-builder-id>jsSprite</engine-builder-id>
-            </engine-chain>
-        </workflow-template>
-        <workflow-template id="util-js">
-            <engine-chain />
-        </workflow-template>
-        <workflow-template id="css-image">
-            <engine-chain />
-        </workflow-template>
-        <workflow-template id="css-scripts">
-            <engine-chain/>
-        </workflow-template>
-    </workflow-templates>
-
-    <workflows>
-        <workflow id-prefix="js-image" workflow-template-id="js-image" heap-id-pattern="js-image" />
-        <workflow id-prefix="util-js" workflow-template-id="util-js" heap-id-pattern="util-js" />
-        <workflow id-prefix="css-image" workflow-template-id="css-image" heap-id-pattern="css-image" />
-        <workflow id-prefix="css-scripts" workflow-template-id="css-image" heap-id-pattern="css-scripts" />
-    </workflows>
 </wuic>

@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlValue;
 
 /**
  * <p>
- * Represents a property to be set in a {@link com.github.wuic.util.GenericBuilder}.
+ * Represents a property to be set in a {@link com.github.wuic.config.ObjectBuilder}.
  * </p>
  *
  * @author Guillaume DROUET

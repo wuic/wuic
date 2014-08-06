@@ -127,7 +127,7 @@ public @interface IntegerConfigParam {
      *
      * @return the setter
      */
-    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfInteger.Adapter.class;
+    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfInteger.class;
 
     /**
      * <p>

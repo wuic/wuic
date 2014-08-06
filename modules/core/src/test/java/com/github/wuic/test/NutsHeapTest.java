@@ -55,7 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
- * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
+ * An abstract implementation of a {@link com.github.wuic.nut.dao.NutDao}. As any implementation should provides it, this class defines a base
  * path when retrieved nuts, a set of proxies URIs and a polling feature.
  * </p>
  *

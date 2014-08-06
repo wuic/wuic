@@ -38,18 +38,19 @@
 
 package com.github.wuic.test.engine;
 
-import com.github.wuic.engine.EngineBuilderFactory;
-import com.github.wuic.engine.core.*;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * {@link com.github.wuic.engine.EngineBuilderFactory} support for core module tests.
+ * {@link com.github.wuic.engine.Engine} builder factory support for core module tests.
  * </p>
  *
  * @author Guillaume DROUET
@@ -60,16 +61,24 @@ import org.junit.runners.JUnit4;
 public class EngineBuilderFactoryCoreTest {
 
     /**
+     * The factory.
+     */
+    private static ObjectBuilderFactory<Engine> engineObjectBuilderFactory;
+
+    /**
+     * Initializes the factory.
+     */
+    @BeforeClass
+    public static void initFactory() {
+        engineObjectBuilderFactory = new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE);
+    }
+
+    /**
      * Test for unknown builder.
      */
     @Test
     public void testCreateUnknownBuilder() throws UnableToInstantiateException {
-        try {
-            EngineBuilderFactory.getInstance().create("FooEngineBuilder");
-            Assert.fail();
-        } catch (BadArgumentException ie) {
-            Assert.assertTrue(true);
-        }
+        Assert.assertNull(engineObjectBuilderFactory.create("FooEngineBuilder"));
     }
 
     /**
@@ -77,7 +86,7 @@ public class EngineBuilderFactoryCoreTest {
      */
     @Test
     public void testCreateImageCompressorBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(EngineBuilderFactory.getInstance().create(ImageCompressorEngineBuilder.class.getSimpleName()));
+        Assert.assertNotNull(engineObjectBuilderFactory.create("ImageCompressorEngineBuilder"));
     }
 
     /**
@@ -85,6 +94,6 @@ public class EngineBuilderFactoryCoreTest {
      */
     @Test
     public void testCreateCssInspectorBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(EngineBuilderFactory.getInstance().create(CssInspectorEngineBuilder.class.getSimpleName()));
+        Assert.assertNotNull(engineObjectBuilderFactory.create("CssInspectorEngineBuilder"));
     }
 }

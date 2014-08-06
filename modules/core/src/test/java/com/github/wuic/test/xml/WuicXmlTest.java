@@ -41,41 +41,39 @@ package com.github.wuic.test.xml;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
-import com.github.wuic.NutType;
-import com.github.wuic.engine.EngineBuilderFactory;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.nut.NutDaoBuilderFactory;
-import com.github.wuic.engine.AbstractEngineBuilder;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.EngineBuilderPropertyNotSupportedException;
-import com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.nut.filter.NutFilter;
+import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
-import com.github.wuic.config.PropertySetter;
-import com.github.wuic.xml.*;
+import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
+import com.github.wuic.xml.XmlBuilderBean;
+import com.github.wuic.xml.XmlHeapBean;
+import com.github.wuic.xml.XmlPropertyBean;
+import com.github.wuic.xml.XmlWorkflowBean;
+import com.github.wuic.xml.XmlWorkflowTemplateBean;
+import com.github.wuic.xml.XmlWuicBean;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.mock;
-
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
-import java.io.*;
-import java.math.BigInteger;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.Reader;
 import java.net.URL;
-import java.util.*;
+import java.util.List;
 
 /**
  * <p>
@@ -91,104 +89,6 @@ public class WuicXmlTest {
 
     /**
      * <p>
-     * Mocked DAO builder.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.0
-     */
-    public static final class MockEngineBuilder extends AbstractEngineBuilder {
-
-        /**
-         * <p>
-         * Builds with a mocked property setter.
-         * </p>
-         */
-        public MockEngineBuilder() {
-            final PropertySetter<String> setter = mock(PropertySetter.class);
-            when(setter.getPropertyKey()).thenReturn("c.g.engine.foo");
-            addPropertySetter(setter);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected Engine internalBuild() throws BuilderPropertyNotSupportedException {
-            final Engine engine = mock(NodeEngine.class);
-            return engine;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void throwPropertyNotSupportedException(final String key) throws EngineBuilderPropertyNotSupportedException {
-
-        }
-    }
-
-    /**
-     * <p>
-     * Mocked DAO builder.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.0
-     */
-    public static final class MockDaoBuilder extends AbstractNutDaoBuilder {
-
-        /**
-         * <p>
-         * Builds with a mocked setter.
-         * </p>
-         */
-        public MockDaoBuilder() {
-            final PropertySetter<String> setter = mock(PropertySetter.class);
-            when(setter.getPropertyKey()).thenReturn("c.g.dao.foo");
-            addPropertySetter(setter);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected NutDao internalBuild() throws BuilderPropertyNotSupportedException {
-            final NutDao retval = mock(NutDao.class);
-
-            try {
-                final Nut nut = mock(Nut.class);
-                when(nut.getNutType()).thenReturn(NutType.CSS);
-                when(nut.getName()).thenReturn("foo.css");
-                final List<Nut> nuts = new ArrayList<Nut>();
-                nuts.add(nut);
-                when(retval.create(anyString())).thenReturn(nuts);
-                when(retval.saveSupported()).thenReturn(true);
-                when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-                when(nut.isAggregatable()).thenReturn(true);
-                when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
-            } catch (StreamException se) {
-                Assert.fail();
-            } catch (NutNotFoundException se) {
-                Assert.fail();
-            }
-
-            return retval;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void throwPropertyNotSupportedException(final String key) throws NutDaoBuilderPropertyNotSupportedException {
-
-        }
-    }
-
-    /**
-     * <p>
      * Test configurator with a custom DAO/engine previously registered.
      * </p>
      *
@@ -197,12 +97,13 @@ public class WuicXmlTest {
     @Test
     public void configuratorWithCustomDaoAndEngineTest() throws Exception {
         // Add custom DAO and engine
-        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
-        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
 
         // Load configuration
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-full.xml"));
-        final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
     }
 
@@ -320,10 +221,9 @@ public class WuicXmlTest {
      */
     @Test
     public void withDefaultDaoTest() throws Exception {
-        final ContextBuilder builder = new ContextBuilder();
-
         // File required default configuration
-        NutDaoBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
+
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
         builder.build().process("", "simpleWorkflowsimpleHeap");
@@ -336,10 +236,11 @@ public class WuicXmlTest {
      */
     @Test
     public void withPollingTest() throws Exception {
-
         // Add custom DAO and engine required
-        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
-        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
 
         // By default we use this file
         final URL full = getClass().getResource("/wuic-full.xml");
@@ -348,7 +249,6 @@ public class WuicXmlTest {
 
         // Load configuration
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(tmp.toURI().toURL());
-        final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
         Context ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
@@ -377,14 +277,14 @@ public class WuicXmlTest {
      */
     @Test
     public void bindTest() throws Exception {
-
         // Add custom DAO and engine required
-        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
-        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
 
         // Load configuration
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-bind.xml"));
-        final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
         final Context ctx = builder.build();
 
@@ -437,7 +337,7 @@ public class WuicXmlTest {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
         final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
-        final ContextBuilder builder = new ContextBuilder();
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
 
         final List<Nut> nuts = builder.build().process("", "wf-refHeap");
@@ -459,14 +359,14 @@ public class WuicXmlTest {
      */
     @Test
     public void heapCompositionTest() throws Exception {
-
         // Add custom DAO and engine required
-        NutDaoBuilderFactory.getInstance().addBuilderClass(MockDaoBuilder.class.getName());
-        EngineBuilderFactory.getInstance().addBuilderClass(MockEngineBuilder.class.getName());
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
 
         // Load configuration
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-heap-composition.xml"));
-        final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
         final Context ctx = builder.build();
 

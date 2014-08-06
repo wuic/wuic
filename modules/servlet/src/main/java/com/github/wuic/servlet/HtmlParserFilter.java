@@ -47,10 +47,10 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.core.ByteArrayNut;
-import com.github.wuic.nut.core.ProxyNutDao;
-import com.github.wuic.nut.jee.WebappNutDaoBuilder;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.dao.core.ProxyNutDao;
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
@@ -82,10 +82,10 @@ import java.util.Set;
  *
  * <p>
  * This filters uses an internal {@link NutDao} to retrieve referenced nuts when parsing HTML. By default, the DAO
- * built from a {@link WebappNutDaoBuilder} with the {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property set
- * to {@code true}. DAO is configured like this for consistency reason because the version number must computed from
- * content when scripts are declared inside tag. User can takes control over {@link NutDao} creation by extending this
- * class and overriding the {@link com.github.wuic.servlet.HtmlParserFilter#createDao()} method.
+ * built from a {@link com.github.wuic.nut.dao.jee.WebappNutDao} builder with the {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER}
+ * property set to {@code true}. DAO is configured like this for consistency reason because the version number must computed
+ * from content when scripts are declared inside tag. User can takes control over {@link NutDao} creation by extending
+ * this class and overriding the {@link com.github.wuic.servlet.HtmlParserFilter#createDao()} method.
  * </p>
  *
  * @author Guillaume DROUET
@@ -160,14 +160,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Creates a new {@link NutDao} from the {@link WebappNutDaoBuilder}.
+     * Creates a new {@link NutDao} from the {@link com.github.wuic.nut.dao.jee.WebappNutDao} builder.
      * </p>
      *
      * @return the nut DAO
      * @throws BuilderPropertyNotSupportedException if {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
      */
     protected NutDao createDao() throws BuilderPropertyNotSupportedException {
-        final WebappNutDaoBuilder b = new WebappNutDaoBuilder();
+        final ObjectBuilder<NutDao> b = WuicJeeContext.getWuicFacade().newNutDaoBuilder("WebappNutDaoBuilder");
         return NutDao.class.cast(b.property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER, Boolean.TRUE).build());
     }
 

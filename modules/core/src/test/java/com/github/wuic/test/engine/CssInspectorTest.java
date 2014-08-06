@@ -42,16 +42,14 @@ import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.engine.impl.embedded.CGCssInspectorEngine;
+import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -61,12 +59,15 @@ import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
- * {@link com.github.wuic.engine.impl.embedded.CGCssInspectorEngine} tests.
+ * {@link com.github.wuic.engine.core.CssInspectorEngine} tests.
  * </p>
  *
  * @author Guillaume DROUET
@@ -89,7 +90,7 @@ public class CssInspectorTest {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
-        final Engine engine = new CGCssInspectorEngine(new ArrayList<NutFilter>(), true, "UTF-8");
+        final Engine engine = new CssInspectorEngine(true, "UTF-8");
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 
@@ -258,8 +259,7 @@ public class CssInspectorTest {
      */
     @Test
     public void parentRefTest() throws Exception {
-        final ContextBuilder builder = new ContextBuilder();
-        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
 
@@ -283,8 +283,7 @@ public class CssInspectorTest {
      */
     @Test
     public void compositionByWorkflowTest() throws Exception {
-        final ContextBuilder builder = new ContextBuilder();
-        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
         ctx.process("", "composite");

@@ -37,12 +37,14 @@
 
 /**
  * <p>
- * Package where {@link com.github.wuic.engine.Engine engines} and their {@link com.github.wuic.engine.EngineBuilder builers}
+ * Package where {@link com.github.wuic.engine.Engine engines} and their {@link com.github.wuic.engine.Engine} builders
  * implementations are defined for core module.
  * </p>
  *
  * <p>
  * Engines for image/Text aggregation, sprite computation, caching and CSS inspection are supported here.
+ * This package contains the {@link com.github.wuic.engine.Engine engines} which don't delegate its work to any library
+ * like YUI Compressor.
  * </p>
  *
  * @author Guillaume DROUET

@@ -38,19 +38,19 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.util.GenericBuilder;
+import com.github.wuic.config.ObjectBuilder;
 
 /**
  * <p>
- * This exception is thrown when a {@link com.github.wuic.util.GenericBuilder} does not support
+ * This exception is thrown when a {@link com.github.wuic.config.ObjectBuilder} does not support
  * a specified property.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
-public abstract class BuilderPropertyNotSupportedException extends WuicException implements ErrorCode {
+public class BuilderPropertyNotSupportedException extends WuicException implements ErrorCode {
 
     /**
      * Serial version UID.
@@ -63,10 +63,18 @@ public abstract class BuilderPropertyNotSupportedException extends WuicException
      * </p>
      *
      * @param key the property key
-     * @param builderClass the DAO class
+     * @param builderClass the built class
      */
-    public BuilderPropertyNotSupportedException(final String key, final Class<? extends GenericBuilder> builderClass) {
-        super(String.format("%s is not a property which is supported by the %s", key, builderClass.getName()));
+    public BuilderPropertyNotSupportedException(final String key, final Class<?> builderClass) {
+        super(String.format("%s is not a property which is supported by the %s builder", key, builderClass.getName()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getErrorCode() {
+        return BUILDER_PROPERTY_NOT_SUPPORTED;
     }
 
     /**
@@ -85,10 +93,10 @@ public abstract class BuilderPropertyNotSupportedException extends WuicException
          * Builds a new instance.
          * </p>
          *
-         * @param klasey the unsupported property
+         * @param key the unsupported property
          */
         public Adapter(final String key) {
-            super(key, GenericBuilder.class);
+            super(key, ObjectBuilder.class);
         }
 
         /**

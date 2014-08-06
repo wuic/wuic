@@ -40,7 +40,7 @@ package com.github.wuic.test.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import org.junit.Test;

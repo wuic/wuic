@@ -43,11 +43,12 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.jee.WebappNutDaoBuilder;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.jee.WebappNutDao;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -116,14 +117,15 @@ public class JeeTest {
     }
 
     /**
-     * Tests {@link com.github.wuic.nut.jee.WebappNut} creation.
+     * Tests {@link WebappNutDao} creation.
      *
      * @throws StreamException if nut creation fails
      */
     @Test
     public void webappNutTest() throws StreamException {
-        final WebappNutDaoBuilder builder = new WebappNutDaoBuilder();
-        final NutDao dao = builder.build();
+        final ObjectBuilder<NutDao> builder = WuicJeeContext.getWuicFacade().newNutDaoBuilder("WebappNutDaoBuilder");
+        final WebappNutDao dao = WebappNutDao.class.cast(builder.build());
+        dao.setContext(WuicJeeContext.getServletContext());
         final List<Nut> nuts = dao.create("index.html");
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());

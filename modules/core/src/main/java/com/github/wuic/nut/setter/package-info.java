@@ -38,9 +38,9 @@
 
 /**
  * <p>
- * This package defines basic stuff to implement the {@link com.github.wuic.nut.NutDaoBuilder}. It
+ * This package defines basic stuff to implement the {@link com.github.wuic.nut.dao.NutDao} builder. It
  * provides {@link com.github.wuic.config.PropertySetter setters} which can configure in a very extensible
- * way the the {@link com.github.wuic.nut.AbstractNutDaoBuilder}.
+ * way.
  * </p>
  *
  * @author Guillaume DROUET

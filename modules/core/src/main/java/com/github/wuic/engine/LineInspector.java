@@ -41,7 +41,7 @@ package com.github.wuic.engine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.IOUtils;
 
 import java.util.Arrays;

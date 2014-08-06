@@ -40,7 +40,6 @@ package com.github.wuic.test.engine;
 
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
-import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.nut.Nut;
 
 import java.util.List;
@@ -54,7 +53,7 @@ import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * This class tests {@link com.github.wuic.engine.impl.embedded.CGImageAggregatorEngine}.
+ * This class tests {@link com.github.wuic.engine.core.ImageAggregatorEngine}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -78,8 +77,7 @@ public class ImageAggregatorEngineTest {
      */
     @Before
     public void context() throws Exception {
-        final ContextBuilder builder = new ContextBuilder();
-        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-sprite.xml")).configure(builder);
         ctx = builder.build();
     }

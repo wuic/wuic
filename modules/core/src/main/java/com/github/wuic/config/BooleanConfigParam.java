@@ -127,7 +127,7 @@ public @interface BooleanConfigParam {
      *
      * @return the setter
      */
-    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfBoolean.Adapter.class;
+    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfBoolean.class;
 
     /**
      * <p>

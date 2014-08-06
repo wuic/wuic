@@ -39,10 +39,9 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.NutType;
-import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.engine.impl.embedded.StaticEngine;
+import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
@@ -58,7 +57,7 @@ import java.util.List;
 
 /**
  * <p>
- * {@link com.github.wuic.engine.impl.embedded.StaticEngine} tests.
+ * {@link com.github.wuic.engine.core.StaticEngine} tests.
  * </p>
  *
  * @author Guillaume DROUET

@@ -39,10 +39,9 @@
 package com.github.wuic.engine.setter;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
 import com.github.wuic.engine.SpriteProvider;
-import com.github.wuic.engine.impl.embedded.CGCssSpriteProvider;
-import com.github.wuic.engine.impl.embedded.CGJavascriptSpriteProvider;
+import com.github.wuic.engine.core.CssSpriteProvider;
+import com.github.wuic.engine.core.JavascriptSpriteProvider;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.config.PropertySetter;
 
@@ -60,30 +59,6 @@ import com.github.wuic.config.PropertySetter;
  * @since 0.4.0
  */
 public class SpriteProviderPropertySetter extends PropertySetter<SpriteProvider[]> {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public SpriteProviderPropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public SpriteProviderPropertySetter(final AbstractEngineBuilder b) {
-        this(b, null);
-        set("css");
-    }
 
     /**
      * {@inheritDoc}
@@ -107,9 +82,9 @@ public class SpriteProviderPropertySetter extends PropertySetter<SpriteProvider[
 
             for (final String o : strArray) {
                 if (o.equals("css")) {
-                    sp[cpt++] = new CGCssSpriteProvider();
+                    sp[cpt++] = new CssSpriteProvider();
                 } else if (o.equals("javascript")) {
-                    sp[cpt++] = new CGJavascriptSpriteProvider();
+                    sp[cpt++] = new JavascriptSpriteProvider();
                 } else {
                     throw new BadArgumentException(new IllegalArgumentException(
                             String.format(

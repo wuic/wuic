@@ -42,12 +42,14 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.NumberUtils;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -130,7 +132,7 @@ public class ContextBuilderConfiguratorTest {
      */
     @Test
     public void configureWithPollingTest() throws Exception {
-        final AtomicInteger count = new AtomicInteger(0);
+        final CountDownLatch latch = new CountDownLatch(NumberUtils.TWO);
 
         final ContextBuilderConfigurator cfg = new ContextBuilderConfigurator() {
 
@@ -139,7 +141,7 @@ public class ContextBuilderConfiguratorTest {
              */
             @Override
             public int internalConfigure(final ContextBuilder ctxBuilder) {
-                return 1;
+                return 3 - (int) latch.getCount();
             }
 
             /**
@@ -156,7 +158,7 @@ public class ContextBuilderConfiguratorTest {
             @Override
             protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
                 synchronized (ContextBuilderConfiguratorTest.class) {
-                    count.incrementAndGet();
+                    latch.countDown();
                     ContextBuilderConfiguratorTest.class.notify();
                 }
 
@@ -167,10 +169,6 @@ public class ContextBuilderConfiguratorTest {
         final ContextBuilder builder = Mockito.mock(ContextBuilder.class);
         cfg.configure(builder);
 
-        synchronized (ContextBuilderConfiguratorTest.class) {
-            ContextBuilderConfiguratorTest.class.wait(1500L);
-        }
-
-        Assert.assertEquals(count.intValue(), NumberUtils.TWO);
+        Assert.assertTrue(latch.await(1500, TimeUnit.MILLISECONDS));
     }
 }

@@ -42,6 +42,8 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.SaveOperationNotSupportedException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
@@ -489,8 +491,30 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      *
      * @return the base path
      */
-    protected String getBasePath() {
+    public String getBasePath() {
         return basePath;
+    }
+
+    /**
+     * <p>
+     * Gets the proxy URIs.
+     * </p>
+     *
+     * @return the proxies
+     */
+    public String[] getProxyUris() {
+        return proxyUris;
+    }
+
+    /**
+     * <p>
+     * Gets the hash version strategy.
+     * </p>
+     *
+     * @return {@code true} if version number is based on content, {@code false} otherwise (last modification timestamp).
+     */
+    public Boolean getContentBasedVersionNumber() {
+        return contentBasedVersionNumber;
     }
 
     /**

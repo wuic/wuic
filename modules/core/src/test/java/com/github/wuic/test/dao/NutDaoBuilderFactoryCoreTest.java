@@ -38,40 +38,49 @@
 
 package com.github.wuic.test.dao;
 
-import com.github.wuic.nut.NutDaoBuilderFactory;
+import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.exception.UnableToInstantiateException;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
  * <p>
- * {@link com.github.wuic.nut.NutDaoBuilderFactory} support for core module tests.
+ * {@link NutDao} builder factory support for core module tests.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 @RunWith(JUnit4.class)
 public class NutDaoBuilderFactoryCoreTest {
 
     /**
+     * The factory.
+     */
+    private static ObjectBuilderFactory<NutDao> nutDaoObjectBuilderFactory;
+
+    /**
+     * Initializes the factory.
+     */
+    @BeforeClass
+    public static void initFactory() {
+        nutDaoObjectBuilderFactory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, NutDaoService.DEFAULT_SCAN_PACKAGE);
+    }
+
+    /**
      * Test for unknown builder.
      */
     @Test
     public void testCreateUnknownBuilder() throws UnableToInstantiateException {
-        try {
-            NutDaoBuilderFactory.getInstance().create("FooNutDaoBuilder");
-            Assert.fail();
-        } catch (BadArgumentException ie) {
-            Assert.assertTrue(true);
-        }
+        Assert.assertNull(nutDaoObjectBuilderFactory.create("FooNutDaoBuilder"));
     }
 
     /**
@@ -79,7 +88,7 @@ public class NutDaoBuilderFactoryCoreTest {
      */
     @Test
     public void testCreateClasspathBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(NutDaoBuilderFactory.getInstance().create("ClasspathNutDaoBuilder"));
+        Assert.assertNotNull(nutDaoObjectBuilderFactory.create("ClasspathNutDaoBuilder"));
     }
 
     /**
@@ -87,7 +96,7 @@ public class NutDaoBuilderFactoryCoreTest {
      */
     @Test
     public void testCreateHttpBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(NutDaoBuilderFactory.getInstance().create("HttpNutDaoBuilder"));
+        Assert.assertNotNull(nutDaoObjectBuilderFactory.create("HttpNutDaoBuilder"));
     }
 
     /**
@@ -95,6 +104,6 @@ public class NutDaoBuilderFactoryCoreTest {
      */
     @Test
     public void testCreateDiskBuilder() throws UnableToInstantiateException {
-        Assert.assertNotNull(NutDaoBuilderFactory.getInstance().create("DiskNutDaoBuilder"));
+        Assert.assertNotNull(nutDaoObjectBuilderFactory.create("DiskNutDaoBuilder"));
     }
 }

@@ -38,27 +38,35 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.*;
-import com.github.wuic.engine.core.*;
+import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.HeadEngine;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.NutDao;
-import com.github.wuic.nut.NutDaoBuilder;
-import com.github.wuic.nut.NutDaoBuilderFactory;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.filter.NutFilter;
-import com.github.wuic.nut.filter.NutFilterBuilder;
-import com.github.wuic.nut.filter.NutFilterBuilderFactory;
-import com.github.wuic.util.AbstractBuilderFactory;
+import com.github.wuic.nut.filter.NutFilterHolder;
+import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.CollectionUtils;
-import com.github.wuic.util.GenericBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -110,10 +118,15 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
+ * @version 1.3
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {
+
+    /**
+     * Prefix for default IDs.
+     */
+    public static final String ID_PREFIX = "wuicDefault";
 
     /**
      * The logger.
@@ -136,13 +149,191 @@ public class ContextBuilder extends Observable {
     private Map<String, ContextSetting> taggedSettings;
 
     /**
+     * Factory for engine builder.
+     */
+    private ObjectBuilderFactory<Engine> engineBuilderFactory;
+
+    /**
+     * Factory for nut dao builder.
+     */
+    private ObjectBuilderFactory<NutDao> nutDaoBuilderFactory;
+
+    /**
+     * Factory for nut filter builder.
+     */
+    private ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory;
+
+    /**
+     * Indicates that {@link #configureDefault()} has been called and default entries are injected.
+     */
+    private boolean configureDefault;
+
+    /**
+     * <p>
+     * Creates a new instance with specific builder factories.
+     * </p>
+     *
+     * @param engineBuilderFactory the engine builder factory, {@code null} if default should be created
+     * @param nutDaoBuilderFactory the DAO builder factory, {@code null} if default should be created
+     * @param nutFilterBuilderFactory the filter builder factory, {@code null} if default should be created
+     * @param inspectors the inspectors to add to the factories
+     */
+    public ContextBuilder(final ObjectBuilderFactory<Engine> engineBuilderFactory,
+                          final ObjectBuilderFactory<NutDao> nutDaoBuilderFactory,
+                          final ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory,
+                          final ObjectBuilderInspector ... inspectors) {
+        this.taggedSettings = new HashMap<String, ContextSetting>();
+        this.lock = new ReentrantLock();
+        this.configureDefault = false;
+
+        this.engineBuilderFactory = engineBuilderFactory == null ?
+                new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE) : engineBuilderFactory;
+        this.nutDaoBuilderFactory = nutDaoBuilderFactory == null ?
+                new ObjectBuilderFactory<NutDao>(NutDaoService.class, NutDaoService.DEFAULT_SCAN_PACKAGE) : nutDaoBuilderFactory;
+        this.nutFilterBuilderFactory = nutFilterBuilderFactory == null ?
+                new ObjectBuilderFactory<NutFilter>(NutFilterService.class, NutFilterService.DEFAULT_SCAN_PACKAGE) : nutFilterBuilderFactory;
+
+        final ObjectBuilderInspector inspector = new NutFilterHolderInspector();
+        this.engineBuilderFactory.inspector(inspector);
+        this.nutDaoBuilderFactory.inspector(inspector);
+
+        for (final ObjectBuilderInspector i : inspectors) {
+            this.engineBuilderFactory.inspector(i);
+            this.nutDaoBuilderFactory.inspector(i);
+        }
+    }
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
+     *
+     * @param inspectors the inspectors
      */
-    public ContextBuilder() {
-        taggedSettings = new HashMap<String, ContextSetting>();
-        lock = new ReentrantLock();
+    public ContextBuilder(final ObjectBuilderInspector ... inspectors) {
+        this(null, null, null, inspectors);
+    }
+
+    /**
+     * <p>
+     * This class configures default engines in the {@link com.github.wuic.ContextBuilder}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.1
+     * @since 0.4.0
+     */
+    class DefaultEngineContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int internalConfigure(final ContextBuilder ctxBuilder) {
+            try {
+                for (final ObjectBuilderFactory.KnownType type : engineBuilderFactory.knownTypes()) {
+                    ctxBuilder.contextEngineBuilder(ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                }
+                // Should never occur
+            } catch (BuilderPropertyNotSupportedException bpnse) {
+                throw new IllegalStateException(bpnse);
+            } catch (UnableToInstantiateException itie) {
+                throw new IllegalStateException(itie);
+            }
+
+            // Never poll
+            return -1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getTag() {
+            return "default.engine";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            // Never poll
+            return 1L;
+        }
+    }
+
+    /**
+     * <p>
+     * Sets the filters configured in the given instance if it's a {@link NutFilterHolder}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class NutFilterHolderInspector implements ObjectBuilderInspector {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public <T> T inspect(final T object) {
+            if (NutFilterHolder.class.isAssignableFrom(object.getClass())) {
+                NutFilterHolder.class.cast(object).setNutFilter(getFilters());
+            }
+
+            return object;
+        }
+    }
+
+    /**
+     * <p>
+     * This class configures default DAOs in the {@link com.github.wuic.ContextBuilder}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.1
+     * @since 0.4.0
+     */
+    private final class DefaultDaoContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int internalConfigure(final ContextBuilder ctxBuilder) {
+            try {
+                for (final ObjectBuilderFactory.KnownType type : nutDaoBuilderFactory.knownTypes()) {
+                    ctxBuilder.contextNutDaoBuilder(ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                }
+                // Should never occur
+            } catch (BuilderPropertyNotSupportedException bpnse) {
+                throw new IllegalStateException(bpnse);
+            } catch (UnableToInstantiateException itie) {
+                throw new IllegalStateException(itie);
+            }
+
+            // Never poll
+            return -1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getTag() {
+            return "default.dao";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            // Never poll
+            return 1L;
+        }
     }
 
     /**
@@ -167,9 +358,9 @@ public class ContextBuilder extends Observable {
         private Map<String, NutFilter> nutFilterMap = new HashMap<String, NutFilter>();
 
         /**
-         * All {@link EngineBuilder engines} associated to their ID.
+         * All {@link com.github.wuic.config.ObjectBuilder} building {@link Engine} associated to their ID.
          */
-        private Map<String, EngineBuilder> engineMap = new HashMap<String, EngineBuilder>();
+        private Map<String, ObjectBuilder<Engine>> engineMap = new HashMap<String, ObjectBuilder<Engine>>();
 
         /**
          * All {@link NutsHeap heaps} associated to their ID.
@@ -211,12 +402,12 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the {@link EngineBuilder} associated to an ID.
+         * Gets the {@link com.github.wuic.config.ObjectBuilder} associated to an ID.
          * </p>
          *
          * @return the map
          */
-        public Map<String, EngineBuilder> getEngineMap() {
+        public Map<String, ObjectBuilder<Engine>> getEngineMap() {
             return engineMap;
         }
 
@@ -274,6 +465,38 @@ public class ContextBuilder extends Observable {
         } else {
             return setting;
         }
+    }
+
+    /**
+     * <p>
+     * Configures for each type provided by the engine builder factory and nut dao builder factory a
+     * default instance identified with an id starting by {@link #ID_PREFIX} and followed by the type
+     * name itself.
+     * </p>
+     *
+     * @return the current builder
+     * @throws StreamException if configuration fails
+     */
+    public ContextBuilder configureDefault() throws StreamException {
+        if (!configureDefault) {
+            new DefaultEngineContextBuilderConfigurator().configure(this);
+            new DefaultDaoContextBuilderConfigurator().configure(this);
+            configureDefault = true;
+        }
+
+        return this;
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link NutDao} builder.
+     * </p>
+     *
+     * @param type the type of DAO
+     * @return the builder
+     */
+    public synchronized ObjectBuilder<NutDao> newNutDaoBuilder(final String type) {
+        return nutDaoBuilderFactory.create(type);
     }
 
     /**
@@ -439,7 +662,7 @@ public class ContextBuilder extends Observable {
         /**
          * The builder.
          */
-        private EngineBuilder engineBuilder;
+        private ObjectBuilder<Engine> engineBuilder;
 
         /**
          * <p>
@@ -452,7 +675,7 @@ public class ContextBuilder extends Observable {
          */
         public ContextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
             super(id);
-            this.engineBuilder = EngineBuilderFactory.getInstance().create(type);
+            this.engineBuilder = engineBuilderFactory.create(type);
         }
 
         /**
@@ -488,7 +711,7 @@ public class ContextBuilder extends Observable {
         /**
          * The builder.
          */
-        private NutDaoBuilder nutDaoBuilder;
+        private ObjectBuilder<NutDao> nutDaoBuilder;
 
         /**
          * <p>
@@ -501,7 +724,7 @@ public class ContextBuilder extends Observable {
          */
         public ContextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
             super(id);
-            this.nutDaoBuilder = NutDaoBuilderFactory.getInstance().create(type);
+            this.nutDaoBuilder = nutDaoBuilderFactory.create(type);
         }
 
         /**
@@ -537,7 +760,7 @@ public class ContextBuilder extends Observable {
         /**
          * The builder.
          */
-        private NutFilterBuilder nutFilterBuilder;
+        private ObjectBuilder<NutFilter> nutFilterBuilder;
 
         /**
          * <p>
@@ -550,7 +773,7 @@ public class ContextBuilder extends Observable {
          */
         public ContextNutFilterBuilder(final String id, final String type) throws UnableToInstantiateException {
             super(id);
-            this.nutFilterBuilder = NutFilterBuilderFactory.getInstance().create(type);
+            this.nutFilterBuilder = nutFilterBuilderFactory.create(type);
         }
 
         /**
@@ -616,7 +839,7 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Add a new {@link com.github.wuic.nut.NutDao} identified by the specified ID.
+     * Add a new {@link com.github.wuic.nut.dao.NutDao} identified by the specified ID.
      * </p>
      *
      * @param id the ID which identifies the builder in the context
@@ -641,7 +864,7 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Adds a new {@link com.github.wuic.nut.NutDaoBuilder} identified by the specified ID.
+     * Adds a new {@link com.github.wuic.nut.dao.NutDao} builder identified by the specified ID.
      * </p>
      *
      * <p>
@@ -652,10 +875,10 @@ public class ContextBuilder extends Observable {
      * @param daoBuilder the builder associated to its ID
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
-     * @throws com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException if a property is not supported by the builder
+     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if a property is not supported by the builder
      */
     private ContextBuilder nutDaoBuilder(final String id,
-                                         final NutDaoBuilder daoBuilder,
+                                         final ObjectBuilder<NutDao> daoBuilder,
                                          final Map<String, Object> properties)
                                          throws BuilderPropertyNotSupportedException {
         final ContextSetting setting = getSetting();
@@ -675,7 +898,7 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Adds a new {@link com.github.wuic.nut.filter.NutFilterBuilder} identified by the specified ID.
+     * Adds a new {@link com.github.wuic.nut.filter.NutFilter} builder identified by the specified ID.
      * </p>
      *
      * <p>
@@ -686,10 +909,10 @@ public class ContextBuilder extends Observable {
      * @param filterBuilder the builder associated to its ID
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
-     * @throws com.github.wuic.exception.NutDaoBuilderPropertyNotSupportedException if a property is not supported by the builder
+     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if a property is not supported by the builder
      */
     private ContextBuilder nutFilterBuilder(final String id,
-                                            final NutFilterBuilder filterBuilder,
+                                            final ObjectBuilder<NutFilter> filterBuilder,
                                             final Map<String, Object> properties)
             throws BuilderPropertyNotSupportedException {
         final ContextSetting setting = getSetting();
@@ -714,7 +937,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the heap ID
-     * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
+     * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
      * @throws StreamException if the HEAP could not be created
@@ -726,7 +949,7 @@ public class ContextBuilder extends Observable {
     /**
      * <p>
      * Defines a new {@link com.github.wuic.nut.NutsHeap heap} in this context. A heap is always identified
-     * by an ID and is associated to {@link com.github.wuic.nut.NutDaoBuilder} to use to convert paths into
+     * by an ID and is associated to {@link com.github.wuic.nut.dao.NutDao} builder to use to convert paths into
      * {@link com.github.wuic.nut.Nut}. A list of paths needs also to be specified to know which underlying
      * nuts compose the heap.
      * </p>
@@ -736,13 +959,13 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * If the {@link NutDaoBuilder} ID is not known, a {@link com.github.wuic.exception.wrapper.BadArgumentException}
+     * If the {@link com.github.wuic.config.ObjectBuilder} ID is not known, a {@link com.github.wuic.exception.wrapper.BadArgumentException}
      * will be thrown.
      * </p>
      *
      * @param id the heap ID
      * @param heapIds the heaps composition
-     * @param ndbId the {@link com.github.wuic.nut.NutDaoBuilder} the heap is based on
+     * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
      * @throws StreamException if the HEAP could not be created
@@ -804,8 +1027,8 @@ public class ContextBuilder extends Observable {
 
         if (path.length != 0) {
             if (dao == null) {
-                final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first ",
-                        ndbId, NutDaoBuilder.class.getName());
+                final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first",
+                        ndbId, NutDaoService.class.getName());
                 throw new BadArgumentException(new IllegalArgumentException(msg));
             } else {
                 // Going to filter the list with all declared filters
@@ -826,19 +1049,19 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Declares a new {@link com.github.wuic.engine.EngineBuilder} with its specific properties.
+     * Declares a new {@link com.github.wuic.engine.Engine} builder with its specific properties.
      * The builder is identified by an unique ID and produces in fine {@link com.github.wuic.engine.Engine engines}
      * that could be chained.
      * </p>
      *
-     * @param id the {@link EngineBuilder} ID
-     * @param engineBuilder the {@link com.github.wuic.engine.EngineBuilder} to configure
+     * @param id the {@link com.github.wuic.config.ObjectBuilder} ID
+     * @param engineBuilder the {@link com.github.wuic.engine.Engine} builder to configure
      * @param properties the builder's properties (must be supported by the builder)
      * @return this {@link ContextBuilder}
      * @throws BuilderPropertyNotSupportedException if a property is not supported
      */
     private ContextBuilder engineBuilder(final String id,
-                                         final EngineBuilder engineBuilder,
+                                         final ObjectBuilder<Engine> engineBuilder,
                                          final Map<String, Object> properties)
             throws BuilderPropertyNotSupportedException {
         final ContextSetting setting = getSetting();
@@ -862,7 +1085,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the template's id
-     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
+     * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
      * @param daos the DAO
      * @return this {@link ContextBuilder}
      * @throws StreamException if an I/O error occurs
@@ -880,17 +1103,17 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * The template consists to chain a set of engines produced by the specified {@link com.github.wuic.engine.EngineBuilder builders}.
+     * The template consists to chain a set of engines produced by the specified {@link com.github.wuic.engine.Engine} builders.
      * There is a chain for each possible {@link NutType}. A chain that processes a particular {@link NutType} of
      * {@link com.github.wuic.nut.Nut} is composed of {@link Engine engines} ordered by type. All engines specified in
      * parameter as array are simply organized following those two criteria to create the chains. Moreover, default engines
-     * could be injected in the chain to perform common operations to be done on nuts. If an {@link com.github.wuic.engine.EngineBuilder}
+     * could be injected in the chain to perform common operations to be done on nuts. If an {@link com.github.wuic.engine.Engine} builder
      * is specified in a chain while it is injected by default, then the configuration of the given builder will overrides
      * the default one.
      * </p>
      *
      * <p>
-     * A set of {@link com.github.wuic.nut.NutDaoBuilder} could be specified to store processed nuts. When the client
+     * A set of {@link com.github.wuic.nut.dao.NutDao} builder could be specified to store processed nuts. When the client
      * will retrieve the nuts, it will access it through a proxy URI configured in the protocol. This URI corresponds
      * to a server in front of the location where nuts have been stored. For that reason the {@link NutDao} must
      * support {@link NutDao#save(com.github.wuic.nut.Nut)} operation.
@@ -903,16 +1126,15 @@ public class ContextBuilder extends Observable {
      * <p>
      * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are :
      *  <ul>
-     *      <li>Unknown {@link EngineBuilder} ID</li>
-     *      <li>Unknown {@link NutDaoBuilder} ID</li>
+     *      <li>Unknown {@link com.github.wuic.config.ObjectBuilder} ID</li>
      *      <li>A {@link NutDao} does not supports {@link NutDao#save(com.github.wuic.nut.Nut)} method</li>
      *  </ul>
      * </p>
      *
      * @param id the template's id
-     * @param ebIds the set of {@link com.github.wuic.engine.EngineBuilder} to use
+     * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
      * @param ebIdsExclusion some default builder to be excluded in the chain
-     * @param ndbIds the set of {@link com.github.wuic.nut.NutDaoBuilder} where to eventually upload processed nuts
+     * @param ndbIds the set of {@link com.github.wuic.nut.dao.NutDao} builder where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
      * @throws StreamException if an I/O error occurs
@@ -932,7 +1154,7 @@ public class ContextBuilder extends Observable {
             final NutDao dao = getNutDao(ndbId);
 
             if (dao == null) {
-                throw new IllegalStateException(String.format("'%s' not associated to any %s", ndbId, NutDaoBuilder.class.getName()));
+                throw new IllegalStateException(String.format("'%s' not associated to any %s", ndbId, NutDaoService.class.getName()));
             }
 
             if (!dao.saveSupported()) {
@@ -951,7 +1173,7 @@ public class ContextBuilder extends Observable {
             final Engine engine = newEngine(ebId);
 
             if (engine == null) {
-                throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineBuilder.class.getName()));
+                throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineService.class.getName()));
             } else {
 
                 if (engine instanceof HeadEngine) {
@@ -1078,7 +1300,7 @@ public class ContextBuilder extends Observable {
     /**
      * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
-     * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.NutDaoBuilder} ID.
+     * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
      * </p>
      *
      * @return the new {@link Context}
@@ -1136,16 +1358,38 @@ public class ContextBuilder extends Observable {
      * @param ebIdsExclusions the default engines to exclude
      * @return the different chains
      */
+    @SuppressWarnings("unchecked")
     private Map<NutType, NodeEngine> createChains(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         // Include default engines
         if (includeDefaultEngines) {
-            chains.put(NutType.CSS, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions), defaultCssInspector(ebIdsExclusions)));
-            chains.put(NutType.PNG, NodeEngine.chain(defaultSpriteInspector(ebIdsExclusions), defaultImageAggregator(ebIdsExclusions), defaultImageCompressor(ebIdsExclusions)));
-            chains.put(NutType.JAVASCRIPT, NodeEngine.chain(defaultTextAggregator(ebIdsExclusions), defaultJavascriptInspector(ebIdsExclusions)));
-            chains.put(NutType.HTML, NodeEngine.chain(defaultHtmlInspector(ebIdsExclusions)));
-            // TODO : when created, include GZIP compressor
+            if (!configureDefault) {
+                log.warn("This builder can't include default engines to chains if you've not call configureDefault before");
+                return chains;
+            }
+
+            for (final ObjectBuilderFactory.KnownType knownType : engineBuilderFactory.knownTypes()) {
+                if ((NodeEngine.class.isAssignableFrom(knownType.getClassType()))
+                    && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
+                    && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
+                    final String id = ID_PREFIX + knownType.getTypeName();
+                    NodeEngine engine = NodeEngine.class.cast(newEngine(id));
+
+                    // TODO: would be easier if nut types are provided by service annotation
+                    for (final NutType nutType : engine.getNutTypes()) {
+                        NodeEngine chain = chains.get(nutType);
+
+                        if (chain == null) {
+                            chains.put(nutType, engine);
+                        } else {
+                            chains.put(nutType, NodeEngine.chain(chain, engine));
+                        }
+
+                        engine = NodeEngine.class.cast(newEngine(id));
+                    }
+                }
+            }
         }
 
         return chains;
@@ -1156,203 +1400,42 @@ public class ContextBuilder extends Observable {
      * Creates the engine that will be the head of the chain of responsibility.
      * </p>
      *
+     * <p>
+     * If an {@link HeadEngine} is configured with {@link EngineService#isCoreEngine()} = false,
+     * it will be returned in place of any {@link HeadEngine} configured with {@link EngineService#isCoreEngine()} = true.
+     * because extensions override core in this case.
+     * </p>
+     *
      * @param includeDefaultEngines if include default engines or not
      * @param ebIdsExclusions the engines to exclude
      * @return the {@link HeadEngine}
      */
+    @SuppressWarnings("unchecked")
     private HeadEngine createHead(final Boolean includeDefaultEngines, final String[] ebIdsExclusions) {
-        return includeDefaultEngines ? defaultCache(ebIdsExclusions) : null;
-    }
+        if (includeDefaultEngines) {
+            HeadEngine core = null;
 
-    /**
-     * <p>
-     * Creates a default image compressor.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultImageCompressor(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + ImageCompressorEngineBuilder.class.getSimpleName();
+            for (final ObjectBuilderFactory.KnownType knownType : engineBuilderFactory.knownTypes()) {
+                final EngineService annotation = EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class));
+                if (HeadEngine.class.isAssignableFrom(knownType.getClassType())
+                        && annotation.injectDefaultToWorkflow()
+                        && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
+                    final String id = ID_PREFIX + knownType.getTypeName();
+                    HeadEngine engine = HeadEngine.class.cast(newEngine(id));
 
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
+                    if (annotation.isCoreEngine()) {
+                        core = engine;
+                    } else {
+                        // Extension found, use it
+                        return engine;
+                    }
+                }
+            }
 
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new ImageCompressorEngineBuilder().contextBuilder(this).build());
+            // Use core if no extension set
+            return core;
         } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default sprite inspector.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultSpriteInspector(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + SpriteInspectorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
             return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new SpriteInspectorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default image aggregator.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultImageAggregator(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + ImageAggregatorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new ImageAggregatorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default css inspector.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultCssInspector(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + CssInspectorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new CssInspectorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default javascript inspector.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultJavascriptInspector(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + JavascriptInspectorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new JavascriptInspectorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default text aggregator.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultTextAggregator(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + TextAggregatorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new TextAggregatorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return NodeEngine.class.cast(retval);
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default HTML inspector.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default engine
-     */
-    private NodeEngine defaultHtmlInspector(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + HtmlInspectorEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final NodeEngine retval = NodeEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return NodeEngine.class.cast(new HtmlInspectorEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Creates a default cache engine.
-     * </p>
-     *
-     * @param ebIdsExclusions exclusions
-     * @return the default cache
-     */
-    private HeadEngine defaultCache(final String[] ebIdsExclusions) {
-        final String name = AbstractBuilderFactory.ID_PREFIX + MemoryMapCacheEngineBuilder.class.getSimpleName();
-
-        if (ebIdsExclusions != null && CollectionUtils.indexOf(name, ebIdsExclusions) != -1) {
-            return null;
-        }
-
-        final HeadEngine retval = HeadEngine.class.cast(newEngine(name));
-
-        if (retval == null) {
-            return  HeadEngine.class.cast(new MemoryMapCacheEngineBuilder().contextBuilder(this).build());
-        } else {
-            return retval;
         }
     }
 
@@ -1446,13 +1529,11 @@ public class ContextBuilder extends Observable {
      * @return the given builder
      * @throws BuilderPropertyNotSupportedException if a specified property is not supported by the builder
      */
-    private <O, T extends GenericBuilder<O>> T configure(final T builder,  final Map<String, Object> properties)
+    private <O, T extends ObjectBuilder<O>> T configure(final T builder,  final Map<String, Object> properties)
             throws BuilderPropertyNotSupportedException {
         for (final Map.Entry entry : properties.entrySet()) {
             builder.property(String.valueOf(entry.getKey()), entry.getValue());
         }
-
-        builder.contextBuilder(this);
 
         return builder;
     }

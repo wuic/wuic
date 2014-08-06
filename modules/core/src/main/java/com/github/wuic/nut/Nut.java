@@ -53,7 +53,7 @@ import java.util.List;
  * </p>
  *
  * <p>
- * The name is the path relative to a location specified by a {@link NutDao} which is in charge of nut creations.
+ * The name is the path relative to a location specified by a {@link com.github.wuic.nut.dao.NutDao} which is in charge of nut creations.
  * </p>
  *
  * @author Guillaume DROUET

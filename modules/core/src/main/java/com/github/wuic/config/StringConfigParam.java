@@ -127,7 +127,7 @@ public @interface StringConfigParam {
      *
      * @return the setter
      */
-    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfString.Adapter.class;
+    Class<? extends PropertySetter> setter() default PropertySetter.PropertySetterOfString.class;
 
     /**
      * <p>

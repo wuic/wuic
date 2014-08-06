@@ -38,9 +38,9 @@
 
 package com.github.wuic.test.config;
 
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.util.GenericBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class ConfigTest {
      */
     @BeforeClass
     public static void scan() {
-        factory = new ObjectBuilderFactory<I>(IService.class, "com.github.wuic.test");
+        factory = new ObjectBuilderFactory<I>(IService.class, "com.github.wuic.test.config");
     }
 
     /**
@@ -75,7 +75,7 @@ public class ConfigTest {
      */
     @Test
     public void builderDefaultValueTest() {
-        final GenericBuilder<I> b = factory.create("MyService");
+        final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         final I i = b.build();
 
         Assert.assertEquals(MyService.class, i.getClass());
@@ -89,7 +89,7 @@ public class ConfigTest {
      */
     @Test
     public void builderSpecificValueTest() throws Exception {
-        final GenericBuilder<I> b = factory.create("MyService");
+        final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("int", 2);
         final I i = b.build();
 
@@ -104,7 +104,7 @@ public class ConfigTest {
      */
     @Test(expected = BuilderPropertyNotSupportedException.class)
     public void builderBadPropertyTest() throws Exception {
-        final GenericBuilder<I> b = factory.create("MyService");
+        final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("bar", 2);
     }
 
@@ -113,7 +113,7 @@ public class ConfigTest {
      */
     @Test
     public void badServiceTest() {
-        Assert.assertNull(factory.create("MyBadService"));
-        Assert.assertNull(factory.create("MyInnerBadService"));
+        Assert.assertNull(factory.create("MyBadServiceBuilder"));
+        Assert.assertNull(factory.create("MyInnerBadServiceBuilder"));
     }
 }

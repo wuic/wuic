@@ -38,9 +38,9 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.EngineBuilderFactory;
+import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.NutDaoBuilderFactory;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
@@ -48,6 +48,7 @@ import java.net.URL;
 import java.util.*;
 
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
@@ -93,16 +94,32 @@ public final class WuicFacade {
      * </p>
      *
      * @param cp the context path where the files will be exposed
+     * @param useDefault injects default configuration for each known engine and DAO type
      * @param contextBuilderConfigurators configurators to be used on the builder
+     * @param inspector an additional inspector
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String cp,
+                       final Boolean useDefault,
+                       final ObjectBuilderInspector inspector,
                        final ContextBuilderConfigurator ... contextBuilderConfigurators)
             throws WuicException {
-        builder = new ContextBuilder();
-        configure(contextBuilderConfigurators);
+        builder = inspector == null ? new ContextBuilder() : new ContextBuilder(inspector);
+        configure(useDefault, contextBuilderConfigurators);
         context = builder.build();
         contextPath = cp;
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link NutDao} builder.
+     * </p>
+     *
+     * @param type the type of DAO
+     * @return the builder
+     */
+    public synchronized ObjectBuilder<NutDao> newNutDaoBuilder(final String type) {
+        return builder.newNutDaoBuilder(type);
     }
 
     /**
@@ -124,12 +141,46 @@ public final class WuicFacade {
      *
      * @param contextPath the context where the nuts will be exposed
      * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
+     * @param inspector additional inspector
+     * @return the unique instance
+     * @throws WuicException if the 'wuic.xml' path is not well configured
+     */
+    public static synchronized WuicFacade newInstance(final String contextPath, final Boolean useDefaultConfigurator, final ObjectBuilderInspector inspector)
+            throws WuicException {
+        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, inspector);
+    }
+
+    /**
+     * <p>
+     * Gets a new instance witout any additional inspector. If an error occurs, it will be wrapped in a
+     * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
+     * </p>
+     *
+     * @param contextPath the context where the nuts will be exposed
+     * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @return the unique instance
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     public static synchronized WuicFacade newInstance(final String contextPath, final Boolean useDefaultConfigurator)
             throws WuicException {
-        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator);
+        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, null);
+    }
+
+    /**
+     * <p>
+     * Gets a new instance without any additional inspector. If an error occurs, it will be wrapped in a
+     * {@link com.github.wuic.exception.WuicRuntimeException} which will be thrown.
+     * </p>
+     *
+     * @param contextPath the context where the nuts will be exposed
+     * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
+     * @param wuicXmlPath the specific wuic.xml path URL (could be {@code null}
+     * @return the unique instance
+     * @throws WuicException if the 'wuic.xml' path is not well configured
+     */
+    public static synchronized WuicFacade newInstance(final String contextPath, final URL wuicXmlPath, final Boolean useDefaultConfigurator)
+            throws WuicException {
+        return newInstance(contextPath, wuicXmlPath, useDefaultConfigurator, null);
     }
 
     /**
@@ -141,29 +192,19 @@ public final class WuicFacade {
      * @param wuicXmlPath the specific wuic.xml path URL (could be {@code null}
      * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @param contextPath the context where the nuts will be exposed
+     * @param inspector additional inspector
      * @return the unique instance
-     *
      */
     public static synchronized WuicFacade newInstance(final String contextPath,
                                                       final URL wuicXmlPath,
-                                                      final Boolean useDefaultConfigurator) throws WuicException {
+                                                      final Boolean useDefaultConfigurator,
+                                                      final ObjectBuilderInspector inspector)
+            throws WuicException {
         try {
             if (wuicXmlPath != null) {
-                if (useDefaultConfigurator) {
-                    return new WuicFacade(contextPath,
-                            new NutDaoBuilderFactory().newContextBuilderConfigurator(),
-                            new EngineBuilderFactory().newContextBuilderConfigurator(),
-                            new FileXmlContextBuilderConfigurator(wuicXmlPath));
-                } else {
-                    return new WuicFacade(contextPath,
-                            new FileXmlContextBuilderConfigurator(wuicXmlPath));
-                }
-            } else  if (useDefaultConfigurator) {
-                return new WuicFacade(contextPath,
-                        new NutDaoBuilderFactory().newContextBuilderConfigurator(),
-                        new EngineBuilderFactory().newContextBuilderConfigurator());
+                return new WuicFacade(contextPath, useDefaultConfigurator, inspector, new FileXmlContextBuilderConfigurator(wuicXmlPath));
             } else {
-                return new WuicFacade(contextPath);
+                return new WuicFacade(contextPath, useDefaultConfigurator, inspector);
             }
         } catch (JAXBException je) {
             throw new WuicXmlReadException("unable to load wuic.xml", je) ;
@@ -175,13 +216,31 @@ public final class WuicFacade {
      * Configures the internal builder with the given configurators.
      * </p>
      *
+     * @param useDefault injects default configuration for each known engine and DAO type or not
+     * @param configurators the configurators
+     * @throws StreamException if an I/O error occurs
+     */
+    public synchronized void configure(final Boolean useDefault, final ContextBuilderConfigurator... configurators) throws StreamException {
+        if (useDefault) {
+            builder.configureDefault();
+        }
+
+        for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
+            contextBuilderConfigurator.configure(builder);
+        }
+    }
+
+    /**
+     * <p>
+     * Configures the internal builder with the given configurators. By default, injects default configuration for each
+     * known engine and DAO type or not
+     * </p>
+     *
      * @param configurators the configurators
      * @throws StreamException if an I/O error occurs
      */
     public synchronized void configure(final ContextBuilderConfigurator... configurators) throws StreamException {
-        for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
-            contextBuilderConfigurator.configure(builder);
-        }
+        configure(Boolean.TRUE, configurators);
     }
     
     /**

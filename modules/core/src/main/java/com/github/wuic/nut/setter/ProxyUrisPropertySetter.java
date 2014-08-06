@@ -40,7 +40,6 @@ package com.github.wuic.nut.setter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.nut.AbstractNutDaoBuilder;
 import com.github.wuic.config.PropertySetter;
 
 /**
@@ -53,35 +52,10 @@ import com.github.wuic.config.PropertySetter;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.nut.AbstractNutDaoBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public ProxyUrisPropertySetter(final AbstractNutDaoBuilder b, final Object defaultValue) {
-        // Prevent ClassCastException by validating the parameter in 'set(Object)' method
-        super(b, null);
-        set(defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link AbstractNutDaoBuilder} which needs to be configured
-     */
-    public ProxyUrisPropertySetter(final AbstractNutDaoBuilder b) {
-        this(b, null);
-    }
 
     /**
      * {@inheritDoc}
@@ -91,7 +65,7 @@ public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
         if (value == null) {
             put(getPropertyKey(), value);
         } else if (value instanceof String) {
-            put(getPropertyKey(), value.toString().split("\\|"));
+            put(getPropertyKey(), value.toString().isEmpty() ? null : value.toString().split("\\|"));
         } else {
             throw new BadArgumentException(new IllegalArgumentException(
                     String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));

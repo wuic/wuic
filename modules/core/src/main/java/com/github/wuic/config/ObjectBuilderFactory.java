@@ -41,7 +41,6 @@ package com.github.wuic.config;
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.util.GenericBuilder;
 import com.github.wuic.util.ReflectionsAnnotationScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +48,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -64,6 +63,56 @@ import java.util.Map;
  * @param <T> the type of objects produced by the builder
  */
 public class ObjectBuilderFactory<T> implements AnnotationProcessor {
+
+    /**
+     * Data object that provides a detected service and the type name that identifies its builder.
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5
+     */
+    public final class KnownType {
+
+        /**
+         * The class type.
+         */
+        private Class<T> classType;
+
+        /**
+         * The type name.
+         */
+        private String typeName;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param classType the class type
+         */
+        public KnownType(final Class<T> classType) {
+            this.classType = classType;
+            this.typeName = classType.getSimpleName() + "Builder";
+        }
+
+        /**
+         * Gets the class type.
+         *
+         * @return the class
+         */
+        public Class<T> getClassType() {
+            return classType;
+        }
+
+        /**
+         * Gets the name that identified the class builder.
+         *
+         * @return the type name
+         */
+        public String getTypeName() {
+            return typeName;
+        }
+    }
 
     /**
      * Bad annotation usage warning message.
@@ -83,7 +132,12 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
     /**
      * All the discovered types.
      */
-    private Map<String, Class<T>> knownTypes;
+    private List<KnownType> knownTypes;
+
+    /**
+     * A list of inspector to execute on any built object.
+     */
+    private List<ObjectBuilderInspector> inspectors;
 
     /**
      * <p>
@@ -96,8 +150,57 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
     public ObjectBuilderFactory(final Class<? extends Annotation> annotationToScan,
                                 final String packageToScan) {
         this.annotationToScan = annotationToScan;
-        this.knownTypes = new HashMap<String, Class<T>>();
+        this.knownTypes = new ArrayList<KnownType>();
+        this.inspectors = new ArrayList<ObjectBuilderInspector>();
         new ReflectionsAnnotationScanner().scan(packageToScan, this);
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param annotationToScan the annotation to discover
+     * @param classes a list of classes to directly scan instead of discovering types by scanning classpath
+     */
+    public ObjectBuilderFactory(final Class<? extends Annotation> annotationToScan,
+                                final Class<? extends T> ... classes) {
+        this.annotationToScan = annotationToScan;
+        this.knownTypes = new ArrayList<KnownType>();
+        this.inspectors = new ArrayList<ObjectBuilderInspector>();
+
+        for (Class<? extends T> clazz : classes) {
+            if (clazz.isAnnotationPresent(annotationToScan)) {
+                handle(clazz);
+            } else {
+                logger.warn(String.format("%s must be annotated with %s, ignoring...", clazz.getName(), annotationToScan.getName()),
+                        new IllegalArgumentException());
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Adds an inspector.
+     * </p>
+     *
+     * @param i the inspector
+     * @return this
+     */
+    public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector i) {
+        inspectors.add(i);
+        return this;
+    }
+
+    /**
+     * <p>
+     * Returns all the supported types.
+     * </p>
+     *
+     * @return the known types
+     */
+    public List<KnownType> knownTypes() {
+        return knownTypes;
     }
 
     /**
@@ -113,12 +216,12 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public void handle(final Class<?> annotatedType) {
+    public final void handle(final Class<?> annotatedType) {
         if (annotatedType.getDeclaringClass() != null) {
             logger.warn(String.format("Your service annotation can't be applied to inner class %s", annotatedType.getName()),
                     new IllegalArgumentException());
         } else {
-            knownTypes.put(annotatedType.getSimpleName(), (Class<T>) annotatedType);
+            knownTypes.add(new KnownType((Class<T>) annotatedType));
         }
     }
 
@@ -132,7 +235,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * @version 1.0
      * @since 0.5
      */
-    final class Builder extends AbstractGenericBuilder<T> {
+    final class Builder extends AbstractObjectBuilder<T> {
 
         /**
          * The constructor.
@@ -158,24 +261,24 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             final Object[] params = getAllProperties();
 
             try {
-                return constructor.newInstance(params);
+                T retval = constructor.newInstance(params);
+
+                for (final ObjectBuilderInspector i : inspectors) {
+                    retval = i.inspect(retval);
+                }
+
+                return retval;
             } catch (IllegalAccessException iae) {
                  logger.error("", iae);
             } catch (InstantiationException ie) {
                 logger.error("", ie);
             } catch (InvocationTargetException ite) {
                 logger.error("", ite);
+            } catch (IllegalArgumentException iae) {
+                logger.error("", iae);
             }
 
             return null;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected void throwPropertyNotSupportedException(final String key) throws BuilderPropertyNotSupportedException {
-            throw new BuilderPropertyNotSupportedException.Adapter(key);
         }
     }
 
@@ -190,8 +293,15 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * @return the builder, {@code null} if the there is a bad usage of annotation or if the type is unknown
      */
     @SuppressWarnings("unchecked")
-    public GenericBuilder<T> create(final String type) {
-        final Class<T> clazz = knownTypes.get(type);
+    public ObjectBuilder<T> create(final String type) {
+        Class<T> clazz = null;
+
+        for (final KnownType knownType : knownTypes) {
+            if (knownType.getTypeName().equals(type)) {
+                clazz = knownType.getClassType();
+                break;
+            }
+        }
 
         if (clazz == null) {
             return null;

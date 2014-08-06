@@ -38,9 +38,8 @@
 
 /**
  * <p>
- * This package defines basic stuff to implement the {@link com.github.wuic.nut.filter.NutFilterBuilder}. It
- * provides {@link com.github.wuic.config.PropertySetter setters} which can configure in a very extensible
- * way the the {@link com.github.wuic.nut.filter.AbstractNutFilterBuilder}.
+ * This package defines basic stuff to implement the {@link com.github.wuic.nut.filter.NutFilter} builder. It
+ * provides {@link com.github.wuic.config.PropertySetter setters} which can configure in a very extensible way.
  * </p>
  *
  * @author Guillaume DROUET

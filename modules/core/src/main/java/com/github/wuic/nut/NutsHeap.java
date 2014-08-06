@@ -41,6 +41,8 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
@@ -236,7 +238,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * <p>
      * Gets the {@link NutDao} of this {@link NutsHeap}. Caution, don't use its method like
-     * {@link NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)}, {@link NutDao#proxyUriFor(Nut)} or
+     * {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat)}, {@link NutDao#proxyUriFor(Nut)} or
      * {@link NutDao#withRootPath(String)} but to the corresponding proxy methods in this class which check if the
      * {@link NutDao} to actually use is not in one of the {@link NutsHeap heaps} that compose this {@link NutsHeap}.
      * </p>
@@ -276,7 +278,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Delegates method of {@link NutDao#create(String, com.github.wuic.nut.NutDao.PathFormat)}.
+     * Delegates method of {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat)}.
      * The DAO is picked from heap or its composition.
      * </p>
      *

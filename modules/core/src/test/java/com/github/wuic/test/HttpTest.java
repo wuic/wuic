@@ -40,18 +40,17 @@ package com.github.wuic.test;
 
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
-import com.github.wuic.engine.EngineBuilderFactory;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
-import junit.framework.Assert;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -175,8 +174,7 @@ public class HttpTest extends WuicTest {
     @Test
     public void httpNutTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final ContextBuilder builder = new ContextBuilder();
-        EngineBuilderFactory.getInstance().newContextBuilderConfigurator().configure(builder);
+        final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-http.xml")).configure(builder);
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;

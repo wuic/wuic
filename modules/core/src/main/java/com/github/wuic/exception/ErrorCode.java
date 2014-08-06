@@ -66,12 +66,12 @@ public interface ErrorCode {
     long BAD_ARGUMENT_EXCEPTION = 19860606003L;
 
     /**
-     * {@link com.github.wuic.nut.NutDao#save(com.github.wuic.nut.Nut)} is not supported.
+     * {@link com.github.wuic.nut.dao.NutDao#save(com.github.wuic.nut.Nut)} is not supported.
      */
     long SAVE_NOT_SUPPORTED_EXCEPTION = 19860606004L;
 
     /**
-     * {@link com.github.wuic.nut.NutDao} polling feature is not supported.
+     * {@link com.github.wuic.nut.dao.NutDao} polling feature is not supported.
      */
     long POLLING_NOT_SUPPORTED_EXCEPTION = 19860606005L;
 
@@ -127,25 +127,13 @@ public interface ErrorCode {
     long WORKFLOW_NOT_FOUND = 19860606201L;
 
     /**
-     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by a
-     * {@link com.github.wuic.nut.NutDaoBuilder}.
-     */
-    long NUT_DAO_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606202L;
-
-    /**
      * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
-     * {@link com.github.wuic.engine.EngineBuilder}.
-     */
-    long ENGINE_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
-
-    /**
-     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
-     * {@link com.github.wuic.config.AbstractGenericBuilder}.
+     * {@link com.github.wuic.config.AbstractObjectBuilder}.
      */
     long BUILDER_PROPERTY_NOT_SUPPORTED = 19860606203L;
 
     /**
-     * Indicates that the {@link com.github.wuic.engine.impl.embedded.StaticEngine} did not found a retrieved workflow.
+     * Indicates that the {@link com.github.wuic.engine.core.StaticEngine} did not found a retrieved workflow.
      */
     long STATIC_WORKFLOW_NOT_FOUND = 19860606204L;
 
@@ -158,12 +146,6 @@ public interface ErrorCode {
      * Indicates that a workflow doesn't define one and only one of its 'id' and 'idPrefix' attributes.
      */
     long WORKFLOW_IDENTIFIER = 19860606206L;
-
-    /**
-     * Indicates that a property defined in {@link com.github.wuic.ApplicationConfig} is not supported by an
-     * {@link com.github.wuic.nut.filter.NutFilterBuilder}.
-     */
-    long NUT_FILTER_BUILDER_PROPERTY_NOT_SUPPORTED = 19860606207L;
 
     /**
      * <p>

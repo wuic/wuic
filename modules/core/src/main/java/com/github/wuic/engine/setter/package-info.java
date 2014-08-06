@@ -38,9 +38,9 @@
 
 /**
  * <p>
- * This package defines basic stuff to implement the {@link com.github.wuic.engine.EngineBuilder}. It
+ * This package defines basic stuff to implement the {@link com.github.wuic.engine.Engine} builder. It
  * provides {@link com.github.wuic.config.PropertySetter setters} which can configure in a very extensible
- * way the the {@link com.github.wuic.engine.AbstractEngineBuilder}.
+ * way.
  * </p>
  *
  * @author Guillaume DROUET

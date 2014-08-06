@@ -40,7 +40,6 @@ package com.github.wuic.nut.filter.setter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.nut.filter.AbstractNutFilterBuilder;
 import com.github.wuic.config.PropertySetter;
 
 import java.util.HashSet;
@@ -56,35 +55,10 @@ import java.util.Set;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.5
  */
 public class RegexExpressionsPropertySetter extends PropertySetter<String[]> {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link AbstractNutFilterBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public RegexExpressionsPropertySetter(final AbstractNutFilterBuilder b, final Object defaultValue) {
-        // Prevent ClassCastException by validating the parameter in 'set(Object)' method
-        super(b, "");
-        set(defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link AbstractNutFilterBuilder} which needs to be configured
-     */
-    public RegexExpressionsPropertySetter(final AbstractNutFilterBuilder b) {
-        this(b, "");
-    }
 
     /**
      * {@inheritDoc}

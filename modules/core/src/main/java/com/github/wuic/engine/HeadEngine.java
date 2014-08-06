@@ -41,7 +41,7 @@ package com.github.wuic.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.nut.CompositeNut;
 
 import java.util.ArrayList;
 import java.util.Iterator;

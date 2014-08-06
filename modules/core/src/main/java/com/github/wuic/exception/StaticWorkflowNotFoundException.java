@@ -38,11 +38,11 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.engine.impl.embedded.StaticEngine;
+import com.github.wuic.engine.core.StaticEngine;
 
 /**
  * <p>
- * Thrown when a workflow is retrieved with the {@link com.github.wuic.engine.impl.embedded.StaticEngine} and when
+ * Thrown when a workflow is retrieved with the {@link com.github.wuic.engine.core.StaticEngine} and when
  * its associated file has not been found in classpath.
  * </p>
  *

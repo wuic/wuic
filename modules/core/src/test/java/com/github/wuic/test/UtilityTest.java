@@ -43,7 +43,7 @@ import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.core.CompositeNut;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;

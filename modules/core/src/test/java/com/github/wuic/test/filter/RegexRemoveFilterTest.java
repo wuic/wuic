@@ -39,11 +39,13 @@
 package com.github.wuic.test.filter;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.nut.filter.NutFilter;
-import com.github.wuic.nut.filter.RegexRemoveNutFilterBuilder;
-import com.github.wuic.util.GenericBuilder;
-import junit.framework.Assert;
+import com.github.wuic.nut.filter.NutFilterService;
+import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
+import com.github.wuic.config.ObjectBuilder;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -52,7 +54,7 @@ import java.util.Arrays;
 
 /**
  * <p>
- * Tests suite for {@link com.github.wuic.nut.filter.RegexRemoveNutFilter} and its builder.
+ * Tests suite for {@link com.github.wuic.nut.filter.core.RegexRemoveNutFilter} and its builder.
  * </p>
  *
  * @author Guillaume DROUET
@@ -67,7 +69,8 @@ public class RegexRemoveFilterTest {
      */
     @Test
     public void defaultBuilderTest() {
-        final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");
         final NutFilter f = b.build();
         Assert.assertEquals(3, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
@@ -79,7 +82,8 @@ public class RegexRemoveFilterTest {
      */
     @Test
     public void oneRegexBuilderTest() throws Exception {
-        final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");
         final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b").build());
         Assert.assertEquals(2, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
@@ -91,7 +95,8 @@ public class RegexRemoveFilterTest {
      */
     @Test
     public void disabledTest() throws Exception {
-        final GenericBuilder b = new RegexRemoveNutFilterBuilder()
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder")
                 .property(ApplicationConfig.REGEX_EXPRESSIONS, "b")
                 .property(ApplicationConfig.ENABLE, false);
         final NutFilter f = NutFilter.class.cast(b.build());
@@ -105,7 +110,8 @@ public class RegexRemoveFilterTest {
      */
     @Test(expected = BuilderPropertyNotSupportedException.class)
     public void badPropertyTest() throws Exception {
-        new RegexRemoveNutFilterBuilder().property("foo", "b");
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder").property("foo", "b");
     }
 
     /**
@@ -115,8 +121,8 @@ public class RegexRemoveFilterTest {
      */
     @Test
     public void twoRegexBuilderTest() throws Exception {
-        final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
-        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\nc").build());
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\nc").build());
         Assert.assertEquals(1, f.filterPaths(Arrays.asList("a", "b", "c")).size());
     }
 
@@ -127,8 +133,8 @@ public class RegexRemoveFilterTest {
      */
     @Test
     public void lineFeedRegexBuilderTest() throws Exception {
-        final RegexRemoveNutFilterBuilder b = new RegexRemoveNutFilterBuilder();
-        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\\nc").build());
+        final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\\nc").build());
         Assert.assertEquals(0, f.filterPaths(Arrays.asList("b\nc")).size());
     }
 }

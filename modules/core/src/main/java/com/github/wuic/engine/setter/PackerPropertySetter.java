@@ -39,8 +39,6 @@
 package com.github.wuic.engine.setter;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.engine.AbstractEngineBuilder;
-import com.github.wuic.engine.impl.embedded.CGBinPacker;
 import com.github.wuic.config.PropertySetter;
 
 /**
@@ -49,33 +47,10 @@ import com.github.wuic.config.PropertySetter;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.0
  */
 public class PackerPropertySetter extends PropertySetter.PropertySetterOfObject {
-
-    /**
-     * <p>
-     * Creates a new instance with a specific default value.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     * @param defaultValue the default value
-     */
-    public PackerPropertySetter(final AbstractEngineBuilder b, final Object defaultValue) {
-        super(b, defaultValue);
-    }
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param b the {@link com.github.wuic.engine.AbstractEngineBuilder} which needs to be configured
-     */
-    public PackerPropertySetter(final AbstractEngineBuilder b) {
-        this(b, CGBinPacker.class.getName());
-    }
 
     /**
      * {@inheritDoc}

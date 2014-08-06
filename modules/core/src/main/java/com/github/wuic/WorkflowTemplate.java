@@ -40,7 +40,7 @@ package com.github.wuic;
 
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.dao.NutDao;
 
 import java.util.Map;
 

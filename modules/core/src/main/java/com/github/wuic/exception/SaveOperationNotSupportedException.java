@@ -38,11 +38,11 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.nut.NutDao;
+import com.github.wuic.nut.dao.NutDao;
 
 /**
  * <p>
- * Indicates that the {@link com.github.wuic.nut.NutDao#save(com.github.wuic.nut.Nut)} method is not supported
+ * Indicates that the {@link com.github.wuic.nut.dao.NutDao#save(com.github.wuic.nut.Nut)} method is not supported
  * by a particular implementation.
  * </p>
  *

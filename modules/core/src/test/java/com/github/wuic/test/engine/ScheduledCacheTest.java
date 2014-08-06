@@ -39,7 +39,7 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.impl.embedded.*;
+import com.github.wuic.engine.core.ScheduledCacheEngine;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
