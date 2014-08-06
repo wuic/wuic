@@ -29,7 +29,14 @@
     <engine-builders>
         <engine-builder id="wuicDefaultSpriteInspectorEngineBuilder" type="SpriteInspectorEngineBuilder">
             <properties>
+                <!-- javascript|css can cause stack overflow error -->
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>
+            </properties>
+        </engine-builder>
+
+        <engine-builder id="cssSpriteInspectorEngineBuilder" type="SpriteInspectorEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.spriteProviderClassName">css</property>
             </properties>
         </engine-builder>
     </engine-builders>
@@ -78,7 +85,7 @@
             <nut-path>cgsg/type.scenegraph.js</nut-path>
             <nut-path>cgsg/type.scene.js</nut-path>
 		</heap>
-        <heap id="css-image" dao-builder-id="imgSourceRootProvider">
+        <heap id="image" dao-builder-id="imgSourceRootProvider">
             <nut-path>images/.*.png</nut-path>
         </heap>
         <heap id="css-scripts" dao-builder-id="cssSourceRootProvider">
@@ -86,4 +93,16 @@
             <nut-path>jquery.ui.all.css</nut-path>
         </heap>
 	</heaps>
+
+    <workflow-templates>
+        <workflow-template id="workflow-template">
+            <engine-chain>
+                <engine-builder-id>cssSpriteInspectorEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id="css-image" workflow-template-id="workflow-template" heap-id-pattern="image" />
+    </workflows>
 </wuic>
