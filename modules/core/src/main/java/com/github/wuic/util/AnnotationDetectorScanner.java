@@ -40,35 +40,93 @@ package com.github.wuic.util;
 
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
-import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
+import eu.infomas.annotation.AnnotationDetector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 
 /**
  * <p>
- * An annotation scanner based on Reflections library.
+ * An annotation scanner based on ASL Annotation Detector library.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
  */
-public class ReflectionsAnnotationScanner implements AnnotationScanner {
+public class AnnotationDetectorScanner implements AnnotationScanner {
+
+    /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void scan(final String basePackage, final AnnotationProcessor... processors) {
-        final Reflections reflections = new Reflections(ClasspathHelper.forPackage(basePackage));
-
         for (AnnotationProcessor processor : processors) {
-            final Collection<Class<?>> detected = reflections.getTypesAnnotatedWith(processor.requiredAnnotation());
+            final AnnotationDetector detector = new AnnotationDetector(new AnnotationProcessorReporter(processor));
 
-            for (final Class<?> type : detected) {
-                processor.handle(type);
+            try  {
+                detector.detect(basePackage);
+            } catch (IOException ioe) {
+                logger.error("Unable to detect annotation during classpath scanning", ioe);
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private class AnnotationProcessorReporter implements AnnotationDetector.TypeReporter {
+
+        /**
+         * The annotation processor.
+         */
+        private AnnotationProcessor annotationProcessor;
+
+        /**
+         * <p>
+         * Builds a new reporter.
+         * </p>
+         *
+         * @param annotationProcessor t the processor to notify
+         */
+        private AnnotationProcessorReporter(final AnnotationProcessor annotationProcessor) {
+            this.annotationProcessor = annotationProcessor;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void reportTypeAnnotation(final Class<? extends Annotation> aClass, final String s) {
+            try {
+                annotationProcessor.handle(Class.forName(s));
+            } catch (ClassNotFoundException cnfe) {
+                logger.error("Reported class during annotation scanning not found", cnfe);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @SuppressWarnings("unchecked")
+        public Class<? extends Annotation>[] annotations() {
+            return new Class[] {
+                    annotationProcessor.requiredAnnotation()
+            };
         }
     }
 }

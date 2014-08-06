@@ -41,7 +41,7 @@ package com.github.wuic.config;
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.util.ReflectionsAnnotationScanner;
+import com.github.wuic.util.AnnotationDetectorScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +152,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         this.annotationToScan = annotationToScan;
         this.knownTypes = new ArrayList<KnownType>();
         this.inspectors = new ArrayList<ObjectBuilderInspector>();
-        new ReflectionsAnnotationScanner().scan(packageToScan, this);
+        new AnnotationDetectorScanner().scan(packageToScan, this);
     }
 
     /**

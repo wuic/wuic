@@ -66,7 +66,7 @@ public interface ObjectBuilder<T> {
      * @return a builder taking in consideration the new property
      * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if the property key is not supported or if the value is incorrect
      */
-    ObjectBuilder property(String key, Object value) throws BuilderPropertyNotSupportedException;
+    ObjectBuilder<T> property(String key, Object value) throws BuilderPropertyNotSupportedException;
 
     /**
      * <p>

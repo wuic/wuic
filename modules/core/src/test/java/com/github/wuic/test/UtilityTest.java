@@ -44,11 +44,11 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.util.AnnotationDetectorScanner;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
-import com.github.wuic.util.ReflectionsAnnotationScanner;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import org.junit.Assert;
@@ -312,7 +312,6 @@ public class UtilityTest extends WuicTest {
     public void fileSearchInJarTest() throws IOException, StreamException {
         final String resolve = "/META-INF/resources/webjars";
         String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
-        str.substring(0, str.lastIndexOf('/', str.length() - resolve.length() - 1));
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
@@ -435,7 +434,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void defaultAnnotationScannerTest() {
-        final AnnotationScanner s = new ReflectionsAnnotationScanner();
+        final AnnotationScanner s = new AnnotationDetectorScanner();
         final AtomicInteger count = new AtomicInteger();
         s.scan("com", new AnnotationProcessor() {
 

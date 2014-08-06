@@ -108,9 +108,9 @@
             </dependency>
 
             <dependency>
-                <groupId>org.reflections</groupId>
-                <artifactId>reflections</artifactId>
-                <version>${reflections.version}</version>
+                <groupId>eu.infomas</groupId>
+                <artifactId>annotation-detector</artifactId>
+                <version>${annotation-detector.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -281,7 +281,7 @@
         <mockito.version>1.9.5</mockito.version>
         <ecj.version>4.3.1</ecj.version>
         <el.version>3.0-b01</el.version>
-        <reflections.version>0.9.9-RC2</reflections.version>
+        <annotation-detector.version>3.0.4</annotation-detector.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
         <jetty8-version>8.1.9.v20130131</jetty8-version>
