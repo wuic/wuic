@@ -225,6 +225,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Indicates if html processor should preserve line break position.
+     * </p>
+     */
+    String PRESERVE_LINE_BREAK = "c.g.wuic.engine.preserveLineBreakPos";
+
+    /**
+     * <p>
      * Indicates if javascript processor should not apply extra optimizations.
      * </p>
      */
