@@ -98,11 +98,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
                 "\r\n".getBytes(),
                 request.getNuts().toArray(new Nut[request.getNuts().size()])));
 
-        if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
-        } else {
-            return retval;
-        }
+        return retval;
     }
 
     /**
