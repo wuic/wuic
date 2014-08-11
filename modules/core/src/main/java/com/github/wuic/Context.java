@@ -70,6 +70,11 @@ public class Context implements Observer {
     private Map<String, Workflow> workflowMap;
 
     /**
+     * All interceptors.
+     */
+    private List<ContextInterceptor> interceptors;
+
+    /**
      * Indicates if this context is up to date or not.
      */
     private Boolean upToDate;
@@ -86,12 +91,14 @@ public class Context implements Observer {
      *
      * @param cb the builder
      * @param wm the workflow map
+     * @param interceptorsList some interceptors
      */
-    Context(final ContextBuilder cb, final Map<String, Workflow> wm) {
+    Context(final ContextBuilder cb, final Map<String, Workflow> wm, final List<ContextInterceptor> interceptorsList) {
         contextBuilder = cb;
         contextBuilder.addObserver(this);
         workflowMap = wm;
         upToDate = true;
+        interceptors = interceptorsList;
     }
 
     /**
@@ -146,10 +153,20 @@ public class Context implements Observer {
      * @throws WorkflowNotFoundException if no workflow is associated to the ID.
      */
     private Workflow getWorkflow(final String workflowId) throws WorkflowNotFoundException {
-        final Workflow workflow = workflowMap.get(workflowId);
+        String wId = workflowId;
+
+        for (final ContextInterceptor i : interceptors) {
+            wId = i.beforeGetWorkflow(wId);
+        }
+
+        Workflow workflow = workflowMap.get(wId);
+
+        for (final ContextInterceptor i : interceptors) {
+            workflow = i.afterGetWorkflow(wId, workflow);
+        }
 
         if (workflow == null) {
-            throw new WorkflowNotFoundException(workflowId);
+            throw new WorkflowNotFoundException(wId);
         } else {
             return workflow;
         }
@@ -167,18 +184,27 @@ public class Context implements Observer {
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
     private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path) throws WuicException {
-        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
 
+        for (final ContextInterceptor interceptor : interceptors) {
+            request = interceptor.beforeProcess(request, path);
+        }
+
+        Nut retval;
         if (workflow.getHead() != null) {
-            return workflow.getHead().parse(request, path);
+            retval = workflow.getHead().parse(request, path);
         } else {
-            final Nut nut = NutUtils.findByName(HeadEngine.runChains(request, Boolean.FALSE), path);
+            retval = NutUtils.findByName(HeadEngine.runChains(request, Boolean.FALSE), path);
+        }
 
-            if (nut != null) {
-                return nut;
-            }
+        for (final ContextInterceptor interceptor : interceptors) {
+            retval = interceptor.afterProcess(retval, path);
+        }
 
+        if (retval == null) {
             throw new NutNotFoundException(path, wId);
+        } else {
+            return retval;
         }
     }
 
@@ -193,13 +219,25 @@ public class Context implements Observer {
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
     private List<Nut> process(final String contextPath, final String wId, final Workflow workflow) throws WuicException {
-        final EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+
+        for (final ContextInterceptor interceptor : interceptors) {
+            request = interceptor.beforeProcess(request);
+        }
+
+        List<Nut> retval;
 
         if (workflow.getHead() != null) {
-            return workflow.getHead().parse(request);
+            retval = workflow.getHead().parse(request);
         } else {
-           return HeadEngine.runChains(request, Boolean.FALSE);
+            retval = HeadEngine.runChains(request, Boolean.FALSE);
         }
+
+        for (final ContextInterceptor interceptor : interceptors) {
+            retval = interceptor.afterProcess(retval);
+        }
+
+        return retval;
     }
 
     /**

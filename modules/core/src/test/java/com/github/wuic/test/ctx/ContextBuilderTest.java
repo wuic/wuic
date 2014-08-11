@@ -42,11 +42,16 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 
+import com.github.wuic.ContextInterceptor;
+import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
@@ -56,6 +61,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -127,6 +137,74 @@ public class ContextBuilderTest {
 
         // Should be aggregated now
         Assert.assertTrue(context.process("", "workflow-heap").size() == 1);
+    }
+
+    /**
+     * <p>
+     * Test {@link ContextInterceptor} usage.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void interceptorTest() throws Exception {
+        final AtomicInteger count = new AtomicInteger(4);
+        final List<Nut> nuts = new ArrayList<Nut>();
+        final Nut nut = Mockito.mock(Nut.class);
+
+        // Typical use : no exception should be thrown
+        final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+                .tag("test")
+                .contextNutDaoBuilder("dao", "MockDaoBuilder")
+                .toContext()
+                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .interceptor(new ContextInterceptorAdapter() {
+                    @Override
+                    public EngineRequest beforeProcess(final EngineRequest request) {
+                        super.beforeProcess(request);
+                        count.decrementAndGet();
+                        return request;
+                    }
+
+                    @Override
+                    public EngineRequest beforeProcess(final EngineRequest request, final String path) {
+                        super.beforeProcess(request, path);
+                        count.decrementAndGet();
+                        return request;
+                    }
+
+                    @Override
+                    public List<Nut> afterProcess(final List<Nut> n) {
+                        super.afterProcess(n);
+                        count.decrementAndGet();
+                        return nuts;
+                    }
+
+                    @Override
+                    public String beforeGetWorkflow(final String wId) {
+                        super.beforeGetWorkflow(wId);
+                        return wId;
+                    }
+
+                    @Override
+                    public Workflow afterGetWorkflow(final String id, final Workflow workflow) {
+                        super.afterGetWorkflow(id, workflow);
+                        return workflow;
+                    }
+
+                    @Override
+                    public Nut afterProcess(final Nut n, final String path) {
+                        super.afterProcess(n, path);
+                        count.decrementAndGet();
+                        return nut;
+                    }
+                }).releaseTag().build();
+
+        Assert.assertEquals(nuts, context.process("", "heap"));
+        Assert.assertEquals(2, count.get());
+
+        Assert.assertEquals(nut, context.process("", "heap", ""));
+        Assert.assertEquals(0, count.get());
     }
 
     /**

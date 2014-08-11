@@ -378,6 +378,11 @@ public class ContextBuilder extends Observable {
         private Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
 
         /**
+         * All {@link ContextInterceptor interceptors}.
+         */
+        private List<ContextInterceptor> interceptorsList = new ArrayList<ContextInterceptor>();
+
+        /**
          * <p>
          * Gets the {@link NutDao} associated to an ID.
          * </p>
@@ -443,6 +448,17 @@ public class ContextBuilder extends Observable {
         public Map<String, WorkflowTemplate> getTemplateMap() {
             return templates;
         }
+
+        /**
+         * <p>
+         * Gets the {@link ContextInterceptor interceptors}.
+         * </p>
+         *
+         * @return the list
+         */
+        private List<ContextInterceptor> getInterceptorsList() {
+            return interceptorsList;
+        }
     }
 
     /**
@@ -497,6 +513,18 @@ public class ContextBuilder extends Observable {
      */
     public synchronized ObjectBuilder<NutDao> newNutDaoBuilder(final String type) {
         return nutDaoBuilderFactory.create(type);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link Engine} builder.
+     * </p>
+     *
+     * @param type the type of engine
+     * @return the builder
+     */
+    public synchronized ObjectBuilder<Engine> newEngineBuilder(final String type) {
+        return engineBuilderFactory.create(type);
     }
 
     /**
@@ -835,6 +863,23 @@ public class ContextBuilder extends Observable {
      */
     public ContextEngineBuilder contextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
         return new ContextEngineBuilder(id, type);
+    }
+
+    /**
+     * <p>
+     * Adds a {@link ContextInterceptor} to the builder.
+     * </p>
+     *
+     * @param interceptor the interceptor
+     * @return this {@link ContextBuilder}
+     */
+    public ContextBuilder interceptor(final ContextInterceptor interceptor) {
+        final ContextSetting setting = getSetting();
+        setting.getInterceptorsList().add(interceptor);
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers();
+        return this;
     }
 
     /**
@@ -1341,7 +1386,13 @@ public class ContextBuilder extends Observable {
                 workflowMap.put(heap.getId(), new Workflow(createHead(Boolean.TRUE, null), createChains(Boolean.TRUE, null), heap));
             }
 
-            return new Context(this, workflowMap);
+            final List<ContextInterceptor> interceptors = new ArrayList<ContextInterceptor>();
+
+            for (final ContextSetting setting : taggedSettings.values()) {
+                interceptors.addAll(setting.getInterceptorsList());
+            }
+
+            return new Context(this, workflowMap, interceptors);
         } finally {
             if (requiresLock) {
                 lock.unlock();
