@@ -45,7 +45,7 @@ import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

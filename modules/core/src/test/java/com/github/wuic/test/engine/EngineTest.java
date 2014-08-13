@@ -46,7 +46,7 @@ import com.github.wuic.engine.core.ImageAggregatorEngine;
 import com.github.wuic.engine.core.ImageCompressorEngine;
 import com.github.wuic.engine.core.SpriteInspectorEngine;
 import com.github.wuic.nut.Nut;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
