@@ -46,8 +46,16 @@ import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
+import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.Path;
+import com.github.wuic.path.core.VirtualDirectoryPath;
+import com.github.wuic.util.IOUtils;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * <p>
@@ -80,26 +88,38 @@ public class ClasspathNutDao extends DiskNutDao {
                            @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
                            @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
                            @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber) {
-        super(staticProcessBasePath(base), basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber);
+        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber);
     }
 
     /**
-     * <p>
-     * Implementation of the process algorithm in a static method to be called in constructor.
-     * </p>
-     *
-     * @param value the value to process
-     * @return the processed value
+     * {@inheritDoc}
      */
-    private static String staticProcessBasePath(final String value) {
-        final URL classPathEntry = ClasspathNutDao.class.getResource(value);
+    @Override
+    protected DirectoryPath createBaseDirectory() throws IOException {
 
-        if (classPathEntry == null) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s not found in classpath", value)));
+        // Get locations for the given resource
+        final String normalize = getBasePath().startsWith("/") ? getBasePath().substring(1) : getBasePath();
+        final Enumeration<URL> e = Thread.currentThread().getContextClassLoader().getResources(normalize);
+
+        // Build the directory path corresponding to each location
+        final List<DirectoryPath> paths = new ArrayList<DirectoryPath>();
+
+        while (e.hasMoreElements()) {
+            final String p = e.nextElement().toString();
+            final String sub = p.substring(p.indexOf(":/") + 1);
+            final Path path = IOUtils.buildPath(sub);
+
+            if (DirectoryPath.class.isAssignableFrom(path.getClass())) {
+                paths.add(DirectoryPath.class.cast(path));
+            } else {
+                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", sub)));
+            }
         }
 
-        final String path = classPathEntry.toString();
-
-        return path.substring(path.indexOf(":/") + 1);
+        if (!paths.isEmpty()) {
+            return new VirtualDirectoryPath(getBasePath(), paths);
+        } else {
+            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
+        }
     }
 }
