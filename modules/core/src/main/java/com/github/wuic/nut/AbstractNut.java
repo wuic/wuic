@@ -70,14 +70,19 @@ public abstract class AbstractNut implements Nut {
     private String nutName;
 
     /**
-     * Text compressible or not.
+     * Compressed or not.
      */
-    private Boolean textCompressible;
+    private Boolean compressed;
 
     /**
-     * Binary compressible or not.
+     * Text reducible or not.
      */
-    private Boolean binaryCompressible;
+    private Boolean textReducible;
+
+    /**
+     * Binary reducible or not.
+     */
+    private Boolean binaryReducible;
 
     /**
      * Cacheable or not.
@@ -117,7 +122,9 @@ public abstract class AbstractNut implements Nut {
      * @param o the nut to copy
      */
     protected AbstractNut(final Nut o) {
-        this(o.getName(),o.getNutType(), o.isBinaryCompressible(), o.isTextCompressible(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
+        this(o.getName(), o.getNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
+        binaryReducible = o.isBinaryReducible();
+        textReducible = o.isTextReducible();
         referencedNuts = o.getReferencedNuts();
         originalNuts = o.getOriginalNuts();
     }
@@ -130,20 +137,18 @@ public abstract class AbstractNut implements Nut {
      *
      * @param name the nut's name
      * @param ft the nut's type
-     * @param bc binary compressible or not
-     * @param tc text compressible or not
+     * @param comp compressed or not
      * @param c cacheable or not
      * @param a aggregatable or not
      * @param o the original nuts
      */
     protected AbstractNut(final String name,
                           final NutType ft,
-                          final Boolean bc,
-                          final Boolean tc,
+                          final Boolean comp,
                           final Boolean c,
                           final Boolean a,
                           final List<Nut> o) {
-        this(name, ft, bc, tc, c, a, BigInteger.ZERO);
+        this(name, ft, comp, c, a, BigInteger.ZERO);
         originalNuts = o;
 
         // Computes a hash based on each original hash
@@ -164,16 +169,14 @@ public abstract class AbstractNut implements Nut {
      *
      * @param name the nut's name
      * @param ft the nut's type
-     * @param bc binary compressible or not
-     * @param tc text compressible or not
+     * @param comp compressed or not
      * @param c cacheable or not
      * @param a aggregatable or not
      * @param v version number
      */
     protected AbstractNut(final String name,
                           final NutType ft,
-                          final Boolean bc,
-                          final Boolean tc,
+                          final Boolean comp,
                           final Boolean c,
                           final Boolean a,
                           final BigInteger v) {
@@ -187,8 +190,9 @@ public abstract class AbstractNut implements Nut {
 
         nutType = ft;
         nutName = name;
-        binaryCompressible = bc;
-        textCompressible = tc;
+        compressed = comp;
+        binaryReducible = !nutType.isText();
+        textReducible = nutType.isText();
         cacheable = c;
         aggregatable = a;
         referencedNuts = null;
@@ -227,16 +231,24 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public Boolean isBinaryCompressible() {
-        return binaryCompressible;
+    public Boolean isCompressed() {
+        return compressed;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean isTextCompressible() {
-        return textCompressible;
+    public Boolean isBinaryReducible() {
+        return binaryReducible;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isTextReducible() {
+        return textReducible;
     }
 
     /**
@@ -259,16 +271,24 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public void setBinaryCompressible(final Boolean bc) {
-        binaryCompressible = bc;
+    public void setIsCompressed(final Boolean compressed) {
+        this.compressed = compressed;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setTextCompressible(final Boolean tc) {
-        textCompressible = tc;
+    public void setBinaryReducible(final Boolean bc) {
+        binaryReducible = bc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTextReducible(final Boolean tc) {
+        textReducible = tc;
     }
 
     /**

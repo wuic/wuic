@@ -38,6 +38,10 @@
 
 package com.github.wuic.servlet;
 
+import com.github.wuic.ContextBuilder;
+import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
@@ -77,6 +81,11 @@ import java.util.regex.Pattern;
 public class WuicServlet extends HttpServlet {
 
     /**
+     * Servlet request supporting GZIP or not during workflow processing.
+     */
+    private static final ThreadLocal<Boolean> CAN_GZIP = new ThreadLocal<Boolean>();
+
+    /**
      * Serial version UID.
      */
     private static final long serialVersionUID = -7678202861072625737L;
@@ -108,11 +117,41 @@ public class WuicServlet extends HttpServlet {
      */
     public WuicServlet() {
         errorCodeToHttpCode = new HashMap<Long, Integer>();
-
         errorCodeToHttpCode.put(ErrorCode.NUT_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
         errorCodeToHttpCode.put(ErrorCode.WORKFLOW_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
-
         charset = System.getProperty("file.encoding");
+    }
+
+    /**
+     * <p>
+     * Indicates if the {@link HttpServletRequest} bound to the current {@link #CAN_GZIP} thread local supports GZIP.
+     * </p>
+     *
+     * @return {@code true} if it supports GZIP, {@code false} otherwise
+     */
+    public static boolean canGzip() {
+        final Boolean canGzip = CAN_GZIP.get();
+        return canGzip != null && canGzip;
+    }
+
+    /**
+     * <p>
+     * Indicates if the given {@link HttpServletRequest} supports GZIP or not in {@link #CAN_GZIP} thread local.
+     * </p>
+     */
+    private static void canGzip(final HttpServletRequest request) {
+        final Boolean can;
+
+        if (request != null) {
+            final String acceptEncoding = request.getHeader("Accept-Encoding");
+
+            // Accept-Encoding must be set and GZIP specific
+            can = acceptEncoding != null && acceptEncoding.contains("gzip");
+        } else {
+            can = Boolean.TRUE;
+        }
+
+        CAN_GZIP.set(can);
     }
 
     /**
@@ -141,6 +180,12 @@ public class WuicServlet extends HttpServlet {
 
         urlPattern = Pattern.compile(patternBuilder.toString());
 
+        try {
+            WuicJeeContext.getWuicFacade().configure(new WuicServletContextBuilderConfigurator());
+        } catch (StreamException se) {
+            throw new ServletException(se);
+        }
+
         super.init(config);
     }
 
@@ -157,6 +202,7 @@ public class WuicServlet extends HttpServlet {
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
+                canGzip(request);
                 writeNut(URLDecoder.decode(matcher.group(1), "UTF-8"),
                         URLDecoder.decode(matcher.group(NumberUtils.TWO), "UTF-8"),
                         response);
@@ -169,6 +215,8 @@ public class WuicServlet extends HttpServlet {
 
                 response.getWriter().println(we.getMessage());
                 response.setStatus(httpCode);
+            } finally {
+                CAN_GZIP.remove();
             }
         }
     }
@@ -196,6 +244,11 @@ public class WuicServlet extends HttpServlet {
                 response.setCharacterEncoding(charset);
                 response.setContentType(nut.getNutType().getMimeType());
 
+                if (canGzip()) {
+                    response.setHeader("Content-Encoding", "gzip");
+                    response.setHeader("Vary", "Accept-Encoding");
+                }
+
                 // We set a far expiration date because we assume that polling will change the timestamp in path
                 response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
 
@@ -209,6 +262,85 @@ public class WuicServlet extends HttpServlet {
             }
         } else {
             throw new NutNotFoundException(nutName, workflowId);
+        }
+    }
+
+    /**
+     * <p>
+     * Configurator that injects {@link WuicServletContextInterceptor} to the context.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class WuicServletContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int internalConfigure(final ContextBuilder ctxBuilder) {
+            ctxBuilder.interceptor(new WuicServletContextInterceptor());
+            return -1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getTag() {
+            return getClass().getName();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            return -1L;
+        }
+    }
+
+    /**
+     * <p>
+     * Handles workflow ID to duplicate cache entries for both GZIP and non-GZIP content.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class WuicServletContextInterceptor extends ContextInterceptorAdapter {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String beforeGetWorkflow(final String wId) {
+            return wId;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EngineRequest beforeProcess(final EngineRequest request) {
+            final Boolean canGzip = CAN_GZIP.get();
+
+            if (canGzip != null && canGzip) {
+                return new EngineRequest(request.getWorkflowId(), request.getWorkflowId() + "-gzip", request);
+            } else {
+                return request;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EngineRequest beforeProcess(final EngineRequest request, final String path) {
+            return beforeProcess(request);
         }
     }
 }

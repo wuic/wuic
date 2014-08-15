@@ -40,7 +40,6 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +73,7 @@ public class HttpNut extends AbstractNut {
      * @param version the version
      */
     public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
-        super(name, nutType, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
+        super(name, nutType, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, version);
         nutUrl = url;
     }
 

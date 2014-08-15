@@ -83,7 +83,7 @@ public final class ByteArrayNut extends AbstractNut {
      * @param originalNuts the original nuts
      */
     public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<Nut> originalNuts) {
-        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, originalNuts);
+        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, originalNuts);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 
@@ -97,7 +97,7 @@ public final class ByteArrayNut extends AbstractNut {
      * @param originalNuts the original nuts
      */
     public ByteArrayNut(final String name, final NutType nt, final List<Nut> originalNuts) {
-        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, originalNuts);
+        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, originalNuts);
         byteArray = null;
     }
 
@@ -112,7 +112,7 @@ public final class ByteArrayNut extends AbstractNut {
      * @param version the version number
      */
     public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final BigInteger version) {
-        super(name, nt, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, version);
+        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, version);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 

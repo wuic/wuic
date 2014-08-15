@@ -92,18 +92,18 @@ public class MockDao implements NutDao {
         when(mockNutOne.getName()).thenReturn("foo.js");
         when(mockNutOne.getNutType()).thenReturn(NutType.JAVASCRIPT);
         when(mockNutOne.isAggregatable()).thenReturn(true);
-        when(mockNutOne.isTextCompressible()).thenReturn(true);
+        when(mockNutOne.isTextReducible()).thenReturn(true);
         when(mockNutOne.isCacheable()).thenReturn(true);
-        when(mockNutOne.isBinaryCompressible()).thenReturn(true);
+        when(mockNutOne.isBinaryReducible()).thenReturn(true);
         when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
         when(mockNutOne.getVersionNumber()).thenReturn(new BigInteger("1"));
 
         when(mockNutTwo.getName()).thenReturn("test.js");
         when(mockNutTwo.getNutType()).thenReturn(NutType.JAVASCRIPT);
         when(mockNutTwo.isAggregatable()).thenReturn(true);
-        when(mockNutTwo.isTextCompressible()).thenReturn(true);
+        when(mockNutTwo.isTextReducible()).thenReturn(true);
         when(mockNutTwo.isCacheable()).thenReturn(true);
-        when(mockNutTwo.isBinaryCompressible()).thenReturn(true);
+        when(mockNutTwo.isBinaryReducible()).thenReturn(true);
         when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
         when(mockNutTwo.getVersionNumber()).thenReturn(new BigInteger("1"));
     }

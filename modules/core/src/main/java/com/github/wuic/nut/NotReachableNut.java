@@ -73,7 +73,7 @@ public class NotReachableNut extends AbstractNut {
      * @param version the version number
      */
     public NotReachableNut(final String name, final NutType nutType, final String heapId, final BigInteger version) {
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, version);
+        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, version);
         heap = heapId;
     }
 

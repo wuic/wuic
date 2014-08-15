@@ -39,11 +39,17 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * <p>
@@ -122,6 +128,7 @@ public class CompositeNut extends AbstractNut {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         return name != null ? name : super.getName();
     }
@@ -238,7 +245,23 @@ public class CompositeNut extends AbstractNut {
      */
     @Override
     public InputStream openStream() throws NutNotFoundException {
-        return new CompositeInputStream();
+        if (isCompressed()) {
+            try {
+                final ByteArrayOutputStream ungzip = new ByteArrayOutputStream();
+                IOUtils.copyStream(new GZIPInputStream(new CompositeInputStream()), ungzip);
+                final ByteArrayOutputStream gzipArray = new ByteArrayOutputStream();
+                final GZIPOutputStream gzip = new GZIPOutputStream(gzipArray);
+                IOUtils.copyStream(new ByteArrayInputStream(ungzip.toByteArray()), gzip);
+                gzip.close();
+                return new ByteArrayInputStream(gzipArray.toByteArray());
+            } catch (StreamException se) {
+                throw new BadArgumentException(new IllegalArgumentException(se));
+            } catch (IOException ioe) {
+                throw new BadArgumentException(new IllegalArgumentException(ioe));
+            }
+        } else {
+            return new CompositeInputStream();
+        }
     }
 
     /**

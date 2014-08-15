@@ -131,7 +131,10 @@ public class SpriteInspectorEngine extends NodeEngine {
                 initSpriteProviders(n.getName());
 
                 if (n.getOriginalNuts() != null) {
-                    for (final Nut origin : n.getOriginalNuts()) {
+                    // Origin can be compressed, use its own origin which is the image in that case
+                    final List<Nut> originalNuts = n.isCompressed() ? n.getOriginalNuts().get(0).getOriginalNuts() : n.getOriginalNuts();
+
+                    for (final Nut origin : originalNuts) {
                         if (origin instanceof ImageNut) {
                             addRegionToSpriteProviders(ImageNut.class.cast(origin).getRegion(), origin.getName());
                         } else {

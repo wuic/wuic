@@ -73,7 +73,12 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
     /**
      * Engines types that will be skipped when processing referenced nuts.
      */
-    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.AGGREGATOR, EngineType.CACHE, EngineType.INSPECTOR };
+    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] {
+            EngineType.AGGREGATOR,
+            EngineType.CACHE,
+            EngineType.INSPECTOR,
+            EngineType.BINARY_COMPRESSION
+    };
 
     /**
      * Possible value for CSS file name.

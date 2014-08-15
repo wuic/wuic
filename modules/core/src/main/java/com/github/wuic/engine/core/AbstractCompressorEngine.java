@@ -150,7 +150,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
      * @throws WuicException if an I/O error occurs
      */
     private Nut compress(final Nut nut) throws WuicException {
-        if (!nut.isTextCompressible() || nut.getName().contains(renameExtensionPrefix)) {
+        if (!nut.isTextReducible() || nut.getName().contains(renameExtensionPrefix)) {
             return nut;
         }
 
@@ -176,8 +176,8 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
             // Now create nut
             final Nut res = new ByteArrayNut(os.toByteArray(), nameBuilder.toString(), nut.getNutType(), Arrays.asList(nut));
             res.setAggregatable(nut.isAggregatable());
-            res.setBinaryCompressible(nut.isBinaryCompressible());
-            res.setTextCompressible(nut.isTextCompressible());
+            res.setBinaryReducible(nut.isBinaryReducible());
+            res.setTextReducible(nut.isTextReducible());
             res.setCacheable(nut.isCacheable());
 
             // Also compress referenced nuts

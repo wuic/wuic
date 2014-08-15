@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,62 +35,45 @@
  * licenses."
  */
 
-package com.github.wuic.nut;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.path.FilePath;
+package com.github.wuic.engine.servlet;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.core.GzipEngine;
+import com.github.wuic.servlet.WuicServlet;
 
 /**
  * <p>
- * Represents a nut on the path system provided or to be managed by the WUIC framework. Thanks to
- * {@link FilePath}, the nut could also be a ZIP entry.
+ * This engine GZIP nut content served by {@link WuicServlet}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
- * @since 0.1.1
+ * @version 1.0
+ * @since 0.5.0
  */
-public class FilePathNut extends AbstractNut {
-
-    /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The root directory that contains the files of a same group.
-     */
-    private FilePath path;
+@EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+public class ServletGzipEngine extends GzipEngine {
 
     /**
      * <p>
-     * Builds a new {@code Nut} based on a given path.
+     * Builds a new instance.
      * </p>
      *
-     * @param p the path
-     * @param name the nut name
-     * @param ft the path type
-     * @param versionNumber the nut's version number
+     * @param compress compress or not
      */
-    public FilePathNut(final FilePath p, final String name, final NutType ft, final BigInteger versionNumber) {
-        super(name, ft, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, versionNumber);
-        path = p;
+    @ConfigConstructor
+    public ServletGzipEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
+        super(compress);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return path.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    public Boolean works() {
+        return WuicServlet.canGzip();
     }
 }

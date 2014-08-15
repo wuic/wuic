@@ -101,16 +101,16 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public Boolean isBinaryCompressible() {
-        return wrapped.isBinaryCompressible();
+    public Boolean isBinaryReducible() {
+        return wrapped.isBinaryReducible();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean isTextCompressible() {
-        return wrapped.isTextCompressible();
+    public Boolean isTextReducible() {
+        return wrapped.isTextReducible();
     }
 
     /**
@@ -133,16 +133,16 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public void setBinaryCompressible(final Boolean tc) {
-        wrapped.setBinaryCompressible(tc);
+    public void setBinaryReducible(final Boolean tc) {
+        wrapped.setBinaryReducible(tc);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setTextCompressible(final Boolean tc) {
-        wrapped.setTextCompressible(tc);
+    public void setTextReducible(final Boolean tc) {
+        wrapped.setTextReducible(tc);
     }
 
     /**
@@ -207,5 +207,21 @@ public class NutWrapper implements Nut {
     @Override
     public List<Nut> getOriginalNuts() {
         return wrapped.getOriginalNuts();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isCompressed() {
+        return wrapped.isCompressed();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIsCompressed(final Boolean c) {
+        wrapped.setIsCompressed(c);
     }
 }

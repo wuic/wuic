@@ -85,7 +85,7 @@ public enum NutType {
     /**
      * SVG path support.
      */
-    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", Boolean.FALSE),
+    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", Boolean.TRUE),
 
     /**
      * ICO file.

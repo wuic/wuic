@@ -177,8 +177,8 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
             final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), Arrays.asList(nut));
             inspected.setCacheable(nut.isCacheable());
             inspected.setAggregatable(nut.isAggregatable());
-            inspected.setTextCompressible(nut.isTextCompressible());
-            inspected.setBinaryCompressible(nut.isBinaryCompressible());
+            inspected.setTextReducible(nut.isTextReducible());
+            inspected.setBinaryReducible(nut.isBinaryReducible());
 
             // Also add all the referenced nuts
             for (final Nut ref : referencedNuts) {
@@ -262,8 +262,8 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
     private void configureExtracted(final Nut nut) {
         // TODO : is it really required ? Why ???
         nut.setAggregatable(Boolean.FALSE);
-        nut.setTextCompressible(nut.getNutType().isText());
-        nut.setBinaryCompressible(!nut.getNutType().isText());
+        nut.setTextReducible(nut.getNutType().isText());
+        nut.setBinaryReducible(!nut.getNutType().isText());
     }
 
     /**

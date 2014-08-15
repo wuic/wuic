@@ -92,21 +92,30 @@ public interface Nut extends Serializable {
 
     /**
      * <p>
-     * Indicates if this nut could be binary compressible.
+     * Indicates if the nut is compressed.
      * </p>
      *
-     * @return {@code true} if compressible, {@code false} otherwise
+     * @return {@code true} if the nut is compressed, {@code false} otherwise
      */
-    Boolean isBinaryCompressible();
+    Boolean isCompressed();
 
     /**
      * <p>
-     * Indicates if this nut is text compressible.
+     * Indicates if this nut could be binary reducible.
      * </p>
      *
-     * @return {@code true} if compressible, {@code false} otherwise
+     * @return {@code true} if reducible, {@code false} otherwise
      */
-    Boolean isTextCompressible();
+    Boolean isBinaryReducible();
+
+    /**
+     * <p>
+     * Indicates if this nut is text reducible.
+     * </p>
+     *
+     * @return {@code true} if reducible, {@code false} otherwise
+     */
+    Boolean isTextReducible();
 
     /**
      * <p>
@@ -128,21 +137,30 @@ public interface Nut extends Serializable {
 
     /**
      * <p>
-     * Sets if this nut is binary compressible.
+     * Indicates if the nut is compressed.
      * </p>
      *
-     * @param tc {@code true} if compressible, {@code false} otherwise
+     * @param c {@code true} if the nut is compressed, {@code false} otherwise
      */
-    void setBinaryCompressible(Boolean tc);
+    void setIsCompressed(Boolean c);
 
     /**
      * <p>
-     * Sets if this nut is text compressible.
+     * Sets if this nut is binary reducible.
      * </p>
      *
-     * @param tc {@code true} if compressible, {@code false} otherwise
+     * @param tr {@code true} if reducible, {@code false} otherwise
      */
-    void setTextCompressible(Boolean tc);
+    void setBinaryReducible(Boolean tr);
+
+    /**
+     * <p>
+     * Sets if this nut is text reducible.
+     * </p>
+     *
+     * @param tr {@code true} if reducible, {@code false} otherwise
+     */
+    void setTextReducible(Boolean tr);
 
     /**
      * <p>

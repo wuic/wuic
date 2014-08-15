@@ -98,6 +98,11 @@ public final class EngineRequest {
     private String workflowId;
 
     /**
+     * The key this request uses to compute the key.
+     */
+    private String workflowKey;
+
+    /**
      * The engine chains for each type.
      */
     private Map<NutType, ? extends NodeEngine> chains;
@@ -161,7 +166,7 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts and a specified context path to be used.
+     * Builds a new {@code EngineRequest} with some specific nuts to be used.
      * </p>
      *
      * @param n the nuts to be parsed
@@ -169,6 +174,31 @@ public final class EngineRequest {
      */
     public EngineRequest(final List<Nut> n, final EngineRequest other) {
         this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.skip);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with some specific nuts to be used.
+     * </p>
+     *
+     * @param workflowId the workflowId
+     * @param workflowKey a specific workflow key
+     * @param other the request to copy
+     */
+    public EngineRequest(final String workflowId, final String workflowKey, final EngineRequest other) {
+        this(workflowId, workflowKey, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.skip);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with specific workflow ID.
+     * </p>
+     *
+     * @param wid the workflow ID
+     * @param other the request to copy
+     */
+    public EngineRequest(final String wid, final EngineRequest other) {
+        this(wid, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.skip);
     }
 
     /**
@@ -231,7 +261,8 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter.
+     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter except the
+     * workflow key which is the workflow ID by default.
      * </p>
      *
      * @param wid the workflow ID
@@ -249,7 +280,33 @@ public final class EngineRequest {
                          final Map<NutType, ? extends NodeEngine> c,
                          final String pcn,
                          final EngineType ... toSkip) {
+        this(wid, wid, cp, h, n, c, pcn, toSkip);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter.
+     * </p>
+     *
+     * @param wid the workflow ID
+     * @param wk the workflow key
+     * @param cp the context root where the generated nuts should be exposed
+     * @param h the heap
+     * @param c the engine chains
+     * @param n the nuts
+     * @param pcn prefix created nut
+     * @param toSkip some engine types to skip
+     */
+    public EngineRequest(final String wid,
+                         final String wk,
+                         final String cp,
+                         final NutsHeap h,
+                         final List<Nut> n,
+                         final Map<NutType, ? extends NodeEngine> c,
+                         final String pcn,
+                         final EngineType ... toSkip) {
         nuts = new ArrayList<Nut>(n);
+        workflowKey = wk;
         contextPath = cp;
         heap = h;
         chains = c;
@@ -367,7 +424,7 @@ public final class EngineRequest {
      */
     public Key getKey() throws NutNotFoundException, StreamException {
         if (key == null) {
-            key = new Key(workflowId, nuts);
+            key = new Key(workflowKey, nuts);
         }
 
         return key;
@@ -491,9 +548,9 @@ public final class EngineRequest {
     public static final class Key implements Serializable {
 
         /**
-         * The workflow ID.
+         * The workflow key.
          */
-        private String workflowId;
+        private String workflowKey;
 
         /**
          * The nuts.
@@ -505,13 +562,13 @@ public final class EngineRequest {
          * Builds a new instance.
          * </p>
          *
-         * @param wId the workflow ID
+         * @param wKey the workflow key
          * @param nutsList the nuts
          * @throws StreamException if an I/O error occurs
          * @throws NutNotFoundException if given nut not normally created
          */
-        public Key(final String wId, final List<Nut> nutsList) throws NutNotFoundException, StreamException {
-            workflowId = wId;
+        public Key(final String wKey, final List<Nut> nutsList) throws NutNotFoundException, StreamException {
+            workflowKey = wKey;
             nuts = new ArrayList<String>(nutsList.size());
 
             for (final Nut n : nutsList) {
@@ -526,7 +583,7 @@ public final class EngineRequest {
         public boolean equals(final Object other) {
             if (other instanceof Key) {
                 final Key request = (Key) other;
-                return workflowId.equals(request.workflowId)
+                return workflowKey.equals(request.workflowKey)
                         && CollectionUtils.difference(new HashSet<String>(nuts), new HashSet<String>(request.nuts)).isEmpty();
             } else {
                 return false;
@@ -538,7 +595,7 @@ public final class EngineRequest {
          */
         @Override
         public int hashCode() {
-            return CollectionUtils.deepHashCode(workflowId, nuts.toArray());
+            return CollectionUtils.deepHashCode(workflowKey, nuts.toArray());
         }
 
         /**
@@ -546,7 +603,7 @@ public final class EngineRequest {
          */
         @Override
         public String toString() {
-            return workflowId + " / " + Arrays.deepToString(nuts.toArray());
+            return workflowKey + " / " + Arrays.deepToString(nuts.toArray());
         }
     }
 }

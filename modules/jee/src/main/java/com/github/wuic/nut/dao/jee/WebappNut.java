@@ -84,7 +84,7 @@ public class WebappNut extends AbstractNut {
      * @param versionNumber the nuts's version number
      */
     public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft, final BigInteger versionNumber) {
-        super(name, ft, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, versionNumber);
+        super(name, ft, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, versionNumber);
         context = ctx;
         path = p;
     }
