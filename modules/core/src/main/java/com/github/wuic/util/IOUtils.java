@@ -46,14 +46,24 @@ import com.github.wuic.path.core.FsDirectoryPathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-
+import java.io.BufferedInputStream;
+import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 
 /**
  * <p>
@@ -62,7 +72,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.3.1
  */
 public final class IOUtils {
@@ -103,18 +113,13 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Returns a new {@link MessageDigest} based on MD5 algorithm.
+     * Returns a new {@link MessageDigest} based on CRC algorithm.
      * </p>
      *
      * @return the message digest
      */
     public static MessageDigest newMessageDigest() {
-        try {
-            return MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException nsae) {
-            // Should never occur
-            throw new IllegalStateException(nsae);
-        }
+        return new CrcMessageDigest();
     }
 
     /**
@@ -190,7 +195,7 @@ public final class IOUtils {
      *
      * @param closeableArray the objects to close
      */
-    public static void close(final Closeable ... closeableArray) {
+    public static void close(final Closeable... closeableArray) {
         for (Closeable closeable : closeableArray) {
             try {
                 if (closeable != null) {
@@ -459,5 +464,64 @@ public final class IOUtils {
      */
     public static Path buildPath(final String path) throws IOException {
         return buildPath(path, new FsDirectoryPathFactory());
+    }
+
+    /**
+     * <p>
+     * A {@link CRC32} is wrapped inside this class which is a {@link MessageDigest}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public static final class CrcMessageDigest extends MessageDigest {
+
+        /**
+         * The CRC32 instance.
+         */
+        private final CRC32 crc;
+
+        /**
+         * Builds a new instance.
+         */
+        public CrcMessageDigest() {
+            super("");
+            crc = new CRC32();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void engineUpdate(final byte input) {
+            crc.update(input);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void engineUpdate(final byte[] input, final int offset, final int len) {
+            crc.update(input, offset, len);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected byte[] engineDigest() {
+            ByteBuffer buffer = ByteBuffer.allocate(8);
+            buffer.putLong(crc.getValue());
+            return buffer.array();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void engineReset() {
+            crc.reset();
+        }
     }
 }
