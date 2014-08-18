@@ -88,7 +88,7 @@ public class AnnotationDetectorScanner implements AnnotationScanner {
      * @version 1.0
      * @since 0.5.0
      */
-    private class AnnotationProcessorReporter implements AnnotationDetector.TypeReporter {
+    private final class AnnotationProcessorReporter implements AnnotationDetector.TypeReporter {
 
         /**
          * The annotation processor.

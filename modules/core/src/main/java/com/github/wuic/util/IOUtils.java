@@ -511,7 +511,7 @@ public final class IOUtils {
          */
         @Override
         protected byte[] engineDigest() {
-            ByteBuffer buffer = ByteBuffer.allocate(8);
+            ByteBuffer buffer = ByteBuffer.allocate(NumberUtils.HEIGHT);
             buffer.putLong(crc.getValue());
             return buffer.array();
         }
