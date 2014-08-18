@@ -127,11 +127,11 @@ public class WuicServlet extends HttpServlet {
      * Indicates if the {@link HttpServletRequest} bound to the current {@link #CAN_GZIP} thread local supports GZIP.
      * </p>
      *
-     * @return {@code true} if it supports GZIP, {@code false} otherwise
+     * @return {@code true} if it supports GZIP or if not http request is bound, {@code false} otherwise
      */
     public static boolean canGzip() {
         final Boolean canGzip = CAN_GZIP.get();
-        return canGzip != null && canGzip;
+        return canGzip == null || canGzip;
     }
 
     /**
@@ -182,8 +182,8 @@ public class WuicServlet extends HttpServlet {
 
         try {
             WuicJeeContext.getWuicFacade().configure(new WuicServletContextBuilderConfigurator());
-        } catch (StreamException se) {
-            throw new ServletException(se);
+        } catch (WuicException we) {
+            throw new ServletException(we);
         }
 
         super.init(config);
@@ -328,8 +328,8 @@ public class WuicServlet extends HttpServlet {
         public EngineRequest beforeProcess(final EngineRequest request) {
             final Boolean canGzip = CAN_GZIP.get();
 
-            if (canGzip != null && canGzip) {
-                return new EngineRequest(request.getWorkflowId(), request.getWorkflowId() + "-gzip", request);
+            if (canGzip != null && !canGzip) {
+                return new EngineRequest(request.getWorkflowId(), request.getWorkflowId() + "-ungzip", request);
             } else {
                 return request;
             }
