@@ -40,16 +40,17 @@ package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.WuicScheduledThreadPool;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,70 @@ import javax.xml.bind.JAXBException;
  * @since 0.1.0
  */
 public final class WuicFacade {
+
+    /**
+     * <p>
+     * This enumeration allows to indicate how the {@link Context} should be initialized when
+     * {@link ContextBuilder#build()} is called.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public enum WarmupStrategy {
+
+        /**
+         * Just build the context and return it.
+         */
+        NONE,
+
+        /**
+         * Runs synchronously all workflows and return the context when execution is finished.
+         */
+        SYNC,
+
+        /**
+         * Runs asynchronously all workflows and return the context immediately.
+         */
+        ASYNC
+    }
+
+    /**
+     * <p>
+     * Executes the specified workflow ID.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class ExecuteWorkflowJob implements Callable<List<Nut>> {
+
+        /**
+         * The workflow ID to process.
+         */
+        private String workflowId;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param workflowId the workflow ID
+         */
+        private ExecuteWorkflowJob(final String workflowId) {
+            this.workflowId = workflowId;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Nut> call() throws WuicException {
+            return runWorkflow(workflowId);
+        }
+    }
 
     /**
      * Logger.
@@ -89,6 +154,11 @@ public final class WuicFacade {
     private String contextPath;
 
     /**
+     * What to do with workflows when context is built.
+     */
+    private WarmupStrategy warmupStrategy;
+
+    /**
      * <p>
      * Builds a new {@link WuicFacade} for a particular wuic.xml path .
      * </p>
@@ -96,18 +166,21 @@ public final class WuicFacade {
      * @param cp the context path where the files will be exposed
      * @param useDefault injects default configuration for each known engine and DAO type
      * @param contextBuilderConfigurators configurators to be used on the builder
+     * @param wm the warm up strategy
      * @param inspector an additional inspector
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
     private WuicFacade(final String cp,
                        final Boolean useDefault,
                        final ObjectBuilderInspector inspector,
+                       final WarmupStrategy wm,
                        final ContextBuilderConfigurator ... contextBuilderConfigurators)
             throws WuicException {
         builder = inspector == null ? new ContextBuilder() : new ContextBuilder(inspector);
         configure(useDefault, contextBuilderConfigurators);
-        context = builder.build();
         contextPath = cp;
+        warmupStrategy = wm;
+        buildContext();
     }
 
     /**
@@ -142,12 +215,16 @@ public final class WuicFacade {
      * @param contextPath the context where the nuts will be exposed
      * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @param inspector additional inspector
+     * @param warmupStrategy the {@link WarmupStrategy}
      * @return the unique instance
      * @throws WuicException if the 'wuic.xml' path is not well configured
      */
-    public static synchronized WuicFacade newInstance(final String contextPath, final Boolean useDefaultConfigurator, final ObjectBuilderInspector inspector)
+    public static synchronized WuicFacade newInstance(final String contextPath,
+                                                      final Boolean useDefaultConfigurator,
+                                                      final ObjectBuilderInspector inspector,
+                                                      final WarmupStrategy warmupStrategy)
             throws WuicException {
-        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, inspector);
+        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, inspector, warmupStrategy);
     }
 
     /**
@@ -163,7 +240,7 @@ public final class WuicFacade {
      */
     public static synchronized WuicFacade newInstance(final String contextPath, final Boolean useDefaultConfigurator)
             throws WuicException {
-        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, null);
+        return newInstance(contextPath, WuicFacade.class.getResource("/wuic.xml"), useDefaultConfigurator, null, WarmupStrategy.NONE);
     }
 
     /**
@@ -180,7 +257,7 @@ public final class WuicFacade {
      */
     public static synchronized WuicFacade newInstance(final String contextPath, final URL wuicXmlPath, final Boolean useDefaultConfigurator)
             throws WuicException {
-        return newInstance(contextPath, wuicXmlPath, useDefaultConfigurator, null);
+        return newInstance(contextPath, wuicXmlPath, useDefaultConfigurator, null, WarmupStrategy.NONE);
     }
 
     /**
@@ -193,18 +270,20 @@ public final class WuicFacade {
      * @param useDefaultConfigurator use or not default configurators that injects default DAO and engines
      * @param contextPath the context where the nuts will be exposed
      * @param inspector additional inspector
+     * @param warmupStrategy the {@link WarmupStrategy}
      * @return the unique instance
      */
     public static synchronized WuicFacade newInstance(final String contextPath,
                                                       final URL wuicXmlPath,
                                                       final Boolean useDefaultConfigurator,
-                                                      final ObjectBuilderInspector inspector)
+                                                      final ObjectBuilderInspector inspector,
+                                                      final WarmupStrategy warmupStrategy)
             throws WuicException {
         try {
             if (wuicXmlPath != null) {
-                return new WuicFacade(contextPath, useDefaultConfigurator, inspector, new FileXmlContextBuilderConfigurator(wuicXmlPath));
+                return new WuicFacade(contextPath, useDefaultConfigurator, inspector, warmupStrategy, new FileXmlContextBuilderConfigurator(wuicXmlPath));
             } else {
-                return new WuicFacade(contextPath, useDefaultConfigurator, inspector);
+                return new WuicFacade(contextPath, useDefaultConfigurator, inspector, warmupStrategy);
             }
         } catch (JAXBException je) {
             throw new WuicXmlReadException("unable to load wuic.xml", je) ;
@@ -218,9 +297,9 @@ public final class WuicFacade {
      *
      * @param useDefault injects default configuration for each known engine and DAO type or not
      * @param configurators the configurators
-     * @throws StreamException if an I/O error occurs
+     * @throws WuicException if an I/O error occurs or context can't be built
      */
-    public synchronized void configure(final Boolean useDefault, final ContextBuilderConfigurator... configurators) throws StreamException {
+    public synchronized void configure(final Boolean useDefault, final ContextBuilderConfigurator... configurators) throws WuicException {
         if (useDefault) {
             builder.configureDefault();
         }
@@ -228,6 +307,8 @@ public final class WuicFacade {
         for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
             contextBuilderConfigurator.configure(builder);
         }
+
+        refreshContext();
     }
 
     /**
@@ -237,9 +318,9 @@ public final class WuicFacade {
      * </p>
      *
      * @param configurators the configurators
-     * @throws StreamException if an I/O error occurs
+     * @throws WuicException if an I/O error occurs or context can't be built
      */
-    public synchronized void configure(final ContextBuilderConfigurator... configurators) throws StreamException {
+    public synchronized void configure(final ContextBuilderConfigurator... configurators) throws WuicException {
         configure(Boolean.TRUE, configurators);
     }
     
@@ -300,18 +381,33 @@ public final class WuicFacade {
      *
      * @param id the workflow to be run
      * @return the timestamp as start time
+     * @throws WuicException if context can't be built
      */
-    private long beforeRunWorkflow(final String id) {
+    private long beforeRunWorkflow(final String id) throws WuicException {
         final long start = System.currentTimeMillis();
 
         log.info("Getting nuts for workflow : {}", id);
-
-        // Update context if necessary
-        if (!context.isUpToDate()) {
-            context = builder.build();
-        }
+        refreshContext();
 
         return start;
+    }
+
+    /**
+     * <p>
+     * Refresh the context if necessary.
+     * </p>
+     *
+     * @return {@code true} if the context is re-built,{@code false} otherwise
+     * @throws WuicException context can't be built
+     */
+    public boolean refreshContext() throws WuicException {
+        // Update context if necessary
+        if (context != null && !context.isUpToDate()) {
+            buildContext();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -323,5 +419,38 @@ public final class WuicFacade {
      */
     public String getContextPath() {
         return contextPath;
+    }
+
+    /**
+     * <p>
+     * Builds the {@link Context} according the {@link WarmupStrategy} set.
+     * </p>
+     *
+     * @throws WuicException if context can't be built
+     */
+    private void buildContext() throws WuicException {
+        context = builder.build();
+
+        switch (warmupStrategy) {
+            case NONE:
+                log.info("Building the context without any warmup");
+                break;
+            case SYNC:
+                log.info("Building the context with synchronous call for each workflow");
+
+                for (final String wId : workflowIds()) {
+                    runWorkflow(wId);
+                }
+
+                break;
+            case ASYNC:
+                log.info("Building the context with asynchronous call for each workflow");
+
+                for (final String wId : workflowIds()) {
+                    WuicScheduledThreadPool.getInstance().executeAsap(new ExecuteWorkflowJob(wId));
+                }
+
+                break;
+        }
     }
 }

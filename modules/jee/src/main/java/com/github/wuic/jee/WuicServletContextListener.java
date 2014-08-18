@@ -91,6 +91,12 @@ public class WuicServletContextListener implements ServletContextListener {
     public static final String WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS = "c.g.w.useDefaultContextBuilderConfigurators";
 
     /**
+     * Which warmup strategy to use when {@link WuicFacade} initializes the context. Possible values are enumerated by
+     * {@link com.github.wuic.WuicFacade.WarmupStrategy}.
+     */
+    public static final String WUIC_WARMUP_STRATEGY = "c.g.w.wuicWarmupStrategy";
+
+    /**
      * The logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -112,18 +118,22 @@ public class WuicServletContextListener implements ServletContextListener {
             final String useDefaultConfStr = sce.getServletContext().getInitParameter(WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS);
             final Boolean useDefaultConf = useDefaultConfStr == null ? Boolean.TRUE : Boolean.parseBoolean(useDefaultConfStr);
 
+            final String warmupStrategyStr = sce.getServletContext().getInitParameter(WUIC_WARMUP_STRATEGY);
+            final WuicFacade.WarmupStrategy warmupStrategy = warmupStrategyStr == null ?
+                    WuicFacade.WarmupStrategy.NONE : WuicFacade.WarmupStrategy.valueOf(warmupStrategyStr);
+
             final String wuicXmlPath = sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_PATH_PARAM);
             final WuicFacade facade;
             final ObjectBuilderInspector inspector = new WebappNutDaoBuilderInspector(sce.getServletContext());
 
             // Choose specific location for XML file
             if (wuicXmlPath == null) {
-                facade = WuicFacade.newInstance(wuicCp, useDefaultConf, inspector);
+                facade = WuicFacade.newInstance(wuicCp, useDefaultConf, inspector, warmupStrategy);
             } else {
                 if (Boolean.parseBoolean(sce.getServletContext().getInitParameter(WUIC_SERVLET_XML_SYS_PROP_PARAM))) {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)), useDefaultConf, inspector);
+                    facade = WuicFacade.newInstance(wuicCp, new URL(System.getProperty(wuicXmlPath)), useDefaultConf, inspector, warmupStrategy);
                 } else {
-                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath), useDefaultConf, inspector);
+                    facade = WuicFacade.newInstance(wuicCp, new URL(wuicXmlPath), useDefaultConf, inspector, warmupStrategy);
                 }
             }
 

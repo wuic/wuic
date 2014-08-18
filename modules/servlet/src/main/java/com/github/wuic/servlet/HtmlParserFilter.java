@@ -153,8 +153,8 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             }
         } catch (BuilderPropertyNotSupportedException bpnse) {
             throw new ServletException(bpnse);
-        } catch (StreamException se) {
-            throw new ServletException(se);
+        } catch (WuicException we) {
+            throw new ServletException(we);
         }
     }
 
