@@ -186,6 +186,7 @@ public final class ByteArrayNut extends AbstractNut {
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(nut.getOriginalNuts()));
             }
 
+            bytes.setIsCompressed(nut.isCompressed());
             bytes.setProxyUri(nut.getProxyUri());
 
             if (nut.getReferencedNuts() != null && nut.getReferencedNuts() != bytes.getReferencedNuts()) {

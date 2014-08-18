@@ -50,7 +50,6 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +60,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URLDecoder;
 import java.util.HashMap;
@@ -79,11 +77,6 @@ import java.util.regex.Pattern;
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
-
-    /**
-     * Servlet request supporting GZIP or not during workflow processing.
-     */
-    private static final ThreadLocal<Boolean> CAN_GZIP = new ThreadLocal<Boolean>();
 
     /**
      * Serial version UID.
@@ -106,11 +99,6 @@ public class WuicServlet extends HttpServlet {
     private Map<Long, Integer> errorCodeToHttpCode;
 
     /**
-     * The charset used to write the response.
-     */
-    private final String charset;
-
-    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -119,39 +107,6 @@ public class WuicServlet extends HttpServlet {
         errorCodeToHttpCode = new HashMap<Long, Integer>();
         errorCodeToHttpCode.put(ErrorCode.NUT_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
         errorCodeToHttpCode.put(ErrorCode.WORKFLOW_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
-        charset = System.getProperty("file.encoding");
-    }
-
-    /**
-     * <p>
-     * Indicates if the {@link HttpServletRequest} bound to the current {@link #CAN_GZIP} thread local supports GZIP.
-     * </p>
-     *
-     * @return {@code true} if it supports GZIP or if not http request is bound, {@code false} otherwise
-     */
-    public static boolean canGzip() {
-        final Boolean canGzip = CAN_GZIP.get();
-        return canGzip == null || canGzip;
-    }
-
-    /**
-     * <p>
-     * Indicates if the given {@link HttpServletRequest} supports GZIP or not in {@link #CAN_GZIP} thread local.
-     * </p>
-     */
-    private static void canGzip(final HttpServletRequest request) {
-        final Boolean can;
-
-        if (request != null) {
-            final String acceptEncoding = request.getHeader("Accept-Encoding");
-
-            // Accept-Encoding must be set and GZIP specific
-            can = acceptEncoding != null && acceptEncoding.contains("gzip");
-        } else {
-            can = Boolean.TRUE;
-        }
-
-        CAN_GZIP.set(can);
     }
 
     /**
@@ -201,8 +156,9 @@ public class WuicServlet extends HttpServlet {
             response.getWriter().println("Expected URL pattern: [workflowId]/[timestamp]/[nutName]");
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
+            final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(request);
+
             try {
-                canGzip(request);
                 writeNut(URLDecoder.decode(matcher.group(1), "UTF-8"),
                         URLDecoder.decode(matcher.group(NumberUtils.TWO), "UTF-8"),
                         response);
@@ -216,7 +172,7 @@ public class WuicServlet extends HttpServlet {
                 response.getWriter().println(we.getMessage());
                 response.setStatus(httpCode);
             } finally {
-                CAN_GZIP.remove();
+                r.run();
             }
         }
     }
@@ -236,30 +192,10 @@ public class WuicServlet extends HttpServlet {
 
         // Get the nuts workflow
         final Nut nut = WuicJeeContext.getWuicFacade().runWorkflow(workflowId, nutName);
-        InputStream is = null;
 
         // Nut found
         if (nut != null) {
-            try {
-                response.setCharacterEncoding(charset);
-                response.setContentType(nut.getNutType().getMimeType());
-
-                if (canGzip()) {
-                    response.setHeader("Content-Encoding", "gzip");
-                    response.setHeader("Vary", "Accept-Encoding");
-                }
-
-                // We set a far expiration date because we assume that polling will change the timestamp in path
-                response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
-
-                is = nut.openStream();
-                IOUtils.copyStream(is, response.getOutputStream());
-                response.getOutputStream().flush();
-            } catch (IOException ioe) {
-                throw new StreamException(ioe);
-            } finally {
-                IOUtils.close(is);
-            }
+            HttpRequestThreadLocal.INSTANCE.write(nut, response);
         } else {
             throw new NutNotFoundException(nutName, workflowId);
         }
@@ -326,7 +262,7 @@ public class WuicServlet extends HttpServlet {
          */
         @Override
         public EngineRequest beforeProcess(final EngineRequest request) {
-            final Boolean canGzip = CAN_GZIP.get();
+            final Boolean canGzip = HttpRequestThreadLocal.INSTANCE.canGzip();
 
             if (canGzip != null && !canGzip) {
                 return new EngineRequest(request.getWorkflowId(), request.getWorkflowId() + "-ungzip", request);

@@ -67,7 +67,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
@@ -120,18 +119,12 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private boolean virtualContextPath;
 
     /**
-     * The charset used to write the response.
-     */
-    private final String charset;
-
-    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public HtmlParserFilter() {
         workflowIds = new HashMap<String, String>();
-        charset = System.getProperty("file.encoding");
     }
 
     /**
@@ -177,7 +170,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
-        response.setCharacterEncoding(charset);
         final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper((HttpServletResponse) response);
 
         chain.doFilter(request, wrapper);
@@ -209,14 +201,12 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
                 final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
                 InputStream is = null;
+                final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(HttpServletRequest.class.cast(request));
 
                 try {
-                    final Nut nut = nuts.get(0);
-                    is = nut.openStream();
-                    final String body = IOUtils.readString(new InputStreamReader(is));
-                    response.setContentLength(body.length());
-                    response.getWriter().print(body);
+                    HttpRequestThreadLocal.INSTANCE.write(nuts.get(0), HttpServletResponse.class.cast(response));
                 } finally {
+                    r.run();
                     IOUtils.close(is);
                 }
             } catch (WuicException we) {

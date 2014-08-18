@@ -43,11 +43,11 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.GzipEngine;
-import com.github.wuic.servlet.WuicServlet;
+import com.github.wuic.servlet.HttpRequestThreadLocal;
 
 /**
  * <p>
- * This engine GZIP nut content served by {@link WuicServlet}.
+ * This engine GZIP nut content served requested by {@link HttpRequestThreadLocal}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -74,6 +74,6 @@ public class ServletGzipEngine extends GzipEngine {
      */
     @Override
     public Boolean works() {
-        return WuicServlet.canGzip();
+        return HttpRequestThreadLocal.INSTANCE.canGzip();
     }
 }
