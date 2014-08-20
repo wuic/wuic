@@ -7,6 +7,7 @@ import com.github.wuic.util.IOUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -108,7 +109,10 @@ public enum HttpRequestThreadLocal implements Runnable {
                 is = nut.isCompressed() ? new GZIPInputStream(nut.openStream()) : nut.openStream();
             }
 
-            IOUtils.copyStream(is, response.getOutputStream());
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            IOUtils.copyStream(is, bos);
+            response.setContentLength(bos.toByteArray().length);
+            response.getOutputStream().write(bos.toByteArray());
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         } finally {
