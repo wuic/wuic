@@ -40,10 +40,9 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.nut.AbstractNut;
+import com.github.wuic.util.FutureLong;
 
 import java.io.InputStream;
-import java.math.BigInteger;
 
 /**
  * <p>
@@ -72,8 +71,8 @@ public class NotReachableNut extends AbstractNut {
      * @param heapId the nut's heap
      * @param version the version number
      */
-    public NotReachableNut(final String name, final NutType nutType, final String heapId, final BigInteger version) {
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, version);
+    public NotReachableNut(final String name, final NutType nutType, final String heapId, final Long version) {
+        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, new FutureLong(version));
         heap = heapId;
     }
 

@@ -145,7 +145,7 @@ public class GzipEngine extends NodeEngine {
             gos = new GZIPOutputStream(bos);
             IOUtils.copyStream(is, gos);
             gos.close();
-            final Nut compress = new ByteArrayNut(bos.toByteArray(), nut.getName(), nut.getNutType(), Arrays.asList(nut));
+            final Nut compress = new ByteArrayNut(bos.toByteArray(), nut.getName(), nut.getNutType(), nut);
             compress.setIsCompressed(Boolean.TRUE);
 
             if (nut.getReferencedNuts() != null) {

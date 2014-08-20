@@ -43,6 +43,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -125,7 +126,7 @@ public abstract class LineInspector {
                     "/",
                     request.getContextPath(),
                     request.getWorkflowId(),
-                    nut.getVersionNumber().toString(),
+                    String.valueOf(NutUtils.getVersionNumber(nut)),
                     renamed.getName()));
         } else {
             replacement.append(proxy);

@@ -42,8 +42,8 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -197,7 +197,7 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public BigInteger getVersionNumber() {
+    public Future<Long> getVersionNumber() {
         return wrapped.getVersionNumber();
     }
 

@@ -63,7 +63,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -165,7 +164,7 @@ public class HtmlInspectorEngineTest {
         };
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, BigInteger.ONE);
+        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
@@ -215,7 +214,7 @@ public class HtmlInspectorEngineTest {
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, BigInteger.ONE);
+        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);

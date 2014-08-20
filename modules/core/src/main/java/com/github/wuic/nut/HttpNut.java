@@ -43,8 +43,8 @@ import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -72,7 +72,7 @@ public class HttpNut extends AbstractNut {
      * @param nutType the path type
      * @param version the version
      */
-    public HttpNut(final String name, final URL url, final NutType nutType, final BigInteger version) {
+    public HttpNut(final String name, final URL url, final NutType nutType, final Future<Long> version) {
         super(name, nutType, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, version);
         nutUrl = url;
     }

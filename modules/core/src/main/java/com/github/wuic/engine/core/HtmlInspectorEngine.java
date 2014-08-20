@@ -59,7 +59,8 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
-import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.TerFunction;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
@@ -72,7 +73,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +109,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     /**
      * We use a specific parser for each matched group. Store them in a TreeMap to ensure that lower groups will be tested before higher.
      */
-    private static final Map<Integer, BiFunction<String, ProxyNutDao, String>> PARSERS = new TreeMap<Integer, BiFunction<String,ProxyNutDao,String>>() {
+    private static final Map<Integer, TerFunction<String, ProxyNutDao, String, String>> PARSERS =
+            new TreeMap<Integer, TerFunction<String, ProxyNutDao, String, String>>() {
         {
             put(NumberUtils.SIX, new HrefParser());
         }
@@ -237,10 +239,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.4
      */
-    private abstract static class ScriptParser implements BiFunction<String, ProxyNutDao, String> {
+    private abstract static class ScriptParser implements TerFunction<String, ProxyNutDao, String, String> {
 
         /**
          * <p>
@@ -273,7 +275,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String s, final ProxyNutDao proxy) {
+        public String apply(final String s, final ProxyNutDao proxy, final String nutName) {
             if (s.contains("data-wuic-skip")) {
                 return null;
             }
@@ -312,15 +314,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 final int end = s.indexOf('<', start - 1);
                 final byte[] content = s.substring(start, end).getBytes();
 
+                // Create nut
+                final NutType nt = getNutType();
+                final String retval = String.format("%s%s", nutName, nt.getExtensions()[0]);
+
                 // Sign content
                 final MessageDigest md = IOUtils.newMessageDigest();
                 md.update(content);
-                final BigInteger id = new BigInteger(md.digest());
-
-                // Create nut
-                final NutType nt = getNutType();
-                final String retval = String.format("%s%s", id.toString(NumberUtils.SIXTEEN), nt.getExtensions()[0]);
-                proxy.addRule(retval, new ByteArrayNut(content, retval, nt, id));
+                proxy.addRule(retval, new ByteArrayNut(content, retval, nt, ByteBuffer.wrap(md.digest()).getLong()));
 
                 return retval;
             } else {
@@ -335,7 +336,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.4
      */
     private static class JsParser extends ScriptParser {
@@ -371,7 +372,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.4
      */
     private static class HrefParser extends ScriptParser {
@@ -407,7 +408,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
+     * @version 1.1
      * @since 0.4.4
      */
     private static class CssParser extends ScriptParser {
@@ -446,13 +447,13 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.0
      * @since 0.4.4
      */
-    private static class DefaultParser implements BiFunction<String, ProxyNutDao, String> {
+    private static class DefaultParser implements TerFunction<String, ProxyNutDao, String, String> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String s, final ProxyNutDao proxyNutDao) {
+        public String apply(final String s, final ProxyNutDao proxyNutDao, final String nutName) {
             return null;
         }
     }
@@ -483,12 +484,16 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * Builds a new instance.
          * </p>
          *
+         * @param groupName the nut name
          * @param groups captured statements
          * @param proxyNutDao the DAO to use when computing path from collected data
          * @param rootPath the root path of content
          * @throws StreamException if any I/O error occurs
          */
-        private ParseInfo(final Map<String, Integer> groups, final ProxyNutDao proxyNutDao, final String rootPath)
+        private ParseInfo(final String groupName,
+                          final Map<String, Integer> groups,
+                          final ProxyNutDao proxyNutDao,
+                          final String rootPath)
                 throws StreamException {
             final String[] groupPaths = new String[groups.size()];
             this.capturedStatements = new ArrayList<String>(groups.keySet());
@@ -497,7 +502,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             // Gets the appropriate parser for each captured group according to their position and compute path
             for (final Map.Entry<String, Integer> entry : groups.entrySet()) {
-                final String path = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao);
+                final String path = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao, groupName + cpt);
 
                 // Path is null, do not replace anything
                 if (path != null) {
@@ -532,7 +537,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             }
 
             final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
-            final String heapId = new BigInteger(hash).toString(NumberUtils.SIXTEEN);
+            final String heapId = StringUtils.toHexString(hash);
             heap = new NutsHeap(filteredPath, proxyNutDao, heapId);
         }
 
@@ -583,10 +588,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      *
      * @param content the HTML content to parse
      * @param dao the DAO
+     * @param nutName the nut name
      * @return the parsed HTML
      * @throws WuicException if WUIC fails to configure context or process created workflow
      */
-    private List<ParseInfo> parse(final String content, final NutDao dao, final String rootPath) throws WuicException {
+    private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException {
         // Create a proxy that maps inline scripts
         final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
 
@@ -597,6 +603,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         // All the paths we have currently collected
         final Map<String, Integer> paths = new LinkedHashMap<String, Integer>();
         final List<ParseInfo> retval = new ArrayList<ParseInfo>();
+        int no = 0;
 
         // Finds desired groups
         while (matcher.find()) {
@@ -610,7 +617,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                  * together. Consequently, we create here a separate heap.
                  */
                 if (previousGroupEnd != -1 && !content.substring(previousGroupEnd + 1, matcher.start()).trim().isEmpty()) {
-                    new ParseInfo(paths, proxy, rootPath).addTo(retval);
+                    new ParseInfo(nutName + (no++), paths, proxy, rootPath).addTo(retval);
                     paths.clear();
                 }
 
@@ -630,7 +637,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         // Create a heap for remaining paths
         if (!paths.isEmpty()) {
-            new ParseInfo(paths, proxy, rootPath).addTo(retval);
+            new ParseInfo(nutName + (no), paths, proxy, rootPath).addTo(retval);
         }
 
         return retval;
@@ -663,7 +670,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         final int endParent = nut.getName().lastIndexOf('/');
         final String rootPath = endParent == -1 ? "" : nut.getName().substring(0, endParent);
-        final List<ParseInfo> parseInfoList = parse(content, request.getHeap().findDaoFor(nut), rootPath);
+        final List<ParseInfo> parseInfoList = parse(nut.getName(), content, request.getHeap().findDaoFor(nut), rootPath);
 
         final StringBuilder transform = new StringBuilder(content);
         int end = 0;
@@ -705,7 +712,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             }
         }
 
-        final Nut retval = new ByteArrayNut(transform.toString().getBytes(), nut.getName(), nut.getNutType(), nut.getVersionNumber());
+        final Nut retval = new ByteArrayNut(transform.toString().getBytes(), nut.getName(), nut.getNutType(), NutUtils.getVersionNumber(nut));
 
         for (final Nut ref : referenced) {
             retval.addReferencedNut(ref);

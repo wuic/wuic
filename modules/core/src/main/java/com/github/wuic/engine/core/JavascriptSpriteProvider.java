@@ -44,6 +44,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
     @Override
     public Nut getSprite(final String url, final String heapId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
-        final ByteArrayNut retval = new ByteArrayNut(nutNameSuffix + "sprites.js", NutType.JAVASCRIPT, originals);
+        final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder jsBuilder = new StringBuilder();
 
         // Inject instantiation
@@ -106,13 +107,11 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
             jsBuilder.append("\",\n\th : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\",\n\turl : \"");
-            jsBuilder.append(IOUtils.mergePath("/", url, retval.getVersionNumber().toString(), image));
+            jsBuilder.append(IOUtils.mergePath("/", url, String.valueOf(versionNumber), image));
             jsBuilder.append("\"\n};\n");
         }
 
         // Make a byte array and return nut wrapper
-        retval.setBytes(jsBuilder.toString().getBytes());
-
-        return retval;
+        return new ByteArrayNut(jsBuilder.toString().getBytes(), nutNameSuffix + "sprites.js", NutType.JAVASCRIPT, originals, versionNumber);
     }
 }

@@ -44,12 +44,17 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -518,7 +523,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
         for (final Nut nut : nuts) {
             // Nut has changed
-            if (nut.getName().equals(path) && !nut.getVersionNumber().equals(new BigInteger(timestamp.toString()))) {
+            if (nut.getName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
                 // We don't need to be notified anymore
                 return notifyListeners();
             }

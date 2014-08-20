@@ -46,6 +46,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.AnnotationDetectorScanner;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
@@ -61,7 +62,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.lang.annotation.Annotation;
-import java.math.BigInteger;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -120,11 +120,11 @@ public class UtilityTest extends WuicTest {
         final Nut fifth = Mockito.mock(Nut.class);
         final List<Nut> input = Arrays.asList(first, second, third, fourth, fifth);
 
-        Mockito.when(first.getVersionNumber()).thenReturn(new BigInteger("1"));
-        Mockito.when(second.getVersionNumber()).thenReturn(new BigInteger("1"));
-        Mockito.when(third.getVersionNumber()).thenReturn(new BigInteger("1"));
-        Mockito.when(fourth.getVersionNumber()).thenReturn(new BigInteger("1"));
-        Mockito.when(fifth.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(first.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(second.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(third.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(fourth.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(fifth.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         Mockito.when(first.getNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(second.getNutType()).thenReturn(NutType.CSS);
@@ -372,7 +372,7 @@ public class UtilityTest extends WuicTest {
     public void htmlJavascriptImportTest() throws IOException {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
-        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.js\""));
     }
@@ -387,7 +387,7 @@ public class UtilityTest extends WuicTest {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
-        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.css\""));
     }
 
@@ -398,7 +398,7 @@ public class UtilityTest extends WuicTest {
     public void getUrltTest() {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
-        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         // Served nut
         Mockito.when(nut.getName()).thenReturn("foo.css");

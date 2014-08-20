@@ -52,7 +52,7 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +67,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -187,7 +187,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
                     // Workflow not already created, compute it
                     if (!exists) {
-                        workflowId = new BigInteger(IOUtils.digest(key)).toString(NumberUtils.SIXTEEN);
+                        workflowId = StringUtils.toHexString(IOUtils.digest(key));
                         workflowIds.put(key, workflowId);
                     } else {
                         workflowId = workflowIds.get(key);
@@ -272,7 +272,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         try {
             final ProxyNutDao dao = new ProxyNutDao("", nutDao);
             final String name = path.endsWith("/") ? (path + NutType.HTML.getExtensions()[0]) : path;
-            dao.addRule(path, new ByteArrayNut(content, name, NutType.HTML, new BigInteger(IOUtils.digest(content))));
+            dao.addRule(path, new ByteArrayNut(content, name, NutType.HTML, ByteBuffer.wrap(IOUtils.digest(content)).getLong()));
 
             contextBuilder.tag(getClass().getName())
                     .nutDao(path, dao)

@@ -44,6 +44,7 @@ import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
+import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,11 +55,11 @@ import org.slf4j.LoggerFactory;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -80,6 +81,20 @@ public class AbstractNutDaoTest {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
+     * A byte array.
+     */
+    private static final byte[] BYTES = new byte[4000];
+
+    /**
+     * Age for mock DAO.
+     */
+    private static final Long BEGIN_AGE = System.currentTimeMillis();
+
+    static {
+        new Random().nextBytes(BYTES);
+    }
+
+    /**
      * <p>
      * A mocked DAO for tests.
      * </p>
@@ -96,6 +111,26 @@ public class AbstractNutDaoTest {
         private Long age;
 
         /**
+         * Change timestamps after x ms.
+         */
+        private Long updateAfterMs;
+
+        /**
+         * <p>
+         * Creates a new instance.
+         * </p>
+         *
+         * @param pollingSeconds polling interval
+         * @param updateAfter change timestamps after x ms
+         * @param contentBasedVersionNumber use version number computed from content
+         */
+        private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber) {
+            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, contentBasedVersionNumber);
+            age = BEGIN_AGE;
+            updateAfterMs = updateAfter;
+        }
+
+        /**
          * <p>
          * Creates a new instance.
          * </p>
@@ -103,8 +138,7 @@ public class AbstractNutDaoTest {
          * @param pollingSeconds polling interval
          */
         private MockNutDaoTest(final int pollingSeconds) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, false);
-            age = System.currentTimeMillis();
+            this(pollingSeconds, 1500L, false);
         }
 
         /**
@@ -115,8 +149,7 @@ public class AbstractNutDaoTest {
          * @param contentBasedVersionNumber use version number computed from content
          */
         private MockNutDaoTest(final Boolean contentBasedVersionNumber) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, -1, contentBasedVersionNumber);
-            age = System.currentTimeMillis();
+            this(-1, null, contentBasedVersionNumber);
         }
 
         /**
@@ -134,7 +167,12 @@ public class AbstractNutDaoTest {
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut mock = mock(Nut.class);
             when(mock.getName()).thenReturn(realPath);
-            when(mock.getVersionNumber()).thenReturn(new BigInteger("1"));
+
+            try {
+                when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath).get()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             return mock;
         }
@@ -144,7 +182,7 @@ public class AbstractNutDaoTest {
          */
         @Override
         protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
-            if (age + 1500L < System.currentTimeMillis()) {
+            if (updateAfterMs != null && age + updateAfterMs < System.currentTimeMillis()) {
                 age = System.currentTimeMillis();
             }
 
@@ -158,18 +196,7 @@ public class AbstractNutDaoTest {
          */
         @Override
         public InputStream newInputStream(final String path) throws StreamException {
-            final AtomicInteger bits = new AtomicInteger(4000);
-
-            return new InputStream() {
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public int read() throws IOException {
-                    return bits.decrementAndGet();
-                }
-            };
+            return new ByteArrayInputStream(BYTES);
         }
     }
 
@@ -185,9 +212,9 @@ public class AbstractNutDaoTest {
         final NutDao third = new MockNutDaoTest(false);
         final NutDao fourth = new MockNutDaoTest(false);
 
-        Assert.assertEquals(first.create("").get(0).getVersionNumber(), second.create("").get(0).getVersionNumber());
-        Assert.assertNotSame(second.create("").get(0).getVersionNumber(), third.create("").get(0).getVersionNumber());
-        Assert.assertEquals(third.create("").get(0).getVersionNumber(), fourth.create("").get(0).getVersionNumber());
+        Assert.assertEquals(first.create("").get(0).getVersionNumber().get(), second.create("").get(0).getVersionNumber().get());
+        Assert.assertNotEquals(second.create("").get(0).getVersionNumber().get(), third.create("").get(0).getVersionNumber().get());
+        Assert.assertEquals(third.create("").get(0).getVersionNumber().get(), fourth.create("").get(0).getVersionNumber().get());
     }
 
     /**
@@ -314,7 +341,7 @@ public class AbstractNutDaoTest {
         final AbstractNutDao dao = new MockNutDaoTest(1);
         final Nut nut = mock(Nut.class);
         when(nut.getName()).thenReturn("mock");
-        when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         for (int i = 0; i < 750; i++) {
             new Thread(new Runnable() {

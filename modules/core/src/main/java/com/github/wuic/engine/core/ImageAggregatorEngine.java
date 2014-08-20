@@ -50,6 +50,7 @@ import com.github.wuic.nut.ImageNut;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -157,7 +158,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
                 throw new StreamException(ioe);
             }
 
-            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals);
+            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals, NutUtils.getVersionNumber(originals));
 
             return Arrays.asList(res);
         }

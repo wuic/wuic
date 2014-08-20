@@ -56,7 +56,6 @@ import com.github.wuic.util.NumberUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -143,10 +142,10 @@ public class StaticEngine extends NodeEngine {
                     if (!path.contains("http://")) {
                         final int versionDelimiterIndex = path.indexOf('/');
                         final String name = path.substring(versionDelimiterIndex + 1);
-                        final BigInteger version = new BigInteger(path.substring(0, versionDelimiterIndex));
+                        final Long version = Long.parseLong(path.substring(0, versionDelimiterIndex));
                         retval.add(new NotReachableNut(name, nutType, request.getHeap().getId(), version));
                     } else {
-                        retval.add(new NotReachableNut(path, nutType, request.getHeap().getId(), BigInteger.ZERO));
+                        retval.add(new NotReachableNut(path, nutType, request.getHeap().getId(), 0L));
                     }
                 }
 

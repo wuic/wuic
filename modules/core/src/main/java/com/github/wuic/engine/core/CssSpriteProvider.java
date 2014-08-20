@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
     @Override
     public Nut getSprite(final String url, final String workflowId, final String nutNameSuffix, final List<Nut> originals)
             throws StreamException {
-        final ByteArrayNut retval = new ByteArrayNut(nutNameSuffix + "sprites.css", NutType.CSS, originals);
+        final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder cssBuilder = new StringBuilder();
 
         for (String name : regions.keySet()) {
@@ -75,7 +76,7 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
             cssBuilder.append(".");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(IOUtils.mergePath("/", url, retval.getVersionNumber().toString(), image));
+            cssBuilder.append(IOUtils.mergePath("/", url, String.valueOf(versionNumber), image));
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
@@ -88,7 +89,6 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
         }
 
         // Make a byte array and return wrapper nut
-        retval.setBytes(cssBuilder.toString().getBytes());
-        return retval;
+        return new ByteArrayNut(cssBuilder.toString().getBytes(), nutNameSuffix + "sprites.css", NutType.CSS, originals, versionNumber);
     }
 }

@@ -41,12 +41,13 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +55,12 @@ import java.util.List;
 /**
  * <p>
  * Represents an in-memory nut which can be created on the fly in any context.
+ * </p>
+ *
+ * <p>
+ * This class also aims to provide a fully {@link java.io.Serializable} {@link Nut}.
+ * Since the {@link java.util.concurrent.Future} implementation which provides the version number could is not
+ * always a {@link java.io.Serializable}, then the version number must be directly provided.
  * </p>
  * 
  * @author Guillaume DROUET
@@ -74,17 +81,16 @@ public final class ByteArrayNut extends AbstractNut {
     
     /**
      * <p>
-     * Builds a new {@code Nut} transformed nut based on a given byte array.
+     * Builds a new {@code Nut} transformed nut based on a given byte array and only one original nut.
      * </p>
      * 
      * @param bytes the byte array
      * @param name the nut name
      * @param nt the {@link NutType}
-     * @param originalNuts the original nuts
+     * @param originalNut the original nut
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<Nut> originalNuts) {
-        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, originalNuts);
-        byteArray = Arrays.copyOf(bytes, bytes.length);
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Nut originalNut) {
+        this(bytes, name, nt, Arrays.asList(originalNut), NutUtils.getVersionNumber(originalNut));
     }
 
     /**
@@ -92,13 +98,16 @@ public final class ByteArrayNut extends AbstractNut {
      * Builds a new {@code Nut} transformed nut based on a {@code null} byte array.
      * </p>
      *
+     * @param bytes the byte array
      * @param name the nut name
      * @param nt the {@link NutType}
      * @param originalNuts the original nuts
+     * @param version the version number
      */
-    public ByteArrayNut(final String name, final NutType nt, final List<Nut> originalNuts) {
-        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, originalNuts);
-        byteArray = null;
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<Nut> originalNuts, final Long version) {
+        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, new FutureLong(version));
+        setOriginalNuts(originalNuts);
+        byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 
     /**
@@ -111,8 +120,8 @@ public final class ByteArrayNut extends AbstractNut {
      * @param nt the {@link NutType}
      * @param version the version number
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final BigInteger version) {
-        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, version);
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Long version) {
+        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, new FutureLong(version));
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 
@@ -134,7 +143,8 @@ public final class ByteArrayNut extends AbstractNut {
             is = nut.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             IOUtils.copyStream(is, os);
-            setBytes(os.toByteArray());
+            final byte[] bytes = os.toByteArray();
+            byteArray = Arrays.copyOf(bytes, bytes.length);
         } finally {
             IOUtils.close(is);
         }
@@ -181,9 +191,10 @@ public final class ByteArrayNut extends AbstractNut {
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), nut.getVersionNumber());
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut));
             } else {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(nut.getOriginalNuts()));
+                final List<Nut> o = nut.getOriginalNuts();
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
             }
 
             bytes.setIsCompressed(nut.isCompressed());
@@ -199,17 +210,6 @@ public final class ByteArrayNut extends AbstractNut {
         } finally {
             IOUtils.close(is);
         }
-    }
-
-    /**
-     * <p>
-     * Sets the given array as byte array content.
-     * </p>
-     *
-     * @param bytes the bytes
-     */
-    public void setBytes(final byte[] bytes) {
-        byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 
     /**

@@ -48,6 +48,7 @@ import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,7 +59,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,7 +104,7 @@ public class CssInspectorTest {
                 Mockito.when(nut.getName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
                 Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
                 Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
-                Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+                Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
                 retval.add(nut);
                 return retval;
@@ -116,7 +116,7 @@ public class CssInspectorTest {
         final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
         final List<Nut> nuts = new ArrayList<Nut>();
         final Nut nut = Mockito.mock(Nut.class);
-        Mockito.when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getName()).thenAnswer(new Answer<Object>() {
 

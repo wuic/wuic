@@ -124,7 +124,7 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Digests each {@code String} in the given array and return the corresponding MD5 signature.
+     * Digests each {@code String} in the given array and return the corresponding signature.
      * </p>
      *
      * @param strings the string array
@@ -142,7 +142,7 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Digests each {@code byte} array in the given array and return the corresponding MD5 signature.
+     * Digests each {@code byte} array in the given array and return the corresponding signature.
      * </p>
      *
      * @param bytes the byte arrays

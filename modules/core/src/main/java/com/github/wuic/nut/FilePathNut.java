@@ -43,7 +43,7 @@ import com.github.wuic.path.FilePath;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -77,7 +77,7 @@ public class FilePathNut extends AbstractNut {
      * @param ft the path type
      * @param versionNumber the nut's version number
      */
-    public FilePathNut(final FilePath p, final String name, final NutType ft, final BigInteger versionNumber) {
+    public FilePathNut(final FilePath p, final String name, final NutType ft, final Future<Long> versionNumber) {
         super(name, ft, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, versionNumber);
         path = p;
     }

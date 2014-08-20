@@ -48,7 +48,7 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
+ * @version 1.1
  * @since 0.4.1
  */
 public final class HtmlUtil {
@@ -136,7 +136,7 @@ public final class HtmlUtil {
         } else if (nut.getName().startsWith("http://")) {
             return nut.getName();
         } else {
-            return IOUtils.mergePath(workflowContextPath, nut.getVersionNumber().toString(), nut.getName());
+            return IOUtils.mergePath(workflowContextPath, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName());
         }
     }
 }

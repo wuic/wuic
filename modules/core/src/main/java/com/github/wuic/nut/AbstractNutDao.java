@@ -48,14 +48,25 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -205,7 +216,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * <p>
      * Gets the version number for the {@link Nut} the given path.
      * </p>
-     *
+     * <p/>
      * <p>
      * If the {@link AbstractNutDao#contentBasedVersionNumber} value related to
      * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
@@ -216,29 +227,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @return the version number
      * @throws StreamException if version number could not be computed
      */
-    protected BigInteger getVersionNumber(final String path) throws StreamException {
-        if (contentBasedVersionNumber) {
-            InputStream is = null;
-
-            try {
-                is = newInputStream(path);
-                final MessageDigest md = IOUtils.newMessageDigest();
-                final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
-                int offset;
-
-                while ((offset = is.read(buffer)) != -1) {
-                    md.update(buffer, 0, offset);
-                }
-
-                return new BigInteger(md.digest());
-            } catch (IOException ioe) {
-                throw new StreamException(ioe);
-            } finally {
-                IOUtils.close(is);
-            }
-        } else {
-            return new BigInteger(getLastUpdateTimestampFor(path).toString());
-        }
+    protected Future<Long> getVersionNumber(final String path) throws StreamException {
+        return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path));
     }
 
     /**
@@ -544,7 +534,66 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return String.format("%s with base path %s", getClass().getName(), getBasePath());
+    }
+
+    /**
+     * <p>
+     * This {@link Callable} is used to compute asynchronously the version number according to the value set to
+     * {@link #contentBasedVersionNumber} member.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class VersionNumberCallable implements Callable<Long> {
+
+        /**
+         * The path corresponding to the resource.
+         */
+        private String path;
+
+        /**
+         * Builds a new instance.
+         *
+         * @param p the path
+         */
+        private VersionNumberCallable(final String p) {
+            path = p;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Long call() throws Exception {
+            log.debug("Computing asynchronously version number for path '{}'. Content based: {}", path, contentBasedVersionNumber);
+
+            if (contentBasedVersionNumber) {
+                InputStream is = null;
+
+                try {
+                    is = newInputStream(path);
+                    final MessageDigest md = IOUtils.newMessageDigest();
+                    final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
+                    int offset;
+
+                    while ((offset = is.read(buffer)) != -1) {
+                        md.update(buffer, 0, offset);
+                    }
+
+                    return ByteBuffer.wrap(md.digest()).getLong();
+                } catch (IOException ioe) {
+                    throw new StreamException(ioe);
+                } finally {
+                    IOUtils.close(is);
+                }
+            } else {
+                return getLastUpdateTimestampFor(path);
+            }
+        }
     }
 }

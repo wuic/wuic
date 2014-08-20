@@ -50,12 +50,38 @@ package com.github.wuic.util;
 public final class StringUtils {
 
     /**
+     * Hexadecimal possibles characters.
+     */
+    public static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>
      */
     private StringUtils() {
 
+    }
+
+    /**
+     * <p>
+     * Converts bytes to hexadecimal {@code String}.
+     * See: http://stackoverflow.com/questions/9655181/convert-from-byte-array-to-hex-string-in-java
+     * </p>
+     *
+     * @param bytes bytes
+     * @return hexadecimal string
+     */
+    public static String toHexString(final byte[] bytes) {
+        char[] hexChars = new char[bytes.length * NumberUtils.TWO];
+
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & NumberUtils.TWO_FIVE_FIVE;
+            hexChars[j * NumberUtils.TWO] = HEX_ARRAY[v >>> NumberUtils.FOUR];
+            hexChars[j * NumberUtils.TWO + 1] = HEX_ARRAY[v & NumberUtils.FIFTEEN];
+        }
+
+        return new String(hexChars);
     }
 
     /**

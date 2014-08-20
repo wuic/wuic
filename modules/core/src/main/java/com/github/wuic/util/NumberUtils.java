@@ -85,9 +85,14 @@ public final class NumberUtils {
     public static final int FOURTEEN = 14;
 
     /**
-     * Sixteen. Use this constant to evict checkstyle issue.
+     * Fifteen.
      */
-    public static final int SIXTEEN = 16;
+    public static final int FIFTEEN = 15;
+
+    /**
+     * Two hundred and fifty five.
+     */
+    public static final int TWO_FIVE_FIVE = 255;
 
     /**
      * One thousand. Use this constant to evict checkstyle issue.

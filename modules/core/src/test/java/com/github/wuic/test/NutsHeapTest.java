@@ -41,7 +41,11 @@ package com.github.wuic.test;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.*;
+import com.github.wuic.nut.AbstractNutDao;
+import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,8 +53,11 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
-import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -112,7 +119,7 @@ public class NutsHeapTest {
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut retval = Mockito.mock(Nut.class);
             Mockito.when(retval.getName()).thenReturn(realPath);
-            Mockito.when(retval.getVersionNumber()).thenReturn(new BigInteger(getLastUpdateTimestampFor(realPath).toString()));
+            Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
 
             return retval;
         }
@@ -129,7 +136,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(String path) throws StreamException {
+        public InputStream newInputStream(final String path) throws StreamException {
             return null;
         }
     }

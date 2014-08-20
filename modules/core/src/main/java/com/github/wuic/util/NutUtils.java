@@ -39,8 +39,13 @@
 package com.github.wuic.util;
 
 import com.github.wuic.nut.Nut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * <p>
@@ -52,6 +57,11 @@ import java.util.List;
  * @since 0.4.4
  */
 public final class NutUtils {
+
+    /**
+     * Logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(NutUtils.class);
 
     /**
      * <p>
@@ -109,5 +119,44 @@ public final class NutUtils {
         }
 
         return null;
+    }
+
+
+    /**
+     * <p>
+     * Gets the version number from the given nut.
+     * </p>
+     *
+     * @param nut the nut
+     * @return the version number string representation, 0 if can't retrieve it
+     */
+    public static Long getVersionNumber(final Nut nut) {
+        try {
+            return nut.getVersionNumber().get();
+        } catch (ExecutionException ee) {
+            LOGGER.error("Can't get the version number. Returning 0...", ee);
+        } catch (InterruptedException ie) {
+            LOGGER.error("Can't get the version number. Returning 0...", ie);
+        }
+
+        return 0L;
+    }
+
+    /**
+     * <p>
+     * Computes the version number based on version number retrieved from given nuts.
+     * </p>
+     *
+     * @param nuts the nuts
+     * @return the computed version number
+     */
+    public static Long getVersionNumber(final List<Nut> nuts) {
+        final MessageDigest md = IOUtils.newMessageDigest();
+
+        for (final Nut o : nuts) {
+            md.update(ByteBuffer.allocate(NumberUtils.HEIGHT).putLong(getVersionNumber(o)).array());
+        }
+
+        return  ByteBuffer.wrap(md.digest()).getLong();
     }
 }

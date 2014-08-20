@@ -44,6 +44,7 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +55,6 @@ import org.mockito.Mockito;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +84,7 @@ public class GzipEngineTest {
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("var foo = 1;".getBytes()));
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(nut.getVersionNumber()).thenReturn(BigInteger.ONE);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.isBinaryReducible()).thenReturn(true);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -116,7 +116,7 @@ public class GzipEngineTest {
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("var foo = 1;".getBytes()));
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(nut.getVersionNumber()).thenReturn(BigInteger.ONE);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));

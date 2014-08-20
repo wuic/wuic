@@ -48,7 +48,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
@@ -174,7 +173,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
             nameBuilder.insert(nut.getName().lastIndexOf('.'), renameExtensionPrefix);
 
             // Now create nut
-            final Nut res = new ByteArrayNut(os.toByteArray(), nameBuilder.toString(), nut.getNutType(), Arrays.asList(nut));
+            final Nut res = new ByteArrayNut(os.toByteArray(), nameBuilder.toString(), nut.getNutType(), nut);
             res.setAggregatable(nut.isAggregatable());
             res.setBinaryReducible(nut.isBinaryReducible());
             res.setTextReducible(nut.isTextReducible());

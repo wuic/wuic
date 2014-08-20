@@ -56,7 +56,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -174,7 +173,7 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
             os.write((line + "\n").getBytes());
 
             // Create and add the inspected nut with its transformations
-            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), Arrays.asList(nut));
+            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), nut);
             inspected.setCacheable(nut.isCacheable());
             inspected.setAggregatable(nut.isAggregatable());
             inspected.setTextReducible(nut.isTextReducible());

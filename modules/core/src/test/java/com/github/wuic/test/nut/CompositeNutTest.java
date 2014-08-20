@@ -41,6 +41,7 @@ package com.github.wuic.test.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import org.junit.Test;
@@ -50,7 +51,6 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -77,14 +77,14 @@ public class CompositeNutTest {
         Mockito.when(n1.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(n1.getName()).thenReturn("n1.css");
         Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
-        Mockito.when(n1.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(n1.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final Nut n2 = Mockito.mock(Nut.class);
         Mockito.when(n2.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
         Mockito.when(n2.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(n2.getName()).thenReturn("n2.css");
         Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
-        Mockito.when(n2.getVersionNumber()).thenReturn(new BigInteger("1"));
+        Mockito.when(n2.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final Nut composite = new CompositeNut(Nut[].class.cast(Arrays.asList(n1, n2).toArray()), "composite", null);
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());

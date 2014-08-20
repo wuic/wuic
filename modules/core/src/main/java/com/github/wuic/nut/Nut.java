@@ -43,8 +43,8 @@ import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -223,7 +223,7 @@ public interface Nut extends Serializable {
      *
      * @return the nut's version
      */
-    BigInteger getVersionNumber();
+    Future<Long> getVersionNumber();
 
     /**
      * <p>

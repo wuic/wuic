@@ -38,28 +38,76 @@
 
 package com.github.wuic.util;
 
+import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /**
  * <p>
- * Represents a contract inspired from Java 8 features which defines a function expecting two parameters..
+ * This {@link Future} wraps a {@code Long} to directly return when it's retrieved.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.4
- * @param <T> the first parameter
- * @param <U> the second parameter
- * @param <R> the returned type
+ * @since 0.5.0
  */
-public interface BiFunction<T, U, R> {
+public class FutureLong implements Future<Long>, Serializable {
+
+    /**
+     * The wrapped value.
+     */
+    private Long l;
 
     /**
      * <p>
-     * Applies the function contract.
+     * Builds a new instance.
      * </p>
      *
-     * @param first first parameter
-     * @param second second parameter
-     * @return returned value
+     * @param longValue the wrapped value
      */
-    R apply(T first, U second);
+    public FutureLong(final Long longValue) {
+        this.l = longValue;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCancelled() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDone() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long get() throws InterruptedException, ExecutionException {
+        return l;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return l;
+    }
 }

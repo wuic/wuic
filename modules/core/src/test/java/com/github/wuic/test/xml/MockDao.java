@@ -9,10 +9,10 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.FutureLong;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +70,7 @@ public class MockDao implements NutDao {
             nuts.add(nut);
             when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
             when(nut.isAggregatable()).thenReturn(true);
-            when(nut.getVersionNumber()).thenReturn(new BigInteger("1"));
+            when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
             return nuts;
         } catch (NutNotFoundException se) {
             throw new RuntimeException(se);

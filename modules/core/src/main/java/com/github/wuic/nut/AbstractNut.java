@@ -40,12 +40,9 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.util.IOUtils;
-
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -112,7 +109,7 @@ public abstract class AbstractNut implements Nut {
     /**
      * The nut's version number.
      */
-    private BigInteger versionNumber;
+    private Future<Long> versionNumber;
 
     /**
      * <p>
@@ -140,38 +137,6 @@ public abstract class AbstractNut implements Nut {
      * @param comp compressed or not
      * @param c cacheable or not
      * @param a aggregatable or not
-     * @param o the original nuts
-     */
-    protected AbstractNut(final String name,
-                          final NutType ft,
-                          final Boolean comp,
-                          final Boolean c,
-                          final Boolean a,
-                          final List<Nut> o) {
-        this(name, ft, comp, c, a, BigInteger.ZERO);
-        originalNuts = o;
-
-        // Computes a hash based on each original hash
-        final MessageDigest md = IOUtils.newMessageDigest();
-
-        for (final Nut original : originalNuts) {
-            md.update(original.getVersionNumber().toString().getBytes());
-        }
-
-        versionNumber = new BigInteger(md.digest());
-    }
-
-    /**
-     * <p>
-     * Creates a new instance. The nut is actually an original nut because constructor provides a version number of this
-     * nut without any original nuts.
-     * </p>
-     *
-     * @param name the nut's name
-     * @param ft the nut's type
-     * @param comp compressed or not
-     * @param c cacheable or not
-     * @param a aggregatable or not
      * @param v version number
      */
     protected AbstractNut(final String name,
@@ -179,7 +144,7 @@ public abstract class AbstractNut implements Nut {
                           final Boolean comp,
                           final Boolean c,
                           final Boolean a,
-                          final BigInteger v) {
+                          final Future<Long> v) {
         if (ft == null) {
             throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
         }
@@ -198,6 +163,17 @@ public abstract class AbstractNut implements Nut {
         referencedNuts = null;
         originalNuts = null;
         versionNumber = v;
+    }
+
+    /**
+     * <p>
+     * Sets the original nuts.
+     * </p>
+     *
+     * @param o the original nuts
+     */
+    protected void setOriginalNuts(final List<Nut> o) {
+        this.originalNuts = o;
     }
 
     /**
@@ -359,7 +335,7 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public BigInteger getVersionNumber() {
+    public Future<Long> getVersionNumber() {
         return versionNumber;
     }
 

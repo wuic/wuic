@@ -46,10 +46,10 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.FutureLong;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -96,7 +96,7 @@ public class MockDao implements NutDao {
         when(mockNutOne.isCacheable()).thenReturn(true);
         when(mockNutOne.isBinaryReducible()).thenReturn(true);
         when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
-        when(mockNutOne.getVersionNumber()).thenReturn(new BigInteger("1"));
+        when(mockNutOne.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         when(mockNutTwo.getName()).thenReturn("test.js");
         when(mockNutTwo.getNutType()).thenReturn(NutType.JAVASCRIPT);
@@ -105,7 +105,7 @@ public class MockDao implements NutDao {
         when(mockNutTwo.isCacheable()).thenReturn(true);
         when(mockNutTwo.isBinaryReducible()).thenReturn(true);
         when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
-        when(mockNutTwo.getVersionNumber()).thenReturn(new BigInteger("1"));
+        when(mockNutTwo.getVersionNumber()).thenReturn(new FutureLong(1L));
     }
 
     /**
