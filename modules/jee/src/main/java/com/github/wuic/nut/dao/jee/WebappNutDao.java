@@ -45,6 +45,7 @@ import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.jee.path.WebappDirectoryPathFactory;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.PathNutDao;
@@ -119,6 +120,13 @@ public class WebappNutDao extends PathNutDao {
      */
     @Override
     protected DirectoryPath createBaseDirectory() throws IOException {
+        if (context == null) {
+            throw new BadArgumentException(
+                    new IllegalArgumentException(
+                            String.format("context is null! Use setContext first or add %s in your descriptor file",
+                                    WuicServletContextListener.class.getName())));
+        }
+
         final Path file = IOUtils.buildPath(getBasePath(), new WebappDirectoryPathFactory(context));
 
         if (file instanceof DirectoryPath) {
