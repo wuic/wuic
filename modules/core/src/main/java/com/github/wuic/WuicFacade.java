@@ -40,6 +40,7 @@ package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
@@ -330,17 +331,18 @@ public final class WuicFacade {
      * </p>
      *
      * <p>
-     * The path should be used with the name of nuts returned when invoking {@link WuicFacade#runWorkflow(String)}.
+     * The path should be used with the name of nuts returned when invoking {@link WuicFacade#runWorkflow(String, com.github.wuic.engine.EngineType...)}.
      * </p>
      * 
      * @param id the workflow ID
      * @param path the requested path, {@code null} to retrieve all paths
+     * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
-    public synchronized Nut runWorkflow(final String id, final String path) throws WuicException {
+    public synchronized Nut runWorkflow(final String id, final String path, final EngineType ... skip) throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final Nut retval = context.process(contextPath, id, path);
+        final Nut retval = context.process(contextPath, id, path, skip);
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -352,12 +354,13 @@ public final class WuicFacade {
      * </p>
      *
      * @param id the workflow ID
+     * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
-    public synchronized List<Nut> runWorkflow(final String id) throws WuicException {
+    public synchronized List<Nut> runWorkflow(final String id, final EngineType ... skip) throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final List<Nut> retval = new ArrayList<Nut>(context.process(contextPath, id));
+        final List<Nut> retval = new ArrayList<Nut>(context.process(contextPath, id, skip));
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;

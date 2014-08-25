@@ -558,18 +558,25 @@ public final class EngineRequest {
         private List<String> nuts;
 
         /**
+         * Skipped engines.
+         */
+        private EngineType[] skip;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
          *
+         * @param s the skipped engine types
          * @param wKey the workflow key
          * @param nutsList the nuts
          * @throws StreamException if an I/O error occurs
          * @throws NutNotFoundException if given nut not normally created
          */
-        public Key(final String wKey, final List<Nut> nutsList) throws NutNotFoundException, StreamException {
+        public Key(final String wKey, final List<Nut> nutsList, final EngineType ... s) throws NutNotFoundException, StreamException {
             workflowKey = wKey;
             nuts = new ArrayList<String>(nutsList.size());
+            skip = s;
 
             for (final Nut n : nutsList) {
                 nuts.add(n.getName());
@@ -584,6 +591,7 @@ public final class EngineRequest {
             if (other instanceof Key) {
                 final Key request = (Key) other;
                 return workflowKey.equals(request.workflowKey)
+                        && Arrays.equals(skip, request.skip)
                         && CollectionUtils.difference(new HashSet<String>(nuts), new HashSet<String>(request.nuts)).isEmpty();
             } else {
                 return false;
@@ -595,7 +603,7 @@ public final class EngineRequest {
          */
         @Override
         public int hashCode() {
-            return CollectionUtils.deepHashCode(workflowKey, nuts.toArray());
+            return CollectionUtils.deepHashCode(workflowKey, nuts.toArray(), skip);
         }
 
         /**

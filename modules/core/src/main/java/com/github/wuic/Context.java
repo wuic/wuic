@@ -39,14 +39,19 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.*;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.NutUtils;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 
 /**
  * <p>
@@ -112,8 +117,8 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    public List<Nut> process(final String contextPath, final String workflowId) throws WuicException {
-        return process(contextPath, workflowId, getWorkflow(workflowId));
+    public List<Nut> process(final String contextPath, final String workflowId, final EngineType ... skip) throws WuicException {
+        return process(contextPath, workflowId, getWorkflow(workflowId), skip);
     }
 
     /**
@@ -121,14 +126,15 @@ public class Context implements Observer {
      * Processes a workflow an returns the nut inside the result with a name that equals to the specified one.
      * </p>
      *
+     * @param skip the skipped engine types
      * @param contextPath the context path where nuts will be referenced
      * @param wId the workflow ID
      * @param path the nut name
      * @return the nut corresponding to the nut name
      * @throws WuicException if workflow fails to be processed
      */
-    public Nut process(final String contextPath, final String wId, final String path) throws WuicException {
-        return process(contextPath, wId, getWorkflow(wId), path);
+    public Nut process(final String contextPath, final String wId, final String path, final EngineType ... skip) throws WuicException {
+        return process(contextPath, wId, getWorkflow(wId), path, skip);
     }
 
     /**
@@ -178,13 +184,15 @@ public class Context implements Observer {
      * </p>
      *
      * @param wId the workflow ID
+     * @param skip the skipped engine types
      * @param contextPath the context path where nuts will be referenced
      * @param path the path corresponding to desired nut
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path) throws WuicException {
-        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path, final EngineType ... skip)
+            throws WuicException {
+        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", skip);
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request, path);
@@ -213,13 +221,15 @@ public class Context implements Observer {
      * Processes a workflow with its associated ID and returns the resulting nuts.
      * </p>
      *
+     * @param skip the skipped engine types
      * @param wId the workflow ID
      * @param contextPath the context path where nuts will be referenced
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private List<Nut> process(final String contextPath, final String wId, final Workflow workflow) throws WuicException {
-        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "");
+    private List<Nut> process(final String contextPath, final String wId, final Workflow workflow, final EngineType ... skip)
+            throws WuicException {
+        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", skip);
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request);
