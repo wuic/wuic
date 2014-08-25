@@ -50,7 +50,7 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.UrlMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +61,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -89,11 +86,6 @@ public class WuicServlet extends HttpServlet {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * The expected pattern in request URI's.
-     */
-    private Pattern urlPattern;
-
-    /**
      * Mapping error code to their HTTP code.
      */
     private Map<Long, Integer> errorCodeToHttpCode;
@@ -114,26 +106,17 @@ public class WuicServlet extends HttpServlet {
      */
     @Override
     public void init(final ServletConfig config) throws ServletException {
-        // Build expected URL pattern
-        final StringBuilder patternBuilder = new StringBuilder();
+
+        // Validate servlet mapping
         final String key = WuicServletContextListener.WUIC_SERVLET_CONTEXT_PARAM;
         final String servletMapping = config.getServletContext().getInitParameter(key);
 
         if (servletMapping == null) {
             throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
+        } else if (servletMapping.isEmpty()) {
+            throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' could not be empty", key)));
         }
 
-        // Starts with nut mapping
-        patternBuilder.append(Pattern.quote(servletMapping));
-
-        if (!servletMapping.endsWith("/")) {
-            patternBuilder.append("/");
-        }
-
-        // Followed by the workflow ID, a slash, its version timestamp, a new slash and finally the page name
-        patternBuilder.append("([^/]*)/-?\\d*/?(.*)");
-
-        urlPattern = Pattern.compile(patternBuilder.toString());
 
         try {
             WuicJeeContext.getWuicFacade().configure(new WuicServletContextBuilderConfigurator());
@@ -150,18 +133,16 @@ public class WuicServlet extends HttpServlet {
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        final Matcher matcher = urlPattern.matcher(request.getRequestURI());
+        final UrlMatcher matcher = new UrlMatcher(request.getRequestURI());
 
-        if (!matcher.find() || matcher.groupCount() != NumberUtils.TWO) {
-            response.getWriter().println("Expected URL pattern: [workflowId]/[timestamp]/[nutName]");
+        if (!matcher.matches()) {
+            response.getWriter().println(UrlMatcher.MATCHER_MESSAGE);
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(request);
 
             try {
-                writeNut(URLDecoder.decode(matcher.group(1), "UTF-8"),
-                        URLDecoder.decode(matcher.group(NumberUtils.TWO), "UTF-8"),
-                        response);
+                writeNut(matcher.getWorkflowId(), matcher.getNutName(), response);
             } catch (WuicException we) {
                 log.error("Unable to retrieve nut", we);
 

@@ -46,6 +46,7 @@ import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.UrlMatcher;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -130,7 +131,7 @@ public class WuicServletTest {
     @Test
     public void badUriTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/wuic/").getEntity().getContent()));
-        Assert.assertTrue(content.contains("Expected URL pattern: [workflowId]/[timestamp]/[nutName]"));
+        Assert.assertTrue(content.contains(UrlMatcher.MATCHER_MESSAGE));
     }
 
     /**

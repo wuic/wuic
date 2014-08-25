@@ -52,6 +52,7 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.util.UrlMatcher;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.List;
@@ -456,5 +458,48 @@ public class UtilityTest extends WuicTest {
         });
 
         Assert.assertNotEquals(0, count.intValue());
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} when no context path is defined.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithNoContextPathTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/nut.js");
+        Assert.assertFalse(urlMatcher.matches());
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} with nominal case.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/context/workflow/4000/nut.js");
+        Assert.assertTrue(urlMatcher.matches());
+        Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
+        Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} when no version is defined.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithNoVersion() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/context/workflow/nut.js");
+        Assert.assertTrue(urlMatcher.matches());
+        Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
+        Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
     }
 }
