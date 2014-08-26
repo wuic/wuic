@@ -151,14 +151,14 @@ public class Context implements Observer {
 
     /**
      * <p>
-     * Returns the workflow associated to the given ID
+     * Returns the workflow associated to the given ID.
      * </p>
      *
      * @param workflowId the ID
      * @return the workflow that corresponds to the ID
      * @throws WorkflowNotFoundException if no workflow is associated to the ID.
      */
-    private Workflow getWorkflow(final String workflowId) throws WorkflowNotFoundException {
+    public Workflow getWorkflow(final String workflowId) throws WorkflowNotFoundException {
         String wId = workflowId;
 
         for (final ContextInterceptor i : interceptors) {

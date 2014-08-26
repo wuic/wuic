@@ -57,6 +57,7 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1018,6 +1019,10 @@ public class ContextBuilder extends Observable {
     public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws StreamException {
         NutDao dao = null;
 
+        if (NumberUtils.isNumber(id)) {
+            throw new BadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
+        }
+
         // Will override existing element
         for (final ContextSetting s : taggedSettings.values()) {
             s.getNutsHeaps().remove(id);
@@ -1306,6 +1311,11 @@ public class ContextBuilder extends Observable {
             for (final NutsHeap heap : heaps) {
                 final String id = identifier + heap.getId();
 
+                if (NumberUtils.isNumber(id)) {
+                    throw new BadArgumentException(new IllegalArgumentException(
+                            String.format("Workflow ID %s cannot be a numeric value", id)));
+                }
+
                 // Will override existing element
                 for (final ContextSetting s : taggedSettings.values()) {
                     s.getWorkflowMap().remove(id);
@@ -1314,6 +1324,11 @@ public class ContextBuilder extends Observable {
                 setting.getWorkflowMap().put(id, new Workflow(template.getHead(), chains, heap, nutDaos));
             }
         } else {
+            if (NumberUtils.isNumber(identifier)) {
+                throw new BadArgumentException(new IllegalArgumentException(
+                        String.format("Workflow ID %s cannot be a numeric value", identifier)));
+            }
+
             final NutsHeap[] array = heaps.toArray(new NutsHeap[heaps.size()]);
             setting.getWorkflowMap().put(identifier, new Workflow(template.getHead(), chains, new NutsHeap(null, null, heapIdPattern, array)));
         }

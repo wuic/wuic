@@ -462,14 +462,27 @@ public class UtilityTest extends WuicTest {
 
     /**
      * <p>
-     * Tests {@link UrlMatcher} when no context path is defined.
+     * Tests {@link UrlMatcher} when no workflow is defined.
      * </p>
      *
      * @throws UnsupportedEncodingException if test fails
      */
     @Test
-    public void urlMatcherWithNoContextPathTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/nut.js");
+    public void urlMatcherWithNoWorkflowTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/4000/nut.js");
+        Assert.assertFalse(urlMatcher.matches());
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} when no nut name is defined.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithNoNutNameTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("workflow/4000/");
         Assert.assertFalse(urlMatcher.matches());
     }
 
@@ -482,10 +495,72 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/context/workflow/4000/nut.js");
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
+        Assert.assertEquals(urlMatcher.getVersionNumber(), "4000");
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} with deep nut name case.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithDeepNameTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/deep/nut.js");
+        Assert.assertTrue(urlMatcher.matches());
+        Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
+        Assert.assertEquals(urlMatcher.getNutName(), "deep/nut.js");
+        Assert.assertEquals(urlMatcher.getVersionNumber(), "4000");
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} with bad numeric nut name case.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithNumericNameTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/4000/nut.js");
+        Assert.assertFalse(urlMatcher.matches());
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} with good numeric nut name case.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithGoodNumericNameTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/deep/4000/nut.js");
+        Assert.assertTrue(urlMatcher.matches());
+        Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
+        Assert.assertEquals(urlMatcher.getNutName(), "deep/4000/nut.js");
+        Assert.assertEquals(urlMatcher.getVersionNumber(), "4000");
+    }
+
+    /**
+     * <p>
+     * Tests {@link UrlMatcher} with deep nut name and not version number case.
+     * </p>
+     *
+     * @throws UnsupportedEncodingException if test fails
+     */
+    @Test
+    public void urlMatcherWithDeepNameAndWithoutVersionTest() throws UnsupportedEncodingException {
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/deep/nut.js");
+        Assert.assertTrue(urlMatcher.matches());
+        Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
+        Assert.assertEquals(urlMatcher.getNutName(), "deep/nut.js");
+        Assert.assertNull(urlMatcher.getVersionNumber());
     }
 
     /**
@@ -497,9 +572,10 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithNoVersion() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/context/workflow/nut.js");
+        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
+        Assert.assertNull(urlMatcher.getVersionNumber());
     }
 }

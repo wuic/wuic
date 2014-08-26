@@ -128,14 +128,17 @@ Breaking changes:
 - spriteProviderClassName must be now defined a SpriteInspectorEngineBuilder
 - With WebappNutDaoBuilder, all path starting with "WEB-INF" will be ignored
 
-##### v0.4.4 #####
+##### v0.4.5 #####
 
 Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.5&page=1&state=open
 
-##### v0.4.5 #####
+##### v0.5.0 #####
 
 Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.5.0&page=1&state=open
 
 Breaking changes:
 - "interleave" has been replace everywhere by "interval". For instance, xml attribute "polling-interleave-seconds" is now called "polling-interval-seconds"
 - Servlet API 3.1 now used in place of Servlet API 2.5
+- New naming rules for workflow ID, heap ID and nut name
+- Extensions can be enabled only by adding WUIC artifacts dependencies
+

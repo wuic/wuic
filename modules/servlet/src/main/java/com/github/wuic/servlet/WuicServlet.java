@@ -91,6 +91,11 @@ public class WuicServlet extends HttpServlet {
     private Map<Long, Integer> errorCodeToHttpCode;
 
     /**
+     * Servlet mapping.
+     */
+    private String servletMapping;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -109,14 +114,13 @@ public class WuicServlet extends HttpServlet {
 
         // Validate servlet mapping
         final String key = WuicServletContextListener.WUIC_SERVLET_CONTEXT_PARAM;
-        final String servletMapping = config.getServletContext().getInitParameter(key);
+        servletMapping = config.getServletContext().getInitParameter(key);
 
         if (servletMapping == null) {
             throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
         } else if (servletMapping.isEmpty()) {
             throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' could not be empty", key)));
         }
-
 
         try {
             WuicJeeContext.getWuicFacade().configure(new WuicServletContextBuilderConfigurator());
@@ -133,7 +137,7 @@ public class WuicServlet extends HttpServlet {
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        final UrlMatcher matcher = new UrlMatcher(request.getRequestURI());
+        final UrlMatcher matcher = new UrlMatcher(request.getRequestURI().substring(servletMapping.length()));
 
         if (!matcher.matches()) {
             response.getWriter().println(UrlMatcher.MATCHER_MESSAGE);

@@ -46,6 +46,16 @@ import java.net.URLDecoder;
  * This class helps to extract parameters from URL. The expected URL structure is described in {@link #MATCHER_MESSAGE}.
  * </p>
  *
+ * <p>
+ * Details:
+ * <ul>
+ *     <li>Workflow ID can't be a numeric value</li>
+ *     <li>Nut name's first level path cannot be a numeric value (ex: 4000/foo.js)</li>
+ *     <li>Version number must be a numeric value</li>
+ *     <li>Version number is optional</li>
+ * </ul>
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
@@ -55,12 +65,7 @@ public final class UrlMatcher {
     /**
      * The expected URL.
      */
-    public static final String MATCHER_MESSAGE = "Expected URL pattern: [ContextPath]/[workflowId]/[timestamp]/[nutName]";
-
-    /**
-     * Elements exploded from URL.
-     */
-    private String[] elements;
+    public static final String MATCHER_MESSAGE = "Expected URL pattern: [workflowId]/[timestamp]/[nutName] (see javadoc for more details)";
 
     /**
      * If the URL matches or not.
@@ -68,14 +73,19 @@ public final class UrlMatcher {
     private boolean matches;
 
     /**
-     * Index of value corresponding to workflow.
+     * Version number if any.
      */
-    private int workflowIndex;
+    private String versionNumber;
 
     /**
-     * Index of value corresponding to name.
+     * Value corresponding to workflow.
      */
-    private int nameIndex;
+    private String workflowId;
+
+    /**
+     * Value corresponding to name.
+     */
+    private String name;
 
     /**
      * <p>
@@ -85,21 +95,57 @@ public final class UrlMatcher {
      * @param requestUri the request URI
      */
     public UrlMatcher(final String requestUri) {
-        elements = StringUtils.removeTrailing(requestUri, "/").split("/");
-        matches = elements.length >= NumberUtils.THREE;
+        final String uri = StringUtils.removeTrailing(requestUri, "/");
+        final int workflowEndIndex = uri.indexOf('/');
 
-        if (matches) {
-            if (elements.length > NumberUtils.THREE
-                    && NumberUtils.isNumber(elements[elements.length - NumberUtils.TWO])) {
-                workflowIndex = elements.length - NumberUtils.THREE;
-            } else if (elements.length == NumberUtils.THREE
-                    && NumberUtils.isNumber(elements[elements.length - NumberUtils.TWO])) {
+        // No workflow ID
+        if (workflowEndIndex == -1) {
+            matches = false;
+        } else {
+            workflowId = uri.substring(0, workflowEndIndex);
+
+            // Workflow ID is actually a version number
+            if (NumberUtils.isNumber(workflowId)) {
                 matches = false;
             } else {
-                workflowIndex = elements.length - NumberUtils.TWO;
+                final int versionNumberIndex = uri.indexOf('/', workflowEndIndex + 1);
+
+                // No version number
+                if (versionNumberIndex == -1) {
+                    if (uri.length() > uri.indexOf('/', workflowEndIndex + NumberUtils.TWO)) {
+                        name = uri.substring(workflowEndIndex + 1);
+                        matches = !NumberUtils.isNumber(name);
+                    } else {
+                        matches = false;
+                    }
+                } else {
+                    final String version = uri.substring(workflowEndIndex + 1, versionNumberIndex);
+
+                    // Check that version is a numeric value
+                    if (NumberUtils.isNumber(version)) {
+                        versionNumber = version;
+                        name = uri.substring(versionNumberIndex + 1);
+                        matches = true;
+                    // Version number was actually the name's first level path
+                    } else if (uri.length() > uri.indexOf('/', versionNumberIndex + NumberUtils.TWO)) {
+                        matches = true;
+                        versionNumber = null;
+                        name = uri.substring(workflowEndIndex + 1);
+                    } else {
+                        // No nut name
+                        matches = false;
+                    }
+                }
             }
 
-            nameIndex = elements.length - 1;
+            // Additional rule: check that first level path is not a numeric value
+            if (name != null) {
+                final int slashIndex = name.indexOf('/');
+
+                if (slashIndex != -1 && NumberUtils.isNumber(name.substring(0, slashIndex))) {
+                    matches = false;
+                }
+            }
         }
     }
 
@@ -123,7 +169,7 @@ public final class UrlMatcher {
      * @throws UnsupportedEncodingException if UTF-8 is not supported
      */
     public String getWorkflowId() throws UnsupportedEncodingException {
-        return URLDecoder.decode(elements[workflowIndex], "UTF-8");
+        return URLDecoder.decode(workflowId, "UTF-8");
     }
 
     /**
@@ -135,6 +181,18 @@ public final class UrlMatcher {
      * @throws UnsupportedEncodingException if UTF-8 is not supported
      */
     public String getNutName() throws UnsupportedEncodingException {
-        return URLDecoder.decode(elements[nameIndex], "UTF-8");
+        return URLDecoder.decode(name, "UTF-8");
+    }
+
+    /**
+     * <p>
+     * Gets the version number.
+     * </p>
+     *
+     * @return the version number, {@code null} if not set
+     * @throws UnsupportedEncodingException if UTF-8 is not supported
+     */
+    public String getVersionNumber() throws UnsupportedEncodingException {
+        return versionNumber == null ? null : URLDecoder.decode(versionNumber, "UTF-8");
     }
 }

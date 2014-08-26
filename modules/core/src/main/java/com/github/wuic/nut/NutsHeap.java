@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
@@ -360,6 +361,15 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
                 for (final Nut nut : res) {
                     getCreated().add(nut.getName());
+
+                    final int slashIndex = nut.getName().indexOf('/');
+
+                    if (slashIndex != -1 && NumberUtils.isNumber(nut.getName().substring(0, slashIndex))) {
+                        throw new BadArgumentException(
+                                new IllegalArgumentException(
+                                        String.format("First level if nut name's path cannot be a numeric value: %s",
+                                                nut.getName())));
+                    }
                 }
             }
         }
