@@ -182,4 +182,12 @@ public class MockDao implements NutDao {
     public InputStream newInputStream(final String path) throws StreamException {
         return null;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean exists(final String path) throws StreamException {
+        return null;
+    }
 }

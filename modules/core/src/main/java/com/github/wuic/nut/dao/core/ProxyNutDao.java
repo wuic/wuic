@@ -160,7 +160,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public void save(final Nut nut) {
-        throw new UnsupportedOperationException();
+        delegate.save(nut);
     }
 
     /**
@@ -168,7 +168,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public Boolean saveSupported() {
-        return false;
+        return delegate.saveSupported();
     }
 
     /**
@@ -204,5 +204,13 @@ public class ProxyNutDao implements NutDao {
                 throw new StreamException(new IOException(nnfe));
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean exists(final String path) throws StreamException {
+        return delegate.exists(path);
     }
 }

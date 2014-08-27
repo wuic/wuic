@@ -294,25 +294,29 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * Indicates if the given path belongs to the heap bound to the workflow identified by the given ID. If the path
-     * is not found, maybe it's because it's the result of a transformation process.
+     * Indicates if the given path belongs to the heap bound to the workflow identified by the given ID by returning it or not.
+     * If the path is not found, maybe it's because it's the result of a transformation process. If that case, the method
+     * returns all existing paths picked from the heap.
      * </p>
      *
      * @param workflowId the workflow ID
      * @param path the path
-     * @return {@code true} if the path exists, {@code false} otherwise
+     * @return the given path if the path exists, all existing paths otherwise
      * @throws WorkflowNotFoundException if the workflow does not exists
      */
-    public synchronized boolean isDeclaredByHeap(final String workflowId, final String path) throws WorkflowNotFoundException {
+    public synchronized List<String> getDeclaredByHeap(final String workflowId, final String path) throws WorkflowNotFoundException {
         final Workflow workflow = context.getWorkflow(workflowId);
+        final List<String> retval = new ArrayList<String>();
 
         for (final Nut nut : workflow.getHeap().getNuts()) {
             if (nut.getName().equals(path)) {
-                return true;
+                return Arrays.asList(nut.getName());
+            } else {
+                retval.add(nut.getName());
             }
         }
 
-        return false;
+        return retval;
     }
 
     /**

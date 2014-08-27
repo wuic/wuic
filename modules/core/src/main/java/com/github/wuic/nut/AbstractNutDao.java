@@ -432,6 +432,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         public InputStream newInputStream(final String path) throws StreamException {
             return AbstractNutDao.this.newInputStream(path);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean exists(final String path) throws StreamException {
+            return AbstractNutDao.this.exists(path);
+        }
     }
 
     /**
@@ -447,21 +455,17 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     public List<String> computeRealPaths(final String pathName, final PathFormat format) throws StreamException {
         if (!format.canBeRegex()) {
-            final NutType type = NutType.getNutType(pathName);
-
             try {
-                // Will raise an exception if path does not exists
-                // TODO : would be better to call an 'exists' method instead of raising an exception
-                accessFor(pathName, type);
-
-                // Nut can be raised, return its path
-                return Arrays.asList(pathName);
+                if (exists(pathName)) {
+                    // Nut can be raised, return its path
+                    return Arrays.asList(pathName);
+                }
             } catch (StreamException e) {
                 log.warn("'{}' can't be loaded ignoring it. Absolute path is '{}'", pathName, absolutePathOf(pathName), e);
-
-                // Nut can't be raised
-                return Collections.emptyList();
             }
+
+            // Nut can't be raised
+            return Collections.emptyList();
         } else {
             final List<String> paths = listNutsPaths(pathName);
             final List<String> retval = new ArrayList<String>(paths.size());

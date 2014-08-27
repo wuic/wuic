@@ -50,6 +50,7 @@ import com.github.wuic.path.FilePath;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -206,6 +207,7 @@ public abstract class PathNutDao extends AbstractNutDao {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         return String.format("%s with base directory %s", getClass().getName(), baseDirectory);
     }
@@ -229,20 +231,47 @@ public abstract class PathNutDao extends AbstractNutDao {
     }
 
     /**
+     * <p>
+     * Resolve the give path.
+     * </p>
+     *
+     * @param path the path to resolve
+     * @return the resolved path {@link Path}, {@code null} if it does not exists
+     * @throws IOException if any I/O error occurs
+     * @throws StreamException if any I/O error occurs
+     */
+    private Path resolve(final String path) throws IOException, StreamException {
+        init();
+        return baseDirectory.getChild(path);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public InputStream newInputStream(final String path) throws StreamException {
-        init();
-
         try {
-            final Path p = baseDirectory.getChild(path);
+            final Path p = resolve(path);
 
             if (p instanceof FilePath) {
                 return FilePath.class.cast(p).openStream();
             } else {
                 throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
             }
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean exists(final String path) throws StreamException {
+        try {
+            return resolve(path) != null;
+        } catch (FileNotFoundException fne) {
+            return Boolean.FALSE;
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

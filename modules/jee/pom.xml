@@ -13,11 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.wuic</groupId>
             <artifactId>wuic-core</artifactId>
             <version>${project.version}</version>

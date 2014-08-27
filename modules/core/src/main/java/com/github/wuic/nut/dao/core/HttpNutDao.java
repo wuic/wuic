@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -176,9 +177,26 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws StreamException {
         try {
             return new URL(path).openStream();
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean exists(final String path) throws StreamException {
+        final String url = IOUtils.mergePath(baseUrl, getBasePath(), path);
+        HttpURLConnection.setFollowRedirects(false);
+
+        try {
+            final HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+            con.setRequestMethod("HEAD");
+            return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }

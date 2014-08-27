@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 
@@ -96,7 +97,7 @@ public class WebappDirectoryPath extends AbstractDirectoryPath {
 
         if (paths == null) {
             logger.warn("Path {} in {} was not found in webapp directory path.", absoluteParent, absoluteChild);
-            return null;
+            throw new FileNotFoundException();
         // If child is a directory, it will ends with a '/' and won't be match the absolute child path in returned set
         } else if (paths.contains(absoluteChild)) {
             return new WebappFilePath(child, this, context);

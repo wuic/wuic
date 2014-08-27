@@ -139,6 +139,14 @@ public class NutsHeapTest {
         public InputStream newInputStream(final String path) throws StreamException {
             return null;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean exists(final String path) throws StreamException {
+            return null;
+        }
     }
 
     /**

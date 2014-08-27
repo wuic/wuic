@@ -38,7 +38,16 @@
 
 package com.github.wuic.test.dao;
 
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +55,10 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -88,5 +100,43 @@ public class ClasspathNutDaoTest {
 
         final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false);
         Assert.assertEquals(2, dao.create(".*.css").size());
+    }
+
+    /**
+     * <p>
+     * Test exists implementation.
+     * </p>
+     *
+     * @throws StreamException if test fails
+     * @throws BuilderPropertyNotSupportedException if test fails
+     */
+    @Test
+    public void classpathExistsTest() throws StreamException, BuilderPropertyNotSupportedException {
+        final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
+        final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
+        final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
+        Assert.assertTrue(dao.exists("reject-block.png"));
+        Assert.assertFalse(dao.exists("unknown.png"));
+    }
+
+    /**
+     * <p>
+     * Test stream.
+     * </p>
+     *
+     * @throws StreamException if test fails
+     * @throws BuilderPropertyNotSupportedException if test fails
+     * @throws IOException if test fails
+     * @throws NutNotFoundException if test fails
+     */
+    @Test
+    public void classpathReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+        final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
+        final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
+        final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
+        Assert.assertTrue(dao.exists("reject-block.png"));
+        final InputStream is = dao.create("reject-block.png").get(0).openStream();
+        IOUtils.copyStream(is, new ByteArrayOutputStream());
+        is.close();
     }
 }

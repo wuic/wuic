@@ -198,6 +198,14 @@ public class AbstractNutDaoTest {
         public InputStream newInputStream(final String path) throws StreamException {
             return new ByteArrayInputStream(BYTES);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean exists(final String path) throws StreamException {
+            return true;
+        }
     }
 
     /**

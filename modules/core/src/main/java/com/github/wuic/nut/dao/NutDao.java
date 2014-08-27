@@ -50,7 +50,7 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
+ * @version 1.6
  * @since 0.3.1
  */
 public interface NutDao {
@@ -206,4 +206,15 @@ public interface NutDao {
      * @throws StreamException if stream could not be opened
      */
     InputStream newInputStream(String path) throws StreamException;
+
+    /**
+     * <p>
+     * Indicates if the given path exists or not.
+     * </p>
+     *
+     * @param path the path the DAO should be able to resolve
+     * @return {@code true} if path is resolved, {@code false} otherwise
+     * @throws StreamException if any I/O error occurs
+     */
+    Boolean exists(String path) throws StreamException;
 }

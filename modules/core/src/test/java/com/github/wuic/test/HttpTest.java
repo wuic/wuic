@@ -38,32 +38,29 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
+import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.exception.BuilderPropertyNotSupportedException;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.nut.dao.core.HttpNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -79,6 +76,7 @@ import java.util.Collection;
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)
+@WuicRunnerConfiguration(webApplicationPath = "/", port = 9876)
 public class HttpTest extends WuicTest {
 
     /**
@@ -87,83 +85,46 @@ public class HttpTest extends WuicTest {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * Server instance.
+     * The server running during tests.
      */
-    private static Server SERVER;
+    @ClassRule
+    public static Server server = new com.github.wuic.test.Server();
 
     /**
      * <p>
-     * Starts the servlet container.
+     * Test exists implementation.
      * </p>
      *
-     * @throws Exception if server can't starts.
+     * @throws StreamException if test fails
+     * @throws BuilderPropertyNotSupportedException if test fails
      */
-    @BeforeClass
-    public static void tearUp() throws Exception {
-        // Create server with webapp
-        SERVER = new Server(9876);
-
-        // Do not forget to turn on HTTPS in wuic-http.xml to test HTTPS
-        //activateSsl();
-
-        SERVER.setHandler(new AbstractHandler() {
-            public void handle(final String target,
-                               final Request baseRequest,
-                               final HttpServletRequest request,
-                               final HttpServletResponse response)
-                    throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_OK);
-                baseRequest.setHandled(Boolean.TRUE);
-                try {
-                    IOUtils.copyStream(HttpTest.class.getResourceAsStream(request.getRequestURI()), response.getOutputStream());
-                } catch (StreamException wse) {
-                    throw new IOException(wse);
-                }
-            }
-        });
-
-        SERVER.start();
-
-        // Uncomment if you want to open URL manually in your browser
-        //SERVER.join();
-    }
-
-    private static void activateSsl() {
-        // Keystore to declare on both client and server side
-        final String keyStore = HttpTest.class.getResource("/nonguestablepassword.keystore").getFile();
-
-        // Client configuration
-        System.setProperty("javax.net.ssl.trustStore", keyStore);
-        System.setProperty("javax.net.ssl.trustStoreType", "JKS");
-
-        HttpsURLConnection.setDefaultHostnameVerifier(
-                new HostnameVerifier() {
-                    public boolean verify(final String hostname, final SSLSession sslSession) {
-                        return hostname.equals("localhost");
-                    }
-                });
-
-
-        // Server configuration
-        final SslSocketConnector connector = new SslSocketConnector();
-        connector.setPort(9876); //or here .it's up to you
-        connector.setPassword("nonguestablepassword"); //password which you set during creation of certificate
-        connector.setKeyPassword("nonguestablepassword"); //password which you set during creation of certificate
-        connector.setKeystore(HttpTest.class.getResource("/nonguestablepassword.keystore").getFile()); // path to your keystroke path (depend what you've done in step 4(or 3 )
-        connector.setTrustPassword("nonguestablepassword");
-        SERVER.setConnectors(new Connector[] { connector });
+    @Test
+    public void httpExistsTest() throws StreamException, BuilderPropertyNotSupportedException {
+        final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
+        final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
+        final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
+        Assert.assertTrue(dao.exists("images/reject-block.png"));
+        Assert.assertFalse(dao.exists("images/unknw.png"));
     }
 
     /**
      * <p>
-     * Stops the servlet container.
+     * Test stream.
      * </p>
      *
-     * @throws Exception if an error occurs while stopping
+     * @throws StreamException if test fails
+     * @throws BuilderPropertyNotSupportedException if test fails
+     * @throws IOException if test fails
+     * @throws NutNotFoundException if test fails
      */
-    @AfterClass
-    public static void tearDown() throws Exception {
-        SERVER.stop();
+    @Test
+    public void httpReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+        final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
+        final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
+        final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
+        final InputStream is = dao.create("images/reject-block.png").get(0).openStream();
+        IOUtils.copyStream(is, new ByteArrayOutputStream());
+        is.close();
     }
 
     /**
