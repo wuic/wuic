@@ -67,6 +67,8 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.StringUtils;
 
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -676,6 +678,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         int end = 0;
         final List<Nut> referenced = new ArrayList<Nut>();
 
+        final UrlProvider urlProvider = UrlUtils.urlProvider(IOUtils.mergePath(contextPath, request.getWorkflowId()));
+
         // A workflow have been created for each heap
         for (final ParseInfo parseInfo : parseInfoList) {
             // Render HTML for workflow result
@@ -688,7 +692,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
                     final Nut renamed = new PrefixedNut(n, parseInfo.getHeap().getId(), Boolean.FALSE);
                     referenced.add(renamed);
-                    html.append(HtmlUtil.writeScriptImport(renamed, IOUtils.mergePath(contextPath, request.getWorkflowId()))).append("\r\n");
+                    html.append(HtmlUtil.writeScriptImport(renamed, urlProvider)).append("\r\n");
                 } catch (IOException ioe) {
                     throw new StreamException(ioe);
                 }

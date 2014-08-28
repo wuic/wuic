@@ -51,6 +51,7 @@ import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.UrlMatcher;
+import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +138,7 @@ public class WuicServlet extends HttpServlet {
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        final UrlMatcher matcher = new UrlMatcher(request.getRequestURI().substring(servletMapping.length()));
+        final UrlMatcher matcher = UrlUtils.urlMatcher(request.getRequestURI().substring(servletMapping.length()));
 
         if (!matcher.matches()) {
             response.getWriter().println(UrlMatcher.MATCHER_MESSAGE);

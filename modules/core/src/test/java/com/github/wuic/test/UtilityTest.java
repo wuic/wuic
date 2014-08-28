@@ -53,6 +53,7 @@ import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.util.UrlMatcher;
+import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -404,16 +405,16 @@ public class UtilityTest extends WuicTest {
 
         // Served nut
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("myPath/1/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("myPath/1/foo.css"));
 
         // Absolute path
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("http:/domain.fr/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("http:/domain.fr/foo.css"));
 
         // Proxy path
         Mockito.when(nut.getProxyUri()).thenReturn("http://proxy.fr/foo.css");
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(HtmlUtil.getUrl(nut, "myPath").contains("http://proxy.fr/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("http://proxy.fr/foo.css"));
     }
 
     /**
@@ -469,7 +470,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithNoWorkflowTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/4000/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/4000/nut.js");
         Assert.assertFalse(urlMatcher.matches());
     }
 
@@ -482,7 +483,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithNoNutNameTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("workflow/4000/");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("workflow/4000/");
         Assert.assertFalse(urlMatcher.matches());
     }
 
@@ -495,7 +496,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
@@ -511,7 +512,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithDeepNameTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/deep/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/deep/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "deep/nut.js");
@@ -527,7 +528,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithNumericNameTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/4000/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/4000/nut.js");
         Assert.assertFalse(urlMatcher.matches());
     }
 
@@ -540,7 +541,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithGoodNumericNameTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/4000/deep/4000/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/deep/4000/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "deep/4000/nut.js");
@@ -556,7 +557,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithDeepNameAndWithoutVersionTest() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/deep/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/deep/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "deep/nut.js");
@@ -572,7 +573,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void urlMatcherWithNoVersion() throws UnsupportedEncodingException {
-        final UrlMatcher urlMatcher = new UrlMatcher("/workflow/nut.js");
+        final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/nut.js");
         Assert.assertTrue(urlMatcher.matches());
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "nut.js");

@@ -62,7 +62,7 @@ public final class HtmlUtil {
 
     /**
      * <p>
-     * Writes the import statement in HTML into the output stream for the given nut.
+     * Writes the import statement in HTML into the output stream for the given nut, using a default {@link UrlProvider}.
      * </p>
      *
      * @param workflowContextPath the workflow context path
@@ -70,12 +70,25 @@ public final class HtmlUtil {
      * @throws java.io.IOException if an I/O error occurs
      */
     public static String writeScriptImport(final Nut nut, final String workflowContextPath) throws IOException {
+        return writeScriptImport(nut, UrlUtils.urlProvider(workflowContextPath));
+    }
+
+    /**
+     * <p>
+     * Writes the import statement in HTML into the output stream for the given nut.
+     * </p>
+     *
+     * @param urlProvider the {@link UrlProvider}
+     * @param nut the nut to import
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public static String writeScriptImport(final Nut nut, final UrlProvider urlProvider) throws IOException {
         switch (nut.getNutType()) {
             case CSS :
-                return cssImport(nut, workflowContextPath);
+                return cssImport(nut, urlProvider);
 
             case JAVASCRIPT :
-                return javascriptImport(nut, workflowContextPath);
+                return javascriptImport(nut, urlProvider);
 
             default :
                 return "";
@@ -87,15 +100,15 @@ public final class HtmlUtil {
      * Generates import for CSS script.
      * </p>
      *
-     * @param workflowContextPath the workflow context path
+     * @param urlProvider the {@link UrlProvider}
      * @param nut the CSS nut
      * @return the import
      */
-    public static String cssImport(final Nut nut, final String workflowContextPath) {
+    public static String cssImport(final Nut nut, final UrlProvider urlProvider) {
         final StringBuilder retval = new StringBuilder();
 
         retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-        retval.append(getUrl(nut, workflowContextPath));
+        retval.append(urlProvider.getUrl(nut));
         retval.append("\" />");
 
         return retval.toString();
@@ -106,37 +119,19 @@ public final class HtmlUtil {
      * Generates import for Javascript script.
      * </p>
      *
-     * @param workflowContextPath the workflow context path
      * @param nut the Javascript nut
+     * @param urlProvider the {@link UrlProvider}
+     *
      * @return the import
      */
-    public static String javascriptImport(final Nut nut, final String workflowContextPath) {
+    public static String javascriptImport(final Nut nut, final UrlProvider urlProvider) {
         final StringBuilder retval = new StringBuilder();
 
         retval.append("<script type=\"text/javascript");
         retval.append("\" src=\"");
-        retval.append(getUrl(nut, workflowContextPath));
+        retval.append(urlProvider.getUrl(nut));
         retval.append("\"></script>");
 
         return retval.toString();
-    }
-
-    /**
-     * <p>
-     * Generates the URL to use to access to the given nut.
-     * </p>
-     *
-     * @param workflowContextPath the workflow context path
-     * @param nut the nut
-     * @return the url
-     */
-    public static String getUrl(final Nut nut, final String workflowContextPath) {
-        if (nut.getProxyUri() != null) {
-            return nut.getProxyUri();
-        } else if (nut.getName().startsWith("http://")) {
-            return nut.getName();
-        } else {
-            return IOUtils.mergePath(workflowContextPath, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName());
-        }
     }
 }

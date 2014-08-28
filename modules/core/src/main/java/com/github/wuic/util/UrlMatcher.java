@@ -94,7 +94,7 @@ public final class UrlMatcher {
      *
      * @param requestUri the request URI
      */
-    public UrlMatcher(final String requestUri) {
+    UrlMatcher(final String requestUri) {
         final String uri = StringUtils.removeTrailing(requestUri, "/");
         final int workflowEndIndex = uri.indexOf('/');
 
