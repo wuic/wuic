@@ -41,12 +41,13 @@ package com.github.wuic;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.github.wuic.nut.Nut;
@@ -290,33 +291,6 @@ public final class WuicFacade {
         } catch (JAXBException je) {
             throw new WuicXmlReadException("unable to load wuic.xml", je) ;
         }
-    }
-
-    /**
-     * <p>
-     * Indicates if the given path belongs to the heap bound to the workflow identified by the given ID by returning it or not.
-     * If the path is not found, maybe it's because it's the result of a transformation process. If that case, the method
-     * returns all existing paths picked from the heap.
-     * </p>
-     *
-     * @param workflowId the workflow ID
-     * @param path the path
-     * @return the given path if the path exists, all existing paths otherwise
-     * @throws WorkflowNotFoundException if the workflow does not exists
-     */
-    public synchronized List<String> getDeclaredByHeap(final String workflowId, final String path) throws WorkflowNotFoundException {
-        final Workflow workflow = context.getWorkflow(workflowId);
-        final List<String> retval = new ArrayList<String>();
-
-        for (final Nut nut : workflow.getHeap().getNuts()) {
-            if (nut.getName().equals(path)) {
-                return Arrays.asList(nut.getName());
-            } else {
-                retval.add(nut.getName());
-            }
-        }
-
-        return retval;
     }
 
     /**
