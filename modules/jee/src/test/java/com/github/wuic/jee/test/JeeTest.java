@@ -40,7 +40,6 @@ package com.github.wuic.jee.test;
 
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -91,7 +90,7 @@ public class JeeTest {
          */
         @Override
         public void clearConfiguration() {
-            WuicJeeContext.getWuicFacade().clearTag(getClass().getName());
+            WuicServletContextListener.getWuicFacade(server.getServletContext()).clearTag(getClass().getName());
         }
 
         /**
@@ -100,21 +99,13 @@ public class JeeTest {
         @Override
         public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
             try {
-                WuicJeeContext.getWuicFacade().configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+                WuicServletContextListener.getWuicFacade(server.getServletContext()).configure(
+                        new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
             } catch (WuicException e) {
                 throw new RuntimeException(e);
             }
         }
     };
-
-    /**
-     * Tests that {@code ServletContext} is set.
-     */
-    @Test
-    public void contextTest() {
-        Assert.assertNotNull(WuicJeeContext.getWuicFacade());
-        Assert.assertNotNull(WuicJeeContext.getServletContext());
-    }
 
     /**
      * Tests {@link WebappNutDao} creation.
@@ -123,9 +114,10 @@ public class JeeTest {
      */
     @Test
     public void webappNutTest() throws StreamException {
-        final ObjectBuilder<NutDao> builder = WuicJeeContext.getWuicFacade().newNutDaoBuilder("WebappNutDaoBuilder");
+        final ObjectBuilder<NutDao> builder =
+                WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");
         final WebappNutDao dao = WebappNutDao.class.cast(builder.build());
-        dao.setContext(WuicJeeContext.getServletContext());
+        dao.setContext(server.getServletContext());
         final List<Nut> nuts = dao.create("index.html");
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());

@@ -266,9 +266,39 @@ public interface ApplicationConfig {
     String ENABLE = "c.g.wuic.filter.enable";
 
     /**
-     * <p>
-     * Indicates the context builder.
-     * </p>
+     * Init parameter which indicates if configurations injected by tag supports (JSP, Thymeleaf, etc) should be done
+     * each time a page is processed or not.
      */
-    String CONTEXT_BUILDER = "c.g.wuic.contextBuilder";
+    String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = "c.g.wuic.facade.multipleConfigInTagSupport";
+
+    /**
+     * Init parameter which indicates the WUIC context path.
+     */
+    String WUIC_SERVLET_CONTEXT_PARAM = "c.g.wuic.facade.contextPath";
+
+    /**
+     * Init parameter which indicates the WUIC xml file.
+     */
+    String WUIC_SERVLET_XML_PATH_PARAM = "c.g.wuic.facade.xmlPath";
+
+    /**
+     * Init parameter which indicates that the WUIC context path is a system property.
+     */
+    String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.wuic.facade.xmlPathAsSystemProperty";
+
+    /**
+     * Init parameter which indicates to use or not context builder configurators which inject default DAOs and engines.
+     */
+    String WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS = "c.g.w.useDefaultContextBuilderConfigurators";
+
+    /**
+     * Which warmup strategy to use when {@link WuicFacade} initializes the context. Possible values are enumerated by
+     * {@link com.github.wuic.WuicFacade.WarmupStrategy}.
+     */
+    String WUIC_WARMUP_STRATEGY = "c.g.wuic.facade.warmupStrategy";
+
+    /**
+     * This is the property name of the {@link WuicFacade} instance shared inside a web context.
+     */
+    String WEB_WUIC_FACADE = "c.g.wuic.webWuicFacade";
 }

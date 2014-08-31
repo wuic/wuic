@@ -40,10 +40,11 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 import javax.xml.bind.JAXBException;
@@ -65,6 +66,20 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
     private static final long serialVersionUID = 4305181623848741300L;
 
     /**
+     * The WUIC facade.
+     */
+    private WuicFacade wuicFacade;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPageContext(final PageContext pageContext) {
+        super.setPageContext(pageContext);
+        wuicFacade = WuicServletContextListener.getWuicFacade(pageContext.getServletContext());
+    }
+
+    /**
      * <p>
      * Includes according to the page name.
      * </p>
@@ -82,13 +97,10 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
     @Override
     public int doAfterBody() throws JspException {
         try {
-            // Get the facade
-            final WuicFacade facade = WuicJeeContext.getWuicFacade();
-
             // Let's load the wuic.xml file and configure the builder with it
             final BodyContent content = getBodyContent();
-            facade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString(),
-                    WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()));
+            wuicFacade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString(),
+                    wuicFacade.allowsMultipleConfigInTagSupport()));
             content.clearBody();
         } catch (WuicException we) {
             throw new JspException(we);

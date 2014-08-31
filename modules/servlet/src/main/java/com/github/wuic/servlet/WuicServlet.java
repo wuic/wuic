@@ -38,16 +38,17 @@
 
 package com.github.wuic.servlet;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.UrlMatcher;
@@ -97,6 +98,11 @@ public class WuicServlet extends HttpServlet {
     private String servletMapping;
 
     /**
+     * The WUIC facade.
+     */
+    private WuicFacade wuicFacade;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -114,7 +120,7 @@ public class WuicServlet extends HttpServlet {
     public void init(final ServletConfig config) throws ServletException {
 
         // Validate servlet mapping
-        final String key = WuicServletContextListener.WUIC_SERVLET_CONTEXT_PARAM;
+        final String key = ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM;
         servletMapping = config.getServletContext().getInitParameter(key);
 
         if (servletMapping == null) {
@@ -124,7 +130,8 @@ public class WuicServlet extends HttpServlet {
         }
 
         try {
-            WuicJeeContext.getWuicFacade().configure(new WuicServletContextBuilderConfigurator());
+            wuicFacade = WuicServletContextListener.getWuicFacade(config.getServletContext());
+            wuicFacade.configure(new WuicServletContextBuilderConfigurator());
         } catch (WuicException we) {
             throw new ServletException(we);
         }
@@ -177,7 +184,7 @@ public class WuicServlet extends HttpServlet {
             throws WuicException {
 
         // Get the nuts workflow
-        final Nut nut = WuicJeeContext.getWuicFacade().runWorkflow(workflowId, nutName);
+        final Nut nut = wuicFacade.runWorkflow(workflowId, nutName);
 
         // Nut found
         if (nut != null) {

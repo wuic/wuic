@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
@@ -77,7 +78,7 @@ public class WarmupTest {
      * @throws WuicException if test fails
      */
     private void createFacade(final WuicFacade.WarmupStrategy strategy, final Runnable r) throws WuicException {
-        WuicFacade.newInstance("", Boolean.TRUE, new ObjectBuilderInspector() {
+        new WuicFacadeBuilder().objectBuilderInspector(new ObjectBuilderInspector() {
 
             @Override
             public <T> T inspect(final T object) {
@@ -108,7 +109,7 @@ public class WarmupTest {
                 }
                 return object;
             }
-        }, strategy);
+        }).warmUpStrategy(strategy).build();
     }
 
     /**
@@ -163,6 +164,6 @@ public class WarmupTest {
         });
 
         Assert.assertEquals(1, count.getCount());
-        Assert.assertTrue(count.await(10L, TimeUnit.SECONDS));
+        Assert.assertTrue(count.await(20L, TimeUnit.SECONDS));
     }
 }

@@ -41,6 +41,7 @@ package com.github.wuic.test;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.WuicFacade;
+import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.nut.Nut;
 
 import java.io.File;
@@ -88,7 +89,7 @@ public class CoreTest extends WuicTest {
     @Test
     public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("", getClass().getResource("/wuic.xml"), false);
+        final WuicFacade facade = new WuicFacadeBuilder().noDefaultContextBuilderConfigurator().build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -131,7 +132,7 @@ public class CoreTest extends WuicTest {
     public void cssTest() throws Exception {
         // TODO : WUIC currently supports only one configuration per NutType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
-        final WuicFacade facade = WuicFacade.newInstance("", getClass().getResource("/wuic.xml"), true);
+        final WuicFacade facade = new WuicFacadeBuilder().build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;

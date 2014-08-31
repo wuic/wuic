@@ -42,10 +42,11 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
+import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.ByteArrayNut;
@@ -119,6 +120,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private boolean virtualContextPath;
 
     /**
+     * The WUIC facade.
+     */
+    private WuicFacade wuicFacade;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -133,10 +139,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
         try {
+            wuicFacade = WuicServletContextListener.getWuicFacade(filterConfig.getServletContext());
+            wuicFacade.configure(this);
             nutDao = createDao();
-            WuicJeeContext.getWuicFacade().configure(this);
 
-            final ServletContext sc = WuicJeeContext.getServletContext();
+            final ServletContext sc = filterConfig.getServletContext();
 
             if (!sc.getContextPath().isEmpty()) {
                 final Set resourcePaths = sc.getResourcePaths(sc.getContextPath());
@@ -160,7 +167,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @throws BuilderPropertyNotSupportedException if {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
      */
     protected NutDao createDao() throws BuilderPropertyNotSupportedException {
-        final ObjectBuilder<NutDao> b = WuicJeeContext.getWuicFacade().newNutDaoBuilder("WebappNutDaoBuilder");
+        final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder("WebappNutDaoBuilder");
         return NutDao.class.cast(b.property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER, Boolean.TRUE).build());
     }
 
@@ -199,7 +206,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     contextBuilder.build();
                 }
 
-                final List<Nut> nuts = WuicJeeContext.getWuicFacade().runWorkflow(workflowId);
+                final List<Nut> nuts = wuicFacade.runWorkflow(workflowId);
                 InputStream is = null;
                 final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(HttpServletRequest.class.cast(request));
 
@@ -230,7 +237,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
         // Ignore the context path if virtual
         if (virtualContextPath) {
-            keyBuilder.append(request.getRequestURI().substring(1 + WuicJeeContext.getServletContext().getContextPath().length()));
+            keyBuilder.append(request.getRequestURI().substring(1 + request.getServletContext().getContextPath().length()));
         } else {
             keyBuilder.append(request.getRequestURI().substring(1));
         }

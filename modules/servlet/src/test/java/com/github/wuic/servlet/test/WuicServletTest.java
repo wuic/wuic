@@ -39,7 +39,6 @@
 package com.github.wuic.servlet.test;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicJeeContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.test.Server;
@@ -90,7 +89,7 @@ public class WuicServletTest {
          */
         @Override
         public void clearConfiguration() {
-            WuicJeeContext.getWuicFacade().clearTag(getClass().getName());
+            WuicServletContextListener.getWuicFacade(server.getServletContext()).clearTag(getClass().getName());
         }
 
         /**
@@ -99,7 +98,8 @@ public class WuicServletTest {
         @Override
         public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
             try {
-                WuicJeeContext.getWuicFacade().configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+                WuicServletContextListener.getWuicFacade(server.getServletContext())
+                        .configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
             } catch (WuicException e) {
                 throw new RuntimeException(e);
             }

@@ -41,7 +41,7 @@ package com.github.wuic.tag;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.jee.WuicJeeContext;
+import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 /**
@@ -74,6 +75,20 @@ public class WuicTag extends TagSupport {
     private String workflowId;
 
     /**
+     * The WUIC facade.
+     */
+    private WuicFacade wuicFacade;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPageContext(final PageContext pageContext) {
+        super.setPageContext(pageContext);
+        wuicFacade = WuicServletContextListener.getWuicFacade(pageContext.getServletContext());
+    }
+
+    /**
      * <p>
      * Includes according to the page name.
      * </p>
@@ -88,17 +103,14 @@ public class WuicTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         try {
-            // Get the facade
-            final WuicFacade facade = WuicJeeContext.getWuicFacade();
-
-            if (WuicJeeContext.initParams().wuicServletMultipleConfInTagSupport()) {
-                facade.clearTag(workflowId);
+            if (wuicFacade.allowsMultipleConfigInTagSupport()) {
+                wuicFacade.clearTag(workflowId);
             }
 
-            final List<Nut> nuts = facade.runWorkflow(workflowId);
+            final List<Nut> nuts = wuicFacade.runWorkflow(workflowId);
 
             for (final Nut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowId)));
+                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
             }
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
