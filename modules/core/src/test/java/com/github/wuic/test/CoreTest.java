@@ -57,7 +57,9 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -75,6 +77,12 @@ import org.slf4j.LoggerFactory;
  */
 @RunWith(JUnit4.class)
 public class CoreTest extends WuicTest {
+
+    /**
+     * Temporary.
+     */
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
      * Logger.
@@ -183,7 +191,7 @@ public class CoreTest extends WuicTest {
                 writeToDisk(next, name + ".js");
 
                 fis = next.openStream();
-                final File file = File.createTempFile(name, ".js");
+                final File file = temporaryFolder.newFile(name + ".js");
                 IOUtils.copyStream(fis, new FileOutputStream(file));
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));
                 log.info(content);

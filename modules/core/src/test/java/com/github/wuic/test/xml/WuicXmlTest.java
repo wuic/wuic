@@ -60,7 +60,9 @@ import com.github.wuic.xml.XmlWorkflowBean;
 import com.github.wuic.xml.XmlWorkflowTemplateBean;
 import com.github.wuic.xml.XmlWuicBean;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -86,6 +88,12 @@ import java.util.List;
  */
 @RunWith(JUnit4.class)
 public class WuicXmlTest {
+
+    /**
+     * Temporary.
+     */
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
      * <p>
@@ -244,7 +252,7 @@ public class WuicXmlTest {
 
         // By default we use this file
         final URL full = getClass().getResource("/wuic-full.xml");
-        final File tmp = File.createTempFile("wuic", "xml");
+        final File tmp = temporaryFolder.newFile("wuic.xml");
         IOUtils.copyStream(full.openStream(), new FileOutputStream(tmp));
 
         // Load configuration
