@@ -49,6 +49,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -264,12 +265,12 @@ public class CssInspectorTest {
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
-        List<Nut> group = ctx.process("", "css-inner");
+        List<Nut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(3, group.get(0).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
-        group = ctx.process("", "css-outer");
+        group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
     }
@@ -286,6 +287,6 @@ public class CssInspectorTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
-        ctx.process("", "composite");
+        ctx.process("", "composite", UrlUtils.urlProviderFactory());
     }
 }

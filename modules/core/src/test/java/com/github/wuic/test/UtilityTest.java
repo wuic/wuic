@@ -405,16 +405,16 @@ public class UtilityTest extends WuicTest {
 
         // Served nut
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("myPath/1/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProviderFactory().create("myPath").getUrl(nut).contains("myPath/1/foo.css"));
 
         // Absolute path
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("http:/domain.fr/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProviderFactory().create("myPath").getUrl(nut).contains("http:/domain.fr/foo.css"));
 
         // Proxy path
         Mockito.when(nut.getProxyUri()).thenReturn("http://proxy.fr/foo.css");
         Mockito.when(nut.getName()).thenReturn("http:/domain.fr/foo.css");
-        Assert.assertTrue(UrlUtils.urlProvider("myPath").getUrl(nut).contains("http://proxy.fr/foo.css"));
+        Assert.assertTrue(UrlUtils.urlProviderFactory().create("myPath").getUrl(nut).contains("http://proxy.fr/foo.css"));
     }
 
     /**

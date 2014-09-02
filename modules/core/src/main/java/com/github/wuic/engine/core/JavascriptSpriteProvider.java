@@ -45,6 +45,8 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlProviderFactory;
 
 import java.util.List;
 
@@ -77,8 +79,13 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String heapId, final String nutNameSuffix, final List<Nut> originals)
+    public Nut getSprite(final String url,
+                         final String workflowId,
+                         final UrlProviderFactory urlProviderFactory,
+                         final String nutNameSuffix,
+                         final List<Nut> originals)
             throws StreamException {
+        final UrlProvider urlProvider = urlProviderFactory.create(IOUtils.mergePath("/", url, workflowId));
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder jsBuilder = new StringBuilder();
 
@@ -91,13 +98,13 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
         jsBuilder.append(" = {};\n");
         jsBuilder.append("}\n");
 
-        for (String name : regions.keySet()) {
-            final Region reg = regions.get(name);
+        for (final String name : getRegions().keySet()) {
+            final Region reg = getRegions().get(name);
             
             // Instruction that affect the new object to the WUIC_SPRITE constant
             jsBuilder.append(JS_CONSTANT);
             jsBuilder.append("['");
-            jsBuilder.append(convertAllowedName(heapId, name));
+            jsBuilder.append(convertAllowedName(workflowId, name));
             jsBuilder.append("'] = {\n\tx : \"");
             jsBuilder.append(reg.getxPosition());
             jsBuilder.append("\",\n\ty : \"");
@@ -107,7 +114,7 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
             jsBuilder.append("\",\n\th : \"");
             jsBuilder.append(reg.getHeight());
             jsBuilder.append("\",\n\turl : \"");
-            jsBuilder.append(IOUtils.mergePath("/", url, String.valueOf(versionNumber), image));
+            jsBuilder.append(urlProvider.getUrl(getImage()));
             jsBuilder.append("\"\n};\n");
         }
 

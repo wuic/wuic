@@ -62,7 +62,7 @@ public final class HtmlUtil {
 
     /**
      * <p>
-     * Writes the import statement in HTML into the output stream for the given nut, using a default {@link UrlProvider}.
+     * Writes the import statement in HTML into the output stream for the given nut, using a default {@link UrlProviderFactory}.
      * </p>
      *
      * @param workflowContextPath the workflow context path
@@ -70,7 +70,7 @@ public final class HtmlUtil {
      * @throws java.io.IOException if an I/O error occurs
      */
     public static String writeScriptImport(final Nut nut, final String workflowContextPath) throws IOException {
-        return writeScriptImport(nut, UrlUtils.urlProvider(workflowContextPath));
+        return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath));
     }
 
     /**

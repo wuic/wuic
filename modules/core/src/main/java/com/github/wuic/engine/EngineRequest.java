@@ -44,6 +44,8 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.UrlProviderFactory;
+import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,6 +125,11 @@ public final class EngineRequest {
     private String prefixCreatedNut;
 
     /**
+     * The URL provider.
+     */
+    private UrlProviderFactory urlProviderFactory;
+
+    /**
      * <p>
      * Builds a new {@code EngineRequest} with some specific nuts and a workflow ID.
      * </p>
@@ -134,7 +141,7 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final String pcn, final EngineType ... toSkip) {
-        this(wId, other.contextPath, other.heap, n, other.chains, pcn, toSkip);
+        this(wId, other.contextPath, other.heap, n, other.chains, pcn, other.urlProviderFactory, toSkip);
     }
 
     /**
@@ -148,7 +155,7 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final EngineType ... toSkip) {
-        this(wId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, toSkip);
+        this(wId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
     /**
@@ -161,7 +168,7 @@ public final class EngineRequest {
      * @param toSkip the engines type to skip
      */
     public EngineRequest(final List<Nut> n, final EngineRequest other, final EngineType[] toSkip) {
-        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, toSkip);
+        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
     /**
@@ -173,7 +180,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.skip);
+        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
     /**
@@ -186,7 +193,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final String workflowId, final String workflowKey, final EngineRequest other) {
-        this(workflowId, workflowKey, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.skip);
+        this(workflowId, workflowKey, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
     /**
@@ -198,7 +205,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final String wid, final EngineRequest other) {
-        this(wid, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.skip);
+        this(wid, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
     /**
@@ -209,7 +216,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, other.nuts, other.chains, other.prefixCreatedNut, other.skip);
+        this(other.workflowId, other.contextPath, other.heap, other.nuts, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
     /**
@@ -223,7 +230,7 @@ public final class EngineRequest {
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, toSkip);
+        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
     /**
@@ -236,7 +243,7 @@ public final class EngineRequest {
      * @param other the request to copy
      */
     public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.skip);
+        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
     /**
@@ -256,7 +263,7 @@ public final class EngineRequest {
                          final NutsHeap h,
                          final Map<NutType, ? extends NodeEngine> c,
                          final EngineType ... toSkip) {
-        this(wid, cp, h, new ArrayList<Nut>(h.getNuts()), c, "", toSkip);
+        this(wid, cp, h, new ArrayList<Nut>(h.getNuts()), c, "", UrlUtils.urlProviderFactory(), toSkip);
     }
 
     /**
@@ -271,6 +278,7 @@ public final class EngineRequest {
      * @param c the engine chains
      * @param n the nuts
      * @param pcn prefix created nut
+     * @param urlProviderFactory the URL provider
      * @param toSkip some engine types to skip
      */
     public EngineRequest(final String wid,
@@ -279,8 +287,9 @@ public final class EngineRequest {
                          final List<Nut> n,
                          final Map<NutType, ? extends NodeEngine> c,
                          final String pcn,
+                         final UrlProviderFactory urlProviderFactory,
                          final EngineType ... toSkip) {
-        this(wid, wid, cp, h, n, c, pcn, toSkip);
+        this(wid, wid, cp, h, n, c, pcn, urlProviderFactory, toSkip);
     }
 
     /**
@@ -295,6 +304,7 @@ public final class EngineRequest {
      * @param c the engine chains
      * @param n the nuts
      * @param pcn prefix created nut
+     * @param up the URL provider
      * @param toSkip some engine types to skip
      */
     public EngineRequest(final String wid,
@@ -304,6 +314,7 @@ public final class EngineRequest {
                          final List<Nut> n,
                          final Map<NutType, ? extends NodeEngine> c,
                          final String pcn,
+                         final UrlProviderFactory up,
                          final EngineType ... toSkip) {
         nuts = new ArrayList<Nut>(n);
         workflowKey = wk;
@@ -313,6 +324,7 @@ public final class EngineRequest {
         workflowId = wid;
         prefixCreatedNut = pcn;
         skip = new EngineType[toSkip.length];
+        urlProviderFactory = up;
         System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
     }
 
@@ -428,6 +440,17 @@ public final class EngineRequest {
         }
 
         return key;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link UrlProviderFactory}.
+     * </p>
+     *
+     * @return the factory
+     */
+    public UrlProviderFactory getUrlProviderFactory() {
+        return urlProviderFactory;
     }
 
     /**

@@ -51,6 +51,7 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import com.github.wuic.xml.XmlBuilderBean;
@@ -234,7 +235,7 @@ public class WuicXmlTest {
 
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
-        builder.build().process("", "simpleWorkflowsimpleHeap");
+        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory());
     }
 
     /**
@@ -272,7 +273,7 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("", "simpleWorkflowsimpleHeap");
+        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory());
 
         // Remove test file
         tmp.delete();
@@ -297,7 +298,7 @@ public class WuicXmlTest {
         final Context ctx = builder.build();
 
         // Process implicit workflow with composed heaps
-        ctx.process("", "bind");
+        ctx.process("", "bind", UrlUtils.urlProviderFactory());
     }
 
     /**
@@ -330,7 +331,7 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
 
-        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap").size());
+        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory()).size());
     }
 
     /**
@@ -348,7 +349,7 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
 
-        final List<Nut> nuts = builder.build().process("", "wf-refHeap");
+        final List<Nut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory());
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());
@@ -379,10 +380,10 @@ public class WuicXmlTest {
         final Context ctx = builder.build();
 
         // Process implicit workflow with composed heaps
-        ctx.process("", "simple");
-        ctx.process("", "nested");
-        ctx.process("", "referenced");
-        ctx.process("", "both");
-        ctx.process("", "full");
+        ctx.process("", "simple", UrlUtils.urlProviderFactory());
+        ctx.process("", "nested", UrlUtils.urlProviderFactory());
+        ctx.process("", "referenced", UrlUtils.urlProviderFactory());
+        ctx.process("", "both", UrlUtils.urlProviderFactory());
+        ctx.process("", "full", UrlUtils.urlProviderFactory());
     }
 }

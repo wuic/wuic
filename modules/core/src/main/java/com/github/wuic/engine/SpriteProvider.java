@@ -39,6 +39,7 @@ package com.github.wuic.engine;
 
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.util.UrlProviderFactory;
 
 import java.util.List;
 
@@ -86,19 +87,21 @@ public interface SpriteProvider {
      * 
      * @param url of the final image
      * @param workflowId the workflow ID
+     * @param urlProviderFactory the {@link UrlProviderFactory}
      * @param nutNamePrefix the prefix to append to the sprite nut name
      * @param originals the original nuts
      * @return a nut representing the sprite path
      * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs while aggregating images
      */
-    Nut getSprite(String url, String workflowId, String nutNamePrefix, List<Nut> originals) throws StreamException;
+    Nut getSprite(String url, String workflowId, UrlProviderFactory urlProviderFactory, String nutNamePrefix, List<Nut> originals)
+            throws StreamException;
 
     /**
      * <p>
      * Initializes this provider with a new image. Previous regions will be cleared.
      * </p>
      * 
-     * @param imageName the new image name
+     * @param nut the new image
      */
-    void init(String imageName);
+    void init(Nut nut);
 }

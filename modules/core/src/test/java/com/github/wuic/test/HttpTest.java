@@ -51,6 +51,7 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.HttpNutDao;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -142,7 +143,7 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final Collection<Nut> group = facade.process("", "css-imagecss-image");
+        final Collection<Nut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory());
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

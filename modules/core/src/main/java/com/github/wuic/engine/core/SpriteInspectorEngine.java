@@ -123,12 +123,11 @@ public class SpriteInspectorEngine extends NodeEngine {
             int spriteCpt = 0;
             final List<Nut> res = getNext() == null ? request.getNuts() : getNext().parse(request);
             final List<Nut> retval = new ArrayList<Nut>();
-            final String url = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
 
             // Calculate type and dimensions of the final image
             for (final Nut n : res) {
                 // Clear previous work
-                initSpriteProviders(n.getName());
+                initSpriteProviders(n);
 
                 if (n.getOriginalNuts() != null) {
                     // Origin can be compressed, use its own origin which is the image in that case
@@ -167,7 +166,7 @@ public class SpriteInspectorEngine extends NodeEngine {
                     suffix  = IOUtils.mergePath(request.getPrefixCreatedNut(), String.valueOf(spriteCpt++));
                 }
 
-                retval.add(applySpriteProviders(url, request.getHeap().getId(), suffix, n, request));
+                retval.add(applySpriteProviders(request.getContextPath(), request.getHeap().getId(), suffix, n, request));
             }
 
             return retval;
@@ -179,11 +178,11 @@ public class SpriteInspectorEngine extends NodeEngine {
      * Initializes all sprite providers.
      * </p>
      *
-     * @param name the name
+     * @param nut the nut
      */
-    private void initSpriteProviders(final String name) {
+    private void initSpriteProviders(final Nut nut) {
         for (final SpriteProvider sp : spriteProviders) {
-            sp.init(name);
+            sp.init(nut);
         }
     }
 
@@ -222,7 +221,7 @@ public class SpriteInspectorEngine extends NodeEngine {
         Nut retval = null;
 
         for (final SpriteProvider sp : spriteProviders) {
-            Nut nut = sp.getSprite(url, request.getWorkflowId(), suffix, Arrays.asList(n));
+            Nut nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
             final NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {

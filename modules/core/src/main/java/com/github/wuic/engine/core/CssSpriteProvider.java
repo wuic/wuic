@@ -45,6 +45,8 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlProviderFactory;
 
 import java.util.List;
 
@@ -63,20 +65,25 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url, final String workflowId, final String nutNameSuffix, final List<Nut> originals)
+    public Nut getSprite(final String url,
+                         final String workflowId,
+                         final UrlProviderFactory urlProviderFactory,
+                         final String nutNameSuffix,
+                         final List<Nut> originals)
             throws StreamException {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder cssBuilder = new StringBuilder();
+        final UrlProvider urlProvider = urlProviderFactory.create(IOUtils.mergePath("/", url, workflowId));
 
-        for (String name : regions.keySet()) {
-            final Region reg = regions.get(name);
+        for (String name : getRegions().keySet()) {
+            final Region reg = getRegions().get(name);
             final String className = convertAllowedName(workflowId, name);
 
             // Define region within the image
             cssBuilder.append(".");
             cssBuilder.append(className);
             cssBuilder.append("{display:inline-block;background:url('");
-            cssBuilder.append(IOUtils.mergePath("/", url, String.valueOf(versionNumber), image));
+            cssBuilder.append(urlProvider.getUrl(getImage()));
             cssBuilder.append("') ");
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
@@ -88,7 +95,6 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
             cssBuilder.append("px;}");
         }
 
-        // Make a byte array and return wrapper nut
         return new ByteArrayNut(cssBuilder.toString().getBytes(), nutNameSuffix + "sprites.css", NutType.CSS, originals, versionNumber);
     }
 }

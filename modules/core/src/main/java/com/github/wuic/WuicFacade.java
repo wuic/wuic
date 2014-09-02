@@ -51,6 +51,8 @@ import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.UrlProviderFactory;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
@@ -241,18 +243,63 @@ public final class WuicFacade {
      * </p>
      *
      * <p>
-     * The path should be used with the name of nuts returned when invoking {@link WuicFacade#runWorkflow(String, com.github.wuic.engine.EngineType...)}.
+     * The path should be used with the name of nuts returned when invoking
+     * {@link WuicFacade#runWorkflow(String, String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
      * </p>
      * 
+     * @param id the workflow ID
+     * @param path the requested path, {@code null} to retrieve all paths
+     * @param urlProviderFactory the URL provider
+     * @param skip the engine types
+     * @return the processed nuts
+     * @throws WuicException if the context can't be processed
+     */
+    public synchronized Nut runWorkflow(final String id, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+            throws WuicException {
+        final long start = beforeRunWorkflow(id);
+        final Nut retval = context.process(config.contextPath, id, path, urlProviderFactory, skip);
+        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+
+        return retval;
+    }
+
+
+    /**
+     * <p>
+     * Gets the nut with the given path processed by the given workflow identified by the specified ID.
+     * </p>
+     *
+     * <p>
+     * The path should be used with the name of nuts returned when invoking
+     * {@link WuicFacade#runWorkflow(String, String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
+     * </p>
+     *
      * @param id the workflow ID
      * @param path the requested path, {@code null} to retrieve all paths
      * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
-    public synchronized Nut runWorkflow(final String id, final String path, final EngineType ... skip) throws WuicException {
+    public synchronized Nut runWorkflow(final String id, final String path, final EngineType ... skip)
+            throws WuicException {
+        return runWorkflow(id, path, UrlUtils.urlProviderFactory(), skip);
+    }
+
+
+    /**
+     * <p>
+     * Gets the nuts processed by the given workflow identified by the specified ID.
+     * </p>
+     *
+     * @param id the workflow ID
+     * @param urlProviderFactory the URL provider
+     * @param skip the engine types
+     * @return the processed nuts
+     * @throws WuicException if the context can't be processed
+     */
+    public synchronized List<Nut> runWorkflow(final String id, final UrlProviderFactory urlProviderFactory, final EngineType ... skip) throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final Nut retval = context.process(config.contextPath, id, path, skip);
+        final List<Nut> retval = new ArrayList<Nut>(context.process(config.contextPath, id, urlProviderFactory, skip));
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -269,11 +316,7 @@ public final class WuicFacade {
      * @throws WuicException if the context can't be processed
      */
     public synchronized List<Nut> runWorkflow(final String id, final EngineType ... skip) throws WuicException {
-        final long start = beforeRunWorkflow(id);
-        final List<Nut> retval = new ArrayList<Nut>(context.process(config.contextPath, id, skip));
-        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
-
-        return retval;
+        return runWorkflow(id, UrlUtils.urlProviderFactory(), skip);
     }
 
     /**

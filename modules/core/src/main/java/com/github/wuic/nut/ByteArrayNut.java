@@ -95,7 +95,7 @@ public final class ByteArrayNut extends AbstractNut {
 
     /**
      * <p>
-     * Builds a new {@code Nut} transformed nut based on a {@code null} byte array.
+     * Builds a new {@code Nut} transformed nut based on a specified byte array.
      * </p>
      *
      * @param bytes the byte array

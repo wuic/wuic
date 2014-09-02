@@ -54,6 +54,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 
 import org.junit.Assert;
@@ -174,7 +175,7 @@ public class CoreTest extends WuicTest {
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<Nut> group = facade.process("", "js-image");
+        List<Nut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory());
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
@@ -199,7 +200,7 @@ public class CoreTest extends WuicTest {
                 final int end = content.indexOf("/aggregate.png");
                 String imageGroup = content.substring(start, end);
                 imageGroup = imageGroup.substring(0, imageGroup.lastIndexOf('/'));
-                group = facade.process("", imageGroup);
+                group = facade.process("", imageGroup, UrlUtils.urlProviderFactory());
 
                 writeToDisk(group.get(0).getReferencedNuts().get(0), "aggregate.png");
             } finally {

@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
+import com.github.wuic.nut.Nut;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,12 +59,12 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
     /**
      * Region in the image.
      */
-    protected Map<String, Region> regions;
+    private Map<String, Region> regions;
 
     /**
-     * The image name.
+     * The image.
      */
-    protected String image;
+    private Nut image;
 
     /**
      * <p>
@@ -86,9 +87,9 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public void init(final String imageName) {
+    public void init(final Nut nut) {
         regions.clear();
-        image = imageName;
+        image = nut;
     }
 
     /**
@@ -118,5 +119,27 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
 
         // Replace non letter characters
         return retval.toString().replaceAll("[^a-zA-Z]", "_");
+    }
+
+    /**
+     * <p>
+     * Gets the regions.
+     * </p>
+     *
+     * @return teh regions
+     */
+    protected Map<String, Region> getRegions() {
+        return regions;
+    }
+
+    /**
+     * <p>
+     * Gets the image.
+     * </p>
+     *
+     * @return the image
+     */
+    protected Nut getImage() {
+        return image;
     }
 }

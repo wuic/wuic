@@ -46,6 +46,7 @@ import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.UrlProviderFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -72,22 +73,22 @@ public class Context implements Observer {
     /**
      * All possible workflow mapped to their ID.
      */
-    private Map<String, Workflow> workflowMap;
+    private final Map<String, Workflow> workflowMap;
 
     /**
      * All interceptors.
      */
-    private List<ContextInterceptor> interceptors;
+    private final List<ContextInterceptor> interceptors;
+
+    /**
+     * The {@link ContextBuilder} which created this instance.
+     */
+    private final ContextBuilder contextBuilder;
 
     /**
      * Indicates if this context is up to date or not.
      */
     private Boolean upToDate;
-
-    /**
-     * The {@link ContextBuilder} which created this instance.
-     */
-    private ContextBuilder contextBuilder;
 
     /**
      * <p>
@@ -98,7 +99,9 @@ public class Context implements Observer {
      * @param wm the workflow map
      * @param interceptorsList some interceptors
      */
-    Context(final ContextBuilder cb, final Map<String, Workflow> wm, final List<ContextInterceptor> interceptorsList) {
+    Context(final ContextBuilder cb,
+            final Map<String, Workflow> wm,
+            final List<ContextInterceptor> interceptorsList) {
         contextBuilder = cb;
         contextBuilder.addObserver(this);
         workflowMap = wm;
@@ -117,8 +120,9 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    public List<Nut> process(final String contextPath, final String workflowId, final EngineType ... skip) throws WuicException {
-        return process(contextPath, workflowId, getWorkflow(workflowId), skip);
+    public List<Nut> process(final String contextPath, final String workflowId, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+            throws WuicException {
+        return process(contextPath, workflowId, getWorkflow(workflowId), urlProviderFactory, skip);
     }
 
     /**
@@ -130,11 +134,13 @@ public class Context implements Observer {
      * @param contextPath the context path where nuts will be referenced
      * @param wId the workflow ID
      * @param path the nut name
+     * @param urlProviderFactory the URL provider
      * @return the nut corresponding to the nut name
      * @throws WuicException if workflow fails to be processed
      */
-    public Nut process(final String contextPath, final String wId, final String path, final EngineType ... skip) throws WuicException {
-        return process(contextPath, wId, getWorkflow(wId), path, skip);
+    public Nut process(final String contextPath, final String wId, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+            throws WuicException {
+        return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, skip);
     }
 
     /**
@@ -187,12 +193,13 @@ public class Context implements Observer {
      * @param skip the skipped engine types
      * @param contextPath the context path where nuts will be referenced
      * @param path the path corresponding to desired nut
+     * @param urlProviderFactory the URL provider
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path, final EngineType ... skip)
+    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
             throws WuicException {
-        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", skip);
+        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", urlProviderFactory, skip);
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request, path);
@@ -224,12 +231,23 @@ public class Context implements Observer {
      * @param skip the skipped engine types
      * @param wId the workflow ID
      * @param contextPath the context path where nuts will be referenced
+     * @param urlProviderFactory the URL provider
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private List<Nut> process(final String contextPath, final String wId, final Workflow workflow, final EngineType ... skip)
+    private List<Nut> process(final String contextPath,
+                              final String wId,
+                              final Workflow workflow,
+                              final UrlProviderFactory urlProviderFactory,
+                              final EngineType ... skip)
             throws WuicException {
-        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", skip);
+        EngineRequest request = new EngineRequest(wId,
+                contextPath,
+                workflow.getHeap(),
+                workflow.getHeap().getNuts(),
+                workflow.getChains(), "",
+                urlProviderFactory,
+                skip);
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request);

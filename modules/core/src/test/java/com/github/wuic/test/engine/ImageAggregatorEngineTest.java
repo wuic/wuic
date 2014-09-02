@@ -44,6 +44,7 @@ import com.github.wuic.nut.Nut;
 
 import java.util.List;
 
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.Before;
@@ -91,7 +92,7 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withoutAggregation() throws Exception {
-        final List<Nut> nuts = ctx.process("", "jsSpriteNotAggregate");
+        final List<Nut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory());
         Assert.assertEquals(3, nuts.size());
         assertOneReference(nuts);
     }
@@ -105,7 +106,7 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withAggregation() throws Exception {
-        final List<Nut> nuts = ctx.process("", "cssSpriteAggregate");
+        final List<Nut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, nuts.size());
         assertOneReference(nuts);
 

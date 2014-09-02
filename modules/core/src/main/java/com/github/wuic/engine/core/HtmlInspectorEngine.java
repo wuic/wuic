@@ -678,7 +678,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         int end = 0;
         final List<Nut> referenced = new ArrayList<Nut>();
 
-        final UrlProvider urlProvider = UrlUtils.urlProvider(IOUtils.mergePath(contextPath, request.getWorkflowId()));
+        final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(IOUtils.mergePath(contextPath, request.getWorkflowId()));
 
         // A workflow have been created for each heap
         for (final ParseInfo parseInfo : parseInfoList) {

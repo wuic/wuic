@@ -53,6 +53,26 @@ public final class UrlUtils {
 
     /**
      * <p>
+     * This factory builds default {@link UrlProvider}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public static final class DefaultUrlProviderFactory implements UrlProviderFactory {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public UrlProvider create(final String workflowId) {
+            return new UrlUtils.DefaultUrlProvider(workflowId);
+        }
+    }
+
+    /**
+     * <p>
      * Provides the default mechanism to build URL.
      * </p>
      *
@@ -95,14 +115,13 @@ public final class UrlUtils {
 
     /**
      * <p>
-     * Creates a default {@link UrlProvider}.
+     * Creates a default {@link UrlProviderFactory}.
      * </p>
      *
-     * @param workflowContextPath the workflow ID and base path
-     * @return the {@link DefaultUrlProvider}
+     * @return the {@link com.github.wuic.util.UrlUtils.DefaultUrlProviderFactory}
      */
-    public static UrlProvider urlProvider(final String workflowContextPath) {
-        return new DefaultUrlProvider(workflowContextPath);
+    public static UrlProviderFactory urlProviderFactory() {
+        return new DefaultUrlProviderFactory();
     }
 
     /**
@@ -116,5 +135,4 @@ public final class UrlUtils {
     public static UrlMatcher urlMatcher(final String requestUrl) {
         return new UrlMatcher(requestUrl);
     }
-
 }

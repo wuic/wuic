@@ -38,26 +38,27 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.nut.Nut;
-
 /**
  * <p>
- * This interface gives a change to specify how the public URL should be exposed to access a nut.
+ * This factory creates {@link UrlProvider} considering a particular workflow ID. Since the {@link UrlProvider} produces
+ * URL for a particular {@link com.github.wuic.nut.Nut}, this factory gives a chance to include a workflow ID in a
+ * generated URL.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
  */
-public interface UrlProvider {
+public interface UrlProviderFactory {
 
     /**
      * <p>
-     * Generates the URL to use to access to the given nut.
+     * Creates a new {@link UrlProvider}.
      * </p>
      *
-     * @param nut the nut
-     * @return the url
+     * @param workflowId the workflow ID
+     * @return the new {@link UrlProvider}
      */
-    String getUrl(Nut nut);
+    UrlProvider create(String workflowId);
 }
+
