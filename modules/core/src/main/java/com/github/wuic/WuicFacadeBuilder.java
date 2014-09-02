@@ -157,7 +157,7 @@ public class WuicFacadeBuilder {
             }
 
             // Choose specific location for XML file
-            if (wuicXmlPath != null) {
+            if (xmlPath != null) {
                 if (Boolean.parseBoolean(properties.apply(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM, "false"))) {
                     wuicXmlPath(new URL(System.getProperty(xmlPath)));
                 } else {
