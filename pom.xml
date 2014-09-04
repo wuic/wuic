@@ -63,33 +63,28 @@
         </contributor>
     </contributors>
 
-    <!-- Engines dependencies need to be explicitly imported by the user -->
+
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.googlecode.htmlcompressor</groupId>
-                <artifactId>htmlcompressor</artifactId>
-                <version>${htmlcompressor.version}</version>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
             </dependency>
 
-            <!-- For engine and samples using YUICompressor -->
             <dependency>
-                <groupId>com.yahoo.platform.yui</groupId>
-                <artifactId>yuicompressor</artifactId>
-                <version>${yuicompressor.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>rhino</groupId>
-                        <artifactId>js</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.eclipse.jdt.core.compiler</groupId>
+                <artifactId>ecj</artifactId>
+                <version>${ecj.version}</version>
+                <scope>test</scope>
             </dependency>
 
-            <!-- For engine and samples using EHCache -->
             <dependency>
-                <groupId>net.sf.ehcache</groupId>
-                <artifactId>ehcache-core</artifactId>
-                <version>${ehcache-core.version}</version>
+                <groupId>org.glassfish</groupId>
+                <artifactId>javax.el</artifactId>
+                <version>${el.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <!-- JEE APIs are always provided -->
@@ -106,12 +101,6 @@
                 <version>${jsp-api.version}</version>
                 <scope>provided</scope>
             </dependency>
-
-            <dependency>
-                <groupId>eu.infomas</groupId>
-                <artifactId>annotation-detector</artifactId>
-                <version>${annotation-detector.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -121,6 +110,20 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Testing library -->
+        <dependency>
+            <groupId>com.github.wuic</groupId>
+            <artifactId>wuic-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss.spec.javax.servlet</groupId>
+                    <artifactId>jboss-servlet-api_3.1_spec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -178,6 +181,14 @@
                             <links>
                                 <link>http://docs.oracle.com/javase/6/docs/api/</link>
                                 <link>http://ehcache.org/apidocs/</link>
+                                <link>http://docs.spring.io/spring/docs/current/javadoc-api/</link>
+                                <link>http://epaul.github.io/jsch-documentation/javadoc/</link>
+                                <link>http://commons.apache.org/proper/commons-net/apidocs/</link>
+                                <link>http://docs.oracle.com/javaee/6/api/</link>
+                                <link>http://www.thymeleaf.org/apidocs/thymeleaf/2.1.3.RELEASE/</link>
+                                <link>http://htmlcompressor.googlecode.com/svn/trunk/doc/</link>
+                                <link>http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/</link>
+                                <link>https://developers.google.com/appengine/docs/java/googlecloudstorageclient/javadoc/</link>
                             </links>
                             <header>
                                 <![CDATA[
@@ -232,6 +243,15 @@
                             <charset>UTF-8</charset>
                             <links>
                                 <link>http://docs.oracle.com/javase/6/docs/api/</link>
+                                <link>http://ehcache.org/apidocs/</link>
+                                <link>http://docs.spring.io/spring/docs/current/javadoc-api/</link>
+                                <link>http://epaul.github.io/jsch-documentation/javadoc/</link>
+                                <link>http://commons.apache.org/proper/commons-net/apidocs/</link>
+                                <link>http://docs.oracle.com/javaee/6/api/</link>
+                                <link>http://www.thymeleaf.org/apidocs/thymeleaf/2.1.3.RELEASE/</link>
+                                <link>http://htmlcompressor.googlecode.com/svn/trunk/doc/</link>
+                                <link>http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/</link>
+                                <link>https://developers.google.com/appengine/docs/java/googlecloudstorageclient/javadoc/</link>
                             </links>
                         </configuration>
                         <executions>
@@ -277,7 +297,6 @@
         <mockito.version>1.9.5</mockito.version>
         <ecj.version>4.3.1</ecj.version>
         <el.version>3.0-b01</el.version>
-        <annotation-detector.version>3.0.4</annotation-detector.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
 
