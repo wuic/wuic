@@ -38,7 +38,7 @@
 
 /**
  * <p>
- * This package contains the definition of an {@link Engine}. The possible
+ * This package contains the definition of an {@link com.github.wuic.engine.Engine}. The possible
  * implementations and factories are located in the sub-packages.
  * </p>
  * 

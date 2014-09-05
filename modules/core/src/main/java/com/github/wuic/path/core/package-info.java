@@ -53,7 +53,7 @@
  * </p>
  *
  * <p>
- * See this {@link com.github.wuic.util.IOUtils.buildPath(String) helper} to build a path.
+ * See this {@link com.github.wuic.util.IOUtils#buildPath(String) helper} to build a path.
  * </p>
  *
  * @author Guillaume DROUET

@@ -504,7 +504,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * <p>
      * Indicates if the given heap equals to this heap or any heap of its composition. The equality if evaluated
-     * recusrively through the composition.
+     * recursively through the composition.
      * </p>
      *
      * @param heap the heap to compare
@@ -558,7 +558,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Notifies the listeners that this heap has detected an update in one or many nuts.
      * </p>
      *
-     * @return {@link false} for convenient usage in caller
+     * @return {@code false} for convenient usage in caller
      */
     private boolean notifyListeners() {
         return notifyListeners(this);
@@ -570,7 +570,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * </p>
      *
      * @param observable the heap where change has been detected
-     * @return {@link false} for convenient usage in caller
+     * @return {@code false} for convenient usage in caller
      */
     public boolean notifyListeners(final NutsHeap observable) {
         try {

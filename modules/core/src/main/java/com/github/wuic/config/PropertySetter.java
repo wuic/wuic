@@ -106,7 +106,7 @@ public abstract class PropertySetter<T> {
      *
      * @param key the key
      * @param value the property value
-     * @return {@code true} if the setter supports the key and has put the value, {@link false} otherwise
+     * @return {@code true} if the setter supports the key and has put the value, {@code false} otherwise
      */
     public Boolean setProperty(final String key, final Object value) {
         if (getPropertyKey().equals(key)) {
@@ -122,7 +122,7 @@ public abstract class PropertySetter<T> {
      * Gets the value from the builder associated to the supported key.
      * </p>
      *
-     * @return the property value, {@link null} if the property value has not been set to the builder
+     * @return the property value, {@code null} if the property value has not been set to the builder
      */
     @SuppressWarnings("unchecked")
     public T get() {

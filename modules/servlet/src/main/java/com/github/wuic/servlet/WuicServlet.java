@@ -172,7 +172,7 @@ public class WuicServlet extends HttpServlet {
 
     /**
      * <p>
-     * Writes a nut in the HTTP response.
+     * Writes a nut in the {@link HttpServletResponse}.
      * </p>
      *
      * @param workflowId the workflow ID

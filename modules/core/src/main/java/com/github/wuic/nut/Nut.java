@@ -229,7 +229,7 @@ public interface Nut extends Serializable {
      * <p>
      * When this nut is the result of the transformation of another one, then it is actually a processed nut. This returns
      * a list of original nuts that have been transformed to obtain this nut. When this nut is actually an non-transformed
-     * one, say an original nut, then the returned value should be {@link null}.
+     * one, say an original nut, then the returned value should be {@code null}.
      * </p>
      *
      * @return the original nuts of this nut, {@code null} if this nut is actually original

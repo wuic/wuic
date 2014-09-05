@@ -45,7 +45,7 @@ package com.github.wuic.nut;
  * </p>
  *
  * <p>
- * To be notified, it must be registered to the {@link NutsHeap} thanks to its  {@link NutsHeap#observe(HeapListener)}
+ * To be notified, it must be registered to the {@link NutsHeap} thanks to its  {@link NutsHeap#addObserver(HeapListener)}
  * method.
  * </p>
  *

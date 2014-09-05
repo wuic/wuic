@@ -269,7 +269,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * Indicates if the parser should tries to read ant inline content.
          * </p>
 
-         * @return {@link true} if inline content needs to be read, {@code false} otherwise
+         * @return {@code true} if inline content needs to be read, {@code false} otherwise
          */
         protected abstract Boolean readInlineIfTokenNotFound();
 
@@ -442,7 +442,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
     /**
      * <p>
-     * This class returns always {@link null}, telling the caller to not replace the parsed {@code String}.
+     * This class returns always {@code null}, telling the caller to not replace the parsed {@code String}.
      * </p>
      *
      * @author Guillaume DROUET

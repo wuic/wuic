@@ -389,7 +389,6 @@ public final class EngineRequest {
      * </p>
      *
      * @return the iterator
-     * @see NutsIterator
      */
     public Iterator<List<Nut>> iterator() {
         return new NutsIterator();

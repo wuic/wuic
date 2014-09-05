@@ -137,7 +137,7 @@ public class XmlWorkflowTemplateBean {
      * Indicates if the chain should include default engines.
      * </p>
      *
-     * @return {@code true} if we include default engines or if value is {@code null}, {@link false} otherwise
+     * @return {@code true} if we include default engines or if value is {@code null}, {@code false} otherwise
      */
     public Boolean getUseDefaultEngines() {
         return useDefaultEngines == null ? Boolean.TRUE : useDefaultEngines;

@@ -68,12 +68,12 @@ public interface NutDaoListener {
      * </p>
      *
      * <p>
-     * If the listener returns {@link false}, the observable will stop notifying it <b>only</b> during the polling
+     * If the listener returns {@code false}, the observable will stop notifying it <b>only</b> during the polling
      * operation.
      * </p>
      *
      * @param paths all the real paths which are going to be polled
-     * @return {@link false} if polling should not be done, {@link true} otherwise
+     * @return {@code false} if polling should not be done, {@code true} otherwise
      */
     boolean polling(Set<String> paths);
 
