@@ -104,7 +104,7 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
                 is = archive.getInputStream(entry);
                 os = new FileOutputStream(entryArchiveDisk);
                 IOUtils.copyStreamIoe(is, os);
-                return new ZipFilePath(entryArchiveDisk, child, this, Boolean.FALSE);
+                return new ZipFilePath(entryArchiveDisk, child, this);
             } else {
 
                 // Entry is a path

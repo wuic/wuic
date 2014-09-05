@@ -78,12 +78,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
     /**
      * The archive.
      */
-    private File zipFile;
-
-    /**
-     * If this file should be deleted or not.
-     */
-    private Boolean keepZipFile;
+    private File zip;
 
     /**
      * <p>
@@ -95,7 +90,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * @throws java.io.IOException if any I/O error occurs
      */
     public ZipFilePath(final File file, final DirectoryPath parent) throws IOException {
-        this(file, file.getName(), parent, Boolean.TRUE);
+        this(file, file.getName(), parent);
     }
 
     /**
@@ -106,10 +101,9 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * @param file the path
      * @param name the name
      * @param parent the parent
-     * @param keepFile if given file should be deleted when object is garbage collected
      * @throws java.io.IOException if any I/O error occurs
      */
-    public ZipFilePath(final File file, final String name, final DirectoryPath parent, final Boolean keepFile)
+    public ZipFilePath(final File file, final String name, final DirectoryPath parent)
             throws IOException {
         super(name, parent);
 
@@ -117,8 +111,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
             throw new IllegalArgumentException(String.format("%s is not a ZIP archive", file.getAbsolutePath()));
         }
 
-        zipFile = file;
-        keepZipFile = keepFile;
+        zip = file;
     }
 
     /**
@@ -129,7 +122,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * @return the raw path
      */
     public File getRawFile() {
-        return zipFile;
+        return zipFile();
     }
 
     /**
@@ -137,7 +130,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      */
     @Override
     public InputStream openStream() throws IOException {
-        return new FileInputStream(zipFile);
+        return new FileInputStream(zipFile());
     }
 
     /**
@@ -148,7 +141,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
         ZipFile archive = null;
 
         try {
-            archive = new ZipFile(zipFile);
+            archive = new ZipFile(zipFile());
             final Enumeration<? extends ZipEntry> entries = archive.entries();
             final List<String> retval = new ArrayList<String>();
 
@@ -185,7 +178,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
         final String rootEntry = StringUtils.merge(new String[] { baseEntry, "/", }, "/");
 
         try {
-            archive = new ZipFile(zipFile);
+            archive = new ZipFile(zipFile());
             final Enumeration<? extends ZipEntry> entries = archive.entries();
             final List<String> retval = new ArrayList<String>();
 
@@ -221,7 +214,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      */
     @Override
     protected ZipFile getZipFile() throws IOException {
-        return new ZipFile(zipFile);
+        return new ZipFile(zipFile());
     }
 
     /**
@@ -229,7 +222,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      */
     @Override
     public long getLastUpdate() {
-        return zipFile.lastModified();
+        return zipFile().lastModified();
     }
 
     /**
@@ -240,15 +233,18 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
         return child;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void finalize() throws Throwable {
-        if (!keepZipFile && !zipFile.delete()) {
-            log.warn("A ZipFilePath has been garbage collected but unable to delete {}", zipFile.getAbsolutePath());
+    private File zipFile() {
+        if (!zip.exists()) {
+            final String absolutePath = getAbsolutePath();
+
+            try {
+                log.info("'{}' was not found. Recreating an unzipped entry for '{}'", zip.getAbsolutePath(), absolutePath);
+                zip = ZipFilePath.class.cast(getParent().getChild(getName())).zip;
+            } catch (IOException ioe) {
+                log.error(String.format("Unable to create an unzipped entry for '%s'", absolutePath), ioe);
+            }
         }
 
-        super.finalize();
+        return zip;
     }
 }

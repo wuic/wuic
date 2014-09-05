@@ -41,6 +41,7 @@ package com.github.wuic.path.core;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipFile;
@@ -51,7 +52,7 @@ import java.util.zip.ZipFile;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
+ * @version 1.2
  * @since 0.3.4
  */
 public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
@@ -74,11 +75,20 @@ public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
     @Override
     public InputStream openStream() throws IOException {
         final ArchiveWithParentEntry wrapper = findZipArchive("");
+        final File file = wrapper.getArchive().getRawFile();
 
-        // Let's GC call finalize and close the ZIP path
-        final ZipFile zipFile = new ZipFile(wrapper.getArchive().getRawFile());
+        final ZipFile zipFile;
 
-        return zipFile.getInputStream(zipFile.getEntry(wrapper.getEntryPath()));
+        if (file.exists()) {
+            zipFile = new ZipFile(file);
+        } else {
+            wrapper.getArchive().getChild(getName());
+            zipFile = new ZipFile(file);
+        }
+
+        final InputStream is = zipFile.getInputStream(zipFile.getEntry(wrapper.getEntryPath()));
+
+        return new ZipFileInputStream(file, zipFile, is);
     }
 
     /**
@@ -92,5 +102,76 @@ public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
         final ZipFile zipFile = new ZipFile(wrapper.getArchive().getRawFile());
 
         return zipFile.getEntry(wrapper.getEntryPath()).getTime();
+    }
+
+    /**
+     * <p>
+     * This class wraps a {@link ZipFile} and delegate the {@link #read()} method to an {@link InputStream} created by
+     * itself. When {@link #close()} is invoked, both file and stream are closed.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.1
+     * @since 0.3.4
+     */
+    public final class ZipFileInputStream extends InputStream {
+
+        /**
+         * The file on file system.
+         */
+        private File file;
+
+        /**
+         * The ZIP file.
+         */
+        private ZipFile zipFile;
+
+        /**
+         * The delegate input stream.
+         */
+        private InputStream inputStream;
+
+        /**
+         * <p>
+         * Creates a new instance.
+         * </p>
+         *
+         * @param f the file on file system
+         * @param zf the ZIP file
+         * @param is the delegate stream
+         */
+        private ZipFileInputStream(final File f, final ZipFile zf, final InputStream is) {
+            file = f;
+            zipFile = zf;
+            inputStream = is;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int read() throws IOException {
+            return inputStream.read();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() throws IOException {
+            inputStream.close();
+            zipFile.close();
+        }
+
+        /**
+         * <p>
+         * Gets the file on file system.
+         * </p>
+         *
+         * @return the file
+         */
+        public File getFile() {
+            return file;
+        }
     }
 }

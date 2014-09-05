@@ -44,6 +44,8 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.path.FilePath;
+import com.github.wuic.path.core.ZipEntryFilePath;
 import com.github.wuic.util.AnnotationDetectorScanner;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
@@ -60,6 +62,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -319,6 +322,37 @@ public class UtilityTest extends WuicTest {
         final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
         IOUtils.listFile(directoryPath, Pattern.compile(".*.js"));
+    }
+
+    /**
+     * <p>
+     * Tests when reading unzipped entry. Also tests that unzipped entry is recreated when unzipped file is deleted.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     * @throws StreamException if error occurs during research
+     */
+    @Test
+    public void zipEntryTest() throws IOException, StreamException {
+        String str = IOUtils.normalizePathSeparator(getClass().getResource("/zip").toString());
+
+        final String baseDir = str.substring(str.indexOf(":/") + 1);
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final List<String> list = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
+        ZipEntryFilePath.ZipFileInputStream is;
+
+        for (final String s : list) {
+            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
+            IOUtils.copyStream(is, new ByteArrayOutputStream());
+            is.close();
+            Assert.assertTrue(is.getFile().delete());
+
+            // Retry when file is deleted
+            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
+            IOUtils.copyStream(is, new ByteArrayOutputStream());
+            is.close();
+            Assert.assertTrue(is.getFile().delete());
+        }
     }
 
     /**
