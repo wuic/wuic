@@ -635,12 +635,12 @@ public class ContextBuilder extends Observable {
         /**
          * The ID.
          */
-        protected String id;
+        private String id;
 
         /**
          * The properties.
          */
-        protected Map<String, Object> properties;
+        private Map<String, Object> properties;
 
         /**
          * <p>
@@ -653,6 +653,28 @@ public class ContextBuilder extends Observable {
         public ContextGenericBuilder(final String id) throws UnableToInstantiateException {
             this.id = id;
             this.properties = new HashMap<String, Object>();
+        }
+
+        /**
+         * <p>
+         * Gets the ID.
+         * </p>
+         *
+         * @return the ID
+         */
+        protected String getId() {
+            return id;
+        }
+
+        /**
+         * <p>
+         * Gets the properties
+         * </p>
+         *
+         * @return the properties
+         */
+        protected Map<String, Object> getProperties() {
+            return properties;
         }
 
         /***
@@ -712,7 +734,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextEngineBuilder property(final String key, final Object value) {
-            properties.put(key, value);
+            getProperties().put(key, value);
             return this;
         }
 
@@ -721,7 +743,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
-            engineBuilder(id, engineBuilder, properties);
+            engineBuilder(getId(), engineBuilder, getProperties());
             return ContextBuilder.this;
         }
     }
@@ -761,7 +783,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextNutDaoBuilder property(final String key, final Object value) {
-            properties.put(key, value);
+            getProperties().put(key, value);
             return this;
         }
 
@@ -770,7 +792,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
-            nutDaoBuilder(id, nutDaoBuilder, properties);
+            nutDaoBuilder(getId(), nutDaoBuilder, getProperties());
             return ContextBuilder.this;
         }
     }
@@ -810,7 +832,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextNutFilterBuilder property(final String key, final Object value) {
-            properties.put(key, value);
+            getProperties().put(key, value);
             return this;
         }
 
@@ -819,7 +841,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
-            nutFilterBuilder(id, nutFilterBuilder, properties);
+            nutFilterBuilder(getId(), nutFilterBuilder, getProperties());
             return ContextBuilder.this;
         }
     }

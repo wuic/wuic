@@ -71,37 +71,37 @@ public class WuicFacadeBuilder {
     /**
      * The context path where public URL will be exposed.
      */
-    String contextPath;
+    private String contextPath;
 
     /**
      * How the workflow should be executed when facade is created.
      */
-    WuicFacade.WarmupStrategy warmUpStrategy;
+    private WuicFacade.WarmupStrategy warmUpStrategy;
 
     /**
      * Indicates to view templates if they should reload their own configurations for each requests.
      */
-    Boolean multipleConfigInTagSupport;
+    private Boolean multipleConfigInTagSupport;
 
     /**
      * The URL where wuic.xml file is located.
      */
-    URL wuicXmlPath;
+    private URL wuicXmlPath;
 
     /**
      * Use or not configurator that creates default DAOs and engines.
      */
-    Boolean useDefaultContextBuilderConfigurator;
+    private Boolean useDefaultContextBuilderConfigurator;
 
     /**
      * An inspector of any built object.
      */
-    ObjectBuilderInspector objectBuilderInspector;
+    private ObjectBuilderInspector objectBuilderInspector;
 
     /**
      * Additional custom context configurators.
      */
-    List<ContextBuilderConfigurator> configurators;
+    private List<ContextBuilderConfigurator> configurators;
 
     /**
      * <p>
@@ -281,5 +281,82 @@ public class WuicFacadeBuilder {
     public WuicFacade build() throws WuicException {
         log.info("Building facade.");
         return new WuicFacade(this);
+    }
+
+    /**
+     * <p>
+     * Gets the context path.
+     * </p>
+     *
+     * @return the context path
+     */
+    String getContextPath() {
+        return contextPath;
+    }
+
+    /**
+     * <p>
+     * Gets the warmup strategy.
+     * </p>
+     *
+     * @return the {@link com.github.wuic.WuicFacade.WarmupStrategy}
+     */
+    WuicFacade.WarmupStrategy getWarmUpStrategy() {
+        return warmUpStrategy;
+    }
+
+    /**
+     * <p>
+     * Indicates if multiple configurations inside tag are allowed
+     * </p>
+     *
+     * @return {@code true} or {@code false}
+     */
+    Boolean getMultipleConfigInTagSupport() {
+        return multipleConfigInTagSupport;
+    }
+
+    /**
+     * <p>
+     * Gets the wuic.xml location if any
+     * </p>
+     *
+     * @return the location
+     */
+    URL getWuicXmlPath() {
+        return wuicXmlPath;
+    }
+
+    /**
+     * <p>
+     * Indicates if default context builders should be used.
+     * </p>
+     *
+     * @return {@code true} or {@code false}
+     */
+    Boolean getUseDefaultContextBuilderConfigurator() {
+        return useDefaultContextBuilderConfigurator;
+    }
+
+    /**
+     * <p>
+     * Gets the interceptor if any.
+     * </p>
+     *
+     * @return the interceptor
+     */
+    ObjectBuilderInspector getObjectBuilderInspector() {
+        return objectBuilderInspector;
+    }
+
+    /**
+     * <p>
+     * Gets extra configurators if any
+     * </p>
+     *
+     * @return the configurators
+     */
+    List<ContextBuilderConfigurator> getConfigurators() {
+        return configurators;
     }
 }

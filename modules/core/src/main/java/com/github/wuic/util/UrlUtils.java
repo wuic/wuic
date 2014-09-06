@@ -135,4 +135,13 @@ public final class UrlUtils {
     public static UrlMatcher urlMatcher(final String requestUrl) {
         return new UrlMatcher(requestUrl);
     }
+
+    /**
+     * <p>
+     * Private constructor for utility class.
+     * </p>
+     */
+    private UrlUtils() {
+
+    }
 }

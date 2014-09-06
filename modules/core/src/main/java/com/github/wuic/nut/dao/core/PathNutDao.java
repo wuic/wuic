@@ -75,7 +75,7 @@ public abstract class PathNutDao extends AbstractNutDao {
     /**
      * Base directory where the protocol has to look up.
      */
-    protected DirectoryPath baseDirectory;
+    private DirectoryPath baseDirectory;
 
     /**
      * {@code true} if the path is a regex, {@code false} otherwise

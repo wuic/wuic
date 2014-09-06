@@ -168,15 +168,16 @@ public final class WuicFacade {
         config = b;
 
         try {
-            if (b.wuicXmlPath != null) {
-                b.configurators.add(new FileXmlContextBuilderConfigurator(config.wuicXmlPath));
+            if (b.getWuicXmlPath() != null) {
+                b.getConfigurators().add(new FileXmlContextBuilderConfigurator(config.getWuicXmlPath()));
             }
         } catch (JAXBException je) {
             throw new WuicXmlReadException("unable to load wuic.xml", je) ;
         }
 
-        builder = b.objectBuilderInspector == null ? new ContextBuilder() : new ContextBuilder(b.objectBuilderInspector);
-        configure(b.useDefaultContextBuilderConfigurator, b.configurators.toArray(new ContextBuilderConfigurator[config.configurators.size()]));
+        builder = b.getObjectBuilderInspector() == null ? new ContextBuilder() : new ContextBuilder(b.getObjectBuilderInspector());
+        final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];
+        configure(b.getUseDefaultContextBuilderConfigurator(), b.getConfigurators().toArray(array));
         buildContext();
     }
 
@@ -243,8 +244,8 @@ public final class WuicFacade {
      * </p>
      *
      * <p>
-     * The path should be used with the name of nuts returned when invoking
-     * {@link WuicFacade#runWorkflow(String, String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
+     * The path should be used with the name of one nut returned when invoking
+     * {@link #runWorkflow(String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
      * </p>
      * 
      * @param id the workflow ID
@@ -257,7 +258,7 @@ public final class WuicFacade {
     public synchronized Nut runWorkflow(final String id, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
             throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final Nut retval = context.process(config.contextPath, id, path, urlProviderFactory, skip);
+        final Nut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, skip);
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -299,7 +300,7 @@ public final class WuicFacade {
      */
     public synchronized List<Nut> runWorkflow(final String id, final UrlProviderFactory urlProviderFactory, final EngineType ... skip) throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final List<Nut> retval = new ArrayList<Nut>(context.process(config.contextPath, id, urlProviderFactory, skip));
+        final List<Nut> retval = new ArrayList<Nut>(context.process(config.getContextPath(), id, urlProviderFactory, skip));
         log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -374,7 +375,7 @@ public final class WuicFacade {
      * @return context path
      */
     public String getContextPath() {
-        return config.contextPath;
+        return config.getContextPath();
     }
 
     /**
@@ -385,7 +386,7 @@ public final class WuicFacade {
      * @return {@code true} if allowed, {@code false} otherwise
      */
     public Boolean allowsMultipleConfigInTagSupport() {
-        return config.multipleConfigInTagSupport;
+        return config.getMultipleConfigInTagSupport();
     }
 
     /**
@@ -398,7 +399,7 @@ public final class WuicFacade {
     private void buildContext() throws WuicException {
         context = builder.build();
 
-        switch (config.warmUpStrategy) {
+        switch (config.getWarmUpStrategy()) {
             case NONE:
                 log.info("Building the context without any warmup");
                 break;
