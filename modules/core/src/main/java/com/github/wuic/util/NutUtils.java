@@ -151,12 +151,16 @@ public final class NutUtils {
      * @return the computed version number
      */
     public static Long getVersionNumber(final List<Nut> nuts) {
+        if (nuts.size() == 1) {
+            return getVersionNumber(nuts.get(0));
+        }
+
         final MessageDigest md = IOUtils.newMessageDigest();
 
         for (final Nut o : nuts) {
             md.update(ByteBuffer.allocate(NumberUtils.HEIGHT).putLong(getVersionNumber(o)).array());
         }
 
-        return  ByteBuffer.wrap(md.digest()).getLong();
+        return ByteBuffer.wrap(md.digest()).getLong();
     }
 }
