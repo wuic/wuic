@@ -77,14 +77,12 @@
                 <groupId>org.eclipse.jdt.core.compiler</groupId>
                 <artifactId>ecj</artifactId>
                 <version>${ecj.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.el</artifactId>
                 <version>${el.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <!-- JEE APIs are always provided -->
