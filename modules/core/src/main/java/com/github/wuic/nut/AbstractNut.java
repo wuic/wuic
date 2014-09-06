@@ -40,6 +40,10 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.util.NutUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -55,6 +59,11 @@ import java.util.concurrent.Future;
  * @since 0.3.0
  */
 public abstract class AbstractNut implements Nut {
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * The path type.
@@ -344,7 +353,8 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + getName() + "] - v" + getVersionNumber();
+        final String retval = getClass().getSimpleName() + "[" + getName() + "]";
+        return logger.isInfoEnabled() ? (retval + " - v" + NutUtils.getVersionNumber(this)) : retval;
     }
 
     /**
