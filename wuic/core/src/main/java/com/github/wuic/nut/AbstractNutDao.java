@@ -126,11 +126,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                           final String[] proxies,
                           final int pollingSeconds,
                           final Boolean contentBasedHash) {
-        if (base == null) {
+        final String b = basePathAsSysProp ? System.getProperty(base) : base;
+
+        if (b == null) {
             throw new BadArgumentException(new IllegalArgumentException("Base path can't be null"));
         }
 
-        basePath = IOUtils.mergePath("/", basePathAsSysProp ? System.getProperty(base) : base);
+        basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
         contentBasedVersionNumber = contentBasedHash;

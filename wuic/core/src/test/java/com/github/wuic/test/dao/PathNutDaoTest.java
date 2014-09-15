@@ -47,6 +47,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -65,7 +66,7 @@ import java.net.URLClassLoader;
 
 /**
  * <p>
- * Tests for {@link ClasspathNutDao}.
+ * Tests for classes related to {@link com.github.wuic.nut.dao.core.PathNutDao}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -73,7 +74,7 @@ import java.net.URLClassLoader;
  * @since 0.5.0
  */
 @RunWith(JUnit4.class)
-public class ClasspathNutDaoTest {
+public class PathNutDaoTest {
 
     /**
      * Temporary folder factory.
@@ -82,7 +83,7 @@ public class ClasspathNutDaoTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     /**
-     * Tests when one base directory corresponds to multiple classpath entries.
+     * Tests when one base directory corresponds to multiple classpath entries for {@link ClasspathNutDao}.
      *
      * @throws Exception if test fails
      */
@@ -104,7 +105,7 @@ public class ClasspathNutDaoTest {
 
     /**
      * <p>
-     * Test exists implementation.
+     * Test exists implementation for {@link ClasspathNutDao}.
      * </p>
      *
      * @throws StreamException if test fails
@@ -121,7 +122,7 @@ public class ClasspathNutDaoTest {
 
     /**
      * <p>
-     * Test stream.
+     * Test stream for {@link ClasspathNutDao}.
      * </p>
      *
      * @throws StreamException if test fails
@@ -136,6 +137,27 @@ public class ClasspathNutDaoTest {
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
         Assert.assertTrue(dao.exists("reject-block.png"));
         final InputStream is = dao.create("reject-block.png").get(0).openStream();
+        IOUtils.copyStream(is, new ByteArrayOutputStream());
+        is.close();
+    }
+
+    /**
+     * <p>
+     * Test with {@link DiskNutDao}.
+     * </p>
+     *
+     * @throws StreamException if test fails
+     * @throws BuilderPropertyNotSupportedException if test fails
+     * @throws IOException if test fails
+     * @throws NutNotFoundException if test fails
+     */
+    @Test
+    public void diskReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+        final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, DiskNutDao.class);
+        final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");
+        final NutDao dao = builder.build();
+        Assert.assertTrue(dao.exists("src/test/resources/images/reject-block.png"));
+        final InputStream is = dao.create("src/test/resources/images/reject-block.png").get(0).openStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
