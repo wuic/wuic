@@ -52,6 +52,7 @@ import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.util.UrlMatcher;
@@ -62,10 +63,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -612,5 +616,33 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(urlMatcher.getWorkflowId(), "workflow");
         Assert.assertEquals(urlMatcher.getNutName(), "nut.js");
         Assert.assertNull(urlMatcher.getVersionNumber());
+    }
+
+    /**
+     * <p>
+     * Tests the pipe.    
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void pipeTest() throws Exception {
+        final AtomicInteger count = new AtomicInteger(10);
+        final Pipe p = new Pipe(new ByteArrayInputStream(new byte[] { (byte) count.get() }));
+        class T implements Pipe.Transformer {
+            @Override
+            public void transform(final InputStream is, final OutputStream os) throws IOException {
+                int r = is.read();
+                os.write(r + count.decrementAndGet());
+            }
+        }
+
+        int expect = 0;
+        for (int i = 1; i <= count.get(); i++) {
+            expect += i;
+            p.register(new T());
+        }
+
+        Assert.assertEquals(expect, p.execute().toByteArray()[0]);
     }
 }

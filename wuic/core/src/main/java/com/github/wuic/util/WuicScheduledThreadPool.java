@@ -137,6 +137,18 @@ public final class WuicScheduledThreadPool extends Thread {
     }
 
     /**
+     * <p>
+     * Executes as soon as possible the given job and returns the related {@link Future}.
+     * </p>
+     *
+     * @param job the job to execute
+     * @return the future result
+     */
+    public synchronized Future<?> executeAsap(final Runnable job) {
+        return pool.submit(job);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void run() {
