@@ -45,7 +45,10 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.CssInspectorEngine;
+import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
@@ -60,7 +63,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -92,7 +97,6 @@ public class CssInspectorTest {
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
         final Engine engine = new CssInspectorEngine(true, "UTF-8");
-        final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 
             /**
@@ -102,7 +106,7 @@ public class CssInspectorTest {
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
                 final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
-                Mockito.when(nut.getName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
+                Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
                 Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
                 Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
@@ -111,28 +115,13 @@ public class CssInspectorTest {
                 return retval;
             }
         });
+
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getId()).thenReturn("heap");
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
         final List<Nut> nuts = new ArrayList<Nut>();
-        final Nut nut = Mockito.mock(Nut.class);
-        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
-        Mockito.when(nut.getName()).thenAnswer(new Answer<Object>() {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                final String retval = createCount.get() + ".css";
-                h.getCreated().add(retval);
-                return retval;
-
-            }
-        });
-        nuts.add(nut);
 
         for (final String[] c : collection) {
             final String rule = c[0];
@@ -140,14 +129,33 @@ public class CssInspectorTest {
             builder.append(String.format(rule, path));
         }
 
-        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(builder.toString().getBytes()));
+        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS , 1L)) {
+            @Override
+            public String getName() {
+                final String retval = createCount.get() + ".css";
+                h.getCreated().add(retval);
+                return retval;
+            }
+
+            @Override
+            public String getInitialName() {
+                return getName();
+            }
+        };
+        nuts.add(nut);
+
         Mockito.when(heap.getNuts()).thenReturn(nuts);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
-        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>());
+        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>(Arrays.asList(nut.getInitialName())));
 
         final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
-        engine.parse(request);
+        final List<ConvertibleNut> res = engine.parse(request);
+
+        for (final ConvertibleNut convertibleNut : res) {
+            convertibleNut.transform(new ByteArrayOutputStream());
+        }
+
         Assert.assertEquals(message, count, createCount.get());
     }
 
@@ -265,13 +273,15 @@ public class CssInspectorTest {
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
-        List<Nut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory());
+        List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
+        group.get(0).transform(new ByteArrayOutputStream());
         Assert.assertEquals(3, group.get(0).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
         group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
+        group.get(0).transform(new ByteArrayOutputStream());
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
     }
 

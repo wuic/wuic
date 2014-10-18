@@ -42,7 +42,9 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.FutureLong;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * <p>
@@ -54,7 +56,7 @@ import java.io.InputStream;
  * @version 1.1
  * @since 0.4.1
  */
-public class NotReachableNut extends AbstractNut {
+public class NotReachableNut extends AbstractConvertibleNut {
 
     /**
      * The nut's heap.
@@ -81,6 +83,14 @@ public class NotReachableNut extends AbstractNut {
      */
     @Override
     public InputStream openStream() throws NutNotFoundException {
-        throw new NutNotFoundException(getName(), heap);
+        throw new NutNotFoundException(getInitialName(), heap);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void transform(final OutputStream outputStream) throws IOException {
+        throw new IOException(new NutNotFoundException(getInitialName(), heap));
     }
 }

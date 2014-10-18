@@ -291,7 +291,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 }
 
                 // Do the round-robin by incrementing nextProxyIndex counter
-                return IOUtils.mergePath(String.valueOf(proxyUris[nextProxyIndex.getAndIncrement()]), nut.getName());
+                return IOUtils.mergePath(String.valueOf(proxyUris[nextProxyIndex.getAndIncrement()]), nut.getInitialName());
             }
         } else {
             return null;
@@ -575,7 +575,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public Long call() throws Exception {
+        public Long call() throws StreamException {
             log.debug("Computing asynchronously version number for path '{}'. Content based: {}", path, contentBasedVersionNumber);
 
             if (contentBasedVersionNumber) {

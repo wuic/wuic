@@ -40,7 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -64,7 +64,7 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
     /**
      * The image.
      */
-    private Nut image;
+    private ConvertibleNut image;
 
     /**
      * <p>
@@ -87,7 +87,7 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public void init(final Nut nut) {
+    public void init(final ConvertibleNut nut) {
         regions.clear();
         image = nut;
     }
@@ -139,7 +139,7 @@ public abstract class AbstractSpriteProvider implements SpriteProvider {
      *
      * @return the image
      */
-    protected Nut getImage() {
+    protected ConvertibleNut getImage() {
         return image;
     }
 }

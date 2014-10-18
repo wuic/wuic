@@ -43,17 +43,24 @@ import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.engine.*;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.Region;
+import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.setter.SpriteProviderPropertySetter;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
-import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,7 +119,7 @@ public class SpriteInspectorEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         /*
          * If the configuration says that no inspection should be done or if no sprite provider is defined,
          * then we return the given request nuts
@@ -121,19 +128,18 @@ public class SpriteInspectorEngine extends NodeEngine {
             return request.getNuts();
         } else {
             int spriteCpt = 0;
-            final List<Nut> res = getNext() == null ? request.getNuts() : getNext().parse(request);
-            final List<Nut> retval = new ArrayList<Nut>();
+            final List<ConvertibleNut> res = getNext() == null ? request.getNuts() : getNext().parse(request);
+            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
 
             // Calculate type and dimensions of the final image
-            for (final Nut n : res) {
+            for (final ConvertibleNut n : res) {
                 // Clear previous work
                 initSpriteProviders(n);
 
                 if (n.getOriginalNuts() != null) {
-                    // Origin can be compressed, use its own origin which is the image in that case
-                    final List<Nut> originalNuts = n.isCompressed() ? n.getOriginalNuts().get(0).getOriginalNuts() : n.getOriginalNuts();
+                    final List<ConvertibleNut> originalNuts = n.getOriginalNuts();
 
-                    for (final Nut origin : originalNuts) {
+                    for (final ConvertibleNut origin : originalNuts) {
                         if (origin instanceof ImageNut) {
                             addRegionToSpriteProviders(ImageNut.class.cast(origin).getRegion(), origin.getName());
                         } else {
@@ -180,7 +186,7 @@ public class SpriteInspectorEngine extends NodeEngine {
      *
      * @param nut the nut
      */
-    private void initSpriteProviders(final Nut nut) {
+    private void initSpriteProviders(final ConvertibleNut nut) {
         for (final SpriteProvider sp : spriteProviders) {
             sp.init(nut);
         }
@@ -212,16 +218,20 @@ public class SpriteInspectorEngine extends NodeEngine {
      * @param request the initial engine request
      * @throws WuicException if generation fails
      */
-    private Nut applySpriteProviders(final String url, final String heapId, final String suffix, final Nut n, final EngineRequest request)
+    private ConvertibleNut applySpriteProviders(final String url,
+                                                final String heapId,
+                                                final String suffix,
+                                                final ConvertibleNut n,
+                                                final EngineRequest request)
             throws WuicException {
         if (spriteProviders.length == 0) {
             return n;
         }
 
-        Nut retval = null;
+        ConvertibleNut retval = null;
 
         for (final SpriteProvider sp : spriteProviders) {
-            Nut nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
+            final ConvertibleNut nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
             final NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
@@ -230,19 +240,19 @@ public class SpriteInspectorEngine extends NodeEngine {
                  * We also skip inspection because this is not necessary to detect references to this image
                  */
                 final EngineType[] skip = request.alsoSkip(EngineType.CACHE, EngineType.INSPECTOR);
-                final List<Nut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, skip));
+                final List<ConvertibleNut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, skip));
 
                 if (retval != null) {
                     n.addReferencedNut(parsed.get(0));
                 } else {
                     retval = parsed.get(0);
-                    retval.addReferencedNut(n);
+                    retval.addTransformer(new AddReferencedNutOnTransform(n));
                 }
             } else if (retval != null) {
-                n.addReferencedNut(nut);
+                n.addTransformer(new AddReferencedNutOnTransform(nut));
             }  else {
                 retval = nut;
-                retval.addReferencedNut(n);
+                retval.addTransformer(new AddReferencedNutOnTransform(n));
             }
         }
 
@@ -271,5 +281,44 @@ public class SpriteInspectorEngine extends NodeEngine {
     @Override
     public EngineType getEngineType() {
         return EngineType.INSPECTOR;
+    }
+
+    /**
+     * <p>
+     * This class adds a specified nut as a referenced nut when the
+     * {@link com.github.wuic.util.Pipe.Transformer#transform(java.io.InputStream, java.io.OutputStream, Object)}
+     * method is invoked.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private static final class AddReferencedNutOnTransform extends Pipe.DefaultTransformer<ConvertibleNut> {
+
+        /**
+         * The referenced nut.
+         */
+        private ConvertibleNut ref;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param cn the nut to add as a referenced nut
+         */
+        private AddReferencedNutOnTransform(final ConvertibleNut cn) {
+            this.ref = cn;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+            convertible.addReferencedNut(ref);
+            super.transform(is, os, convertible);
+        }
     }
 }

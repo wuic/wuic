@@ -47,6 +47,7 @@ import com.github.wuic.util.NutUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +68,7 @@ import java.util.List;
  * @version 1.7
  * @since 0.2.0
  */
-public final class ByteArrayNut extends AbstractNut {
+public final class ByteArrayNut extends PipedConvertibleNut {
 
     /**
      * Serial version UID.
@@ -89,7 +90,7 @@ public final class ByteArrayNut extends AbstractNut {
      * @param nt the {@link NutType}
      * @param originalNut the original nut
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Nut originalNut) {
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final ConvertibleNut originalNut) {
         this(bytes, name, nt, Arrays.asList(originalNut), NutUtils.getVersionNumber(originalNut));
     }
 
@@ -104,7 +105,7 @@ public final class ByteArrayNut extends AbstractNut {
      * @param originalNuts the original nuts
      * @param version the version number
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<Nut> originalNuts, final Long version) {
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<ConvertibleNut> originalNuts, final Long version) {
         super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, new FutureLong(version));
         setOriginalNuts(originalNuts);
         byteArray = Arrays.copyOf(bytes, bytes.length);
@@ -127,31 +128,6 @@ public final class ByteArrayNut extends AbstractNut {
 
     /**
      * <p>
-     * Builds a copy of given original {@code Nut} and puts its content into a memory byte array.
-     * </p>
-     *
-     * @param nut the original nut
-     * @throws NutNotFoundException if original {@link Nut} is wrongly built
-     * @throws StreamException if content fails to be copied
-     */
-    public ByteArrayNut(final Nut nut) throws NutNotFoundException, StreamException {
-        super(nut);
-
-        InputStream is = null;
-
-        try {
-            is = nut.openStream();
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            IOUtils.copyStream(is, os);
-            final byte[] bytes = os.toByteArray();
-            byteArray = Arrays.copyOf(bytes, bytes.length);
-        } finally {
-            IOUtils.close(is);
-        }
-    }
-
-    /**
-     * <p>
      * Converts the given nuts list and its referenced nuts into nuts wrapping an in memory byte array.
      * </p>
      *
@@ -159,10 +135,10 @@ public final class ByteArrayNut extends AbstractNut {
      * @throws StreamException if an I/O error occurs
      * @throws NutNotFoundException if given nut not normally created
      */
-    public static List<Nut> toByteArrayNut(final List<Nut> nuts) throws StreamException, NutNotFoundException {
-        final List<Nut> retval = new ArrayList<Nut>(nuts.size());
+    public static List<ConvertibleNut> toByteArrayNut(final List<ConvertibleNut> nuts) throws StreamException, NutNotFoundException {
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
 
-        for (final Nut nut : nuts) {
+        for (final ConvertibleNut nut : nuts) {
             retval.add(toByteArrayNut(nut));
         }
 
@@ -179,21 +155,21 @@ public final class ByteArrayNut extends AbstractNut {
      * @throws StreamException if an I/O error occurs
      * @throws NutNotFoundException if given nut not normally created
      */
-    public static Nut toByteArrayNut(final Nut nut) throws StreamException, NutNotFoundException {
+    public static ConvertibleNut toByteArrayNut(final ConvertibleNut nut) throws StreamException, NutNotFoundException {
         InputStream is = null;
 
         try {
-            is = nut.openStream();
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            IOUtils.copyStream(is, os);
-            final Nut bytes;
+            nut.transform(os);
+
+            final ConvertibleNut bytes;
             final String name = IOUtils.mergePath(nut.getName());
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut));
             } else {
-                final List<Nut> o = nut.getOriginalNuts();
+                final List<ConvertibleNut> o = nut.getOriginalNuts();
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
             }
 
@@ -201,12 +177,14 @@ public final class ByteArrayNut extends AbstractNut {
             bytes.setProxyUri(nut.getProxyUri());
 
             if (nut.getReferencedNuts() != null && nut.getReferencedNuts() != bytes.getReferencedNuts()) {
-                for (final Nut ref : nut.getReferencedNuts()) {
+                for (final ConvertibleNut ref : nut.getReferencedNuts()) {
                     bytes.addReferencedNut(toByteArrayNut(ref));
                 }
             }
 
-            return bytes;
+            return new TransformedNut(bytes);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
         } finally {
             IOUtils.close(is);
         }

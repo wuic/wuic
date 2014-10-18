@@ -39,17 +39,24 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.Pipe;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.io.OutputStream;
+import java.io.SequenceInputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -61,22 +68,17 @@ import java.util.zip.GZIPOutputStream;
  * @version 1.2
  * @since 0.4.2
  */
-public class CompositeNut extends AbstractNut {
-
-    /**
-     * The composition list.
-     */
-    private Nut[] compositionList;
-
-    /**
-     * The nut name.
-     */
-    private String name;
+public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * The bytes between each stream.
      */
     private byte[] streamSeparator;
+
+    /**
+     * The composition list.
+     */
+    private List<ConvertibleNut> compositionList;
 
     /**
      * <p>
@@ -87,21 +89,7 @@ public class CompositeNut extends AbstractNut {
      * @param separator the bytes between each stream, {@code null} if nothing
      * @param specificName the name of the composition
      */
-    public CompositeNut(final String specificName, final byte[] separator, final Nut ... composition) {
-        this(composition, "", separator);
-        name = specificName;
-    }
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param composition the nuts of this composition
-     * @param prefixName a prefix to add to the nut name
-     * @param separator the bytes between each stream, {@code null} if nothing
-     */
-    public CompositeNut(final Nut[] composition, final String prefixName, final byte[] separator) {
+    public CompositeNut(final String specificName, final byte[] separator, final ConvertibleNut ... composition) {
         super(composition[0]);
 
         if (separator != null) {
@@ -109,19 +97,96 @@ public class CompositeNut extends AbstractNut {
             System.arraycopy(separator, 0, streamSeparator, 0, streamSeparator.length);
         }
 
-        compositionList = new Nut[composition.length];
-        System.arraycopy(composition, 0, compositionList, 0, composition.length);
-        setNutName(new StringBuilder(getName()).insert(getName().lastIndexOf('/') + 1, prefixName).toString());
+        compositionList = new ArrayList<ConvertibleNut>();
+
+        for (final ConvertibleNut nut : composition) {
+            if (CompositeNut.class.isAssignableFrom(nut.getClass())) {
+                compositionList.addAll(CompositeNut.class.cast(nut).compositionList);
+            } else {
+                compositionList.add(nut);
+            }
+        }
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
         for (int i = 1; i < composition.length; i++) {
-            final Nut nut = composition[i];
+            final ConvertibleNut nut = composition[i];
 
             if (nut.getReferencedNuts() != null) {
-                for (final Nut ref : nut.getReferencedNuts()) {
+                for (final ConvertibleNut ref : nut.getReferencedNuts()) {
                     addReferencedNut(ref);
                 }
             }
+        }
+
+        setNutName(specificName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void transform(final OutputStream outputStream) throws IOException {
+        if (isTransformed()) {
+            throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
+        }
+
+        try {
+            if (getTransformers() != null) {
+                final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
+                final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
+
+                // Collect transformer executed for each nut and group transformers for aggregated content
+                for (final Pipe.Transformer<ConvertibleNut> transformer : getTransformers()) {
+                    if (transformer.canAggregateTransformedStream()) {
+                        separateStream.add(transformer);
+                    } else {
+                        aggregatedStream.add(transformer);
+                    }
+                }
+
+                final List<InputStream> is =
+                        new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
+
+                // First we transform each nut with transformers producing content which could be aggregated
+                for (final ConvertibleNut nut : compositionList) {
+                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
+                        @Override
+                        public String getName() {
+                            return nut.getInitialName();
+                        }
+                    }, nut.openStream());
+
+                    for (final Pipe.Transformer<ConvertibleNut> transformer :separateStream) {
+                        pipe.register(transformer);
+                    }
+
+                    pipe.execute(bos);
+                    is.add(new ByteArrayInputStream(bos.toByteArray()));
+
+                    if (streamSeparator != null) {
+                        is.add(new ByteArrayInputStream(streamSeparator));
+                    }
+                }
+
+                // Aggregate the results
+                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(this, new SequenceInputStream(Collections.enumeration(is)));
+
+                // Transform the aggregated results
+                for (final Pipe.Transformer<ConvertibleNut> transformer : aggregatedStream) {
+                    pipe.register(transformer);
+                }
+
+                pipe.execute(outputStream);
+            } else {
+                IOUtils.copyStream(openStream(), outputStream);
+            }
+        } catch (NutNotFoundException nnfe) {
+            throw new IOException(nnfe);
+        } catch (StreamException se) {
+            throw new IOException(se);
+        } finally {
+            setTransformed(true);
         }
     }
 
@@ -129,8 +194,18 @@ public class CompositeNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return name != null ? name : super.getName();
+    public InputStream openStream() throws NutNotFoundException {
+        final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
+
+        for (final Nut n : compositionList) {
+            is.add(n.openStream());
+
+            if (streamSeparator != null) {
+                is.add(new ByteArrayInputStream(streamSeparator));
+            }
+        }
+
+        return new SequenceInputStream(Collections.enumeration(is));
     }
 
     /**
@@ -174,14 +249,14 @@ public class CompositeNut extends AbstractNut {
          * @return the merged nuts
          * @see CompositeNut#mergeNuts(java.util.List)
          */
-        public List<Nut> mergeNuts(final List<Nut> nuts) {
-            final List<Nut> retval = new ArrayList<Nut>(nuts.size());
+        public List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
+            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
             int start = 0;
             int end = 1;
             String current = null;
 
-            for (final Iterator<Nut> it = nuts.iterator();;) {
-                final Nut nut = it.hasNext() ? it.next() : null;
+            for (final Iterator<ConvertibleNut> it = nuts.iterator();;) {
+                final ConvertibleNut nut = it.hasNext() ? it.next() : null;
 
                 // New sequence
                 if (nut != null && current == null) {
@@ -191,18 +266,20 @@ public class CompositeNut extends AbstractNut {
                     end++;
                     // Nut name does not equals previous nut name, add previous composition
                 } else {
-                    final List<Nut> subList = nuts.subList(start, end);
-                    final Nut[] composition = subList.toArray(new Nut[subList.size()]);
-                    final String prefix;
+                    final List<ConvertibleNut> subList = nuts.subList(start, end);
+                    final ConvertibleNut[] composition = subList.toArray(new ConvertibleNut[subList.size()]);
+                    final String name = composition[0].getName();
+                    final String compositionName;
 
                     // Create the composition with a potential prefix to avoid duplicate
-                    if (names.add(composition[0].getName())) {
-                        prefix = "";
+                    if (names.add(name)) {
+                        compositionName = name;
                     } else {
-                        prefix = String.valueOf(prefixCount);
+                        compositionName = new StringBuilder(name).insert(name.lastIndexOf('/') + 1, prefixCount).toString();
                     }
 
-                    retval.add(new CompositeNut(composition, prefix, null));
+                    final CompositeNut compositeNut = new CompositeNut(compositionName, null, composition);
+                    retval.add(compositeNut);
 
                     if (nut != null) {
                         // New sequence
@@ -236,95 +313,7 @@ public class CompositeNut extends AbstractNut {
      * @param nuts the nuts to merge
      * @return a list containing all the nuts with some compositions
      */
-    public static List<Nut> mergeNuts(final List<Nut> nuts) {
+    public static List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
         return new Combiner().mergeNuts(nuts);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws NutNotFoundException {
-        if (isCompressed()) {
-            try {
-                final ByteArrayOutputStream ungzip = new ByteArrayOutputStream();
-                IOUtils.copyStream(new GZIPInputStream(new CompositeInputStream()), ungzip);
-                final ByteArrayOutputStream gzipArray = new ByteArrayOutputStream();
-                final GZIPOutputStream gzip = new GZIPOutputStream(gzipArray);
-                IOUtils.copyStream(new ByteArrayInputStream(ungzip.toByteArray()), gzip);
-                gzip.close();
-                return new ByteArrayInputStream(gzipArray.toByteArray());
-            } catch (StreamException se) {
-                throw new BadArgumentException(new IllegalArgumentException(se));
-            } catch (IOException ioe) {
-                throw new BadArgumentException(new IllegalArgumentException(ioe));
-            }
-        } else {
-            return new CompositeInputStream();
-        }
-    }
-
-    /**
-     * <p>
-     * Inner class that represents an {@link InputStream} on the stream of each {@link Nut} of the composition in the
-     * enclosing class.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.2
-     */
-    private class CompositeInputStream extends InputStream {
-
-        /**
-         * Current read stream.
-         */
-        private InputStream current;
-
-        /**
-         * Current nut's index in the composition.
-         */
-        private int index;
-
-        /**
-         * Current stream is actually serving the {@link #streamSeparator} bytes.
-         */
-        private Boolean separating = Boolean.FALSE;
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int read() throws IOException {
-            try {
-                // First call
-                if (current == null) {
-                    current = CompositeNut.this.compositionList[index].openStream();
-                }
-
-                // Read the stream
-                final int retval = current.read();
-
-                // End of the stream, we can start reading the next stream
-                if (retval == -1 && index < CompositeNut.this.compositionList.length - 1) {
-
-                    // We have a stream separator to serve
-                    if (streamSeparator != null && !separating) {
-                        separating = Boolean.TRUE;
-                        current = new ByteArrayInputStream(streamSeparator);
-                    } else {
-                        separating = Boolean.FALSE;
-                        current = CompositeNut.this.compositionList[++index].openStream();
-                    }
-
-                    return current.read();
-                // Stream not ended or no stream to read anymore
-                } else {
-                    return retval;
-                }
-            } catch (NutNotFoundException nnfe) {
-                throw new IOException(nnfe);
-            }
-        }
     }
 }

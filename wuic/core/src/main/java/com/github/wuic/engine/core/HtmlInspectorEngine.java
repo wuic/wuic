@@ -51,15 +51,14 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
-import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import com.github.wuic.util.TerFunction;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.HtmlUtil;
@@ -72,9 +71,11 @@ import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -205,12 +206,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         // Will contains both heap's nuts eventually modified or extracted nuts.
-        final List<Nut> retval = new ArrayList<Nut>();
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
 
         if (works()) {
-            for (final Nut nut : request.getNuts()) {
+            for (final ConvertibleNut nut : request.getNuts()) {
 
                 try {
                     retval.add(transformHtml(nut, request.getContextPath(), request));
@@ -233,6 +234,112 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     @Override
     public void setNutFilter(final List<NutFilter> nutFilters) {
         this.nutFilters = nutFilters;
+    }
+
+    /**
+     * <p>
+     * This class is a transformer that appends to a particular nut an extracted resource added as a referenced nut.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class HtmlTransformer extends Pipe.DefaultTransformer<ConvertibleNut> {
+
+        /**
+         * The request.
+         */
+        private EngineRequest request;
+
+        /**
+         * The context path.
+         */
+        private String contextPath;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param r the request
+         * @param cp the context path
+         */
+        private HtmlTransformer(final EngineRequest r, final String cp) {
+            this.request = r;
+            this.contextPath = cp;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible)
+                throws IOException {
+            final long now = System.currentTimeMillis();
+            final String content = IOUtils.readString(new InputStreamReader(is, charset));
+            final int endParent = convertible.getName().lastIndexOf('/');
+            final String rootPath = endParent == -1 ? "" : convertible.getName().substring(0, endParent);
+            final List<ParseInfo> parseInfoList;
+
+            try {
+                parseInfoList = parse(convertible.getName(), content, request.getHeap().findDaoFor(convertible), rootPath);
+            } catch (WuicException we) {
+                throw new IOException(we);
+            }
+
+            final StringBuilder transform = new StringBuilder(content);
+            int end = 0;
+            final List<ConvertibleNut> referenced = new ArrayList<ConvertibleNut>();
+
+            final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(IOUtils.mergePath(contextPath, request.getWorkflowId()));
+
+            // A workflow have been created for each heap
+            for (final ParseInfo parseInfo : parseInfoList) {
+                // Render HTML for workflow result
+                final StringBuilder html = new StringBuilder();
+                final EngineRequest parseRequest = new EngineRequest(parseInfo.getHeap().getNuts(), parseInfo.getHeap(), request, SKIPPED_ENGINE);
+                final List<ConvertibleNut> merged;
+
+                try {
+                    merged = HeadEngine.runChains(parseRequest, Boolean.FALSE);
+                } catch (WuicException we) {
+                    throw new IOException(we);
+                }
+
+                for (final ConvertibleNut n : merged) {
+                    // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
+                    n.setNutName(parseInfo.getHeap().getId() + n.getName());
+                    referenced.add(n);
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
+                }
+
+                // Replace all captured statements with HTML generated from WUIC process
+                for (int i = 0; i < parseInfo.getCapturedStatements().size(); i++) {
+                    final String toReplace = parseInfo.getCapturedStatements().get(i);
+                    int start = transform.indexOf(toReplace, end);
+                    end = start + toReplace.length();
+
+                    // Add the WUIC result in place of the first statement
+                    if (i == 0) {
+                        final String replacement = html.toString();
+                        transform.replace(start, end, replacement);
+                        end = start + replacement.length();
+                    } else {
+                        transform.replace(start, end, "");
+                        end = start;
+                    }
+                }
+            }
+
+            IOUtils.copyStreamIoe(new ByteArrayInputStream(transform.toString().getBytes()), os);
+
+            for (final ConvertibleNut ref : referenced) {
+                convertible.addReferencedNut(ref);
+            }
+
+            logger.info("HTML transformation in {}ms", System.currentTimeMillis() - now);
+        }
     }
 
     /**
@@ -585,7 +692,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * <p>
-     * When a script is referenced, the given {@link NutDao} will be used to retrieve the corresponding {@link Nut}.
+     * When a script is referenced, the given {@link NutDao} will be used to retrieve the corresponding
+     * {@link ConvertibleNut}.
      * </p>
      *
      * @param content the HTML content to parse
@@ -655,76 +763,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @return the nut wrapping parsed HTML
      * @throws WuicException if WUIC fails to configure context or process created workflow
      */
-    public Nut transformHtml(final Nut nut,
-                             final String contextPath,
-                             final EngineRequest request)
+    public ConvertibleNut transformHtml(final ConvertibleNut nut,
+                                        final String contextPath,
+                                        final EngineRequest request)
             throws WuicException, IOException {
-        final long now = System.currentTimeMillis();
-        InputStream is = null;
-        final String content;
 
-        try {
-            is = nut.openStream();
-            content = IOUtils.readString(new InputStreamReader(is, charset));
-        } finally {
-            IOUtils.close(is);
-        }
+        nut.addTransformer(new HtmlTransformer(request, contextPath));
 
-        final int endParent = nut.getName().lastIndexOf('/');
-        final String rootPath = endParent == -1 ? "" : nut.getName().substring(0, endParent);
-        final List<ParseInfo> parseInfoList = parse(nut.getName(), content, request.getHeap().findDaoFor(nut), rootPath);
-
-        final StringBuilder transform = new StringBuilder(content);
-        int end = 0;
-        final List<Nut> referenced = new ArrayList<Nut>();
-
-        final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(IOUtils.mergePath(contextPath, request.getWorkflowId()));
-
-        // A workflow have been created for each heap
-        for (final ParseInfo parseInfo : parseInfoList) {
-            // Render HTML for workflow result
-            final StringBuilder html = new StringBuilder();
-            final EngineRequest parseRequest = new EngineRequest(parseInfo.getHeap().getNuts(), parseInfo.getHeap(), request, SKIPPED_ENGINE);
-            final List<Nut> merged = HeadEngine.runChains(parseRequest, Boolean.FALSE);
-
-            for (final Nut n : merged) {
-                try {
-                    // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
-                    final Nut renamed = new PrefixedNut(n, parseInfo.getHeap().getId(), Boolean.FALSE);
-                    referenced.add(renamed);
-                    html.append(HtmlUtil.writeScriptImport(renamed, urlProvider)).append("\r\n");
-                } catch (IOException ioe) {
-                    throw new StreamException(ioe);
-                }
-            }
-
-            // Replace all captured statements with HTML generated from WUIC process
-            for (int i = 0; i < parseInfo.getCapturedStatements().size(); i++) {
-                final String toReplace = parseInfo.getCapturedStatements().get(i);
-                int start = transform.indexOf(toReplace, end);
-                end = start + toReplace.length();
-
-                // Add the WUIC result in place of the first statement
-                if (i == 0) {
-                    final String replacement = html.toString();
-                    transform.replace(start, end, replacement);
-                    end = start + replacement.length();
-                } else {
-                    transform.replace(start, end, "");
-                    end = start;
-                }
-            }
-        }
-
-        final Nut retval = new ByteArrayNut(transform.toString().getBytes(), nut.getName(), nut.getNutType(), NutUtils.getVersionNumber(nut));
-
-        for (final Nut ref : referenced) {
-            retval.addReferencedNut(ref);
-        }
-
-        logger.info("HTML transformation in {}ms", System.currentTimeMillis() - now);
-
-        return retval;
+        return nut;
     }
 
     /**

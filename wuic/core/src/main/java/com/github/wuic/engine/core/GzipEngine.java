@@ -47,15 +47,13 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -70,7 +68,7 @@ import java.util.zip.GZIPOutputStream;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = false, isCoreEngine = true)
-public class GzipEngine extends NodeEngine {
+public class GzipEngine extends NodeEngine implements Pipe.Transformer<ConvertibleNut> {
 
     /**
      * Do compression or not.
@@ -109,59 +107,58 @@ public class GzipEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    protected List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         if (!works()) {
             return request.getNuts();
         }
 
-        final List<Nut> retval = new ArrayList<Nut>(request.getNuts().size());
-
-        for (final Nut nut : request.getNuts()) {
-            retval.add(compress(nut));
+        for (final ConvertibleNut nut : request.getNuts()) {
+            compress(nut);
         }
 
-        return retval;
+        return request.getNuts();
     }
 
     /**
      * <p>
-     * Compress the given {@link Nut} and return it. Also compress any referenced nut.
+     * Compress the given {@link ConvertibleNut} by adding a transformer that GZIP the stream. Also compress any
+     * referenced nut.
      * </p>
      *
      * @param nut the nut
-     * @return the compressed nut
      * @throws WuicException if compression fails
      */
-    private Nut compress(final Nut nut) throws WuicException {
-        if (nut.isCompressed()) {
-            return nut;
+    private void compress(final ConvertibleNut nut) throws WuicException {
+
+        if (!nut.isCompressed()) {
+            nut.setIsCompressed(Boolean.TRUE);
+            nut.addTransformer(this);
         }
 
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        GZIPOutputStream gos;
-        InputStream is = nut.openStream();
-
-        try {
-            gos = new GZIPOutputStream(bos);
-            IOUtils.copyStream(is, gos);
-            gos.close();
-            final Nut compress = new ByteArrayNut(bos.toByteArray(), nut.getName(), nut.getNutType(), nut);
-            compress.setIsCompressed(Boolean.TRUE);
-
-            if (nut.getReferencedNuts() != null) {
-
-                // Also add all the referenced nuts
-                for (final Nut ref : nut.getReferencedNuts()) {
-                    compress.addReferencedNut(compress(ref));
-                }
+        if (nut.getReferencedNuts() != null) {
+            // Also add all the referenced nuts
+            for (final ConvertibleNut ref : nut.getReferencedNuts()) {
+                compress(ref);
             }
-
-            return compress;
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        } finally {
-            IOUtils.close(is);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canAggregateTransformedStream() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
+        GZIPOutputStream gos = new GZIPOutputStream(os);
+        IOUtils.copyStreamIoe(is, gos);
+        gos.close();
     }
 
     /**

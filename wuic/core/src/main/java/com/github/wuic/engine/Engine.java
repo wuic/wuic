@@ -39,7 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.List;
 
@@ -83,7 +83,7 @@ public abstract class Engine implements Comparable<Engine> {
      * @return the parsed nuts
      * @throws WuicException if any kind of error occurs
      */
-    public abstract List<Nut> parse(EngineRequest request) throws WuicException;
+    public abstract List<ConvertibleNut> parse(EngineRequest request) throws WuicException;
 
     /**
      * <p>
@@ -94,7 +94,7 @@ public abstract class Engine implements Comparable<Engine> {
      * @return the parsed files
      * @throws com.github.wuic.exception.WuicException if any kind of error occurs
      */
-    protected abstract List<Nut> internalParse(EngineRequest request) throws WuicException;
+    protected abstract List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException;
 
     /**
      * <p>

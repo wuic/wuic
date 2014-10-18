@@ -40,7 +40,7 @@ package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 
 import java.util.ArrayList;
@@ -50,8 +50,8 @@ import java.util.List;
 /**
  * <p>
  * Represents an {@link Engine} that could be the head of a chain of responsibility. This engine can parse a request
- * containing {@link Nut} of different {@link com.github.wuic.NutType type} and provides the way to access to a particular
- * nut of a process result.
+ * containing {@link ConvertibleNut} of different {@link com.github.wuic.NutType type} and provides the way to access to
+ * a particular nut of a process result.
  * </p>
  *
  * <p>
@@ -68,7 +68,7 @@ public abstract class HeadEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> parse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
         if (works()) {
             return internalParse(request);
         } else {
@@ -78,8 +78,8 @@ public abstract class HeadEngine extends Engine {
 
     /**
      * <p>
-     * This method parses the sequences of {@link Nut} of the same {@link com.github.wuic.NutType type} and aggregates
-     * the nuts with same names between the results.
+     * This method parses the sequences of {@link ConvertibleNut} of the same {@link com.github.wuic.NutType type} and
+     * aggregates the nuts with same names between the results.
      * </p>
      *
      * @param request the request providing engine chains
@@ -87,13 +87,13 @@ public abstract class HeadEngine extends Engine {
      * @return the process result
      * @throws WuicException if WUIC fails to process nuts
      */
-    public static List<Nut> runChains(final EngineRequest request, final Boolean bestEffort) throws WuicException {
-        final List<Nut> retval = new ArrayList<Nut>();
-        final Iterator<List<Nut>> it = request.iterator();
+    public static List<ConvertibleNut> runChains(final EngineRequest request, final Boolean bestEffort) throws WuicException {
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+        final Iterator<List<? extends ConvertibleNut>> it = request.iterator();
 
         // We parse a request for each sequence of nuts having the same type
         while (it.hasNext()) {
-            final List<Nut> nuts = it.next();
+            final List<? extends ConvertibleNut> nuts = it.next();
             final NutType nutType = nuts.get(0).getNutType();
             final NodeEngine chain = request.getChainFor(nutType);
             final EngineRequest req = bestEffort ? new EngineRequest(nuts, request, nutType.getRequiredForBestEffort()) : new EngineRequest(nuts, request);
@@ -114,5 +114,5 @@ public abstract class HeadEngine extends Engine {
      * @return the associated nut
      * @throws WuicException if request could not be executed successfully
      */
-    public abstract Nut parse(EngineRequest request, String path) throws WuicException;
+    public abstract ConvertibleNut parse(EngineRequest request, String path) throws WuicException;
 }

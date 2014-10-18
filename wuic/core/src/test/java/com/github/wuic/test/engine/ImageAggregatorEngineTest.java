@@ -40,8 +40,10 @@ package com.github.wuic.test.engine;
 
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import com.github.wuic.util.UrlUtils;
@@ -92,7 +94,7 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withoutAggregation() throws Exception {
-        final List<Nut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory());
         Assert.assertEquals(3, nuts.size());
         assertOneReference(nuts);
     }
@@ -106,15 +108,22 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withAggregation() throws Exception {
-        final List<Nut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, nuts.size());
         assertOneReference(nuts);
-
-
     }
 
-    private void assertOneReference(final List<Nut> nuts) {
-        for (final Nut n : nuts) {
+    /**
+     * <p>
+     * Asserts that each nut in the given list references one nut after transformation.
+     * </p>
+     *
+     * @param nuts the nuts
+     * @throws IOException if transformation fails
+     */
+    private void assertOneReference(final List<ConvertibleNut> nuts) throws IOException {
+        for (final ConvertibleNut n : nuts) {
+            n.transform(new ByteArrayOutputStream());
             Assert.assertNotNull(n.getReferencedNuts());
             Assert.assertEquals(1, n.getReferencedNuts().size());
         }

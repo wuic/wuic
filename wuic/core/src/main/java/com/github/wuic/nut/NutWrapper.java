@@ -38,12 +38,13 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.util.Pipe;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
-import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -55,12 +56,12 @@ import java.util.concurrent.Future;
  * @version 1.0
  * @since 0.4.4
  */
-public class NutWrapper implements Nut {
+public class NutWrapper extends AbstractNut implements ConvertibleNut {
 
     /**
      * The wrapped nut.
      */
-    private Nut wrapped;
+    private ConvertibleNut wrapped;
 
     /**
      * <p>
@@ -69,7 +70,8 @@ public class NutWrapper implements Nut {
      *
      * @param w teh wrapped nut
      */
-    public NutWrapper(final Nut w) {
+    public NutWrapper(final ConvertibleNut w) {
+        super(w);
         wrapped = w;
     }
 
@@ -85,8 +87,8 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public NutType getNutType() {
-        return wrapped.getNutType();
+    public List<ConvertibleNut> getOriginalNuts() {
+        return wrapped.getOriginalNuts();
     }
 
     /**
@@ -101,71 +103,39 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public Boolean isBinaryReducible() {
-        return wrapped.isBinaryReducible();
+    public void setNutName(final String nutName) {
+        wrapped.setNutName(nutName);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean isTextReducible() {
-        return wrapped.isTextReducible();
+    public void transform(final OutputStream outputStream) throws IOException {
+        wrapped.transform(outputStream);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean isCacheable() {
-        return wrapped.isCacheable();
+    public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
+        wrapped.addTransformer(transformer);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean isAggregatable() {
-        return wrapped.isAggregatable();
+    public List<Pipe.Transformer<ConvertibleNut>> getTransformers() {
+        return wrapped.getTransformers();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setBinaryReducible(final Boolean tc) {
-        wrapped.setBinaryReducible(tc);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setTextReducible(final Boolean tc) {
-        wrapped.setTextReducible(tc);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setCacheable(final Boolean c) {
-        wrapped.setCacheable(c);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setAggregatable(final Boolean a) {
-        wrapped.setAggregatable(a);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addReferencedNut(final Nut referenced) {
+    public void addReferencedNut(ConvertibleNut referenced) {
         wrapped.addReferencedNut(referenced);
     }
 
@@ -173,55 +143,7 @@ public class NutWrapper implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getReferencedNuts() {
+    public List<ConvertibleNut> getReferencedNuts() {
         return wrapped.getReferencedNuts();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setProxyUri(final String uri) {
-        wrapped.setProxyUri(uri);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getProxyUri() {
-        return wrapped.getProxyUri();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Future<Long> getVersionNumber() {
-        return wrapped.getVersionNumber();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getOriginalNuts() {
-        return wrapped.getOriginalNuts();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isCompressed() {
-        return wrapped.isCompressed();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setIsCompressed(final Boolean c) {
-        wrapped.setIsCompressed(c);
     }
 }

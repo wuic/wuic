@@ -44,9 +44,10 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -82,10 +83,17 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    protected void compress(final InputStream source, final OutputStream target)
-            throws StreamException {
+    public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut) throws IOException {
         // Do not use char set here !
-        IOUtils.copyStream(source, target);
+        IOUtils.copyStreamIoe(source, target);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canAggregateTransformedStream() {
+        return false;
     }
 
     /**

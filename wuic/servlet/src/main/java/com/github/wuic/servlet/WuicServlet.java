@@ -50,7 +50,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.UrlMatcher;
 import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
@@ -184,7 +184,7 @@ public class WuicServlet extends HttpServlet {
             throws WuicException {
 
         // Get the nuts workflow
-        final Nut nut = wuicFacade.runWorkflow(workflowId, nutName);
+        final ConvertibleNut nut = wuicFacade.runWorkflow(workflowId, nutName);
 
         // Nut found
         if (nut != null) {

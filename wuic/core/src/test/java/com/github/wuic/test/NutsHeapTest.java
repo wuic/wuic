@@ -118,7 +118,7 @@ public class NutsHeapTest {
         @Override
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
             final Nut retval = Mockito.mock(Nut.class);
-            Mockito.when(retval.getName()).thenReturn(realPath);
+            Mockito.when(retval.getInitialName()).thenReturn(realPath);
             Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
 
             return retval;

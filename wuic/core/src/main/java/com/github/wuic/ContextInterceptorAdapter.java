@@ -39,7 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.List;
 
@@ -90,7 +90,7 @@ public class ContextInterceptorAdapter implements ContextInterceptor {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> afterProcess(final List<Nut> nuts) {
+    public List<ConvertibleNut> afterProcess(final List<ConvertibleNut> nuts) {
         return nuts;
     }
 
@@ -98,7 +98,7 @@ public class ContextInterceptorAdapter implements ContextInterceptor {
      * {@inheritDoc}
      */
     @Override
-    public Nut afterProcess(final Nut nut, final String path) {
+    public ConvertibleNut afterProcess(final ConvertibleNut nut, final String path) {
         return nut;
     }
 }

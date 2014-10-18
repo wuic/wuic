@@ -47,7 +47,7 @@ import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicServletContextListener;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
@@ -206,7 +206,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     contextBuilder.build();
                 }
 
-                final List<Nut> nuts = wuicFacade.runWorkflow(workflowId);
+                final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId);
                 InputStream is = null;
                 final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(HttpServletRequest.class.cast(request));
 

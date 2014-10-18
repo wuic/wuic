@@ -121,6 +121,6 @@ public class JeeTest {
         final List<Nut> nuts = dao.create("index.html");
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());
-        Assert.assertEquals("index.html", nuts.get(0).getName());
+        Assert.assertEquals("index.html", nuts.get(0).getInitialName());
     }
 }

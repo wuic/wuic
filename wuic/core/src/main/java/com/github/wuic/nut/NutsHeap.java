@@ -303,7 +303,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             heap.getNutDao().observe(path, this);
 
             for (final Nut n : retval) {
-                heap.getCreated().add(n.getName());
+                heap.getCreated().add(n.getInitialName());
             }
         } else {
             retval = Collections.emptyList();
@@ -360,15 +360,15 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                 nutDao.observe(path, this);
 
                 for (final Nut nut : res) {
-                    getCreated().add(nut.getName());
+                    getCreated().add(nut.getInitialName());
 
-                    final int slashIndex = nut.getName().indexOf('/');
+                    final int slashIndex = nut.getInitialName().indexOf('/');
 
-                    if (slashIndex != -1 && NumberUtils.isNumber(nut.getName().substring(0, slashIndex))) {
+                    if (slashIndex != -1 && NumberUtils.isNumber(nut.getInitialName().substring(0, slashIndex))) {
                         throw new BadArgumentException(
                                 new IllegalArgumentException(
                                         String.format("First level if nut name's path cannot be a numeric value: %s",
-                                                nut.getName())));
+                                                nut.getInitialName())));
                     }
                 }
             }
@@ -401,7 +401,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     private void checkExtension(final Collection<Nut> toCheck) {
         for (final Nut nut : toCheck) {
-            nutTypes.add(NutType.getNutTypeForExtension(nut.getName().substring(nut.getName().lastIndexOf('.'))));
+            nutTypes.add(NutType.getNutTypeForExtension(nut.getInitialName().substring(nut.getInitialName().lastIndexOf('.'))));
         }
     }
 
@@ -468,7 +468,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         final Set<String> current = new HashSet<String>();
 
         for (final Nut nut : nuts) {
-            current.add(nut.getName());
+            current.add(nut.getInitialName());
         }
 
         // Paths have not changed if difference is empty, otherwise we notify listeners
@@ -492,13 +492,21 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @return {@code true} if heap has created a {@link Nut} with this path, {@code false} otherwise
      */
     public Boolean hasCreated(final Nut nut) {
-        Nut refOrigin = nut;
+        final Nut refOrigin;
 
-        while (refOrigin.getOriginalNuts() != null && !refOrigin.getOriginalNuts().isEmpty()) {
-            refOrigin = refOrigin.getOriginalNuts().get(0);
+        if (ConvertibleNut.class.isAssignableFrom(nut.getClass())) {
+            ConvertibleNut convertibleNut = ConvertibleNut.class.cast(nut);
+
+            while (convertibleNut.getOriginalNuts() != null && !convertibleNut.getOriginalNuts().isEmpty()) {
+                convertibleNut = convertibleNut.getOriginalNuts().get(0);
+            }
+
+            refOrigin = convertibleNut;
+        } else {
+            refOrigin = nut;
         }
 
-        return getCreated().contains(refOrigin.getName());
+        return getCreated().contains(refOrigin.getInitialName());
     }
 
     /**
@@ -533,7 +541,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
         for (final Nut nut : nuts) {
             // Nut has changed
-            if (nut.getName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
+            if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
                 // We don't need to be notified anymore
                 return notifyListeners();
             }

@@ -42,7 +42,7 @@ import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.core.ZipEntryFilePath;
@@ -99,13 +99,13 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void searchNutTest() {
-        final Nut nut1 = Mockito.mock(Nut.class);
+        final ConvertibleNut nut1 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut1.getName()).thenReturn("./nut1");
 
-        final Nut nut2 = Mockito.mock(Nut.class);
+        final ConvertibleNut nut2 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut2.getName()).thenReturn("nut2/.");
 
-        final Nut nut3 = Mockito.mock(Nut.class);
+        final ConvertibleNut nut3 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut3.getName()).thenReturn("nut3");
         Mockito.when(nut3.getReferencedNuts()).thenReturn(Arrays.asList(nut1, nut2));
 
@@ -123,12 +123,12 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void mergeNutTest() {
-        final Nut first = Mockito.mock(Nut.class);
-        final Nut second = Mockito.mock(Nut.class);
-        final Nut third = Mockito.mock(Nut.class);
-        final Nut fourth = Mockito.mock(Nut.class);
-        final Nut fifth = Mockito.mock(Nut.class);
-        final List<Nut> input = Arrays.asList(first, second, third, fourth, fifth);
+        final ConvertibleNut first = Mockito.mock(ConvertibleNut.class);
+        final ConvertibleNut second = Mockito.mock(ConvertibleNut.class);
+        final ConvertibleNut third = Mockito.mock(ConvertibleNut.class);
+        final ConvertibleNut fourth = Mockito.mock(ConvertibleNut.class);
+        final ConvertibleNut fifth = Mockito.mock(ConvertibleNut.class);
+        final List<ConvertibleNut> input = Arrays.asList(first, second, third, fourth, fifth);
 
         Mockito.when(first.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(second.getVersionNumber()).thenReturn(new FutureLong(1L));
@@ -148,7 +148,13 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getName()).thenReturn("bar.js");
         Mockito.when(fifth.getName()).thenReturn("baz.css");
 
-        List<Nut> output = CompositeNut.mergeNuts(input);
+        Mockito.when(first.getInitialName()).thenReturn("foo.js");
+        Mockito.when(second.getInitialName()).thenReturn("foo.css");
+        Mockito.when(third.getInitialName()).thenReturn("bar.js");
+        Mockito.when(fourth.getInitialName()).thenReturn("bar.js");
+        Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
+
+        List<ConvertibleNut> output = CompositeNut.mergeNuts(input);
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -161,6 +167,12 @@ public class UtilityTest extends WuicTest {
         Mockito.when(third.getName()).thenReturn("bar.js");
         Mockito.when(fourth.getName()).thenReturn("bar2.js");
         Mockito.when(fifth.getName()).thenReturn("baz.css");
+
+        Mockito.when(first.getInitialName()).thenReturn("foo.js");
+        Mockito.when(second.getInitialName()).thenReturn("foo.css");
+        Mockito.when(third.getInitialName()).thenReturn("bar.js");
+        Mockito.when(fourth.getInitialName()).thenReturn("bar2.js");
+        Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
         output = CompositeNut.mergeNuts(input);
 
@@ -177,6 +189,12 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getName()).thenReturn("baz.css");
         Mockito.when(fifth.getName()).thenReturn("baz.css");
 
+        Mockito.when(first.getInitialName()).thenReturn("foo.js");
+        Mockito.when(second.getInitialName()).thenReturn("foo.js");
+        Mockito.when(third.getInitialName()).thenReturn("bar.js");
+        Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
+        Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
+
         output = CompositeNut.mergeNuts(input);
 
         Assert.assertEquals(3, output.size());
@@ -189,6 +207,12 @@ public class UtilityTest extends WuicTest {
         Mockito.when(third.getName()).thenReturn("bar.js");
         Mockito.when(fourth.getName()).thenReturn("baz.css");
         Mockito.when(fifth.getName()).thenReturn("foo.js");
+
+        Mockito.when(first.getInitialName()).thenReturn("foo.js");
+        Mockito.when(second.getInitialName()).thenReturn("foo.js");
+        Mockito.when(third.getInitialName()).thenReturn("bar.js");
+        Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
+        Mockito.when(fifth.getInitialName()).thenReturn("foo.js");
 
         output = CompositeNut.mergeNuts(input);
 
@@ -232,10 +256,10 @@ public class UtilityTest extends WuicTest {
     @Test
     public void mergeTest() {
         Assert.assertEquals(StringUtils.merge(new String[] {"foo", "oof", }, ":"), "foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo:", "oof", }, ":"), "foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo:", ":oof", }, ":"), "foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", }, ":"), "foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo", }, ":"), "foo:oof:foo");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo:", "oof",}, ":"), "foo:oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo:", ":oof",}, ":"), "foo:oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo", ":oof",}, ":"), "foo:oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo", ":oof", "foo",}, ":"), "foo:oof:foo");
         Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo", }, null), "foo:ooffoo");
         Assert.assertEquals(StringUtils.merge(new String[] {":", "oof", }, ":"), ":oof");
         Assert.assertEquals(StringUtils.merge(new String[] {":", ":foo:", ":oof", }, ":"), ":foo:oof");
@@ -411,7 +435,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void htmlJavascriptImportTest() throws IOException {
-        final Nut nut = Mockito.mock(Nut.class);
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
@@ -425,7 +449,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void htmlCssImportTest() throws IOException {
-        final Nut nut = Mockito.mock(Nut.class);
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
@@ -437,7 +461,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void getUrltTest() {
-        final Nut nut = Mockito.mock(Nut.class);
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
@@ -628,10 +652,10 @@ public class UtilityTest extends WuicTest {
     @Test
     public void pipeTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(10);
-        final Pipe p = new Pipe(new ByteArrayInputStream(new byte[] { (byte) count.get() }));
-        class T implements Pipe.Transformer {
+        final Pipe p = new Pipe(new Object(), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
+        class T extends Pipe.DefaultTransformer {
             @Override
-            public void transform(final InputStream is, final OutputStream os) throws IOException {
+            public void transform(final InputStream is, final OutputStream os, final Object o) throws IOException {
                 int r = is.read();
                 os.write(r + count.decrementAndGet());
             }
@@ -643,6 +667,9 @@ public class UtilityTest extends WuicTest {
             p.register(new T());
         }
 
-        Assert.assertEquals(expect, p.execute().toByteArray()[0]);
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        p.execute(bos);
+
+        Assert.assertEquals(expect, bos.toByteArray()[0]);
     }
 }

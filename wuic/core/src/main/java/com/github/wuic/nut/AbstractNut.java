@@ -44,8 +44,6 @@ import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -71,9 +69,9 @@ public abstract class AbstractNut implements Nut {
     private NutType nutType;
 
     /**
-     * The path name.
+     * The original name.
      */
-    private String nutName;
+    private String originalName;
 
     /**
      * Compressed or not.
@@ -101,19 +99,9 @@ public abstract class AbstractNut implements Nut {
     private Boolean aggregatable;
 
     /**
-     * Returns all the referenced nuts.
-     */
-    private List<Nut> referencedNuts;
-
-    /**
      * The proxy URI.
      */
     private String proxyUri;
-
-    /**
-     * The original nuts.
-     */
-    private List<Nut> originalNuts;
 
     /**
      * The nut's version number.
@@ -128,11 +116,9 @@ public abstract class AbstractNut implements Nut {
      * @param o the nut to copy
      */
     protected AbstractNut(final Nut o) {
-        this(o.getName(), o.getNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
+        this(o.getInitialName(), o.getNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
         binaryReducible = o.isBinaryReducible();
         textReducible = o.isTextReducible();
-        referencedNuts = o.getReferencedNuts();
-        originalNuts = o.getOriginalNuts();
     }
 
     /**
@@ -163,37 +149,21 @@ public abstract class AbstractNut implements Nut {
         }
 
         nutType = ft;
-        nutName = name;
+        originalName = name;
         compressed = comp;
         binaryReducible = !nutType.isText();
         textReducible = nutType.isText();
         cacheable = c;
         aggregatable = a;
-        referencedNuts = null;
-        originalNuts = null;
         versionNumber = v;
     }
 
     /**
-     * <p>
-     * Sets the original nuts.
-     * </p>
-     *
-     * @param o the original nuts
+     * {@inheritDoc}
      */
-    protected void setOriginalNuts(final List<Nut> o) {
-        this.originalNuts = o;
-    }
-
-    /**
-     * <p>
-     * Sets the nut name.
-     * </p>
-     *
-     * @param nutName the name
-     */
-    public final void setNutName(final String nutName) {
-        this.nutName = nutName;
+    @Override
+    public String getInitialName() {
+        return originalName;
     }
 
     /**
@@ -202,14 +172,6 @@ public abstract class AbstractNut implements Nut {
     @Override
     public NutType getNutType() {
         return nutType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return nutName;
     }
 
     /**
@@ -296,30 +258,6 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public void addReferencedNut(final Nut referenced) {
-        if (referencedNuts == null) {
-            referencedNuts = new ArrayList<Nut>();
-        }
-
-        // Do not allow duplicate nuts (many nuts with same name)
-        if (referencedNuts.contains(referenced)) {
-            referencedNuts.remove(referenced);
-        }
-        referencedNuts.add(referenced);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Nut> getReferencedNuts() {
-        return referencedNuts;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getProxyUri() {
         return proxyUri;
     }
@@ -336,14 +274,6 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> getOriginalNuts() {
-        return originalNuts;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Future<Long> getVersionNumber() {
         return versionNumber;
     }
@@ -353,7 +283,7 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public String toString() {
-        final String retval = getClass().getSimpleName() + "[" + getName() + "]";
+        final String retval = getClass().getSimpleName() + "[" + getInitialName() + "]";
         return logger.isInfoEnabled() ? (retval + " - v" + NutUtils.getVersionNumber(this)) : retval;
     }
 
@@ -363,7 +293,7 @@ public abstract class AbstractNut implements Nut {
     @Override
     public boolean equals(final Object other) {
         if (other instanceof AbstractNut) {
-            return ((AbstractNut) other).nutName.equals(nutName);
+            return ((AbstractNut) other).getInitialName().equals(getInitialName());
         } else {
             return Boolean.FALSE;
         }
@@ -374,6 +304,6 @@ public abstract class AbstractNut implements Nut {
      */
     @Override
     public int hashCode() {
-        return nutName.hashCode();
+        return getInitialName().hashCode();
     }
 }

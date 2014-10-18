@@ -42,7 +42,9 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.filter.NutFilter;
@@ -163,11 +165,11 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> appendTransformation(final Matcher matcher,
-                                          final StringBuilder replacement,
-                                          final EngineRequest request,
-                                          final NutsHeap heap,
-                                          final Nut originalNut) throws WuicException {
+    public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
+                                                               final StringBuilder replacement,
+                                                               final EngineRequest request,
+                                                               final NutsHeap heap,
+                                                               final ConvertibleNut originalNut) throws WuicException {
         // Search the right group
         int i = 0;
         int groupIndex;
@@ -189,7 +191,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
         if (rawPath == null) {
             final Pattern patternUrl = Pattern.compile(URL_REGEX);
             final Matcher matcherUrl = patternUrl.matcher(matcher.group());
-            final List<Nut> retval = new ArrayList<Nut>();
+            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
             final StringBuffer sb = new StringBuffer();
 
             // Process each font URL inside the font rule
@@ -226,11 +228,11 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
      * @return the extracted nuts
      * @throws WuicException if processing fails
      */
-    private List<Nut> processData(final MatcherData data,
-                                  final StringBuilder replacement,
-                                  final EngineRequest request,
-                                  final NutsHeap heap,
-                                  final Nut originalNut) throws WuicException {
+    private List<? extends ConvertibleNut> processData(final MatcherData data,
+                                                       final StringBuilder replacement,
+                                                       final EngineRequest request,
+                                                       final NutsHeap heap,
+                                                       final Nut originalNut) throws WuicException {
         final Matcher matcher = data.getMatcher();
         final String rawPath = data.getGroupValue();
         final int groupIndex = data.getGroupIndex();
@@ -267,7 +269,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
         // Write path to nut
         replacement.append("\"");
 
-        List<Nut> res;
+        List<? extends ConvertibleNut> res;
 
         // Don't change nut if absolute
         if (isAbsolute) {
@@ -287,7 +289,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
                 replacement.append(referencedPath);
                 res = Collections.emptyList();
             } else {
-                res = manageAppend(nuts.iterator().next(), replacement, request, heap, SKIPPED_ENGINE);
+                res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap, SKIPPED_ENGINE);
             }
         }
 

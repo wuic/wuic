@@ -44,7 +44,7 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,18 +85,18 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> aggregationParse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> aggregationParse(final EngineRequest request) throws WuicException {
 
         // Do nothing if the configuration says that no aggregation should be done
         if (!works()) {
             return request.getNuts();
         }
         
-        final List<Nut> retval = new ArrayList<Nut>();
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
         final String name = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
         retval.add(new CompositeNut(request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
                 "\r\n".getBytes(),
-                request.getNuts().toArray(new Nut[request.getNuts().size()])));
+                request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()])));
 
         return retval;
     }

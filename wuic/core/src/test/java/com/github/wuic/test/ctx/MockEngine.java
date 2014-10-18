@@ -45,7 +45,7 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +87,7 @@ public class MockEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    protected List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         return request.getNuts();
     }
 

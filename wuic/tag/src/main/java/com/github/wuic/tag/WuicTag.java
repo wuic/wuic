@@ -42,7 +42,7 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicServletContextListener;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 
@@ -107,9 +107,9 @@ public class WuicTag extends TagSupport {
                 wuicFacade.clearTag(workflowId);
             }
 
-            final List<Nut> nuts = wuicFacade.runWorkflow(workflowId);
+            final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId);
 
-            for (final Nut nut : nuts) {
+            for (final ConvertibleNut nut : nuts) {
                 pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
             }
         } catch (IOException ioe) {

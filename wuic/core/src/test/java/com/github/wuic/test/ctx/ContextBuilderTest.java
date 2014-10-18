@@ -51,7 +51,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
@@ -150,8 +150,8 @@ public class ContextBuilderTest {
     @Test
     public void interceptorTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(4);
-        final List<Nut> nuts = new ArrayList<Nut>();
-        final Nut nut = Mockito.mock(Nut.class);
+        final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
 
         // Typical use : no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -175,7 +175,7 @@ public class ContextBuilderTest {
                     }
 
                     @Override
-                    public List<Nut> afterProcess(final List<Nut> n) {
+                    public List<ConvertibleNut> afterProcess(final List<ConvertibleNut> n) {
                         super.afterProcess(n);
                         count.decrementAndGet();
                         return nuts;
@@ -194,7 +194,7 @@ public class ContextBuilderTest {
                     }
 
                     @Override
-                    public Nut afterProcess(final Nut n, final String path) {
+                    public ConvertibleNut afterProcess(final ConvertibleNut n, final String path) {
                         super.afterProcess(n, path);
                         count.decrementAndGet();
                         return nut;

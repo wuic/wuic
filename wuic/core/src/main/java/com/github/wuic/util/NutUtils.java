@@ -38,14 +38,20 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.zip.GZIPInputStream;
 
 /**
  * <p>
@@ -81,7 +87,7 @@ public final class NutUtils {
      * @param nutName the nutName
      * @return the nut, {@code null} if not found
      */
-    public static Nut findByName(final Nut nut, final String nutName) {
+    public static ConvertibleNut findByName(final ConvertibleNut nut, final String nutName) {
         String parsedName = StringUtils.simplifyPathWithDoubleDot(nut.getName());
 
         // Nut found : write the stream and return
@@ -89,7 +95,7 @@ public final class NutUtils {
             return nut;
         } else if (nut.getReferencedNuts() != null) {
             // Find in referenced nuts
-            final Nut ref = findByName(nut.getReferencedNuts(), nutName);
+            final ConvertibleNut ref = findByName(nut.getReferencedNuts(), nutName);
 
             if (ref != null) {
                 return ref;
@@ -108,10 +114,10 @@ public final class NutUtils {
      * @param name the nut name
      * @return the nut, {@code null} if not found
      */
-    public static Nut findByName(final List<Nut> nuts, final String name) {
+    public static ConvertibleNut findByName(final List<ConvertibleNut> nuts, final String name) {
         // Iterates the nuts to find the requested element
-        for (final Nut nut : nuts) {
-            final Nut retval = findByName(nut, name);
+        for (final ConvertibleNut nut : nuts) {
+            final ConvertibleNut retval = findByName(nut, name);
 
             if (retval != null) {
                 return retval;
@@ -150,7 +156,7 @@ public final class NutUtils {
      * @param nuts the nuts
      * @return the computed version number
      */
-    public static Long getVersionNumber(final List<Nut> nuts) {
+    public static Long getVersionNumber(final List<? extends Nut> nuts) {
         if (nuts.size() == 1) {
             return getVersionNumber(nuts.get(0));
         }
@@ -162,5 +168,24 @@ public final class NutUtils {
         }
 
         return ByteBuffer.wrap(md.digest()).getLong();
+    }
+
+    /**
+     * <p>
+     * Reads the result of the transformation process configured on the {@link Nut}. If the {@link Nut} is compressed,
+     * then the result if uncompressed to return a readable string.
+     * </p>
+     *
+     * @param n the nut
+     * @return the result of transformation
+     * @throws IOException if transformation fails
+     */
+    public static String readTransform(final ConvertibleNut n) throws IOException {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        n.transform(bos);
+        final byte[] b = bos.toByteArray();
+
+        return n.isCompressed() ?
+                IOUtils.readString(new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(b)))) : new String(b);
     }
 }

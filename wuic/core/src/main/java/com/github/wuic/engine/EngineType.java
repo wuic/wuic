@@ -70,14 +70,14 @@ public enum EngineType {
     CACHE,
 
     /**
-     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.dao.NutDao}.
-     */
-    INSPECTOR,
-
-    /**
      * Third type in a chain. Compress the text only.
      */
     MINIFICATION,
+
+    /**
+     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.dao.NutDao}.
+     */
+    INSPECTOR,
 
     /**
      * Fourth type in a chain. Aggregates the text only.

@@ -39,6 +39,7 @@
 package com.github.wuic.test.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.FutureLong;
@@ -72,21 +73,23 @@ public class CompositeNutTest {
      */
     @Test
     public void compositeTest() throws Exception {
-        final Nut n1 = Mockito.mock(Nut.class);
+        final ConvertibleNut n1 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(n1.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
         Mockito.when(n1.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(n1.getName()).thenReturn("n1.css");
-        Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
+        Mockito.when(n1.getInitialName()).thenReturn("n1.css");
+        Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
         Mockito.when(n1.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final Nut n2 = Mockito.mock(Nut.class);
+        final ConvertibleNut n2 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(n2.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
         Mockito.when(n2.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(n2.getName()).thenReturn("n2.css");
-        Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(Nut.class)));
+        Mockito.when(n2.getInitialName()).thenReturn("n2.css");
+        Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
         Mockito.when(n2.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final Nut composite = new CompositeNut(Nut[].class.cast(Arrays.asList(n1, n2).toArray()), "composite", null);
+        final Nut composite = new CompositeNut("composite", null, ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
 }

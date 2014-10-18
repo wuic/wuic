@@ -38,11 +38,11 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 /**
  * <p>
- * Utility class for URLs management around {@link Nut nuts}.
+ * Utility class for URLs management around {@link ConvertibleNut nuts}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -102,7 +102,7 @@ public final class UrlUtils {
          * {@inheritDoc}
          */
         @Override
-        public String getUrl(final Nut nut) {
+        public String getUrl(final ConvertibleNut nut) {
             if (nut.getProxyUri() != null) {
                 return nut.getProxyUri();
             } else if (nut.getName().startsWith("http://")) {

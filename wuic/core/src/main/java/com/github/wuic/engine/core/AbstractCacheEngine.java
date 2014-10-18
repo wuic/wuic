@@ -43,8 +43,8 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
-import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
@@ -55,7 +55,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -103,7 +107,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     /**
      * The future default parsing done asynchronously.
      */
-    private final Map<EngineRequest.Key, Future<Map<String, Nut>>> parsingDefault;
+    private final Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
 
     /**
      * The future best effort parsing done asynchronously.
@@ -121,7 +125,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     public AbstractCacheEngine(final Boolean work, final Boolean be) {
         doCache = work;
         bestEffort = be;
-        parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, Nut>>>();
+        parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, ConvertibleNut>>>();
         parsingBestEffort = new HashMap<EngineRequest.Key, ParseBestEffortCall>();
     }
 
@@ -130,10 +134,10 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
-        List<Nut> retval;
+        List<ConvertibleNut> retval;
 
         final EngineRequest.Key key = request.getKey();
         final CacheResult value = getFromCache(key);
@@ -141,26 +145,26 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         // Nuts exist in cache, returns them
         if (value != null) {
             log.info("Nuts for request '{}' found in cache", request);
-            retval = new ArrayList<Nut>((value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult()).values());
+            retval = new ArrayList<ConvertibleNut>((value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult()).values());
         } else {
             // Nut does not exists
             request.getHeap().addObserver(new InvalidateCache(key));
-            final Map<String, Nut> toCache;
+            final Map<String, ConvertibleNut> toCache;
 
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
-                final List<Nut> prefixed = new ArrayList<Nut>(request.getNuts().size());
+                final List<ConvertibleNut> prefixed = new ArrayList<ConvertibleNut>(request.getNuts().size());
 
-                for (final Nut nut : request.getNuts()) {
+                for (final ConvertibleNut nut : request.getNuts()) {
                     // Nut will differ from full processed version thanks to its prefix
                     prefixed.add(new PrefixedNut(nut, "best-effort"));
                 }
 
                 retval = runChains(new EngineRequest(request.getWorkflowId(), prefixed, request, "best-effort"), Boolean.TRUE);
 
-                final Map<String, Nut> bestEffortResult = new HashMap<String, Nut>(retval.size());
+                final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
-                for (final Nut nut : retval) {
+                for (final ConvertibleNut nut : retval) {
                     bestEffortResult.put(nut.getName(), nut);
                 }
 
@@ -175,7 +179,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             } else {
                 // Not in best effort, we can wait for the end of the job
                 toCache = new ParseDefaultCall(request).call();
-                retval = new ArrayList<Nut>(toCache.values());
+                retval = new ArrayList<ConvertibleNut>(toCache.values());
             }
         }
 
@@ -204,17 +208,17 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * {@inheritDoc}
      */
     @Override
-    public Nut parse(final EngineRequest request, final String path) throws WuicException {
+    public ConvertibleNut parse(final EngineRequest request, final String path) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
-        Nut retval = null;
+        ConvertibleNut retval = null;
 
         // Apply cache support
         if (works()) {
             // Retrieving the result form the cache first
             final EngineRequest.Key key = request.getKey();
-            final Future<Map<String, Nut>> future;
-            final Map<String, Nut> value;
+            final Future<Map<String, ConvertibleNut>> future;
+            final Map<String, ConvertibleNut> value;
 
             // Indicates if we are looking for a nut from best effort process or not
             final Boolean isBestEffort = path.startsWith("best-effort");
@@ -261,7 +265,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
             // TODO : we should also add the referenced nut in the map to not iterate in the list which is slower
             if (retval == null) {
-                for (final Map.Entry<String, Nut> entry : value.entrySet()) {
+                for (final Map.Entry<String, ConvertibleNut> entry : value.entrySet()) {
                     if (entry.getValue().getReferencedNuts() != null) {
                         retval = NutUtils.findByName(entry.getValue().getReferencedNuts(), path);
 
@@ -273,9 +277,9 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             }
         // we don't cache so just call the next engine if exists
         } else {
-            final List<Nut> list = runChains(request, Boolean.FALSE);
+            final List<ConvertibleNut> list = runChains(request, Boolean.FALSE);
 
-            for (final Nut nut : list) {
+            for (final ConvertibleNut nut : list) {
                 if (nut.getName().equals(path)) {
                     retval = nut;
                     break;
@@ -300,7 +304,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @return the result of future
      * @throws WuicException if the cause of an {@link ExecutionException} is a {@link WuicException}
      */
-    private Map<String, Nut> waitAndGet(final Future<Map<String, Nut>> future) throws WuicException {
+    private Map<String, ConvertibleNut> waitAndGet(final Future<Map<String, ConvertibleNut>> future) throws WuicException {
         try {
             return future.get();
         } catch (InterruptedException ie) {
@@ -389,7 +393,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @version 1.0
      * @since 0.4.4
      */
-    private final class ParseBestEffortCall implements Callable<Map<String, Nut>> {
+    private final class ParseBestEffortCall implements Callable<Map<String, ConvertibleNut>> {
 
         /**
          * The request to parse.
@@ -399,7 +403,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         /**
          * The best effort result.
          */
-        private Map<String, Nut> bestEffortResult;
+        private Map<String, ConvertibleNut> bestEffortResult;
 
         /**
          * <p>
@@ -409,7 +413,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * @param er the engine request
          * @param ber the best effort result
          */
-        private ParseBestEffortCall(final EngineRequest er, final Map<String, Nut> ber) {
+        private ParseBestEffortCall(final EngineRequest er, final Map<String, ConvertibleNut> ber) {
             request = er;
             bestEffortResult = ber;
         }
@@ -418,18 +422,18 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * {@inheritDoc}
          */
         @Override
-        public Map<String, Nut> call() throws WuicException {
+        public Map<String, ConvertibleNut> call() throws WuicException {
             try {
-                final Map<String, Nut> toCache = new LinkedHashMap<String, Nut>(bestEffortResult.size());
-                final List<Nut> nuts = new ArrayList<Nut>(bestEffortResult.values());
+                final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
+                final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>(bestEffortResult.values());
 
-                for (final Nut nut : nuts) {
-                    final Nut byteArray = ByteArrayNut.toByteArrayNut(nut);
+                for (final ConvertibleNut nut : nuts) {
+                    final ConvertibleNut byteArray = ByteArrayNut.toByteArrayNut(nut);
                     if (byteArray.isCacheable()) {
                         toCache.put(byteArray.getName(), byteArray);
 
                         if (byteArray.getReferencedNuts() != null) {
-                            for (final Nut ref : byteArray.getReferencedNuts()) {
+                            for (final ConvertibleNut ref : byteArray.getReferencedNuts()) {
                                 if (ref.isCacheable()) {
                                     toCache.put(ref.getName(), ref);
                                 }
@@ -442,7 +446,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 putToCache(request.getKey(), new CacheResult(toCache, null));
 
                 // Now let's parse the default result asynchronously
-                final Future<Map<String, Nut>> future = WuicScheduledThreadPool.getInstance().executeAsap(new ParseDefaultCall(request));
+                final Future<Map<String, ConvertibleNut>> future = WuicScheduledThreadPool.getInstance().executeAsap(new ParseDefaultCall(request));
 
                 synchronized (parsingDefault) {
                     parsingDefault.put(request.getKey(), future);
@@ -467,7 +471,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @version 1.0
      * @since 0.4.4
      */
-    private final class ParseDefaultCall implements Callable<Map<String, Nut>> {
+    private final class ParseDefaultCall implements Callable<Map<String, ConvertibleNut>> {
 
         /**
          * The request to parse.
@@ -489,12 +493,12 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * {@inheritDoc}
          */
         @Override
-        public Map<String, Nut> call() throws WuicException {
+        public Map<String, ConvertibleNut> call() throws WuicException {
             try {
-                final List<Nut> nuts = runChains(new EngineRequest(request), Boolean.FALSE);
-                final Map<String, Nut> toCache = new LinkedHashMap<String, Nut>(nuts.size());
+                final List<ConvertibleNut> nuts = runChains(new EngineRequest(request), Boolean.FALSE);
+                final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
 
-                for (final Nut nut : nuts) {
+                for (final ConvertibleNut nut : nuts) {
                     if (nut.isCacheable()) {
                         toCache.put(nut.getName(), ByteArrayNut.toByteArrayNut(nut));
                     }
@@ -539,12 +543,12 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         /**
          * The best effort result.
          */
-        private Map<String, Nut> bestEffortResult;
+        private Map<String, ConvertibleNut> bestEffortResult;
 
         /**
          * The default result.
          */
-        private Map<String, Nut> defaultResult;
+        private Map<String, ConvertibleNut> defaultResult;
 
         /**
          * <p>
@@ -554,7 +558,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * @param bestEffortResult the best effort map
          * @param defaultResult the default map
          */
-        public CacheResult(final Map<String, Nut> bestEffortResult, final Map<String, Nut> defaultResult) {
+        public CacheResult(final Map<String, ConvertibleNut> bestEffortResult, final Map<String, ConvertibleNut> defaultResult) {
             this.bestEffortResult = bestEffortResult;
             this.defaultResult = defaultResult;
         }
@@ -566,7 +570,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          *
          * @return the default result
          */
-        public Map<String, Nut> getDefaultResult() {
+        public Map<String, ConvertibleNut> getDefaultResult() {
             return defaultResult;
         }
 
@@ -577,7 +581,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          *
          * @return the best effort result
          */
-        public Map<String, Nut> getBestEffortResult() {
+        public Map<String, ConvertibleNut> getBestEffortResult() {
             return bestEffortResult;
         }
 
@@ -588,7 +592,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          *
          * @param defaultResult the default result
          */
-        public void setDefaultResult(Map<String, Nut> defaultResult) {
+        public void setDefaultResult(final Map<String, ConvertibleNut> defaultResult) {
             this.defaultResult = defaultResult;
         }
     }

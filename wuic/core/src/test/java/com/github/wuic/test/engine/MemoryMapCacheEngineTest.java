@@ -40,7 +40,7 @@ package com.github.wuic.test.engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.core.AbstractCacheEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,10 +70,10 @@ public class MemoryMapCacheEngineTest {
      */
     @Test
     public void addThenClearTest() throws Exception {
-        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
+        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
-        final Map<String, Nut> nuts = new HashMap<String, Nut>();
-        nuts.put("", Mockito.mock(Nut.class));
+        final Map<String, ConvertibleNut> nuts = new HashMap<String, ConvertibleNut>();
+        nuts.put("", Mockito.mock(ConvertibleNut.class));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
         engine.putToCache(req, result);
         engine.clearCache();
@@ -87,10 +87,10 @@ public class MemoryMapCacheEngineTest {
      */
     @Test
     public void addThenRemoveTest() throws Exception {
-        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(Nut.class)));
+        final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
-        final Map<String, Nut> nuts = new HashMap<String, Nut>();
-        nuts.put("", Mockito.mock(Nut.class));
+        final Map<String, ConvertibleNut> nuts = new HashMap<String, ConvertibleNut>();
+        nuts.put("", Mockito.mock(ConvertibleNut.class));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
         engine.putToCache(req, result);
         engine.removeFromCache(req);

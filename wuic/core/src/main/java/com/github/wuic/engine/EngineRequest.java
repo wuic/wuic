@@ -41,8 +41,10 @@ package com.github.wuic.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.UrlProviderFactory;
 import com.github.wuic.util.UrlUtils;
@@ -82,7 +84,7 @@ public final class EngineRequest {
     /**
      * The nuts.
      */
-    private List<Nut> nuts;
+    private List<ConvertibleNut> nuts;
 
     /**
      * The context path.
@@ -140,7 +142,7 @@ public final class EngineRequest {
      * @param pcn prefix created nut
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
-    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final String pcn, final EngineType ... toSkip) {
+    public EngineRequest(final String wId, final List<? extends ConvertibleNut> n, final EngineRequest other, final String pcn, final EngineType ... toSkip) {
         this(wId, other.contextPath, other.heap, n, other.chains, pcn, other.urlProviderFactory, toSkip);
     }
 
@@ -154,7 +156,7 @@ public final class EngineRequest {
      * @param other the request to copy
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
-    public EngineRequest(final String wId, final List<Nut> n, final EngineRequest other, final EngineType ... toSkip) {
+    public EngineRequest(final String wId, final List<? extends ConvertibleNut> n, final EngineRequest other, final EngineType ... toSkip) {
         this(wId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
@@ -167,7 +169,7 @@ public final class EngineRequest {
      * @param other the request to copy
      * @param toSkip the engines type to skip
      */
-    public EngineRequest(final List<Nut> n, final EngineRequest other, final EngineType[] toSkip) {
+    public EngineRequest(final List<? extends ConvertibleNut> n, final EngineRequest other, final EngineType[] toSkip) {
         this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
@@ -179,7 +181,7 @@ public final class EngineRequest {
      * @param n the nuts to be parsed
      * @param other the request to copy
      */
-    public EngineRequest(final List<Nut> n, final EngineRequest other) {
+    public EngineRequest(final List<? extends ConvertibleNut> n, final EngineRequest other) {
         this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
@@ -229,7 +231,7 @@ public final class EngineRequest {
      * @param other the request to copy
      * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
      */
-    public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
+    public EngineRequest(final List<? extends Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
         this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
     }
 
@@ -242,7 +244,7 @@ public final class EngineRequest {
      * @param h the heap
      * @param other the request to copy
      */
-    public EngineRequest(final List<Nut> n, final NutsHeap h, final EngineRequest other) {
+    public EngineRequest(final List<? extends Nut> n, final NutsHeap h, final EngineRequest other) {
         this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
     }
 
@@ -284,7 +286,7 @@ public final class EngineRequest {
     public EngineRequest(final String wid,
                          final String cp,
                          final NutsHeap h,
-                         final List<Nut> n,
+                         final List<? extends Nut> n,
                          final Map<NutType, ? extends NodeEngine> c,
                          final String pcn,
                          final UrlProviderFactory urlProviderFactory,
@@ -311,12 +313,12 @@ public final class EngineRequest {
                          final String wk,
                          final String cp,
                          final NutsHeap h,
-                         final List<Nut> n,
+                         final List<? extends Nut> n,
                          final Map<NutType, ? extends NodeEngine> c,
                          final String pcn,
                          final UrlProviderFactory up,
                          final EngineType ... toSkip) {
-        nuts = new ArrayList<Nut>(n);
+        nuts = new ArrayList<ConvertibleNut>(n.size());
         workflowKey = wk;
         contextPath = cp;
         heap = h;
@@ -326,6 +328,14 @@ public final class EngineRequest {
         skip = new EngineType[toSkip.length];
         urlProviderFactory = up;
         System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
+
+        for (final Nut nut : n) {
+            if (ConvertibleNut.class.isAssignableFrom(nut.getClass())) {
+                nuts.add(ConvertibleNut.class.cast(nut));
+            } else {
+                nuts.add(new PipedConvertibleNut(nut));
+            }
+        }
     }
 
     /**
@@ -346,7 +356,7 @@ public final class EngineRequest {
      *
      * @return the nuts
      */
-    public List<Nut> getNuts() {
+    public List<ConvertibleNut> getNuts() {
         return nuts;
     }
 
@@ -390,7 +400,7 @@ public final class EngineRequest {
      *
      * @return the iterator
      */
-    public Iterator<List<Nut>> iterator() {
+    public Iterator<List<? extends ConvertibleNut>> iterator() {
         return new NutsIterator();
     }
 
@@ -491,17 +501,17 @@ public final class EngineRequest {
      * @version 1.0
      * @since 0.4.3
      */
-    private final class NutsIterator implements Iterator<List<Nut>> {
+    private final class NutsIterator implements Iterator<List<? extends ConvertibleNut>> {
 
         /**
          * Iterator.
          */
-        private Iterator<Nut> iterator;
+        private Iterator<ConvertibleNut> iterator;
 
         /**
          * Next element.
          */
-        private Nut next;
+        private ConvertibleNut next;
 
         /**
          * <p>
@@ -524,12 +534,12 @@ public final class EngineRequest {
          * {@inheritDoc}
          */
         @Override
-        public List<Nut> next() {
+        public List<? extends ConvertibleNut> next() {
             if (next == null) {
                 next = iterator.next();
             }
 
-            final LinkedList<Nut> retval = new LinkedList<Nut>();
+            final LinkedList<ConvertibleNut> retval = new LinkedList<ConvertibleNut>();
             retval.add(next);
             next = null;
 
@@ -595,12 +605,13 @@ public final class EngineRequest {
          * @throws StreamException if an I/O error occurs
          * @throws NutNotFoundException if given nut not normally created
          */
-        public Key(final String wKey, final List<Nut> nutsList, final EngineType ... s) throws NutNotFoundException, StreamException {
+        public Key(final String wKey, final List<ConvertibleNut> nutsList, final EngineType ... s)
+                throws NutNotFoundException, StreamException {
             workflowKey = wKey;
             nuts = new ArrayList<String>(nutsList.size());
             skip = s;
 
-            for (final Nut n : nutsList) {
+            for (final ConvertibleNut n : nutsList) {
                 nuts.add(n.getName());
             }
         }

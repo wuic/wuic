@@ -39,7 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ import java.util.List;
  * <p>
  * Represents an interceptor that is called just before and just after a workflow is processed. This gives a last chance
  * to modify input and output of several services. For instance, an interceptor could intercept an {@link EngineRequest}
- * the {@link Context} is going to use and the list of {@link Nut nuts} it returns when the job is done.
+ * the {@link Context} is going to use and the list of {@link ConvertibleNut nuts} it returns when the job is done.
  * </p>
  *
  * @author Guillaume DROUET
@@ -105,7 +105,7 @@ public interface ContextInterceptor {
      * @param nuts the nuts
      * @return the nuts the {@link Context} should return or give to the next interceptor
      */
-    List<Nut> afterProcess(List<Nut> nuts);
+    List<ConvertibleNut> afterProcess(List<ConvertibleNut> nuts);
 
     /**
      * Called just after the workflow has been executed to retrieve one path.
@@ -114,5 +114,5 @@ public interface ContextInterceptor {
      * @param path the path
      * @return the nut the {@link Context} should return or give to the next interceptor
      */
-    Nut afterProcess(Nut nut, String path);
+    ConvertibleNut afterProcess(ConvertibleNut nut, String path);
 }

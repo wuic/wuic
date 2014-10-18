@@ -47,7 +47,7 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.StaticWorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NotReachableNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
@@ -96,7 +96,7 @@ public class StaticEngine extends NodeEngine {
     /**
      * Cached workflow already retrieved.
      */
-    private Map<String, List<Nut>> retrievedWorkflow;
+    private Map<String, List<ConvertibleNut>> retrievedWorkflow;
 
     /**
      * <p>
@@ -105,16 +105,16 @@ public class StaticEngine extends NodeEngine {
      */
     @ConfigConstructor
     public StaticEngine() {
-        retrievedWorkflow = new HashMap<String, List<Nut>>();
+        retrievedWorkflow = new HashMap<String, List<ConvertibleNut>>();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected List<Nut> internalParse(final EngineRequest request) throws WuicException {
+    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         final String fileName = String.format(STATIC_WORKFLOW_FILE, request.getWorkflowId());
-        List<Nut> retval = retrievedWorkflow.get(fileName);
+        List<ConvertibleNut> retval = retrievedWorkflow.get(fileName);
 
         // Workflow already retrieved
         if (retval != null) {
@@ -132,7 +132,7 @@ public class StaticEngine extends NodeEngine {
                 isr = new InputStreamReader(is);
                 final String paths = IOUtils.readString(isr);
                 final Matcher matcher = PATTERN_KEY_VALUE.matcher(paths);
-                retval = new ArrayList<Nut>();
+                retval = new ArrayList<ConvertibleNut>();
 
                 // Read each file associated to its type
                 while (matcher.find()) {

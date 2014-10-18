@@ -38,56 +38,87 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 
 /**
  * <p>
- * This class wraps a {@link com.github.wuic.nut.Nut} that should be named with a particular prefix. The prefix could be
- * a path or not.
+ * A transformed nut wraps a {@link ConvertibleNut} and considers its input stream as the result of the transformation.
+ * Consequently, not transformers will be used and no changes of the state will be accepted.
+ * </p>
+ *
+ * <p>
+ * The instances could be serialized so the wrapped nut must be a {@link Serializable}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.4
+ * @since 0.5.0
  */
-public class PrefixedNut extends NutWrapper {
-
-    /**
-     * The name with prefix path.
-     */
-    private String name;
+public class TransformedNut extends NutWrapper implements Serializable {
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param nut the nut to wrap
-     * @param prefix the prefix
-     * @param asPath if the prefix is a path
+     * @param w the wrapped nut
      */
-    public PrefixedNut(final ConvertibleNut nut, final String prefix, final Boolean asPath) {
-        super(nut);
-        name = asPath ? IOUtils.mergePath(prefix, nut.getName()) : prefix + nut.getName();
-    }
+    public TransformedNut(final ConvertibleNut w) {
+        super(w);
 
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param nut the nut to wrap
-     * @param prefixPath the prefix path
-     */
-    public PrefixedNut(final ConvertibleNut nut, final String prefixPath) {
-        this(nut, prefixPath, Boolean.TRUE);
+        if (!Serializable.class.isAssignableFrom(w.getClass())) {
+            throw new IllegalArgumentException("Transformed nut is serializable so its wrapped nut must be serializable.");
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return name;
+    public void setNutName(final String nutName) {
+        throw new IllegalStateException("Can't change the name of an already transformed nut.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void transform(final OutputStream outputStream) throws IOException {
+        InputStream is = null;
+
+        try {
+            is = openStream();
+            IOUtils.copyStream(is, outputStream);
+        } catch (NutNotFoundException nnfe) {
+            throw new IOException(nnfe);
+        } catch (StreamException se) {
+            throw new IOException(se);
+        } finally {
+            IOUtils.close(is, outputStream);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addTransformer(final Pipe.Transformer transformer) {
+        throw new IllegalStateException("Can't add a transformer to an already transformed nut.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addReferencedNut(final ConvertibleNut referenced) {
+        throw new IllegalStateException("Can't add a referenced nut to an already transformed nut.");
     }
 }

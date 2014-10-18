@@ -41,6 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 
 import java.util.List;
@@ -78,9 +79,9 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    public final List<Nut> internalParse(final EngineRequest request)
+    public final List<ConvertibleNut> internalParse(final EngineRequest request)
             throws WuicException {
-        final List<Nut> retval = aggregationParse(request);
+        final List<ConvertibleNut> retval = aggregationParse(request);
 
         // Compute proxy URIs
         for (final Nut nut : retval) {
@@ -104,7 +105,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
      * @return the aggregated nuts
      * @throws WuicException if an error occurs
      */
-    protected abstract List<Nut> aggregationParse(EngineRequest request) throws WuicException ;
+    protected abstract List<ConvertibleNut> aggregationParse(EngineRequest request) throws WuicException ;
 
     /**
      * {@inheritDoc}

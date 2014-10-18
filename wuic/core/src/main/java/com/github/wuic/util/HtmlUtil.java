@@ -38,7 +38,7 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 import java.io.IOException;
 
@@ -69,7 +69,7 @@ public final class HtmlUtil {
      * @param nut the nut to import
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final Nut nut, final String workflowContextPath) throws IOException {
+    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath) throws IOException {
         return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath));
     }
 
@@ -82,7 +82,7 @@ public final class HtmlUtil {
      * @param nut the nut to import
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final Nut nut, final UrlProvider urlProvider) throws IOException {
+    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) throws IOException {
         switch (nut.getNutType()) {
             case CSS :
                 return cssImport(nut, urlProvider);
@@ -104,7 +104,7 @@ public final class HtmlUtil {
      * @param nut the CSS nut
      * @return the import
      */
-    public static String cssImport(final Nut nut, final UrlProvider urlProvider) {
+    public static String cssImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
         final StringBuilder retval = new StringBuilder();
 
         retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
@@ -124,7 +124,7 @@ public final class HtmlUtil {
      *
      * @return the import
      */
-    public static String javascriptImport(final Nut nut, final UrlProvider urlProvider) {
+    public static String javascriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
         final StringBuilder retval = new StringBuilder();
 
         retval.append("<script type=\"text/javascript");

@@ -43,6 +43,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import org.junit.Assert;
@@ -81,7 +82,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
-        List<Nut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
+        List<ConvertibleNut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
         Assert.assertEquals(res.size(), 3);
 
         try {

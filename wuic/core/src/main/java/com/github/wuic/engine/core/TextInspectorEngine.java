@@ -43,18 +43,19 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -117,20 +118,17 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
-        // Will contains both heap's nuts eventually modified or extracted nuts.
-        final List<Nut> retval = new ArrayList<Nut>();
-
+    public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         if (works()) {
-            for (Nut nut : request.getNuts()) {
-                retval.add(inspect(nut, request));
+            for (final ConvertibleNut nut : request.getNuts()) {
+                inspect(nut, request);
             }
         }
 
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
+            return getNext().parse(request);
         } else {
-            return retval;
+            return request.getNuts();
         }
     }
 
@@ -139,57 +137,13 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
      * Extracts from the given nut all the nuts referenced by the @import statement in CSS.
      * </p>
      *
-     * <p>
-     * This method is recursive.
-     * </p>
-     *
      * @param nut the nut
      * @param request the initial request
-     * @return the nut corresponding the inspected nut specified in parameter
      * @throws WuicException if an I/O error occurs while reading
      */
-    protected Nut inspect(final Nut nut, final EngineRequest request)
+    protected void inspect(final ConvertibleNut nut, final EngineRequest request)
             throws WuicException {
-        // Extracts the location where nut is listed in order to compute the location of the extracted imported nuts
-        final int lastIndexOfSlash = nut.getName().lastIndexOf("/") + 1;
-        final String name = nut.getName();
-        final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
-
-        InputStreamReader isr = null;
-
-        try {
-            // Reads as a line and keep the transformations in memory
-            isr = new InputStreamReader(nut.openStream(), charset);
-            String line = IOUtils.readString(isr);
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            final List<Nut> referencedNuts = new ArrayList<Nut>();
-
-            for (final LineInspector inspector : lineInspectors) {
-                final NutsHeap heap = new NutsHeap(request.getHeap());
-                heap.setNutDao(request.getHeap().withRootPath(nutLocation, nut), nut);
-                line = inspectLine(line, request, inspector, referencedNuts, heap, nut);
-            }
-
-            os.write((line + "\n").getBytes());
-
-            // Create and add the inspected nut with its transformations
-            final Nut inspected = new ByteArrayNut(os.toByteArray(), nut.getName(), nut.getNutType(), nut);
-            inspected.setCacheable(nut.isCacheable());
-            inspected.setAggregatable(nut.isAggregatable());
-            inspected.setTextReducible(nut.isTextReducible());
-            inspected.setBinaryReducible(nut.isBinaryReducible());
-
-            // Also add all the referenced nuts
-            for (final Nut ref : referencedNuts) {
-                inspected.addReferencedNut(ref);
-            }
-
-            return inspected;
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        } finally {
-            IOUtils.close(isr);
-        }
+        nut.addTransformer(new TextInspectorTransformer(request));
     }
 
     /**
@@ -205,7 +159,7 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
      * @param request the initial request
      * @param inspector the inspector to use
      * @param referencedNuts the collection where any referenced nut identified by the method will be added
-     * @param nutsHeap the heap wrapping the DAO to use
+     * @param heap the heap wrapping the DAO to use
      * @param original the inspected nut
      * @throws WuicException if an I/O error occurs while reading
      * @return the given line eventually transformed
@@ -213,9 +167,9 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
     protected String inspectLine(final String line,
                                  final EngineRequest request,
                                  final LineInspector inspector,
-                                 final List<Nut> referencedNuts,
-                                 final NutsHeap nutsHeap,
-                                 final Nut original)
+                                 final List<ConvertibleNut> referencedNuts,
+                                 final NutsHeap heap,
+                                 final ConvertibleNut original)
             throws WuicException {
         // Use a builder to transform the line
         final StringBuffer retval = new StringBuffer();
@@ -226,22 +180,20 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
             final StringBuilder replacement = new StringBuilder();
-            final List<Nut> res = inspector.appendTransformation(matcher, replacement, request, nutsHeap, original);
+            final List<? extends ConvertibleNut> res = inspector.appendTransformation(matcher, replacement, request, heap, original);
 
             // Evict special $ character
             matcher.appendReplacement(retval, replacement.toString().replaceAll("\\$", ""));
 
             // Add the nut and inspect it recursively if it's a CSS path
             if (res != null) {
-                for (final Nut r : res) {
-                    Nut inspected = r;
-
+                for (final ConvertibleNut r : res) {
                     if (r.getNutType().equals(NutType.CSS)) {
-                        inspected = inspect(r, new EngineRequest(res, request));
+                        inspect(r, new EngineRequest(res, request));
                     }
 
-                    configureExtracted(inspected);
-                    referencedNuts.add(inspected);
+                    configureExtracted(r);
+                    referencedNuts.add(r);
                 }
             }
         }
@@ -281,6 +233,65 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
         for (final LineInspector i : lineInspectors) {
             if (NutFilterHolder.class.isAssignableFrom(i.getClass())) {
                 NutFilterHolder.class.cast(i).setNutFilter(nutFilters);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * This transformer applies inspection process.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class TextInspectorTransformer extends Pipe.DefaultTransformer<ConvertibleNut> {
+
+        /**
+         * The request.
+         */
+        private EngineRequest request;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param req the request
+         */
+        private TextInspectorTransformer(final EngineRequest req) {
+            this.request = req;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut)
+                throws IOException {
+            // Extracts the location where nut is listed in order to compute the location of the extracted imported nuts
+            final String name = convertibleNut.getName();
+            final int lastIndexOfSlash = name.lastIndexOf('/') + 1;
+            final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
+            final List<ConvertibleNut> referencedNuts = new ArrayList<ConvertibleNut>();
+            String line = IOUtils.readString(new InputStreamReader(is, charset));
+
+            for (final LineInspector inspector : lineInspectors) {
+                try {
+                    final NutsHeap heap = new NutsHeap(request.getHeap());
+                    heap.setNutDao(request.getHeap().withRootPath(nutLocation, convertibleNut), convertibleNut);
+                    line = inspectLine(line, request, inspector, referencedNuts, heap, convertibleNut);
+                } catch (WuicException we) {
+                    throw new IOException(we);
+                }
+            }
+
+            os.write((line + "\n").getBytes());
+
+            // Also add all the referenced nuts
+            for (final ConvertibleNut ref : referencedNuts) {
+                convertibleNut.addReferencedNut(ref);
             }
         }
     }

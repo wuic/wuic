@@ -42,7 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Region;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProvider;
@@ -65,11 +65,11 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public Nut getSprite(final String url,
-                         final String workflowId,
-                         final UrlProviderFactory urlProviderFactory,
-                         final String nutNameSuffix,
-                         final List<Nut> originals)
+    public ConvertibleNut getSprite(final String url,
+                                    final String workflowId,
+                                    final UrlProviderFactory urlProviderFactory,
+                                    final String nutNameSuffix,
+                                    final List<ConvertibleNut> originals)
             throws StreamException {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder cssBuilder = new StringBuilder();

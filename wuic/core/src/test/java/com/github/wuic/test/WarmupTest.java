@@ -45,7 +45,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -86,7 +86,7 @@ public class WarmupTest {
                     return (T) new HeadEngine() {
 
                         @Override
-                        public Nut parse(final EngineRequest request, final String path) throws WuicException {
+                        public ConvertibleNut parse(final EngineRequest request, final String path) throws WuicException {
                             return HeadEngine.class.cast(object).parse(request, path);
                         }
 
@@ -96,7 +96,7 @@ public class WarmupTest {
                         }
 
                         @Override
-                        protected List<Nut> internalParse(final EngineRequest request) throws WuicException {
+                        protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
                             r.run();
                             return request.getNuts();
                         }

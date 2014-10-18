@@ -43,12 +43,15 @@ import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.engine.*;
+import com.github.wuic.engine.DimensionPacker;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.Region;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
@@ -92,7 +95,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
     /**
      * Dimension packer.
      */
-    private DimensionPacker<Nut> dimensionPacker;
+    private DimensionPacker<ConvertibleNut> dimensionPacker;
 
     /**
      * <p>
@@ -110,7 +113,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
             @ObjectConfigParam(
                     defaultValue = "com.github.wuic.engine.core.BinPacker",
                     propertyKey = ApplicationConfig.PACKER_CLASS_NAME)
-            final DimensionPacker<Nut> packer) {
+            final DimensionPacker<ConvertibleNut> packer) {
         super(aggregate);
         dimensionPacker = packer;
     }
@@ -119,20 +122,20 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> aggregationParse(final EngineRequest request) throws WuicException {
+    public List<ConvertibleNut> aggregationParse(final EngineRequest request) throws WuicException {
         // If the configuration says that no aggregation should be done, keep all images separated
         if (!works()) {
             return request.getNuts();
         } else {
-            final Map<Region, Nut> packed = pack(request.getNuts());
-            final List<Nut> originals = new ArrayList<Nut>(packed.size());
+            final Map<Region, ConvertibleNut> packed = pack(request.getNuts());
+            final List<ConvertibleNut> originals = new ArrayList<ConvertibleNut>(packed.size());
 
             // Initializing the final image
             final Dimension finalDim = getDimensionPack();
             final BufferedImage transparentImage = makeTransparentImage((int) finalDim.getWidth(), (int) finalDim.getHeight());
 
             // Merge each image into the final image
-            for (final Entry<Region, Nut> entry : packed.entrySet()) {
+            for (final Entry<Region, ConvertibleNut> entry : packed.entrySet()) {
                 InputStream is = null;
 
                 try {
@@ -158,7 +161,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
                 throw new StreamException(ioe);
             }
 
-            final Nut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals, NutUtils.getVersionNumber(originals));
+            final ConvertibleNut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals, NutUtils.getVersionNumber(originals));
 
             return Arrays.asList(res);
         }
@@ -233,13 +236,13 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
      * @return a map which associates each packed image to its allocated region
      * @throws WuicException if one image could not be read
      */
-    public Map<Region, Nut> pack(final List<Nut> nuts) throws WuicException {
+    public Map<Region, ConvertibleNut> pack(final List<ConvertibleNut> nuts) throws WuicException {
 
         // Clear previous work
         dimensionPacker.clearElements();
 
         // Load each image, read its dimension and add it to the packer with the ile as data
-        for (final Nut nut : nuts) {
+        for (final ConvertibleNut nut : nuts) {
             InputStream is = null;
 
             try {

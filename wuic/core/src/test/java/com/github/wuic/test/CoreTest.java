@@ -42,6 +42,7 @@ import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 
 import java.io.File;
@@ -103,7 +104,7 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<Nut> group = facade.runWorkflow("util-js");
+        List<ConvertibleNut> group = facade.runWorkflow("util-js");
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -151,7 +152,7 @@ public class CoreTest extends WuicTest {
         is.close();
         writeToDisk(nut, "sprite.css");
 
-        List<Nut> group = facade.runWorkflow("css-scripts");
+        List<ConvertibleNut> group = facade.runWorkflow("css-scripts");
         int i = 0;
 
         for (Nut res : group) {
@@ -175,12 +176,12 @@ public class CoreTest extends WuicTest {
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<Nut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory());
+        List<ConvertibleNut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory());
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
 
-        final Iterator<Nut> it = Arrays.asList(group.get(0)).iterator();
+        final Iterator<ConvertibleNut> it = Arrays.asList(group.get(0)).iterator();
         int i = 0;
 
         while (it.hasNext()) {

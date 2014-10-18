@@ -43,7 +43,6 @@ import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -80,15 +79,15 @@ public interface Nut extends Serializable {
      * @return the path type
      */
     NutType getNutType();
-    
+
     /**
      * <p>
      * Returns the name of the nut. This is not a path consequently it should not contains any paths.
      * </p>
-     * 
+     *
      * @return the nut name
      */
-    String getName();
+    String getInitialName();
 
     /**
      * <p>
@@ -182,24 +181,6 @@ public interface Nut extends Serializable {
 
     /**
      * <p>
-     * Adds a new nut referenced by this nut.
-     * </p>
-     *
-     * @param referenced the referenced nut
-     */
-    void addReferencedNut(Nut referenced);
-
-    /**
-     * <p>
-     * Gets the nuts referenced by this nut.
-     * </p>
-     *
-     * @return the referenced nuts, {@code null} if no nut is referenced
-     */
-    List<Nut> getReferencedNuts();
-
-    /**
-     * <p>
      * Sets a proxy URI that allow to access the nut through another way.
      * </p>
      *
@@ -224,15 +205,4 @@ public interface Nut extends Serializable {
      * @return the nut's version
      */
     Future<Long> getVersionNumber();
-
-    /**
-     * <p>
-     * When this nut is the result of the transformation of another one, then it is actually a processed nut. This returns
-     * a list of original nuts that have been transformed to obtain this nut. When this nut is actually an non-transformed
-     * one, say an original nut, then the returned value should be {@code null}.
-     * </p>
-     *
-     * @return the original nuts of this nut, {@code null} if this nut is actually original
-     */
-    List<Nut> getOriginalNuts();
 }

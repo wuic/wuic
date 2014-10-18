@@ -38,7 +38,7 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
 /**
  * <p>
@@ -59,5 +59,5 @@ public interface UrlProvider {
      * @param nut the nut
      * @return the url
      */
-    String getUrl(Nut nut);
+    String getUrl(ConvertibleNut nut);
 }

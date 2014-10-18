@@ -231,25 +231,21 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Copies the data from the given input stream into the given writer.
+     * Copies the data from the given input stream into the given writer and does not wrap the {@link IOException}.
      * </p>
      *
      * @param is the {@code InputStream}
      * @param writer the {@code Writer}
      * @param cs the charset to use to convert byte array to char array
-     * @throws com.github.wuic.exception.wrapper.StreamException in an I/O error occurs
+     * @throws IOException in an I/O error occurs
      */
-    public static void copyStreamToWriter(final InputStream is, final Writer writer, final String cs)
-            throws StreamException {
+    public static void copyStreamToWriterIoe(final InputStream is, final Writer writer, final String cs)
+            throws IOException {
         int offset;
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
-        try {
-            while ((offset = is.read(buffer)) != -1) {
-                writer.write(new String(Arrays.copyOf(buffer, offset), cs));
-            }
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
+        while ((offset = is.read(buffer)) != -1) {
+            writer.write(new String(Arrays.copyOf(buffer, offset), cs));
         }
     }
 

@@ -44,7 +44,7 @@ import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProviderFactory;
 
@@ -120,7 +120,10 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    public List<Nut> process(final String contextPath, final String workflowId, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+    public List<ConvertibleNut> process(final String contextPath,
+                                        final String workflowId,
+                                        final UrlProviderFactory urlProviderFactory,
+                                        final EngineType ... skip)
             throws WuicException {
         return process(contextPath, workflowId, getWorkflow(workflowId), urlProviderFactory, skip);
     }
@@ -138,7 +141,7 @@ public class Context implements Observer {
      * @return the nut corresponding to the nut name
      * @throws WuicException if workflow fails to be processed
      */
-    public Nut process(final String contextPath, final String wId, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+    public ConvertibleNut process(final String contextPath, final String wId, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
             throws WuicException {
         return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, skip);
     }
@@ -197,7 +200,12 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private Nut process(final String contextPath, final String wId, final Workflow workflow, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+    private ConvertibleNut process(final String contextPath,
+                                   final String wId,
+                                   final Workflow workflow,
+                                   final String path,
+                                   final UrlProviderFactory urlProviderFactory,
+                                   final EngineType ... skip)
             throws WuicException {
         EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", urlProviderFactory, skip);
 
@@ -205,7 +213,7 @@ public class Context implements Observer {
             request = interceptor.beforeProcess(request, path);
         }
 
-        Nut retval;
+        ConvertibleNut retval;
         if (workflow.getHead() != null) {
             retval = workflow.getHead().parse(request, path);
         } else {
@@ -235,11 +243,11 @@ public class Context implements Observer {
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
-    private List<Nut> process(final String contextPath,
-                              final String wId,
-                              final Workflow workflow,
-                              final UrlProviderFactory urlProviderFactory,
-                              final EngineType ... skip)
+    private List<ConvertibleNut> process(final String contextPath,
+                                         final String wId,
+                                         final Workflow workflow,
+                                         final UrlProviderFactory urlProviderFactory,
+                                         final EngineType ... skip)
             throws WuicException {
         EngineRequest request = new EngineRequest(wId,
                 contextPath,
@@ -253,7 +261,7 @@ public class Context implements Observer {
             request = interceptor.beforeProcess(request);
         }
 
-        List<Nut> retval;
+        List<ConvertibleNut> retval;
 
         if (workflow.getHead() != null) {
             retval = workflow.getHead().parse(request);

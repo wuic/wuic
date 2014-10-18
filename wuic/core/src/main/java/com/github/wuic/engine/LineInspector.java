@@ -39,9 +39,8 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
@@ -92,12 +91,12 @@ public abstract class LineInspector {
      * @return the processed nuts specified in parameter
      * @throws WuicException if processing fails
      */
-    public static List<Nut> manageAppend(final Nut nut,
-                                         final StringBuilder replacement,
-                                         final EngineRequest request,
-                                         final NutsHeap heap,
-                                         final EngineType ... skippedEngine) throws WuicException {
-        List<Nut> res;
+    public static List<? extends ConvertibleNut> manageAppend(final ConvertibleNut nut,
+                                                              final StringBuilder replacement,
+                                                              final EngineRequest request,
+                                                              final NutsHeap heap,
+                                                              final EngineType ... skippedEngine) throws WuicException {
+        List<? extends ConvertibleNut> res;
 
         // If nut name is null, it means that nothing has been changed by the inspector
         res = Arrays.asList(nut);
@@ -111,12 +110,12 @@ public abstract class LineInspector {
         // Use proxy URI if DAO provide it
         final String proxy = nut.getProxyUri();
 
-        final Nut resNut = res.isEmpty() ? null: res.get(0);
-        final Nut renamed;
+        final ConvertibleNut resNut = res.isEmpty() ? null: res.get(0);
+        final ConvertibleNut renamed;
 
         if (resNut != null) {
-            renamed = new CompositeNut(resNut.getName().replace("../", "a/../"), null, resNut);
-            res.set(0, renamed);
+            renamed = resNut;
+            resNut.setNutName(resNut.getName().replace("../", "a/../"));
         } else {
             renamed = nut;
         }
@@ -160,9 +159,9 @@ public abstract class LineInspector {
      * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
      * @throws WuicException if an exception occurs
      */
-    public abstract List<Nut> appendTransformation(Matcher matcher,
-                                                   StringBuilder replacement,
-                                                   EngineRequest request,
-                                                   NutsHeap heap,
-                                                   Nut originalNut) throws WuicException;
+    public abstract List<? extends ConvertibleNut> appendTransformation(Matcher matcher,
+                                                                        StringBuilder replacement,
+                                                                        EngineRequest request,
+                                                                        NutsHeap heap,
+                                                                        ConvertibleNut originalNut) throws WuicException;
 }

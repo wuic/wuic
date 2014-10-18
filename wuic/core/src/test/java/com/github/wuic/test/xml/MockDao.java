@@ -5,6 +5,7 @@ import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -63,9 +64,10 @@ public class MockDao implements NutDao {
     @Override
     public List<Nut> create(final String path, final PathFormat format) throws StreamException {
         try {
-            final Nut nut = mock(Nut.class);
+            final ConvertibleNut nut = mock(ConvertibleNut.class);
             when(nut.getNutType()).thenReturn(NutType.CSS);
             when(nut.getName()).thenReturn("foo.css");
+            when(nut.getInitialName()).thenReturn("foo.css");
             final List<Nut> nuts = new ArrayList<Nut>();
             nuts.add(nut);
             when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));

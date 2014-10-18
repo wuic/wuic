@@ -40,18 +40,14 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * @version 1.7
  * @since 0.1.0
  */
-public abstract class AbstractCompressorEngine extends NodeEngine {
+public abstract class AbstractCompressorEngine extends NodeEngine implements Pipe.Transformer<ConvertibleNut> {
  
     /**
      * Logger.
@@ -89,18 +85,6 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
 
     /**
      * <p>
-     * Compress a stream (the source) into a target. The target is overridden if
-     * it already exists.
-     * </p>
-     * 
-     * @param source the source
-     * @param target the path where to compressed content should be written
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs during compression
-     */
-    protected abstract void compress(InputStream source, OutputStream target) throws StreamException;
-
-    /**
-     * <p>
      * Builds a new instance.
      * </p>
      *
@@ -116,26 +100,20 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> internalParse(final EngineRequest request) throws WuicException {
-        // Return the same number of files
-        final List<Nut> retval = new ArrayList<Nut>(request.getNuts().size());
-        
+    public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
+
         // Compress only if needed
         if (works()) {
             // Compress each path
-            for (final Nut nut : request.getNuts()) {
-                final Nut compress = compress(nut);
-                compress.setProxyUri(request.getHeap().proxyUriFor(compress));
-                retval.add(compress);
+            for (final ConvertibleNut nut : request.getNuts()) {
+                compress(nut);
             }
-        } else {
-            retval.addAll(request.getNuts());
         }
         
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
+            return getNext().parse(request);
         } else {
-            return retval;
+            return request.getNuts();
         }
     }
 
@@ -145,12 +123,11 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
      * </p>
      *
      * @param nut the nut to be compressed
-     * @return the compressed nut
      * @throws WuicException if an I/O error occurs
      */
-    private Nut compress(final Nut nut) throws WuicException {
+    private void compress(final ConvertibleNut nut) throws WuicException {
         if (!nut.isTextReducible() || nut.getName().contains(renameExtensionPrefix)) {
-            return nut;
+            return;
         }
 
         // Compression has to be implemented by sub-classes
@@ -159,39 +136,32 @@ public abstract class AbstractCompressorEngine extends NodeEngine {
         try {
             log.debug("Compressing {}", nut.getName());
 
-            // Source
-            is = nut.openStream();
-
-            // Where compression result will be written
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-            // Do compression
-            compress(is, os);
-
             // Build new name
             final StringBuilder nameBuilder = new StringBuilder(nut.getName());
             nameBuilder.insert(nut.getName().lastIndexOf('.'), renameExtensionPrefix);
 
-            // Now create nut
-            final Nut res = new ByteArrayNut(os.toByteArray(), nameBuilder.toString(), nut.getNutType(), nut);
-            res.setAggregatable(nut.isAggregatable());
-            res.setBinaryReducible(nut.isBinaryReducible());
-            res.setTextReducible(nut.isTextReducible());
-            res.setCacheable(nut.isCacheable());
+            nut.setNutName(nameBuilder.toString());
+            nut.addTransformer(this);
 
             // Also compress referenced nuts
             if (nut.getReferencedNuts() != null) {
-                for (Nut ref : nut.getReferencedNuts()) {
-                    res.addReferencedNut(compress(ref));
+                for (final ConvertibleNut ref : nut.getReferencedNuts()) {
+                    compress(ref);
                 }
             }
-
-            return res;
         } finally {
             IOUtils.close(is);
         }
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canAggregateTransformedStream() {
+        return true;
+    }
+
     /**
      * {@inheritDoc}
      */

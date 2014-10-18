@@ -46,6 +46,7 @@ import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
@@ -143,7 +144,7 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final Collection<Nut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory());
+        final Collection<ConvertibleNut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory());
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

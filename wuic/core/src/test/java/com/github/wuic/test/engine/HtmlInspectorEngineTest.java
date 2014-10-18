@@ -49,6 +49,7 @@ import com.github.wuic.engine.core.AbstractCacheEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.engine.core.HtmlInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
@@ -56,12 +57,15 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -109,13 +113,13 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.CSS, new TextAggregatorEngine(true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
         final EngineRequest request = new EngineRequest("workflow", "", heap, chains);
-        final List<Nut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
+        final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
 
         Assert.assertEquals(1, nuts.size());
-
-        final String content = IOUtils.readString(new InputStreamReader(nuts.get(0).openStream()));
-        System.out.println(content);
-        Assert.assertTrue(Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        nuts.get(0).transform(os);
+        final String content = new String(os.toByteArray());
+        Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
     }
 
     /**
@@ -173,14 +177,14 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
         chains.put(NutType.CSS, new TextAggregatorEngine(true));
 
-        List<Nut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
+        List<ConvertibleNut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
         String res = IOUtils.readString(new InputStreamReader(nuts.get(0).openStream()));
         Assert.assertEquals(content, res);
 
         countDownLatch.await(5, TimeUnit.SECONDS);
 
         nuts = engine.parse(new EngineRequest("", "", heap, chains));
-        res = IOUtils.readString(new InputStreamReader(nuts.get(0).openStream()));
+        res = NutUtils.readTransform(nuts.get(0));
         System.out.print(res);
         Assert.assertTrue(Pattern.compile(REGEX, Pattern.DOTALL).matcher(res).matches());
     }

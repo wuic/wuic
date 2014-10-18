@@ -44,7 +44,7 @@ import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
@@ -71,6 +71,7 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -349,15 +350,16 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
 
-        final List<Nut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory());
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());
+        nuts.get(0).transform(new ByteArrayOutputStream());
         Assert.assertNotNull(nuts.get(0).getReferencedNuts());
         Assert.assertEquals(2, nuts.get(0).getReferencedNuts().size());
 
         // Assert that ref.css is removed
-        final List<Nut> ref = nuts.get(0).getReferencedNuts().get(1).getReferencedNuts();
+        final List<ConvertibleNut> ref = nuts.get(0).getReferencedNuts().get(1).getReferencedNuts();
         Assert.assertTrue(ref == null || ref.isEmpty());
     }
 

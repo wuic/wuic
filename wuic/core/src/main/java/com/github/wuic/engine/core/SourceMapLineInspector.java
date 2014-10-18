@@ -43,7 +43,9 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import org.slf4j.Logger;
@@ -92,11 +94,11 @@ public class SourceMapLineInspector extends LineInspector {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> appendTransformation(final Matcher matcher,
-                                          final StringBuilder replacement,
-                                          final EngineRequest request,
-                                          final NutsHeap heap,
-                                          final Nut originalNut) throws WuicException {
+    public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
+                                                               final StringBuilder replacement,
+                                                               final EngineRequest request,
+                                                               final NutsHeap heap,
+                                                               final ConvertibleNut originalNut) throws WuicException {
         NodeEngine next = engine.getNext();
 
         while (next != null) {
@@ -113,10 +115,10 @@ public class SourceMapLineInspector extends LineInspector {
         // Extract the nut
         final String referencedPath = matcher.group(1);
         final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
-        final List<Nut> res;
+        final List<? extends ConvertibleNut> res;
 
         if (!nuts.isEmpty()) {
-            res = manageAppend(nuts.iterator().next(), replacement, request, heap);
+            res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
         } else {
             log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
             replacement.append(matcher.group());

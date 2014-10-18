@@ -38,28 +38,26 @@
 
 package com.github.wuic.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * <p>
  * This class helps to chains transformers that read {@link InputStream} and writes some transformed bytes to a
- * {@link ByteArrayOutputStream}. {@link Transformer Transformers} can be chained internally with a
- * {@link PipedInputStream} and a {@link PipedOutputStream}.
+ * {@link ByteArrayOutputStream}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
+ * @param <T> the type of convertible object
  */
-public final class Pipe {
+public final class Pipe<T> {
 
     /**
      * <p>
@@ -71,11 +69,17 @@ public final class Pipe {
      * When registered with the {@link Pipe}, the close method is invoked transparently.
      * </p>
      *
+     * <p>
+     * That transformer is also able to change the state of on 'convertible' object identified as the origin of the
+     * source input stream.
+     * </p>
+     *
      * @author Guillaume DROUET
      * @version 1.0
      * @since 0.5.0
+     * @param <T> the type of convertible object
      */
-    public interface Transformer {
+    public interface Transformer<T> {
 
         /**
          * <p>
@@ -84,82 +88,50 @@ public final class Pipe {
          *
          * @param is the input
          * @param os the output
+         * @param convertible the object that provides the original input stream
          * @throws IOException if an I/O error occurs
          */
-        void transform(InputStream is, OutputStream os) throws IOException;
+        void transform(InputStream is, OutputStream os, T convertible) throws IOException;
+
+        /**
+         * <p>
+         * Indicates if the content generated when {@link #transform(InputStream, OutputStream, Object)} is called can
+         * be aggregated to an other one. This is usually the case but won't be possible for instance when a magic
+         * number should appears only at the beginning of the composite stream and not in each stream of the aggregation.
+         * </p>
+         *
+         * @return {@code true} if aggregation is possible, {@code false} otherwise
+         */
+        boolean canAggregateTransformedStream();
     }
 
     /**
      * <p>
-     * Internal class that wraps {@link Transformer} and the stream to use.
+     * The default transformer just copies the {@link InputStream} to the {@link OutputStream} and produces a content
+     * which can be aggregated to an other one.
      * </p>
      *
      * @author Guillaume DROUET
      * @version 1.0
      * @since 0.5.0
+     * @param <T> the type of convertible object
      */
-    private static final class Node implements Runnable {
+    public static class DefaultTransformer<T> implements Transformer<T> {
 
         /**
-         * The input stream.
+         * {@inheritDoc}
          */
-        private InputStream inputStream;
-
-        /**
-         * The output stream.
-         */
-        private OutputStream outputStream;
-
-        /**
-         * The transformer that reads and writes.
-         */
-        private Transformer transformer;
-
-        /**
-         * <p>
-         * Sets the input stream.
-         * </p>
-         *
-         * @param is the input stream
-         */
-        private void setInputStream(final InputStream is) {
-            this.inputStream = is;
-        }
-
-        /**
-         * <p>
-         * Sets the output stream.
-         * </p>
-         *
-         * @param os the output stream
-         */
-        private void setOutputStream(final OutputStream os) {
-            this.outputStream = os;
-        }
-
-        /**
-         * <p>
-         * Sets the transformer.
-         * </p>
-         *
-         * @param t the transformer
-         */
-        private void setTransformer(final Transformer t) {
-            this.transformer = t;
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final T convertible) throws IOException {
+            IOUtils.copyStreamIoe(is, os);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void run() {
-            try {
-                transformer.transform(inputStream, outputStream);
-            } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
-            } finally {
-                IOUtils.close(inputStream, outputStream);
-            }
+        public boolean canAggregateTransformedStream() {
+            return true;
         }
     }
 
@@ -169,26 +141,27 @@ public final class Pipe {
     private InputStream inputStream;
 
     /**
-     * Output stream of the pipe.
-     */
-    private ByteArrayOutputStream outputStream;
-
-    /**
      * Nodes that wrap registered {@link Transformer transformers}.
      */
-    private LinkedList<Node> nodes;
+    private Deque<Transformer<T>> transformers;
+
+    /**
+     * The convertible object.
+     */
+    private T convertible;
 
     /**
      * <p>
      * Creates a new instance with an input.
      * </p>
      *
+     * @param c the convertible bound to the input stream
      * @param is the {@link InputStream}
      */
-    public Pipe(final InputStream is) {
+    public Pipe(final T c, final InputStream is) {
+        convertible = c;
         inputStream = is;
-        outputStream = new ByteArrayOutputStream();
-        nodes = new LinkedList<Node>();
+        transformers = new LinkedList<Transformer<T>>();
     }
 
     /**
@@ -200,53 +173,51 @@ public final class Pipe {
      * @param transformer the transformer
      * @throws IOException if streams could not be piped
      */
-    public void register(final Transformer transformer) throws IOException {
-        final Node node = new Node();
-        node.setOutputStream(outputStream);
-        node.setTransformer(transformer);
-
-        if (nodes.isEmpty()) {
-            node.setInputStream(inputStream);
-        } else {
-            final PipedOutputStream pos = new PipedOutputStream();
-            final Node prev = nodes.getLast();
-            node.setInputStream(new PipedInputStream(pos));
-            prev.setOutputStream(pos);
+    public void register(final Transformer<T> transformer) throws IOException {
+        if (!transformers.isEmpty()
+                && !transformers.getLast().canAggregateTransformedStream()
+                && transformer.canAggregateTransformedStream()) {
+            throw new IllegalArgumentException(
+                    "You can't add a transformer which produces a stream which could be aggregated after a stream which doesn't.");
         }
 
-        nodes.addLast(node);
+        transformers.addLast(transformer);
     }
 
     /**
      * <p>
-     * Executes this pipe by writing to the returned {@link ByteArrayOutputStream} the result generated by all
+     * Executes this pipe by writing to the given {@link OutputStream} the result generated by all
      * registered {@link Transformer transformers}.
      * </p>
      *
-     * @return the pipe's output
      * @throws IOException if an I/O error occurs
      */
-    public ByteArrayOutputStream execute() throws IOException {
-        // Keep futures to wait result
-        final Future[] futures = new Future[nodes.size()];
-        int cpt = 0;
-
-        // Execute transformers in separated threads
-        for (final Node n : nodes) {
-            futures[cpt++] = WuicScheduledThreadPool.getInstance().executeAsap(n);
+    public void execute(final OutputStream os) throws IOException {
+        if (transformers.isEmpty()) {
+            IOUtils.copyStreamIoe(inputStream, os);
+            return;
         }
 
-        // Wait for the end of execution of all transformers
-        for (final Future<?> f : futures) {
-            try {
-                f.get();
-            } catch (ExecutionException ee) {
-                throw new IOException(ee);
-            } catch (InterruptedException ie) {
-                throw new IOException(ie);
+        InputStream is = inputStream;
+
+        for (final Transformer<T> t : transformers) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+            if (!t.equals(transformers.getLast())) {
+                try {
+                    t.transform(is, out, convertible);
+                } finally {
+                    IOUtils.close(is);
+                }
+
+                is = new ByteArrayInputStream(out.toByteArray());
+            } else {
+                try {
+                    t.transform(is, os, convertible);
+                } finally {
+                    IOUtils.close(is);
+                }
             }
         }
-
-        return outputStream;
     }
 }

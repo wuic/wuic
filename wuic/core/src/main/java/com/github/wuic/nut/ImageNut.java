@@ -64,7 +64,7 @@ public class ImageNut extends NutWrapper {
      * @param image the nut to wrap
      * @param r the image's region
      */
-    public ImageNut(final Nut image, final Region r) {
+    public ImageNut(final ConvertibleNut image, final Region r) {
         super(image);
         region = r;
     }

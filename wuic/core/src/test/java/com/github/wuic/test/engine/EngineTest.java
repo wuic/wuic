@@ -45,7 +45,7 @@ import com.github.wuic.engine.core.BinPacker;
 import com.github.wuic.engine.core.ImageAggregatorEngine;
 import com.github.wuic.engine.core.ImageCompressorEngine;
 import com.github.wuic.engine.core.SpriteInspectorEngine;
-import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.ConvertibleNut;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,7 +69,7 @@ public class EngineTest {
     @Test
     public void chainTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine3 = new ImageCompressorEngine(false);
         final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
@@ -81,7 +81,7 @@ public class EngineTest {
     @Test
     public void chainTestWithNull() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine3 = new ImageCompressorEngine(false);
         final NodeEngine chain = NodeEngine.chain(null, engine1, null, engine2, null, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
@@ -93,7 +93,7 @@ public class EngineTest {
     @Test
     public void chainUnionTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine3 = new ImageCompressorEngine(false);
         assertChainTest(NodeEngine.chain(NodeEngine.chain(engine1, engine2), NodeEngine.chain(engine2, engine3)), engine1, engine2, engine3);
     }
@@ -105,7 +105,7 @@ public class EngineTest {
     public void chainDuplicateTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = engine1;
-        final NodeEngine engine3 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine3 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine4 = new ImageCompressorEngine(false);
         assertChainTest(NodeEngine.chain(engine1, engine2, engine3, engine4), engine2, engine3, engine4);
     }
@@ -116,9 +116,9 @@ public class EngineTest {
     @Test
     public void chainReplaceWithLast() {
         final NodeEngine engine1 =new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine3 = new ImageCompressorEngine(false);
-        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         assertChainTest(NodeEngine.chain(chain, engine4), engine1, engine4, engine3);
     }
@@ -129,9 +129,9 @@ public class EngineTest {
     @Test
     public void chainReplaceFirst() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         final NodeEngine engine3 = new ImageCompressorEngine(false);
-        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<Nut>());
+        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
         NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         chain = NodeEngine.chain(engine4, chain);
         assertChainTest(chain, engine1, engine2, engine3);

@@ -41,6 +41,7 @@ package com.github.wuic.test.dao;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -165,8 +166,9 @@ public class AbstractNutDaoTest {
          */
         @Override
         protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
-            final Nut mock = mock(Nut.class);
+            final ConvertibleNut mock = mock(ConvertibleNut.class);
             when(mock.getName()).thenReturn(realPath);
+            when(mock.getInitialName()).thenReturn(realPath);
 
             try {
                 when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath).get()));
@@ -347,8 +349,9 @@ public class AbstractNutDaoTest {
     @Test
     public void concurrentTest() throws Exception {
         final AbstractNutDao dao = new MockNutDaoTest(1);
-        final Nut nut = mock(Nut.class);
+        final ConvertibleNut nut = mock(ConvertibleNut.class);
         when(nut.getName()).thenReturn("mock");
+        when(nut.getInitialName()).thenReturn("mock");
         when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         for (int i = 0; i < 750; i++) {
