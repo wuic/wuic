@@ -1,5 +1,5 @@
-@import "../css/file.css";
+@import "../css/file.css?bar";
 
 .test {
-    background: url("../image/file.png");
+    background: url("../image/file.png?foo");
 }

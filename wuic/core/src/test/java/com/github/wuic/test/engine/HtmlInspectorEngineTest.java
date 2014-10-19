@@ -64,7 +64,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -117,9 +116,12 @@ public class HtmlInspectorEngineTest {
 
         Assert.assertEquals(1, nuts.size());
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        nuts.get(0).transform(os);
+        final ConvertibleNut nut = nuts.get(0);
+        nut.transform(os);
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
+        Assert.assertNotNull(nut.getReferencedNuts());
+        Assert.assertEquals(7, nut.getReferencedNuts().size());
     }
 
     /**
@@ -185,8 +187,7 @@ public class HtmlInspectorEngineTest {
 
         nuts = engine.parse(new EngineRequest("", "", heap, chains));
         res = NutUtils.readTransform(nuts.get(0));
-        System.out.print(res);
-        Assert.assertTrue(Pattern.compile(REGEX, Pattern.DOTALL).matcher(res).matches());
+        Assert.assertTrue(res, Pattern.compile(REGEX, Pattern.DOTALL).matcher(res).matches());
     }
 
     /**

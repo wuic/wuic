@@ -415,7 +415,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 if (retval.startsWith("http://") || retval.startsWith("https://")) {
                     return null;
                 } else {
-                    return retval;
+                    // Looking for a delimiter adding extra characters after the extracted name
+                    int delimiter = retval.indexOf('#');
+
+                    if (delimiter == -1) {
+                        delimiter = retval.indexOf('?');
+                    }
+
+                    return delimiter == -1 ? retval : retval.substring(0, delimiter);
                 }
             } else if (readInlineIfTokenNotFound()) {
                 // Looking for content
