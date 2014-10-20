@@ -63,7 +63,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -153,7 +152,7 @@ public class CssInspectorTest {
         final List<ConvertibleNut> res = engine.parse(request);
 
         for (final ConvertibleNut convertibleNut : res) {
-            convertibleNut.transform(new ByteArrayOutputStream());
+            convertibleNut.transform();
         }
 
         Assert.assertEquals(message, count, createCount.get());
@@ -275,13 +274,13 @@ public class CssInspectorTest {
         // ../ refers a file inside base directory hierarchy
         List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
-        group.get(0).transform(new ByteArrayOutputStream());
+        group.get(0).transform();
         Assert.assertEquals(3, group.get(0).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
         group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory());
         Assert.assertEquals(1, group.size());
-        group.get(0).transform(new ByteArrayOutputStream());
+        group.get(0).transform();
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
     }
 

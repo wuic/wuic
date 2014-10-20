@@ -58,6 +58,7 @@ import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,6 +66,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -117,7 +119,12 @@ public class HtmlInspectorEngineTest {
         Assert.assertEquals(1, nuts.size());
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final ConvertibleNut nut = nuts.get(0);
-        nut.transform(os);
+        nut.transform(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(os);
+            }
+        });
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
         Assert.assertNotNull(nut.getReferencedNuts());

@@ -39,8 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.Pipe;
 
@@ -48,7 +47,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -125,7 +123,7 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final OutputStream outputStream) throws IOException {
+    public void transform(final Pipe.OnReady... onReady) throws IOException {
         if (isTransformed()) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
         }
@@ -151,6 +149,10 @@ public class CompositeNut extends PipedConvertibleNut {
                 for (final ConvertibleNut nut : compositionList) {
                     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
+
+                        /**
+                         * {@inheritDoc}
+                         */
                         @Override
                         public String getName() {
                             return nut.getInitialName();
@@ -161,7 +163,8 @@ public class CompositeNut extends PipedConvertibleNut {
                         pipe.register(transformer);
                     }
 
-                    pipe.execute(bos);
+                    Pipe.executeAndWriteTo(pipe, nut.getReadyCallbacks(), bos);
+
                     is.add(new ByteArrayInputStream(bos.toByteArray()));
 
                     if (streamSeparator != null) {
@@ -177,14 +180,16 @@ public class CompositeNut extends PipedConvertibleNut {
                     pipe.register(transformer);
                 }
 
-                pipe.execute(outputStream);
-            } else {
-                IOUtils.copyStream(openStream(), outputStream);
+                final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
+
+                if (getReadyCallbacks() != null) {
+                    merge.addAll(getReadyCallbacks());
+                }
+
+                pipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
             }
         } catch (NutNotFoundException nnfe) {
             throw new IOException(nnfe);
-        } catch (StreamException se) {
-            throw new IOException(se);
         } finally {
             setTransformed(true);
         }

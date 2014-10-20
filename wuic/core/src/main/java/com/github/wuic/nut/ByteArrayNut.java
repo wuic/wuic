@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -160,7 +161,12 @@ public final class ByteArrayNut extends PipedConvertibleNut {
 
         try {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            nut.transform(os);
+            nut.transform(new Pipe.OnReady() {
+                @Override
+                public void ready(final Pipe.Execution e) throws IOException {
+                    e.writeResultTo(os);
+                }
+            });
 
             final ConvertibleNut bytes;
             final String name = IOUtils.mergePath(nut.getName());

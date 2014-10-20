@@ -42,7 +42,6 @@ import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.nut.ConvertibleNut;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -123,7 +122,7 @@ public class ImageAggregatorEngineTest {
      */
     private void assertOneReference(final List<ConvertibleNut> nuts) throws IOException {
         for (final ConvertibleNut n : nuts) {
-            n.transform(new ByteArrayOutputStream());
+            n.transform();
             Assert.assertNotNull(n.getReferencedNuts());
             Assert.assertEquals(1, n.getReferencedNuts().size());
         }

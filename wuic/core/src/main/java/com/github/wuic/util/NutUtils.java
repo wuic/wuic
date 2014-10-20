@@ -182,9 +182,18 @@ public final class NutUtils {
      */
     public static String readTransform(final ConvertibleNut n) throws IOException {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        n.transform(bos);
-        final byte[] b = bos.toByteArray();
+        n.transform(new Pipe.OnReady() {
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(bos);
+            }
+        });
+
+        final byte[] b = bos.toByteArray();
         return n.isCompressed() ?
                 IOUtils.readString(new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(b)))) : new String(b);
     }

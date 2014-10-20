@@ -43,7 +43,6 @@ import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -111,8 +110,24 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final OutputStream outputStream) throws IOException {
-        wrapped.transform(outputStream);
+    public void transform(final Pipe.OnReady... onReady) throws IOException {
+        wrapped.transform(onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onReady(final Pipe.OnReady onReady) {
+        wrapped.onReady(onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Pipe.OnReady> getReadyCallbacks() {
+        return wrapped.getReadyCallbacks();
     }
 
     /**

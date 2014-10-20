@@ -72,6 +72,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -668,8 +669,7 @@ public class UtilityTest extends WuicTest {
         }
 
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        p.execute(bos);
-
+        Pipe.executeAndWriteTo(p, new ArrayList<Pipe.OnReady>(), bos);
         Assert.assertEquals(expect, bos.toByteArray()[0]);
     }
 }

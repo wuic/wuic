@@ -40,12 +40,14 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -102,12 +104,20 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final OutputStream outputStream) throws IOException {
+    public void transform(final Pipe.OnReady ... onReady) throws IOException {
         if (isTransformed()) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
         }
 
+        InputStream is = null;
+
         try {
+            final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
+
+            if (getReadyCallbacks() != null) {
+                merge.addAll(getReadyCallbacks());
+            }
+
             if (getTransformers() != null) {
                 final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(this, openStream());
 
@@ -115,15 +125,21 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                     pipe.register(transformer);
                 }
 
-                pipe.execute(outputStream);
+                pipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
             } else {
-                IOUtils.copyStream(openStream(), outputStream);
+                is = openStream();
+                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                IOUtils.copyStreamIoe(is, bos);
+                final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
+
+                for (final Pipe.OnReady cb : onReady) {
+                    cb.ready(execution);
+                }
             }
         } catch (NutNotFoundException nnfe) {
             throw new IOException(nnfe);
-        } catch (StreamException se) {
-            throw new IOException(se);
         } finally {
+            IOUtils.close(is);
             setTransformed(true);
         }
     }

@@ -42,6 +42,9 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,6 +70,11 @@ public enum HttpRequestThreadLocal implements Runnable {
      * Singleton.
      */
     INSTANCE;
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * Servlet request supporting GZIP or not during workflow processing.
@@ -139,26 +147,7 @@ public enum HttpRequestThreadLocal implements Runnable {
         response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
 
         try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            nut.transform(bos);
-
-            if (canGzip() && nut.isCompressed()) {
-                response.setHeader("Content-Encoding", "gzip");
-                response.setHeader("Vary", "Accept-Encoding");
-            } else if (nut.isCompressed()) {
-                InputStream is = null;
-
-                try {
-                    is = new GZIPInputStream(new ByteArrayInputStream(bos.toByteArray()));
-                    bos = new ByteArrayOutputStream();
-                    IOUtils.copyStream(is, bos);
-                } finally {
-                    IOUtils.close(is);
-                }
-            }
-
-            response.setContentLength(bos.toByteArray().length);
-            response.getOutputStream().write(bos.toByteArray());
+            nut.transform(new WriteResponseOnReady(response, nut));
         } catch (IOException ioe) {
             throw new StreamException(ioe);
         }
@@ -170,5 +159,81 @@ public enum HttpRequestThreadLocal implements Runnable {
     @Override
     public void run() {
         canGzipThreadLocal.remove();
+    }
+
+    /**
+     * <p>
+     * This listener writes the response one the transformation is done.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private final class WriteResponseOnReady implements Pipe.OnReady {
+
+        /**
+         * The response.
+         */
+        private HttpServletResponse response;
+
+        /**
+         * The nut.
+         */
+        private ConvertibleNut nut;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param r the response
+         * @param n the nut
+         */
+        private WriteResponseOnReady(final HttpServletResponse r, final ConvertibleNut n) {
+            this.response = r;
+            this.nut = n;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void ready(final Pipe.Execution e) {
+            try {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+                if (canGzip() && nut.isCompressed()) {
+                    // Response accept GZIP and content is compressed: we directly write it
+                    response.setHeader("Content-Encoding", "gzip");
+                    response.setHeader("Vary", "Accept-Encoding");
+                    response.setContentLength(e.getContentLength());
+                    e.writeResultTo(response.getOutputStream());
+                } else if (nut.isCompressed()) {
+                    e.writeResultTo(bos);
+
+                    // Nut is compressed but response does not expect GZIP, unzip content
+                    InputStream is = null;
+
+                    try {
+                        is = new GZIPInputStream(new ByteArrayInputStream(bos.toByteArray()));
+                        bos = new ByteArrayOutputStream();
+                        IOUtils.copyStreamIoe(is, bos);
+                    } finally {
+                        IOUtils.close(is);
+                    }
+
+                    response.setContentLength(bos.toByteArray().length);
+                    response.getOutputStream().write(bos.toByteArray());
+                } else {
+                    // Nut is not compressed and response does not expect GZIP, we directly write content
+                    response.setContentLength(e.getContentLength());
+                    e.writeResultTo(response.getOutputStream());
+                }
+            } catch (IOException ioe) {
+                logger.error("Cannot write response.", ioe);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }

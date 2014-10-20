@@ -80,6 +80,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private List<Pipe.Transformer<ConvertibleNut>> transformers;
 
     /**
+     * Callbacks.
+     */
+    private List<Pipe.OnReady> onReady;
+
+    /**
      * Converted nut.
      */
     private Nut wrap;
@@ -97,10 +102,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         setNutName(o.getInitialName());
 
         if (ConvertibleNut.class.isAssignableFrom(o.getClass())) {
-            transformers = ConvertibleNut.class.cast(o).getTransformers();
+            ConvertibleNut c = ConvertibleNut.class.cast(o);
+            transformers = c.getTransformers();
+            onReady = c.getReadyCallbacks();
         }
     }
-
 
     /**
      * <p>
@@ -147,6 +153,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
+    public List<Pipe.OnReady> getReadyCallbacks() {
+        return onReady;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final void setNutName(final String nutName) {
         this.nutName = nutName;
     }
@@ -161,6 +175,18 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         }
 
         transformers.add(transformer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onReady(final Pipe.OnReady callback) {
+        if (onReady == null) {
+            onReady = new ArrayList<Pipe.OnReady>();
+        }
+
+        onReady.add(callback);
     }
 
     /**

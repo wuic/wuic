@@ -354,7 +354,7 @@ public class WuicXmlTest {
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());
-        nuts.get(0).transform(new ByteArrayOutputStream());
+        nuts.get(0).transform();
         Assert.assertNotNull(nuts.get(0).getReferencedNuts());
         Assert.assertEquals(2, nuts.get(0).getReferencedNuts().size());
 

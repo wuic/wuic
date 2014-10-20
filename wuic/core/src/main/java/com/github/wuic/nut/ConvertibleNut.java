@@ -41,7 +41,6 @@ package com.github.wuic.nut;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -93,13 +92,32 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
-     * Transforms the source stream with all registered transformers and write the result to the given {@link java.io.OutputStream}.
+     * Transforms the source stream with all registered transformers and calls the given callback in addition
+     * to callbacks previously registered. The method also writes the result to the given output stream.
      * </p>
      *
-     * @param outputStream the {@link java.io.OutputStream}
+     * @param onReady the callback
      * @throws java.io.IOException if an I/O error occurs
      */
-    void transform(OutputStream outputStream) throws IOException;
+    void transform(Pipe.OnReady ... onReady) throws IOException;
+
+    /**
+     * <p>
+     * Adds the given callback to be invoked once transformation occurs.
+     * </p>
+     *
+     * @param onReady the callback to add
+     */
+    void onReady(Pipe.OnReady onReady);
+
+    /**
+     * <p>
+     * Gets the callbacks notified when transformation has been done.
+     * </p>
+     *
+     * @return the callbacks
+     */
+    List<Pipe.OnReady> getReadyCallbacks();
 
     /**
      * <p>

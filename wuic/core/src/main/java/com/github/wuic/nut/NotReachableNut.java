@@ -41,10 +41,10 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * <p>
@@ -90,7 +90,7 @@ public class NotReachableNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final OutputStream outputStream) throws IOException {
+    public void transform(final Pipe.OnReady... onReady) throws IOException {
         throw new IOException(new NutNotFoundException(getInitialName(), heap));
     }
 }

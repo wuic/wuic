@@ -40,13 +40,15 @@ package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>
@@ -91,18 +93,30 @@ public class TransformedNut extends NutWrapper implements Serializable {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final OutputStream outputStream) throws IOException {
+    public void transform(final Pipe.OnReady ... onReady) throws IOException {
         InputStream is = null;
 
         try {
+            final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
+
+            if (getReadyCallbacks() != null) {
+                merge.addAll(getReadyCallbacks());
+            }
+
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             is = openStream();
-            IOUtils.copyStream(is, outputStream);
+            IOUtils.copyStream(is, bos);
+            final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
+
+            for (final Pipe.OnReady cb : merge) {
+                cb.ready(execution);
+            }
         } catch (NutNotFoundException nnfe) {
             throw new IOException(nnfe);
         } catch (StreamException se) {
             throw new IOException(se);
         } finally {
-            IOUtils.close(is, outputStream);
+            IOUtils.close(is);
         }
     }
 
