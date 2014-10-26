@@ -129,6 +129,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         {
             put(NumberUtils.THIRTEEN, new CssParser());
         }
+
+        {
+            put(NumberUtils.FIFTEEN, new ImgParser());
+        }
     };
 
     /**
@@ -147,6 +151,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     private static final String HREF_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>)(([^<]*</%1$s>)|([^/]*/>))?))", "link", "href");
 
     /**
+     * Regex that matches images import.
+     */
+    private static final String IMG_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>)(([^<]*</%1$s>)|([^/]*/>))?))", "img", "src");
+
+    /**
      * Regex that matches CSS declaration.
      */
     private static final String CSS_SCRIPT_PATTERN = "(<style>.*?</style>)";
@@ -159,7 +168,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     /**
      * The entire regex that collects desired data.
      */
-    private static final String REGEX = String.format("%s|%s|%s|%s", JS_SCRIPT_PATTERN, HREF_SCRIPT_PATTERN, CSS_SCRIPT_PATTERN, HTML_COMMENT_PATTERN);
+    private static final String REGEX =
+            String.format("%s|%s|%s|%s|%s", JS_SCRIPT_PATTERN, HREF_SCRIPT_PATTERN, CSS_SCRIPT_PATTERN, HTML_COMMENT_PATTERN, IMG_PATTERN);
 
     /**
      * The pattern that collects desired data
@@ -351,7 +361,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.1
      * @since 0.4.4
      */
-    private abstract static class ScriptParser implements TerFunction<String, ProxyNutDao, String, String> {
+    private abstract static class ResourceParser implements TerFunction<String, ProxyNutDao, String, String> {
 
         /**
          * <p>
@@ -455,7 +465,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.1
      * @since 0.4.4
      */
-    private static class JsParser extends ScriptParser {
+    private static class JsParser extends ResourceParser {
 
         /**
          * {@inheritDoc}
@@ -491,7 +501,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.1
      * @since 0.4.4
      */
-    private static class HrefParser extends ScriptParser {
+    private static class HrefParser extends ResourceParser {
 
         /**
          * {@inheritDoc}
@@ -520,6 +530,42 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
     /**
      * <p>
+     * This class parses 'img' tags.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private static class ImgParser extends ResourceParser {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String urlToken() {
+            return "src=";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean readInlineIfTokenNotFound() {
+            return Boolean.FALSE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutType getNutType() {
+            return NutType.PNG;
+        }
+    }
+
+    /**
+     * <p>
      * This class parses inline CSS.
      * </p>
      *
@@ -527,7 +573,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.1
      * @since 0.4.4
      */
-    private static class CssParser extends ScriptParser {
+    private static class CssParser extends ResourceParser {
 
         /**
          * {@inheritDoc}
@@ -618,18 +664,42 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             // Gets the appropriate parser for each captured group according to their position and compute path
             for (final Map.Entry<String, Integer> entry : groups.entrySet()) {
-                final String path = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao, groupName + cpt);
+                final TerFunction<String, ProxyNutDao, String, String> function = PARSERS.get(entry.getValue());
+                final String path = function.apply(entry.getKey(), proxyNutDao, groupName + cpt);
 
                 // Path is null, do not replace anything
                 if (path != null) {
-                    final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
-                    final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+                    Boolean supportedType = Boolean.FALSE;
 
-                    if (simplified == null) {
-                        throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                    // Maybe the extension is not supported, evict the exception by not replacing the path
+                    if (ResourceParser.class.isAssignableFrom(function.getClass())) {
+                        final String[] ext = ResourceParser.class.cast(function).getNutType().getExtensions();
+
+                        for (final String e : ext) {
+                            if (path.endsWith(e)) {
+                                supportedType = Boolean.TRUE;
+                                break;
+                            }
+                        }
+
+                        if (!supportedType) {
+                            logger.warn("Extension of {} does not ends with an extension  supported by WUIC, skipping...");
+                            this.capturedStatements.remove(entry.getKey());
+                        }
+                    } else {
+                        supportedType = Boolean.TRUE;
                     }
 
-                    groupPaths[cpt++] = simplified;
+                    if (supportedType) {
+                        final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
+                        final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+
+                        if (simplified == null) {
+                            throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                        }
+
+                        groupPaths[cpt++] = simplified;
+                    }
                 } else {
                     this.capturedStatements.remove(entry.getKey());
                 }

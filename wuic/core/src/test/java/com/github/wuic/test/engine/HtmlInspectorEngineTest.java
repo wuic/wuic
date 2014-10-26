@@ -94,6 +94,7 @@ public class HtmlInspectorEngineTest {
     private static final String REGEX = ".*?<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
+            "<img src=\".*?\\d.*?png\" />.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
@@ -128,7 +129,14 @@ public class HtmlInspectorEngineTest {
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
         Assert.assertNotNull(nut.getReferencedNuts());
-        Assert.assertEquals(7, nut.getReferencedNuts().size());
+        Assert.assertEquals(8, nut.getReferencedNuts().size());
+
+        final ConvertibleNut js = nut.getReferencedNuts().get(7);
+        Assert.assertEquals(js.getNutType(), NutType.JAVASCRIPT);
+        final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
+        Assert.assertTrue(script, script.contains("console.log"));
+        Assert.assertTrue(script, script.contains("i+=3"));
+        Assert.assertTrue(script, script.contains("i+=4"));
     }
 
     /**

@@ -90,6 +90,8 @@ public final class HtmlUtil {
             case JAVASCRIPT :
                 return javascriptImport(nut, urlProvider);
 
+            case PNG :
+                return imgImport(nut, urlProvider);
             default :
                 return "";
         }
@@ -121,7 +123,6 @@ public final class HtmlUtil {
      *
      * @param nut the Javascript nut
      * @param urlProvider the {@link UrlProvider}
-     *
      * @return the import
      */
     public static String javascriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
@@ -131,6 +132,26 @@ public final class HtmlUtil {
         retval.append("\" src=\"");
         retval.append(urlProvider.getUrl(nut));
         retval.append("\"></script>");
+
+        return retval.toString();
+    }
+
+
+    /**
+     * <p>
+     * Generates import for images.
+     * </p>
+     *
+     * @param nut the image nut
+     * @param urlProvider the {@link UrlProvider}
+     * @return the import
+     */
+    public static String imgImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
+        final StringBuilder retval = new StringBuilder();
+
+        retval.append("<img src=\"");
+        retval.append(urlProvider.getUrl(nut));
+        retval.append("\" />");
 
         return retval.toString();
     }
