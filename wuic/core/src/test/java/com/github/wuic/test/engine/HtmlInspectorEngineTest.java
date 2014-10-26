@@ -152,7 +152,7 @@ public class HtmlInspectorEngineTest {
              * {@inheritDoc}
              */
             @Override
-            public void putToCache(final EngineRequest.Key request, final CacheResult nuts) {
+            public void internalPut(final EngineRequest.Key request, final CacheResult nuts) {
                 cache = nuts;
 
                 if (nuts.getDefaultResult() != null) {
@@ -164,14 +164,14 @@ public class HtmlInspectorEngineTest {
              * {@inheritDoc}
              */
             @Override
-            public void removeFromCache(final EngineRequest.Key request) {
+            public void internalRemove(final EngineRequest.Key request) {
             }
 
             /**
              * {@inheritDoc}
              */
             @Override
-            public CacheResult getFromCache(final EngineRequest.Key request) {
+            public CacheResult internalGet(final EngineRequest.Key request) {
                 return cache;
             }
         };

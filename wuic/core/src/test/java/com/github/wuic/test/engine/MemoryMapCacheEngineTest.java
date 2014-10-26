@@ -75,9 +75,9 @@ public class MemoryMapCacheEngineTest {
         final Map<String, ConvertibleNut> nuts = new HashMap<String, ConvertibleNut>();
         nuts.put("", Mockito.mock(ConvertibleNut.class));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
-        engine.putToCache(req, result);
+        engine.internalPut(req, result);
         engine.clearCache();
-        Assert.assertNull(engine.getFromCache(req));
+        Assert.assertNull(engine.internalGet(req));
     }
 
     /**
@@ -92,8 +92,8 @@ public class MemoryMapCacheEngineTest {
         final Map<String, ConvertibleNut> nuts = new HashMap<String, ConvertibleNut>();
         nuts.put("", Mockito.mock(ConvertibleNut.class));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
-        engine.putToCache(req, result);
-        engine.removeFromCache(req);
-        Assert.assertNull(engine.getFromCache(req));
+        engine.internalPut(req, result);
+        engine.internalRemove(req);
+        Assert.assertNull(engine.internalGet(req));
     }
 }

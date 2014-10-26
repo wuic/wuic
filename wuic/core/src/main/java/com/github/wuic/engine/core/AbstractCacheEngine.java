@@ -41,19 +41,27 @@ package com.github.wuic.engine.core;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.TransformedNut;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,8 +69,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * <p>
@@ -140,7 +151,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         List<ConvertibleNut> retval;
 
         final EngineRequest.Key key = request.getKey();
-        final CacheResult value = getFromCache(key);
+        final CacheResult value = internalGet(key);
 
         // Nuts exist in cache, returns them
         if (value != null) {
@@ -232,11 +243,11 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 if (call != null) {
                     value = call.bestEffortResult;
                 } else {
-                    CacheResult result = getFromCache(key);
+                    CacheResult result = internalGet(key);
 
                     if (result == null) {
                         parse(request, path);
-                        result = getFromCache(key);
+                        result = internalGet(key);
                     }
 
                     value = result.bestEffortResult;
@@ -250,7 +261,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     waitAndGet(future);
                 }
 
-                final CacheResult result = getFromCache(key);
+                final CacheResult result = internalGet(key);
 
                 if (result == null) {
                     parse(request);
@@ -318,6 +329,147 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         }
     }
 
+    class CacheJob implements Runnable {
+
+        private final CacheResult cacheResult;
+
+        private final CountDownLatch transformedCount;
+
+        public CacheJob(final CacheResult cr) {
+            class Interceptor extends PipedConvertibleNut implements Pipe.OnReady {
+                final Object mutex = new Object();
+                final AtomicReference<ConvertibleNut> transformed = new AtomicReference<ConvertibleNut>();
+
+                Interceptor(Nut o) {
+                    super(o);
+                    onReady(this);
+                }
+
+                @Override
+                public void addReferencedNut(ConvertibleNut referenced) {
+                    super.addReferencedNut(new Interceptor(referenced));
+                }
+
+                public void transform(final Pipe.OnReady ... onReady) throws IOException {
+                    synchronized (mutex) {
+                        if (TransformationState.PROCESSING.equals(getTransformationState())) {
+                            try {
+                                mutex.wait();
+                                transformed.get().transform(onReady);
+                            } catch (InterruptedException ie) {
+                                log.warn("java.lang.Object#wait() interrupted", ie);
+                            }
+                        } else if (TransformationState.DONE.equals(getTransformationState())) {
+                            transformed.get().transform(onReady);
+                        } else {
+                            super.transform(onReady);
+                        }
+                    }
+                }
+
+                @Override
+                public void ready(final Pipe.Execution e) throws IOException {
+                    final ConvertibleNut that = this;
+
+                    WuicScheduledThreadPool.getInstance().executeAsap(new FutureTask(new Callable() {
+                        @Override
+                        public Object call() throws Exception {
+                            try {
+                                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                e.writeResultTo(bos);
+                                final ConvertibleNut nut = ByteArrayNut.toByteArrayNut(bos.toByteArray(), that);
+                                transformed.set(new TransformedNut(nut));
+                                return nut;
+                            } catch (NutNotFoundException nnfe) {
+                                throw new ExecutionException(nnfe);
+                            } catch (StreamException se) {
+                                throw new ExecutionException(se);
+                            } catch (IOException ioe) {
+                                throw new ExecutionException(ioe);
+                            }
+                        }
+                    }));
+                }
+
+                @Override
+                protected void setTransformationState(final TransformationState state) {
+                    synchronized (mutex) {
+                        if (TransformationState.DONE.equals(state)) {
+                            mutex.notifyAll();
+                        }
+                    }
+                }
+            }
+
+            cacheResult = cr;
+            transformedCount = new CountDownLatch(cr.defaultResult.size());
+
+            final Map<String, ConvertibleNut> transformationInterceptors =
+                    new LinkedHashMap<String, ConvertibleNut>(cacheResult.defaultResult);
+
+            for (final Map.Entry<String, ConvertibleNut> convertibleNut : transformationInterceptors.entrySet()) {
+                final ConvertibleNut interceptor = new Interceptor(convertibleNut.getValue());
+                cacheResult.defaultResult.put(convertibleNut.getKey(), interceptor);
+            }
+        }
+
+        public void run() {
+            try {
+                transformedCount.await();
+            } catch (InterruptedException ie) {
+                log.info("Cache job has been interrupted, maybe because associated entry has been removed from cache");
+            }
+        }
+    }
+
+    private Map<EngineRequest.Key, CacheJob> cacheJobs = new LinkedHashMap<EngineRequest.Key, CacheJob>();
+
+    /**
+     * <p>
+     * Asynchronously puts the given list of nuts associated to the specified request to the cache.
+     * </p>
+     *
+     * @param key the request key
+     * @param nuts the nuts
+     */
+    public void putToCache(final EngineRequest.Key key, final CacheResult nuts) {
+        final CacheJob job = new CacheJob(nuts);
+
+        synchronized (cacheJobs) {
+            cacheJobs.put(key, job);
+        }
+    }
+
+    /**
+     * <p>
+     * Removes the given list of nuts associated to the specified request from the cache or stop
+     * the asynchronous job performing cache operation.
+     * </p>
+     *
+     * @param request request key
+     */
+    public void removeFromCache(final EngineRequest.Key request) {
+        synchronized (cacheJobs) {
+            cacheJobs.remove(request);
+        }
+    }
+
+    /**
+     * <p>
+     * Gets the list of nuts associated to the specified request from the cache or from the job
+     * which is asynchronously caching the result.
+     * </p>
+     *
+     * @param request the request key
+     * @return the list of nuts
+     */
+    public CacheResult getFromCache(EngineRequest.Key request) {
+        synchronized (cacheJobs) {
+            final CacheJob cj = cacheJobs.get(request);
+            return cj == null ? null : cj.cacheResult;
+        }
+    }
+
     /**
      * <p>
      * Puts the given list of nuts associated to the specified request to the cache.
@@ -326,7 +478,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @param request the request key
      * @param nuts the nuts
      */
-    public abstract void putToCache(EngineRequest.Key request, CacheResult nuts);
+    protected abstract void internalPut(EngineRequest.Key request, CacheResult nuts);
 
     /**
      * <p>
@@ -335,7 +487,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      *
      * @param request request key
      */
-    public abstract void removeFromCache(EngineRequest.Key request);
+    protected abstract void internalRemove(EngineRequest.Key request);
 
     /**
      * <p>
@@ -345,7 +497,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @param request the request key
      * @return the list of nuts
      */
-    public abstract CacheResult getFromCache(final EngineRequest.Key request);
+    protected abstract CacheResult internalGet(EngineRequest.Key request);
 
     /**
      * <p>
@@ -380,7 +532,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          */
         @Override
         public void nutUpdated(final NutsHeap heap) {
-            removeFromCache(key);
+            internalRemove(key);
         }
     }
 
@@ -443,7 +595,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 }
 
                 log.debug("Caching nut with key '{}'", request);
-                putToCache(request.getKey(), new CacheResult(toCache, null));
+                internalPut(request.getKey(), new CacheResult(toCache, null));
 
                 // Now let's parse the default result asynchronously
                 final Future<Map<String, ConvertibleNut>> future = WuicScheduledThreadPool.getInstance().executeAsap(new ParseDefaultCall(request));
@@ -504,7 +656,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     }
                 }
 
-                CacheResult cached = getFromCache(request.getKey());
+                CacheResult cached = internalGet(request.getKey());
 
                 // Not in best effort mode
                 if (cached == null) {
@@ -516,7 +668,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
                 // Update cache
                 log.debug("Caching nuts with key '{}'", request);
-                putToCache(request.getKey(), cached);
+                internalPut(request.getKey(), cached);
 
                 return toCache;
             } finally {

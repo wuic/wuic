@@ -157,8 +157,6 @@ public final class ByteArrayNut extends PipedConvertibleNut {
      * @throws NutNotFoundException if given nut not normally created
      */
     public static ConvertibleNut toByteArrayNut(final ConvertibleNut nut) throws StreamException, NutNotFoundException {
-        InputStream is = null;
-
         try {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             nut.transform(new Pipe.OnReady() {
@@ -168,15 +166,36 @@ public final class ByteArrayNut extends PipedConvertibleNut {
                 }
             });
 
+            return toByteArrayNut(os.toByteArray(), nut);
+        } catch (IOException ioe) {
+            throw new StreamException(ioe);
+        }
+    }
+
+    /**
+     * <p>
+     * Converts the given nut and its referenced nuts into nuts wrapping an in memory byte array.
+     * </p>
+     *
+     * @param byteArray the byte array corresponding to nut content
+     * @param nut the nut to convert
+     * @return the byte array nut
+     * @throws StreamException if an I/O error occurs
+     * @throws NutNotFoundException if given nut not normally created
+     */
+    public static ConvertibleNut toByteArrayNut(final byte[] byteArray, final ConvertibleNut nut) throws StreamException, NutNotFoundException {
+        InputStream is = null;
+
+        try {
             final ConvertibleNut bytes;
             final String name = IOUtils.mergePath(nut.getName());
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut));
+                bytes = new ByteArrayNut(byteArray, name, nut.getNutType(), NutUtils.getVersionNumber(nut));
             } else {
                 final List<ConvertibleNut> o = nut.getOriginalNuts();
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
+                bytes = new ByteArrayNut(byteArray, name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
             }
 
             bytes.setIsCompressed(nut.isCompressed());
@@ -189,8 +208,6 @@ public final class ByteArrayNut extends PipedConvertibleNut {
             }
 
             return new TransformedNut(bytes);
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
         } finally {
             IOUtils.close(is);
         }

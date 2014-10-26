@@ -124,7 +124,7 @@ public class CompositeNut extends PipedConvertibleNut {
      */
     @Override
     public void transform(final Pipe.OnReady... onReady) throws IOException {
-        if (isTransformed()) {
+        if (!TransformationState.NOT_STARTED.equals(getTransformationState())) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
         }
 
@@ -191,7 +191,7 @@ public class CompositeNut extends PipedConvertibleNut {
         } catch (NutNotFoundException nnfe) {
             throw new IOException(nnfe);
         } finally {
-            setTransformed(true);
+            setTransformationState(TransformationState.DONE);
         }
     }
 

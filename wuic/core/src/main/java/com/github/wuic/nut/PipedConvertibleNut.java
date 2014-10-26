@@ -62,9 +62,36 @@ import java.util.concurrent.Future;
 public class PipedConvertibleNut extends AbstractConvertibleNut {
 
     /**
+     * <p>
+     * This internal enumeration helps to indicate state of transformation of this nut.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    protected enum TransformationState {
+
+        /**
+         * Transformation has not started.
+         */
+        NOT_STARTED,
+
+        /**
+         * Transformation is currently applied.
+         */
+        PROCESSING,
+
+        /**
+         * Transformation is done.
+         */
+        DONE;
+    }
+
+    /**
      * If transformation already occurred.
      */
-    private boolean transformed;
+    private TransformationState transformationState;
 
     /**
      * <p>
@@ -75,7 +102,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      */
     public PipedConvertibleNut(final Nut o) {
         super(o);
-        transformed = false;
+        transformationState = TransformationState.NOT_STARTED;
     }
 
     /**
@@ -97,7 +124,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                                   final Boolean a,
                                   final Future<Long> v) {
         super(name, ft, comp, c, a, v);
-        transformed = false;
+        transformationState = TransformationState.NOT_STARTED;
     }
 
     /**
@@ -105,13 +132,14 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      */
     @Override
     public void transform(final Pipe.OnReady ... onReady) throws IOException {
-        if (isTransformed()) {
+        if (!TransformationState.NOT_STARTED.equals(getTransformationState())) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
         }
 
         InputStream is = null;
 
         try {
+            setTransformationState(TransformationState.PROCESSING);
             final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
 
             if (getReadyCallbacks() != null) {
@@ -140,7 +168,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
             throw new IOException(nnfe);
         } finally {
             IOUtils.close(is);
-            setTransformed(true);
+            setTransformationState(TransformationState.DONE);
         }
     }
 
@@ -149,20 +177,20 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      * Change the state of this nut by indicating if its transformed or not.
      * </p>
      *
-     * @param transformed {@code true} if transformed, {@code false} otherwise
+     * @param state the new state
      */
-    protected void setTransformed(final boolean transformed) {
-        this.transformed = transformed;
+    protected void setTransformationState(final TransformationState state) {
+        this.transformationState = state;
     }
 
     /**
      * <p>
-     * indicates if this nut is transformed or not.
+     * Indicates if this nut is transformed or not.
      * </p>
      *
-     * @return {@code true} if transformed, {@code false} otherwise
+     * @return current state
      */
-    protected boolean isTransformed() {
-        return transformed;
+    protected TransformationState getTransformationState() {
+        return transformationState;
     }
 }

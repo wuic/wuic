@@ -88,7 +88,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public void putToCache(final EngineRequest.Key request, final CacheResult nuts) {
+    public void internalPut(final EngineRequest.Key request, final CacheResult nuts) {
         cache.put(request, nuts);
     }
 
@@ -96,7 +96,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public void removeFromCache(final EngineRequest.Key request) {
+    public void internalRemove(final EngineRequest.Key request) {
         cache.remove(request);
     }
 
@@ -104,7 +104,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      * {@inheritDoc}
      */
     @Override
-    public CacheResult getFromCache(final EngineRequest.Key request) {
+    public CacheResult internalGet(final EngineRequest.Key request) {
         return cache.get(request);
     }
 

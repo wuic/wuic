@@ -80,17 +80,17 @@ public class ScheduledCacheTest {
             /**
              * {@inheritDoc}
              */
-            @Override public void putToCache(EngineRequest.Key request, CacheResult nuts) { }
+            @Override public void internalPut(EngineRequest.Key request, CacheResult nuts) { }
 
             /**
              * {@inheritDoc}
              */
-            @Override public void removeFromCache(EngineRequest.Key request) { }
+            @Override public void internalRemove(EngineRequest.Key request) { }
 
             /**
              * {@inheritDoc}
              */
-            @Override public CacheResult getFromCache(EngineRequest.Key request) { return null; }
+            @Override public CacheResult internalGet(EngineRequest.Key request) { return null; }
         };
 
         count.await(1500, TimeUnit.MILLISECONDS);
