@@ -153,7 +153,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     /**
      * Regex that matches images import.
      */
-    private static final String IMG_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>)(([^<]*</%1$s>)|([^/]*/>))?))", "img", "src");
+    private static final String IMG_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "img", "src");
 
     /**
      * Regex that matches CSS declaration.
