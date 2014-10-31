@@ -141,6 +141,14 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * If the underlying API does not provides a way to create input stream, this setting can be used to indicates that
+     * resources should be stored on disk and not in an in memory byte array.
+     * </p>
+     */
+    String DOWNLOAD_TO_DISK = "c.g.wuic.dao.downloadToDisk";
+
+    /**
+     * <p>
      * Indicates if the engine should cache or not.
      * </p>
      */
