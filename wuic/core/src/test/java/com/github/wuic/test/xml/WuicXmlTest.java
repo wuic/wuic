@@ -71,7 +71,6 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -356,7 +355,7 @@ public class WuicXmlTest {
         Assert.assertEquals(1, nuts.size());
         nuts.get(0).transform();
         Assert.assertNotNull(nuts.get(0).getReferencedNuts());
-        Assert.assertEquals(2, nuts.get(0).getReferencedNuts().size());
+        Assert.assertEquals(3, nuts.get(0).getReferencedNuts().size());
 
         // Assert that ref.css is removed
         final List<ConvertibleNut> ref = nuts.get(0).getReferencedNuts().get(1).getReferencedNuts();
