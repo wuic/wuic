@@ -182,16 +182,7 @@ public final class NutUtils {
      */
     public static String readTransform(final ConvertibleNut n) throws IOException {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        n.transform(new Pipe.OnReady() {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void ready(final Pipe.Execution e) throws IOException {
-                e.writeResultTo(bos);
-            }
-        });
+        n.transform(new Pipe.DefaultOnReady(bos));
 
         final byte[] b = bos.toByteArray();
         return n.isCompressed() ?

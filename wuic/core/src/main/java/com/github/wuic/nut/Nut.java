@@ -42,7 +42,6 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.concurrent.Future;
 
 /**
@@ -59,7 +58,7 @@ import java.util.concurrent.Future;
  * @version 1.4
  * @since 0.1.1
  */
-public interface Nut extends Serializable {
+public interface Nut {
 
     /**
      * <p>

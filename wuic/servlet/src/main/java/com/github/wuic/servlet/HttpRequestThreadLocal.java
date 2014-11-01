@@ -225,6 +225,7 @@ public enum HttpRequestThreadLocal implements Runnable {
 
                     response.setContentLength(bos.toByteArray().length);
                     response.getOutputStream().write(bos.toByteArray());
+                    response.getOutputStream().close();
                 } else {
                     // Nut is not compressed and response does not expect GZIP, we directly write content
                     response.setContentLength(e.getContentLength());

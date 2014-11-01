@@ -72,12 +72,7 @@ public final class Pipe<T> {
      */
     public static <T> void executeAndWriteTo(final Pipe<T> pipe, final List<OnReady> callbacks, final OutputStream os)
             throws IOException {
-        final OnReady onReady = new OnReady() {
-            @Override
-            public void ready(final Execution e) throws IOException {
-                e.writeResultTo(os);
-            }
-        };
+        final OnReady onReady = new DefaultOnReady(os);
 
         if (callbacks != null) {
             callbacks.add(onReady);
@@ -145,12 +140,54 @@ public final class Pipe<T> {
     public interface OnReady {
 
         /**
+         * <p>
          * Called once all transformers have been called to transform the source stream.
+         * </p>
          *
          * @param e the current execution
          * @throws IOException if callback throws an I/O error
          */
         void ready(Execution e) throws IOException;
+    }
+
+    /**
+     * <p>
+     * Default implementation which writes the result to a wrapped output stream and close if automatically.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public static class DefaultOnReady implements OnReady {
+
+        /**
+         * The output stream.
+         */
+        private OutputStream outputStream;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param os the stream to write
+         */
+        public DefaultOnReady(final OutputStream os) {
+            this.outputStream = os;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void ready(final Pipe.Execution e) throws IOException {
+            try {
+                e.writeResultTo(outputStream);
+            } finally {
+                IOUtils.close(outputStream);
+            }
+        }
     }
 
     /**
@@ -231,7 +268,14 @@ public final class Pipe<T> {
          * @throws IOException if copy fails
          */
         public void writeResultTo(final OutputStream os) throws IOException {
-            IOUtils.copyStreamIoe(new ByteArrayInputStream(result), os);
+            InputStream is = null;
+
+            try {
+                is = new ByteArrayInputStream(result);
+                IOUtils.copyStreamIoe(is, os);
+            } finally {
+                IOUtils.close(is);
+            }
         }
     }
 
@@ -300,6 +344,7 @@ public final class Pipe<T> {
     public void execute(final OnReady ... onReady) throws IOException {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
+        // No transformer, simply copy streams
         if (transformers.isEmpty()) {
             try {
                 IOUtils.copyStreamIoe(inputStream, os);
@@ -309,9 +354,11 @@ public final class Pipe<T> {
         } else {
             InputStream is = inputStream;
 
+            // Make transformation
             for (final Transformer<T> t : transformers) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+                // Pipe transformers with in memory byte arrays
                 if (!t.equals(transformers.getLast())) {
                     try {
                         t.transform(is, out, convertible);
@@ -322,9 +369,10 @@ public final class Pipe<T> {
                     is = new ByteArrayInputStream(out.toByteArray());
                 } else {
                     try {
+                        // Last transformation
                         t.transform(is, os, convertible);
                     } finally {
-                        IOUtils.close(is);
+                        IOUtils.close(is, os);
                     }
                 }
             }

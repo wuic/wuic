@@ -56,7 +56,6 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -91,12 +90,7 @@ public class GzipEngineTest {
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals(1, res.size());
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        res.get(0).transform(new Pipe.OnReady() {
-            @Override
-            public void ready(final Pipe.Execution e) throws IOException {
-                e.writeResultTo(bos);
-            }
-        });
+        res.get(0).transform(new Pipe.DefaultOnReady(bos));
         final PushbackInputStream pb = new PushbackInputStream(new ByteArrayInputStream(bos.toByteArray()), 2 );
         final byte[] signature = new byte[2];
         pb.read(signature);

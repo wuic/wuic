@@ -50,6 +50,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +70,7 @@ import java.util.List;
  * @version 1.7
  * @since 0.2.0
  */
-public final class ByteArrayNut extends PipedConvertibleNut {
+public final class ByteArrayNut extends PipedConvertibleNut implements Serializable {
 
     /**
      * Serial version UID.
@@ -161,12 +162,7 @@ public final class ByteArrayNut extends PipedConvertibleNut {
 
         try {
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
-            nut.transform(new Pipe.OnReady() {
-                @Override
-                public void ready(final Pipe.Execution e) throws IOException {
-                    e.writeResultTo(os);
-                }
-            });
+            nut.transform(new Pipe.DefaultOnReady(os));
 
             final ConvertibleNut bytes;
             final String name = IOUtils.mergePath(nut.getName());
