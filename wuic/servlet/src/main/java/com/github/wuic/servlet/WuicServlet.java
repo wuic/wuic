@@ -145,7 +145,8 @@ public class WuicServlet extends HttpServlet {
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response)
             throws ServletException, IOException {
-        final UrlMatcher matcher = UrlUtils.urlMatcher(request.getRequestURI().substring(servletMapping.length()));
+        final String requestUri = request.getRequestURI();
+        final UrlMatcher matcher = UrlUtils.urlMatcher(requestUri.substring(requestUri.indexOf(servletMapping) + servletMapping.length()));
 
         if (!matcher.matches()) {
             response.getWriter().println(UrlMatcher.MATCHER_MESSAGE);
