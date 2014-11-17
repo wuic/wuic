@@ -189,7 +189,7 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.CSS, new TextAggregatorEngine(true));
 
         List<ConvertibleNut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
-        String res = IOUtils.readString(new InputStreamReader(nuts.get(0).openStream()));
+        String res = NutUtils.readTransform(nuts.get(0));
         Assert.assertEquals(content, res);
 
         countDownLatch.await(5, TimeUnit.SECONDS);

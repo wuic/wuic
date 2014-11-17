@@ -64,6 +64,14 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
 
     /**
      * <p>
+     * Default constructor for serialization purpose.
+     * </p>
+     */
+    public NutWrapper() {
+    }
+
+    /**
+     * <p>
      * Builds a new instance.
      * </p>
      *

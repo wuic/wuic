@@ -110,6 +110,14 @@ public abstract class AbstractNut implements Nut {
 
     /**
      * <p>
+     * Default constructor for serialization purpose.
+     * </p>
+     */
+    public AbstractNut() {
+    }
+
+    /**
+     * <p>
      * Creates a new instance by copying the given {@link Nut}.
      * </p>
      *
