@@ -129,11 +129,19 @@ public class CompositeNut extends PipedConvertibleNut {
         }
 
         try {
+            final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
+
+            if (getReadyCallbacks() != null) {
+                merge.addAll(getReadyCallbacks());
+            }
+
+            final Pipe<ConvertibleNut> finalPipe;
+
+            // Collect transformer executed for each nut and group transformers for aggregated content
             if (getTransformers() != null) {
                 final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
                 final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
 
-                // Collect transformer executed for each nut and group transformers for aggregated content
                 for (final Pipe.Transformer<ConvertibleNut> transformer : getTransformers()) {
                     if (transformer.canAggregateTransformedStream()) {
                         separateStream.add(transformer);
@@ -173,21 +181,17 @@ public class CompositeNut extends PipedConvertibleNut {
                 }
 
                 // Aggregate the results
-                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(this, new SequenceInputStream(Collections.enumeration(is)));
+                finalPipe = new Pipe<ConvertibleNut>(this, new SequenceInputStream(Collections.enumeration(is)));
 
                 // Transform the aggregated results
                 for (final Pipe.Transformer<ConvertibleNut> transformer : aggregatedStream) {
-                    pipe.register(transformer);
+                    finalPipe.register(transformer);
                 }
-
-                final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
-
-                if (getReadyCallbacks() != null) {
-                    merge.addAll(getReadyCallbacks());
-                }
-
-                pipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
+            } else {
+                finalPipe = new Pipe<ConvertibleNut>(this, openStream());
             }
+
+            finalPipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
         } catch (NutNotFoundException nnfe) {
             throw new IOException(nnfe);
         } finally {
