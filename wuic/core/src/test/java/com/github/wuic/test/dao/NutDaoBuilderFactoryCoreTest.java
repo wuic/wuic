@@ -78,9 +78,9 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for unknown builder.
      */
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() throws UnableToInstantiateException {
-        Assert.assertNull(nutDaoObjectBuilderFactory.create("FooNutDaoBuilder"));
+        nutDaoObjectBuilderFactory.create("FooNutDaoBuilder");
     }
 
     /**

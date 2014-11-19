@@ -76,7 +76,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for unknown builder.
      */
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() throws UnableToInstantiateException {
         Assert.assertNull(engineObjectBuilderFactory.create("FooEngineBuilder"));
     }

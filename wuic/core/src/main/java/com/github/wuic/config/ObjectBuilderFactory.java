@@ -49,6 +49,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -111,6 +112,13 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          */
         public String getTypeName() {
             return typeName;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public String toString() {
+            return getTypeName();
         }
     }
 
@@ -289,8 +297,12 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * cause is logged and when retrieved with this method, {@code null} will be returned.
      * </p>
      *
+     * <p>
+     * Throws an {@code IllegalArgumentException} if the there is a bad usage of annotation or if the type is unknown
+     * </p>
+     *
      * @param type the type created by the builder
-     * @return the builder, {@code null} if the there is a bad usage of annotation or if the type is unknown
+     * @return the builder
      */
     @SuppressWarnings("unchecked")
     public ObjectBuilder<T> create(final String type) {
@@ -304,7 +316,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         }
 
         if (clazz == null) {
-            return null;
+            throw new IllegalArgumentException(type + " is not supported! Available builders are: " + Arrays.toString(knownTypes.toArray()));
         }
 
         // Detect constructors

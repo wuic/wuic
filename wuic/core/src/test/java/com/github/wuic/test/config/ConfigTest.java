@@ -114,6 +114,13 @@ public class ConfigTest {
     @Test
     public void badServiceTest() {
         Assert.assertNull(factory.create("MyBadServiceBuilder"));
-        Assert.assertNull(factory.create("MyInnerBadServiceBuilder"));
+    }
+
+    /**
+     * Tests bad usage detection.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badInnerServiceTest() {
+        factory.create("MyInnerBadServiceBuilder");
     }
 }
