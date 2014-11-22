@@ -40,7 +40,7 @@ package com.github.wuic.util;
 
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
-import eu.infomas.annotation.AnnotationDetector;
+import com.github.wuic.util.detect.AnnotationDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
