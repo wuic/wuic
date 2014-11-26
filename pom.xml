@@ -112,6 +112,12 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.jboss</groupId>
+                <artifactId>jboss-vfs</artifactId>
+                <version>${jboss-vfs.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -283,6 +289,7 @@
         <mockito.version>1.9.5</mockito.version>
         <ecj.version>4.3.1</ecj.version>
         <el.version>3.0-b01</el.version>
+        <jboss-vfs.version>3.2.7.Final</jboss-vfs.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
 

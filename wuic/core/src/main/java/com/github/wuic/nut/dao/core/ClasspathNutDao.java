@@ -106,7 +106,17 @@ public class ClasspathNutDao extends DiskNutDao {
 
         while (e.hasMoreElements()) {
             final String p = e.nextElement().toString();
-            final String sub = p.substring(p.indexOf(":/") + 1);
+            final int pathIndex = p.indexOf(":/") + 1;
+            final String sub;
+            
+            // Handle virtual files on JBOSS/WILDFLY
+            if (p.startsWith("vfs")) {
+            	final org.jboss.vfs.VirtualFile vfs = org.jboss.vfs.VFS.getChild(p.substring(pathIndex));
+            	sub = vfs.getPhysicalFile().toString();
+            } else {
+            	sub = p.substring(pathIndex);
+            }
+            
             final Path path = IOUtils.buildPath(sub);
 
             if (DirectoryPath.class.isAssignableFrom(path.getClass())) {
