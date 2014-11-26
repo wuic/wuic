@@ -40,11 +40,14 @@ package com.github.wuic.xml;
 
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.util.IOUtils;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * <p>
@@ -92,10 +95,15 @@ public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigur
      */
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        InputStream is = null;
         try {
-            return xmlFile.openConnection().getLastModified();
+            final URLConnection c = xmlFile.openConnection();
+            is = c.getInputStream();
+            return c.getLastModified();
         } catch (IOException ioe) {
             throw new StreamException(ioe);
+        } finally {
+            IOUtils.close(is);
         }
     }
 
