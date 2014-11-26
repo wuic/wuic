@@ -89,7 +89,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
      * </p>
      *
      * @param compress activate compression or not
-     * @param rnp the extension prefix used to compute new nut name after compression.
+     * @param rnp the extension prefix used to compute new nut name after compression, {@code null} if no extension is managed
      */
     public AbstractCompressorEngine(final Boolean compress, final String rnp) {
         doCompression = compress;
@@ -126,7 +126,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
      * @throws WuicException if an I/O error occurs
      */
     private void compress(final ConvertibleNut nut) throws WuicException {
-        if (!nut.isTextReducible() || nut.getName().contains(renameExtensionPrefix)) {
+        if (!nut.isTextReducible() || (renameExtensionPrefix != null && nut.getName().contains(renameExtensionPrefix))) {
             return;
         }
 
@@ -138,7 +138,10 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
 
             // Build new name
             final StringBuilder nameBuilder = new StringBuilder(nut.getName());
-            nameBuilder.insert(nut.getName().lastIndexOf('.'), renameExtensionPrefix);
+
+            if (renameExtensionPrefix != null) {
+                nameBuilder.insert(nut.getName().lastIndexOf('.'), renameExtensionPrefix);
+            }
 
             nut.setNutName(nameBuilder.toString());
             nut.addTransformer(this);
