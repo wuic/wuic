@@ -41,7 +41,9 @@ package com.github.wuic.nut;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.WuicScheduledThreadPool;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,12 +51,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * <p>
@@ -104,6 +108,18 @@ public class CompositeNut extends PipedConvertibleNut {
                 compositionList.add(nut);
             }
         }
+
+        // Make a composite version number
+        setVersionNumber(WuicScheduledThreadPool.getInstance().executeAsap(new Callable<Long>() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Long call() throws Exception {
+                return NutUtils.getVersionNumber(Arrays.asList(composition));
+            }
+        }));
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
         for (int i = 1; i < composition.length; i++) {

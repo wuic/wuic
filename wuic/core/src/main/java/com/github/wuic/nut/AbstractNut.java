@@ -314,4 +314,15 @@ public abstract class AbstractNut implements Nut {
     public int hashCode() {
         return getInitialName().hashCode();
     }
+
+    /**
+     * <p>
+     * Sets internal version number.
+     * </p>
+     *
+     * @param vn the new version
+     */
+    protected final void setVersionNumber(final Future<Long> vn) {
+        versionNumber = vn;
+    }
 }
