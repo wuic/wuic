@@ -68,5 +68,6 @@
 
     <properties>
         <annotation-detector.version>3.0.4</annotation-detector.version>
+        <sonar.exclusions>**/detect/**/*.java</sonar.exclusions>
     </properties>
 </project>

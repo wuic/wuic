@@ -116,7 +116,7 @@ public class CompositeNut extends PipedConvertibleNut {
              * {@inheritDoc}
              */
             @Override
-            public Long call() throws Exception {
+            public Long call() {
                 return NutUtils.getVersionNumber(Arrays.asList(composition));
             }
         }));

@@ -111,10 +111,10 @@ public class ClasspathNutDao extends DiskNutDao {
             
             // Handle virtual files on JBOSS/WILDFLY
             if (p.startsWith("vfs")) {
-            	final org.jboss.vfs.VirtualFile vfs = org.jboss.vfs.VFS.getChild(p.substring(pathIndex));
-            	sub = vfs.getPhysicalFile().toString();
+                final org.jboss.vfs.VirtualFile vfs = org.jboss.vfs.VFS.getChild(p.substring(pathIndex));
+                sub = vfs.getPhysicalFile().toString();
             } else {
-            	sub = p.substring(pathIndex);
+                sub = p.substring(pathIndex);
             }
             
             final Path path = IOUtils.buildPath(sub);

@@ -117,19 +117,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         {
             put(NumberUtils.SIX, new HrefParser());
         }
-
         {
             put(NumberUtils.FOURTEEN, new DefaultParser());
         }
-
         {
             put(1, new JsParser());
         }
-
         {
             put(NumberUtils.THIRTEEN, new CssParser());
         }
-
         {
             put(NumberUtils.FIFTEEN, new ImgParser());
         }
