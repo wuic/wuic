@@ -99,12 +99,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     protected AbstractConvertibleNut(final Nut o) {
         super(o);
         wrap = o;
-        setNutName(o.getInitialName());
 
         if (ConvertibleNut.class.isAssignableFrom(o.getClass())) {
-            ConvertibleNut c = ConvertibleNut.class.cast(o);
+            final ConvertibleNut c = ConvertibleNut.class.cast(o);
             transformers = c.getTransformers();
             onReady = c.getReadyCallbacks();
+            setNutName(c.getName());
+        } else {
+            setNutName(o.getInitialName());
         }
     }
 

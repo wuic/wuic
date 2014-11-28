@@ -330,11 +330,7 @@ public final class EngineRequest {
         System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
 
         for (final Nut nut : n) {
-            if (ConvertibleNut.class.isAssignableFrom(nut.getClass())) {
-                nuts.add(ConvertibleNut.class.cast(nut));
-            } else {
-                nuts.add(new PipedConvertibleNut(nut));
-            }
+            nuts.add(new PipedConvertibleNut(nut));
         }
     }
 
