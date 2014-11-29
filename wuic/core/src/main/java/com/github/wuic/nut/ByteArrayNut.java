@@ -180,7 +180,15 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
 
             if (nut.getReferencedNuts() != null && nut.getReferencedNuts() != bytes.getReferencedNuts()) {
                 for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                    bytes.addReferencedNut(toByteArrayNut(ref));
+                    final List<ConvertibleNut> o = bytes.getOriginalNuts();
+                    final int index = o == null ? -1 : o.indexOf(ref);
+
+                    // If original is also a referenced nut (cases like image aggregation), its already transformed
+                    if (index != -1)  {
+                        bytes.addReferencedNut(o.get(index));
+                    } else {
+                        bytes.addReferencedNut(toByteArrayNut(ref));
+                    }
                 }
             }
 

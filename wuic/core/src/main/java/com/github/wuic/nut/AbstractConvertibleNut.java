@@ -105,6 +105,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             transformers = c.getTransformers();
             onReady = c.getReadyCallbacks();
             setNutName(c.getName());
+            setOriginalNuts(c.getOriginalNuts());
         } else {
             setNutName(o.getInitialName());
         }
