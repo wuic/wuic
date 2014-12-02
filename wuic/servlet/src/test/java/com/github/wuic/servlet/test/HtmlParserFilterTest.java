@@ -80,6 +80,7 @@ public class HtmlParserFilterTest {
     @Test
     public void filterTest() throws IOException {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/index.html").getEntity().getContent()));
-        Assert.assertTrue(content.contains("aggregate.css"));
+        Assert.assertTrue(content, content.contains("aggregate.css"));
+        Assert.assertTrue(content, content.contains("aggregate.png"));
     }
 }
