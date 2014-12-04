@@ -42,6 +42,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
@@ -168,7 +169,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
     public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
                                                                final StringBuilder replacement,
                                                                final EngineRequest request,
-                                                               final NutsHeap heap,
+                                                               final CompositeNut.CompositeInputStream cis,
                                                                final ConvertibleNut originalNut) throws WuicException {
         // Search the right group
         int i = 0;
@@ -186,6 +187,8 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             groupIndex = GROUP_INDEXES[i++];
             rawPath = matcher.group(groupIndex);
         } while (rawPath == null && i < GROUP_INDEXES.length);
+
+        final NutsHeap heap = getHeap(request, originalNut, cis, matcher, groupIndex);
 
         // @font-face case
         if (rawPath == null) {

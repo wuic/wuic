@@ -43,6 +43,7 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
@@ -97,7 +98,7 @@ public class SourceMapLineInspector extends LineInspector {
     public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
                                                                final StringBuilder replacement,
                                                                final EngineRequest request,
-                                                               final NutsHeap heap,
+                                                               final CompositeNut.CompositeInputStream cis,
                                                                final ConvertibleNut originalNut) throws WuicException {
         NodeEngine next = engine.getNext();
 
@@ -114,6 +115,7 @@ public class SourceMapLineInspector extends LineInspector {
 
         // Extract the nut
         final String referencedPath = matcher.group(1);
+        final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
         final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
         final List<? extends ConvertibleNut> res;
 

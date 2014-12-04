@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.IOUtils;
@@ -136,6 +137,40 @@ public abstract class LineInspector {
 
     /**
      * <p>
+     * Gets the {@link NutsHeap} pointing to the right {@link com.github.wuic.nut.dao.NutDao} according to the given
+     * original nut.
+     * </p>
+     *
+     * @param request the request
+     * @param originalNut the original nut
+     * @param cis the composite stream if any
+     * @param matcher the matcher that inspects the stream
+     * @param groupIndex the group index of currently matched value
+     * @return the heap
+     */
+    public static NutsHeap getHeap(final EngineRequest request,
+                                   final ConvertibleNut originalNut,
+                                   final CompositeNut.CompositeInputStream cis,
+                                   final Matcher matcher,
+                                   final int groupIndex) {
+        final NutsHeap heap = new NutsHeap(request.getHeap());
+        final String name;
+
+        // Extracts the location where nut is listed in order to compute the location of the extracted imported nuts
+        if (cis == null) {
+            name = originalNut.getName();
+        } else {
+            name = cis.nutAt(matcher.start(groupIndex)).getName();
+        }
+
+        final int lastIndexOfSlash = name.lastIndexOf('/') + 1;
+        final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
+        heap.setNutDao(request.getHeap().withRootPath(nutLocation, originalNut), originalNut);
+        return heap;
+    }
+
+    /**
+     * <p>
      * Gets the pattern to find text to be replaced inside the lines.
      * </p>
      *
@@ -154,7 +189,7 @@ public abstract class LineInspector {
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
      * @param replacement the text which will replace the matching text
      * @param request the request that orders this transformation
-     * @param heap use when we need to create nut
+     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
      * @param originalNut the original nut
      * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
      * @throws WuicException if an exception occurs
@@ -162,6 +197,6 @@ public abstract class LineInspector {
     public abstract List<? extends ConvertibleNut> appendTransformation(Matcher matcher,
                                                                         StringBuilder replacement,
                                                                         EngineRequest request,
-                                                                        NutsHeap heap,
+                                                                        CompositeNut.CompositeInputStream cis,
                                                                         ConvertibleNut originalNut) throws WuicException;
 }

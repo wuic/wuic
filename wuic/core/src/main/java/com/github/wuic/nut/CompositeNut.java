@@ -220,17 +220,109 @@ public class CompositeNut extends PipedConvertibleNut {
      */
     @Override
     public InputStream openStream() throws NutNotFoundException {
-        final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
+        return new CompositeInputStream();
+    }
 
-        for (final Nut n : compositionList) {
-            is.add(n.openStream());
+    /**
+     * <p>
+     * This class keeps the position of each nut in the read content. When this stream has been entirely read,
+     * it's possible to retrieve the nut containing the byte at a specified position.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    public final class CompositeInputStream extends InputStream {
 
-            if (streamSeparator != null) {
-                is.add(new ByteArrayInputStream(streamSeparator));
+        /**
+         * The sequence containing each steam of this composition and their separator.
+         */
+        private InputStream sequence;
+
+        /**
+         * The position of each separator between streams.
+         */
+        private long[] separatorPositions;
+
+        /**
+         * The total length.
+         */
+        private long length;
+
+        /**
+         * The nut's index currently read.
+         */
+        private int current;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @throws NutNotFoundException if a stream could not be opened
+         */
+        private CompositeInputStream() throws NutNotFoundException {
+            final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * NumberUtils.TWO);
+            separatorPositions = new long[compositionList.size()];
+
+            for (final Nut n : compositionList) {
+                is.add(n.openStream());
+
+                if (streamSeparator != null) {
+                    // Keep the separation position when stream is closed
+                    is.add(new ByteArrayInputStream(streamSeparator) {
+                        @Override
+                        public void close() throws IOException {
+                            separatorPositions[current++] = length;
+                        }
+                    });
+                } else {
+                    // No separator stream, just add a marker
+                    is.add(new InputStream() {
+                        @Override
+                        public int read() throws IOException {
+                            separatorPositions[current++] = length;
+                            return -1;
+                        }
+                    });
+                }
             }
+
+            sequence = new SequenceInputStream(Collections.enumeration(is));
         }
 
-        return new SequenceInputStream(Collections.enumeration(is));
+        /**
+         * <p>
+         * Retrieves the nut owning the byte at the given position/
+         * </p>
+         *
+         * @param position the position
+         * @return the nut, {@code null} if the given position is not in the interval [0, length - 1]
+         */
+        public ConvertibleNut nutAt(final int position) {
+            for (int i = 0; i < separatorPositions.length; i++) {
+                if (position < separatorPositions[i]) {
+                    return compositionList.get(i);
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int read() throws IOException {
+            final int retval = sequence.read();
+
+            if (retval != -1) {
+                length++;
+            }
+
+            return retval;
+        }
     }
 
     /**
