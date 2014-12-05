@@ -51,6 +51,8 @@ import com.github.wuic.util.WuicScheduledThreadPool;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * <p>
@@ -83,15 +85,81 @@ public class WuicServletContextListener implements ServletContextListener {
     }
 
     /**
+     * <p>
+     * Gets the {@link BiFunction} providing parameters..
+     * </p>
+     *
+     * @param servletContext the context that must contains the function
+     * @return the function
+     */
+    @SuppressWarnings("unchecked")
+    public static BiFunction<String, String, String> getParamProvider(final ServletContext servletContext) {
+        final Object fct = servletContext.getAttribute(ApplicationConfig.INIT_PARAM_FUNCTION);
+        if (fct == null) {
+            final String message = String.format("BiFunction is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
+            throw new BadArgumentException(new IllegalArgumentException(message));
+        }
+
+        return (BiFunction<String, String, String>) fct;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void contextInitialized(final ServletContextEvent sce) {
-        final WuicFacadeBuilder builder = new WuicFacadeBuilder(new InitParamProperties(sce.getServletContext()))
-                .objectBuilderInspector(new WebappNutDaoBuilderInspector(sce.getServletContext()));
+        final ServletContext sc = sce.getServletContext();
+        final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
+        final BiFunction<String, String, String> paramProvider;
+
+        // No specific provider, use default
+        if (paramClass == null) {
+            paramProvider = paramProvider(sc);
+        } else {
+            try {
+                // The class BiFunction implementation must be parameterized only with java.lang.String types
+                // If it does not expose a default constructor, it must provide a constructor expected a ServletContext
+                Constructor<?> defaultConstructor = null;
+                Constructor<?> scConstructor = null;
+                final Class<?> clazz = Class.forName(paramClass);
+
+                // Lookup constructor
+                for (final Constructor<?> c : clazz.getDeclaredConstructors()) {
+                    if (c.getParameterTypes().length == 0) {
+                        defaultConstructor = c;
+                    } else if (c.getParameterTypes().length == 1 && c.getParameterTypes()[0].equals(ServletContext.class)) {
+                        scConstructor = c;
+                    }
+                }
+
+                // Check if constructor exists
+                if (scConstructor != null) {
+                    paramProvider = (BiFunction<String, String, String>) scConstructor.newInstance(sc);
+                } else if (defaultConstructor != null) {
+                    paramProvider = (BiFunction<String, String, String>) defaultConstructor.newInstance();
+                } else {
+                    throw new IllegalStateException(
+                            String.format("'%s' provide at least a default constructor or a constructor expecting one parameter of type '%s'",
+                                    paramClass, ServletContext.class.getName()));
+                }
+            } catch (ClassNotFoundException cnfe) {
+                throw new IllegalStateException("Cannot apply custom parameter provider", cnfe);
+            } catch (IllegalAccessException iae) {
+                throw new IllegalStateException("Cannot apply custom parameter provider", iae);
+            } catch (InvocationTargetException ite) {
+                throw new IllegalStateException("Cannot apply custom parameter provider", ite);
+            } catch (InstantiationException ie) {
+                throw new IllegalStateException("Cannot apply custom parameter provider", ie);
+            }
+        }
+
+        sc.setAttribute(ApplicationConfig.INIT_PARAM_FUNCTION, paramProvider);
+        final WuicFacadeBuilder builder = new WuicFacadeBuilder(paramProvider)
+                .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
 
         try {
-            sce.getServletContext().setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
+            sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
             throw new BadArgumentException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
         }
@@ -103,6 +171,18 @@ public class WuicServletContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         WuicScheduledThreadPool.getInstance().shutdown();
+    }
+
+    /**
+     * <p>
+     * Returns the function the {@link WuicFacadeBuilder} will use to retrieve properties.
+     * </p>
+     *
+     * @param sc the servlet context
+     * @return the function to apply
+     */
+    protected BiFunction<String, String, String> paramProvider(final ServletContext sc) {
+        return new InitParamProperties(sc);
     }
 
     /**

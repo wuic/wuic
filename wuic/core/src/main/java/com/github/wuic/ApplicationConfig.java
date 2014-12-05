@@ -309,4 +309,9 @@ public interface ApplicationConfig {
      * This is the property name of the {@link WuicFacade} instance shared inside a web context.
      */
     String WEB_WUIC_FACADE = "c.g.wuic.webWuicFacade";
+
+    /**
+     * This class provides the {@link com.github.wuic.util.BiFunction} that provides parameters.
+     */
+    String INIT_PARAM_FUNCTION = "c.g.wuic.initParameterClass";
 }

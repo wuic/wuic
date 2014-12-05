@@ -121,7 +121,7 @@ public class WuicServlet extends HttpServlet {
 
         // Validate servlet mapping
         final String key = ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM;
-        servletMapping = config.getServletContext().getInitParameter(key);
+        servletMapping = WuicServletContextListener.getParamProvider(config.getServletContext()).apply(key, null);
 
         if (servletMapping == null) {
             throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
