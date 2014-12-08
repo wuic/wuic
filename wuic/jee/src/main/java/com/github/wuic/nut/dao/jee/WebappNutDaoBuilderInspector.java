@@ -42,6 +42,7 @@ import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 
 import javax.servlet.ServletContext;
+import java.util.List;
 
 /**
  * <p>
@@ -110,7 +111,15 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                         webappNutDao.getProxyUris(),
                         webappNutDao.getPollingInterval(),
                         webappNutDao.getRegularExpression(),
-                        webappNutDao.getContentBasedVersionNumber());
+                        webappNutDao.getContentBasedVersionNumber()) {
+
+                    /**
+                     * {@inheritDoc}
+                     */
+                    protected List<String> skipStartsWith() {
+                        return webappNutDao.skipStartsWith();
+                    }
+                };
             } else {
                 webappNutDao.setContext(servletContext);
             }
