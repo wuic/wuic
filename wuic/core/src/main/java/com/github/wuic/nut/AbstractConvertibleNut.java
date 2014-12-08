@@ -240,4 +240,24 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     public InputStream openStream() throws NutNotFoundException {
         return wrap.openStream();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object other) {
+        if (other instanceof ConvertibleNut) {
+            return ((ConvertibleNut) other).getName().equals(getName());
+        } else {
+            return Boolean.FALSE;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getName().hashCode();
+    }
 }
