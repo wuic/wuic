@@ -374,14 +374,22 @@ public class UtilityTest extends WuicTest {
             is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
             IOUtils.copyStream(is, new ByteArrayOutputStream());
             is.close();
-            Assert.assertTrue(is.getFile().delete());
+
+            if (!"img.zip".equals(is.getFile().getName())) {
+                Assert.assertTrue(is.getFile().delete());
+            }
 
             // Retry when file is deleted
             is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
             IOUtils.copyStream(is, new ByteArrayOutputStream());
             is.close();
-            Assert.assertTrue(is.getFile().delete());
+
+            if (!"img.zip".equals(is.getFile().getName())) {
+                Assert.assertTrue(is.getFile().delete());
+            }
         }
+
+        Assert.assertEquals(5, list.size());
     }
 
     /**

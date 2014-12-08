@@ -194,10 +194,12 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
                 final String entryName = entry.getName();
 
                 // We only add the entries at the root level
-                final String relativeEntry = entryName.replace(rootEntry, "");
+                if (entryName.startsWith(rootEntry)) {
+                    final String relativeEntry = entryName.substring(rootEntry.length());
 
-                if (entryName.startsWith(rootEntry) && !relativeEntry.isEmpty() && relativeEntry.split(IOUtils.STD_SEPARATOR).length == 1) {
-                    retval.add(relativeEntry);
+                    if (entryName.startsWith(rootEntry) && !relativeEntry.isEmpty() && relativeEntry.split(IOUtils.STD_SEPARATOR).length == 1) {
+                        retval.add(relativeEntry);
+                    }
                 }
             }
 
