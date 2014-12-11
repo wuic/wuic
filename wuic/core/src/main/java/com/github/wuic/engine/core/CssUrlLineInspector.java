@@ -188,7 +188,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             rawPath = matcher.group(groupIndex);
         } while (rawPath == null && i < GROUP_INDEXES.length);
 
-        final NutsHeap heap = getHeap(request, originalNut, cis, matcher, groupIndex);
+        final NutsHeap heap;
 
         // @font-face case
         if (rawPath == null) {
@@ -196,6 +196,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             final Matcher matcherUrl = patternUrl.matcher(matcher.group());
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
             final StringBuffer sb = new StringBuffer();
+            heap = getHeap(request, originalNut, cis, matcher, 0);
 
             // Process each font URL inside the font rule
             while (matcherUrl.find()) {
@@ -211,6 +212,9 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
         } else {
             if (group.isEmpty()) {
                 group = matcher.group(NumberUtils.TWO);
+                heap = getHeap(request, originalNut, cis, matcher, NumberUtils.TWO);
+            } else {
+                heap = getHeap(request, originalNut, cis, matcher, groupIndex);
             }
 
             return processData(new MatcherData(rawPath, matcher, groupIndex, group), replacement, request, heap, originalNut);
