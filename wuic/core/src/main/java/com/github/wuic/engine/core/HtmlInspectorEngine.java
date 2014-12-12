@@ -690,7 +690,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                         }
 
                         if (!supportedType) {
-                            logger.warn("Extension of {} does not ends with an extension  supported by WUIC, skipping...");
+                            logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
                             this.capturedStatements.remove(entry.getKey());
                         }
                     } else {
