@@ -87,10 +87,6 @@ public class WebappNutDao extends PathNutDao {
      * Builds a new instance with a base directory.
      * </p>
      *
-     * <p>
-     * Package access because build logic should be dedicated to the builder inside the same package.
-     * </p>
-     *
      * @param base the directory where we have to look up
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
