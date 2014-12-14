@@ -120,9 +120,11 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                         return webappNutDao.skipStartsWith();
                     }
                 };
-            } else {
-                webappNutDao.setContext(servletContext);
             }
+        }
+
+        if (object instanceof ServletContextHandler) {
+            ServletContextHandler.class.cast(object).setServletContext(servletContext);
         }
 
         return object;

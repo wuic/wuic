@@ -36,49 +36,28 @@
  */
 
 
-package com.github.wuic.servlet.test;
+package com.github.wuic.nut.dao.jee;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.nut.AbstractNutDao;
-import com.github.wuic.nut.dao.NutDao;
-import com.github.wuic.nut.dao.core.ProxyNutDao;
-import com.github.wuic.servlet.HtmlParserFilter;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-import java.io.IOException;
+import javax.servlet.ServletContext;
 
 /**
  * <p>
- * Filter that helps testing {@link HtmlParserFilter} by skipping the issue 123.
+ * This interface represents an object which handles a {@link javax.servlet.ServletContext}. Objects of this type should
+ * be modified by {@link WebappNutDaoBuilderInspector} when WUIC bootstrap to wrap a not {@code null} context.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.5.0
+ * @since 0.5
  */
-public class SkipIssue123 extends HtmlParserFilter {
+public interface ServletContextHandler {
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Sets the servlet context.
+     * </p>
+     *
+     * @param sc the context
      */
-    @Override
-    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
-            throws IOException, ServletException {
-        super.doFilter(request, new HttpServletResponseWrapper(HttpServletResponse.class.cast(response)) {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getContentType() {
-                return NutType.HTML.getMimeType();
-            }
-        }, chain);
-    }
+    void setServletContext(final ServletContext sc);
 }

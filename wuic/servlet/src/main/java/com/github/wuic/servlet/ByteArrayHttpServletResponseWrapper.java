@@ -41,7 +41,6 @@ package com.github.wuic.servlet;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -55,7 +54,7 @@ import java.io.PrintWriter;
  * @version 1.0
  * @since 0.4.4
  */
-public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseWrapper {
+public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdapter {
 
     /**
      * <p>
@@ -127,11 +126,19 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseWrap
      * <p>
      * Builds a new instance.
      * </p>
-     *
-     * @param response the response to wrap
      */
-    public ByteArrayHttpServletResponseWrapper(final HttpServletResponse response) {
-        super(response);
+    public ByteArrayHttpServletResponseWrapper() {
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param httpServletResponse a response to wrap
+     */
+    public ByteArrayHttpServletResponseWrapper(final HttpServletResponse httpServletResponse) {
+        super(httpServletResponse);
     }
 
     /**

@@ -75,7 +75,7 @@ import java.util.List;
  * @since 0.4.2
  */
 @NutDaoService
-public class WebappNutDao extends PathNutDao {
+public class WebappNutDao extends PathNutDao implements ServletContextHandler {
 
     /**
      * The context to use to retrieve resources.
@@ -119,7 +119,7 @@ public class WebappNutDao extends PathNutDao {
         if (context == null) {
             throw new BadArgumentException(
                     new IllegalArgumentException(
-                            String.format("context is null! Use setContext first or add %s in your descriptor file",
+                            String.format("context is null! Use setServletContext first or add %s in your descriptor file",
                                     WuicServletContextListener.class.getName())));
         }
 
@@ -139,7 +139,8 @@ public class WebappNutDao extends PathNutDao {
      *
      * @param context the servlet context
      */
-    public void setContext(final ServletContext context) {
+    @Override
+    public void setServletContext(final ServletContext context) {
         this.context = context;
     }
 }

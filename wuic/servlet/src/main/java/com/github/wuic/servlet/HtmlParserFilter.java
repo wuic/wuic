@@ -38,11 +38,11 @@
 
 package com.github.wuic.servlet;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.exception.wrapper.StreamException;
@@ -51,7 +51,7 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
-import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
@@ -66,6 +66,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -81,11 +82,10 @@ import java.util.Set;
  * </p>
  *
  * <p>
- * This filters uses an internal {@link NutDao} to retrieve referenced nuts when parsing HTML. By default, the DAO
- * built from a {@link com.github.wuic.nut.dao.jee.WebappNutDao} builder with the {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER}
- * property set to {@code true}. DAO is configured like this for consistency reason because the version number must computed
- * from content when scripts are declared inside tag. User can takes control over {@link NutDao} creation by extending
- * this class and overriding the {@link com.github.wuic.servlet.HtmlParserFilter#createDao()} method.
+ * This filters uses an internal {@link NutDao} to retrieve referenced nuts when parsing HTML. By default, the DAO built from
+ * a {@link com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao}. DAO is configured like this for consistency reason because
+ * the version number must computed from content when scripts are declared inside tag. User can takes control over {@link NutDao}
+ * creation by extending this class and overriding the {@link com.github.wuic.servlet.HtmlParserFilter#createDao()} method.
  * </p>
  *
  * @author Guillaume DROUET
@@ -164,11 +164,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * </p>
      *
      * @return the nut DAO
-     * @throws BuilderPropertyNotSupportedException if {@link ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
+     * @throws BuilderPropertyNotSupportedException if {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
      */
     protected NutDao createDao() throws BuilderPropertyNotSupportedException {
-        final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder("WebappNutDaoBuilder");
-        return NutDao.class.cast(b.property(ApplicationConfig.CONTENT_BASED_VERSION_NUMBER, Boolean.TRUE).build());
+        final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder(RequestDispatcherNutDao.class.getSimpleName() + "Builder");
+        return NutDao.class.cast(b.build());
     }
 
     /**
@@ -177,15 +177,16 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
-        final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper((HttpServletResponse) response);
+        final HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(response);
+        final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper(httpServletResponse);
 
-        chain.doFilter(request, wrapper);
+        chain.doFilter(request, new HttpServletResponseWrapper(wrapper));
         final byte[] bytes = wrapper.toByteArray();
 
         // There is some content to parse
         if (bytes.length > 0) {
             try {
-                final String key = buildKey(HttpServletRequest.class.cast(request), HttpServletResponse.class.cast(response));
+                final String key = buildKey(HttpServletRequest.class.cast(request), httpServletResponse);
                 final String workflowId;
                 Boolean exists;
 

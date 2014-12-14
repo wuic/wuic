@@ -117,7 +117,7 @@ public class JeeTest {
         final ObjectBuilder<NutDao> builder =
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");
         final WebappNutDao dao = WebappNutDao.class.cast(builder.build());
-        dao.setContext(server.getServletContext());
+        dao.setServletContext(server.getServletContext());
         final List<Nut> nuts = dao.create("index.html");
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());
