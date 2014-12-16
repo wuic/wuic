@@ -67,6 +67,11 @@ import java.lang.reflect.InvocationTargetException;
 public class WuicServletContextListener implements ServletContextListener {
 
     /**
+     * Message logged when a custom implementation could not be applied.
+     */
+    private static final String CUSTOM_PARAM_PROVIDER_MESSAGE = "Cannot apply custom parameter provider";
+
+    /**
      * <p>
      * Gets the {@link WuicFacade} injected into the given context.
      * </p>
@@ -144,13 +149,13 @@ public class WuicServletContextListener implements ServletContextListener {
                                     paramClass, ServletContext.class.getName()));
                 }
             } catch (ClassNotFoundException cnfe) {
-                throw new IllegalStateException("Cannot apply custom parameter provider", cnfe);
+                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, cnfe);
             } catch (IllegalAccessException iae) {
-                throw new IllegalStateException("Cannot apply custom parameter provider", iae);
+                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, iae);
             } catch (InvocationTargetException ite) {
-                throw new IllegalStateException("Cannot apply custom parameter provider", ite);
+                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, ite);
             } catch (InstantiationException ie) {
-                throw new IllegalStateException("Cannot apply custom parameter provider", ie);
+                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, ie);
             }
         }
 

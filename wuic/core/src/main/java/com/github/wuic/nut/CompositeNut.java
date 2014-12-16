@@ -151,6 +151,17 @@ public class CompositeNut extends PipedConvertibleNut {
     }
 
     /**
+     * <p>
+     * Indicates if version number is computed asynchronously.
+     * </p>
+     *
+     * @return {@code true} if asynchronous operation is performed, {@code false} otherwise
+     */
+    public Boolean getAsynchronousVersionNumber() {
+        return asynchronousVersionNumber;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -342,7 +353,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(Boolean, java.util.List)}
+     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(java.util.List)}
      * It ensures that every names will be unique in returned lists during the entire lifecycle of its instance.
      * </p>
      *
@@ -379,7 +390,7 @@ public class CompositeNut extends PipedConvertibleNut {
          *
          * @param nuts the nuts to merge
          * @return the merged nuts
-         * @see CompositeNut#mergeNuts(Boolean, java.util.List)
+         * @see CompositeNut#mergeNuts(java.util.List)
          */
         public List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
@@ -394,7 +405,7 @@ public class CompositeNut extends PipedConvertibleNut {
                 // New sequence
                 if (nut != null && current == null) {
                     current = nut.getName();
-                    asynchronous = (nut instanceof CompositeNut) && CompositeNut.class.cast(nut).asynchronousVersionNumber;
+                    asynchronous = (nut instanceof CompositeNut) && CompositeNut.class.cast(nut).getAsynchronousVersionNumber();
                     // Nut name is the same as previous nut name, will be included in same composition
                 } else if (nut != null && current.equals(nut.getName())) {
                     end++;
