@@ -99,7 +99,7 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file1.getParentFile().getParentFile().toURI().toURL()});
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().toURI().toURL()});
 
-        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false);
+        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false, true);
         Assert.assertEquals(2, dao.create(".*.css").size());
     }
 

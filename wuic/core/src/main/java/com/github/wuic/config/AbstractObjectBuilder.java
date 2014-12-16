@@ -58,6 +58,11 @@ import java.util.Map;
 public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
 
     /**
+     * Disallowed settings.
+     */
+    private Map<String, Object> disabled;
+
+    /**
      * Managed by {@link PropertySetter}.
      */
     private Map<String, Object> properties;
@@ -77,6 +82,7 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
     public AbstractObjectBuilder(final PropertySetter... setters) {
         propertySetters = setters;
         properties = new HashMap<String, Object>();
+        disabled = new HashMap<String, Object>();
     }
 
     /**
@@ -129,7 +135,16 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      * {@inheritDoc}
      */
     @Override
-    public ObjectBuilder property(final String key, final Object value) throws BuilderPropertyNotSupportedException {
+    public ObjectBuilder<T> property(final String key, final Object value) throws BuilderPropertyNotSupportedException {
+
+        // Check if disabled
+        if (disabled.containsKey(key)) {
+            Object val = disabled.get(key);
+
+            if ((val == null && value == null) || (val != null && val.equals(value))) {
+                throwPropertyNotSupportedException(key + " (disabled)");
+            }
+        }
 
         for (PropertySetter setter : propertySetters) {
             if (setter.setProperty(key, value)) {
@@ -138,6 +153,15 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
         }
 
         throwPropertyNotSupportedException(key);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ObjectBuilder<T> disableSupport(final String key, final Object value) {
+        disabled.put(key, value);
         return this;
     }
 

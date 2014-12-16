@@ -126,7 +126,7 @@ public class AbstractNutDaoTest {
          * @param contentBasedVersionNumber use version number computed from content
          */
         private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, contentBasedVersionNumber);
+            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, contentBasedVersionNumber, true);
             age = BEGIN_AGE;
             updateAfterMs = updateAfter;
         }

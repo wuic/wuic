@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
@@ -83,16 +84,26 @@ public class CompositeNut extends PipedConvertibleNut {
     private List<ConvertibleNut> compositionList;
 
     /**
+     * Computes version number asynchronously or not.
+     */
+    private Boolean asynchronousVersionNumber;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
+     * @param avn indicates if version computation is done asynchronously or not
      * @param composition the nuts of this composition
      * @param separator the bytes between each stream, {@code null} if nothing
      * @param specificName the name of the composition
      */
-    public CompositeNut(final String specificName, final byte[] separator, final ConvertibleNut ... composition) {
+    public CompositeNut(final Boolean avn,
+                        final String specificName,
+                        final byte[] separator,
+                        final ConvertibleNut ... composition) {
         super(composition[0]);
+        asynchronousVersionNumber = avn;
 
         if (separator != null) {
             streamSeparator = new byte[separator.length];
@@ -110,16 +121,20 @@ public class CompositeNut extends PipedConvertibleNut {
         }
 
         // Make a composite version number
-        setVersionNumber(WuicScheduledThreadPool.getInstance().executeAsap(new Callable<Long>() {
+        if (asynchronousVersionNumber) {
+            setVersionNumber(WuicScheduledThreadPool.getInstance().executeAsap(new Callable<Long>() {
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Long call() {
-                return NutUtils.getVersionNumber(Arrays.asList(composition));
-            }
-        }));
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public Long call() {
+                    return NutUtils.getVersionNumber(Arrays.asList(composition));
+                }
+            }));
+        } else {
+            setVersionNumber(new FutureLong(NutUtils.getVersionNumber(Arrays.asList(composition))));
+        }
 
         // Eventually add each referenced nut in the composition (excluding first element taken in consideration by super constructor)
         for (int i = 1; i < composition.length; i++) {
@@ -327,7 +342,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(java.util.List)}.
+     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(Boolean, java.util.List)}
      * It ensures that every names will be unique in returned lists during the entire lifecycle of its instance.
      * </p>
      *
@@ -364,13 +379,14 @@ public class CompositeNut extends PipedConvertibleNut {
          *
          * @param nuts the nuts to merge
          * @return the merged nuts
-         * @see CompositeNut#mergeNuts(java.util.List)
+         * @see CompositeNut#mergeNuts(Boolean, java.util.List)
          */
         public List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
             int start = 0;
             int end = 1;
             String current = null;
+            Boolean asynchronous = Boolean.FALSE;
 
             for (final Iterator<ConvertibleNut> it = nuts.iterator();;) {
                 final ConvertibleNut nut = it.hasNext() ? it.next() : null;
@@ -378,6 +394,7 @@ public class CompositeNut extends PipedConvertibleNut {
                 // New sequence
                 if (nut != null && current == null) {
                     current = nut.getName();
+                    asynchronous = (nut instanceof CompositeNut) && CompositeNut.class.cast(nut).asynchronousVersionNumber;
                     // Nut name is the same as previous nut name, will be included in same composition
                 } else if (nut != null && current.equals(nut.getName())) {
                     end++;
@@ -395,7 +412,7 @@ public class CompositeNut extends PipedConvertibleNut {
                         compositionName = new StringBuilder(name).insert(name.lastIndexOf('/') + 1, prefixCount).toString();
                     }
 
-                    final CompositeNut compositeNut = new CompositeNut(compositionName, null, composition);
+                    final CompositeNut compositeNut = new CompositeNut(asynchronous, compositionName, null, composition);
                     retval.add(compositeNut);
 
                     if (nut != null) {

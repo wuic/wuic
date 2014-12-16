@@ -108,11 +108,11 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void parseTest() throws Exception {
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, true);
         final NutsHeap heap = new NutsHeap(Arrays.asList("index.html"), dao, "heap");
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.CSS, new TextAggregatorEngine(true));
-        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
+        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
+        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
         final EngineRequest request = new EngineRequest("workflow", "", heap, chains);
         final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
 
@@ -143,7 +143,7 @@ public class HtmlInspectorEngineTest {
     @Test
     public void bestEffortTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, true);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
         final Engine engine = new AbstractCacheEngine(true, true) {
@@ -185,8 +185,8 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
-        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true));
-        chains.put(NutType.CSS, new TextAggregatorEngine(true));
+        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
+        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
 
         List<ConvertibleNut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
         String res = NutUtils.readTransform(nuts.get(0));
@@ -224,7 +224,7 @@ public class HtmlInspectorEngineTest {
      */
     public void concurrencyTest(final Engine cache) throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, true);
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);

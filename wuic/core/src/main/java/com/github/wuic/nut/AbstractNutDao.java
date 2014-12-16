@@ -44,6 +44,7 @@ import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
@@ -111,6 +112,11 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     private Boolean contentBasedVersionNumber;
 
     /**
+     * For version number computation.
+     */
+    private final Boolean computeVersionAsynchronously;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -120,12 +126,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
      * @param contentBasedHash  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param asynchronous      activates asynchronous version number computation
      */
     public AbstractNutDao(final String base,
                           final Boolean basePathAsSysProp,
                           final String[] proxies,
                           final int pollingSeconds,
-                          final Boolean contentBasedHash) {
+                          final Boolean contentBasedHash,
+                          final Boolean asynchronous) {
         final String b = basePathAsSysProp ? System.getProperty(base) : base;
 
         if (b == null) {
@@ -136,6 +144,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
         contentBasedVersionNumber = contentBasedHash;
+        computeVersionAsynchronously = asynchronous;
         setPollingInterval(pollingSeconds);
     }
 
@@ -230,7 +239,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @throws StreamException if version number could not be computed
      */
     protected Future<Long> getVersionNumber(final String path) throws StreamException {
-        return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path));
+        if (computeVersionAsynchronously) {
+            log.debug("Computing version number asynchronously");
+            return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path));
+        } else {
+            log.debug("Computing version number synchronously");
+            return new FutureLong(new VersionNumberCallable(path).call());
+        }
     }
 
     /**
@@ -511,6 +526,17 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     public Boolean getContentBasedVersionNumber() {
         return contentBasedVersionNumber;
+    }
+
+    /**
+     * <p>
+     * Gets the flag indicating if the version number is computed asynchronously or not.
+     * </p>
+     *
+     * @return {@code true} if version number is computed asynchronously, {@code false} otherwise
+     */
+    public Boolean getComputeVersionAsynchronously() {
+        return computeVersionAsynchronously;
     }
 
     /**

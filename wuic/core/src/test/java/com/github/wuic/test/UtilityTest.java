@@ -175,7 +175,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar2.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(input);
+        output = CompositeNut.mergeNuts( input);
 
         Assert.assertEquals(5, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -196,7 +196,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(input);
+        output = CompositeNut.mergeNuts( input);
 
         Assert.assertEquals(3, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());

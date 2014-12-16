@@ -167,8 +167,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @throws BuilderPropertyNotSupportedException if {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
      */
     protected NutDao createDao() throws BuilderPropertyNotSupportedException {
-        final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder(RequestDispatcherNutDao.class.getSimpleName() + "Builder");
-        return NutDao.class.cast(b.build());
+        final NutDao def = contextBuilder.nutDao("wuicDefault" + RequestDispatcherNutDao.class.getSimpleName() + "Builder");
+
+        if (def == null) {
+            final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder(RequestDispatcherNutDao.class.getSimpleName() + "Builder");
+            return NutDao.class.cast(b.build());
+        } else {
+            return def;
+        }
     }
 
     /**

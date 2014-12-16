@@ -80,6 +80,7 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
     @ConfigConstructor
     public DiskNutDao(@StringConfigParam(defaultValue = ".", propertyKey = BASE_PATH) final String base,
@@ -87,8 +88,9 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
                       @ObjectConfigParam(defaultValue = "", propertyKey = PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
                       @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
                       @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber);
+                      @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
+                      @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
+        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber, computeVersionAsynchronously);
     }
 
     /**

@@ -70,6 +70,7 @@ public abstract class ScheduledCacheEngine extends AbstractCacheEngine implement
     public ScheduledCacheEngine(final int timeToLiveSeconds, final Boolean cache, final Boolean bestEffort) {
         super(cache, bestEffort);
         setTimeToLive(timeToLiveSeconds);
+
     }
 
     /**

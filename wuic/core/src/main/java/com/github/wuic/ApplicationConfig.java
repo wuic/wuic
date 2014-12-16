@@ -50,6 +50,11 @@ package com.github.wuic;
 public interface ApplicationConfig {
 
     /**
+     * Authorize WUIC to compute version number asynchronously or not.
+     */
+    String COMPUTE_VERSION_ASYNCHRONOUSLY = "c.g.wuic.computeVersionAsynchronously";
+
+    /**
      * <p>
      * The base path when accessing nuts.
      * </p>

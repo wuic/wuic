@@ -101,7 +101,7 @@ public class NutsHeapTest {
          * @param pollingSeconds polling interval
          */
         MockNutDao(final int pollingSeconds) {
-            super("/", false, null, pollingSeconds, false);
+            super("/", false, null, pollingSeconds, false, true);
         }
 
         /**

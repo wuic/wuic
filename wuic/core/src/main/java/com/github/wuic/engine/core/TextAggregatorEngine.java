@@ -69,16 +69,24 @@ import com.github.wuic.util.IOUtils;
 public class TextAggregatorEngine extends AbstractAggregatorEngine {
 
     /**
+     * For version number computation.
+     */
+    private final Boolean canReadNutAsynchronously;
+
+    /**
      * <p>
      * Builds the engine.
      * </p>
      *
+     * @param asynchronous activates asynchronous version number computation
      * @param aggregate activate aggregation or not
      */
     @ConfigConstructor
     public TextAggregatorEngine(
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate) {
+            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate,
+            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean asynchronous) {
         super(aggregate);
+        canReadNutAsynchronously = asynchronous;
     }
     
     /**
@@ -94,7 +102,8 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
         
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
         final String name = "aggregate" + request.getNuts().get(0).getNutType().getExtensions()[0];
-        retval.add(new CompositeNut(request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
+        retval.add(new CompositeNut(canReadNutAsynchronously,
+                request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
                 "\r\n".getBytes(),
                 request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()])));
 

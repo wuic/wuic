@@ -87,7 +87,8 @@ public abstract class HeadEngine extends Engine {
      * @return the process result
      * @throws WuicException if WUIC fails to process nuts
      */
-    public static List<ConvertibleNut> runChains(final EngineRequest request, final Boolean bestEffort) throws WuicException {
+    public static List<ConvertibleNut> runChains(final EngineRequest request,
+                                                 final Boolean bestEffort) throws WuicException {
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
         final Iterator<List<? extends ConvertibleNut>> it = request.iterator();
 

@@ -93,14 +93,16 @@ public abstract class PathNutDao extends AbstractNutDao {
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
     public PathNutDao(final String base,
                       final Boolean basePathAsSysProp,
                       final String[] proxies,
                       final int pollingSeconds,
                       final Boolean regex,
-                      final Boolean contentBasedVersionNumber) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, contentBasedVersionNumber);
+                      final Boolean contentBasedVersionNumber,
+                      final Boolean computeVersionAsynchronously) {
+        super(base, basePathAsSysProp, proxies, pollingSeconds, contentBasedVersionNumber, computeVersionAsynchronously);
         regularExpression = regex;
     }
 

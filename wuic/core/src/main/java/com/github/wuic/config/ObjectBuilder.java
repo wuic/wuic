@@ -70,6 +70,18 @@ public interface ObjectBuilder<T> {
 
     /**
      * <p>
+     * Disables the support of a property with a particular value. Any future setting which match the given key/value pair
+     * (when calling {@link #property(String, Object)}) will result in a {@link BuilderPropertyNotSupportedException}.
+     * </p>
+     *
+     * @param key the key
+     * @param value the value
+     * @return a builder taking in consideration the new setting
+     */
+    ObjectBuilder<T> disableSupport(String key, Object value);
+
+    /**
+     * <p>
      * Gets the property identified by the given key.
      * </p>
      *

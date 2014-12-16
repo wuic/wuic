@@ -100,6 +100,7 @@ public class HttpNutDao extends AbstractNutDao {
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
     @ConfigConstructor
     public HttpNutDao(@BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.SECRET_PROTOCOL)final Boolean https,
@@ -108,8 +109,9 @@ public class HttpNutDao extends AbstractNutDao {
                       @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.BASE_PATH) final String path,
                       @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
                       @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean contentBasedVersionNumber) {
-        super(path, basePathAsSysProp, null, pollingSeconds, contentBasedVersionNumber);
+                      @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean contentBasedVersionNumber,
+                      @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
+        super(path, basePathAsSysProp, null, pollingSeconds, contentBasedVersionNumber, computeVersionAsynchronously);
         final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
 
         if (port != null) {

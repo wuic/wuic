@@ -160,7 +160,8 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     prefixed.add(new PrefixedNut(nut, "best-effort"));
                 }
 
-                retval = ByteArrayNut.toByteArrayNut(runChains(new EngineRequest(request.getWorkflowId(), prefixed, request, "best-effort"), Boolean.TRUE));
+                retval = ByteArrayNut.toByteArrayNut(
+                        runChains(new EngineRequest(request.getWorkflowId(), prefixed, request, "best-effort"), Boolean.TRUE));
                 final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
                 for (final ConvertibleNut nut : retval) {

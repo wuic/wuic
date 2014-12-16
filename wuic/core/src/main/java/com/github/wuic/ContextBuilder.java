@@ -518,18 +518,6 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Builds a new {@link Engine} builder.
-     * </p>
-     *
-     * @param type the type of engine
-     * @return the builder
-     */
-    public synchronized ObjectBuilder<Engine> newEngineBuilder(final String type) {
-        return engineBuilderFactory.create(type);
-    }
-
-    /**
-     * <p>
      * Decorates the current builder with a new builder associated to a specified tag. Tagging the context allows to
      * isolate a set of configurations that could be erased by calling {@link ContextBuilder#clearTag(String)}.
      * This way, this feature is convenient when you need to poll the configurations to reload it.
@@ -1377,6 +1365,24 @@ public class ContextBuilder extends Observable {
         }
 
         return retval;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link com.github.wuic.nut.dao.NutDao} identified by the specified ID.
+     * </p>
+     *
+     * @param id the ID which identifies the builder in the context
+     * @return the associated {@link NutDao}, {@code null} if not found
+     */
+    public NutDao nutDao(final String id) {
+        for (ContextSetting s : taggedSettings.values()) {
+            if (s.nutDaoMap.containsKey(id)) {
+                return s.nutDaoMap.get(id);
+            }
+        }
+
+        return null;
     }
 
     /**
