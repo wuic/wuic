@@ -39,13 +39,14 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.Pipe.Transformer;
 
 import java.io.IOException;
 import java.util.List;
 
 /**
  * <p>
- * A convertible nut has a content which can be transformed with a chain of {@link Pipe.Transformer transformers}.
+ * A convertible nut has a content which can be transformed with a chain of {@link Transformer transformers}.
  * During transformation, the state of the nut can change and not only its content. For instance, the nut becomes
  * compressed or refers new nuts.
  * </p>
@@ -121,12 +122,12 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
-     * Adds a {@link com.github.wuic.util.Pipe.Transformer}.
+     * Adds a {@link Transformer}.
      * </p>
      *
      * @param transformer the transformer
      */
-    void addTransformer(Pipe.Transformer<ConvertibleNut> transformer);
+    void addTransformer(Transformer<ConvertibleNut> transformer);
 
     /**
      * <p>
@@ -135,7 +136,7 @@ public interface ConvertibleNut extends Nut {
      *
      * @return the transformers
      */
-    List<Pipe.Transformer<ConvertibleNut>> getTransformers();
+    List<Transformer<ConvertibleNut>> getTransformers();
 
     /**
      * <p>
