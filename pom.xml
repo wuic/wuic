@@ -126,6 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.verdion}</version>
                 <configuration>
                     <source>${java-source.version}</source>
                     <target>${java-source.version}</target>
@@ -299,6 +300,7 @@
         <surefire-plugin.version>2.14.1</surefire-plugin.version>
         <source-plugin.version>2.1.2</source-plugin.version>
         <release-plugin.version>2.5</release-plugin.version>
+        <compiler-plugin.verdion>3.1</compiler-plugin.verdion>
     </properties>
 	
 </project>
