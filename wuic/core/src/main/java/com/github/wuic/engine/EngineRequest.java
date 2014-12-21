@@ -251,6 +251,14 @@ public final class EngineRequest {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " with nuts '" + Arrays.deepToString(getNuts().toArray());
+    }
+
+    /**
      * <p>
      * Internal class which helps iterating on all its {@link com.github.wuic.nut.Nut nuts}.
      * The {@link com.github.wuic.nut.Nut nuts} are read and returned by sequence of elements
