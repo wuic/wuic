@@ -39,6 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.NutNotFoundException;
@@ -207,7 +208,12 @@ public class Context implements Observer {
                                    final UrlProviderFactory urlProviderFactory,
                                    final EngineType ... skip)
             throws WuicException {
-        EngineRequest request = new EngineRequest(wId, contextPath, workflow.getHeap(), workflow.getHeap().getNuts(), workflow.getChains(), "", urlProviderFactory, skip);
+        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
+                .contextPath(contextPath)
+                .chains(workflow.getChains())
+                .urlProviderFactory(urlProviderFactory)
+                .skip(skip)
+                .build();
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request, path);
@@ -249,13 +255,12 @@ public class Context implements Observer {
                                          final UrlProviderFactory urlProviderFactory,
                                          final EngineType ... skip)
             throws WuicException {
-        EngineRequest request = new EngineRequest(wId,
-                contextPath,
-                workflow.getHeap(),
-                workflow.getHeap().getNuts(),
-                workflow.getChains(), "",
-                urlProviderFactory,
-                skip);
+        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
+                .contextPath(contextPath)
+                .chains(workflow.getChains())
+                .urlProviderFactory(urlProviderFactory)
+                .skip(skip)
+                .build();
 
         for (final ContextInterceptor interceptor : interceptors) {
             request = interceptor.beforeProcess(request);

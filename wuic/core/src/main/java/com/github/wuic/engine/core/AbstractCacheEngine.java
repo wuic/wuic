@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
@@ -161,7 +162,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 }
 
                 retval = ByteArrayNut.toByteArrayNut(
-                        runChains(new EngineRequest(request.getWorkflowId(), prefixed, request, "best-effort"), Boolean.TRUE));
+                        runChains(new EngineRequestBuilder(request).nuts(prefixed).prefixCreatedNut("best-effort").build(), Boolean.TRUE));
                 final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
                 for (final ConvertibleNut nut : retval) {
@@ -495,7 +496,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         @Override
         public Map<String, ConvertibleNut> call() throws WuicException {
             try {
-                final List<ConvertibleNut> nuts = runChains(new EngineRequest(request), Boolean.FALSE);
+                final List<ConvertibleNut> nuts = runChains(new EngineRequestBuilder(request).build(), Boolean.FALSE);
                 final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
 
                 for (final ConvertibleNut nut : nuts) {

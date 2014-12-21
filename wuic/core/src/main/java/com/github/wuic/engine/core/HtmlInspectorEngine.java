@@ -44,6 +44,7 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
@@ -228,7 +229,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         }
 
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
+            return getNext().parse(new EngineRequestBuilder(request).nuts(retval).build());
         } else {
             return retval;
         }
@@ -315,7 +316,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                 // Render HTML for workflow result
                 final StringBuilder html = new StringBuilder();
-                final EngineRequest parseRequest = new EngineRequest(parseInfo.getHeap().getNuts(), parseInfo.getHeap(), request, skip);
+                final EngineRequest parseRequest = new EngineRequestBuilder(request)
+                        .nuts(parseInfo.getHeap().getNuts())
+                        .heap(parseInfo.getHeap())
+                        .skip(skip)
+                        .build();
                 final List<ConvertibleNut> merged;
 
                 try {

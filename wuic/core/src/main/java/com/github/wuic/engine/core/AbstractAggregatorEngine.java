@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
@@ -90,7 +91,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
 
         // Call next engine in chain
         if (getNext() != null) {
-            return getNext().parse(new EngineRequest(retval, request));
+            return getNext().parse(new EngineRequestBuilder(request).nuts(retval).build());
         } else {
             return retval;
         }

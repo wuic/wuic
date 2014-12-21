@@ -40,7 +40,7 @@ package com.github.wuic.test.engine;
 
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -58,7 +58,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PushbackInputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -86,7 +85,7 @@ public class GzipEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>());
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals(1, res.size());
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -114,7 +113,7 @@ public class GzipEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>());
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals("var foo = 1;", NutUtils.readTransform(res.get(0)));
     }

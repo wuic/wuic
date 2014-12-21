@@ -44,6 +44,7 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
@@ -240,7 +241,11 @@ public class SpriteInspectorEngine extends NodeEngine {
                  * We also skip inspection because this is not necessary to detect references to this image
                  */
                 final EngineType[] skip = request.alsoSkip(EngineType.CACHE, EngineType.INSPECTOR);
-                final List<ConvertibleNut> parsed = chain.parse(new EngineRequest(heapId, Arrays.asList(nut), request, skip));
+                final List<ConvertibleNut> parsed = chain.parse(new EngineRequestBuilder(request)
+                        .workflowId(heapId)
+                        .nuts(Arrays.asList(nut))
+                        .skip(skip)
+                        .build());
 
                 if (retval != null) {
                     n.addReferencedNut(parsed.get(0));

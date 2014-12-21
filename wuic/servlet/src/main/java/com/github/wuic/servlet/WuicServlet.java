@@ -44,6 +44,7 @@ import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.exception.ErrorCode;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.BadArgumentException;
@@ -259,7 +260,7 @@ public class WuicServlet extends HttpServlet {
             final Boolean canGzip = HttpRequestThreadLocal.INSTANCE.canGzip();
 
             if (canGzip != null && !canGzip) {
-                return new EngineRequest(request.getWorkflowId(), request.getWorkflowId() + "-ungzip", request);
+                return new EngineRequestBuilder(request).workflowId(request.getWorkflowId()).contextPath(request.getWorkflowId() + "-ungzip").build();
             } else {
                 return request;
             }

@@ -43,7 +43,7 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -65,7 +65,6 @@ import org.mockito.stubbing.Answer;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -148,7 +147,7 @@ public class CssInspectorTest {
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
         Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>(Arrays.asList(nut.getInitialName())));
 
-        final EngineRequest request = new EngineRequest("wid", "cp", h, new HashMap<NutType, NodeEngine>());
+        final EngineRequest request = new EngineRequestBuilder("wid", h).contextPath("cp").build();
         final List<ConvertibleNut> res = engine.parse(request);
 
         for (final ConvertibleNut convertibleNut : res) {

@@ -43,20 +43,14 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.UrlProviderFactory;
-import com.github.wuic.util.UrlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.HashSet;
 import java.util.Arrays;
 
@@ -77,261 +71,35 @@ import java.util.Arrays;
 public final class EngineRequest {
 
     /**
-     * Logger.
-     */
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    /**
-     * The nuts.
-     */
-    private List<ConvertibleNut> nuts;
-
-    /**
-     * The context path.
-     */
-    private String contextPath;
-
-    /**
-     * The heap.
-     */
-    private NutsHeap heap;
-
-    /**
-     * The workflow ID.
-     */
-    private String workflowId;
-
-    /**
-     * The key this request uses to compute the key.
-     */
-    private String workflowKey;
-
-    /**
-     * The engine chains for each type.
-     */
-    private Map<NutType, ? extends NodeEngine> chains;
-
-    /**
-     * {@link EngineType} that should be skipped during workflow execution.
-     */
-    private EngineType[] skip;
-
-    /**
      * The key generated for the request.
      */
     private Key key;
 
     /**
-     * The prefix path of created nuts.
+     * The builder which built this instance.
      */
-    private String prefixCreatedNut;
-
-    /**
-     * The URL provider.
-     */
-    private UrlProviderFactory urlProviderFactory;
+    private final EngineRequestBuilder engineRequestBuilder;
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts and a workflow ID.
+     * Builds a new {@code EngineRequest}.
      * </p>
      *
-     * @param wId the workflow ID
-     * @param n the nuts to be parsed
-     * @param other the request to copy
-     * @param pcn prefix created nut
-     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
+     * @param erb the builder with request state
      */
-    public EngineRequest(final String wId, final List<? extends ConvertibleNut> n, final EngineRequest other, final String pcn, final EngineType ... toSkip) {
-        this(wId, other.contextPath, other.heap, n, other.chains, pcn, other.urlProviderFactory, toSkip);
+    EngineRequest(final EngineRequestBuilder erb) {
+        engineRequestBuilder = erb;
     }
 
     /**
      * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts and a workflow ID.
+     * Returns the object that built this request.
      * </p>
      *
-     * @param wId the workflow ID
-     * @param n the nuts to be parsed
-     * @param other the request to copy
-     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
+     * @return the builder
      */
-    public EngineRequest(final String wId, final List<? extends ConvertibleNut> n, final EngineRequest other, final EngineType ... toSkip) {
-        this(wId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts and a specified context path to be used.
-     * </p>
-     *
-     * @param n the nuts to be parsed
-     * @param other the request to copy
-     * @param toSkip the engines type to skip
-     */
-    public EngineRequest(final List<? extends ConvertibleNut> n, final EngineRequest other, final EngineType[] toSkip) {
-        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts to be used.
-     * </p>
-     *
-     * @param n the nuts to be parsed
-     * @param other the request to copy
-     */
-    public EngineRequest(final List<? extends ConvertibleNut> n, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with some specific nuts to be used.
-     * </p>
-     *
-     * @param workflowId the workflowId
-     * @param workflowKey a specific workflow key
-     * @param other the request to copy
-     */
-    public EngineRequest(final String workflowId, final String workflowKey, final EngineRequest other) {
-        this(workflowId, workflowKey, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with specific workflow ID.
-     * </p>
-     *
-     * @param wid the workflow ID
-     * @param other the request to copy
-     */
-    public EngineRequest(final String wid, final EngineRequest other) {
-        this(wid, other.contextPath, other.heap, other.getNuts(), other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with a specific timestamp identifying nuts version path.
-     * </p>
-     *
-     * @param other the request to copy
-     */
-    public EngineRequest(final EngineRequest other) {
-        this(other.workflowId, other.contextPath, other.heap, other.nuts, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with some nuts specific and a specified heap to be used.
-     * </p>
-     *
-     * @param n the nuts to be parsed
-     * @param h the heap
-     * @param other the request to copy
-     * @param toSkip the engine's type that should be skipped when request is sent to an engine chain
-     */
-    public EngineRequest(final List<? extends Nut> n, final NutsHeap h, final EngineRequest other, final EngineType[] toSkip) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, toSkip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with some nuts specific and a specified heap to be used.
-     * </p>
-     *
-     * @param n the nuts to be parsed
-     * @param h the heap
-     * @param other the request to copy
-     */
-    public EngineRequest(final List<? extends Nut> n, final NutsHeap h, final EngineRequest other) {
-        this(other.workflowId, other.contextPath, h, n, other.chains, other.prefixCreatedNut, other.urlProviderFactory, other.skip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with a timestamp version which equals to 0 and the nuts retrieved from the specified
-     * heap.
-     * </p>
-     *
-     * @param wid the workflow ID
-     * @param cp the context root where the generated nuts should be exposed
-     * @param h the heap
-     * @param c the engine chains
-     * @param toSkip some engine types to skip
-     */
-    public EngineRequest(final String wid,
-                         final String cp,
-                         final NutsHeap h,
-                         final Map<NutType, ? extends NodeEngine> c,
-                         final EngineType ... toSkip) {
-        this(wid, cp, h, new ArrayList<Nut>(h.getNuts()), c, "", UrlUtils.urlProviderFactory(), toSkip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter except the
-     * workflow key which is the workflow ID by default.
-     * </p>
-     *
-     * @param wid the workflow ID
-     * @param cp the context root where the generated nuts should be exposed
-     * @param h the heap
-     * @param c the engine chains
-     * @param n the nuts
-     * @param pcn prefix created nut
-     * @param urlProviderFactory the URL provider
-     * @param toSkip some engine types to skip
-     */
-    public EngineRequest(final String wid,
-                         final String cp,
-                         final NutsHeap h,
-                         final List<? extends Nut> n,
-                         final Map<NutType, ? extends NodeEngine> c,
-                         final String pcn,
-                         final UrlProviderFactory urlProviderFactory,
-                         final EngineType ... toSkip) {
-        this(wid, wid, cp, h, n, c, pcn, urlProviderFactory, toSkip);
-    }
-
-    /**
-     * <p>
-     * Builds a new {@code EngineRequest} with all elements of the state (attributes) specified in parameter.
-     * </p>
-     *
-     * @param wid the workflow ID
-     * @param wk the workflow key
-     * @param cp the context root where the generated nuts should be exposed
-     * @param h the heap
-     * @param c the engine chains
-     * @param n the nuts
-     * @param pcn prefix created nut
-     * @param up the URL provider
-     * @param toSkip some engine types to skip
-     */
-    public EngineRequest(final String wid,
-                         final String wk,
-                         final String cp,
-                         final NutsHeap h,
-                         final List<? extends Nut> n,
-                         final Map<NutType, ? extends NodeEngine> c,
-                         final String pcn,
-                         final UrlProviderFactory up,
-                         final EngineType ... toSkip) {
-        nuts = new ArrayList<ConvertibleNut>(n.size());
-        workflowKey = wk;
-        contextPath = cp;
-        heap = h;
-        chains = c;
-        workflowId = wid;
-        prefixCreatedNut = pcn;
-        skip = new EngineType[toSkip.length];
-        urlProviderFactory = up;
-        System.arraycopy(toSkip, 0, skip, 0, toSkip.length);
-
-        for (final Nut nut : n) {
-            nuts.add(new PipedConvertibleNut(nut));
-        }
+    EngineRequestBuilder getBuilder() {
+        return engineRequestBuilder;
     }
 
     /**
@@ -342,7 +110,7 @@ public final class EngineRequest {
      * @return the created nut
      */
     public String getPrefixCreatedNut() {
-        return prefixCreatedNut;
+        return engineRequestBuilder.getPrefixCreatedNut();
     }
 
     /**
@@ -353,7 +121,7 @@ public final class EngineRequest {
      * @return the nuts
      */
     public List<ConvertibleNut> getNuts() {
-        return nuts;
+        return engineRequestBuilder.getNuts();
     }
 
     /**
@@ -364,7 +132,7 @@ public final class EngineRequest {
      * @return the context path
      */
     public String getContextPath() {
-        return contextPath;
+        return engineRequestBuilder.getContextPath();
     }
 
     /**
@@ -375,7 +143,7 @@ public final class EngineRequest {
      * @return the heap
      */
     public NutsHeap getHeap() {
-        return heap;
+        return engineRequestBuilder.getHeap();
     }
 
     /**
@@ -386,12 +154,12 @@ public final class EngineRequest {
      * @return the workflow ID.
      */
     public String getWorkflowId() {
-        return workflowId;
+        return engineRequestBuilder.getWorkflowId();
     }
 
     /**
      * <p>
-     * Creates a new iterator on the {@link Nut nuts}.
+     * Creates a new iterator on the {@link com.github.wuic.nut.Nut nuts}.
      * </p>
      *
      * @return the iterator
@@ -409,13 +177,7 @@ public final class EngineRequest {
      * @return the chains that can treat this nut type
      */
     public NodeEngine getChainFor(final NutType nutType) {
-        final NodeEngine retval = chains.get(nutType);
-
-        if (retval == null) {
-            log.warn("No chain exists for the heap '{}' and the nut type {}.", heap.getId(), nutType.name());
-        }
-
-        return retval;
+        return engineRequestBuilder.getChainFor(nutType);
     }
 
     /**
@@ -427,7 +189,7 @@ public final class EngineRequest {
      * @return {@code true} if treatment should be skipped, {@code false} otherwise.
      */
     public boolean shouldSkip(final EngineType engineType) {
-        return CollectionUtils.indexOf(engineType, skip) != -1;
+        return engineRequestBuilder.shouldSkip(engineType);
     }
 
     /**
@@ -441,7 +203,7 @@ public final class EngineRequest {
      */
     public Key getKey() throws NutNotFoundException, StreamException {
         if (key == null) {
-            key = new Key(workflowKey, nuts);
+            key = new Key(engineRequestBuilder.getWorkflowKey(), engineRequestBuilder.getNuts());
         }
 
         return key;
@@ -455,18 +217,19 @@ public final class EngineRequest {
      * @return the factory
      */
     public UrlProviderFactory getUrlProviderFactory() {
-        return urlProviderFactory;
+        return engineRequestBuilder.getUrlProviderFactory();
     }
 
     /**
      * <p>
-     * Returns an array containing all items of {@link EngineRequest#skip} and also the specified types.
+     * Returns an array containing all items of {@link EngineRequestBuilder#skip} and also the specified types.
      * </p>
      *
      * @param type the array to add
      * @return the skipped engines including the parameter
      */
     public EngineType[] alsoSkip(final EngineType ... type) {
+        final EngineType[] skip = engineRequestBuilder.getSkip();
         int length = skip.length;
 
         for (final EngineType et : type) {
@@ -489,8 +252,9 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Internal class which helps iterating on all its {@link Nut nuts}. The {@link Nut nuts}
-     * are read and returned by sequence of elements having the same {@link NutType}.
+     * Internal class which helps iterating on all its {@link com.github.wuic.nut.Nut nuts}.
+     * The {@link com.github.wuic.nut.Nut nuts} are read and returned by sequence of elements
+     * having the same {@link NutType}.
      * </p>
      *
      * @author Guillaume DROUET

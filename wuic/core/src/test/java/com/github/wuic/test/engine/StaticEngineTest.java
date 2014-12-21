@@ -38,9 +38,7 @@
 
 package com.github.wuic.test.engine;
 
-import com.github.wuic.NutType;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -53,7 +51,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -82,7 +79,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
-        List<ConvertibleNut> res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("workflow", heap).build());
         Assert.assertEquals(res.size(), 3);
 
         try {
@@ -93,7 +90,7 @@ public class StaticEngineTest {
         }
 
         // Test cache
-        res = engine.parse(new EngineRequest("workflow", "", heap, new HashMap<NutType, NodeEngine>()));
+        res = engine.parse(new EngineRequestBuilder("workflow", heap).build());
         Assert.assertEquals(res.size(), 3);
     }
 
@@ -109,7 +106,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         try {
-            engine.parse(new EngineRequest("foo", "", heap, new HashMap<NutType, NodeEngine>()));
+            engine.parse(new EngineRequestBuilder("foo", heap).build());
             Assert.fail();
         } catch (WuicException we) {
             // Normal behavior

@@ -97,7 +97,8 @@ public abstract class HeadEngine extends Engine {
             final List<? extends ConvertibleNut> nuts = it.next();
             final NutType nutType = nuts.get(0).getNutType();
             final NodeEngine chain = request.getChainFor(nutType);
-            final EngineRequest req = bestEffort ? new EngineRequest(nuts, request, nutType.getRequiredForBestEffort()) : new EngineRequest(nuts, request);
+            final EngineRequestBuilder builder = new EngineRequestBuilder(request).nuts(nuts);
+            final EngineRequest req = bestEffort ? builder.skip(nutType.getRequiredForBestEffort()).build() : builder.build();
             retval.addAll(chain == null ? nuts : chain.parse(req));
         }
 

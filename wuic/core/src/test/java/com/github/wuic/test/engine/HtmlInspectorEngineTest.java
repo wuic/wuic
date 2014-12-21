@@ -43,6 +43,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.AbstractCacheEngine;
@@ -113,7 +114,7 @@ public class HtmlInspectorEngineTest {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
-        final EngineRequest request = new EngineRequest("workflow", "", heap, chains);
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap).chains(chains).build();
         final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -188,13 +189,13 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
 
-        List<ConvertibleNut> nuts = engine.parse(new EngineRequest("", "", heap, chains));
+        List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap).chains(chains).build());
         String res = NutUtils.readTransform(nuts.get(0));
         Assert.assertEquals(content, res);
 
         countDownLatch.await(5, TimeUnit.SECONDS);
 
-        nuts = engine.parse(new EngineRequest("", "", heap, chains));
+        nuts = engine.parse(new EngineRequestBuilder("", heap).chains(chains).build());
         res = NutUtils.readTransform(nuts.get(0));
         Assert.assertTrue(res, Pattern.compile(REGEX, Pattern.DOTALL).matcher(res).matches());
     }
@@ -240,7 +241,7 @@ public class HtmlInspectorEngineTest {
                 @Override
                 public void run() {
                     try {
-                        cache.parse(new EngineRequest("", "", heap, chains));
+                        cache.parse(new EngineRequestBuilder("", heap).chains(chains).build());
                         countDownLatch.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();

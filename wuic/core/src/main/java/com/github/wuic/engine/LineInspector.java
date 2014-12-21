@@ -105,7 +105,7 @@ public abstract class LineInspector {
         // Process nut
         final NodeEngine engine = request.getChainFor(nut.getNutType());
         if (engine != null) {
-            res = engine.parse(new EngineRequest(res, heap, request, skippedEngine));
+            res = engine.parse(new EngineRequestBuilder(request).nuts(res).heap(heap).skip(skippedEngine).build());
         }
 
         // Use proxy URI if DAO provide it

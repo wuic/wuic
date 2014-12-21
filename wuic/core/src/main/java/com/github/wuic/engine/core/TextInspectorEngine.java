@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
@@ -190,7 +191,7 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
             if (res != null) {
                 for (final ConvertibleNut r : res) {
                     if (r.getNutType().equals(NutType.CSS)) {
-                        inspect(r, new EngineRequest(res, request));
+                        inspect(r, new EngineRequestBuilder(request).nuts(res).build());
                     }
 
                     configureExtracted(r);
