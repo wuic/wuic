@@ -58,6 +58,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -132,20 +133,36 @@ public class StaticEngine extends NodeEngine {
                 isr = new InputStreamReader(is);
                 final String paths = IOUtils.readString(isr);
                 final Matcher matcher = PATTERN_KEY_VALUE.matcher(paths);
+                final Map<Integer, ConvertibleNut> nutPerDepth = new LinkedHashMap<Integer, ConvertibleNut>();
                 retval = new ArrayList<ConvertibleNut>();
 
                 // Read each file associated to its type
                 while (matcher.find()) {
                     final NutType nutType = NutType.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
-                    final String path = matcher.group(1);
+                    final String pathLine = matcher.group(1);
+                    int depth = 0;
+
+                    while (pathLine.charAt(depth) == '\t') {
+                        depth++;
+                    }
+
+                    final String path = pathLine.substring(depth);
+                    final ConvertibleNut nut;
 
                     if (!path.contains("http://")) {
                         final int versionDelimiterIndex = path.indexOf('/');
                         final String name = path.substring(versionDelimiterIndex + 1);
                         final Long version = Long.parseLong(path.substring(0, versionDelimiterIndex));
-                        retval.add(new NotReachableNut(name, nutType, request.getHeap().getId(), version));
+                        nut = new NotReachableNut(name, nutType, request.getHeap().getId(), version);
                     } else {
-                        retval.add(new NotReachableNut(path, nutType, request.getHeap().getId(), 0L));
+                        nut = new NotReachableNut(path, nutType, request.getHeap().getId(), 0L);
+                    }
+
+                    if (depth == 0) {
+                        retval.add(nut);
+                        nutPerDepth.put(0, nut);
+                    } else {
+                        nutPerDepth.get(depth - 1).addReferencedNut(nut);
                     }
                 }
 
