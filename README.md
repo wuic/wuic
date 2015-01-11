@@ -12,13 +12,13 @@ We are working on [0.5.0](https://github.com/wuic/wuic/issues?q=is%3Aissue+label
   <dependency>
       <groupId>com.github.wuic</groupId>
       <artifactId>wuic-core</artifactId>
-      <version>0.5.0.RC6</version>
+      <version>0.5.0.RC7</version>
   </dependency>
 ```
 
 Please help us by testing this new version!
 
-Migration guides:
+### Migration guides
 
 * [0.3.x to 0.4.0](https://github.com/wuic/wuic/wiki/Migrating-to-0.4.x)
 * [0.4.0 to 0.4.1](https://github.com/wuic/wuic/wiki/Migrating-from-0.4.0-to-0.4.1)
