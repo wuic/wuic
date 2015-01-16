@@ -4,19 +4,19 @@ Please take a look at the website's project [here](http://wuic.github.io).
 
 ### Current release
 
-Our official release is the [0.4.5](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.4.5+is%3Aclosed).
+Our official release is the [0.5.0](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.0+is%3Aclosed).
 
-We are working on [0.5.0](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.0+is%3Aclosed):
+Please help us by testing this new version!
 
 ```xml
   <dependency>
       <groupId>com.github.wuic</groupId>
       <artifactId>wuic-core</artifactId>
-      <version>0.5.0.RC7</version>
+      <version>0.5.0</version>
   </dependency>
 ```
 
-Please help us by testing this new version!
+We are working on [0.5.1](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.1+is%3Aopen).
 
 ### Migration guides
 
