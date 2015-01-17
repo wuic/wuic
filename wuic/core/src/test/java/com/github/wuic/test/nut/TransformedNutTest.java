@@ -83,7 +83,7 @@ public class TransformedNutTest {
     @Test(expected = IllegalArgumentException.class)
     public void notSerializableTest() {
         final ConvertibleNut mock = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(mock.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(mock.getInitialName()).thenReturn("foo.js");
         new TransformedNut(mock);
     }

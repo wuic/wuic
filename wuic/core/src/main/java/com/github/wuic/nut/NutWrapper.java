@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.NutType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.Pipe;
 
@@ -112,6 +113,23 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     @Override
     public void setNutName(final String nutName) {
         wrapped.setNutName(nutName);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NutType getNutType() {
+        return wrapped.getNutType();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNutType(final NutType nutType) {
+        wrapped.setNutType(nutType);
     }
 
     /**

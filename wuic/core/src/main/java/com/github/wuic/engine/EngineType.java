@@ -70,12 +70,12 @@ public enum EngineType {
     CACHE,
 
     /**
-     * Third type in a chain. Compress the text only.
+     * Second type in a chain. Compress the text only.
      */
     MINIFICATION,
 
     /**
-     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.dao.NutDao}.
+     * Third type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.dao.NutDao}.
      */
     INSPECTOR,
 
@@ -85,13 +85,14 @@ public enum EngineType {
     AGGREGATOR,
 
     /**
-     * Fifth type in a chain. Compress bytes.
+     * Fifth type in the chain. Convert the result from a type to another type.
+     */
+    CONVERTER,
+
+    /**
+     * Sixth type in a chain. Compress bytes.
      */
     BINARY_COMPRESSION;
-
-    private EngineType(final EngineType ... requiredForBestEffort) {
-
-    }
 
     /**
      * <p>

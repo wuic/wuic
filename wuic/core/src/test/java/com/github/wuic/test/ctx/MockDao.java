@@ -90,7 +90,7 @@ public class MockDao implements NutDao {
     public MockDao() throws NutNotFoundException, StreamException {
         // Prepare Nut mock
         when(mockNutOne.getInitialName()).thenReturn("foo.js");
-        when(mockNutOne.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        when(mockNutOne.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         when(mockNutOne.isAggregatable()).thenReturn(true);
         when(mockNutOne.isTextReducible()).thenReturn(true);
         when(mockNutOne.isCacheable()).thenReturn(true);
@@ -99,7 +99,7 @@ public class MockDao implements NutDao {
         when(mockNutOne.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         when(mockNutTwo.getInitialName()).thenReturn("test.js");
-        when(mockNutTwo.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        when(mockNutTwo.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         when(mockNutTwo.isAggregatable()).thenReturn(true);
         when(mockNutTwo.isTextReducible()).thenReturn(true);
         when(mockNutTwo.isCacheable()).thenReturn(true);

@@ -233,7 +233,7 @@ public class SpriteInspectorEngine extends NodeEngine {
 
         for (final SpriteProvider sp : spriteProviders) {
             final ConvertibleNut nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
-            final NodeEngine chain = request.getChainFor(nut.getNutType());
+            final NodeEngine chain = request.getChainFor(nut.getInitialNutType());
 
             if (chain != null) {
                 /*

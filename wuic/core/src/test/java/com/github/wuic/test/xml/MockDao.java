@@ -65,7 +65,7 @@ public class MockDao implements NutDao {
     public List<Nut> create(final String path, final PathFormat format) throws StreamException {
         try {
             final ConvertibleNut nut = mock(ConvertibleNut.class);
-            when(nut.getNutType()).thenReturn(NutType.CSS);
+            when(nut.getInitialNutType()).thenReturn(NutType.CSS);
             when(nut.getName()).thenReturn("foo.css");
             when(nut.getInitialName()).thenReturn("foo.css");
             final List<Nut> nuts = new ArrayList<Nut>();

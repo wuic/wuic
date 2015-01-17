@@ -127,7 +127,7 @@ public class HtmlInspectorEngineTest {
         Assert.assertEquals(8, nut.getReferencedNuts().size());
 
         final ConvertibleNut js = nut.getReferencedNuts().get(7);
-        Assert.assertEquals(js.getNutType(), NutType.JAVASCRIPT);
+        Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
         final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
         Assert.assertTrue(script, script.contains("console.log"));
         Assert.assertTrue(script, script.contains("i+=3"));

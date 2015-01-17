@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.NutType;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.Pipe.Transformer;
 
@@ -84,12 +85,30 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
+     * Returns the nut type potentially modified by other components like transformers.
+     * </p>
+     *
+     * @return the path type
+     */
+    NutType getNutType();
+
+    /**
+     * <p>
      * Sets the nut name.
      * </p>
      *
      * @param nutName the name
      */
     void setNutName(String nutName);
+
+    /**
+     * <p>
+     * Sets the nut type.
+     * </p>
+     *
+     * @param nutType the new nut type
+     */
+    void setNutType(NutType nutType);
 
     /**
      * <p>

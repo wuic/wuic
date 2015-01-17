@@ -51,7 +51,6 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +71,9 @@ import java.util.regex.Matcher;
  * @version 1.5
  * @since 0.3.3
  */
-public abstract class TextInspectorEngine extends NodeEngine implements NutFilterHolder {
+public abstract class TextInspectorEngine
+        extends NodeEngine
+        implements NutFilterHolder, EngineRequestTransformer.RequireEngineRequestTransformer {
 
     /**
      * The inspectors of each line
@@ -144,7 +145,7 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
      */
     protected void inspect(final ConvertibleNut nut, final EngineRequest request)
             throws WuicException {
-        nut.addTransformer(new TextInspectorTransformer(request));
+        nut.addTransformer(new EngineRequestTransformer(request, this));
     }
 
     /**
@@ -190,7 +191,7 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
             // Add the nut and inspect it recursively if it's a CSS path
             if (res != null) {
                 for (final ConvertibleNut r : res) {
-                    if (r.getNutType().equals(NutType.CSS)) {
+                    if (r.getInitialNutType().equals(NutType.CSS)) {
                         inspect(r, new EngineRequestBuilder(request).nuts(res).build());
                     }
 
@@ -215,8 +216,8 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
     private void configureExtracted(final Nut nut) {
         // TODO : is it really required ? Why ???
         nut.setAggregatable(Boolean.FALSE);
-        nut.setTextReducible(nut.getNutType().isText());
-        nut.setBinaryReducible(!nut.getNutType().isText());
+        nut.setTextReducible(nut.getInitialNutType().isText());
+        nut.setBinaryReducible(!nut.getInitialNutType().isText());
     }
 
     /**
@@ -240,57 +241,29 @@ public abstract class TextInspectorEngine extends NodeEngine implements NutFilte
     }
 
     /**
-     * <p>
-     * This transformer applies inspection process.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+     * {@inheritDoc}
      */
-    private final class TextInspectorTransformer extends Pipe.DefaultTransformer<ConvertibleNut> {
+    @Override
+    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut, final EngineRequest request)
+            throws IOException {
+        final List<ConvertibleNut> referencedNuts = new ArrayList<ConvertibleNut>();
+        String line = IOUtils.readString(new InputStreamReader(is, charset));
+        final CompositeNut.CompositeInputStream cis = (is instanceof CompositeNut.CompositeInputStream) ?
+                CompositeNut.CompositeInputStream.class.cast(is) : null;
 
-        /**
-         * The request.
-         */
-        private EngineRequest request;
-
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         *
-         * @param req the request
-         */
-        private TextInspectorTransformer(final EngineRequest req) {
-            this.request = req;
+        for (final LineInspector inspector : lineInspectors) {
+            try {
+                line = inspectLine(line, request, inspector, referencedNuts, cis, convertibleNut);
+            } catch (WuicException we) {
+                throw new IOException(we);
+            }
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut)
-                throws IOException {
-            final List<ConvertibleNut> referencedNuts = new ArrayList<ConvertibleNut>();
-            String line = IOUtils.readString(new InputStreamReader(is, charset));
-            final CompositeNut.CompositeInputStream cis = (is instanceof CompositeNut.CompositeInputStream) ?
-                    CompositeNut.CompositeInputStream.class.cast(is) : null;
+        os.write((line + "\n").getBytes());
 
-            for (final LineInspector inspector : lineInspectors) {
-                try {
-                    line = inspectLine(line, request, inspector, referencedNuts, cis, convertibleNut);
-                } catch (WuicException we) {
-                    throw new IOException(we);
-                }
-            }
-
-            os.write((line + "\n").getBytes());
-
-            // Also add all the referenced nuts
-            for (final ConvertibleNut ref : referencedNuts) {
-                convertibleNut.addReferencedNut(ref);
-            }
+        // Also add all the referenced nuts
+        for (final ConvertibleNut ref : referencedNuts) {
+            convertibleNut.addReferencedNut(ref);
         }
     }
 }

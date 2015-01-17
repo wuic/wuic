@@ -98,7 +98,7 @@ public final class EngineRequestBuilder {
     /**
      * The engine chains for each type.
      */
-    private Map<NutType, ? extends NodeEngine> chains;
+    private Map<NutType, NodeEngine> chains;
 
     /**
      * {@link EngineType} that should be skipped during workflow execution.
@@ -270,7 +270,29 @@ public final class EngineRequestBuilder {
      * @return this
      */
     public EngineRequestBuilder chains(final Map<NutType, ? extends NodeEngine> c) {
-        chains = c;
+        for (final Map.Entry<NutType, ? extends NodeEngine> chain : c.entrySet()) {
+            chain(chain.getKey(), chain.getValue());
+        }
+
+        return this;
+    }
+
+    /**
+     * <p>
+     * Sets the chains of {@link NodeEngine engines} for each {@link NutType type}.
+     * </p>
+     *
+     * @param nutType the type
+     * @param nodeEngine the chain's root
+     * @return this
+     */
+    public EngineRequestBuilder chain(final NutType nutType, final NodeEngine nodeEngine) {
+        if (chains == null) {
+            chains = new HashMap<NutType, NodeEngine>();
+        }
+
+        chains.put(nutType, nodeEngine);
+
         return this;
     }
 
@@ -295,7 +317,7 @@ public final class EngineRequestBuilder {
         }
 
         if (chains == null) {
-            chains(new HashMap<NutType, NodeEngine>());
+            chains = new HashMap<NutType, NodeEngine>();
         }
 
         return new EngineRequest(this);

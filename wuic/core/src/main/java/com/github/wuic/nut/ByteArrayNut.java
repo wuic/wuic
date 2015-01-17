@@ -169,10 +169,10 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut));
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getInitialNutType(), NutUtils.getVersionNumber(nut));
             } else {
                 final List<ConvertibleNut> o = nut.getOriginalNuts();
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getInitialNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
             }
 
             bytes.setIsCompressed(nut.isCompressed());

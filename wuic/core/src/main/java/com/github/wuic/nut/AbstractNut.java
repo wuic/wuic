@@ -124,7 +124,7 @@ public abstract class AbstractNut implements Nut {
      * @param o the nut to copy
      */
     protected AbstractNut(final Nut o) {
-        this(o.getInitialName(), o.getNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
+        this(o.getInitialName(), o.getInitialNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
         binaryReducible = o.isBinaryReducible();
         textReducible = o.isTextReducible();
     }
@@ -178,7 +178,7 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
-    public NutType getNutType() {
+    public NutType getInitialNutType() {
         return nutType;
     }
 

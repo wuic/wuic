@@ -103,7 +103,7 @@ public abstract class LineInspector {
         res = Arrays.asList(nut);
 
         // Process nut
-        final NodeEngine engine = request.getChainFor(nut.getNutType());
+        final NodeEngine engine = request.getChainFor(nut.getInitialNutType());
         if (engine != null) {
             res = engine.parse(new EngineRequestBuilder(request).nuts(res).heap(heap).skip(skippedEngine).build());
         }

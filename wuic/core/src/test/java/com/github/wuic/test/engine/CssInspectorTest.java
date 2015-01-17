@@ -105,7 +105,7 @@ public class CssInspectorTest {
                 final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
-                Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+                Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
                 Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 

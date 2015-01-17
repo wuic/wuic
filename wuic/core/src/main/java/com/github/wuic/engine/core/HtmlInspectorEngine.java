@@ -306,7 +306,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 final EngineType[] skip;
 
                 // Do not generate sprite, just compress "img"
-                if (NutType.PNG.equals(parseInfo.getHeap().getNuts().get(0).getNutType())) {
+                if (NutType.PNG.equals(parseInfo.getHeap().getNuts().get(0).getInitialNutType())) {
                     skip = new EngineType[SKIPPED_ENGINE.length + 1];
                     System.arraycopy(SKIPPED_ENGINE, 0, skip, 0, SKIPPED_ENGINE.length);
                     skip[skip.length -1] = EngineType.INSPECTOR;

@@ -137,11 +137,11 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(fifth.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        Mockito.when(first.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(second.getNutType()).thenReturn(NutType.CSS);
-        Mockito.when(third.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(fourth.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(fifth.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(first.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(second.getInitialNutType()).thenReturn(NutType.CSS);
+        Mockito.when(third.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(fourth.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(fifth.getInitialNutType()).thenReturn(NutType.CSS);
 
         Mockito.when(first.getName()).thenReturn("foo.js");
         Mockito.when(second.getName()).thenReturn("foo.css");
@@ -447,7 +447,7 @@ public class UtilityTest extends WuicTest {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.js\""));
     }
 
@@ -460,7 +460,7 @@ public class UtilityTest extends WuicTest {
     public void htmlCssImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.css\""));
     }
@@ -471,7 +471,7 @@ public class UtilityTest extends WuicTest {
     @Test
     public void getUrltTest() {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         // Served nut

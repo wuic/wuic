@@ -65,6 +65,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private String nutName;
 
     /**
+     * The nut type.
+     */
+    private NutType nutType;
+
+    /**
      * Returns all the referenced nuts.
      */
     private List<ConvertibleNut> referencedNuts;
@@ -105,9 +110,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             transformers = c.getTransformers();
             onReady = c.getReadyCallbacks();
             setNutName(c.getName());
+            setNutType(c.getInitialNutType());
             setOriginalNuts(c.getOriginalNuts());
         } else {
             setNutName(o.getInitialName());
+            setNutType(o.getInitialNutType());
         }
     }
 
@@ -172,6 +179,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
+    public final void setNutType(final NutType nutType) {
+        this.nutType = nutType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
         if (transformers == null) {
             transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
@@ -198,6 +213,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public String getName() {
         return nutName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NutType getNutType() {
+        return nutType;
     }
 
     /**

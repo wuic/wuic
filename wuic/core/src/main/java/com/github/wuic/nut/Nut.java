@@ -77,7 +77,7 @@ public interface Nut {
      * 
      * @return the path type
      */
-    NutType getNutType();
+    NutType getInitialNutType();
 
     /**
      * <p>

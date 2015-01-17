@@ -141,7 +141,7 @@ public enum HttpRequestThreadLocal implements Runnable {
     public void write(final ConvertibleNut nut, final HttpServletResponse response)
             throws NutNotFoundException, StreamException {
         response.setCharacterEncoding(charset);
-        response.setContentType(nut.getNutType().getMimeType());
+        response.setContentType(nut.getInitialNutType().getMimeType());
 
         // We set a far expiration date because we assume that polling will change the timestamp in path
         response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");

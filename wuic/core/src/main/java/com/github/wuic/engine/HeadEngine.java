@@ -95,7 +95,7 @@ public abstract class HeadEngine extends Engine {
         // We parse a request for each sequence of nuts having the same type
         while (it.hasNext()) {
             final List<? extends ConvertibleNut> nuts = it.next();
-            final NutType nutType = nuts.get(0).getNutType();
+            final NutType nutType = nuts.get(0).getInitialNutType();
             final NodeEngine chain = request.getChainFor(nutType);
             final EngineRequestBuilder builder = new EngineRequestBuilder(request).nuts(nuts);
             final EngineRequest req = bestEffort ? builder.skip(nutType.getRequiredForBestEffort()).build() : builder.build();
