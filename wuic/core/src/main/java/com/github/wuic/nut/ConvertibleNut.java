@@ -44,6 +44,7 @@ import com.github.wuic.util.Pipe.Transformer;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -150,12 +151,12 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
-     * Gets the registered transformers.
+     * Gets the registered transformers. The set must be ordered.
      * </p>
      *
      * @return the transformers
      */
-    List<Transformer<ConvertibleNut>> getTransformers();
+    Set<Transformer<ConvertibleNut>> getTransformers();
 
     /**
      * <p>

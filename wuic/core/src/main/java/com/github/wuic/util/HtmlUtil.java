@@ -83,7 +83,7 @@ public final class HtmlUtil {
      * @throws java.io.IOException if an I/O error occurs
      */
     public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) throws IOException {
-        switch (nut.getInitialNutType()) {
+        switch (nut.getNutType()) {
             case CSS :
                 return cssImport(nut, urlProvider);
 

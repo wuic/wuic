@@ -447,7 +447,7 @@ public class UtilityTest extends WuicTest {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.js\""));
     }
 
@@ -460,7 +460,7 @@ public class UtilityTest extends WuicTest {
     public void htmlCssImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.css\""));
     }

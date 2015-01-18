@@ -44,7 +44,9 @@ import com.github.wuic.util.Pipe;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -82,7 +84,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     /**
      * Some transformers.
      */
-    private List<Pipe.Transformer<ConvertibleNut>> transformers;
+    private Set<Pipe.Transformer<ConvertibleNut>> transformers;
 
     /**
      * Callbacks.
@@ -110,7 +112,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             transformers = c.getTransformers();
             onReady = c.getReadyCallbacks();
             setNutName(c.getName());
-            setNutType(c.getInitialNutType());
+            setNutType(c.getNutType());
             setOriginalNuts(c.getOriginalNuts());
         } else {
             setNutName(o.getInitialName());
@@ -138,6 +140,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
                                      final Future<Long> v) {
         super(name, ft, comp, c, a, v);
         setNutName(name);
+        setNutType(ft);
     }
 
     /**
@@ -155,7 +158,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
-    public List<Pipe.Transformer<ConvertibleNut>> getTransformers() {
+    public Set<Pipe.Transformer<ConvertibleNut>> getTransformers() {
         return transformers;
     }
 
@@ -189,7 +192,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
         if (transformers == null) {
-            transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
+            transformers = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
         }
 
         transformers.add(transformer);

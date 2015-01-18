@@ -45,6 +45,7 @@ import com.github.wuic.util.Pipe;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -168,7 +169,7 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public List<Pipe.Transformer<ConvertibleNut>> getTransformers() {
+    public Set<Pipe.Transformer<ConvertibleNut>> getTransformers() {
         return wrapped.getTransformers();
     }
 
@@ -176,7 +177,7 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void addReferencedNut(ConvertibleNut referenced) {
+    public void addReferencedNut(final ConvertibleNut referenced) {
         wrapped.addReferencedNut(referenced);
     }
 

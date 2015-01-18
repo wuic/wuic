@@ -165,7 +165,8 @@ public class ConverterEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true) {
             @Override
-            public void transform(final InputStream is, final OutputStream os, final ConvertibleNut nut) throws IOException {
+            protected NutType targetNutType() {
+                return NutType.CSS;
             }
         };
 

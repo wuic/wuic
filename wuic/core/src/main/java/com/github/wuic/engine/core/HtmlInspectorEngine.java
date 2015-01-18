@@ -681,28 +681,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                 // Path is null, do not replace anything
                 if (path != null) {
-                    Boolean supportedType = Boolean.FALSE;
 
-                    // Maybe the extension is not supported, evict the exception by not replacing the path
-                    if (ResourceParser.class.isAssignableFrom(function.getClass())) {
-                        final String[] ext = ResourceParser.class.cast(function).getNutType().getExtensions();
+                    try {
+                        // Will raise an exception if type is not supported
+                        NutType.getNutType(path);
 
-                        for (final String e : ext) {
-                            if (path.endsWith(e)) {
-                                supportedType = Boolean.TRUE;
-                                break;
-                            }
-                        }
-
-                        if (!supportedType) {
-                            logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
-                            this.capturedStatements.remove(entry.getKey());
-                        }
-                    } else {
-                        supportedType = Boolean.TRUE;
-                    }
-
-                    if (supportedType) {
                         final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
                         final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
 
@@ -711,6 +694,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                         }
 
                         groupPaths[cpt++] = simplified;
+                    } catch (Exception e) {
+                        logger.debug("Fail to get the NutType", e);
+                        logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
+                        this.capturedStatements.remove(entry.getKey());
                     }
                 } else {
                     this.capturedStatements.remove(entry.getKey());

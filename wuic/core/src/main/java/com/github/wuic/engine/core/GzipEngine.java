@@ -68,7 +68,7 @@ import java.util.zip.GZIPOutputStream;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = false, isCoreEngine = true)
-public class GzipEngine extends NodeEngine implements Pipe.Transformer<ConvertibleNut> {
+public class GzipEngine extends NodeEngine {
 
     /**
      * Do compression or not.
@@ -132,7 +132,7 @@ public class GzipEngine extends NodeEngine implements Pipe.Transformer<Convertib
 
         if (!nut.isCompressed()) {
             nut.setIsCompressed(Boolean.TRUE);
-            nut.addTransformer(this);
+            nut.addTransformer(GzipTransformer.INSTANCE);
         }
 
         if (nut.getReferencedNuts() != null) {
@@ -147,25 +147,36 @@ public class GzipEngine extends NodeEngine implements Pipe.Transformer<Convertib
      * {@inheritDoc}
      */
     @Override
-    public boolean canAggregateTransformedStream() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
-        GZIPOutputStream gos = new GZIPOutputStream(os);
-        IOUtils.copyStreamIoe(is, gos);
-        gos.close();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Boolean works() {
         return works;
+    }
+
+    /**
+     * This transformer simply GZIP the stream.
+     */
+    private enum GzipTransformer implements Pipe.Transformer<ConvertibleNut> {
+
+        /**
+         * Singleton.
+         */
+        INSTANCE;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean canAggregateTransformedStream() {
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
+            final GZIPOutputStream gos = new GZIPOutputStream(os);
+            IOUtils.copyStreamIoe(is, gos);
+            gos.close();
+        }
     }
 }
