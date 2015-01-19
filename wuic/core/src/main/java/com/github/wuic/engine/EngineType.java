@@ -95,6 +95,11 @@ public enum EngineType {
     BINARY_COMPRESSION;
 
     /**
+     * Is required in best effort or not.
+     */
+    private boolean requiredForBestEffort;
+
+    /**
      * <p>
      * Returns all the {@link EngineType} without the specified one.
      * </p>

@@ -173,20 +173,20 @@ public abstract class NodeEngine extends Engine {
      */
     @Override
     public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
-
-        // Skip this engine parsing
         if (request.shouldSkip(getEngineType())) {
-
-            // Go to next engine if present
+            // Call next engine in chain
             if (getNext() != null) {
-                return getNext().parse(request);
+                return getNext().parse(new EngineRequestBuilder(request).nuts(request.getNuts()).build());
             } else {
-                // Nothing to do
                 return request.getNuts();
             }
         } else {
-            // Delegate to subclass
-            return internalParse(request);
+            // Call next engine in chain
+            if (getNext() != null && callNextEngine()) {
+                return getNext().parse(new EngineRequestBuilder(request).nuts(internalParse(request)).build());
+            } else {
+                return internalParse(request);
+            }
         }
     }
 
@@ -227,5 +227,17 @@ public abstract class NodeEngine extends Engine {
      */
     public NodeEngine getPrevious() {
         return previousEngine;
+    }
+
+    /**
+     * <p>
+     * Indicates if the next engine should be called by the base class or if this responsibility is delegated to the
+     * subclass.
+     * </p>
+     *
+     * @return {@code true} if {@link NodeEngine} is responsible of calling next engine, {@link false} otherwise
+     */
+    protected boolean callNextEngine() {
+        return true;
     }
 }

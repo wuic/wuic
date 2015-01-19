@@ -38,7 +38,6 @@
 
 package com.github.wuic;
 
-import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
@@ -95,12 +94,12 @@ public enum NutType {
     /**
      * PNG path support.
      */
-    PNG(new String[] {".png", ".PNG"}, "image/png", Boolean.TRUE, EngineType.INSPECTOR),
+    PNG(new String[] {".png", ".PNG"}, "image/png", Boolean.TRUE),
 
     /**
      * GIF path support.
      */
-    GIF(new String[] {".gif", ".GIF"}, "image/gif", Boolean.TRUE, EngineType.INSPECTOR),
+    GIF(new String[] {".gif", ".GIF"}, "image/gif", Boolean.TRUE),
 
     /**
      * Javascript files support.
@@ -111,7 +110,6 @@ public enum NutType {
      * CSS files support.
      */
     CSS(new String[] { ".css" }, "text/css", Boolean.FALSE),
-
 
     /**
      * MAP files support.
@@ -138,11 +136,6 @@ public enum NutType {
     private Boolean isText;
 
     /**
-     * The engines that should be applies in best effort.
-     */
-    private EngineType[] requiredForBestEffort;
-
-    /**
      * <p>
      * Builds a new {@link NutType} according to the given extensions and the
      * given MIME type.
@@ -151,13 +144,11 @@ public enum NutType {
      * @param exts the extensions
      * @param mime the MIME type
      * @param isBinary if the path type is binary or not
-     * @param rfbe the engines that should be applies in best effort
      */
-    private NutType(final String[] exts, final String mime, final Boolean isBinary, final EngineType ... rfbe) {
+    private NutType(final String[] exts, final String mime, final Boolean isBinary) {
         extensions = Arrays.copyOf(exts, exts.length);
         mimeType = mime;
         isText = !isBinary;
-        requiredForBestEffort = EngineType.without(rfbe);
     }
     
     /**
@@ -191,17 +182,6 @@ public enum NutType {
      */
     public Boolean isText() {
         return isText;
-    }
-
-    /**
-     * <p>
-     * Gets the engines that should be applied in best effort.
-     * </p>
-     *
-     * @return the mandatory types
-     */
-    public EngineType[] getRequiredForBestEffort() {
-        return requiredForBestEffort;
     }
 
     /**

@@ -182,7 +182,7 @@ public final class EngineRequest {
 
     /**
      * <p>
-     * Indicates if a engine of the given type should skip its treatment when this request is submitted.
+     * Indicates if an engine of the given type should skip its treatment when this request is submitted.
      * </p>
      *
      * @param engineType the {@link EngineType}
@@ -190,6 +190,17 @@ public final class EngineRequest {
      */
     public boolean shouldSkip(final EngineType engineType) {
         return engineRequestBuilder.shouldSkip(engineType);
+    }
+
+    /**
+     * <p>
+     * Indicates if this request requires best effort mode.
+     * </p>
+     *
+     * @return {@code true} if the request requires best effort, {@code false} otherwise
+     */
+    public boolean isBestEffort() {
+        return engineRequestBuilder.isBestEffort();
     }
 
     /**

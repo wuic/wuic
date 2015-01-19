@@ -228,11 +228,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             }
         }
 
-        if (getNext() != null) {
-            return getNext().parse(new EngineRequestBuilder(request).nuts(retval).build());
-        } else {
-            return retval;
-        }
+        return retval;
     }
 
     /**
@@ -275,6 +271,73 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         private HtmlTransformer(final EngineRequest r, final String cp) {
             this.request = r;
             this.contextPath = cp;
+        }
+
+        /**
+         * <p>
+         * Parses the given HTML content and returns all the information collected during the operation.
+         * </p>
+         *
+         * <p>
+         * When a script is referenced, the given {@link NutDao} will be used to retrieve the corresponding
+         * {@link ConvertibleNut}.
+         * </p>
+         *
+         * @param content the HTML content to parse
+         * @param dao the DAO
+         * @param nutName the nut name
+         * @return the parsed HTML
+         * @throws WuicException if WUIC fails to configure context or process created workflow
+         */
+        private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException {
+            // Create a proxy that maps inline scripts
+            final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
+
+            // Create the matcher from the given content, we will keep in an integer the end position of group that  previously matched
+            final Matcher matcher = PATTERN.matcher(content);
+            int previousGroupEnd = -1;
+
+            // All the paths we have currently collected
+            final Map<String, Integer> paths = new LinkedHashMap<String, Integer>();
+            final List<ParseInfo> retval = new ArrayList<ParseInfo>();
+            int no = 0;
+
+            // Finds desired groups
+            while (matcher.find()) {
+
+                // There is something to parse
+                if (!matcher.group().trim().isEmpty()) {
+
+                /*
+                 * We've already matched some scripts and there is something (excluding comment and whitespace) between
+                 * the previous script and the script currently matched that implies that they should not be imported
+                 * together. Consequently, we create here a separate heap.
+                 */
+                    if (previousGroupEnd != -1 && !content.substring(previousGroupEnd + 1, matcher.start()).trim().isEmpty()) {
+                        new ParseInfo(nutName + (no++), paths, proxy, rootPath, request).addTo(retval);
+                        paths.clear();
+                    }
+
+                    // Now find the appropriate parser
+                    for (final Integer groupPosition : PARSERS.keySet()) {
+
+                        // Test value at the associated group position to find the appropriate parser
+                        if (matcher.group(groupPosition) != null) {
+                            paths.put(matcher.group(), groupPosition);
+                            break;
+                        }
+                    }
+
+                    previousGroupEnd = matcher.end();
+                }
+            }
+
+            // Create a heap for remaining paths
+            if (!paths.isEmpty()) {
+                new ParseInfo(nutName + (no), paths, proxy, rootPath, request).addTo(retval);
+            }
+
+            return retval;
         }
 
         /**
@@ -324,7 +387,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 final List<ConvertibleNut> merged;
 
                 try {
-                    merged = HeadEngine.runChains(parseRequest, Boolean.FALSE);
+                    merged = HeadEngine.runChains(parseRequest);
                 } catch (WuicException we) {
                     throw new IOException(we);
                 }
@@ -662,12 +725,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param groups captured statements
          * @param proxyNutDao the DAO to use when computing path from collected data
          * @param rootPath the root path of content
+         * @param request the associated request
          * @throws StreamException if any I/O error occurs
          */
         private ParseInfo(final String groupName,
                           final Map<String, Integer> groups,
                           final ProxyNutDao proxyNutDao,
-                          final String rootPath)
+                          final String rootPath,
+                          final EngineRequest request)
                 throws StreamException {
             final String[] groupPaths = new String[groups.size()];
             this.capturedStatements = new ArrayList<String>(groups.keySet());
@@ -684,16 +749,37 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                     try {
                         // Will raise an exception if type is not supported
-                        NutType.getNutType(path);
+                        final NutType nutType = NutType.getNutType(path);
 
-                        final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
-                        final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+                        // If we are in best effort and the captured path corresponds to a NutType processed by any
+                        // converter engine, we must capture the statement to transform it
+                        NodeEngine e = request.getChainFor(nutType);
 
-                        if (simplified == null) {
-                            throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                        boolean canRemove;
+
+                        if (request.isBestEffort()) {
+                            canRemove = true;
+
+                            while (e != null && canRemove) {
+                                canRemove = !EngineType.CONVERTER.equals(e.getEngineType());
+                                e = e.getNext();
+                            }
+                        } else {
+                            canRemove = false;
                         }
 
-                        groupPaths[cpt++] = simplified;
+                        if (canRemove) {
+                            this.capturedStatements.remove(entry.getKey());
+                        } else {
+                            final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
+                            final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+
+                            if (simplified == null) {
+                                throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                            }
+
+                            groupPaths[cpt++] = simplified;
+                        }
                     } catch (Exception e) {
                         logger.debug("Fail to get the NutType", e);
                         logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
@@ -760,73 +846,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 list.add(this);
             }
         }
-    }
-
-    /**
-     * <p>
-     * Parses the given HTML content and returns all the information collected during the operation.
-     * </p>
-     *
-     * <p>
-     * When a script is referenced, the given {@link NutDao} will be used to retrieve the corresponding
-     * {@link ConvertibleNut}.
-     * </p>
-     *
-     * @param content the HTML content to parse
-     * @param dao the DAO
-     * @param nutName the nut name
-     * @return the parsed HTML
-     * @throws WuicException if WUIC fails to configure context or process created workflow
-     */
-    private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException {
-        // Create a proxy that maps inline scripts
-        final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
-
-        // Create the matcher from the given content, we will keep in an integer the end position of group that  previously matched
-        final Matcher matcher = PATTERN.matcher(content);
-        int previousGroupEnd = -1;
-
-        // All the paths we have currently collected
-        final Map<String, Integer> paths = new LinkedHashMap<String, Integer>();
-        final List<ParseInfo> retval = new ArrayList<ParseInfo>();
-        int no = 0;
-
-        // Finds desired groups
-        while (matcher.find()) {
-
-            // There is something to parse
-            if (!matcher.group().trim().isEmpty()) {
-
-                /*
-                 * We've already matched some scripts and there is something (excluding comment and whitespace) between
-                 * the previous script and the script currently matched that implies that they should not be imported
-                 * together. Consequently, we create here a separate heap.
-                 */
-                if (previousGroupEnd != -1 && !content.substring(previousGroupEnd + 1, matcher.start()).trim().isEmpty()) {
-                    new ParseInfo(nutName + (no++), paths, proxy, rootPath).addTo(retval);
-                    paths.clear();
-                }
-
-                // Now find the appropriate parser
-                for (final Integer groupPosition : PARSERS.keySet()) {
-
-                    // Test value at the associated group position to find the appropriate parser
-                    if (matcher.group(groupPosition) != null) {
-                        paths.put(matcher.group(), groupPosition);
-                        break;
-                    }
-                }
-
-                previousGroupEnd = matcher.end();
-            }
-        }
-
-        // Create a heap for remaining paths
-        if (!paths.isEmpty()) {
-            new ParseInfo(nutName + (no), paths, proxy, rootPath).addTo(retval);
-        }
-
-        return retval;
     }
 
     /**

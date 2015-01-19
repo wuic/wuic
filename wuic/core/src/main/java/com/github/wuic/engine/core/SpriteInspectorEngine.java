@@ -289,6 +289,14 @@ public class SpriteInspectorEngine extends NodeEngine {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean callNextEngine() {
+        return false;
+    }
+
+    /**
      * <p>
      * This class adds a specified nut as a referenced nut when the
      * {@link com.github.wuic.util.Pipe.Transformer#transform(java.io.InputStream, java.io.OutputStream, Object)}

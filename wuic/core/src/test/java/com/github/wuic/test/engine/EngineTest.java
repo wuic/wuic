@@ -38,18 +38,30 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.core.BinPacker;
 import com.github.wuic.engine.core.ImageAggregatorEngine;
 import com.github.wuic.engine.core.ImageCompressorEngine;
 import com.github.wuic.engine.core.SpriteInspectorEngine;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -62,6 +74,110 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public class EngineTest {
+
+    /**
+     * Test purpose class.
+     */
+    private static final class E extends NodeEngine {
+
+        /**
+         * Nut type to return.
+         */
+        private final NutType nutType;
+
+        /**
+         * Engine type to return.
+         */
+        private final EngineType engineType;
+
+        /**
+         * Increment each time parse method is invoked.
+         */
+        private final AtomicInteger invocationCount;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param nutType the nut type
+         * @param engineType the engine type
+         * @param invocationCount the counter
+         */
+        private E(final NutType nutType, final EngineType engineType, final AtomicInteger invocationCount) {
+            this.nutType = nutType;
+            this.engineType = engineType;
+            this.invocationCount = invocationCount;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<NutType> getNutTypes() {
+            return Arrays.asList(nutType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EngineType getEngineType() {
+            return engineType;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
+            invocationCount.incrementAndGet();
+            return request.getNuts();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean works() {
+            return true;
+        }
+    }
+
+    /**
+     * Tests when an engine is skipped.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void skipTest() throws Exception {
+        final AtomicInteger count = new AtomicInteger(0);
+        final NodeEngine a = new E(NutType.GIF, EngineType.CACHE, count);
+        final NodeEngine b = new E(NutType.GIF, EngineType.INSPECTOR, count);
+        final NodeEngine c = new E(NutType.GIF, EngineType.BINARY_COMPRESSION, count);
+
+        a.setNext(b);
+        b.setNext(c);
+
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.GIF);
+        Mockito.when(nut.getInitialName()).thenReturn("foo.gif");
+        Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
+        final EngineRequestBuilder builder = new EngineRequestBuilder("", heap);
+        final EngineRequest request = builder.build();
+
+        a.parse(request);
+        Assert.assertEquals(3, count.get());
+
+        builder.skip(EngineType.CACHE);
+        a.parse(request);
+        Assert.assertEquals(5, count.get());
+
+        builder.skip(EngineType.CACHE, EngineType.BINARY_COMPRESSION);
+        a.parse(request);
+        Assert.assertEquals(6, count.get());
+    }
 
     /**
      * Nominal test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.

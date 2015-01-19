@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
@@ -89,12 +88,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
             nut.setProxyUri(request.getHeap().proxyUriFor(nut));
         }
 
-        // Call next engine in chain
-        if (getNext() != null) {
-            return getNext().parse(new EngineRequestBuilder(request).nuts(retval).build());
-        } else {
-            return retval;
-        }
+        return retval;
     }
 
     /**

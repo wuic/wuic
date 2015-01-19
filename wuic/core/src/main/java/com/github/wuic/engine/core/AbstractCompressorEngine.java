@@ -109,12 +109,8 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
                 compress(nut);
             }
         }
-        
-        if (getNext() != null) {
-            return getNext().parse(request);
-        } else {
-            return request.getNuts();
-        }
+
+        return request.getNuts();
     }
 
     /**

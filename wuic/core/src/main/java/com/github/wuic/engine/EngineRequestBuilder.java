@@ -116,6 +116,11 @@ public final class EngineRequestBuilder {
     private UrlProviderFactory urlProviderFactory;
 
     /**
+     * Indicates if this request requires a best effort or not.
+     */
+    private boolean bestEffort;
+
+    /**
      * <p>
      * Builds a new instance with mandatory workflow ID and {@link NutsHeap}.
      * </p>
@@ -129,6 +134,7 @@ public final class EngineRequestBuilder {
         workflowKey("");
         prefixCreatedNut("");
         contextPath("");
+        bestEffort = false;
     }
 
     /**
@@ -149,6 +155,31 @@ public final class EngineRequestBuilder {
         skip = other.skip;
         prefixCreatedNut = other.prefixCreatedNut;
         urlProviderFactory = other.urlProviderFactory;
+        bestEffort = other.bestEffort;
+    }
+
+    /**
+     * <p>
+     * Disables best effort for this request.
+     * </p>
+     *
+     * @return this
+     */
+    public EngineRequestBuilder disableBestEffort() {
+        bestEffort = false;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Enables best effort for this request.
+     * </p>
+     *
+     * @return this
+     */
+    public EngineRequestBuilder bestEffort() {
+        bestEffort = true;
+        return this;
     }
 
     /**
@@ -398,7 +429,7 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
-     * Indicates if a engine of the given type should skip its treatment when this request is submitted.
+     * Indicates if an engine of the given type should skip its treatment when this request is submitted.
      * </p>
      *
      * @param engineType the {@link EngineType}
@@ -417,6 +448,17 @@ public final class EngineRequestBuilder {
      */
     public UrlProviderFactory getUrlProviderFactory() {
         return urlProviderFactory;
+    }
+
+    /**
+     * <p>
+     * Indicates if this request requires best effort.
+     * </p>
+     *
+     * @return {@code true} in case of best effort, {@code false} otherwise
+     */
+    public boolean isBestEffort() {
+        return bestEffort;
     }
 
     /**

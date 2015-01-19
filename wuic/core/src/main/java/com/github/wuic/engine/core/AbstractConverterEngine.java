@@ -41,6 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -110,11 +111,7 @@ public abstract class AbstractConverterEngine
             }
         }
 
-        if (getNext() != null) {
-            return getNext().parse(request);
-        } else {
-            return request.getNuts();
-        }
+        return request.getNuts();
     }
 
     /**
@@ -147,7 +144,8 @@ public abstract class AbstractConverterEngine
             NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                chain.parse(new EngineRequestBuilder(request).nuts(Arrays.asList(nut)).build());
+                final EngineType[] skip = request.alsoSkip(EngineType.CACHE);
+                chain.parse(new EngineRequestBuilder(request).skip(skip).nuts(Arrays.asList(nut)).build());
             }
 
             // Also convert referenced nuts

@@ -127,11 +127,7 @@ public abstract class TextInspectorEngine
             }
         }
 
-        if (getNext() != null) {
-            return getNext().parse(request);
-        } else {
-            return request.getNuts();
-        }
+        return request.getNuts();
     }
 
     /**

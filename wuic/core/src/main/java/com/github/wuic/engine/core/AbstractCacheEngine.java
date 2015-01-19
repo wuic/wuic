@@ -161,8 +161,13 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     prefixed.add(new PrefixedNut(nut, "best-effort"));
                 }
 
-                retval = ByteArrayNut.toByteArrayNut(
-                        runChains(new EngineRequestBuilder(request).nuts(prefixed).prefixCreatedNut("best-effort").build(), Boolean.TRUE));
+                final EngineRequest req = new EngineRequestBuilder(request)
+                        .nuts(prefixed)
+                        .prefixCreatedNut("best-effort")
+                        .skip(EngineType.AGGREGATOR, EngineType.BINARY_COMPRESSION, EngineType.MINIFICATION)
+                        .bestEffort()
+                        .build();
+                retval = ByteArrayNut.toByteArrayNut(runChains(req));
                 final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
                 for (final ConvertibleNut nut : retval) {
@@ -278,7 +283,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             }
         // we don't cache so just call the next engine if exists
         } else {
-            final List<ConvertibleNut> list = runChains(request, Boolean.FALSE);
+            final List<ConvertibleNut> list = runChains(request);
 
             for (final ConvertibleNut nut : list) {
                 if (nut.getName().equals(path)) {
@@ -496,7 +501,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         @Override
         public Map<String, ConvertibleNut> call() throws WuicException {
             try {
-                final List<ConvertibleNut> nuts = runChains(new EngineRequestBuilder(request).build(), Boolean.FALSE);
+                final List<ConvertibleNut> nuts = runChains(new EngineRequestBuilder(request).disableBestEffort().build());
                 final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
 
                 for (final ConvertibleNut nut : nuts) {

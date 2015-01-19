@@ -45,11 +45,13 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.AbstractCacheEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.engine.core.HtmlInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -124,9 +126,9 @@ public class HtmlInspectorEngineTest {
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
         Assert.assertNotNull(nut.getReferencedNuts());
-        Assert.assertEquals(8, nut.getReferencedNuts().size());
+        Assert.assertEquals(9, nut.getReferencedNuts().size());
 
-        final ConvertibleNut js = nut.getReferencedNuts().get(7);
+        final ConvertibleNut js = nut.getReferencedNuts().get(8);
         Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
         final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
         Assert.assertTrue(script, script.contains("console.log"));
@@ -143,7 +145,8 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void bestEffortTest() throws Exception {
-        final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
+        final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")))
+                .replace("<script src=\"script/foo.ts\"></script>", "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>\n");
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, true);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -188,6 +191,28 @@ public class HtmlInspectorEngineTest {
         chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8"));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
+        chains.put(NutType.TYPESCRIPT, new NodeEngine() {
+            @Override
+            public List<NutType> getNutTypes() {
+                return Arrays.asList(NutType.TYPESCRIPT);
+            }
+
+            @Override
+            public EngineType getEngineType() {
+                return EngineType.CONVERTER;
+            }
+
+            @Override
+            protected List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException {
+                final ConvertibleNut nut = new ByteArrayNut("".getBytes(), "foo.ts.js", NutType.JAVASCRIPT, 0L);
+                return Arrays.asList(nut);
+            }
+
+            @Override
+            public Boolean works() {
+                return true;
+            }
+        });
 
         List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap).chains(chains).build());
         String res = NutUtils.readTransform(nuts.get(0));

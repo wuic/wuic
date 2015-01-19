@@ -223,7 +223,7 @@ public class Context implements Observer {
         if (workflow.getHead() != null) {
             retval = workflow.getHead().parse(request, path);
         } else {
-            retval = NutUtils.findByName(HeadEngine.runChains(request, Boolean.FALSE), path);
+            retval = NutUtils.findByName(HeadEngine.runChains(request), path);
         }
 
         for (final ContextInterceptor interceptor : interceptors) {
@@ -271,7 +271,7 @@ public class Context implements Observer {
         if (workflow.getHead() != null) {
             retval = workflow.getHead().parse(request);
         } else {
-            retval = HeadEngine.runChains(request, Boolean.FALSE);
+            retval = HeadEngine.runChains(request);
         }
 
         for (final ContextInterceptor interceptor : interceptors) {

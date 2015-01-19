@@ -72,7 +72,7 @@ public abstract class HeadEngine extends Engine {
         if (works()) {
             return internalParse(request);
         } else {
-            return runChains(request, Boolean.FALSE);
+            return runChains(request);
         }
     }
 
@@ -83,12 +83,10 @@ public abstract class HeadEngine extends Engine {
      * </p>
      *
      * @param request the request providing engine chains
-     * @param bestEffort performs request in best effort
      * @return the process result
      * @throws WuicException if WUIC fails to process nuts
      */
-    public static List<ConvertibleNut> runChains(final EngineRequest request,
-                                                 final Boolean bestEffort) throws WuicException {
+    public static List<ConvertibleNut> runChains(final EngineRequest request) throws WuicException {
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
         final Iterator<List<? extends ConvertibleNut>> it = request.iterator();
 
@@ -97,9 +95,7 @@ public abstract class HeadEngine extends Engine {
             final List<? extends ConvertibleNut> nuts = it.next();
             final NutType nutType = nuts.get(0).getInitialNutType();
             final NodeEngine chain = request.getChainFor(nutType);
-            final EngineRequestBuilder builder = new EngineRequestBuilder(request).nuts(nuts);
-            final EngineRequest req = bestEffort ? builder.skip(nutType.getRequiredForBestEffort()).build() : builder.build();
-            retval.addAll(chain == null ? nuts : chain.parse(req));
+            retval.addAll(chain == null ? nuts : chain.parse(new EngineRequestBuilder(request).nuts(nuts).build()));
         }
 
         // Merges all nuts with same type (for instance two 'aggregate.js' nuts will be wrapped by one composite nut
