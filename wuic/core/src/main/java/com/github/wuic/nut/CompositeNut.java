@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -282,6 +283,11 @@ public class CompositeNut extends PipedConvertibleNut {
         private int current;
 
         /**
+         * The observers.
+         */
+        private List<Observer> observers;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -293,7 +299,26 @@ public class CompositeNut extends PipedConvertibleNut {
             separatorPositions = new long[compositionList.size()];
 
             for (final Nut n : compositionList) {
-                is.add(n.openStream());
+                final InputStream nutInputStream = n.openStream();
+                is.add(new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        final int retval = nutInputStream.read();
+
+                        if (observers != null) {
+                            for (final Observer o : observers) {
+                                o.update(null, new CompositeInputStreamReadEvent(retval, compositionList.get(current)));
+                            }
+                        }
+
+                        return retval;
+                    }
+
+                    @Override
+                    public void close() throws IOException {
+                        nutInputStream.close();
+                    }
+                });
 
                 if (streamSeparator != null) {
                     // Keep the separation position when stream is closed
@@ -316,6 +341,32 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             sequence = new SequenceInputStream(Collections.enumeration(is));
+        }
+
+        /**
+         * <p>
+         * Adds an observer notified each time a nut is read.
+         * </p>
+         *
+         * @param o the observer
+         */
+        public void addObserver(final Observer o) {
+            if (observers == null) {
+                observers = new ArrayList<Observer>();
+            }
+
+            observers.add(o);
+        }
+
+        /**
+         * <p>
+         * Removes an observer.
+         * </p>
+         *
+         * @param o the observer
+         */
+        public void removeObserver(final Observer o) {
+            observers.remove(o);
         }
 
         /**
@@ -348,6 +399,63 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * An event that is triggered each time a byte in a {@link CompositeInputStream} is read.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    public static final class CompositeInputStreamReadEvent {
+
+        /**
+         * The read byte.
+         */
+        private final int read;
+
+        /**
+         * The nut currently read.
+         */
+        private final ConvertibleNut nut;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param r the byte
+         * @param n the nut
+         */
+        private CompositeInputStreamReadEvent(final int r, final ConvertibleNut n) {
+            read = r;
+            nut = n;
+        }
+
+        /**
+         * <p>
+         * Gets the byte.
+         * </p>
+         *
+         * @return the byte
+         */
+        public int getRead() {
+            return read;
+        }
+
+        /**
+         * <p>
+         * Gets the nut.
+         * </p>
+         *
+         * @return the nut
+         */
+        public ConvertibleNut getNut() {
+            return nut;
         }
     }
 

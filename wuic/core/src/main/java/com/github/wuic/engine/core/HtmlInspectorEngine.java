@@ -394,7 +394,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                 for (final ConvertibleNut n : merged) {
                     // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
-                    n.setNutName(parseInfo.getHeap().getId() + n.getName());
+                    if (request.getPrefixCreatedNut().isEmpty()){
+                        n.setNutName(parseInfo.getHeap().getId() + n.getName());
+                    } else {
+                        n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), parseInfo.getHeap().getId() + n.getName()));
+                    }
+
                     referenced.add(n);
                     html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
                 }

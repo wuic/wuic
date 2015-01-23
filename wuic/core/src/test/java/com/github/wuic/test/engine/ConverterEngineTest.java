@@ -105,7 +105,7 @@ public class ConverterEngineTest {
          * @param convert enabled conversion or not
          */
         public C(final Boolean convert) {
-            super(convert);
+            super(convert, false);
         }
 
         /**
@@ -136,17 +136,10 @@ public class ConverterEngineTest {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest e)
+                throws IOException {
             os.write("function myFunctionSetsCssStyle() {}".getBytes());
             convertible.setNutType(NutType.JAVASCRIPT);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean canAggregateTransformedStream() {
-            return true;
         }
     }
 
@@ -200,7 +193,7 @@ public class ConverterEngineTest {
         final String content = NutUtils.readTransform(nuts.get(0));
         Assert.assertEquals(NutType.JAVASCRIPT, nuts.get(0).getNutType());
         Assert.assertEquals(NutType.CSS, nuts.get(0).getInitialNutType());
-        Assert.assertEquals("foo.css.js", nuts.get(0).getName());
+        Assert.assertEquals("aggregate.css.js", nuts.get(0).getName());
         Assert.assertEquals("foo.css", nuts.get(0).getInitialName());
         Assert.assertEquals("function myReplacedFunctionSetsCssStyle() {}\n", content);
     }

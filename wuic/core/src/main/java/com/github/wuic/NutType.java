@@ -112,6 +112,11 @@ public enum NutType {
     CSS(new String[] { ".css" }, "text/css", Boolean.FALSE),
 
     /**
+     * Typescript files support.
+     */
+    TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", Boolean.FALSE),
+
+    /**
      * MAP files support.
      */
     MAP(new String[] { ".map" }, "application/json", Boolean.FALSE);

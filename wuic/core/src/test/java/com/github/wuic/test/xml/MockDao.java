@@ -66,6 +66,7 @@ public class MockDao implements NutDao {
         try {
             final ConvertibleNut nut = mock(ConvertibleNut.class);
             when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+            when(nut.getNutType()).thenReturn(NutType.CSS);
             when(nut.getName()).thenReturn("foo.css");
             when(nut.getInitialName()).thenReturn("foo.css");
             final List<Nut> nuts = new ArrayList<Nut>();

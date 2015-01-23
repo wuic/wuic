@@ -326,7 +326,7 @@ public final class EngineRequest {
             while (iterator.hasNext()) {
                 next = iterator.next();
 
-                if (next.getInitialNutType().equals(retval.getLast().getInitialNutType())) {
+                if (next.getNutType().equals(retval.getLast().getNutType())) {
                     retval.add(next);
                     next = null;
                 } else {

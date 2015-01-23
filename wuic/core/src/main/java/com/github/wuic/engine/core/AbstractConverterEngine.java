@@ -39,20 +39,20 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -74,7 +74,7 @@ import java.util.List;
  */
 public abstract class AbstractConverterEngine
         extends NodeEngine
-        implements Pipe.Transformer<ConvertibleNut>, EngineRequestTransformer.RequireEngineRequestTransformer {
+        implements EngineRequestTransformer.RequireEngineRequestTransformer {
 
     /**
      * Logger.
@@ -84,7 +84,12 @@ public abstract class AbstractConverterEngine
     /**
      * Activate conversion or not.
      */
-    private Boolean doConversion;
+    private final Boolean doConversion;
+
+    /**
+     * Aggregator.
+     */
+    private final Engine aggregator;
 
     /**
      * <p>
@@ -92,9 +97,11 @@ public abstract class AbstractConverterEngine
      * </p>
      *
      * @param convert activate compression or not
+     * @param asynchronous computes asynchronously the version number or not
      */
-    public AbstractConverterEngine(final Boolean convert) {
+    public AbstractConverterEngine(final Boolean convert, final Boolean asynchronous) {
         doConversion = convert;
+        aggregator = new TextAggregatorEngine(Boolean.TRUE, asynchronous);
     }
 
     /**
@@ -105,13 +112,18 @@ public abstract class AbstractConverterEngine
 
         // Compress only if needed
         if (works()) {
-            // Compress each path
-            for (final ConvertibleNut nut : request.getNuts()) {
-                convert(nut, request);
-            }
-        }
+            final List<ConvertibleNut> aggregate = aggregator.parse(request);
+            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(aggregate.size());
 
-        return request.getNuts();
+            // Compress each path
+            for (final ConvertibleNut nut : aggregate) {
+                retval.add(convert(nut, request));
+            }
+
+            return retval;
+        } else {
+            return request.getNuts();
+        }
     }
 
     /**
@@ -119,20 +131,23 @@ public abstract class AbstractConverterEngine
      * Converts the given nut.
      * </p>
      *
-     * @param nut the nut to be compressed
+     * @param convertibleNut the nut to be compressed
      * @param request the request
+     * @return the new convertible nut (the given nut has been set has an original nut
      * @throws WuicException if an I/O error occurs
      */
-    private void convert(final ConvertibleNut nut, final EngineRequest request) throws WuicException {
+    private ConvertibleNut convert(final ConvertibleNut convertibleNut, final EngineRequest request) throws WuicException {
         // Compression has to be implemented by sub-classes
         InputStream is = null;
 
         try {
-            if (targetNutType().equals(nut.getInitialNutType())) {
+            if (targetNutType().equals(convertibleNut.getInitialNutType())) {
                 throw new IllegalStateException("NutType must be changed by the transformer.");
             }
 
-            log.debug("Converting {}", nut.getName());
+            log.debug("Converting {}", convertibleNut.getName());
+
+            final ConvertibleNut nut = new PipedConvertibleNut(convertibleNut);
 
             // Set target state
             nut.setNutName(nut.getName() + targetNutType().getExtensions()[0]);
@@ -144,16 +159,23 @@ public abstract class AbstractConverterEngine
             NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                final EngineType[] skip = request.alsoSkip(EngineType.CACHE);
-                chain.parse(new EngineRequestBuilder(request).skip(skip).nuts(Arrays.asList(nut)).build());
+                chain.parse(new EngineRequestBuilder(request)
+                        .skip(request.alsoSkip(EngineType.CACHE))
+                        .nuts(Arrays.asList(nut))
+                        .build());
             }
 
             // Also convert referenced nuts
-            if (nut.getReferencedNuts() != null) {
-                for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                    convert(ref, request);
+            if (convertibleNut.getReferencedNuts() != null) {
+                for (final ConvertibleNut ref : convertibleNut.getReferencedNuts()) {
+                    nut.addReferencedNut(convert(ref, request));
                 }
             }
+
+            nut.addReferencedNut(convertibleNut);
+
+            //eturn request.isBestEffort() ? new PrefixedNut(nut, "best-effort") : nut;
+            return nut;
         } finally {
             IOUtils.close(is);
         }
@@ -165,16 +187,6 @@ public abstract class AbstractConverterEngine
     @Override
     public Boolean works() {
         return doConversion;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut nut, final EngineRequest request)
-            throws IOException {
-        // Convert the content
-        transform(is, os, nut);
     }
 
     /**

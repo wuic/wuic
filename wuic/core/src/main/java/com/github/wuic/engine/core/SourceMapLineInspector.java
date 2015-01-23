@@ -107,6 +107,7 @@ public class SourceMapLineInspector extends LineInspector {
             if ((next.getEngineType().equals(EngineType.AGGREGATOR)
                     || next.getEngineType().equals(EngineType.MINIFICATION))
                     && next.works()) {
+                replacement.append(matcher.group());
                 return Collections.emptyList();
             }
 

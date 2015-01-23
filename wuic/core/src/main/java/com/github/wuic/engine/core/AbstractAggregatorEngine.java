@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
@@ -73,6 +74,18 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
      */
     public AbstractAggregatorEngine(final Boolean aggregate)  {
         this.doAggregation = aggregate;
+    }
+
+    /**
+     * <p>
+     * Computes the name of an aggregated set of nuts for a given type.
+     * </p>
+     *
+     * @param nutType the type
+     * @return the aggregation name
+     */
+    public static String aggregationName(final NutType nutType) {
+        return "aggregate" + nutType.getExtensions()[0];
     }
 
     /**

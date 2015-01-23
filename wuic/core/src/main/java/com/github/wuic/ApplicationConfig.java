@@ -187,6 +187,20 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Indicates if the engine should convert or not.
+     * </p>
+     */
+    String CONVERT = "c.g.wuic.engine.convert";
+
+    /**
+     * <p>
+     * Indicates if the engine should use NodeJS command line or not.
+     * </p>
+     */
+    String USE_NODE_JS = "c.g.wuic.engine.useNodeJs";
+
+    /**
+     * <p>
      * Indicates if the engine should aggregate or not.
      * </p>
      */

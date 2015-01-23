@@ -90,7 +90,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
     /**
      * The path name when images are aggregated.
      */
-    public static final String AGGREGATION_NAME = "aggregate.png";
+    public static final String AGGREGATION_NAME = AbstractAggregatorEngine.aggregationName(NutType.PNG);
 
     /**
      * Dimension packer.

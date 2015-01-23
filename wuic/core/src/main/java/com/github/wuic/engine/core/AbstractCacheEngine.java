@@ -154,20 +154,21 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
-                final List<ConvertibleNut> prefixed = new ArrayList<ConvertibleNut>(request.getNuts().size());
-
-                for (final ConvertibleNut nut : request.getNuts()) {
-                    // Nut will differ from full processed version thanks to its prefix
-                    prefixed.add(new PrefixedNut(nut, "best-effort"));
-                }
-
                 final EngineRequest req = new EngineRequestBuilder(request)
-                        .nuts(prefixed)
                         .prefixCreatedNut("best-effort")
                         .skip(EngineType.AGGREGATOR, EngineType.BINARY_COMPRESSION, EngineType.MINIFICATION)
                         .bestEffort()
                         .build();
-                retval = ByteArrayNut.toByteArrayNut(runChains(req));
+
+                final List<ConvertibleNut> result = runChains(req);
+                final List<ConvertibleNut> prefixed = new ArrayList<ConvertibleNut>(result.size());
+
+                for (final ConvertibleNut nut : result) {
+                    // Nut will differ from full processed version thanks to its prefix
+                    prefixed.add(new PrefixedNut(nut, "best-effort"));
+                }
+
+                retval = ByteArrayNut.toByteArrayNut(prefixed);
                 final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
                 for (final ConvertibleNut nut : retval) {
