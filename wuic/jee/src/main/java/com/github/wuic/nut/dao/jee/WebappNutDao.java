@@ -96,7 +96,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
      */
     @ConfigConstructor
     public WebappNutDao(
-            @StringConfigParam(defaultValue = "/", propertyKey = ApplicationConfig.BASE_PATH) final String base,
+            @StringConfigParam(defaultValue = "/WEB-INF", propertyKey = ApplicationConfig.BASE_PATH) final String base,
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.REGEX) final Boolean regex,
@@ -110,7 +110,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
      * {@inheritDoc}
      */
     protected List<String> skipStartsWith() {
-        return Arrays.asList("WEB-INF");
+        return Arrays.asList("WEB-INF/lib");
     }
 
     /**
