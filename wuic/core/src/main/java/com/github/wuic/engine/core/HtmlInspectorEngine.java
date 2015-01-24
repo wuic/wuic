@@ -484,6 +484,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             if (index != token.length() - 1) {
                 char c = s.charAt(index);
+
+                while (c == '=' || c == ' ') {
+                    c = s.charAt(++index);
+                }
+
+                c = s.charAt(index);
                 final String retval;
 
                 if (c == '\'' || c == '"') {
@@ -552,7 +558,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return "src=";
+            return " src";
         }
 
         /**
@@ -588,7 +594,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return "href=";
+            return " href";
         }
 
         /**
@@ -624,7 +630,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return "src=";
+            return " src";
         }
 
         /**
