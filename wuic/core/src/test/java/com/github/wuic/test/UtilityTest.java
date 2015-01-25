@@ -448,7 +448,11 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.js\""));
+        HtmlUtil.writeScriptImport(nut, "myPath");
+
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        Assert.assertTrue(res.contains("\"myPath/1/foo.js\""));
+        Assert.assertTrue(res.startsWith("<script param=param "));
     }
 
     /**
@@ -462,7 +466,27 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getName()).thenReturn("foo.css");
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Assert.assertTrue(HtmlUtil.writeScriptImport(nut, "myPath").contains("\"myPath/1/foo.css\""));
+
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        Assert.assertTrue(res.contains("\"myPath/1/foo.css\""));
+        Assert.assertTrue(res.startsWith("<link param=param "));
+    }
+
+    /**
+     * Test IMG import.
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void htmlImgImportTest() throws IOException {
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(nut.getName()).thenReturn("foo.png");
+        Mockito.when(nut.getNutType()).thenReturn(NutType.PNG);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        Assert.assertTrue(res.contains("\"myPath/1/foo.png\""));
+        Assert.assertTrue(res.startsWith("<img param=param "));
     }
 
     /**

@@ -96,7 +96,7 @@ public class HtmlInspectorEngineTest {
     private static final String REGEX = ".*?<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
-            "<img src=\".*?\\d.*?png\" />.*?" +
+            "<img width=\"50%\" height=\"60%\" src=\".*?\\d.*?png\" />.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +

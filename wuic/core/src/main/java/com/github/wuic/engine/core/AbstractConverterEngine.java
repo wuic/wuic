@@ -174,7 +174,6 @@ public abstract class AbstractConverterEngine
 
             nut.addReferencedNut(convertibleNut);
 
-            //eturn request.isBestEffort() ? new PrefixedNut(nut, "best-effort") : nut;
             return nut;
         } finally {
             IOUtils.close(is);

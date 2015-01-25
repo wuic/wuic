@@ -81,6 +81,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,10 +112,15 @@ import java.util.regex.Pattern;
 public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
     /**
+     * Attribute name for script URL.
+     */
+    private static final String SRC = "src";
+
+    /**
      * We use a specific parser for each matched group. Store them in a TreeMap to ensure that lower groups will be tested before higher.
      */
-    private static final Map<Integer, TerFunction<String, ProxyNutDao, String, String>> PARSERS =
-            new TreeMap<Integer, TerFunction<String, ProxyNutDao, String, String>>() {
+    private static final Map<Integer, TerFunction<String, ProxyNutDao, String, ResourceParser.ApplyResult>> PARSERS =
+            new TreeMap<Integer, TerFunction<String, ProxyNutDao, String, ResourceParser.ApplyResult>>() {
         {
             put(NumberUtils.SIX, new HrefParser());
         }
@@ -140,7 +146,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     /**
      * Regex that matches JS script import or JS declaration.
      */
-    private static final String JS_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "script", "src");
+    private static final String JS_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "script", SRC);
 
     /**
      * Regex that matches CSS script import.
@@ -150,7 +156,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     /**
      * Regex that matches images import.
      */
-    private static final String IMG_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "img", "src");
+    private static final String IMG_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "img", SRC);
 
     /**
      * Regex that matches CSS declaration.
@@ -401,7 +407,20 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     }
 
                     referenced.add(n);
-                    html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
+
+                    // Some additional attributes
+                    if (parseInfo.getAttributes() != null) {
+                        final String[] attributes = new String[parseInfo.getAttributes().size()];
+                        int index = 0;
+
+                        for (final Map.Entry<String, String> entry : parseInfo.getAttributes().entrySet()) {
+                            attributes[index++] = entry.getKey() + "=\"" + entry.getValue() + '"';
+                        }
+
+                        html.append(HtmlUtil.writeScriptImport(n, urlProvider, attributes)).append("\r\n");
+                    } else {
+                        html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
+                    }
                 }
 
                 // Replace all captured statements with HTML generated from WUIC process
@@ -441,7 +460,64 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.1
      * @since 0.4.4
      */
-    private abstract static class ResourceParser implements TerFunction<String, ProxyNutDao, String, String> {
+    private abstract static class ResourceParser implements TerFunction<String, ProxyNutDao, String, ResourceParser.ApplyResult> {
+
+        /**
+         * <p>
+         * Represents the result generated when a {@link ResourceParser} is applied.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.0
+         */
+        public static final class ApplyResult {
+
+            /**
+             * The URL to extract.
+             */
+            private final String url;
+
+            /**
+             * Some detected additional attributes.
+             */
+            private final Map<String, String> attributes;
+
+            /**
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param url the url
+             * @param attributes the attributes
+             */
+            private ApplyResult(final String url, final Map<String, String> attributes) {
+                this.url = url;
+                this.attributes = attributes;
+            }
+
+            /**
+             * <p>
+             * Returns the URL.
+             * </p>
+             *
+             * @return the URL
+             */
+            private String getUrl() {
+                return url;
+            }
+
+            /**
+             * <p>
+             * Returns the attributes.
+             * </p>
+             *
+             * @return the attributes
+             */
+            private Map<String, String> getAttributes() {
+                return attributes;
+            }
+        }
 
         /**
          * <p>
@@ -471,25 +547,66 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         protected abstract Boolean readInlineIfTokenNotFound();
 
         /**
-         * {@inheritDoc}
+         * <p>
+         * Gets all other supported tokens to be collected.
+         * </p>
+         *
+         * @return the tokens to collect
          */
-        @Override
-        public String apply(final String s, final ProxyNutDao proxy, final String nutName) {
-            if (s.contains("data-wuic-skip")) {
+        protected abstract String[] otherTokens();
+
+        /**
+         * <p>
+         * Extract the value of the attribute identified by the given token in the specified {@code String}.
+         * </p>
+         *
+         * @param s the string
+         * @param t the token
+         * @return the value
+         */
+        public static String extractValue(final String s, final String t) {
+            final String token = " ".concat(t);
+            int index = 0;
+            char c = 0;
+
+            // Token found
+            if (!token.isEmpty()) {
+
+                // Check that we do not found another token starting with this desired token
+                boolean valid = false;
+
+                while ((index = s.indexOf(token, index)) != -1) {
+                    index += token.length();
+                    c = s.charAt(index);
+
+                    // Token can be followed by a space or an '=' character
+                    if (c == '=' || c == ' ') {
+                        valid = true;
+                        break;
+                    }
+                }
+
+                if (!valid) {
+                    return null;
+                }
+            } else {
+                // Token not found
                 return null;
             }
 
-            final String token = urlToken();
-            int index = token.isEmpty() ? -1 : s.indexOf(token) + token.length();
+            // Read until we leave spaces
+            while (c == ' ') {
+                c = s.charAt(++index);
+            }
 
-            if (index != token.length() - 1) {
-                char c = s.charAt(index);
+            // There is a value
+            if (c == '=') {
 
-                while (c == '=' || c == ' ') {
+                // Read until we leave spaces
+                do {
                     c = s.charAt(++index);
-                }
+                } while (c == ' ');
 
-                c = s.charAt(index);
                 final String retval;
 
                 if (c == '\'' || c == '"') {
@@ -508,17 +625,54 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     retval = s.substring(index, end);
                 }
 
-                if (retval.startsWith("http://") || retval.startsWith("https://")) {
+                // Looking for a delimiter adding extra characters after the extracted name
+                int delimiter = retval.indexOf('#');
+
+                if (delimiter == -1) {
+                    delimiter = retval.indexOf('?');
+                }
+
+                return (delimiter == -1 ? retval : retval.substring(0, delimiter)).trim();
+            } else {
+                // There is no value
+                return "";
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ApplyResult apply(final String s, final ProxyNutDao proxy, final String nutName) {
+            if (s.contains("data-wuic-skip")) {
+                return null;
+            }
+
+            final String url = extractValue(s, urlToken());
+
+            if (url != null && !url.isEmpty()) {
+                if (url.startsWith("http://") || url.startsWith("https://")) {
                     return null;
                 } else {
-                    // Looking for a delimiter adding extra characters after the extracted name
-                    int delimiter = retval.indexOf('#');
+                    Map<String, String> attributes = null;
+                    final String[] otherTokens = otherTokens();
 
-                    if (delimiter == -1) {
-                        delimiter = retval.indexOf('?');
+                    // Collect all attributes and their values also declared in the tag
+                    if (otherTokens != null) {
+                        for (final String attribute : otherTokens()) {
+                            final String value = extractValue(s, attribute);
+
+                            if (value != null) {
+                                if (attributes == null) {
+                                    attributes = new HashMap<String, String>();
+                                }
+
+                                attributes.put(attribute, value);
+                            }
+                        }
                     }
 
-                    return delimiter == -1 ? retval : retval.substring(0, delimiter);
+                    return new ApplyResult(url, attributes);
                 }
             } else if (readInlineIfTokenNotFound()) {
                 // Looking for content
@@ -535,7 +689,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 md.update(content);
                 proxy.addRule(retval, new ByteArrayNut(content, retval, nt, ByteBuffer.wrap(md.digest()).getLong()));
 
-                return retval;
+                return new ApplyResult(retval, null);
             } else {
                 return null;
             }
@@ -558,7 +712,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return " src";
+            return SRC;
         }
 
         /**
@@ -575,6 +729,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         @Override
         public NutType getNutType() {
             return NutType.JAVASCRIPT;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected String[] otherTokens() {
+            return null;
         }
     }
 
@@ -594,7 +756,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return " href";
+            return "href";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected String[] otherTokens() {
+            return null;
         }
 
         /**
@@ -630,7 +800,17 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         @Override
         public String urlToken() {
-            return " src";
+            return SRC;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected String[] otherTokens() {
+            return new String[] {
+                    "align", "alt", "border", "crossorigin", "height", "hspace", "ismap", "longdesc", "usemap", "vspace", "width",
+            };
         }
 
         /**
@@ -673,6 +853,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * {@inheritDoc}
          */
         @Override
+        protected String[] otherTokens() {
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public Boolean readInlineIfTokenNotFound() {
             return Boolean.TRUE;
         }
@@ -695,13 +883,13 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.0
      * @since 0.4.4
      */
-    private static class DefaultParser implements TerFunction<String, ProxyNutDao, String, String> {
+    private static class DefaultParser implements TerFunction<String, ProxyNutDao, String, ResourceParser.ApplyResult> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String s, final ProxyNutDao proxyNutDao, final String nutName) {
+        public ResourceParser.ApplyResult apply(final String s, final ProxyNutDao proxyNutDao, final String nutName) {
             return null;
         }
     }
@@ -728,6 +916,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         private List<String> capturedStatements;
 
         /**
+         * Additional attributes.
+         */
+        private Map<String, String> attributes;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -752,11 +945,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             // Gets the appropriate parser for each captured group according to their position and compute path
             for (final Map.Entry<String, Integer> entry : groups.entrySet()) {
-                final TerFunction<String, ProxyNutDao, String, String> function = PARSERS.get(entry.getValue());
-                final String path = function.apply(entry.getKey(), proxyNutDao, groupName + cpt);
+                final ResourceParser.ApplyResult result = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao, groupName + cpt);
 
                 // Path is null, do not replace anything
-                if (path != null) {
+                if (result != null) {
+                    final String path = result.getUrl();
 
                     try {
                         // Will raise an exception if type is not supported
@@ -787,6 +980,25 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                             if (simplified == null) {
                                 throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                            }
+
+                            // Now we collect the attributes of the tag to add them in the future statement
+                            if (result.getAttributes() != null) {
+                                if (attributes == null) {
+                                    attributes = new HashMap<String, String>();
+                                }
+
+                                for (final Map.Entry<String, String> attrEntry : result.getAttributes().entrySet()) {
+                                    final String old = attributes.put(attrEntry.getKey(), attrEntry.getValue());
+
+                                    // Conflict
+                                    if (old != null && !old.equals(attrEntry.getValue())) {
+                                        logger.info("Possibly merged tags have different values for the attribute {}, keeping {} instead of {}",
+                                                attrEntry.getKey(),
+                                                attrEntry.getValue(),
+                                                old);
+                                    }
+                                }
                             }
 
                             groupPaths[cpt++] = simplified;
@@ -821,6 +1033,17 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
             final String heapId = StringUtils.toHexString(hash);
             heap = new NutsHeap(filteredPath, proxyNutDao, heapId);
+        }
+
+        /**
+         * <p>
+         * Returns the additional attributes.
+         * </p>
+         *
+         * @return the attributes
+         */
+        public Map<String, String> getAttributes() {
+            return attributes;
         }
 
         /**

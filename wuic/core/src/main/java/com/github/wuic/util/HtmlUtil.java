@@ -67,10 +67,12 @@ public final class HtmlUtil {
      *
      * @param workflowContextPath the workflow context path
      * @param nut the nut to import
+     * @param attributes some attributes to insert in the written script
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath) throws IOException {
-        return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath));
+    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath, final String ... attributes)
+            throws IOException {
+        return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath), attributes);
     }
 
     /**
@@ -80,21 +82,33 @@ public final class HtmlUtil {
      *
      * @param urlProvider the {@link UrlProvider}
      * @param nut the nut to import
+     * @param attributes some attributes to insert in the written script
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) throws IOException {
+    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider, final String ... attributes)
+            throws IOException {
+        final StringBuilder sb = new StringBuilder();
+        final int insertIndex;
+
         switch (nut.getNutType()) {
             case CSS :
-                return cssImport(nut, urlProvider);
-
+                insertIndex = cssImport(nut, urlProvider, sb);
+                break;
             case JAVASCRIPT :
-                return javascriptImport(nut, urlProvider);
-
+                insertIndex = javascriptImport(nut, urlProvider, sb);
+                break;
             case PNG :
-                return imgImport(nut, urlProvider);
+                insertIndex = imgImport(nut, urlProvider, sb);
+                break;
             default :
                 return "";
         }
+
+        for (final String attr : attributes) {
+            sb.insert(insertIndex, attr).insert(insertIndex, " ");
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -104,16 +118,15 @@ public final class HtmlUtil {
      *
      * @param urlProvider the {@link UrlProvider}
      * @param nut the CSS nut
-     * @return the import
+     * @param sb the builder where statement is appended
+     * @return the index where attributes could be inserted
      */
-    public static String cssImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
-        final StringBuilder retval = new StringBuilder();
+    public static int cssImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
+        sb.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
+        sb.append(urlProvider.getUrl(nut));
+        sb.append("\" />");
 
-        retval.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-        retval.append(urlProvider.getUrl(nut));
-        retval.append("\" />");
-
-        return retval.toString();
+        return "<link".length();
     }
 
     /**
@@ -123,19 +136,17 @@ public final class HtmlUtil {
      *
      * @param nut the Javascript nut
      * @param urlProvider the {@link UrlProvider}
-     * @return the import
+     * @param sb the builder where statement is appended
+     * @return the index where attributes could be inserted
      */
-    public static String javascriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
-        final StringBuilder retval = new StringBuilder();
+    public static int javascriptImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
+        sb.append("<script type=\"text/javascript");
+        sb.append("\" src=\"");
+        sb.append(urlProvider.getUrl(nut));
+        sb.append("\"></script>");
 
-        retval.append("<script type=\"text/javascript");
-        retval.append("\" src=\"");
-        retval.append(urlProvider.getUrl(nut));
-        retval.append("\"></script>");
-
-        return retval.toString();
+        return "<script".length();
     }
-
 
     /**
      * <p>
@@ -144,15 +155,14 @@ public final class HtmlUtil {
      *
      * @param nut the image nut
      * @param urlProvider the {@link UrlProvider}
-     * @return the import
+     * @param sb the builder where statement is appended
+     * @return the index where attributes could be inserted
      */
-    public static String imgImport(final ConvertibleNut nut, final UrlProvider urlProvider) {
-        final StringBuilder retval = new StringBuilder();
+    public static int imgImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
+        sb.append("<img src=\"");
+        sb.append(urlProvider.getUrl(nut));
+        sb.append("\" />");
 
-        retval.append("<img src=\"");
-        retval.append(urlProvider.getUrl(nut));
-        retval.append("\" />");
-
-        return retval.toString();
+        return NumberUtils.FOUR;
     }
 }
