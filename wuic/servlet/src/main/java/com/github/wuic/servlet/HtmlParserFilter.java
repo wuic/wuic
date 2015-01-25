@@ -60,7 +60,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -73,7 +72,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>
@@ -142,15 +140,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             wuicFacade = WuicServletContextListener.getWuicFacade(filterConfig.getServletContext());
             wuicFacade.configure(this);
             nutDao = createDao();
-
-            final ServletContext sc = filterConfig.getServletContext();
-
-            if (!sc.getContextPath().isEmpty()) {
-                final Set resourcePaths = sc.getResourcePaths(sc.getContextPath());
-                virtualContextPath = resourcePaths == null || resourcePaths.isEmpty();
-            } else {
-                virtualContextPath = false;
-            }
+            virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
         } catch (BuilderPropertyNotSupportedException bpnse) {
             throw new ServletException(bpnse);
         } catch (WuicException we) {
