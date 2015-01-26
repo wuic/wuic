@@ -41,11 +41,11 @@ Enhancements:
 ##### v0.3.1 #####
 
 Tracked issues:
-- https://github.com/gdrouet/wuic/issues?labels=0.3.1&page=1&state=closed
+- https://github.com/wuic/wuic/issues?labels=0.3.1&page=1&state=closed
 
 ##### v0.3.2 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.2&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.3.2&page=1&state=closed
 
 Not tracked issues:
 - ClasspathWuicResource not use java.class.path system's property anymore due to its limitations, use a new base path property instead.
@@ -55,7 +55,7 @@ Breaking changes:
 
 ##### v0.3.3 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.3&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.3.3&page=1&state=closed
 
 Not tracked issues:
 - Each time a steam's resource is retrieved, we look up for it, which increase the overhead. This look up is now done only one time when the resource is created.
@@ -65,7 +65,7 @@ Breaking changes:
 
 ##### v0.3.4 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.4&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.3.4&page=1&state=closed
 
 Not tracked issues:
 - More robust url builder to deal with some cases where configuration properties that are used to build some URLs don't contain "/"
@@ -77,15 +77,15 @@ Breaking changes:
 
 ##### v0.3.5 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.3.5&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.3.5&page=1&state=closed
 
 ##### v0.4.0 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.0&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.0&page=1&state=closed
 
 ##### v0.4.1 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.1&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.1&page=1&state=closed
 
 Breaking changes:
 - wuic-tag artifact no more depends on wuic-servlet artifact so if you want to serve statics, you need to explicitly declares the wuic-servlet dependency
@@ -94,7 +94,7 @@ Breaking changes:
 
 ##### v0.4.2 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.2&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.2&page=1&state=closed
 
 Breaking changes:
 - Sprite names for both Javascript and CSS support are now computed differently. See the FAQ
@@ -103,7 +103,7 @@ Breaking changes:
 
 ##### v0.4.3 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.3&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.3&page=1&state=closed
 
 Not tracked issues:
 - Timestamp included in the URL to invalidate cache has been now replaced by a MD5 hash which is more efficient because
@@ -120,7 +120,7 @@ Breaking changes:
 
 ##### v0.4.4 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.4&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.4&page=1&state=closed
 
 Breaking changes:
 - Any script with name that contains '.min' extension won't be compress
@@ -130,11 +130,11 @@ Breaking changes:
 
 ##### v0.4.5 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.4.5&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.4.5&page=1&state=closed
 
 ##### v0.5.0 #####
 
-Tracked issues: https://github.com/gdrouet/wuic/issues?labels=0.5.0&page=1&state=closed
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.0&page=1&state=closed
 
 Breaking changes:
 - "interleave" has been replace everywhere by "interval". For instance, xml attribute "polling-interleave-seconds" is now called "polling-interval-seconds"
@@ -142,3 +142,10 @@ Breaking changes:
 - New naming rules for workflow ID, heap ID and nut name
 - Extensions can be enabled only by adding WUIC artifacts dependencies
 - new names for "facade" properties
+
+##### v0.5.1 #####
+
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.1&page=1&state=closed
+
+Breaking changes:
+- By default, WebappNutDao scans "/WEB-INF" and "/WEB-INF/lib" will be skipped
