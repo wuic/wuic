@@ -39,9 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.SaveOperationNotSupportedException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.FutureLong;
@@ -121,7 +119,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * Builds a new instance.
      * </p>
      *
-     * @param base              prefix for all paths (a {@link BadArgumentException} is thrown is {@code null}
+     * @param base              prefix for all paths (an {@link IllegalArgumentException} is thrown is {@code null}
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
@@ -137,10 +135,11 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         final String b = basePathAsSysProp ? System.getProperty(base) : base;
 
         if (b == null) {
-            throw new BadArgumentException(new IllegalArgumentException("Base path can't be null"));
+            WuicException.throwBadArgumentException(new IllegalArgumentException("Base path can't be null"));
+        } else {
+            basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
         }
 
-        basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
         contentBasedVersionNumber = contentBasedHash;
@@ -184,7 +183,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                         }
 
                         nutPathsToPoll.addAll(nutPaths);
-                    } catch (StreamException se) {
+                    } catch (IOException se) {
                         log.error("Unable to list path for {}", pattern, se);
                     }
                 }
@@ -204,7 +203,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                             try {
                                 timestamp = getLastUpdateTimestampFor(path);
                                 timestamps.put(path, timestamp);
-                            } catch (StreamException se) {
+                            } catch (IOException se) {
                                 log.error("Unable to poll nut {}", path, se);
                             }
                         }
@@ -236,9 +235,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      *
      * @param path the nut's path
      * @return the version number
-     * @throws StreamException if version number could not be computed
+     * @throws IOException if version number could not be computed
      */
-    protected Future<Long> getVersionNumber(final String path) throws StreamException {
+    protected Future<Long> getVersionNumber(final String path) throws IOException {
         if (computeVersionAsynchronously) {
             log.debug("Computing version number asynchronously");
             return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path));
@@ -264,7 +263,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws IOException {
         return AbstractNutDao.this.create(path, PathFormat.ANY);
     }
 
@@ -272,7 +271,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String pathName, final PathFormat format) throws StreamException {
+    public List<Nut> create(final String pathName, final PathFormat format) throws IOException {
         final List<String> pathNames = computeRealPaths(pathName, format);
         final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
@@ -318,7 +317,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     @Override
     public void save(final Nut nut) {
-        throw new SaveOperationNotSupportedException(this.getClass());
+        WuicException.throwSaveUnsupportedMethodException(getClass());
     }
 
     /**
@@ -382,7 +381,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+        public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
             AbstractNutDao.this.observe(realPath, listeners);
         }
 
@@ -390,7 +389,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public List<Nut> create(final String path) throws StreamException {
+        public List<Nut> create(final String path) throws IOException {
             return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path));
         }
 
@@ -398,7 +397,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public List<Nut> create(final String path, final PathFormat format) throws StreamException {
+        public List<Nut> create(final String path, final PathFormat format) throws IOException {
             return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), format);
         }
 
@@ -446,7 +445,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws StreamException {
+        public InputStream newInputStream(final String path) throws IOException {
             return AbstractNutDao.this.newInputStream(path);
         }
 
@@ -454,7 +453,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws StreamException {
+        public Boolean exists(final String path) throws IOException {
             return AbstractNutDao.this.exists(path);
         }
     }
@@ -468,16 +467,16 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param pathName the path access
      * @param format   the path format
      * @return the resulting real paths
-     * @throws StreamException if an I/O error occurs when creating the nut
+     * @throws IOException if an I/O error occurs when creating the nut
      */
-    public List<String> computeRealPaths(final String pathName, final PathFormat format) throws StreamException {
+    public List<String> computeRealPaths(final String pathName, final PathFormat format) throws IOException {
         if (!format.canBeRegex()) {
             try {
                 if (exists(pathName)) {
                     // Nut can be raised, return its path
                     return Arrays.asList(pathName);
                 }
-            } catch (StreamException e) {
+            } catch (IOException e) {
                 log.warn("'{}' can't be loaded ignoring it. Absolute path is '{}'", pathName, absolutePathOf(pathName), e);
             }
 
@@ -545,10 +544,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param pattern the pattern
-     * @throws com.github.wuic.exception.wrapper.StreamException
-     *          if any I/O error occurs while reading nuts
+     * @throws IOException if any I/O error occurs while reading nuts
      */
-    protected abstract List<String> listNutsPaths(String pattern) throws StreamException;
+    protected abstract List<String> listNutsPaths(String pattern) throws IOException;
 
     /**
      * <p>
@@ -558,10 +556,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param realPath the real path to use to access the nut
      * @param type     the path's type
      * @return the {@link Nut}
-     * @throws com.github.wuic.exception.wrapper.StreamException
-     *          if an I/O error occurs while creating access
+     * @throws IOException if an I/O error occurs while creating access
      */
-    protected abstract Nut accessFor(String realPath, NutType type) throws StreamException;
+    protected abstract Nut accessFor(String realPath, NutType type) throws IOException;
 
     /**
      * {@inheritDoc}
@@ -601,7 +598,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public Long call() throws StreamException {
+        public Long call() throws IOException {
             log.debug("Computing asynchronously version number for path '{}'. Content based: {}", path, contentBasedVersionNumber);
 
             if (contentBasedVersionNumber) {
@@ -618,8 +615,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                     }
 
                     return ByteBuffer.wrap(md.digest()).getLong();
-                } catch (IOException ioe) {
-                    throw new StreamException(ioe);
                 } finally {
                     IOUtils.close(is);
                 }

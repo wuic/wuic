@@ -39,8 +39,6 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.CollectionUtils;
@@ -209,10 +207,8 @@ public final class EngineRequest {
      * </p>
      *
      * @return the key
-     * @throws NutNotFoundException if nuts of this request are not correctly built
-     * @throws StreamException if I/O error occurs
      */
-    public Key getKey() throws NutNotFoundException, StreamException {
+    public Key getKey() {
         if (key == null) {
             key = new Key(engineRequestBuilder.getWorkflowKey(), engineRequestBuilder.getNuts());
         }
@@ -381,11 +377,8 @@ public final class EngineRequest {
          * @param s the skipped engine types
          * @param wKey the workflow key
          * @param nutsList the nuts
-         * @throws StreamException if an I/O error occurs
-         * @throws NutNotFoundException if given nut not normally created
          */
-        public Key(final String wKey, final List<ConvertibleNut> nutsList, final EngineType ... s)
-                throws NutNotFoundException, StreamException {
+        public Key(final String wKey, final List<ConvertibleNut> nutsList, final EngineType ... s)  {
             workflowKey = wKey;
             nuts = new ArrayList<String>(nutsList.size());
             skip = s;

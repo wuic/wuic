@@ -40,12 +40,12 @@
 package com.github.wuic.test.ctx;
 
 import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -73,14 +73,14 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+    public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws IOException {
         return null;
     }
 
@@ -88,7 +88,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws StreamException {
+    public List<Nut> create(final String path, final PathFormat format) throws IOException {
         return null;
     }
 
@@ -134,7 +134,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws IOException {
         return null;
     }
 
@@ -142,7 +142,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         return null;
     }
 }

@@ -45,8 +45,7 @@ import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.AbstractNut;
 import com.github.wuic.nut.AbstractNutDao;
@@ -118,10 +117,10 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      *
      * @param path the path
      * @param response the response
-     * @throws StreamException if include fails
+     * @throws IOException if include fails
      */
     private void include(final String path, final HttpServletResponse response)
-            throws StreamException {
+            throws IOException {
         try {
             if (servletContext == null) {
                 throw new IllegalArgumentException(
@@ -142,10 +141,8 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
                     return path;
                 }
             }), new HttpServletResponseWrapper(response));
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
         } catch (ServletException se) {
-            throw new StreamException(new IOException(se));
+            WuicException.throwStreamException(new IOException(se));
         }
     }
 
@@ -156,9 +153,9 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      *
      * @param path the path
      * @return the wrapper
-     * @throws StreamException if include fails
+     * @throws IOException if include fails
      */
-    private ByteArrayHttpServletResponseWrapper include(final String path) throws StreamException {
+    private ByteArrayHttpServletResponseWrapper include(final String path) throws IOException {
         final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper();
         include(path, wrapper);
         return wrapper;
@@ -176,7 +173,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         throw new UnsupportedOperationException("This DAO can't provide the last timestamp");
     }
 
@@ -184,7 +181,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    protected List<String> listNutsPaths(final String pattern) throws StreamException {
+    protected List<String> listNutsPaths(final String pattern) throws IOException {
         return Arrays.asList(pattern);
     }
 
@@ -192,7 +189,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
+    protected Nut accessFor(final String realPath, final NutType type) throws IOException {
         return new RequestDispatcherNut(realPath, type, getVersionNumber(realPath));
     }
 
@@ -200,7 +197,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws IOException {
         return new ByteArrayInputStream(include(path).toByteArray());
     }
 
@@ -208,7 +205,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         return include(path).getStatus() == HttpServletResponse.SC_OK;
     }
 
@@ -242,12 +239,8 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
          * {@inheritDoc}
          */
         @Override
-        public InputStream openStream() throws NutNotFoundException {
-            try {
-                return newInputStream(getInitialName());
-            } catch (StreamException se) {
-                throw new NutNotFoundException(new IOException(se));
-            }
+        public InputStream openStream() throws IOException {
+            return newInputStream(getInitialName());
         }
     }
 }

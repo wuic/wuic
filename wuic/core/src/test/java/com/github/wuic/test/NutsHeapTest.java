@@ -39,8 +39,6 @@
 package com.github.wuic.test;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
@@ -52,6 +50,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +107,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        protected List<String> listNutsPaths(final String pattern) throws StreamException {
+        protected List<String> listNutsPaths(final String pattern) throws IOException {
             return new ArrayList<String>(mockPaths.keySet());
         }
 
@@ -116,7 +115,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
+        protected Nut accessFor(final String realPath, final NutType type) throws IOException {
             final Nut retval = Mockito.mock(Nut.class);
             Mockito.when(retval.getInitialName()).thenReturn(realPath);
             Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
@@ -128,7 +127,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             return mockPaths.get(path);
         }
 
@@ -136,7 +135,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws StreamException {
+        public InputStream newInputStream(final String path) throws IOException {
             return null;
         }
 
@@ -144,7 +143,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws StreamException {
+        public Boolean exists(final String path) throws IOException {
             return null;
         }
     }
@@ -244,10 +243,10 @@ public class NutsHeapTest {
     /**
      * Test when different extensions are defined.
      *
-     * @throws StreamException if test fails
+     * @throws IOException if test fails
      */
     @Test
-    public void badExtensionTest() throws StreamException {
+    public void badExtensionTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("hey.js", 1L);
         dao.mockPaths.put("hey.css", 1L);
@@ -257,15 +256,11 @@ public class NutsHeapTest {
     /**
      * Test when no paths are defined.
      *
-     * @throws StreamException if test fails
+     * @throws IOException if test fails
      */
-    @Test
-    public void noPathTest() throws StreamException {
-        try {
-            new NutsHeap(Arrays.asList(""), new MockNutDao(-1), "");
-            Assert.fail();
-        } catch (BadArgumentException be) {
-            // normal behavior
-        }
+    @Test(expected = IllegalArgumentException.class)
+    public void noPathTest() throws IOException {
+        new NutsHeap(Arrays.asList(""), new MockNutDao(-1), "");
+        Assert.fail();
     }
 }

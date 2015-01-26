@@ -38,8 +38,6 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.engine.core.StaticEngine;
-
 /**
  * <p>
  * Thrown when a workflow is retrieved with the {@link com.github.wuic.engine.core.StaticEngine} and when
@@ -57,17 +55,9 @@ public class StaticWorkflowNotFoundException extends WuicException {
      * Builds a new {@link WuicException} with a detail message.
      * </p>
      *
-     * @param fileName the not found file
+     * @param message the not found file message
      */
-    public StaticWorkflowNotFoundException(final String fileName) {
-        super(String.format("The %s did not found '%s' in classpath", StaticEngine.class.getName(), fileName));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getErrorCode() {
-        return ErrorCode.STATIC_WORKFLOW_NOT_FOUND;
+    StaticWorkflowNotFoundException(final String message) {
+        super(message);
     }
 }

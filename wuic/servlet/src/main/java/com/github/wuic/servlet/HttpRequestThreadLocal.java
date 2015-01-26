@@ -38,8 +38,6 @@
 
 package com.github.wuic.servlet;
 
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
@@ -135,22 +133,15 @@ public enum HttpRequestThreadLocal implements Runnable {
      *
      * @param nut the nut to write
      * @param response the response
-     * @throws NutNotFoundException if stream could not be opened
-     * @throws StreamException if stream could not be written
+     * @throws IOException if stream could not be opened
      */
-    public void write(final ConvertibleNut nut, final HttpServletResponse response)
-            throws NutNotFoundException, StreamException {
+    public void write(final ConvertibleNut nut, final HttpServletResponse response) throws IOException {
         response.setCharacterEncoding(charset);
         response.setContentType(nut.getNutType().getMimeType());
 
         // We set a far expiration date because we assume that polling will change the timestamp in path
         response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
-
-        try {
-            nut.transform(new WriteResponseOnReady(response, nut));
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+        nut.transform(new WriteResponseOnReady(response, nut));
     }
 
     /**
@@ -218,7 +209,7 @@ public enum HttpRequestThreadLocal implements Runnable {
                     try {
                         is = new GZIPInputStream(new ByteArrayInputStream(bos.toByteArray()));
                         bos = new ByteArrayOutputStream();
-                        IOUtils.copyStreamIoe(is, bos);
+                        IOUtils.copyStream(is, bos);
                     } finally {
                         IOUtils.close(is);
                     }

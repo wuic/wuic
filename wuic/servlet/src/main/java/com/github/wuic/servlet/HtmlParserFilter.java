@@ -43,9 +43,7 @@ import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.config.ObjectBuilder;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
@@ -141,8 +139,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             wuicFacade.configure(this);
             nutDao = createDao();
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
-        } catch (BuilderPropertyNotSupportedException bpnse) {
-            throw new ServletException(bpnse);
         } catch (WuicException we) {
             throw new ServletException(we);
         }
@@ -154,9 +150,8 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * </p>
      *
      * @return the nut DAO
-     * @throws BuilderPropertyNotSupportedException if {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} property not supported
      */
-    protected NutDao createDao() throws BuilderPropertyNotSupportedException {
+    protected NutDao createDao() {
         final NutDao def = contextBuilder.nutDao("wuicDefault" + RequestDispatcherNutDao.class.getSimpleName() + "Builder");
 
         if (def == null) {
@@ -269,10 +264,10 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @param contextBuilder the builder
      * @param workflowId the workflow
      * @param path the path
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
     protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path, final byte[] content)
-            throws StreamException {
+            throws IOException {
         try {
             final ProxyNutDao dao = new ProxyNutDao("", nutDao);
             final String name = path.endsWith("/") ? (path + NutType.HTML.getExtensions()[0]) : path;
@@ -316,7 +311,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         return -1L;
     }
 }

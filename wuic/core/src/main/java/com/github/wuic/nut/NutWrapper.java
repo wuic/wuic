@@ -39,7 +39,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
@@ -88,7 +87,7 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
+    public InputStream openStream() throws IOException {
         return wrapped.openStream();
     }
 

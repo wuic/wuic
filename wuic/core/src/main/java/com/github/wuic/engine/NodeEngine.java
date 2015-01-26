@@ -40,7 +40,6 @@ package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.Collections;
@@ -97,7 +96,7 @@ public abstract class NodeEngine extends Engine {
      */
     public static NodeEngine chain(final NodeEngine ... engines) {
         if (engines.length == 0) {
-            throw new BadArgumentException(new IllegalArgumentException(
+            WuicException.throwBadArgumentException(new IllegalArgumentException(
                     "A chain must be built with a non-empty array of engines"));
         }
 

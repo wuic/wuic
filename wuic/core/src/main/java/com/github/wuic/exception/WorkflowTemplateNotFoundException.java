@@ -38,8 +38,6 @@
 
 package com.github.wuic.exception;
 
-import com.github.wuic.exception.xml.WuicXmlException;
-
 /**
  * <p>
  * Thrown when a workflow references a template that does not exists.
@@ -49,24 +47,16 @@ import com.github.wuic.exception.xml.WuicXmlException;
  * @version 1.0
  * @since 0.4.3
  */
-public class WorkflowTemplateNotFoundException extends WuicXmlException {
+public class WorkflowTemplateNotFoundException extends WuicException {
 
     /**
      * <p>
      * Builds a new exception.
      * </p>
      *
-     * @param id the ID not found
+     * @param message the ID not found message
      */
-    public WorkflowTemplateNotFoundException(final String id) {
-        super(String.format("Unable to find workflow template ID '%s'", id));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getErrorCode() {
-        return ErrorCode.WORKFLOW_TEMPLATE_NOT_FOUND;
+    WorkflowTemplateNotFoundException(final String message) {
+        super(message);
     }
 }

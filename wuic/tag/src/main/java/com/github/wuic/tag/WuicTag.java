@@ -40,7 +40,6 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.HtmlUtil;
@@ -113,7 +112,7 @@ public class WuicTag extends TagSupport {
                 pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
             }
         } catch (IOException ioe) {
-            throw new JspException("Can't write import statements into JSP output stream", new StreamException(ioe));
+            throw new JspException("Can't write import statements into JSP output stream", ioe);
         } catch (WuicException we) {
             throw new JspException(we);
         }

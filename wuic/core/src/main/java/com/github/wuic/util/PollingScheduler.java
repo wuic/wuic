@@ -38,10 +38,10 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.exception.wrapper.StreamException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -94,9 +94,9 @@ public abstract class PollingScheduler<T> implements Runnable {
      *
      * @param pattern the pattern to use to retrieve the different real paths to poll
      * @param listeners some listeners to be notified when an update has been detected on a nut
-     * @throws StreamException if an I/O occurs while retrieving last update of the nut
+     * @throws IOException if an I/O occurs while retrieving last update of the nut
      */
-    public final void observe(final String pattern, final T ... listeners) throws StreamException {
+    public final void observe(final String pattern, final T ... listeners) throws IOException {
         synchronized (getNutObservers()) {
             for (final T listener : listeners) {
                 Polling polling = getNutObservers().get(listener);
@@ -169,9 +169,9 @@ public abstract class PollingScheduler<T> implements Runnable {
      *
      * @param path the real path of the nut
      * @return the timestamp
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    protected abstract Long getLastUpdateTimestampFor(final String path) throws StreamException;
+    protected abstract Long getLastUpdateTimestampFor(final String path) throws IOException;
 
     /**
      * <p>

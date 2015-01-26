@@ -43,7 +43,7 @@ import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 import com.github.wuic.path.DirectoryPath;
@@ -124,14 +124,14 @@ public class ClasspathNutDao extends DiskNutDao {
             if (DirectoryPath.class.isAssignableFrom(path.getClass())) {
                 paths.add(DirectoryPath.class.cast(path));
             } else {
-                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", sub)));
+                WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", sub)));
             }
         }
 
-        if (!paths.isEmpty()) {
-            return new VirtualDirectoryPath(getBasePath(), paths);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
+        if (paths.isEmpty()) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
         }
+
+        return new VirtualDirectoryPath(getBasePath(), paths);
     }
 }

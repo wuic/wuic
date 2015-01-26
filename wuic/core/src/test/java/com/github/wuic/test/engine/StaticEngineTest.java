@@ -50,6 +50,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,9 +72,10 @@ public class StaticEngineTest {
      * </p>
      *
      * @throws WuicException if test fails
+     * @throws IOException if test fails
      */
     @Test
-    public void staticExistingWorkflowTest() throws WuicException {
+    public void staticExistingWorkflowTest() throws WuicException, IOException {
         final StaticEngine engine = new StaticEngine();
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
@@ -85,7 +87,7 @@ public class StaticEngineTest {
         try {
             res.get(0).openStream();
             Assert.fail();
-        } catch (WuicException we) {
+        } catch (IOException we) {
             // Normal behavior
         }
 

@@ -44,7 +44,6 @@ import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.BiFunction;
 import org.junit.Assert;
 import org.junit.Test;
@@ -52,6 +51,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -89,6 +89,23 @@ public class WuicFacadeBuilderTest {
     }
 
     /**
+     * <p>
+     * Test when an {@link IllegalStateException} is thrown because of bad URL.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testBadUrl() throws WuicException {
+        new WuicFacadeBuilder(new BiFunction<String, String, String>() {
+            @Override
+            public String apply(final String first, final String second) {
+                return ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM.equals(first) ? "" : second;
+            }
+        }).build();
+    }
+
+    /**
      * Asserts that context path is correct.
      *
      * @throws WuicException if test fails
@@ -121,7 +138,7 @@ public class WuicFacadeBuilderTest {
             }
 
             @Override
-            protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 return -1L;
             }
         }).contextPath("/foo").build();

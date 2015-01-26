@@ -44,9 +44,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.StaticWorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NotReachableNut;
 import com.github.wuic.util.CollectionUtils;
@@ -126,7 +124,7 @@ public class StaticEngine extends NodeEngine {
 
             // Not well packaged
             if (is == null) {
-                throw new StaticWorkflowNotFoundException(request.getWorkflowId());
+                WuicException.throwStaticWorkflowNotFoundException(request.getWorkflowId());
             }
 
             try {
@@ -168,7 +166,7 @@ public class StaticEngine extends NodeEngine {
 
                 retrievedWorkflow.put(fileName, retval);
             } catch (IOException ioe) {
-                throw new StreamException(ioe);
+                WuicException.throwWuicException(ioe);
             } finally {
                 IOUtils.close(is, isr);
             }

@@ -39,7 +39,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
@@ -129,15 +128,13 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
             } else {
                 is = openStream();
                 final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                IOUtils.copyStreamIoe(is, bos);
+                IOUtils.copyStream(is, bos);
                 final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
 
                 for (final Pipe.OnReady cb : onReady) {
                     cb.ready(execution);
                 }
             }
-        } catch (NutNotFoundException nnfe) {
-            throw new IOException(nnfe);
         } finally {
             IOUtils.close(is);
             setTransformed(true);

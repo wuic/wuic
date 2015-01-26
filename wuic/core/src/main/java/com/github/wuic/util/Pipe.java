@@ -208,7 +208,7 @@ public final class Pipe<T> {
          */
         @Override
         public void transform(final InputStream is, final OutputStream os, final T convertible) throws IOException {
-            IOUtils.copyStreamIoe(is, os);
+            IOUtils.copyStream(is, os);
         }
 
         /**
@@ -272,7 +272,7 @@ public final class Pipe<T> {
 
             try {
                 is = new ByteArrayInputStream(result);
-                IOUtils.copyStreamIoe(is, os);
+                IOUtils.copyStream(is, os);
             } finally {
                 IOUtils.close(is);
             }
@@ -347,7 +347,7 @@ public final class Pipe<T> {
         // No transformer, simply copy streams
         if (transformers.isEmpty()) {
             try {
-                IOUtils.copyStreamIoe(inputStream, os);
+                IOUtils.copyStream(inputStream, os);
             } finally {
                 IOUtils.close(inputStream, os);
             }

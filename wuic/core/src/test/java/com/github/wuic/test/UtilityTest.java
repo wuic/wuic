@@ -41,7 +41,6 @@ package com.github.wuic.test;
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.path.FilePath;
@@ -303,10 +302,9 @@ public class UtilityTest extends WuicTest {
      * After, that /oof + /js/path.js will result in the exact classpath entry to retrieve
      *
      * @throws IOException if any I/O error occurs
-     * @throws StreamException if error occurs during research
      */
     @Test
-    public void fileSearchTest() throws IOException, StreamException {
+    public void fileSearchTest() throws IOException {
 
         // Part 1
         final String nanoTime = String.valueOf(System.nanoTime());
@@ -341,10 +339,9 @@ public class UtilityTest extends WuicTest {
      * </p>
      *
      * @throws IOException if any I/O error occurs
-     * @throws StreamException if error occurs during research
      */
     @Test
-    public void fileSearchInJarTest() throws IOException, StreamException {
+    public void fileSearchInJarTest() throws IOException {
         final String resolve = "/META-INF/resources/webjars";
         String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
 
@@ -359,10 +356,9 @@ public class UtilityTest extends WuicTest {
      * </p>
      *
      * @throws IOException if any I/O error occurs
-     * @throws StreamException if error occurs during research
      */
     @Test
-    public void zipEntryTest() throws IOException, StreamException {
+    public void zipEntryTest() throws IOException {
         String str = IOUtils.normalizePathSeparator(getClass().getResource("/zip").toString());
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
@@ -398,10 +394,9 @@ public class UtilityTest extends WuicTest {
      * </p>
      *
      * @throws IOException if any I/O error occurs
-     * @throws StreamException if error occurs during research
      */
     @Test
-    public void fileSearchSkipStartWith() throws IOException, StreamException {
+    public void fileSearchSkipStartWith() throws IOException {
         final String str = getClass().getResource("/skipped").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
         final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));

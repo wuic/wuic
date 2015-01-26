@@ -39,7 +39,6 @@
 package com.github.wuic.test.dao;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -57,6 +56,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -157,7 +157,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        protected List<String> listNutsPaths(final String pattern) throws StreamException {
+        protected List<String> listNutsPaths(final String pattern) throws IOException {
             return Arrays.asList("foo.js");
         }
 
@@ -165,7 +165,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        protected Nut accessFor(final String realPath, final NutType type) throws StreamException {
+        protected Nut accessFor(final String realPath, final NutType type) throws IOException {
             final ConvertibleNut mock = mock(ConvertibleNut.class);
             when(mock.getName()).thenReturn(realPath);
             when(mock.getInitialName()).thenReturn(realPath);
@@ -183,7 +183,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             if (updateAfterMs != null && age + updateAfterMs < System.currentTimeMillis()) {
                 age = System.currentTimeMillis();
             }
@@ -197,7 +197,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws StreamException {
+        public InputStream newInputStream(final String path) throws IOException {
             return new ByteArrayInputStream(BYTES);
         }
 
@@ -205,7 +205,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws StreamException {
+        public Boolean exists(final String path) throws IOException {
             return true;
         }
     }

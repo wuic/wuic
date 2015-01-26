@@ -38,7 +38,7 @@
 
 package com.github.wuic.config;
 
-import com.github.wuic.exception.UnableToInstantiateException;
+import com.github.wuic.exception.WuicException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,11 +120,9 @@ public enum PropertySetterFactory {
      * @param annotation the parameter annotation
      * @param <T> the property setter type
      * @return the new {@link PropertySetter}
-     * @throws UnableToInstantiateException if the {@link PropertySetter} could not be instantiated
      */
     @SuppressWarnings("unchecked")
-    public <T> PropertySetter<T> create(final AbstractObjectBuilder<T> builder, final Annotation annotation)
-            throws UnableToInstantiateException {
+    public <T> PropertySetter<T> create(final AbstractObjectBuilder<T> builder, final Annotation annotation) {
         // Check if the parameter is annotated with a supported annotation
         for (final Entry<Class<? extends Annotation>, Constructor<? extends ConfigParam>> entry : annotations.entrySet()) {
             if (annotation.toString().contains(entry.getKey().getName())) {
@@ -135,12 +133,12 @@ public enum PropertySetterFactory {
                     retval.init(builder, configParam.propertyKey(), configParam.defaultValue());
                     return retval;
                 } catch (InstantiationException ie) {
-                    logger.error("Cannot instantiate PropertySetter. Make sure it provides a default constructor.");
-                    throw new UnableToInstantiateException(ie);
+                    WuicException.throwUnableToInstantiateException(new IllegalArgumentException(
+                            "Cannot instantiate PropertySetter. Make sure it provides a default constructor.", ie));
                 } catch (IllegalAccessException iae) {
-                    throw new UnableToInstantiateException(iae);
+                    WuicException.throwUnableToInstantiateException(iae);
                 } catch (InvocationTargetException ite) {
-                    throw new UnableToInstantiateException(ite);
+                    WuicException.throwUnableToInstantiateException(ite);
                 }
             }
         }

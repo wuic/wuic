@@ -41,7 +41,6 @@ package com.github.wuic.test.engine;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineService;
-import com.github.wuic.exception.UnableToInstantiateException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -77,7 +76,7 @@ public class EngineBuilderFactoryCoreTest {
      * Test for unknown builder.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testCreateUnknownBuilder() throws UnableToInstantiateException {
+    public void testCreateUnknownBuilder() {
         Assert.assertNull(engineObjectBuilderFactory.create("FooEngineBuilder"));
     }
 
@@ -85,7 +84,7 @@ public class EngineBuilderFactoryCoreTest {
      * Test for image compression.
      */
     @Test
-    public void testCreateImageCompressorBuilder() throws UnableToInstantiateException {
+    public void testCreateImageCompressorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("ImageCompressorEngineBuilder"));
     }
 
@@ -93,7 +92,7 @@ public class EngineBuilderFactoryCoreTest {
      * Test for CSS inspector.
      */
     @Test
-    public void testCreateCssInspectorBuilder() throws UnableToInstantiateException {
+    public void testCreateCssInspectorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("CssInspectorEngineBuilder"));
     }
 }

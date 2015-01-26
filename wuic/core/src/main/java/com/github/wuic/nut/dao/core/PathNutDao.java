@@ -39,9 +39,7 @@
 package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.SaveOperationNotSupportedException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.FilePathNut;
 import com.github.wuic.nut.Nut;
@@ -132,7 +130,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<String> listNutsPaths(final String pattern) throws StreamException {
+    public List<String> listNutsPaths(final String pattern) throws IOException {
         init();
         final Pattern compiled = Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern));
         return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), compiled, skipStartsWith());
@@ -142,21 +140,17 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws IOException {
         init();
 
-        try {
-            final Path p = baseDirectory.getChild(realPath);
+        final Path p = baseDirectory.getChild(realPath);
 
-            if (p instanceof FilePath) {
-                final FilePath fp = FilePath.class.cast(p);
-                return new FilePathNut(fp, realPath, type, getVersionNumber(realPath));
-            } else {
-                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
-            }
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
+        if (!(p instanceof FilePath)) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
         }
+
+        final FilePath fp = FilePath.class.cast(p);
+        return new FilePathNut(fp, realPath, type, getVersionNumber(realPath));
     }
 
     /**
@@ -166,26 +160,18 @@ public abstract class PathNutDao extends AbstractNutDao {
      *
      * @param path the path
      * @return the last timestamp
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    private Long getLastUpdateTimestampFor(final Path path) throws StreamException {
-        try {
-            return path.getLastUpdate();
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+    private Long getLastUpdateTimestampFor(final Path path) throws IOException {
+        return path.getLastUpdate();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
-        try {
-            return getLastUpdateTimestampFor(baseDirectory.getChild(path));
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
+        return getLastUpdateTimestampFor(baseDirectory.getChild(path));
     }
 
     /**
@@ -194,7 +180,7 @@ public abstract class PathNutDao extends AbstractNutDao {
     @Override
     public void save(final Nut nut) {
         // TODO : update path API
-        throw new SaveOperationNotSupportedException(this.getClass());
+        WuicException.throwSaveUnsupportedMethodException(getClass());
     }
 
     /**
@@ -220,15 +206,11 @@ public abstract class PathNutDao extends AbstractNutDao {
      * the given {@code String} does not represents a directory.
      * </p>
      *
-     * @throws com.github.wuic.exception.wrapper.StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    private void init() throws StreamException {
+    private void init() throws IOException {
         if (baseDirectory == null) {
-            try {
-                baseDirectory = createBaseDirectory();
-            } catch (IOException ioe) {
-                throw new StreamException(ioe);
-            }
+            baseDirectory = createBaseDirectory();
         }
     }
 
@@ -240,9 +222,8 @@ public abstract class PathNutDao extends AbstractNutDao {
      * @param path the path to resolve
      * @return the resolved path {@link Path}, {@code null} if it does not exists
      * @throws IOException if any I/O error occurs
-     * @throws StreamException if any I/O error occurs
      */
-    private Path resolve(final String path) throws IOException, StreamException {
+    private Path resolve(final String path) throws IOException {
         init();
         return baseDirectory.getChild(path);
     }
@@ -251,31 +232,25 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
-        try {
-            final Path p = resolve(path);
+    public InputStream newInputStream(final String path) throws IOException {
+        final Path p = resolve(path);
 
-            if (p instanceof FilePath) {
-                return FilePath.class.cast(p).openStream();
-            } else {
-                throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
-            }
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
+        if (!(p instanceof FilePath)) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not a file", p)));
         }
+
+        return FilePath.class.cast(p).openStream();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         try {
             return resolve(path) != null;
         } catch (FileNotFoundException fne) {
             return Boolean.FALSE;
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
         }
     }
 

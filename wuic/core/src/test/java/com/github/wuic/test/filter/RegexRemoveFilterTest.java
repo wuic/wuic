@@ -40,7 +40,6 @@ package com.github.wuic.test.filter;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
@@ -108,10 +107,10 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(expected = BuilderPropertyNotSupportedException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void badPropertyTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
-        final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder").property("foo", "b");
+        factory.create("RegexRemoveNutFilterBuilder").property("foo", "b");
     }
 
     /**

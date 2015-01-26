@@ -41,12 +41,7 @@ package com.github.wuic.xml;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
-import com.github.wuic.exception.xml.WuicXmlReadException;
-import com.github.wuic.exception.xml.WuicXmlWorkflowIdentifierException;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.UnableToInstantiateException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -54,6 +49,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -78,9 +74,8 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * </p>
      *
      * @throws JAXBException if an context can't be initialized
-     * @throws WuicXmlReadException if the XML is not well formed
      */
-    public XmlContextBuilderConfigurator() throws JAXBException, WuicXmlReadException {
+    public XmlContextBuilderConfigurator() throws JAXBException {
         this(Boolean.TRUE);
     }
 
@@ -91,9 +86,8 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      *
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      * @throws JAXBException if an context can't be initialized
-     * @throws WuicXmlReadException if the XML is not well formed
      */
-    public XmlContextBuilderConfigurator(final Boolean multiple) throws JAXBException, WuicXmlReadException {
+    public XmlContextBuilderConfigurator(final Boolean multiple) throws JAXBException {
         super(multiple);
         final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
         unmarshaller = jc.createUnmarshaller();
@@ -102,7 +96,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             final URL xsd = getClass().getResource("/wuic.xsd");
             unmarshaller.setSchema(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(xsd));
         } catch (SAXException se) {
-            throw new BadArgumentException(new IllegalArgumentException(se));
+            WuicException.throwBadArgumentException(se);
         }
     }
 
@@ -113,9 +107,9 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      *
      * @param ctxBuilder the builder to configure
      * @param heap the configuration bean
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    public static void configureHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws StreamException {
+    public static void configureHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws IOException {
         final String[] paths = heap.getNutPaths() == null ? new String[0] : heap.getNutPaths().toArray(new String[heap.getNutPaths().size()]);
         final String[] nested = configureNestedHeap(ctxBuilder, heap);
         final String[] referenced = getReferencedHeap(heap);
@@ -146,14 +140,17 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * Configures the given builder with the template in the specified bean.
      * </p>
      *
+     * <p>
+     * An {@link IllegalArgumentException} is thrown if the workflow is badly defined.
+     * </p>
+     *
      * @param xml the bean
      * @param ctxBuilder the builder
      * @throws WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
-     * @throws WuicXmlWorkflowIdentifierException if the workflow is badly defined
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
     public static void configureTemplates(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
-            throws WorkflowTemplateNotFoundException, WuicXmlWorkflowIdentifierException, StreamException {
+            throws WorkflowTemplateNotFoundException, IOException {
         if (xml.getWorkflowTemplates() == null) {
             return;
         }
@@ -184,14 +181,17 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * Configures the given builder with the specified bean.
      * </p>
      *
+     * <p>
+     * An {@link IllegalArgumentException} is thrown if the workflow is badly defined.
+     * </p>
+     *
      * @param xml the bean
      * @param ctxBuilder the builder
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
-     * @throws WuicXmlWorkflowIdentifierException if the workflow is badly defined
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
     public static void configureWorkflow(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
-            throws WorkflowTemplateNotFoundException, WuicXmlWorkflowIdentifierException, StreamException {
+            throws WorkflowTemplateNotFoundException, IOException {
         if (xml.getWorkflows() == null) {
             return;
         }
@@ -200,7 +200,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
         for (final XmlWorkflowBean workflow : xml.getWorkflows()) {
             if (!(workflow.getId() == null && workflow.getIdPrefix() != null
                     || workflow.getId() != null && workflow.getIdPrefix() == null)) {
-                throw new WuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());
+                WuicException.throwWuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());
             }
 
             final Boolean forEachHeap = workflow.getId() == null;
@@ -255,18 +255,14 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
             return xml.getPollingIntervalSeconds();
         } catch (JAXBException je) {
-            throw new BadArgumentException(new IllegalArgumentException(je));
-        } catch (UnableToInstantiateException utiae) {
-            throw new BadArgumentException(new IllegalArgumentException(utiae));
-        } catch (BuilderPropertyNotSupportedException bpnse) {
-            throw new BadArgumentException(new IllegalArgumentException(bpnse));
-        } catch (StreamException se) {
-            throw new BadArgumentException(new IllegalArgumentException(se));
+            WuicException.throwBadArgumentException(je);
+        } catch (IOException se) {
+            WuicException.throwBadArgumentException(se);
         } catch (WorkflowTemplateNotFoundException wxwtnfe) {
-            throw new BadArgumentException(new IllegalArgumentException(wxwtnfe));
-        } catch (WuicXmlWorkflowIdentifierException wxwie) {
-            throw new BadArgumentException(new IllegalArgumentException(wxwie));
+            WuicException.throwBadArgumentException(wxwtnfe);
         }
+
+        return 0;
     }
 
     /**
@@ -277,9 +273,9 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @param ctxBuilder the context builder
      * @param heap the enclosing heap
      * @return the extracted heaps
-     * @throws StreamException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
-    private static String[] configureNestedHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws StreamException {
+    private static String[] configureNestedHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws IOException {
         if (heap.getNestedComposition() == null || heap.getNestedComposition().isEmpty()) {
             return null;
         } else {

@@ -45,10 +45,8 @@ import com.github.wuic.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
-import com.github.wuic.exception.ErrorCode;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
@@ -64,8 +62,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
@@ -89,11 +85,6 @@ public class WuicServlet extends HttpServlet {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * Mapping error code to their HTTP code.
-     */
-    private Map<Long, Integer> errorCodeToHttpCode;
-
-    /**
      * Servlet mapping.
      */
     private String servletMapping;
@@ -102,17 +93,6 @@ public class WuicServlet extends HttpServlet {
      * The WUIC facade.
      */
     private WuicFacade wuicFacade;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    public WuicServlet() {
-        errorCodeToHttpCode = new HashMap<Long, Integer>();
-        errorCodeToHttpCode.put(ErrorCode.NUT_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
-        errorCodeToHttpCode.put(ErrorCode.WORKFLOW_NOT_FOUND, HttpURLConnection.HTTP_NOT_FOUND);
-    }
 
     /**
      * {@inheritDoc}
@@ -125,9 +105,9 @@ public class WuicServlet extends HttpServlet {
         servletMapping = WuicServletContextListener.getParamProvider(config.getServletContext()).apply(key, null);
 
         if (servletMapping == null) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Init param '%s' must be defined", key)));
         } else if (servletMapping.isEmpty()) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("Init param '%s' could not be empty", key)));
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Init param '%s' could not be empty", key)));
         }
 
         try {
@@ -157,15 +137,20 @@ public class WuicServlet extends HttpServlet {
 
             try {
                 writeNut(matcher.getWorkflowId(), matcher.getNutName(), response);
+            } catch (WorkflowNotFoundException wnfe) {
+                log.error("Workflow not found", wnfe);
+                response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
+                response.getWriter().println(wnfe.getMessage());
+            } catch (WorkflowTemplateNotFoundException wtnfe) {
+                log.error("Workflow template not found", wtnfe);
+                response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
+                response.getWriter().println(wtnfe.getMessage());
             } catch (WuicException we) {
                 log.error("Unable to retrieve nut", we);
 
                 // Use 500 has default status code
-                final Integer httpCode = errorCodeToHttpCode.containsKey(we.getErrorCode()) ?
-                        errorCodeToHttpCode.get(we.getErrorCode()) : HttpURLConnection.HTTP_INTERNAL_ERROR;
-
+                response.setStatus(HttpURLConnection.HTTP_INTERNAL_ERROR);
                 response.getWriter().println(we.getMessage());
-                response.setStatus(httpCode);
             } finally {
                 r.run();
             }
@@ -180,10 +165,11 @@ public class WuicServlet extends HttpServlet {
      * @param workflowId the workflow ID
      * @param nutName the nut name
      * @param response the response
-     * @throws WuicException if an I/O error occurs or nut not found
+     * @throws WuicException if the nut is not found
+     * @throws IOException if an I/O error occurs
      */
     private void writeNut(final String workflowId, final String nutName, final HttpServletResponse response)
-            throws WuicException {
+            throws WuicException, IOException {
 
         // Get the nuts workflow
         final ConvertibleNut nut = wuicFacade.runWorkflow(workflowId, nutName);
@@ -192,7 +178,7 @@ public class WuicServlet extends HttpServlet {
         if (nut != null) {
             HttpRequestThreadLocal.INSTANCE.write(nut, response);
         } else {
-            throw new NutNotFoundException(nutName, workflowId);
+            WuicException.throwNutNotFoundException(nutName, workflowId);
         }
     }
 
@@ -228,7 +214,7 @@ public class WuicServlet extends HttpServlet {
          * {@inheritDoc}
          */
         @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             return -1L;
         }
     }

@@ -38,11 +38,11 @@
 
 package com.github.wuic.xml;
 
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.exception.WuicException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
 import java.io.Reader;
 
 /**
@@ -76,14 +76,12 @@ public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfig
      * @param t the tag
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      * @throws JAXBException if an context can't be initialized
-     * @throws WuicXmlReadException if the XML is not well formed
      */
-    public ReaderXmlContextBuilderConfigurator(final Reader r, final String t, final Boolean multiple)
-            throws JAXBException, WuicXmlReadException {
+    public ReaderXmlContextBuilderConfigurator(final Reader r, final String t, final Boolean multiple) throws JAXBException {
         super(multiple);
 
         if (r == null) {
-            throw new WuicXmlReadException("XML configuration reader for WUIC is null", new IllegalArgumentException());
+            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration reader for WUIC is null"));
         }
 
         reader = r;
@@ -102,7 +100,7 @@ public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfig
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         return -1L;
     }
 

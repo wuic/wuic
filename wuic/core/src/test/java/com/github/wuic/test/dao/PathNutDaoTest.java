@@ -41,9 +41,6 @@ package com.github.wuic.test.dao;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
@@ -108,11 +105,10 @@ public class PathNutDaoTest {
      * Test exists implementation for {@link ClasspathNutDao}.
      * </p>
      *
-     * @throws StreamException if test fails
-     * @throws BuilderPropertyNotSupportedException if test fails
+     * @throws IOException if test fails
      */
     @Test
-    public void classpathExistsTest() throws StreamException, BuilderPropertyNotSupportedException {
+    public void classpathExistsTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
@@ -125,13 +121,10 @@ public class PathNutDaoTest {
      * Test stream for {@link ClasspathNutDao}.
      * </p>
      *
-     * @throws StreamException if test fails
-     * @throws BuilderPropertyNotSupportedException if test fails
      * @throws IOException if test fails
-     * @throws NutNotFoundException if test fails
      */
     @Test
-    public void classpathReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+    public void classpathReadTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
@@ -146,13 +139,10 @@ public class PathNutDaoTest {
      * Test with {@link DiskNutDao}.
      * </p>
      *
-     * @throws StreamException if test fails
-     * @throws BuilderPropertyNotSupportedException if test fails
      * @throws IOException if test fails
-     * @throws NutNotFoundException if test fails
      */
     @Test
-    public void diskReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+    public void diskReadTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, DiskNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.build();

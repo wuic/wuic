@@ -39,7 +39,6 @@
 package com.github.wuic.test.dao;
 
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.exception.UnableToInstantiateException;
 
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
@@ -79,7 +78,7 @@ public class NutDaoBuilderFactoryCoreTest {
      * Test for unknown builder.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testCreateUnknownBuilder() throws UnableToInstantiateException {
+    public void testCreateUnknownBuilder() {
         nutDaoObjectBuilderFactory.create("FooNutDaoBuilder");
     }
 
@@ -87,7 +86,7 @@ public class NutDaoBuilderFactoryCoreTest {
      * Test for classpath.
      */
     @Test
-    public void testCreateClasspathBuilder() throws UnableToInstantiateException {
+    public void testCreateClasspathBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("ClasspathNutDaoBuilder"));
     }
 
@@ -95,7 +94,7 @@ public class NutDaoBuilderFactoryCoreTest {
      * Test for HTTP.
      */
     @Test
-    public void testCreateHttpBuilder() throws UnableToInstantiateException {
+    public void testCreateHttpBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("HttpNutDaoBuilder"));
     }
 
@@ -103,7 +102,7 @@ public class NutDaoBuilderFactoryCoreTest {
      * Test for disk.
      */
     @Test
-    public void testCreateDiskBuilder() throws UnableToInstantiateException {
+    public void testCreateDiskBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("DiskNutDaoBuilder"));
     }
 }

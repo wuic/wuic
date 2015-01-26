@@ -38,8 +38,7 @@
 
 package com.github.wuic.config;
 
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -135,7 +134,7 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      * {@inheritDoc}
      */
     @Override
-    public ObjectBuilder<T> property(final String key, final Object value) throws BuilderPropertyNotSupportedException {
+    public ObjectBuilder<T> property(final String key, final Object value) {
 
         // Check if disabled
         if (disabled.containsKey(key)) {
@@ -169,7 +168,7 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      * {@inheritDoc}
      */
     @Override
-    public Object property(final String key) throws BuilderPropertyNotSupportedException {
+    public Object property(final String key) {
 
         for (PropertySetter setter : propertySetters) {
             if (setter.getPropertyKey().equals(key)) {
@@ -186,11 +185,7 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      */
     @Override
     public T build() {
-        try {
-            return internalBuild();
-        } catch (BuilderPropertyNotSupportedException wre) {
-            throw new BadArgumentException(new IllegalArgumentException(wre));
-        }
+        return internalBuild();
     }
 
     /**
@@ -200,20 +195,18 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      * </p>
      *
      * @return the object
-     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException the uncaught exception
      */
-    protected abstract T internalBuild() throws BuilderPropertyNotSupportedException;
+    protected abstract T internalBuild();
 
     /**
      * <p>
-     * Throws a particular {@link BuilderPropertyNotSupportedException} because a not supported property has been tried
+     * Throws a particular {@link IllegalArgumentException} because a not supported property has been tried
      * to be set.
      * </p>
      *
      * @param key the property key
-     * @throws BuilderPropertyNotSupportedException the exception
      */
-    protected final void throwPropertyNotSupportedException(final String key) throws BuilderPropertyNotSupportedException {
-        throw new BuilderPropertyNotSupportedException.Adapter(key);
+    protected final void throwPropertyNotSupportedException(final String key) {
+        WuicException.throwBuilderPropertyNotSupportedException(key, getClass());
     }
 }

@@ -85,7 +85,7 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
     @Override
     public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut) throws IOException {
         // Do not use char set here !
-        IOUtils.copyStreamIoe(source, target);
+        IOUtils.copyStream(source, target);
     }
 
     /**

@@ -40,7 +40,6 @@ package com.github.wuic.test.config;
 
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,7 +101,7 @@ public class ConfigTest {
      *
      * @throws Exception if test succeed
      */
-    @Test(expected = BuilderPropertyNotSupportedException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderBadPropertyTest() throws Exception {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("bar", 2);

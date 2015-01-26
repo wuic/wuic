@@ -43,9 +43,6 @@ import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -97,11 +94,10 @@ public class HttpTest extends WuicTest {
      * Test exists implementation.
      * </p>
      *
-     * @throws StreamException if test fails
-     * @throws BuilderPropertyNotSupportedException if test fails
+     * @throws IOException if test fails
      */
     @Test
-    public void httpExistsTest() throws StreamException, BuilderPropertyNotSupportedException {
+    public void httpExistsTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
@@ -114,13 +110,10 @@ public class HttpTest extends WuicTest {
      * Test stream.
      * </p>
      *
-     * @throws StreamException if test fails
-     * @throws BuilderPropertyNotSupportedException if test fails
      * @throws IOException if test fails
-     * @throws NutNotFoundException if test fails
      */
     @Test
-    public void httpReadTest() throws StreamException, BuilderPropertyNotSupportedException, NutNotFoundException, IOException {
+    public void httpReadTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();

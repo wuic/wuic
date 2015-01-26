@@ -50,8 +50,6 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
@@ -225,12 +223,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         if (works()) {
             for (final ConvertibleNut nut : request.getNuts()) {
-
-                try {
-                    retval.add(transformHtml(nut, request.getContextPath(), request));
-                } catch (IOException ioe) {
-                   throw new StreamException(ioe);
-                }
+                retval.add(transformHtml(nut, request.getContextPath(), request));
             }
         }
 
@@ -294,8 +287,9 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param nutName the nut name
          * @return the parsed HTML
          * @throws WuicException if WUIC fails to configure context or process created workflow
+         * @throws IOException if any I/O error occurs
          */
-        private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException {
+        private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException, IOException {
             // Create a proxy that maps inline scripts
             final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
 
@@ -441,7 +435,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 }
             }
 
-            IOUtils.copyStreamIoe(new ByteArrayInputStream(transform.toString().getBytes()), os);
+            IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
 
             for (final ConvertibleNut ref : referenced) {
                 convertible.addReferencedNut(ref);
@@ -930,14 +924,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param proxyNutDao the DAO to use when computing path from collected data
          * @param rootPath the root path of content
          * @param request the associated request
-         * @throws StreamException if any I/O error occurs
+         * @throws IOException if any I/O error occurs
          */
         private ParseInfo(final String groupName,
                           final Map<String, Integer> groups,
                           final ProxyNutDao proxyNutDao,
                           final String rootPath,
                           final EngineRequest request)
-                throws StreamException {
+                throws IOException {
             final String[] groupPaths = new String[groups.size()];
             this.capturedStatements = new ArrayList<String>(groups.keySet());
 
@@ -979,7 +973,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                             final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
 
                             if (simplified == null) {
-                                throw new BadArgumentException(new IllegalArgumentException(String.format("%s does not represents a reachable path", simplify)));
+                                WuicException.throwBadArgumentException(new IllegalArgumentException(
+                                        String.format("%s does not represents a reachable path", simplify)));
                             }
 
                             // Now we collect the attributes of the tag to add them in the future statement
@@ -1095,10 +1090,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     public ConvertibleNut transformHtml(final ConvertibleNut nut,
                                         final String contextPath,
                                         final EngineRequest request)
-            throws WuicException, IOException {
-
+            throws WuicException {
         nut.addTransformer(new HtmlTransformer(request, contextPath));
-
         return nut;
     }
 

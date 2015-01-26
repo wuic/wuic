@@ -55,6 +55,7 @@ import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -288,8 +289,14 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             replacement.append(referencedPath);
             res = Collections.emptyList();
         } else {
-            // Extract the nut
-            final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
+            final List<Nut> nuts;
+            try {
+                // Extract the nut
+                nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+                return null;
+            }
 
             if (nuts.isEmpty()) {
                 log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);

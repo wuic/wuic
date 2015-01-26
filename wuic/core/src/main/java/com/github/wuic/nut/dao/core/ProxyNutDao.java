@@ -38,9 +38,6 @@
 
 package com.github.wuic.nut.dao.core;
 
-
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -111,7 +108,7 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+    public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
         // do not observe anything, feature not available here.
     }
 
@@ -119,7 +116,7 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws IOException {
         final Nut nut = proxy.get(path);
         List<Nut> retval = Arrays.asList(nut);
 
@@ -135,7 +132,7 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws StreamException {
+    public List<Nut> create(final String path, final PathFormat format) throws IOException {
         final Nut nut = proxy.get(path);
         List<Nut> retval = Arrays.asList(nut);
 
@@ -191,18 +188,14 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws IOException {
         final Nut nut = proxy.get(path);
 
         // Path not mapped, call delegate
         if (nut == null) {
             return delegate.newInputStream(path);
         } else {
-            try {
-                return nut.openStream();
-            } catch (NutNotFoundException nnfe) {
-                throw new StreamException(new IOException(nnfe));
-            }
+            return nut.openStream();
         }
     }
 
@@ -210,7 +203,7 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         return delegate.exists(path);
     }
 }

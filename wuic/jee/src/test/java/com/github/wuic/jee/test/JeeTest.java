@@ -39,7 +39,6 @@
 package com.github.wuic.jee.test;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -57,6 +56,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
@@ -110,10 +110,10 @@ public class JeeTest {
     /**
      * Tests {@link WebappNutDao} creation.
      *
-     * @throws StreamException if nut creation fails
+     * @throws java.io.IOException if nut creation fails
      */
     @Test
-    public void webappNutTest() throws StreamException {
+    public void webappNutTest() throws IOException {
         final ObjectBuilder<NutDao> builder =
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");
         final WebappNutDao dao = WebappNutDao.class.cast(builder.build());

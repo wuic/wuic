@@ -40,7 +40,6 @@ package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
@@ -165,7 +164,7 @@ public class WuicFacadeBuilder {
                 }
             }
         } catch (MalformedURLException mue) {
-            throw new BadArgumentException(new IllegalArgumentException("Unable to initialize WuicServlet", mue));
+            WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
         }
     }
 

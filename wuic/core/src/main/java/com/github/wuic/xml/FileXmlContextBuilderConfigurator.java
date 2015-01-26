@@ -38,8 +38,7 @@
 
 package com.github.wuic.xml;
 
-import com.github.wuic.exception.wrapper.StreamException;
-import com.github.wuic.exception.xml.WuicXmlReadException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.IOUtils;
 
 import javax.xml.bind.JAXBException;
@@ -74,9 +73,9 @@ public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigur
      * @param wuicXml the wuic.xml file URL
      * @throws javax.xml.bind.JAXBException if an context can't be initialized
      */
-    public FileXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException, WuicXmlReadException {
+    public FileXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException {
         if (wuicXml == null) {
-            throw new WuicXmlReadException("XML configuration URL for WUIC is null", new IllegalArgumentException());
+            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration URL for WUIC is null"));
         }
 
         xmlFile = wuicXml;
@@ -94,14 +93,12 @@ public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigur
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         InputStream is = null;
         try {
             final URLConnection c = xmlFile.openConnection();
             is = c.getInputStream();
             return c.getLastModified();
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
         } finally {
             IOUtils.close(is);
         }

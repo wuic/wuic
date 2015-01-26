@@ -39,8 +39,8 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Future;
 
@@ -66,9 +66,9 @@ public interface Nut {
      * </p>
      *
      * @return the opened input stream
-     * @throws com.github.wuic.exception.NutNotFoundException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
-    InputStream openStream() throws NutNotFoundException;
+    InputStream openStream() throws IOException;
 
     /**
      * <p>

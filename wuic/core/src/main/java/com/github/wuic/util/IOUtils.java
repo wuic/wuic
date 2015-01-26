@@ -38,7 +38,6 @@
 
 package com.github.wuic.util;
 
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.DirectoryPathFactory;
 import com.github.wuic.path.Path;
@@ -251,25 +250,6 @@ public final class IOUtils {
 
     /**
      * <p>
-     * Copies the data from the given input stream into the given output stream.
-     * </p>
-     *
-     * @param is the {@code InputStream}
-     * @param os the {@code OutputStream}
-     * @return the content length
-     * @throws com.github.wuic.exception.wrapper.StreamException in an I/O error occurs
-     */
-    public static int copyStream(final InputStream is, final OutputStream os)
-            throws StreamException {
-        try {
-            return copyStreamIoe(is, os);
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
-    }
-
-    /**
-     * <p>
      * Copies the data from the given input stream into the given output stream and doesn't wrap any {@code IOException}.
      * </p>
      *
@@ -278,7 +258,7 @@ public final class IOUtils {
      * @return the content length
      * @throws IOException in an I/O error occurs
      */
-    public static int copyStreamIoe(final InputStream is, final OutputStream os)
+    public static int copyStream(final InputStream is, final OutputStream os)
             throws IOException {
         int retval = 0;
         int offset;
@@ -345,9 +325,9 @@ public final class IOUtils {
      * @param parent the directory
      * @param pattern the pattern to filter files
      * @return the matching files
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    public static List<String> listFile(final DirectoryPath parent, final Pattern pattern) throws StreamException {
+    public static List<String> listFile(final DirectoryPath parent, final Pattern pattern) throws IOException {
         return listFile(parent, "", pattern, CollectionUtils.EMPTY_STRING_LIST);
     }
 
@@ -361,10 +341,10 @@ public final class IOUtils {
      * @param pattern the pattern to filter files
      * @param skipStartsWithList a list that contains all begin paths to ignore
      * @return the matching files
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
     public static List<String> listFile(final DirectoryPath parent, final Pattern pattern, final List<String> skipStartsWithList)
-            throws StreamException {
+            throws IOException {
         return listFile(parent, "", pattern, skipStartsWithList);
     }
 
@@ -379,41 +359,37 @@ public final class IOUtils {
      * @param pattern the pattern which filters files
      * @param skipStartsWithList a list that contains all begin paths to ignore
      * @return the matching files
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
     public static List<String> listFile(final DirectoryPath parent, final String relativePath, final Pattern pattern, final List<String> skipStartsWithList)
-            throws StreamException {
-        try {
-            final String[] children = parent.list();
-            final List<String> retval = new ArrayList<String>();
+            throws IOException {
+        final String[] children = parent.list();
+        final List<String> retval = new ArrayList<String>();
 
-            // Check each child path
-            childrenLoop:
-            for (final String child : children) {
-                final Path path = parent.getChild(child);
-                final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
+        // Check each child path
+        childrenLoop:
+        for (final String child : children) {
+            final Path path = parent.getChild(child);
+            final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
 
-                // Child is a directory, search recursively
-                if (path instanceof DirectoryPath) {
+            // Child is a directory, search recursively
+            if (path instanceof DirectoryPath) {
 
-                    // Search recursively if and only if the beginning of the path if not in the excluding list
-                    for (final String skipStartWith : skipStartsWithList) {
-                        if (childRelativePath.startsWith(skipStartWith)) {
-                            continue childrenLoop;
-                        }
+                // Search recursively if and only if the beginning of the path if not in the excluding list
+                for (final String skipStartWith : skipStartsWithList) {
+                    if (childRelativePath.startsWith(skipStartWith)) {
+                        continue childrenLoop;
                     }
-
-                    retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, pattern, skipStartsWithList));
-                // Files matches, return
-                } else if (pattern.matcher(childRelativePath).matches()) {
-                    retval.add(childRelativePath);
                 }
-            }
 
-            return retval;
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
+                retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, pattern, skipStartsWithList));
+            // Files matches, return
+            } else if (pattern.matcher(childRelativePath).matches()) {
+                retval.add(childRelativePath);
+            }
         }
+
+        return retval;
     }
 
     /**

@@ -39,7 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,21 +149,19 @@ public abstract class AbstractNut implements Nut {
                           final Boolean a,
                           final Future<Long> v) {
         if (ft == null) {
-            throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
+            WuicException.throwBadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
+        } else if (name == null) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException("You can't create a nut with a null name"));
+        } else {
+            nutType = ft;
+            originalName = name;
+            compressed = comp;
+            binaryReducible = !nutType.isText();
+            textReducible = nutType.isText();
+            cacheable = c;
+            aggregatable = a;
+            versionNumber = v;
         }
-
-        if (name == null) {
-            throw new BadArgumentException(new IllegalArgumentException("You can't create a nut with a null name"));
-        }
-
-        nutType = ft;
-        originalName = name;
-        compressed = comp;
-        binaryReducible = !nutType.isText();
-        textReducible = nutType.isText();
-        cacheable = c;
-        aggregatable = a;
-        versionNumber = v;
     }
 
     /**

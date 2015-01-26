@@ -39,8 +39,6 @@
 package com.github.wuic.config;
 
 import com.github.wuic.AnnotationProcessor;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.util.AnnotationDetectorScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -265,7 +263,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          * {@inheritDoc}
          */
         @Override
-        protected T internalBuild() throws BuilderPropertyNotSupportedException {
+        protected T internalBuild() {
             final Object[] params = getAllProperties();
 
             try {
@@ -348,8 +346,8 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
                     } else {
                         retval.addPropertySetter(propertySetter);
                     }
-                } catch (UnableToInstantiateException utoie) {
-                    logger.error(String.format("Unable to create a builder with constructor %s", constructor.toString()), utoie);
+                } catch (Exception e) {
+                    logger.error(String.format("Unable to create a builder with constructor %s", constructor.toString()), e);
                     continue constructor;
                 }
             }

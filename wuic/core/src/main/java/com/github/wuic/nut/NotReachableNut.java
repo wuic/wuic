@@ -39,7 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.Pipe;
 
@@ -82,8 +82,9 @@ public class NotReachableNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        throw new NutNotFoundException(getInitialName(), heap);
+    public InputStream openStream() throws IOException {
+        WuicException.throwNutNotFoundException(getInitialName(), heap);
+        return null;
     }
 
     /**
@@ -91,6 +92,6 @@ public class NotReachableNut extends AbstractConvertibleNut {
      */
     @Override
     public void transform(final Pipe.OnReady... onReady) throws IOException {
-        throw new IOException(new NutNotFoundException(getInitialName(), heap));
+        WuicException.throwNutNotFoundException(getInitialName(), heap);
     }
 }

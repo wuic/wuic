@@ -38,10 +38,10 @@
 package com.github.wuic.nut.dao.jee;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.nut.AbstractNut;
 
 import javax.servlet.ServletContext;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Future;
 
@@ -93,7 +93,7 @@ public class WebappNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
+    public InputStream openStream() throws IOException {
         return context.getResourceAsStream(path);
     }
 }

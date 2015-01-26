@@ -51,6 +51,7 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
@@ -304,6 +305,27 @@ public class ContextBuilderTest {
 
         Assert.assertTrue(context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory()).size() == 1);
         Assert.assertTrue(context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory()).size() == 1);
+    }
+
+
+    /**
+     * Test when a template is not found.
+     *
+     * @throws Exception if test fails
+     */
+    @Test(expected = WorkflowTemplateNotFoundException.class)
+    public void workflowTemplateNotFoundTest() throws Exception {
+        new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+                .configureDefault()
+                .tag("test")
+                .contextNutDaoBuilder("dao", "MockDaoBuilder")
+                .toContext()
+                .heap("heap-one", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("engine", "MockEngineBuilder")
+                .toContext()
+                .workflow("workflow-", true, "heap-one", "tpl")
+                .releaseTag()
+                .build();
     }
 
     /**

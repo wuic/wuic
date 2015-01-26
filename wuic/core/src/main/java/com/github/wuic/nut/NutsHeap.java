@@ -39,8 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
@@ -50,6 +49,7 @@ import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -157,7 +157,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * <p>
      * Builds a new {@link NutsHeap}. All the paths must be named with an
      * extension that matches the {@link com.github.wuic.NutType}. If it is not the case, then
-     * an {@link BadArgumentException} will be thrown.
+     * an {@link IllegalArgumentException} will be thrown.
      * </p>
      *
      * <p>
@@ -168,12 +168,12 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
      * @param heaps some other heaps that compose this heap
-     * @throws StreamException if the HEAP could not be created
+     * @throws java.io.IOException if the HEAP could not be created
      */
     public NutsHeap(final List<String> pathsList,
                     final NutDao theNutDao,
                     final String heapId,
-                    final NutsHeap ... heaps) throws StreamException {
+                    final NutsHeap ... heaps) throws IOException {
         this.id = heapId;
         this.paths = pathsList == null ? new ArrayList<String>() : new ArrayList<String>(pathsList);
         this.nutDao = theNutDao;
@@ -292,9 +292,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param path the nut path to create
      * @param pathFormat the format
      * @return the new nut
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    public List<Nut> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws StreamException {
+    public List<Nut> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws IOException {
         final NutsHeap heap = findHeapFor(nut);
         final List<Nut> retval;
 
@@ -318,9 +318,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * </p>
      *
      * @param listener the listener
-     * @throws StreamException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
-    public void addObserver(final HeapListener listener) throws StreamException {
+    public void addObserver(final HeapListener listener) throws IOException {
         synchronized (listeners) {
             this.listeners.add(listener);
         }
@@ -340,14 +340,14 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * <p>
      * Checks that the {@link com.github.wuic.NutType} and the paths list of this heap are not
-     * null. If they are, this methods will throw an {@link BadArgumentException}.
+     * null. If they are, this methods will throw an {@link IllegalArgumentException}.
      * This exception could also be thrown if one path of the list does have a name
      * which ends with one of the possible {@link com.github.wuic.NutType#extensions extensions}.
      * </p>
      *
-     * @throws StreamException in I/O error case
+     * @throws IOException in I/O error case
      */
-    private void checkFiles() throws StreamException {
+    private void checkFiles() throws IOException {
         // Keep order with a linked data structure
         this.nuts = new ArrayList<Nut>();
 
@@ -365,10 +365,9 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     final int slashIndex = nut.getInitialName().indexOf('/');
 
                     if (slashIndex != -1 && NumberUtils.isNumber(nut.getInitialName().substring(0, slashIndex))) {
-                        throw new BadArgumentException(
-                                new IllegalArgumentException(
-                                        String.format("First level if nut name's path cannot be a numeric value: %s",
-                                                nut.getInitialName())));
+                        WuicException.throwBadArgumentException(new IllegalArgumentException(
+                                String.format("First level if nut name's path cannot be a numeric value: %s",
+                                        nut.getInitialName())));
                     }
                 }
             }
@@ -376,11 +375,13 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
         // Non null assertion
         if (paths == null && composition.length == 0) {
-            throw new BadArgumentException(new IllegalArgumentException("A heap must have a non-null paths list and a non-empty composition"));
+            WuicException.throwBadArgumentException(
+                    new IllegalArgumentException("A heap must have a non-null paths list and a non-empty composition"));
         // Do not allow empty heaps
         } else if (nuts.isEmpty() && composition.length == 0) {
             final String merge = StringUtils.merge(paths.toArray(new String[paths.size()]), ", ");
-            throw new BadArgumentException(new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, nutDao.toString())));
+            WuicException.throwBadArgumentException(
+                    new IllegalArgumentException(String.format(EMPTY_PATH_MESSAGE, merge, nutDao.toString())));
         }
 
         // Check the extension of each path : all of them must share the same nut type
@@ -590,7 +591,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     l.nutUpdated(observable);
                 }
             }
-        } catch (StreamException se) {
+        } catch (IOException se) {
             log.error("Unable to update nuts in the heap", se);
         }
 

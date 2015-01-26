@@ -38,7 +38,7 @@
 
 package com.github.wuic.config;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.NumberUtils;
 
 /**
@@ -203,7 +203,8 @@ public abstract class PropertySetter<T> {
                 if (NumberUtils.isNumber(str)) {
                     put(getPropertyKey(), Integer.parseInt(str));
                 } else {
-                    throw new BadArgumentException(new NumberFormatException(String.format("Key '%s' must be an Integer", getPropertyKey())));
+                    WuicException.throwBadArgumentException(
+                            new NumberFormatException(String.format("Key '%s' must be an Integer", getPropertyKey())));
                 }
             }
         }
@@ -257,11 +258,11 @@ public abstract class PropertySetter<T> {
             try {
                 put(getPropertyKey(), value == null ? null : Class.forName(value.toString()).newInstance());
             } catch (ClassNotFoundException cnfe) {
-                throw new BadArgumentException(new IllegalArgumentException(cnfe));
+                WuicException.throwBadStateException(cnfe);
             } catch (IllegalAccessException iae) {
-                throw new BadArgumentException(new IllegalArgumentException(iae));
+                WuicException.throwBadStateException(iae);
             } catch (InstantiationException ie) {
-                throw new BadArgumentException(new IllegalArgumentException(ie));
+                WuicException.throwBadStateException(ie);
             }
         }
     }

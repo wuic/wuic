@@ -175,7 +175,7 @@ public class GzipEngine extends NodeEngine {
         @Override
         public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
             final GZIPOutputStream gos = new GZIPOutputStream(os);
-            IOUtils.copyStreamIoe(is, gos);
+            IOUtils.copyStream(is, gos);
             gos.close();
         }
     }

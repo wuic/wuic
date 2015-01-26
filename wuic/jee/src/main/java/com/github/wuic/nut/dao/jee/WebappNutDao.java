@@ -44,7 +44,7 @@ import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.jee.path.WebappDirectoryPathFactory;
 import com.github.wuic.nut.dao.NutDaoService;
@@ -119,7 +119,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
     @Override
     protected DirectoryPath createBaseDirectory() throws IOException {
         if (context == null) {
-            throw new BadArgumentException(
+            WuicException.throwBadStateException(
                     new IllegalArgumentException(
                             String.format("context is null! Use setServletContext first or add %s in your descriptor file",
                                     WuicServletContextListener.class.getName())));
@@ -127,11 +127,12 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
 
         final Path file = IOUtils.buildPath(getBasePath(), new WebappDirectoryPathFactory(context));
 
-        if (file instanceof DirectoryPath) {
-            return DirectoryPath.class.cast(file);
-        } else {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
+        if (!(file instanceof DirectoryPath)) {
+            WuicException.throwBadStateException(
+                    new IllegalArgumentException(String.format("%s is not a directory", getBasePath())));
         }
+
+        return DirectoryPath.class.cast(file);
     }
 
     /**

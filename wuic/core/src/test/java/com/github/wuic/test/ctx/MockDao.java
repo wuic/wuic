@@ -40,8 +40,6 @@ package com.github.wuic.test.ctx;
 
 import com.github.wuic.NutType;
 import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -49,6 +47,7 @@ import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.util.FutureLong;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -83,11 +82,10 @@ public class MockDao implements NutDao {
      * Builds a new instance.
      * </p>
      *
-     * @throws NutNotFoundException if mock fails
-     * @throws StreamException if mock fails
+     * @throws java.io.IOException if mock fails
      */
     @ConfigConstructor
-    public MockDao() throws NutNotFoundException, StreamException {
+    public MockDao() throws IOException {
         // Prepare Nut mock
         when(mockNutOne.getInitialName()).thenReturn("foo.js");
         when(mockNutOne.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
@@ -112,14 +110,14 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+    public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws IOException {
         return create(path, null);
     }
 
@@ -127,7 +125,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, PathFormat format) throws StreamException {
+    public List<Nut> create(final String path, PathFormat format) throws IOException {
         if (ContextBuilderTest.NUT_NAME_ONE.equals(path)) {
             return Arrays.asList(mockNutOne);
         } else if (ContextBuilderTest.NUT_NAME_TWO.equals(path)) {
@@ -179,7 +177,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws IOException {
         return null;
     }
 
@@ -187,7 +185,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         return null;
     }
 }

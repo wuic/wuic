@@ -40,7 +40,6 @@ package com.github.wuic.test;
 
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.NumberUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,6 +47,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,11 +64,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RunWith(JUnit4.class)
 public class ContextBuilderConfiguratorTest {
 
-
     /**
      * Tests configurations when multiple and non-multiple executions are set.
      *
-     * @throws StreamException if test fails
+     * @throws IOException if test fails
      */
     @Test
     public void configureMultipleTest() throws Exception {
@@ -98,7 +97,7 @@ public class ContextBuilderConfiguratorTest {
              * {@inheritDoc}
              */
             @Override
-            protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 return -1L;
             }
         };
@@ -128,7 +127,7 @@ public class ContextBuilderConfiguratorTest {
     /**
      * Tests basic configuration with polling activation.
      *
-     * @throws StreamException if test fails
+     * @throws IOException if test fails
      */
     @Test
     public void configureWithPollingTest() throws Exception {
@@ -156,7 +155,7 @@ public class ContextBuilderConfiguratorTest {
              * {@inheritDoc}
              */
             @Override
-            protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+            protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 synchronized (ContextBuilderConfiguratorTest.class) {
                     latch.countDown();
                     ContextBuilderConfiguratorTest.class.notify();

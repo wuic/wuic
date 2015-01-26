@@ -42,7 +42,6 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.dao.jee.WebappNutDaoBuilderInspector;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
@@ -83,7 +82,7 @@ public class WuicServletContextListener implements ServletContextListener {
         final Object facade = servletContext.getAttribute(ApplicationConfig.WEB_WUIC_FACADE);
         if (facade == null) {
             final String message = String.format("WuicFacade is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
-            throw new BadArgumentException(new IllegalArgumentException(message));
+            WuicException.throwBadStateException(new IllegalArgumentException(message));
         }
 
         return WuicFacade.class.cast(facade);
@@ -102,7 +101,7 @@ public class WuicServletContextListener implements ServletContextListener {
         final Object fct = servletContext.getAttribute(ApplicationConfig.INIT_PARAM_FUNCTION);
         if (fct == null) {
             final String message = String.format("BiFunction is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
-            throw new BadArgumentException(new IllegalArgumentException(message));
+            WuicException.throwBadStateException(new IllegalArgumentException(message));
         }
 
         return (BiFunction<String, String, String>) fct;
@@ -166,7 +165,7 @@ public class WuicServletContextListener implements ServletContextListener {
         try {
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
-            throw new BadArgumentException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
+            WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
         }
     }
 

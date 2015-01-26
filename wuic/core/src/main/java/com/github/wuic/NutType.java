@@ -38,7 +38,7 @@
 
 package com.github.wuic;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,7 +218,8 @@ public enum NutType {
             }
         }
 
-        throw new BadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any NutType", ext)));
+        WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any NutType", ext)));
+        return null;
     }
 
     /**

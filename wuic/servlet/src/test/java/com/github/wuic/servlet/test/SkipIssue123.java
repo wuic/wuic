@@ -39,10 +39,6 @@
 package com.github.wuic.servlet.test;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.nut.AbstractNutDao;
-import com.github.wuic.nut.dao.NutDao;
-import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.servlet.HtmlParserFilter;
 
 import javax.servlet.FilterChain;

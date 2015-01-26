@@ -221,6 +221,19 @@ public class WuicXmlTest {
         }
     }
 
+
+    /**
+     * <p>
+     * Test when a bad XML file is detected.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void xmlReadExceptionTest() throws Exception {
+        new FileXmlContextBuilderConfigurator(null);
+    }
+
     /**
      * <p>
      * Tests when default DAO.

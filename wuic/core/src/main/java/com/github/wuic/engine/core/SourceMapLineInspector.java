@@ -52,6 +52,7 @@ import com.github.wuic.nut.NutsHeap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -117,7 +118,15 @@ public class SourceMapLineInspector extends LineInspector {
         // Extract the nut
         final String referencedPath = matcher.group(1);
         final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
-        final List<Nut> nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
+        final List<Nut> nuts;
+
+        try {
+            nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+            return null;
+        }
+
         final List<? extends ConvertibleNut> res;
 
         if (!nuts.isEmpty()) {

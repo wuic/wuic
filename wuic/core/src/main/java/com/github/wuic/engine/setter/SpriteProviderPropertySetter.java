@@ -42,8 +42,8 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.core.CssSpriteProvider;
 import com.github.wuic.engine.core.JavascriptSpriteProvider;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.config.PropertySetter;
+import com.github.wuic.exception.WuicException;
 
 /**
  * <p>
@@ -86,17 +86,17 @@ public class SpriteProviderPropertySetter extends PropertySetter<SpriteProvider[
                 } else if (o.equals("javascript")) {
                     sp[cpt++] = new JavascriptSpriteProvider();
                 } else {
-                    throw new BadArgumentException(new IllegalArgumentException(
-                            String.format(
-                                    "Key '%s' is associated to a the value '%s' which is not a String which equals to css or javascript",
-                                    getPropertyKey(),
-                                    value)));
+                    WuicException.throwBadArgumentException(new IllegalArgumentException(
+                             String.format(
+                                     "Key '%s' is associated to a the value '%s' which is not a String which equals to css or javascript",
+                                     getPropertyKey(),
+                                     value)));
                 }
             }
 
             put(getPropertyKey(), sp);
         } else {
-            throw new BadArgumentException(new IllegalArgumentException(
+            WuicException.throwBadArgumentException(new IllegalArgumentException(
                     String.format("Value '%s' associated to key %s must be an String", value, getPropertyKey())));
         }
     }

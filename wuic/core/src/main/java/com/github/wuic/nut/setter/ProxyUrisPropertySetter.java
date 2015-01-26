@@ -39,8 +39,8 @@
 package com.github.wuic.nut.setter;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.config.PropertySetter;
+import com.github.wuic.exception.WuicException;
 
 /**
  * <p>
@@ -67,8 +67,8 @@ public class ProxyUrisPropertySetter extends PropertySetter<String[]> {
         } else if (value instanceof String) {
             put(getPropertyKey(), value.toString().isEmpty() ? null : value.toString().split("\\|"));
         } else {
-            throw new BadArgumentException(new IllegalArgumentException(
-                    String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));
+            WuicException.throwBadArgumentException(new IllegalArgumentException(
+                     String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));
         }
     }
 

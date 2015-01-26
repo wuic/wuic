@@ -43,7 +43,6 @@ import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.NutsHeap;
@@ -55,6 +54,7 @@ import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -149,7 +149,12 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             retval = new ArrayList<ConvertibleNut>((value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult()).values());
         } else {
             // Nut does not exists
-            request.getHeap().addObserver(new InvalidateCache(key));
+            try {
+                request.getHeap().addObserver(new InvalidateCache(key));
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+            }
+
             final Map<String, ConvertibleNut> toCache;
 
             // We are in best effort, do the minimal of operations and return the resulting nut
@@ -168,7 +173,13 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     prefixed.add(new PrefixedNut(nut, "best-effort"));
                 }
 
-                retval = ByteArrayNut.toByteArrayNut(prefixed);
+                try {
+                    retval = ByteArrayNut.toByteArrayNut(prefixed);
+                } catch (IOException ioe) {
+                    WuicException.throwWuicException(ioe);
+                    return null;
+                }
+
                 final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
 
                 for (final ConvertibleNut nut : retval) {
@@ -302,9 +313,9 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     /**
      * <p>
      * Waits for the end of the given future and returns the result. If any {@link InterruptedException} occurs, then it
-     * is wrapped in a {@link BadArgumentException} which is unchecked. If any {@link ExecutionException} occurs, then it
-     * is also wrapped to a {@link BadArgumentException} except if its cause IS-A {@link WuicException}. In that case,
-     * the cause is just re-thrown.
+     * is wrapped in a {@link IllegalArgumentException} which is unchecked. If any {@link ExecutionException} occurs, then
+     * it is also wrapped to a {@link IllegalArgumentException} except if its cause IS-A {@link WuicException}. In that
+     * case, the cause is just re-thrown.
      * </p>
      *
      * @param future the future to wait for
@@ -315,14 +326,16 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         try {
             return future.get();
         } catch (InterruptedException ie) {
-            throw new BadArgumentException(new IllegalArgumentException(ie));
+            WuicException.throwBadArgumentException(new IllegalArgumentException(new IllegalArgumentException(ie)));
         } catch (ExecutionException ee) {
             if (ee.getCause() instanceof WuicException) {
                 throw (WuicException) ee.getCause();
             } else {
-                throw new BadArgumentException(new IllegalArgumentException(ee));
+                WuicException.throwBadArgumentException(new IllegalArgumentException(new IllegalArgumentException(ee)));
             }
         }
+
+        return null;
     }
 
     /**
@@ -460,6 +473,9 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 }
 
                 return toCache;
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+                return null;
             } finally {
                 // Finished parsing
                 synchronized (parsingBestEffort) {
@@ -526,6 +542,9 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 putToCache(request.getKey(), cached);
 
                 return toCache;
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+                return null;
             } finally {
                 // Finished parsing
                 synchronized (parsingDefault) {

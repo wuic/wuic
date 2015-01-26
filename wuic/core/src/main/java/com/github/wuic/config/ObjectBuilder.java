@@ -38,8 +38,6 @@
 
 package com.github.wuic.config;
 
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-
 import java.util.Map;
 
 /**
@@ -61,17 +59,20 @@ public interface ObjectBuilder<T> {
      * Decorates this builder with a property.
      * </p>
      *
+     * <p>
+     * Throws an {@link IllegalArgumentException} if the property key is not supported or if the value is incorrect.
+     * </p>
+     *
      * @param key the key
      * @param value the value
      * @return a builder taking in consideration the new property
-     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if the property key is not supported or if the value is incorrect
      */
-    ObjectBuilder<T> property(String key, Object value) throws BuilderPropertyNotSupportedException;
+    ObjectBuilder<T> property(String key, Object value);
 
     /**
      * <p>
      * Disables the support of a property with a particular value. Any future setting which match the given key/value pair
-     * (when calling {@link #property(String, Object)}) will result in a {@link BuilderPropertyNotSupportedException}.
+     * (when calling {@link #property(String, Object)}) will result in an {@link IllegalArgumentException}.
      * </p>
      *
      * @param key the key
@@ -85,11 +86,14 @@ public interface ObjectBuilder<T> {
      * Gets the property identified by the given key.
      * </p>
      *
+     * <p>
+     * Throws an {@link IllegalArgumentException} if the property key is not supported.
+     * </p>
+     *
      * @param key the key
      * @return the value associated to the key
-     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if the property key is not supported
      */
-    Object property(String key) throws BuilderPropertyNotSupportedException;
+    Object property(String key);
 
     /**
      * <p>

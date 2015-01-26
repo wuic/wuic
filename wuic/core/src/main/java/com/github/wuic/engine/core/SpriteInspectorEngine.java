@@ -52,8 +52,6 @@ import com.github.wuic.engine.Region;
 import com.github.wuic.engine.SpriteProvider;
 import com.github.wuic.engine.setter.SpriteProviderPropertySetter;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
 import com.github.wuic.util.IOUtils;
@@ -144,7 +142,7 @@ public class SpriteInspectorEngine extends NodeEngine {
                         if (origin instanceof ImageNut) {
                             addRegionToSpriteProviders(ImageNut.class.cast(origin).getRegion(), origin.getName());
                         } else {
-                            throw new BadArgumentException(new IllegalArgumentException("Processed nuts must refer ImageNut instances as original nuts"));
+                            WuicException.throwBadArgumentException(new IllegalArgumentException("Processed nuts must refer ImageNut instances as original nuts"));
                         }
                     }
                 } else {
@@ -158,7 +156,7 @@ public class SpriteInspectorEngine extends NodeEngine {
                         reader.setInput(iis);
                         addRegionToSpriteProviders(new Region(0, 0, reader.getWidth(0) - 1, reader.getHeight(0) - 1), n.getName());
                     } catch (IOException ioe) {
-                        throw new StreamException(ioe);
+                        WuicException.throwWuicException(ioe);
                     } finally {
                         IOUtils.close(is);
                     }
@@ -232,7 +230,15 @@ public class SpriteInspectorEngine extends NodeEngine {
         ConvertibleNut retval = null;
 
         for (final SpriteProvider sp : spriteProviders) {
-            final ConvertibleNut nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
+            final ConvertibleNut nut;
+
+            try {
+                nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+                return null;
+            }
+
             final NodeEngine chain = request.getChainFor(nut.getInitialNutType());
 
             if (chain != null) {

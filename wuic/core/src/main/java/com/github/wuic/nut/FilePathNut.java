@@ -38,7 +38,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.path.FilePath;
 
 import java.io.IOException;
@@ -56,11 +55,6 @@ import java.util.concurrent.Future;
  * @since 0.1.1
  */
 public class FilePathNut extends AbstractNut {
-
-    /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = 1L;
 
     /**
      * The root directory that contains the files of a same group.
@@ -86,11 +80,7 @@ public class FilePathNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return path.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    public InputStream openStream() throws IOException {
+        return path.openStream();
     }
 }

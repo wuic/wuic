@@ -38,8 +38,6 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
@@ -111,10 +109,6 @@ public class TransformedNut extends NutWrapper implements Serializable {
             for (final Pipe.OnReady cb : merge) {
                 cb.ready(execution);
             }
-        } catch (NutNotFoundException nnfe) {
-            throw new IOException(nnfe);
-        } catch (StreamException se) {
-            throw new IOException(se);
         } finally {
             IOUtils.close(is);
         }

@@ -76,6 +76,11 @@ public interface ErrorCode {
     long POLLING_NOT_SUPPORTED_EXCEPTION = 19860606005L;
 
     /**
+     * A state is not of an expected state or is null while it should.
+     */
+    long BAD_STATE_EXCEPTION = 19860606006L;
+
+    /**
      * Default code when the wuic.xml path can't be read.
      */
     long XML_CANNOT_READ = 19860606100L;

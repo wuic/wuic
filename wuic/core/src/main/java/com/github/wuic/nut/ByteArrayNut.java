@@ -39,8 +39,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
@@ -134,10 +132,9 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * </p>
      *
      * @return the byte array nut
-     * @throws StreamException if an I/O error occurs
-     * @throws NutNotFoundException if given nut not normally created
+     * @throws IOException if any I/O error occurs
      */
-    public static List<ConvertibleNut> toByteArrayNut(final List<ConvertibleNut> nuts) throws StreamException, NutNotFoundException {
+    public static List<ConvertibleNut> toByteArrayNut(final List<ConvertibleNut> nuts) throws IOException {
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
 
         for (final ConvertibleNut nut : nuts) {
@@ -154,10 +151,9 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      *
      * @param nut the nut to convert
      * @return the byte array nut
-     * @throws StreamException if an I/O error occurs
-     * @throws NutNotFoundException if given nut not normally created
+     * @throws IOException if any I/O error occurs
      */
-    public static ConvertibleNut toByteArrayNut(final ConvertibleNut nut) throws StreamException, NutNotFoundException {
+    public static ConvertibleNut toByteArrayNut(final ConvertibleNut nut) throws IOException {
         InputStream is = null;
 
         try {
@@ -193,8 +189,6 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             }
 
             return new TransformedNut(bytes);
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
         } finally {
             IOUtils.close(is);
         }
@@ -204,7 +198,7 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
+    public InputStream openStream() {
         return new ByteArrayInputStream(byteArray);
     }
 }

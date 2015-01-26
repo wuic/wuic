@@ -3,8 +3,6 @@ package com.github.wuic.test.xml;
 import com.github.wuic.NutType;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.exception.NutNotFoundException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -13,6 +11,7 @@ import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.util.FutureLong;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,14 +46,14 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void observe(final String realPath, final NutDaoListener... listeners) throws StreamException {
+    public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws StreamException {
+    public List<Nut> create(final String path) throws IOException {
         return create(path, null);
     }
 
@@ -62,22 +61,18 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws StreamException {
-        try {
-            final ConvertibleNut nut = mock(ConvertibleNut.class);
-            when(nut.getInitialNutType()).thenReturn(NutType.CSS);
-            when(nut.getNutType()).thenReturn(NutType.CSS);
-            when(nut.getName()).thenReturn("foo.css");
-            when(nut.getInitialName()).thenReturn("foo.css");
-            final List<Nut> nuts = new ArrayList<Nut>();
-            nuts.add(nut);
-            when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-            when(nut.isAggregatable()).thenReturn(true);
-            when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-            return nuts;
-        } catch (NutNotFoundException se) {
-            throw new RuntimeException(se);
-        }
+    public List<Nut> create(final String path, final PathFormat format) throws IOException {
+        final ConvertibleNut nut = mock(ConvertibleNut.class);
+        when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+        when(nut.getNutType()).thenReturn(NutType.CSS);
+        when(nut.getName()).thenReturn("foo.css");
+        when(nut.getInitialName()).thenReturn("foo.css");
+        final List<Nut> nuts = new ArrayList<Nut>();
+        nuts.add(nut);
+        when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        when(nut.isAggregatable()).thenReturn(true);
+        when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        return nuts;
     }
 
     /**
@@ -122,7 +117,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
+    public InputStream newInputStream(final String path) throws IOException {
         return null;
     }
 
@@ -130,7 +125,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         return null;
     }
 }

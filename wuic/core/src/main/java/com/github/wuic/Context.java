@@ -42,13 +42,13 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProviderFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -141,9 +141,10 @@ public class Context implements Observer {
      * @param urlProviderFactory the URL provider
      * @return the nut corresponding to the nut name
      * @throws WuicException if workflow fails to be processed
+     * @throws IOException if any I/O error occurs
      */
     public ConvertibleNut process(final String contextPath, final String wId, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
-            throws WuicException {
+            throws WuicException, IOException {
         return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, skip);
     }
 
@@ -182,10 +183,10 @@ public class Context implements Observer {
         }
 
         if (workflow == null) {
-            throw new WorkflowNotFoundException(wId);
-        } else {
-            return workflow;
+            WuicException.throwWorkflowNotFoundException(wId);
         }
+
+        return workflow;
     }
 
     /**
@@ -207,7 +208,7 @@ public class Context implements Observer {
                                    final String path,
                                    final UrlProviderFactory urlProviderFactory,
                                    final EngineType ... skip)
-            throws WuicException {
+            throws IOException, WuicException {
         EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
                 .contextPath(contextPath)
                 .chains(workflow.getChains())
@@ -231,10 +232,10 @@ public class Context implements Observer {
         }
 
         if (retval == null) {
-            throw new NutNotFoundException(path, wId);
-        } else {
-            return retval;
+            WuicException.throwNutNotFoundException(path, wId);
         }
+
+        return retval;
     }
 
     /**

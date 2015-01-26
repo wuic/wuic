@@ -39,7 +39,6 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,11 +80,7 @@ public class HttpNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
-        try {
-            return nutUrl.openStream();
-        } catch (IOException ioe) {
-            throw new NutNotFoundException(ioe);
-        }
+    public InputStream openStream() throws IOException {
+        return nutUrl.openStream();
     }
 }

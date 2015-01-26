@@ -39,9 +39,9 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.Pipe;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -264,7 +264,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
+    public InputStream openStream() throws IOException {
         return wrap.openStream();
     }
 

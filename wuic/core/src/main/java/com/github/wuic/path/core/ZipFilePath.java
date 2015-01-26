@@ -38,7 +38,7 @@
 
 package com.github.wuic.path.core;
 
-import com.github.wuic.exception.wrapper.BadArgumentException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.util.CloseableZipFileAdapter;
@@ -185,7 +185,7 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
             // Make sure we are going to list the entries of directory inside the archive
             if (!archive.getEntry(rootEntry).isDirectory()) {
                 final String message = String.format("%s is not a ZIP directory entry", rootEntry);
-                throw new BadArgumentException(new IllegalArgumentException(message));
+                WuicException.throwBadArgumentException(new IllegalArgumentException(message));
             }
 
             // Read entries

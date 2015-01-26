@@ -44,7 +44,6 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HttpNut;
 import com.github.wuic.nut.Nut;
@@ -127,7 +126,7 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    protected List<String> listNutsPaths(final String pattern) throws StreamException {
+    protected List<String> listNutsPaths(final String pattern) throws IOException {
         // Finding nuts with a regex through HTTP protocol is tricky
         // Until this feature is implemented, we only expect pattern that represent a real nut
         return Arrays.asList(pattern);
@@ -137,71 +136,51 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final NutType type) throws StreamException {
+    public Nut accessFor(final String realPath, final NutType type) throws IOException {
         final String p = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
         log.debug("Opening HTTP access for {}", p);
-
-        try {
-            final URL url = new URL(p);
-            return new HttpNut(realPath, url, type, getVersionNumber(p));
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+        final URL url = new URL(p);
+        return new HttpNut(realPath, url, type, getVersionNumber(p));
     }
 
     /**
      * Gets the 'LastModified' header from the given URL.
+     *
+     * @throws IOException if any I/O error occurs
      */
-    private Long getLastUpdateTimestampFor(final URL url) throws StreamException {
-        try {
-            return url.openConnection().getLastModified();
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+    private Long getLastUpdateTimestampFor(final URL url) throws IOException {
+        return url.openConnection().getLastModified();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         final String url = IOUtils.mergePath(baseUrl, getBasePath(), path);
         log.debug("Polling HTTP nut for {}", url);
-
-        try {
-            return getLastUpdateTimestampFor(new URL(url));
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+        return getLastUpdateTimestampFor(new URL(url));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws StreamException {
-        try {
-            return new URL(path).openStream();
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+    public InputStream newInputStream(final String path) throws IOException {
+        return new URL(path).openStream();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws StreamException {
+    public Boolean exists(final String path) throws IOException {
         final String url = IOUtils.mergePath(baseUrl, getBasePath(), path);
         HttpURLConnection.setFollowRedirects(false);
 
-        try {
-            final HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-            con.setRequestMethod("HEAD");
-            return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
-        } catch (IOException ioe) {
-            throw new StreamException(ioe);
-        }
+        final HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        con.setRequestMethod("HEAD");
+        return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
     }
 
     /**

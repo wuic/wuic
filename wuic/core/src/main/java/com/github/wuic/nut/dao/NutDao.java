@@ -38,9 +38,9 @@
 
 package com.github.wuic.nut.dao;
 
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.Nut;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -112,9 +112,9 @@ public interface NutDao {
      *
      * @param realPath the real path name of the nut.
      * @param listeners some listeners to be notified when an update has been detected on a nut
-     * @throws StreamException if an I/O occurs while retrieving last update of the nut
+     * @throws IOException if an I/O occurs while retrieving last update of the nut
      */
-    void observe(String realPath, NutDaoListener ... listeners) throws StreamException;
+    void observe(String realPath, NutDaoListener ... listeners) throws IOException;
 
     /**
      * <p>
@@ -123,11 +123,10 @@ public interface NutDao {
      *
      * @param path the path representing the location of the nut(s)
      * @return the created nut(s)
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
+     * @throws java.io.IOException if an I/O error occurs when creating the nut
      * @see NutDao#create(String, NutDao.PathFormat)
      */
-    List<Nut> create(String path) throws StreamException;
-
+    List<Nut> create(String path) throws IOException;
 
     /**
      * <p>
@@ -141,9 +140,9 @@ public interface NutDao {
      * @param path the path representing the location of the nut(s)
      * @param format the path format
      * @return the created nut(s)
-     * @throws com.github.wuic.exception.wrapper.StreamException if an I/O error occurs when creating the nut
+     * @throws IOException if an I/O error occurs when creating the nut
      */
-    List<Nut> create(String path, PathFormat format) throws StreamException;
+    List<Nut> create(String path, PathFormat format) throws IOException;
 
     /**
      * <p>
@@ -203,9 +202,9 @@ public interface NutDao {
      *
      * @param path the path to access
      * @return the stream
-     * @throws StreamException if stream could not be opened
+     * @throws IOException if stream could not be opened
      */
-    InputStream newInputStream(String path) throws StreamException;
+    InputStream newInputStream(String path) throws IOException;
 
     /**
      * <p>
@@ -214,7 +213,7 @@ public interface NutDao {
      *
      * @param path the path the DAO should be able to resolve
      * @return {@code true} if path is resolved, {@code false} otherwise
-     * @throws StreamException if any I/O error occurs
+     * @throws IOException if any I/O error occurs
      */
-    Boolean exists(String path) throws StreamException;
+    Boolean exists(String path) throws IOException;
 }

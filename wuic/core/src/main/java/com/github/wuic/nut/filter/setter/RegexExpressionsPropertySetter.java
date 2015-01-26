@@ -39,8 +39,8 @@
 package com.github.wuic.nut.filter.setter;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.exception.wrapper.BadArgumentException;
 import com.github.wuic.config.PropertySetter;
+import com.github.wuic.exception.WuicException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -77,7 +77,7 @@ public class RegexExpressionsPropertySetter extends PropertySetter<String[]> {
 
             put(getPropertyKey(), trimmed.toArray(new String[trimmed.size()]));
         } else {
-            throw new BadArgumentException(new IllegalArgumentException(
+            WuicException.throwBadArgumentException(new IllegalArgumentException(
                     String.format("Value '%s' associated to key '%s' must be a String", value, getPropertyKey())));
         }
     }

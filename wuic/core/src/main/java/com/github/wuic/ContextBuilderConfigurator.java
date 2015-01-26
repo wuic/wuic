@@ -38,11 +38,11 @@
 
 package com.github.wuic;
 
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -135,7 +135,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
                     pollingContextBuilder.clearTag(getTag());
                     configure(pollingContextBuilder);
                 }
-            } catch (StreamException se) {
+            } catch (IOException se) {
                 log.info("Unable to poll configuration", se);
             }
         } else {
@@ -154,9 +154,9 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * </p>
      *
      * @param ctxBuilder the builder
-     * @throws StreamException if I/O error occurs when start polling
+     * @throws IOException if I/O error occurs when start polling
      */
-    public void configure(final ContextBuilder ctxBuilder) throws StreamException {
+    public void configure(final ContextBuilder ctxBuilder) throws IOException {
         // Do not run multiple times configurators with the same tags
         if (!multipleConfigurations && !IGNORE_TAGS.add(getTag())) {
             log.info("Configuration with tag {} has been already performed, ignoring", getTag());

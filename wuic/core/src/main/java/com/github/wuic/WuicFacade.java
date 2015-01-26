@@ -42,12 +42,12 @@ import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import com.github.wuic.exception.xml.WuicXmlReadException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
@@ -172,7 +172,7 @@ public final class WuicFacade {
                 b.getConfigurators().add(new FileXmlContextBuilderConfigurator(config.getWuicXmlPath()));
             }
         } catch (JAXBException je) {
-            throw new WuicXmlReadException("unable to load wuic.xml", je) ;
+            WuicException.throwWuicXmlReadException(je) ;
         }
 
         builder = b.getObjectBuilderInspector() == null ? new ContextBuilder() : new ContextBuilder(b.getObjectBuilderInspector());
@@ -214,12 +214,16 @@ public final class WuicFacade {
      * @throws WuicException if an I/O error occurs or context can't be built
      */
     public synchronized void configure(final Boolean useDefault, final ContextBuilderConfigurator... configurators) throws WuicException {
-        if (useDefault) {
-            builder.configureDefault();
-        }
+        try {
+            if (useDefault) {
+                builder.configureDefault();
+            }
 
-        for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
-            contextBuilderConfigurator.configure(builder);
+            for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
+                contextBuilderConfigurator.configure(builder);
+            }
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
         }
 
         refreshContext();
@@ -257,11 +261,15 @@ public final class WuicFacade {
      */
     public synchronized ConvertibleNut runWorkflow(final String id, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
             throws WuicException {
-        final long start = beforeRunWorkflow(id);
-        final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, skip);
-        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
-
-        return retval;
+        try {
+            final long start = beforeRunWorkflow(id);
+            final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, skip);
+            log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+            return retval;
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+            return null;
+        }
     }
 
 

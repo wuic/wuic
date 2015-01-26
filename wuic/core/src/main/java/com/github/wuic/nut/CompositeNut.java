@@ -38,7 +38,6 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NumberUtils;
@@ -235,8 +234,6 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             finalPipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
-        } catch (NutNotFoundException nnfe) {
-            throw new IOException(nnfe);
         } finally {
             setTransformed(true);
         }
@@ -246,7 +243,7 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws NutNotFoundException {
+    public InputStream openStream() throws IOException {
         return new CompositeInputStream();
     }
 
@@ -292,9 +289,9 @@ public class CompositeNut extends PipedConvertibleNut {
          * Builds a new instance.
          * </p>
          *
-         * @throws NutNotFoundException if a stream could not be opened
+         * @throws IOException if a stream could not be opened
          */
-        private CompositeInputStream() throws NutNotFoundException {
+        private CompositeInputStream() throws IOException {
             final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * NumberUtils.TWO);
             separatorPositions = new long[compositionList.size()];
 

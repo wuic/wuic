@@ -48,7 +48,6 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.Region;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.exception.wrapper.StreamException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
 import com.github.wuic.nut.ByteArrayNut;
@@ -146,7 +145,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
 
                     originals.add(new ImageNut(entry.getValue(), r));
                 } catch (IOException ioe) {
-                    throw new StreamException(ioe);
+                    WuicException.throwWuicException(ioe);
                 } finally {
                     IOUtils.close(is);
                 }
@@ -158,7 +157,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
             try {
                 ImageIO.write(transparentImage, "png", bos);
             } catch (IOException ioe) {
-                throw new StreamException(ioe);
+                WuicException.throwWuicException(ioe);
             }
 
             final ConvertibleNut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals, NutUtils.getVersionNumber(originals));
@@ -251,7 +250,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
 
                 dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), nut);
             } catch (IOException ioe) {
-                throw new StreamException(ioe);
+                WuicException.throwWuicException(ioe);
             } finally {
                 IOUtils.close(is);
             }

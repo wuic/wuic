@@ -45,11 +45,8 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.BuilderPropertyNotSupportedException;
-import com.github.wuic.exception.UnableToInstantiateException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
-import com.github.wuic.exception.wrapper.BadArgumentException;
-import com.github.wuic.exception.wrapper.StreamException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.NutsHeap;
@@ -61,6 +58,7 @@ import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -231,15 +229,8 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
-            try {
-                for (final ObjectBuilderFactory.KnownType type : engineBuilderFactory.knownTypes()) {
-                    ctxBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
-                }
-                // Should never occur
-            } catch (BuilderPropertyNotSupportedException bpnse) {
-                throw new IllegalStateException(bpnse);
-            } catch (UnableToInstantiateException itie) {
-                throw new IllegalStateException(itie);
+            for (final ObjectBuilderFactory.KnownType type : engineBuilderFactory.knownTypes()) {
+                ctxBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
             }
 
             // Never poll
@@ -258,7 +249,7 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             // Never poll
             return 1L;
         }
@@ -304,15 +295,8 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
-            try {
-                for (final ObjectBuilderFactory.KnownType type : nutDaoBuilderFactory.knownTypes()) {
-                    ctxBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
-                }
-                // Should never occur
-            } catch (BuilderPropertyNotSupportedException bpnse) {
-                throw new IllegalStateException(bpnse);
-            } catch (UnableToInstantiateException itie) {
-                throw new IllegalStateException(itie);
+            for (final ObjectBuilderFactory.KnownType type : nutDaoBuilderFactory.knownTypes()) {
+                ctxBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
             }
 
             // Never poll
@@ -331,7 +315,7 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws StreamException {
+        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             // Never poll
             return 1L;
         }
@@ -504,9 +488,9 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @return the current builder
-     * @throws StreamException if configuration fails
+     * @throws IOException if configuration fails
      */
-    public ContextBuilder configureDefault() throws StreamException {
+    public ContextBuilder configureDefault() throws IOException {
         if (!configureDefault) {
             new DefaultEngineContextBuilderConfigurator().configure(this);
             new DefaultDaoContextBuilderConfigurator().configure(this);
@@ -648,9 +632,8 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param id the ID
-         * @throws UnableToInstantiateException if underlying class could not be instantiated
          */
-        public ContextGenericBuilder(final String id) throws UnableToInstantiateException {
+        public ContextGenericBuilder(final String id) {
             this.id = id;
             this.properties = new HashMap<String, Object>();
         }
@@ -693,10 +676,13 @@ public class ContextBuilder extends Observable {
          * Injects in the enclosing builder the component with its settings and return it.
          * </p>
          *
+         * <p>
+         * Throws an {@link IllegalArgumentException} if a previously configured property is not supported
+         * </p>
+         *
          * @return the enclosing builder
-         * @throws BuilderPropertyNotSupportedException if a previously configured property is not supported
          */
-        public abstract ContextBuilder toContext() throws BuilderPropertyNotSupportedException;
+        public abstract ContextBuilder toContext();
     }
 
     /**
@@ -722,9 +708,8 @@ public class ContextBuilder extends Observable {
          *
          * @param id the builder ID
          * @param type the builder type
-         * @throws UnableToInstantiateException if underlying class could not be instantiated
          */
-        public ContextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
+        public ContextEngineBuilder(final String id, final String type) {
             super(id);
             this.engineBuilder = engineBuilderFactory.create(type);
         }
@@ -742,7 +727,7 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+        public ContextBuilder toContext() {
             engineBuilder(getId(), engineBuilder, getProperties());
             return ContextBuilder.this;
         }
@@ -771,9 +756,8 @@ public class ContextBuilder extends Observable {
          *
          * @param id the builder ID
          * @param type the builder type
-         * @throws UnableToInstantiateException if underlying class could not be instantiated
          */
-        public ContextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
+        public ContextNutDaoBuilder(final String id, final String type) {
             super(id);
             this.nutDaoBuilder = nutDaoBuilderFactory.create(type);
         }
@@ -791,7 +775,7 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+        public ContextBuilder toContext() {
             nutDaoBuilder(getId(), nutDaoBuilder, getProperties());
             return ContextBuilder.this;
         }
@@ -820,9 +804,8 @@ public class ContextBuilder extends Observable {
          *
          * @param id the builder ID
          * @param type the builder type
-         * @throws UnableToInstantiateException if underlying class could not be instantiated
          */
-        public ContextNutFilterBuilder(final String id, final String type) throws UnableToInstantiateException {
+        public ContextNutFilterBuilder(final String id, final String type) {
             super(id);
             this.nutFilterBuilder = nutFilterBuilderFactory.create(type);
         }
@@ -840,7 +823,7 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilder toContext() throws BuilderPropertyNotSupportedException {
+        public ContextBuilder toContext() {
             nutFilterBuilder(getId(), nutFilterBuilder, getProperties());
             return ContextBuilder.this;
         }
@@ -854,9 +837,8 @@ public class ContextBuilder extends Observable {
      * @param id the final builder's ID
      * @param type the final builder's type
      * @return the specific context builder
-     * @throws UnableToInstantiateException if underlying class could not be instantiated
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) throws UnableToInstantiateException {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) {
         return new ContextNutDaoBuilder(id, type);
     }
 
@@ -867,9 +849,8 @@ public class ContextBuilder extends Observable {
      *
      * @param type the component to build
      * @return the specific context builder
-     * @throws UnableToInstantiateException if underlying class could not be instantiated
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) throws UnableToInstantiateException {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) {
         return new ContextNutDaoBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
     }
 
@@ -881,9 +862,8 @@ public class ContextBuilder extends Observable {
      * @param id the final builder's ID
      * @param type the final builder's type
      * @return the specific context builder
-     * @throws UnableToInstantiateException if underlying class could not be instantiated
      */
-    public ContextNutFilterBuilder contextNutFilterBuilder(final String id, final String type) throws UnableToInstantiateException {
+    public ContextNutFilterBuilder contextNutFilterBuilder(final String id, final String type) {
         return new ContextNutFilterBuilder(id, type);
     }
 
@@ -895,9 +875,8 @@ public class ContextBuilder extends Observable {
      * @param id the final builder's ID
      * @param type the final builder's type
      * @return the specific context builder
-     * @throws UnableToInstantiateException if underlying class could not be instantiated
      */
-    public ContextEngineBuilder contextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
+    public ContextEngineBuilder contextEngineBuilder(final String id, final String type) {
         return new ContextEngineBuilder(id, type);
     }
 
@@ -908,9 +887,8 @@ public class ContextBuilder extends Observable {
      *
      * @param type the component to build
      * @return the specific context builder
-     * @throws UnableToInstantiateException if underlying class could not be instantiated
      */
-    public ContextEngineBuilder contextEngineBuilder(final Class<?> type) throws UnableToInstantiateException {
+    public ContextEngineBuilder contextEngineBuilder(final Class<?> type) {
         return new ContextEngineBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
     }
 
@@ -965,16 +943,18 @@ public class ContextBuilder extends Observable {
      * If some properties are not supported by the builder, then an exception will be thrown.
      * </p>
      *
+     * <p>
+     * Throws an {@link IllegalArgumentException} if a property is not supported by the builder.
+     * </p>
+     *
      * @param id the ID which identifies the builder in the context
      * @param daoBuilder the builder associated to its ID
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
-     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if a property is not supported by the builder
      */
     private ContextBuilder nutDaoBuilder(final String id,
                                          final ObjectBuilder<NutDao> daoBuilder,
-                                         final Map<String, Object> properties)
-                                         throws BuilderPropertyNotSupportedException {
+                                         final Map<String, Object> properties) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1003,12 +983,10 @@ public class ContextBuilder extends Observable {
      * @param filterBuilder the builder associated to its ID
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
-     * @throws com.github.wuic.exception.BuilderPropertyNotSupportedException if a property is not supported by the builder
      */
     private ContextBuilder nutFilterBuilder(final String id,
                                             final ObjectBuilder<NutFilter> filterBuilder,
-                                            final Map<String, Object> properties)
-            throws BuilderPropertyNotSupportedException {
+                                            final Map<String, Object> properties) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1034,9 +1012,9 @@ public class ContextBuilder extends Observable {
      * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
-     * @throws StreamException if the HEAP could not be created
+     * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String ... path) throws StreamException {
+    public ContextBuilder heap(final String id, final String ndbId, final String ... path) throws IOException {
         return heap(id, ndbId, null, path);
     }
 
@@ -1053,7 +1031,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * If the {@link com.github.wuic.config.ObjectBuilder} ID is not known, a {@link com.github.wuic.exception.wrapper.BadArgumentException}
+     * If the {@link com.github.wuic.config.ObjectBuilder} ID is not known, a {@link IllegalArgumentException}
      * will be thrown.
      * </p>
      *
@@ -1062,13 +1040,13 @@ public class ContextBuilder extends Observable {
      * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
      * @return this {@link ContextBuilder}
-     * @throws StreamException if the HEAP could not be created
+     * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws StreamException {
+    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws IOException {
         NutDao dao = null;
 
         if (NumberUtils.isNumber(id)) {
-            throw new BadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
+            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
         }
 
         // Will override existing element
@@ -1112,7 +1090,7 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * Also throws a {@link BadArgumentException} if their is at least one path while the specified DAO is {@code null}.
+     * Also throws a {@link IllegalArgumentException} if their is at least one path while the specified DAO is {@code null}.
      * </p>
      *
      * @param dao the {@link NutDao} that creates {@link com.github.wuic.nut.Nut} with given path
@@ -1127,7 +1105,8 @@ public class ContextBuilder extends Observable {
             if (dao == null) {
                 final String msg = String.format("'%s' does not correspond to any %s, add it with nutDaoBuilder() first",
                         ndbId, NutDaoService.class.getName());
-                throw new BadArgumentException(new IllegalArgumentException(msg));
+                WuicException.throwBadArgumentException(new IllegalArgumentException(msg));
+                return null;
             } else {
                 // Going to filter the list with all declared filters
                 pathList = CollectionUtils.newList(path);
@@ -1156,12 +1135,10 @@ public class ContextBuilder extends Observable {
      * @param engineBuilder the {@link com.github.wuic.engine.Engine} builder to configure
      * @param properties the builder's properties (must be supported by the builder)
      * @return this {@link ContextBuilder}
-     * @throws BuilderPropertyNotSupportedException if a property is not supported
      */
     private ContextBuilder engineBuilder(final String id,
                                          final ObjectBuilder<Engine> engineBuilder,
-                                         final Map<String, Object> properties)
-            throws BuilderPropertyNotSupportedException {
+                                         final Map<String, Object> properties) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1186,12 +1163,12 @@ public class ContextBuilder extends Observable {
      * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
      * @param daos the DAO
      * @return this {@link ContextBuilder}
-     * @throws StreamException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      * @see ContextBuilder#template(String, String[], String[], Boolean, String...)
      */
     public ContextBuilder template(final String id,
                                    final String[] ebIds,
-                                   final String ... daos) throws StreamException {
+                                   final String ... daos) throws IOException {
         return template(id, ebIds, null, Boolean.TRUE, daos);
     }
 
@@ -1235,13 +1212,13 @@ public class ContextBuilder extends Observable {
      * @param ndbIds the set of {@link com.github.wuic.nut.dao.NutDao} builder where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
-     * @throws StreamException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     public ContextBuilder template(final String id,
                                    final String[] ebIds,
                                    final String[] ebIdsExclusion,
                                    final Boolean includeDefaultEngines,
-                                   final String ... ndbIds) throws StreamException {
+                                   final String ... ndbIds) throws IOException {
         final ContextSetting setting = getSetting();
 
         // Retrieve each DAO associated to all provided IDs
@@ -1329,20 +1306,20 @@ public class ContextBuilder extends Observable {
      * @param forEachHeap {@code true} if a dedicated workflow must be created for each matching heap, {@code false} for a composition
      * @param heapIdPattern the regex matching the heap IDs that needs to be processed
      * @return this {@link ContextBuilder}
-     * @throws StreamException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      * @throws WorkflowTemplateNotFoundException if the specified template ID does not exists
      */
     public ContextBuilder workflow(final String identifier,
                                    final Boolean forEachHeap,
                                    final String heapIdPattern,
                                    final String workflowTemplateId)
-            throws StreamException, WorkflowTemplateNotFoundException {
+            throws IOException, WorkflowTemplateNotFoundException {
         final ContextSetting setting = getSetting();
 
         final WorkflowTemplate template = getWorkflowTemplate(workflowTemplateId);
 
         if (template == null) {
-            throw new WorkflowTemplateNotFoundException(workflowTemplateId);
+            WuicException.throwWorkflowTemplateNotFoundException(workflowTemplateId);
         }
 
         final Map<NutType, ? extends NodeEngine> chains = template.getChains();
@@ -1360,7 +1337,7 @@ public class ContextBuilder extends Observable {
                 final String id = identifier + heap.getId();
 
                 if (NumberUtils.isNumber(id)) {
-                    throw new BadArgumentException(new IllegalArgumentException(
+                    WuicException.throwBadArgumentException(new IllegalArgumentException(
                             String.format("Workflow ID %s cannot be a numeric value", id)));
                 }
 
@@ -1373,7 +1350,7 @@ public class ContextBuilder extends Observable {
             }
         } else {
             if (NumberUtils.isNumber(identifier)) {
-                throw new BadArgumentException(new IllegalArgumentException(
+                WuicException.throwBadArgumentException(new IllegalArgumentException(
                         String.format("Workflow ID %s cannot be a numeric value", identifier)));
             }
 
@@ -1654,15 +1631,17 @@ public class ContextBuilder extends Observable {
      * Configures the given builder with the specified properties and then return it.
      * </p>
      *
+     * <p>
+     * Throws an {@link IllegalArgumentException} if a specified property is not supported by the builder
+     * </p>
+     *
      * @param builder the builder
      * @param properties the properties to use to configure the builder
      * @param <O> the type produced by the builder
      * @param <T> the type of builder
      * @return the given builder
-     * @throws BuilderPropertyNotSupportedException if a specified property is not supported by the builder
      */
-    private <O, T extends ObjectBuilder<O>> T configure(final T builder,  final Map<String, Object> properties)
-            throws BuilderPropertyNotSupportedException {
+    private <O, T extends ObjectBuilder<O>> T configure(final T builder,  final Map<String, Object> properties) {
         for (final Map.Entry entry : properties.entrySet()) {
             builder.property(String.valueOf(entry.getKey()), entry.getValue());
         }

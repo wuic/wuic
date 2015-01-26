@@ -103,7 +103,7 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
                 final File entryArchiveDisk = File.createTempFile("entryArchive", ".zip");
                 is = archive.getInputStream(entry);
                 os = new FileOutputStream(entryArchiveDisk);
-                IOUtils.copyStreamIoe(is, os);
+                IOUtils.copyStream(is, os);
                 return new ZipFilePath(entryArchiveDisk, child, this);
             } else {
 

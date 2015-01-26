@@ -47,7 +47,7 @@ package com.github.wuic.exception;
  * @version 1.2
  * @since 0.1.0
  */
-public class WorkflowNotFoundException extends WuicException implements ErrorCode {
+public class WorkflowNotFoundException extends WuicException {
 
     /**
      * Serial version UID.
@@ -59,17 +59,9 @@ public class WorkflowNotFoundException extends WuicException implements ErrorCod
      * Builds a new exception.
      * </p>
      *
-     * @param workflowId the group ID
+     * @param message the message
      */
-    public WorkflowNotFoundException(final String workflowId) {
-        super(String.format("The workflow identified with '%s' could not be found", workflowId));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getErrorCode() {
-        return ErrorCode.WORKFLOW_NOT_FOUND;
+    WorkflowNotFoundException(final String message) {
+        super(message);
     }
 }
