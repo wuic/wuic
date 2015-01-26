@@ -264,18 +264,16 @@ public class ContextBuilderTest {
      */
     @Test
     public void overrideDefaultEnginesTest() throws Exception {
-        final String defaultName = ContextBuilder.ID_PREFIX + "TextAggregatorEngineBuilder";
-
         // Typical use : no exception should be thrown
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).configureDefault();
         builder.tag("test")
                .contextNutDaoBuilder("dao", "MockDaoBuilder")
                .toContext()
                .heap("heap", "dao", NUT_NAME_ONE, NUT_NAME_TWO)
-               .contextEngineBuilder(defaultName, "TextAggregatorEngineBuilder")
+               .contextEngineBuilder(TextAggregatorEngine.class)
                .property(ApplicationConfig.AGGREGATE, false)
                .toContext()
-               .template("tpl", new String[]{defaultName})
+               .template("tpl", new String[]{ ContextBuilder.getDefaultBuilderId(TextAggregatorEngine.class) })
                .workflow("workflow-", true, "heap", "tpl")
                .releaseTag();
 

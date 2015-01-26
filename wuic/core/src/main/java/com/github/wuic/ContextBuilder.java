@@ -127,7 +127,7 @@ public class ContextBuilder extends Observable {
     /**
      * Prefix for default IDs.
      */
-    public static final String ID_PREFIX = "wuicDefault";
+    private static final String BUILDER_ID_PREFIX = "wuicDefault";
 
     /**
      * The logger.
@@ -233,7 +233,7 @@ public class ContextBuilder extends Observable {
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final ObjectBuilderFactory.KnownType type : engineBuilderFactory.knownTypes()) {
-                    ctxBuilder.contextEngineBuilder(ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                    ctxBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
                 // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {
@@ -306,7 +306,7 @@ public class ContextBuilder extends Observable {
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             try {
                 for (final ObjectBuilderFactory.KnownType type : nutDaoBuilderFactory.knownTypes()) {
-                    ctxBuilder.contextNutDaoBuilder(ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                    ctxBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
                 // Should never occur
             } catch (BuilderPropertyNotSupportedException bpnse) {
@@ -486,8 +486,20 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Gets the default builder name for the given component class.
+     * </p>
+     *
+     * @param component the component class
+     * @return the default ID
+     */
+    public static String getDefaultBuilderId(final Class<?> component) {
+        return "wuicDefault" + component.getSimpleName() + "Builder";
+    }
+
+    /**
+     * <p>
      * Configures for each type provided by the engine builder factory and nut dao builder factory a
-     * default instance identified with an id starting by {@link #ID_PREFIX} and followed by the type
+     * default instance identified with an id starting by {@link #BUILDER_ID_PREFIX} and followed by the type
      * name itself.
      * </p>
      *
@@ -850,6 +862,19 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Returns a new default context DAO builder.
+     * </p>
+     *
+     * @param type the component to build
+     * @return the specific context builder
+     * @throws UnableToInstantiateException if underlying class could not be instantiated
+     */
+    public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) throws UnableToInstantiateException {
+        return new ContextNutDaoBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+    }
+
+    /**
+     * <p>
      * Returns a new context filter builder.
      * </p>
      *
@@ -874,6 +899,19 @@ public class ContextBuilder extends Observable {
      */
     public ContextEngineBuilder contextEngineBuilder(final String id, final String type) throws UnableToInstantiateException {
         return new ContextEngineBuilder(id, type);
+    }
+
+    /**
+     * <p>
+     * Returns a new context default engine builder.
+     * </p>
+     *
+     * @param type the component to build
+     * @return the specific context builder
+     * @throws UnableToInstantiateException if underlying class could not be instantiated
+     */
+    public ContextEngineBuilder contextEngineBuilder(final Class<?> type) throws UnableToInstantiateException {
+        return new ContextEngineBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
     }
 
     /**
@@ -1467,7 +1505,7 @@ public class ContextBuilder extends Observable {
                 if ((NodeEngine.class.isAssignableFrom(knownType.getClassType()))
                     && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
                     && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
-                    final String id = ID_PREFIX + knownType.getTypeName();
+                    final String id = BUILDER_ID_PREFIX + knownType.getTypeName();
                     NodeEngine engine = NodeEngine.class.cast(newEngine(id));
 
                     // TODO: would be easier if nut types are provided by service annotation
@@ -1514,7 +1552,7 @@ public class ContextBuilder extends Observable {
                 if (HeadEngine.class.isAssignableFrom(knownType.getClassType())
                         && annotation.injectDefaultToWorkflow()
                         && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
-                    final String id = ID_PREFIX + knownType.getTypeName();
+                    final String id = BUILDER_ID_PREFIX + knownType.getTypeName();
                     HeadEngine engine = HeadEngine.class.cast(newEngine(id));
 
                     if (annotation.isCoreEngine()) {
