@@ -122,7 +122,21 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Builds a new instance.
+     * Builds a new instance with a specific {@link WuicFacade}.
+     * </p>
+     *
+     * @param wuicFacade the WUIC facade
+     */
+    public HtmlParserFilter(final WuicFacade wuicFacade) {
+        this.workflowIds = new HashMap<String, String>();
+        this.wuicFacade = wuicFacade;
+    }
+
+    /**
+     * <p>
+     * Builds a new instance. The internal {@link WuicFacade} will be initialized when {@link #init(javax.servlet.FilterConfig)}
+     * method will be invoked. At this moment, this class will get the object from {@link WuicServletContextListener}.
+     * In this case, the listener must be declared in th servlet container configuration.
      * </p>
      */
     public HtmlParserFilter() {
@@ -135,7 +149,10 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
         try {
-            wuicFacade = WuicServletContextListener.getWuicFacade(filterConfig.getServletContext());
+            if (wuicFacade == null) {
+                wuicFacade = WuicServletContextListener.getWuicFacade(filterConfig.getServletContext());
+            }
+
             wuicFacade.configure(this);
             nutDao = createDao();
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
