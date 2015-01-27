@@ -57,7 +57,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -76,14 +78,20 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
     /**
      * The wrapped request.
      */
-    private HttpServletRequest request;
-    
+    private final HttpServletRequest request;
+
+    /**
+     * Attributes map when request is null.
+     */
+    private final Map<String, Object> attributes;
+
     /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public HttpServletRequestAdapter() {
+        this(null);
     }
 
     /**
@@ -95,6 +103,8 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     public HttpServletRequestAdapter(final HttpServletRequest httpServletRequest) {
         request = httpServletRequest;
+        attributes = request == null ? new HashMap<String, Object>() : null;
+
     }
 
     /**
@@ -364,7 +374,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Object getAttribute(final String name) {
-        return (request != null) ? request.getAttribute(name) : null;
+        return (request != null) ? request.getAttribute(name) : attributes.get(name);
     }
 
     /**
@@ -372,7 +382,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<String> getAttributeNames() {
-        return (request != null) ? request.getAttributeNames() : null;
+        return (request != null) ? request.getAttributeNames() : Collections.enumeration(attributes.keySet());
     }
 
     /**
@@ -520,6 +530,8 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
     public void setAttribute(final String name, final Object o) {
         if (request != null) {
             request.setAttribute(name, o);
+        } else {
+            attributes.put(name, o);
         }
     }
 
@@ -530,6 +542,8 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
     public void removeAttribute(final String name) {
         if (request != null) {
             request.removeAttribute(name);
+        } else {
+            attributes.remove(name);
         }
     }
 
