@@ -38,12 +38,16 @@
 
 package com.github.wuic.engine.servlet;
 
-import com.github.wuic.ApplicationConfig;
-import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.GzipEngine;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.dao.jee.ServletContextHandler;
 import com.github.wuic.servlet.HttpRequestThreadLocal;
+import com.github.wuic.servlet.WuicServlet;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration;
 
 /**
  * <p>
@@ -55,18 +59,24 @@ import com.github.wuic.servlet.HttpRequestThreadLocal;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
-public class ServletGzipEngine extends GzipEngine {
+public class ServletGzipEngine extends GzipEngine implements ServletContextHandler {
+
+    /**
+     * Indicates if statics will be served by {@link com.github.wuic.servlet.WuicServlet}, which suppots internal GZIP mechanism
+     */
+    private boolean staticsServedByWuicServlet;
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param compress compress or not
      */
     @ConfigConstructor
-    public ServletGzipEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
-        super(compress);
+    public ServletGzipEngine() {
+        // works() is overridden
+        super(Boolean.FALSE);
+        staticsServedByWuicServlet = false;
     }
 
     /**
@@ -74,6 +84,25 @@ public class ServletGzipEngine extends GzipEngine {
      */
     @Override
     public Boolean works() {
-        return HttpRequestThreadLocal.INSTANCE.canGzip();
+        return staticsServedByWuicServlet && HttpRequestThreadLocal.INSTANCE.canGzip();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setServletContext(final ServletContext sc) {
+        try {
+            // We consider that path match the mapping defined for any WuicServlet
+            for (final ServletRegistration r : sc.getServletRegistrations().values()) {
+
+                // There is a WuicServlet registered
+                if (WuicServlet.class.isAssignableFrom(Class.forName(r.getClassName()))) {
+                    staticsServedByWuicServlet = true;
+                }
+            }
+        } catch (ClassNotFoundException cnfe) {
+            WuicException.throwBadStateException(cnfe);
+        }
     }
 }
