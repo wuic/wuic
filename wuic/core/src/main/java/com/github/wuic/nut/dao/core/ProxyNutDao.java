@@ -52,9 +52,8 @@ import java.util.Map;
 
 /**
  * <p>
- * Internal {@link com.github.wuic.nut.dao.NutDao} class that maps particular path to a particular
- * {@link com.github.wuic.nut.Nut} when the {@link com.github.wuic.nut.dao.NutDao#create(String)}
- * method is invoked. If the path is not mapped, then a delegated DAO is called.
+ * Internal {@link com.github.wuic.nut.dao.NutDao} class that maps particular path to a particular {@link Nut} or then
+ * to a particular {@link NutDao}. If the path is not mapped, then a delegated DAO is called.
  * </p>
  *
  * @author Guillaume DROUET
@@ -71,7 +70,12 @@ public class ProxyNutDao implements NutDao {
     /**
      * All mapped path to corresponding nut.
      */
-    private Map<String, Nut> proxy;
+    private Map<String, Nut> proxyNut;
+
+    /**
+     * All mapped path to corresponding {@link NutDao}.
+     */
+    private Map<String, NutDao> proxyNutDao;
 
     /**
      * The root path.
@@ -88,7 +92,8 @@ public class ProxyNutDao implements NutDao {
      */
     public ProxyNutDao(final String rootPath, final NutDao delegate) {
         this.delegate = delegate;
-        this.proxy = new HashMap<String, Nut>();
+        this.proxyNut = new HashMap<String, Nut>();
+        this.proxyNutDao = new HashMap<String, NutDao>();
         this.rootPath = rootPath;
     }
 
@@ -101,7 +106,19 @@ public class ProxyNutDao implements NutDao {
      * @param nut the nut returned when path is used
      */
     public void addRule(final String path, final Nut nut){
-        proxy.put(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path), nut);
+        proxyNut.put(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path), nut);
+    }
+
+    /**
+     * <p>
+     * Adds a mapping between a path and a nut DAO.
+     * </p>
+     *
+     * @param path the path
+     * @param dao the {@link NutDao} to call when path is used
+     */
+    public void addRule(final String path, final NutDao dao){
+        proxyNutDao.put(rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path), dao);
     }
 
     /**
@@ -117,12 +134,21 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public List<Nut> create(final String path) throws IOException {
-        final Nut nut = proxy.get(path);
-        List<Nut> retval = Arrays.asList(nut);
+        final Nut nut = proxyNut.get(path);
+        List<Nut> retval;
 
         // Nut not mapped, delegate call
         if (nut == null) {
-            retval = delegate.create(path);
+            final NutDao dao = proxyNutDao.get(path);
+
+            if (dao == null) {
+                retval = delegate.create(path);
+            } else {
+                retval = dao.create(path);
+            }
+
+        } else {
+            retval = Arrays.asList(nut);
         }
 
         return retval;
@@ -133,7 +159,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public List<Nut> create(final String path, final PathFormat format) throws IOException {
-        final Nut nut = proxy.get(path);
+        final Nut nut = proxyNut.get(path);
         List<Nut> retval = Arrays.asList(nut);
 
         // Nut not mapped, delegate call
@@ -173,7 +199,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public void shutdown() {
-        proxy.clear();
+        proxyNut.clear();
     }
 
     /**
@@ -189,7 +215,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public InputStream newInputStream(final String path) throws IOException {
-        final Nut nut = proxy.get(path);
+        final Nut nut = proxyNut.get(path);
 
         // Path not mapped, call delegate
         if (nut == null) {
