@@ -44,6 +44,7 @@ import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.util.BiFunction;
 import org.junit.Assert;
 import org.junit.Test;
@@ -168,5 +169,30 @@ public class WuicFacadeBuilderTest {
         Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM), Mockito.anyString())).thenReturn("false");
         Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("false");
         new WuicFacadeBuilder(propsFalse).build();
+    }
+
+    /**
+     * <p>
+     * Test when internal context builder is used.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     * @throws IOException if test fails
+     */
+    @Test
+    public void useInternalContextBuilderTest() throws WuicException, IOException {
+        final WuicFacade wuicFacade = new WuicFacadeBuilder()
+                .contextBuilder()
+                .configureDefault()
+                .tag("internal")
+                .contextNutDaoBuilder(ClasspathNutDao.class)
+                .property(ApplicationConfig.BASE_PATH, "/skipped/deep")
+                .toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), "baz.js")
+                .releaseTag()
+                .toFacade()
+                .build();
+
+        Assert.assertEquals(1, wuicFacade.runWorkflow("heap").size());
     }
 }

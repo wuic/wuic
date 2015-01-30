@@ -143,6 +143,57 @@ public class ContextBuilderTest {
 
     /**
      * <p>
+     * Test when a context builder is merged with another
+     * </p>
+     *
+     * @throws Exception
+     */
+    @Test
+    public void mergeTest() throws Exception {
+        final ContextBuilder a = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+                .tag("a")
+                .contextNutDaoBuilder("a", "MockDaoBuilder")
+                .toContext()
+                .heap("a", "a", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("a", "MockEngineBuilder")
+                .toContext()
+                .template("a", new String[]{"a"})
+                .workflow("workflow-", true, "a", "a")
+                .contextNutFilterBuilder("a", "RegexRemoveNutFilterBuilder")
+                .toContext()
+                .releaseTag();
+
+        final ContextBuilder b = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+                .tag("b")
+                .contextNutDaoBuilder("b", "MockDaoBuilder")
+                .toContext()
+                .heap("b", "b", NUT_NAME_ONE, NUT_NAME_TWO)
+                .contextEngineBuilder("b", "MockEngineBuilder")
+                .toContext()
+                .template("b", new String[]{"b"})
+                .workflow("workflow-", true, "b", "b")
+                .contextNutFilterBuilder("b", "RegexRemoveNutFilterBuilder")
+                .toContext()
+                .releaseTag();
+
+        final Context c  = a.tag("c")
+                .mergeSettings(b)
+                .heap("ca", "a", NUT_NAME_ONE, NUT_NAME_TWO)
+                .heap("cb", "b", NUT_NAME_ONE, NUT_NAME_TWO)
+                .template("ca", new String[]{"a"})
+                .template("cb", new String[]{"b"})
+                .workflow("workflow-", true, "a", "a")
+                .workflow("workflow-", true, "b", "b")
+                .releaseTag()
+                .build();
+
+        Assert.assertEquals(4, c.workflowIds().size());
+        Assert.assertTrue(c.workflowIds().contains("workflow-a"));
+        Assert.assertTrue(c.workflowIds().contains("workflow-b"));
+    }
+
+    /**
+     * <p>
      * Test {@link ContextInterceptor} usage.
      * </p>
      *

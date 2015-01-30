@@ -39,12 +39,15 @@
 package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -100,7 +103,12 @@ public class WuicFacadeBuilder {
     /**
      * Additional custom context configurators.
      */
-    private List<ContextBuilderConfigurator> configurators;
+    private final List<ContextBuilderConfigurator> configurators;
+
+    /**
+     * Central {@link ContextBuilder}.
+     */
+    private final ContextBuilderFacade contextBuilder;
 
     /**
      * <p>
@@ -115,6 +123,7 @@ public class WuicFacadeBuilder {
         useDefaultContextBuilderConfigurator = Boolean.TRUE;
         objectBuilderInspector = null;
         configurators = new ArrayList<ContextBuilderConfigurator>();
+        contextBuilder = new ContextBuilderFacade();
     }
 
     /**
@@ -271,6 +280,17 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
+     * Returns the central {@link ContextBuilder}.
+     * </p>
+     *
+     * @return the context builder
+     */
+    public final ContextBuilderFacade contextBuilder() {
+        return contextBuilder;
+    }
+
+    /**
+     * <p>
      * Builds a new facade.
      * </p>
      *
@@ -357,5 +377,298 @@ public class WuicFacadeBuilder {
      */
     List<ContextBuilderConfigurator> getConfigurators() {
         return configurators;
+    }
+
+    /**
+     * <p>
+     * This class gives a chance to directly define settings for the final {@link ContextBuilder} of the built
+     * {@link WuicFacade}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    public final class ContextBuilderFacade extends ContextBuilder {
+
+        /**
+         * <p>
+         * Backs to the facade builder API.
+         * </p>
+         *
+         * @return the enclosing class
+         */
+        public WuicFacadeBuilder toFacade() {
+            return WuicFacadeBuilder.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade configureDefault() throws IOException {
+            super.configureDefault();
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade tag(final String tagName) {
+            super.tag(tagName);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade clearTag(final String tagName) {
+            super.clearTag(tagName);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade releaseTag() {
+            super.releaseTag();
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextNutDaoBuilderFacade contextNutDaoBuilder(final String id, final String type) {
+            return new ContextNutDaoBuilderFacade(id, type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextNutDaoBuilderFacade contextNutDaoBuilder(final Class<?> type) {
+            return new ContextNutDaoBuilderFacade(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextNutFilterBuilderFacade contextNutFilterBuilder(final String id, final String type) {
+            return new ContextNutFilterBuilderFacade(id, type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextEngineBuilderFacade contextEngineBuilder(final String id, final String type) {
+            return new ContextEngineBuilderFacade(id, type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextEngineBuilderFacade contextEngineBuilder(final Class<?> type) {
+            return new ContextEngineBuilderFacade(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade interceptor(final ContextInterceptor interceptor) {
+            super.interceptor(interceptor);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade nutDao(final String id, final NutDao dao) {
+            super.nutDao(id, dao);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade heap(final String id, final String ndbId, final String... path) throws IOException {
+            super.heap(id, ndbId, path);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade heap(final String id, final String ndbId, final String[] heapIds, final String... path)
+                throws IOException {
+            super.heap(id, ndbId, heapIds, path);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade template(final String id, final String[] ebIds, final String... daos) throws IOException {
+            super.template(id, ebIds, daos);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade template(final String id,
+                                             final String[] ebIds,
+                                             final String[] ebIdsExclusion,
+                                             final Boolean includeDefaultEngines,
+                                             final String... ndbIds)
+                throws IOException {
+            super.template(id, ebIds, ebIdsExclusion, includeDefaultEngines, ndbIds);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade workflow(final String identifier,
+                                             final Boolean forEachHeap,
+                                             final String heapIdPattern,
+                                             final String workflowTemplateId)
+                throws IOException, WorkflowTemplateNotFoundException {
+            super.workflow(identifier, forEachHeap, heapIdPattern, workflowTemplateId);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ContextBuilderFacade mergeSettings(final ContextBuilder other) {
+            super.mergeSettings(other);
+            return ContextBuilderFacade.this;
+        }
+
+        /**
+         * <p>
+         * Exposes {@link ContextBuilderFacade} when {@link #toContext} is called.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.1
+         */
+        public final class ContextNutDaoBuilderFacade extends ContextNutDaoBuilder {
+
+            /**
+             * {@inheritDoc}
+             */
+            public ContextNutDaoBuilderFacade(final String id, final String type) {
+                super(id, type);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextNutDaoBuilderFacade property(final String key, final Object value) {
+                super.property(key, value);
+                return this;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextBuilderFacade toContext() {
+                super.toContext();
+                return ContextBuilderFacade.this;
+            }
+        }
+
+        /**
+         * <p>
+         * Exposes {@link ContextBuilderFacade} when {@link #toContext} is called.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.1
+         */
+        public final class ContextEngineBuilderFacade extends ContextEngineBuilder {
+
+            /**
+             * {@inheritDoc}
+             */
+            public ContextEngineBuilderFacade(final String id, final String type) {
+                super(id, type);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextEngineBuilderFacade property(final String key, final Object value) {
+                super.property(key, value);
+                return this;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextBuilderFacade toContext() {
+                super.toContext();
+                return ContextBuilderFacade.this;
+            }
+        }
+
+        /**
+         * <p>
+         * Exposes {@link ContextBuilderFacade} when {@link #toContext} is called.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.1
+         */
+        public final class ContextNutFilterBuilderFacade extends ContextNutFilterBuilder {
+
+            /**
+             * {@inheritDoc}
+             */
+            public ContextNutFilterBuilderFacade(final String id, final String type) {
+                super(id, type);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextNutFilterBuilderFacade property(final String key, final Object value) {
+                super.property(key, value);
+                return this;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextBuilderFacade toContext() {
+                super.toContext();
+                return ContextBuilderFacade.this;
+            }
+        }
     }
 }

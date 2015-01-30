@@ -113,7 +113,7 @@ import java.util.regex.Pattern;
  * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
  * {@link ContextBuilder#tag(String)} method is called, the current threads holds a lock on the object.
  * It will be released when the {@link com.github.wuic.ContextBuilder#releaseTag()} will be called.
- * Consequenlty, it is really important to always call this last method in a finally block.
+ * Consequently, it is really important to always call this last method in a finally block.
  * </p>
  *
  * @author Guillaume DROUET
@@ -1320,6 +1320,7 @@ public class ContextBuilder extends Observable {
 
         if (template == null) {
             WuicException.throwWorkflowTemplateNotFoundException(workflowTemplateId);
+            return null;
         }
 
         final Map<NutType, ? extends NodeEngine> chains = template.getChains();
@@ -1402,6 +1403,32 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Merges all the {@link ContextSetting settings} of the given {@link ContextBuilder} to the current setting of
+     * this object.
+     * </p>
+     *
+     * @param other the object to merge
+     * @return this
+     */
+    public ContextBuilder mergeSettings(final ContextBuilder other) {
+        final ContextSetting setting = getSetting();
+
+        for (final ContextSetting s : other.taggedSettings.values()) {
+            setting.getNutDaoMap().putAll(s.getNutDaoMap());
+            setting.getEngineMap().putAll(s.getEngineMap());
+            setting.getNutFilterMap().putAll(s.getNutFilterMap());
+            setting.getInterceptorsList().addAll(s.getInterceptorsList());
+            setting.getNutsHeaps().putAll(s.getNutsHeaps());
+            setting.getTemplateMap().putAll(s.getTemplateMap());
+            setting.getWorkflowMap().putAll(s.getWorkflowMap());
+        }
+
+        taggedSettings.put(currentTag, setting);
+        return this;
+    }
+
+    /**
+     * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
      * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
      * </p>
@@ -1456,6 +1483,39 @@ public class ContextBuilder extends Observable {
                 lock.unlock();
             }
         }
+    }
+
+    /**
+     * <p>
+     * Gets the {@link ObjectBuilderFactory} which builds {@link Engine}.
+     * </p>
+     *
+     * @return the factory
+     */
+    ObjectBuilderFactory<Engine> getEngineBuilderFactory() {
+        return engineBuilderFactory;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link ObjectBuilderFactory} which builds {@link NutDao}.
+     * </p>
+     *
+     * @return the factory
+     */
+    ObjectBuilderFactory<NutDao> getNutDaoBuilderFactory() {
+        return nutDaoBuilderFactory;
+    }
+
+    /**
+     * <p>
+     * Gets the {@link ObjectBuilderFactory} which builds {@link NutFilter}.
+     * </p>
+     *
+     * @return the factory
+     */
+    ObjectBuilderFactory<NutFilter> getNutFilterBuilderFactory() {
+        return nutFilterBuilderFactory;
     }
 
     /**
