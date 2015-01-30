@@ -43,6 +43,8 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
+import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.util.BiFunction;
@@ -181,10 +183,12 @@ public class WuicFacadeBuilderTest {
      */
     @Test
     public void useInternalContextBuilderTest() throws WuicException, IOException {
-        final WuicFacade wuicFacade = new WuicFacadeBuilder()
+        WuicFacade wuicFacade = new WuicFacadeBuilder()
                 .contextBuilder()
-                .configureDefault()
                 .tag("internal")
+                .contextEngineBuilder(TextAggregatorEngine.class)
+                .property(ApplicationConfig.AGGREGATE, false)
+                .toContext()
                 .contextNutDaoBuilder(ClasspathNutDao.class)
                 .property(ApplicationConfig.BASE_PATH, "/skipped/deep")
                 .toContext()
@@ -194,5 +198,29 @@ public class WuicFacadeBuilderTest {
                 .build();
 
         Assert.assertEquals(1, wuicFacade.runWorkflow("heap").size());
+        Assert.assertNotEquals(wuicFacade.runWorkflow("heap").get(0).getName(), "aggregate.js");
+
+        wuicFacade = new WuicFacadeBuilder()
+                .objectBuilderInspector(new ObjectBuilderInspector() {
+                    @Override
+                    public <T> T inspect(T object) {
+                        return object;
+                    }
+                })
+                .contextBuilder()
+                .tag("internal")
+                .contextEngineBuilder(TextAggregatorEngine.class)
+                .property(ApplicationConfig.AGGREGATE, false)
+                .toContext()
+                .contextNutDaoBuilder(ClasspathNutDao.class)
+                .property(ApplicationConfig.BASE_PATH, "/skipped/deep")
+                .toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), "baz.js")
+                .releaseTag()
+                .toFacade()
+                .build();
+
+        Assert.assertEquals(1, wuicFacade.runWorkflow("heap").size());
+        Assert.assertNotEquals(wuicFacade.runWorkflow("heap").get(0).getName(), "aggregate.js");
     }
 }

@@ -936,6 +936,56 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Add a new {@link com.github.wuic.nut.filter.NutFilter} identified by the specified ID.
+     * </p>
+     *
+     * @param id the ID which identifies the builder in the context
+     * @param filter the filter associated to its ID
+     * @return this {@link ContextBuilder}
+     */
+    public ContextBuilder nutFilter(final String id, final NutFilter filter) {
+        final ContextSetting setting = getSetting();
+
+        // Will override existing element
+        for (ContextSetting s : taggedSettings.values()) {
+            s.nutFilterMap.remove(id);
+        }
+
+        setting.nutFilterMap.put(id, filter);
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers(id);
+
+        return this;
+    }
+
+    /**
+     * <p>
+     * Add a new {@link com.github.wuic.engine.Engine} builder identified by the specified ID.
+     * </p>
+     *
+     * @param id the ID which identifies the builder in the context
+     * @param engine the engine builder associated to its ID
+     * @return this {@link ContextBuilder}
+     */
+    public ContextBuilder engineBuilder(final String id, final ObjectBuilder<Engine> engine) {
+        final ContextSetting setting = getSetting();
+
+        // Will override existing element
+        for (ContextSetting s : taggedSettings.values()) {
+            s.engineMap.remove(id);
+        }
+
+        setting.engineMap.put(id, engine);
+        taggedSettings.put(currentTag, setting);
+        setChanged();
+        notifyObservers(id);
+
+        return this;
+    }
+
+    /**
+     * <p>
      * Adds a new {@link com.github.wuic.nut.dao.NutDao} builder identified by the specified ID.
      * </p>
      *
@@ -1411,19 +1461,47 @@ public class ContextBuilder extends Observable {
      * @return this
      */
     public ContextBuilder mergeSettings(final ContextBuilder other) {
-        final ContextSetting setting = getSetting();
-
         for (final ContextSetting s : other.taggedSettings.values()) {
-            setting.getNutDaoMap().putAll(s.getNutDaoMap());
-            setting.getEngineMap().putAll(s.getEngineMap());
-            setting.getNutFilterMap().putAll(s.getNutFilterMap());
+            for (final Map.Entry<String, NutDao> entry : s.getNutDaoMap().entrySet()) {
+                nutDao(entry.getKey(), entry.getValue());
+            }
+
+            for (final Map.Entry<String, ObjectBuilder<Engine>> entry : s.getEngineMap().entrySet()) {
+                engineBuilder(entry.getKey(), entry.getValue());
+            }
+
+            for (final Map.Entry<String, NutFilter> entry : s.getNutFilterMap().entrySet()) {
+                nutFilter(entry.getKey(), entry.getValue());
+            }
+
+            for (final Map.Entry<String, NutsHeap> entry : s.getNutsHeaps().entrySet()) {
+                final ContextSetting setting = getSetting();
+                s.getNutsHeaps().remove(entry.getKey());
+                setting.getNutsHeaps().put(entry.getKey(), entry.getValue());
+                taggedSettings.put(currentTag, setting);
+            }
+
+            for (final Map.Entry<String, WorkflowTemplate> entry : s.getTemplateMap().entrySet()) {
+                final ContextSetting setting = getSetting();
+                s.getTemplateMap().remove(entry.getKey());
+                setting.getTemplateMap().put(entry.getKey(), entry.getValue());
+                taggedSettings.put(currentTag, setting);
+            }
+
+            for (final Map.Entry<String, Workflow> entry : s.getWorkflowMap().entrySet()) {
+                final ContextSetting setting = getSetting();
+                s.getWorkflowMap().remove(entry.getKey());
+                setting.getWorkflowMap().put(entry.getKey(), entry.getValue());
+                taggedSettings.put(currentTag, setting);
+            }
+
+            final ContextSetting setting = getSetting();
             setting.getInterceptorsList().addAll(s.getInterceptorsList());
-            setting.getNutsHeaps().putAll(s.getNutsHeaps());
-            setting.getTemplateMap().putAll(s.getTemplateMap());
-            setting.getWorkflowMap().putAll(s.getWorkflowMap());
+            taggedSettings.put(currentTag, setting);
+            setChanged();
+            notifyObservers(setting);
         }
 
-        taggedSettings.put(currentTag, setting);
         return this;
     }
 

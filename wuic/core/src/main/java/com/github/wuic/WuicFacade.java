@@ -177,7 +177,10 @@ public final class WuicFacade {
 
         // No inspector, directly use the wrapped context builder
         if (b.getObjectBuilderInspector() == null) {
-            builder = b.contextBuilder();
+            builder = new ContextBuilder(
+                    b.contextBuilder().getEngineBuilderFactory(),
+                    b.contextBuilder().getNutDaoBuilderFactory(),
+                    b.contextBuilder().getNutFilterBuilderFactory());
         } else {
             // build a new context builder with specific inspector and reuse the factories already declared
             builder = new ContextBuilder(
@@ -185,13 +188,14 @@ public final class WuicFacade {
                     b.contextBuilder().getNutDaoBuilderFactory(),
                     b.contextBuilder().getNutFilterBuilderFactory(),
                     b.getObjectBuilderInspector());
-
-            // also merge all settings
-            builder.tag(getClass().getName()).mergeSettings(b.contextBuilder()).releaseTag();
         }
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];
         configure(b.getUseDefaultContextBuilderConfigurator(), b.getConfigurators().toArray(array));
+
+        // finally merge all settings
+        builder.tag(getClass().getName()).mergeSettings(b.contextBuilder()).releaseTag();
+
         buildContext();
     }
 
