@@ -50,6 +50,7 @@ import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutDiskStore;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.StringUtils;
@@ -65,6 +66,7 @@ import org.mockito.Mockito;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.io.InputStream;
@@ -721,5 +723,32 @@ public class UtilityTest extends WuicTest {
         IOUtils.delete(parent);
         Assert.assertFalse(parent.exists());
         IOUtils.delete(null);
+    }
+
+    /**
+     * <p>
+     * Tests for {@link NutDiskStore}.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void nutDiskStoreTest() throws Exception {
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(nut.getName()).thenReturn("/foo/bar.js");
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+        OutputStream os = NutDiskStore.INSTANCE.store(nut);
+        os.close();
+        Assert.assertTrue(os instanceof FileOutputStream);
+
+        os = NutDiskStore.INSTANCE.store(nut);
+        os.close();
+        Assert.assertFalse(os instanceof FileOutputStream);
+
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(2L));
+        os = NutDiskStore.INSTANCE.store(nut);
+        os.close();
+        Assert.assertTrue(os instanceof FileOutputStream);
     }
 }
