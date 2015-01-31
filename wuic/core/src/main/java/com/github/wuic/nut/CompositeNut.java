@@ -277,7 +277,12 @@ public class CompositeNut extends PipedConvertibleNut {
         /**
          * The nut's index currently read.
          */
-        private int current;
+        private int currentIndex;
+
+        /**
+         * The nut corrently read
+         */
+        private ConvertibleNut currentNut;
 
         /**
          * The observers.
@@ -304,7 +309,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
                         if (observers != null) {
                             for (final Observer o : observers) {
-                                o.update(null, new CompositeInputStreamReadEvent(retval, compositionList.get(current)));
+                                o.update(null, new CompositeInputStreamReadEvent(retval, currentNut));
                             }
                         }
 
@@ -318,11 +323,19 @@ public class CompositeNut extends PipedConvertibleNut {
                 });
 
                 if (streamSeparator != null) {
+                    currentNut = compositionList.get(0);
+
                     // Keep the separation position when stream is closed
                     is.add(new ByteArrayInputStream(streamSeparator) {
                         @Override
                         public void close() throws IOException {
-                            separatorPositions[current++] = length;
+                            if (compositionList.size() > currentIndex + 1) {
+                                currentNut = compositionList.get(currentIndex + 1);
+                            } else {
+                                currentNut = null;
+                            }
+
+                            separatorPositions[currentIndex++] = length;
                         }
                     });
                 } else {
@@ -330,7 +343,8 @@ public class CompositeNut extends PipedConvertibleNut {
                     is.add(new InputStream() {
                         @Override
                         public int read() throws IOException {
-                            separatorPositions[current++] = length;
+                            separatorPositions[currentIndex] = length;
+                            currentNut = compositionList.get(currentIndex++);
                             return -1;
                         }
                     });
