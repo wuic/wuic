@@ -440,6 +440,26 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Deletes the {@link File} quietly. The methods checks if the file is not {@code null} and calls itself recursively
+     * if the file is a directory.
+     * </p>
+     *
+     * @param file the file or directory to delete
+     */
+    public static void delete(final File file) {
+        if (file != null) {
+            if (!file.isFile()) {
+                for (final File f : file.listFiles()) {
+                    delete(f);
+                }
+            }
+
+            file.delete();
+        }
+    }
+
+    /**
+     * <p>
      * A {@link CRC32} is wrapped inside this class which is a {@link MessageDigest}.
      * </p>
      *

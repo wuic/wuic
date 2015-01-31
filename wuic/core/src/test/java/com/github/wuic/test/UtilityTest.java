@@ -699,4 +699,27 @@ public class UtilityTest extends WuicTest {
         Pipe.executeAndWriteTo(p, new ArrayList<Pipe.OnReady>(), bos);
         Assert.assertEquals(expect, bos.toByteArray()[0]);
     }
+
+    /**
+     * <p>
+     * Tests that file deletion supports null values and deep structure.
+     * </p>
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void deleteTest() throws IOException {
+        final String now = String.valueOf(System.currentTimeMillis());
+        final File parent = new File(IOUtils.mergePath(System.getProperty("java.io.tmpdir"), "wuicDeleteTest", now));
+        Assert.assertTrue(parent.mkdirs());
+        final File child1 = new File(parent, "child1");
+        Assert.assertTrue(child1.mkdir());
+        final File child2 = new File(parent, "child2");
+        Assert.assertTrue(child2.createNewFile());
+        final File child3 = new File(child1, "child3");
+        Assert.assertTrue(child3.createNewFile());
+        IOUtils.delete(parent);
+        Assert.assertFalse(parent.exists());
+        IOUtils.delete(null);
+    }
 }
