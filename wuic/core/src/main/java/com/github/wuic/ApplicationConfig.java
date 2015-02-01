@@ -201,6 +201,13 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Indicates the ECMA script version the engine should use to compile javascript.
+     * </p>
+     */
+    String ECMA_SCRIPT_VERSION = "c.g.wuic.engine.ecmaScriptVersion";
+
+    /**
+     * <p>
      * Indicates if the engine should aggregate or not.
      * </p>
      */
