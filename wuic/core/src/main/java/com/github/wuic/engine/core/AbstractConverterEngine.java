@@ -184,6 +184,14 @@ public abstract class AbstractConverterEngine
      * {@inheritDoc}
      */
     @Override
+    public final EngineType getEngineType() {
+        return EngineType.CONVERTER;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Boolean works() {
         return doConversion;
     }
