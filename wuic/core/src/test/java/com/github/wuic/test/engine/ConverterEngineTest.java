@@ -41,7 +41,6 @@ package com.github.wuic.test.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
-import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.AbstractConverterEngine;
@@ -122,14 +121,6 @@ public class ConverterEngineTest {
         @Override
         protected NutType targetNutType() {
             return NutType.JAVASCRIPT;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public EngineType getEngineType() {
-            return EngineType.CONVERTER;
         }
 
         /**
