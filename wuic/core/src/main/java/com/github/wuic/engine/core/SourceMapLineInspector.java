@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * This inspector removes from scripts the "sourceMappingURL" statement when the chain is going the minify/aggregate it.
+ * This inspector removes from scripts the "sourceMappingURL" statement when the chain is going to minify/aggregate it.
  * Otherwise, extracts the source map.
  * </p>
  *
@@ -108,7 +108,7 @@ public class SourceMapLineInspector extends LineInspector {
             if ((next.getEngineType().equals(EngineType.AGGREGATOR)
                     || next.getEngineType().equals(EngineType.MINIFICATION))
                     && next.works()) {
-                replacement.append(matcher.group());
+                replacement.append("");
                 return Collections.emptyList();
             }
 

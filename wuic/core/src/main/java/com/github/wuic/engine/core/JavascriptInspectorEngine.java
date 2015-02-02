@@ -51,7 +51,7 @@ import java.util.List;
 
 /**
  * <p>
- * This engines parses CSS files thanks to a {@link SourceMapLineInspector}.
+ * This engine parses JS files thanks to a {@link SourceMapLineInspector}.
  * </p>
  *
  * @author Guillaume DROUET
