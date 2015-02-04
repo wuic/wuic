@@ -118,7 +118,7 @@ public class WuicException extends Exception {
      * @throws java.io.IOException the exception
      */
     public static void throwNutNotFoundException(final String nutName, final String heapId) throws IOException {
-        throw new IOException(String.format("[Err n. %d] The nut with name '%s' has not been found in the heap identified with '%s'",
+        throw new NutNotFoundException(String.format("[Err n. %d] The nut with name '%s' has not been found in the heap identified with '%s'",
                 ErrorCode.NUT_NOT_FOUND, nutName, heapId));
     }
 

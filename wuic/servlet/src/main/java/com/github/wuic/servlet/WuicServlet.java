@@ -45,6 +45,7 @@ import com.github.wuic.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
@@ -145,12 +146,22 @@ public class WuicServlet extends HttpServlet {
                 log.error("Workflow template not found", wtnfe);
                 response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
                 response.getWriter().println(wtnfe.getMessage());
+            } catch (NutNotFoundException nnfe) {
+                log.error("Nut not found", nnfe);
+                response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
+                response.getWriter().println(nnfe.getMessage());
             } catch (WuicException we) {
-                log.error("Unable to retrieve nut", we);
+                if (we.getCause() instanceof NutNotFoundException) {
+                    log.error("Nut not found", we);
+                    response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
+                    response.getWriter().println(we.getCause().getMessage());
+                } else {
+                    log.error("Unable to retrieve nut", we);
 
-                // Use 500 has default status code
-                response.setStatus(HttpURLConnection.HTTP_INTERNAL_ERROR);
-                response.getWriter().println(we.getMessage());
+                    // Use 500 has default status code
+                    response.setStatus(HttpURLConnection.HTTP_INTERNAL_ERROR);
+                    response.getWriter().println(we.getMessage());
+                }
             } finally {
                 r.run();
             }
