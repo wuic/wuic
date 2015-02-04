@@ -103,6 +103,14 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
+    public boolean isTransformed() {
+        return transformed;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void transform(final Pipe.OnReady ... onReady) throws IOException {
         if (isTransformed()) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
@@ -150,16 +158,5 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      */
     protected void setTransformed(final boolean transformed) {
         this.transformed = transformed;
-    }
-
-    /**
-     * <p>
-     * indicates if this nut is transformed or not.
-     * </p>
-     *
-     * @return {@code true} if transformed, {@code false} otherwise
-     */
-    protected boolean isTransformed() {
-        return transformed;
     }
 }

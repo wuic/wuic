@@ -94,4 +94,12 @@ public class NotReachableNut extends AbstractConvertibleNut {
     public void transform(final Pipe.OnReady... onReady) throws IOException {
         WuicException.throwNutNotFoundException(getInitialName(), heap);
     }
+
+    /**
+     *{@inheritDoc}
+     */
+    @Override
+    public boolean isTransformed() {
+        return false;
+    }
 }

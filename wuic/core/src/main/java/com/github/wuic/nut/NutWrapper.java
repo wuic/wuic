@@ -84,6 +84,14 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     }
 
     /**
+     *{@inheritDoc}
+     */
+    @Override
+    public boolean isTransformed() {
+        return wrapped.isTransformed();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

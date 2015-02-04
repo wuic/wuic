@@ -175,4 +175,13 @@ public interface ConvertibleNut extends Nut {
      * @return the referenced nuts, {@code null} if no nut is referenced
      */
     List<ConvertibleNut> getReferencedNuts();
+
+    /**
+     * <p>
+     * Indicates if this nut is transformed or not.
+     * </p>
+     *
+     * @return {@code true} if transformed, {@code false} otherwise
+     */
+    boolean isTransformed();
 }
