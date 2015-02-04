@@ -41,10 +41,12 @@ package com.github.wuic.engine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -93,10 +95,10 @@ public abstract class LineInspector {
      * @throws WuicException if processing fails
      */
     public static List<? extends ConvertibleNut> manageAppend(final ConvertibleNut nut,
-                                                              final StringBuilder replacement,
-                                                              final EngineRequest request,
-                                                              final NutsHeap heap,
-                                                              final EngineType ... skippedEngine) throws WuicException {
+                                                     final StringBuilder replacement,
+                                                     final EngineRequest request,
+                                                     final NutsHeap heap,
+                                                     final EngineType ... skippedEngine) throws WuicException {
         List<? extends ConvertibleNut> res;
 
         // If nut name is null, it means that nothing has been changed by the inspector
@@ -180,6 +182,25 @@ public abstract class LineInspector {
         return pattern;
     }
 
+
+    /**
+     * <p>
+     * Builds a new {@link ReplacementInfo}.
+     * </p>
+     *
+     * @param startIndex the start index
+     * @param endIndex the end index
+     * @param referencer the referencer
+     * @param convertibleNuts the nuts
+     * @return the new instance
+     */
+    public ReplacementInfo replacementInfo(final int startIndex,
+                                           final int endIndex,
+                                           final Nut referencer,
+                                           final List<? extends ConvertibleNut> convertibleNuts) {
+        return new ReplacementInfo(startIndex, endIndex, referencer, convertibleNuts);
+    }
+
     /**
      * <p>
      * Computes the replacement to be made inside the text for the given {@code Matcher} which its {@code find()}
@@ -199,4 +220,139 @@ public abstract class LineInspector {
                                                                         EngineRequest request,
                                                                         CompositeNut.CompositeInputStream cis,
                                                                         ConvertibleNut originalNut) throws WuicException;
+
+    /**
+     * <p>
+     * Converts the given {@link ConvertibleNut} to a {@code String} representation that is possible to append directly
+     * to the referencer. This could be used as an alternative to URL statements.
+     * </p>
+     *
+     * @param convertibleNut the convertible nut to convert
+     * @return the {@code String} representation, {@code null} if no inclusion is possible
+     * @throws IOException if the transformation fails
+     */
+    protected abstract String toString(final ConvertibleNut convertibleNut) throws IOException;
+
+    /**
+     * <p>
+     * This object indicates the index of the rewritten statement and the associated list of nuts.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    public final class ReplacementInfo {
+
+        /**
+         * Start index.
+         */
+        private int startIndex;
+
+        /**
+         * End index.
+         */
+        private int endIndex;
+
+        /**
+         * The nut referencing the convertibles nuts.
+         */
+        private Nut referencer;
+
+        /**
+         * The convertible nut.
+         */
+        private List<? extends ConvertibleNut> convertibleNuts;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param startIndex the start index
+         * @param endIndex the end index
+         * @param referencer the referencer
+         * @param convertibleNuts the nuts
+         */
+        private ReplacementInfo(final int startIndex,
+                                final int endIndex,
+                                final Nut referencer,
+                                final List<? extends ConvertibleNut> convertibleNuts) {
+            this.startIndex = startIndex;
+            this.convertibleNuts = convertibleNuts;
+            this.referencer = referencer;
+            this.endIndex = endIndex;
+        }
+
+        /**
+         * <p>
+         * Gets the start index.
+         * </p>
+         *
+         * @return the index
+         */
+        public int getStartIndex() {
+            return startIndex;
+        }
+
+        /**
+         * <p>
+         * Gets the end index.
+         * </p>
+         *
+         * @return the index
+         */
+        public int getEndIndex() {
+            return endIndex;
+        }
+
+        /**
+         * <p>
+         * Gets the referencer.
+         * </p>
+         *
+         * @return the referencer
+         */
+        public Nut getReferencer() {
+            return referencer;
+        }
+
+        public void setReferencer(final Nut nut) {
+            referencer = nut;
+        }
+
+        /**
+         * <p>
+         * Gets the nuts
+         * </p>
+         *
+         * @return the list
+         */
+        public List<? extends ConvertibleNut> getConvertibleNuts() {
+            return convertibleNuts;
+        }
+
+        /**
+         * <p>
+         * Returns a concatenated {@code String} representation of each  nut returned {@link #getConvertibleNuts()}.
+         * </p>
+         *
+         * @return the string, {@code null} if no {@code String} representation could be provided
+         */
+        public String asString() throws IOException {
+            final StringBuilder stringBuilder = new StringBuilder();
+
+            for (final ConvertibleNut convertibleNut : getConvertibleNuts()) {
+                final String str = LineInspector.this.toString(convertibleNut);
+
+                if (str == null) {
+                    return str;
+                }
+
+                stringBuilder.append(str);
+            }
+
+            return stringBuilder.toString();
+        }
+    }
 }

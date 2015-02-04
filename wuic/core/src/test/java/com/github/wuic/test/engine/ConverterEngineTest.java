@@ -79,6 +79,10 @@ public class ConverterEngineTest {
         public I() {
             super(true, "UTF-8");
             addInspector(new LineInspector(Pattern.compile(Pattern.quote("function myFunctionSetsCssStyle() {}"))) {
+                protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+                    return null;
+                }
+
                 public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
                                                                            final StringBuilder replacement,
                                                                            final EngineRequest request,

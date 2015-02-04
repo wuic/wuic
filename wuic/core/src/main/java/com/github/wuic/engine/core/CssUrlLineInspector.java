@@ -52,6 +52,7 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
      * </ul>
      */
     private static final Pattern CSS_URL_PATTERN = Pattern.compile(
-            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s))|(?:background[(/\\*(?:.\\{\\})*?\\*/)\\s:\\w#-]*?(%s).*?))|(?:@font-face.*?\\{.*?\\})", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
+            String.format("(/\\*(?:.)*?\\*/)|((?:@import.*?(%s|%s);?)|(?:background[(/\\*(?:.\\{\\})*?\\*/)\\s:\\w#-]*?(%s).*?);?)|(?:@font-face.*?\\{.*?\\})", URL_REGEX, STRING_LITERAL_REGEX, URL_REGEX), Pattern.DOTALL);
 
     /**
      * Three groups could contain the name, test the second one if first returns null.
@@ -219,6 +220,19 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             }
 
             return processData(new MatcherData(rawPath, matcher, groupIndex, group), replacement, request, heap, originalNut);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+        switch (convertibleNut.getNutType()) {
+            case CSS:
+                return NutUtils.readTransform(convertibleNut);
+            default:
+                return null;
         }
     }
 

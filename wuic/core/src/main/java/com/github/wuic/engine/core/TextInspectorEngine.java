@@ -156,7 +156,7 @@ public abstract class TextInspectorEngine
      * @param line the line to be inspected
      * @param request the initial request
      * @param inspector the inspector to use
-     * @param referencedNuts the collection where any referenced nut identified by the method will be added
+     * @param replacementInfoList the collection where any referenced nut identified by the method will be added
      * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
      * @param original the inspected nut
      * @throws WuicException if an I/O error occurs while reading
@@ -165,7 +165,7 @@ public abstract class TextInspectorEngine
     protected String inspectLine(final String line,
                                  final EngineRequest request,
                                  final LineInspector inspector,
-                                 final List<ConvertibleNut> referencedNuts,
+                                 final List<LineInspector.ReplacementInfo> replacementInfoList,
                                  final CompositeNut.CompositeInputStream cis,
                                  final ConvertibleNut original)
             throws WuicException {
@@ -182,17 +182,20 @@ public abstract class TextInspectorEngine
             final List<? extends ConvertibleNut> res = inspector.appendTransformation(matcher, replacement, request, cis, original);
 
             // Evict special $ character
-            matcher.appendReplacement(retval, replacement.toString().replaceAll("\\$", ""));
+            final String evict = replacement.toString().replaceAll("\\$", "");
+
+            matcher.appendReplacement(retval, evict);
 
             // Add the nut and inspect it recursively if it's a CSS path
             if (res != null) {
+                replacementInfoList.add(inspector.replacementInfo(retval.length() - evict.length(), retval.length(), original, res));
+
                 for (final ConvertibleNut r : res) {
                     if (r.getInitialNutType().equals(NutType.CSS)) {
                         inspect(r, new EngineRequestBuilder(request).nuts(res).build());
                     }
 
                     configureExtracted(r);
-                    referencedNuts.add(r);
                 }
             }
         }
@@ -214,6 +217,84 @@ public abstract class TextInspectorEngine
         nut.setAggregatable(Boolean.FALSE);
         nut.setTextReducible(nut.getInitialNutType().isText());
         nut.setBinaryReducible(!nut.getInitialNutType().isText());
+    }
+
+    /**
+     * <p>
+     * Includes content in place of all nuts references in the specified {@code String}.
+     * </p>
+     *
+     * @param line the line with references
+     * @param replacementInfoList where replacement with references has been made
+     * @param referencer the referencer
+     * @return the replaced line
+     * @throws IOException if an I/O error occurs
+     */
+    private String include(final String line,
+                           final List<LineInspector.ReplacementInfo> replacementInfoList,
+                           final Nut referencer)
+            throws IOException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        int index = 0;
+
+        for (final LineInspector.ReplacementInfo replacementInfo : replacementInfoList) {
+            if (referencer.getInitialName().equals(replacementInfo.getReferencer().getInitialName())) {
+                stringBuilder.append(line.substring(index, replacementInfo.getStartIndex()));
+
+                final String append = replacementInfo.asString();
+
+                if (append != null) {
+                    stringBuilder.append(append);
+                } else {
+                    stringBuilder.append(line.substring(replacementInfo.getStartIndex(), replacementInfo.getEndIndex()));
+                }
+
+                index = replacementInfo.getEndIndex();
+            }
+        }
+
+        return stringBuilder.append(line.substring(index)).toString();
+    }
+
+    /**
+     * <p>
+     * Adds the nuts in the replacement list to their referencer.
+     * </p>
+     *
+     * @param convertibleNut the referencer
+     * @param replacementInfoList the replacements that contains nuts to associate
+     */
+    private void populateReferencedNuts(final ConvertibleNut convertibleNut, final List<LineInspector.ReplacementInfo> replacementInfoList) {
+        for (final LineInspector.ReplacementInfo replacementInfo : replacementInfoList) {
+            if (replacementInfo.getReferencer().getInitialName().equals(convertibleNut.getInitialName())) {
+                for (final ConvertibleNut ref : replacementInfo.getConvertibleNuts()) {
+                    convertibleNut.addReferencedNut(ref);
+                    populateReferencedNuts(ref, replacementInfoList);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * <p>
+     * Adds the given 'ref' nut as a referenced nut of the specified nut if its {@link ConvertibleNut#isTransformed()}
+     * method returns {@code false}. The method is called recursively on referenced nuts.
+     * </p>
+     *
+     * @param convertibleNut the nut
+     * @param ref the referenced nut
+     */
+    private void addReferenceNutNotTransformed(final ConvertibleNut convertibleNut, final ConvertibleNut ref) {
+        if (!ref.isTransformed()) {
+            convertibleNut.addReferencedNut(ref);
+        }
+
+        if (ref.getReferencedNuts() != null) {
+            for (final ConvertibleNut r : ref.getReferencedNuts()) {
+                addReferenceNutNotTransformed(convertibleNut, r);
+            }
+        }
     }
 
     /**
@@ -242,24 +323,35 @@ public abstract class TextInspectorEngine
     @Override
     public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut, final EngineRequest request)
             throws IOException {
-        final List<ConvertibleNut> referencedNuts = new ArrayList<ConvertibleNut>();
+        final List<LineInspector.ReplacementInfo> replacementInfoList = new ArrayList<LineInspector.ReplacementInfo>();
         String line = IOUtils.readString(new InputStreamReader(is, charset));
         final CompositeNut.CompositeInputStream cis = (is instanceof CompositeNut.CompositeInputStream) ?
                 CompositeNut.CompositeInputStream.class.cast(is) : null;
 
         for (final LineInspector inspector : lineInspectors) {
             try {
-                line = inspectLine(line, request, inspector, referencedNuts, cis, convertibleNut);
+                line = inspectLine(line, request, inspector, replacementInfoList, cis, convertibleNut);
             } catch (WuicException we) {
                 throw new IOException(we);
             }
         }
 
-        os.write((line + "\n").getBytes());
+        if (!replacementInfoList.isEmpty()) {
+            // Keep all rewritten URL in best effort, try to include otherwise
+            if (!request.isBestEffort()) {
+                line = include(line, replacementInfoList, convertibleNut);
 
-        // Also add all the referenced nuts
-        for (final ConvertibleNut ref : referencedNuts) {
-            convertibleNut.addReferencedNut(ref);
+                for (final LineInspector.ReplacementInfo replacementInfo : replacementInfoList) {
+                    for (final ConvertibleNut ref : replacementInfo.getConvertibleNuts()) {
+                        // Included nuts are already transformed
+                        addReferenceNutNotTransformed(convertibleNut, ref);
+                    }
+                }
+            } else {
+                populateReferencedNuts(convertibleNut, replacementInfoList);
+            }
         }
+
+        os.write((line + '\n').getBytes());
     }
 }

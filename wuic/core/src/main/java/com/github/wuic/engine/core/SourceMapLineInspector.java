@@ -96,6 +96,15 @@ public class SourceMapLineInspector extends LineInspector {
      * {@inheritDoc}
      */
     @Override
+    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+        // Source map could only be referenced with an URL
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
                                                                final StringBuilder replacement,
                                                                final EngineRequest request,

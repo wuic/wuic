@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.Context;
 import com.github.wuic.ContextBuilder;
 import com.github.wuic.NutType;
@@ -45,6 +46,7 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.CssInspectorEngine;
+import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -52,6 +54,7 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
@@ -87,9 +90,10 @@ public class CssInspectorTest {
      * count.
      * </p>
      *
+     * @return the transformation result
      * @throws Exception if test fails
      */
-    public void assertInspection(final String[][] collection, final StringBuilder builder, final String message, final int count)
+    public String assertInspection(final String[][] collection, final StringBuilder builder, final String message, final int count)
             throws Exception {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
@@ -106,7 +110,7 @@ public class CssInspectorTest {
                 final Nut nut = Mockito.mock(Nut.class);
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
                 Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
-                Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+                Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("content of " + invocationOnMock.getArguments()[0]).getBytes()));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
                 retval.add(nut);
@@ -149,12 +153,15 @@ public class CssInspectorTest {
 
         final EngineRequest request = new EngineRequestBuilder("wid", h).contextPath("cp").build();
         final List<ConvertibleNut> res = engine.parse(request);
+        final StringBuilder sb = new StringBuilder();
 
         for (final ConvertibleNut convertibleNut : res) {
-            convertibleNut.transform();
+            sb.append(NutUtils.readTransform(convertibleNut));
         }
 
         Assert.assertEquals(message, count, createCount.get());
+
+        return sb.toString();
     }
 
     /**
@@ -167,14 +174,14 @@ public class CssInspectorTest {
     @Test
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][] {
-            new String[] {"@import url(\"%s\")", "jquery.ui.core.css"},
+            new String[] {"@import url(\"%s\");", "jquery.ui.core.css"},
             new String[] {"@import \"%s\";", "jquery.ui.accordion.css"},
             new String[] {"@import '%s';", "jquery.ui.autocomplete.css"},
             new String[] {"@import url('%s');", "jquery.ui.button.css"},
             new String[] {"@import \"%s\";", "jquery.ui.datepicker.css"},
             new String[] {"@import '%s';", "jquery.ui.dialog.css"},
             new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
-            new String[] {"background: url(\"%s\");", "sprite.png"},
+            new String[] {"foo{background: url(\"%s\") }", "sprite.png"},
             new String[] {"background: /* comment */ url(%s);", "sprite2.png"},
             new String[] {"background:url('%s');", "sprite3.png"},
             new String[] {"background: #FFF url('%s');", "sprite4.png"},
@@ -188,8 +195,7 @@ public class CssInspectorTest {
         // ignore comments
         builder.append("/*background: url('sprite5.png');*/");
         builder.append("/*background:\n url('sprite6.png');*/");
-
-        assertInspection(collection, builder, null, collection.length);
+        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length));
     }
 
     /**
@@ -267,14 +273,18 @@ public class CssInspectorTest {
     @Test
     public void parentRefTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
+        builder.tag("parentRefTest")
+                .contextEngineBuilder(MemoryMapCacheEngine.class).property(ApplicationConfig.BEST_EFFORT, true).toContext()
+                .releaseTag();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
         List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory());
-        Assert.assertEquals(1, group.size());
+        Assert.assertEquals(2, group.size());
         group.get(0).transform();
-        Assert.assertEquals(3, group.get(0).getReferencedNuts().size());
+        Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
+        Assert.assertEquals(1, group.get(1).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
         group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory());
