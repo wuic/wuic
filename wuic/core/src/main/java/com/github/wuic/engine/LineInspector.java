@@ -317,10 +317,6 @@ public abstract class LineInspector {
             return referencer;
         }
 
-        public void setReferencer(final Nut nut) {
-            referencer = nut;
-        }
-
         /**
          * <p>
          * Gets the nuts
