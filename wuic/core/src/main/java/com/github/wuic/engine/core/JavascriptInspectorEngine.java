@@ -45,9 +45,12 @@ import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.NumberUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -72,9 +75,27 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
     @ConfigConstructor
     public JavascriptInspectorEngine(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String charset) {
+            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String charset,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.WRAP_PATTERN) final String wrapPattern) {
         super(inspect, charset);
         addInspector(new SourceMapLineInspector(this));
+
+        if ("".equals(wrapPattern)) {
+            addInspector(new AngularTemplateInspector(null));
+        } else {
+            final int paramIndex = wrapPattern.indexOf('%');
+
+            if (paramIndex == -1) {
+                WuicException.throwBadArgumentException(
+                        new IllegalArgumentException(
+                                "Wrap pattern must contains a String.format() parameter:" + wrapPattern));
+            }
+
+            addInspector(new AngularTemplateInspector(Pattern.quote(wrapPattern.substring(0, paramIndex))
+                    + '%'
+                    + wrapPattern.charAt(paramIndex + 1)
+                    + Pattern.quote(wrapPattern.substring(paramIndex + NumberUtils.TWO))));
+        }
     }
 
     /**

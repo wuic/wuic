@@ -46,6 +46,7 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.CssInspectorEngine;
+import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -74,7 +75,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
- * {@link com.github.wuic.engine.core.CssInspectorEngine} tests.
+ * {@link com.github.wuic.engine.core.TextInspectorEngine} and subclass tests.
  * </p>
  *
  * @author Guillaume DROUET
@@ -82,7 +83,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 0.4.1
  */
 @RunWith(JUnit4.class)
-public class CssInspectorTest {
+public class InspectorTest {
 
     /**
      * <p>
@@ -90,15 +91,18 @@ public class CssInspectorTest {
      * count.
      * </p>
      *
+     * @param collection the collection of content to parse
+     * @param builder the builder used to append the content
+     * @param message failure message
+     * @param count expected number of detected nut
      * @return the transformation result
      * @throws Exception if test fails
      */
-    public String assertInspection(final String[][] collection, final StringBuilder builder, final String message, final int count)
+    public String assertInspection(final String[][] collection, final StringBuilder builder, final String message, final int count, final Engine engine)
             throws Exception {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
-        final Engine engine = new CssInspectorEngine(true, "UTF-8");
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class))).thenAnswer(new Answer<Object>() {
 
             /**
@@ -195,7 +199,7 @@ public class CssInspectorTest {
         // ignore comments
         builder.append("/*background: url('sprite5.png');*/");
         builder.append("/*background:\n url('sprite6.png');*/");
-        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length));
+        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, new CssInspectorEngine(true, "UTF-8")));
     }
 
     /**
@@ -229,7 +233,7 @@ public class CssInspectorTest {
         };
 
 
-        assertInspection(collection, sb, "Must handle font URLs.", collection.length);
+        assertInspection(collection, sb, "Must handle font URLs.", collection.length, new CssInspectorEngine(true, "UTF-8"));
     }
 
     /**
@@ -245,9 +249,71 @@ public class CssInspectorTest {
                 new String[] {"//sourceMappingURL=%s", "sourcemap.js.map"},
         };
 
-        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length);
+        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"));
     }
-    
+
+    /**
+     * <p>
+     * Test for AngularJS with no wrap pattern.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void angularNoWrapTest() throws Exception {
+        String[][] collection = new String[][] {
+                new String[] {"angular.module('docsTemplateUrlDirective', [])\n" +
+                        ".directive('myCustomer', function() {\n" +
+                        "  return {\n" +
+                        "    templateUrl  : '%s'\n" +
+                        "  };\n" +
+                        "});", "my-customer.html"},
+        };
+
+        assertInspection(collection,
+                new StringBuilder(),
+                "Should create nuts for templateUrl urls.",
+                collection.length,
+                new JavascriptInspectorEngine(true, "UTF-8", ""));
+    }
+
+    /**
+     * <p>
+     * Test for AngularJS with wrap pattern.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void angularWrapTest() throws Exception {
+        String[][] collection = new String[][] {
+                new String[] {"angular.module('docsTemplateUrlDirective', [])\n" +
+                        ".directive('myCustomer', function() {\n" +
+                        "  return {\n" +
+                        "    templateUrl  : fn('%s')\n" +
+                        "  };\n" +
+                        "});", "my-customer.html"},
+        };
+
+        assertInspection(collection,
+                new StringBuilder(),
+                "Should create nuts for templateUrl urls.",
+                collection.length,
+                new JavascriptInspectorEngine(true, "UTF-8", "fn('%s')"));
+    }
+
+    /**
+     * <p>
+     * Test for AngularJS with bad wrap pattern.
+     * </p>
+     *
+     * @throws Exception if test succeed
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badAngularWrapTest() throws Exception {
+        new JavascriptInspectorEngine(true, "UTF-8", "fn('foo')");
+    }
+
     /**
      * <p>
      * Test when @import with "data:" url.
@@ -262,7 +328,7 @@ public class CssInspectorTest {
             new String[] {"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
         };
 
-        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0);
+        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, new CssInspectorEngine(true, "UTF-8"));
     }
 
     /**

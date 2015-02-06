@@ -65,6 +65,11 @@ import java.util.regex.Pattern;
 public abstract class LineInspector {
 
     /**
+     * Possible value for path name.
+     */
+    protected static final String STRING_LITERAL_REGEX = "(\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*')";
+
+    /**
      * The pattern.
      */
     private Pattern pattern;
@@ -181,7 +186,6 @@ public abstract class LineInspector {
     public final Pattern getPattern() {
         return pattern;
     }
-
 
     /**
      * <p>

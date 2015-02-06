@@ -286,6 +286,11 @@ public interface ApplicationConfig {
     String CHARSET = "c.g.wuic.engine.charset";
 
     /**
+     * A pattern wrapping a value to capture.
+     */
+    String WRAP_PATTERN = "c.g.wuic.engine.wrapPattern";
+
+    /**
      * <p>
      * Indicates all the regex expressions configured in a filter.
      * </p>

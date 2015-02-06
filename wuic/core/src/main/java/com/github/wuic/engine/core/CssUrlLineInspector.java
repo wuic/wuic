@@ -86,11 +86,6 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
     };
 
     /**
-     * Possible value for CSS file name.
-     */
-    private static final String STRING_LITERAL_REGEX = "(\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*')";
-
-    /**
      * Url pattern.
      */
     private static final String URL_REGEX = String.format("(?:url\\(\\s*(%s|[^)]*)\\s*\\))", STRING_LITERAL_REGEX);
