@@ -247,6 +247,10 @@ public class InspectorTest {
     public void sourceMappingUrlTest() throws Exception {
         String[][] collection = new String[][] {
                 new String[] {"//sourceMappingURL=%s", "sourcemap.js.map"},
+                new String[] {"//# sourceMappingURL=%s", "sourcemap1.js.map"},
+                new String[] {"//@ sourceMappingURL=%s", "sourcemap2.js.map"},
+                new String[] {"// #sourceMappingURL=%s", "sourcemap3.js.map"},
+                new String[] {"// @sourceMappingURL=%s", "sourcemap4.js.map"}
         };
 
         assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"));
