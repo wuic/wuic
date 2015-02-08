@@ -64,11 +64,17 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
     private HttpServletResponse response;
 
     /**
+     * Status is written here if wrapped {@link #response} is {@code null}.
+     */
+    private int status;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public HttpServletResponseAdapter() {
+        status = SC_OK;
     }
 
     /**
@@ -229,6 +235,8 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
     public void setStatus(final int sc) {
         if (response != null) {
             response.setStatus(sc);
+        } else {
+            status = sc;
         }
     }
 
@@ -239,6 +247,8 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
     public void setStatus(final int sc, final String sm) {
         if (response != null) {
             response.setStatus(sc, sm);
+        } else {
+            status = sc;
         }
     }
 
@@ -247,7 +257,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public int getStatus() {
-        return (response != null) ? response.getStatus() : SC_OK;
+        return (response != null) ? response.getStatus() : status;
     }
 
     /**
