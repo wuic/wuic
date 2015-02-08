@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,8 +116,7 @@ public class SourceMapLineInspector extends LineInspector {
             if ((next.getEngineType().equals(EngineType.AGGREGATOR)
                     || next.getEngineType().equals(EngineType.MINIFICATION))
                     && next.works()) {
-                replacement.append("");
-                return Collections.emptyList();
+                return null;
             }
 
             next = next.getNext();
@@ -143,7 +141,7 @@ public class SourceMapLineInspector extends LineInspector {
         } else {
             log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
             replacement.append(matcher.group());
-            res = Collections.emptyList();
+            res = null;
         }
 
         return res;
