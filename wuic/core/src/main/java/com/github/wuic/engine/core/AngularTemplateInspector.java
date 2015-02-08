@@ -136,7 +136,10 @@ public class AngularTemplateInspector extends LineInspector {
     protected String toString(final ConvertibleNut convertibleNut) throws IOException {
         switch (convertibleNut.getNutType()) {
             case HTML:
-                return String.format("template:'%s'", NutUtils.readTransform(convertibleNut)).replace("'", "\'");
+                return String.format("template:'%s'", NutUtils.readTransform(convertibleNut)
+                        .replace("'", "\\'")
+                        .replace("\r\n", "'+'\\r\\n'+'")
+                        .replace("\n", "'+'\\n'+'"));
             default:
                 return null;
         }
