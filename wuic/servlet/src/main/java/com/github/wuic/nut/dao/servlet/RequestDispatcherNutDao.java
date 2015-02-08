@@ -206,7 +206,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      */
     @Override
     public Boolean exists(final String path) throws IOException {
-        return include(path).getStatus() == HttpServletResponse.SC_OK;
+        return include(path).toByteArray().length > 0;
     }
 
     /**
