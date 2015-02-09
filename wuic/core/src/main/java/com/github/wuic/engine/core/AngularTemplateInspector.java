@@ -71,14 +71,14 @@ public class AngularTemplateInspector extends LineInspector {
     /**
      * Quote for 'templateUrl' match pattern.
      */
-    private static final String quoteTemplateUrl = Pattern.quote("templateUrl");
+    private static final String QUOTE_TEMPLATE_URL = Pattern.quote("templateUrl");
 
     /**
      * Start of regex.
      */
     private static final String START_REGEX =
             String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s\\s*?\\:\\s*?",
-                    quoteTemplateUrl, quoteTemplateUrl, quoteTemplateUrl);
+                    QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL);
 
     /**
      * The logger.
