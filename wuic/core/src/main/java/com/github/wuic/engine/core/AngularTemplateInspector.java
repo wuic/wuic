@@ -47,6 +47,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +69,16 @@ import java.util.regex.Pattern;
 public class AngularTemplateInspector extends LineInspector {
 
     /**
+     * Quote for 'templateUrl' match pattern.
+     */
+    private static final String quoteTemplateUrl = Pattern.quote("templateUrl");
+
+    /**
      * Start of regex.
      */
-    private static final String START_REGEX = Pattern.quote("templateUrl") + "\\s*?\\:\\s*?";
+    private static final String START_REGEX =
+            String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s\\s*?\\:\\s*?",
+                    quoteTemplateUrl, quoteTemplateUrl, quoteTemplateUrl);
 
     /**
      * The logger.
@@ -100,7 +108,14 @@ public class AngularTemplateInspector extends LineInspector {
             throws WuicException {
 
         // Removes quotes
-        String referencedPath = matcher.group(1);
+        String referencedPath = matcher.group(NumberUtils.THREE);
+
+        // Comment
+        if (referencedPath == null) {
+            replacement.append(matcher.group());
+            return null;
+        }
+
         referencedPath = referencedPath.substring(1, referencedPath.length() - 1);
 
         // Extract the nut

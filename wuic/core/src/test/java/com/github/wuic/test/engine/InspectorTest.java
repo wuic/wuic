@@ -135,7 +135,7 @@ public class InspectorTest {
             builder.append(String.format(rule, path));
         }
 
-        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS , 1L)) {
+        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS, 1L)) {
             @Override
             public String getName() {
                 final String retval = createCount.get() + ".css";
@@ -177,21 +177,21 @@ public class InspectorTest {
      */
     @Test
     public void multipleImportPerLineTest() throws Exception {
-        String[][] collection = new String[][] {
-            new String[] {"@import url(\"%s\");", "jquery.ui.core.css"},
-            new String[] {"@import \"%s\";", "jquery.ui.accordion.css"},
-            new String[] {"@import '%s';", "jquery.ui.autocomplete.css"},
-            new String[] {"@import url('%s');", "jquery.ui.button.css"},
-            new String[] {"@import \"%s\";", "jquery.ui.datepicker.css"},
-            new String[] {"@import '%s';", "jquery.ui.dialog.css"},
-            new String[] {"@import url(  \"%s\");", "jquery.ui.menu.css"},
-            new String[] {"foo{background: url(\"%s\") }", "sprite.png"},
-            new String[] {"background: /* comment */ url(%s);", "sprite2.png"},
-            new String[] {"background:url('%s');", "sprite3.png"},
-            new String[] {"background: #FFF url('%s');", "sprite4.png"},
-            new String[] {"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
-            new String[] {"background: #dadada/*{bgColorHover}*/ url(%s)/*{bgImgUrlHover}*/ 50/*{bgHoverXPos}*/ 50/*{bgHoverYPos}*/ repeat-x/*{bgHoverRepeat}*/;", "images/ui-bg_glass_75_dadada_1x400.png"},
-            new String[] {"background-image:url(%s);", "images/ui-icons_454545_256x240.png"},
+        String[][] collection = new String[][]{
+                new String[]{"@import url(\"%s\");", "jquery.ui.core.css"},
+                new String[]{"@import \"%s\";", "jquery.ui.accordion.css"},
+                new String[]{"@import '%s';", "jquery.ui.autocomplete.css"},
+                new String[]{"@import url('%s');", "jquery.ui.button.css"},
+                new String[]{"@import \"%s\";", "jquery.ui.datepicker.css"},
+                new String[]{"@import '%s';", "jquery.ui.dialog.css"},
+                new String[]{"@import url(  \"%s\");", "jquery.ui.menu.css"},
+                new String[]{"foo{background: url(\"%s\") }", "sprite.png"},
+                new String[]{"background: /* comment */ url(%s);", "sprite2.png"},
+                new String[]{"background:url('%s');", "sprite3.png"},
+                new String[]{"background: #FFF url('%s');", "sprite4.png"},
+                new String[]{"@import /* some comments */ url(\"%s\");", "jquery.ui.spinner.css"},
+                new String[]{"background: #dadada/*{bgColorHover}*/ url(%s)/*{bgImgUrlHover}*/ 50/*{bgHoverXPos}*/ 50/*{bgHoverYPos}*/ repeat-x/*{bgHoverRepeat}*/;", "images/ui-bg_glass_75_dadada_1x400.png"},
+                new String[]{"background-image:url(%s);", "images/ui-icons_454545_256x240.png"},
         };
 
         final StringBuilder builder = new StringBuilder();
@@ -224,12 +224,12 @@ public class InspectorTest {
                 "}");
         sb.append("@font-face {\nfont-family: 'Glyphicons Halflings';");
 
-        String[][] collection = new String[][] {
-                new String[] {"src: url(\"%s\");", "../fonts/glyphicons-halflings-regular.eot"},
-                new String[] {"src: url(\"%s\") format('embedded-opentype'),", "../fonts/glyphicons-halflings-regular.eot?#iefix"},
-                new String[] {"src: url(\"%s\") format('woff'),", "../fonts/glyphicons-halflings-regular.woff"},
-                new String[] {"src: url(\"%s\") format('truetype'),", "../fonts/glyphicons-halflings-regular.ttf"},
-                new String[] {"src: url(\"%s\") format('svg');}", "../fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular"},
+        String[][] collection = new String[][]{
+                new String[]{"src: url(\"%s\");", "../fonts/glyphicons-halflings-regular.eot"},
+                new String[]{"src: url(\"%s\") format('embedded-opentype'),", "../fonts/glyphicons-halflings-regular.eot?#iefix"},
+                new String[]{"src: url(\"%s\") format('woff'),", "../fonts/glyphicons-halflings-regular.woff"},
+                new String[]{"src: url(\"%s\") format('truetype'),", "../fonts/glyphicons-halflings-regular.ttf"},
+                new String[]{"src: url(\"%s\") format('svg');}", "../fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular"},
         };
 
 
@@ -245,12 +245,12 @@ public class InspectorTest {
      */
     @Test
     public void sourceMappingUrlTest() throws Exception {
-        String[][] collection = new String[][] {
-                new String[] {"//sourceMappingURL=%s", "sourcemap.js.map"},
-                new String[] {"//# sourceMappingURL=%s", "sourcemap1.js.map"},
-                new String[] {"//@ sourceMappingURL=%s", "sourcemap2.js.map"},
-                new String[] {"// #sourceMappingURL=%s", "sourcemap3.js.map"},
-                new String[] {"// @sourceMappingURL=%s", "sourcemap4.js.map"}
+        String[][] collection = new String[][]{
+                new String[]{"//sourceMappingURL=%s", "sourcemap.js.map"},
+                new String[]{"//# sourceMappingURL=%s", "sourcemap1.js.map"},
+                new String[]{"//@ sourceMappingURL=%s", "sourcemap2.js.map"},
+                new String[]{"// #sourceMappingURL=%s", "sourcemap3.js.map"},
+                new String[]{"// @sourceMappingURL=%s", "sourcemap4.js.map"}
         };
 
         assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"));
@@ -265,19 +265,29 @@ public class InspectorTest {
      */
     @Test
     public void angularNoWrapTest() throws Exception {
-        String[][] collection = new String[][] {
-                new String[] {"angular.module('docsTemplateUrlDirective', [])\n" +
-                        ".directive('myCustomer', function() {\n" +
-                        "  return {\n" +
-                        "    templateUrl  : '%s'\n" +
-                        "  };\n" +
-                        "});", "my-customer.html"},
+        String[][] collection = new String[][]{
+                new String[]{
+                        "angular.module('docsTemplateUrlDirective', [])\n" +
+                                ".directive('myCustomer', function() {\n" +
+                                "  return {\n" +
+                                "    templateUrl  : '%s'\n" +
+                                "  };\n" +
+                                "})", "my-customer.html"}, {
+                ".directive('myCustomer2', function() {\n" +
+                "  return {\n\" +\n" +
+                "    // comment templateUrl  : '%s'\n" +
+                "  };\n" +
+                "})", "my-customer2.html"}, {".directive('myCustomer3', function() {\n" +
+                "  return {\n" +
+                "    /*templateUrl  : '%s'*/\n" +
+                "  };\n" +
+                "});", "my-customer3.html"}
         };
 
         assertInspection(collection,
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
-                collection.length,
+                collection.length - 2,
                 new JavascriptInspectorEngine(true, "UTF-8", ""));
     }
 
@@ -290,8 +300,8 @@ public class InspectorTest {
      */
     @Test
     public void angularWrapTest() throws Exception {
-        String[][] collection = new String[][] {
-                new String[] {"angular.module('docsTemplateUrlDirective', [])\n" +
+        String[][] collection = new String[][]{
+                new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
                         ".directive('myCustomer', function() {\n" +
                         "  return {\n" +
                         "    templateUrl  : fn('%s')\n" +
@@ -327,9 +337,9 @@ public class InspectorTest {
      */
     @Test
     public void dataUrlTest() throws Exception {
-        String[][] collection = new String[][] {
-            new String[] {"@import url(\"%s\");", "data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw=="},
-            new String[] {"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
+        String[][] collection = new String[][]{
+                new String[]{"@import url(\"%s\");", "data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw=="},
+                new String[]{"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
         };
 
         assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, new CssInspectorEngine(true, "UTF-8"));
