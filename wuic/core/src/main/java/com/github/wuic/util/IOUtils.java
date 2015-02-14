@@ -448,7 +448,7 @@ public final class IOUtils {
      */
     public static void delete(final File file) {
         if (file != null) {
-            if (!file.isFile()) {
+            if (!file.isFile() && file.exists()) {
                 for (final File f : file.listFiles()) {
                     delete(f);
                 }
