@@ -150,6 +150,34 @@ public class NutsHeapTest {
 
     /**
      * <p>
+     * Tests when the first path level in an absolute nut name is a number, which is reserved for version number.
+     * </p>
+     *
+     * @throws IOException if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void illegalAbsoluteNutNameTest() throws IOException {
+        final MockNutDao dao = new MockNutDao(1);
+        dao.mockPaths.put("/000/hey.js", 1L);
+        new NutsHeap(Arrays.asList(".*"), dao, "");
+    }
+
+    /**
+     * <p>
+     * Tests when the first path level in a relative nut name is a number, which is reserved for version number.
+     * </p>
+     *
+     * @throws IOException if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void illegalRelativeNutNameTest() throws IOException {
+        final MockNutDao dao = new MockNutDao(1);
+        dao.mockPaths.put("000/hey.js", 1L);
+        new NutsHeap(Arrays.asList(".*"), dao, "");
+    }
+
+    /**
+     * <p>
      * Test notification when changes are detected.
      * </p>
      *

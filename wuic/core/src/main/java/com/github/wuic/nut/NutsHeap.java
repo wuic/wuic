@@ -362,11 +362,12 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                 for (final Nut nut : res) {
                     getCreated().add(nut.getInitialName());
 
-                    final int slashIndex = nut.getInitialName().indexOf('/');
+                    final int startIndex = nut.getInitialName().charAt(0) == '/' ? 1 : 0;
+                    final int slashIndex = nut.getInitialName().indexOf('/', startIndex);
 
-                    if (slashIndex != -1 && NumberUtils.isNumber(nut.getInitialName().substring(0, slashIndex))) {
+                    if (slashIndex != -1 && NumberUtils.isNumber(nut.getInitialName().substring(startIndex, slashIndex))) {
                         WuicException.throwBadArgumentException(new IllegalArgumentException(
-                                String.format("First level if nut name's path cannot be a numeric value: %s",
+                                String.format("First level of nut name's path cannot be a numeric value: %s",
                                         nut.getInitialName())));
                     }
                 }
