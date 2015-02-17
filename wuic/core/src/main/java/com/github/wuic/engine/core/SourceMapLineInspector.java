@@ -49,6 +49,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +110,15 @@ public class SourceMapLineInspector extends LineInspector {
                                                                final EngineRequest request,
                                                                final CompositeNut.CompositeInputStream cis,
                                                                final ConvertibleNut originalNut) throws WuicException {
+        final String referencedPath = matcher.group(1);
+
+        // If a nut is already added, then skip
+        if (NutUtils.findByName(originalNut, referencedPath) != null) {
+            replacement.append(matcher.group());
+            return null;
+        }
+
+        // .map will be broken in case of minification
         NodeEngine next = engine.getNext();
 
         while (next != null) {
@@ -123,7 +133,6 @@ public class SourceMapLineInspector extends LineInspector {
         }
 
         // Extract the nut
-        final String referencedPath = matcher.group(1);
         final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
         final List<Nut> nuts;
 
