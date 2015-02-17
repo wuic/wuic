@@ -117,6 +117,6 @@ public final class NumberUtils {
      * @return {@code true} if the {@code String} is a number, {@code false} otherwise
      */
     public static Boolean isNumber(final String candidate) {
-        return candidate.replaceAll("-?\\d+", "").length() == 0;
+        return !candidate.isEmpty() && candidate.replaceAll("-?\\d+", "").length() == 0;
     }
 }

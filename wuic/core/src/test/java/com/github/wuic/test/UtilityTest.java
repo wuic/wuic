@@ -50,6 +50,7 @@ import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutDiskStore;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
@@ -93,6 +94,8 @@ import java.util.regex.Pattern;
  */
 @RunWith(JUnit4.class)
 public class UtilityTest extends WuicTest {
+
+
 
     /**
      * <p>
@@ -750,5 +753,20 @@ public class UtilityTest extends WuicTest {
         os = NutDiskStore.INSTANCE.store(nut);
         os.close();
         Assert.assertTrue(os instanceof FileOutputStream);
+    }
+
+    /**
+     * <p>
+     * Tests number detection support.
+     * </p>
+     */
+    @Test
+    public void isNumberTest() {
+        Assert.assertFalse(NumberUtils.isNumber(""));
+        Assert.assertFalse(NumberUtils.isNumber("aa"));
+        Assert.assertFalse(NumberUtils.isNumber("1aa"));
+        Assert.assertTrue(NumberUtils.isNumber("11"));
+        Assert.assertTrue(NumberUtils.isNumber("01"));
+        Assert.assertTrue(NumberUtils.isNumber("100"));
     }
 }
