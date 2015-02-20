@@ -93,7 +93,7 @@ public class AngularTemplateInspector extends LineInspector {
      * @param wrapPattern a regex describing a pattern wrapping the URL, could be {@code null}
      */
     public AngularTemplateInspector(final String wrapPattern) {
-        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_REGEX : String.format(wrapPattern, "(.*?)"))));
+        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_REGEX : String.format(wrapPattern, "(.*?)")), Pattern.DOTALL));
     }
 
     /**
