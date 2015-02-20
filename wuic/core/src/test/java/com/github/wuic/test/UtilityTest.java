@@ -67,7 +67,6 @@ import org.mockito.Mockito;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.io.InputStream;
@@ -741,18 +740,16 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getName()).thenReturn("/foo/bar.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        OutputStream os = NutDiskStore.INSTANCE.store(nut);
-        os.close();
-        Assert.assertTrue(os instanceof FileOutputStream);
+        File f = NutDiskStore.INSTANCE.store(nut);
+        Assert.assertFalse(f.exists());
+        f.createNewFile();
 
-        os = NutDiskStore.INSTANCE.store(nut);
-        os.close();
-        Assert.assertFalse(os instanceof FileOutputStream);
+        f = NutDiskStore.INSTANCE.store(nut);
+        Assert.assertTrue(f.exists());
 
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(2L));
-        os = NutDiskStore.INSTANCE.store(nut);
-        os.close();
-        Assert.assertTrue(os instanceof FileOutputStream);
+        f = NutDiskStore.INSTANCE.store(nut);
+        Assert.assertFalse(f.exists());
     }
 
     /**

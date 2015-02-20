@@ -272,6 +272,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
+    public String getParentFile() {
+        return wrap.getParentFile();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean equals(final Object other) {
         if (other instanceof ConvertibleNut) {
             return ((ConvertibleNut) other).getName().equals(getName());

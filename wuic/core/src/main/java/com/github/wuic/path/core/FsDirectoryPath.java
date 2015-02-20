@@ -40,6 +40,7 @@ package com.github.wuic.path.core;
 
 import com.github.wuic.path.AbstractDirectoryPath;
 import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.FsItem;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ import java.io.IOException;
  * @version 1.2
  * @since 0.3.4
  */
-public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryPath {
+public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryPath, FsItem {
 
     /**
      * Logger.
@@ -139,5 +140,13 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
     @Override
     public long getLastUpdate() {
         return directory.lastModified();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public File getFile() {
+        return directory;
     }
 }

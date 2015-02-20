@@ -35,74 +35,27 @@
  * licenses."
  */
 
-
-package com.github.wuic.path.core;
-
-import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.FilePath;
-import com.github.wuic.path.FsItem;
+package com.github.wuic.path;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>
- * This {@link com.github.wuic.path.FilePath} represents a path on the path system.
+ * Expose {@link java.io.File} object for {@link Path} implementations relying on it.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.3.4
+ * @version 1.0
+ * @since 0.5.1
  */
-public class FsFilePath extends SimplePath implements FilePath, FsItem {
-
-    /**
-     * The path.
-     */
-    private File file;
+public interface FsItem {
 
     /**
      * <p>
-     * Builds a new instance. Throws a {@link IllegalArgumentException} if the specified path does not represents a
-     * path on the path system.
+     * Gets the file object.
      * </p>
      *
-     * @param f the path
-     * @param parent the parent, {@code null} if this path is a root
+     * @return the file
      */
-    public FsFilePath(final File f, final DirectoryPath parent) {
-        super(f.getName(), parent);
-
-        if (!f.isFile()) {
-            throw new IllegalArgumentException(String.format("%s is not a file on the file system", f.getAbsolutePath()));
-        }
-
-        file = f;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws IOException {
-        return new FileInputStream(file);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getLastUpdate() {
-        return file.lastModified();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public File getFile() {
-        return file;
-    }
+    File getFile();
 }

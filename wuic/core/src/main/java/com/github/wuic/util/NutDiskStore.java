@@ -39,11 +39,11 @@
 package com.github.wuic.util;
 
 import com.github.wuic.nut.ConvertibleNut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -67,6 +67,11 @@ public enum NutDiskStore implements Runnable {
     INSTANCE;
 
     /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
      * Dedicated temporary directory.
      */
     private final File workingDirectory;
@@ -85,6 +90,7 @@ public enum NutDiskStore implements Runnable {
         final String now = String.valueOf(System.currentTimeMillis());
         final String path = IOUtils.mergePath(System.getProperty("java.io.tmpdir"), getClass().getName(), now);
         workingDirectory = new File(path);
+        workingDirectory.mkdirs();
         storedNuts = new HashMap<String, Long>();
         Runtime.getRuntime().addShutdownHook(new Thread(this));
     }
@@ -102,37 +108,32 @@ public enum NutDiskStore implements Runnable {
 
     /**
      * <p>
-     * Stores the given nut and returns the output stream created for the stored file. Nothing will be written to the
-     * disk if the file already exists and has the same version number.
+     * Creates a {@link File} for the given nut and returns the object created for the stored file.
+     * {@code null} will be returned if the file already exists and has the same version number.
      * </p>
      *
      * @param nut the nut to store
-     * @return the output stream
+     * @return the file
      * @throws IOException if file cannot be created
      * @throws InterruptedException if version number can't be retrieved
      * @throws ExecutionException if version number can't be retrieved
      */
-    public OutputStream store(final ConvertibleNut nut) throws IOException, InterruptedException, ExecutionException {
-        final OutputStream os;
+    public File store(final ConvertibleNut nut) throws IOException, InterruptedException, ExecutionException {
         final File path = new File(getWorkingDirectory(), nut.getName());
         final Long version = storedNuts.get(nut.getName());
         final Long actual = nut.getVersionNumber().get();
 
         // Do not rewrite an up to date file
-        if (version != null && version.equals(actual)) {
-            // Just walk through the stream to fire events (see CompositeNut)
-            os = new OutputStream() {
-                @Override
-                public void write(int b) throws IOException {
-                }
-            };
+        if (version != null) {
+            if (!version.equals(actual) && !path.delete()) {
+                logger.warn(String.format("Unable to delete '%s'", path.getAbsolutePath()), new IOException());
+            }
         } else {
             storedNuts.put(nut.getName(), actual);
             path.getParentFile().mkdirs();
-            os = new FileOutputStream(path);
         }
 
-        return os;
+        return path;
     }
 
     /**

@@ -39,7 +39,9 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.path.FilePath;
+import com.github.wuic.path.FsItem;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Future;
@@ -82,5 +84,22 @@ public class FilePathNut extends AbstractNut {
     @Override
     public InputStream openStream() throws IOException {
         return path.openStream();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getParentFile() {
+        if (path instanceof FsItem) {
+            final File f = FsItem.class.cast(path).getFile();
+            final String absPath = f.getAbsolutePath();
+
+            if (absPath.length() > getInitialName().length()) {
+                return absPath.substring(0, absPath.length() - getInitialName().length());
+            }
+        }
+
+        return null;
     }
 }

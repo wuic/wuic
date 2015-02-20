@@ -204,4 +204,13 @@ public interface Nut {
      * @return the nut's version
      */
     Future<Long> getVersionNumber();
+
+    /**
+     * <p>
+     * If the file is stored in a directory on the file system, then this method returns the directory.
+     * </p>
+     *
+     * @return the parent directory, {@code null} if the nut is not directly accessible on the file system
+     */
+    String getParentFile();
 }

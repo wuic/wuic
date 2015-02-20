@@ -57,7 +57,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -280,16 +279,6 @@ public class CompositeNut extends PipedConvertibleNut {
         private int currentIndex;
 
         /**
-         * The nut corrently read
-         */
-        private ConvertibleNut currentNut;
-
-        /**
-         * The observers.
-         */
-        private List<Observer> observers;
-
-        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -301,40 +290,13 @@ public class CompositeNut extends PipedConvertibleNut {
             separatorPositions = new long[compositionList.size()];
 
             for (final Nut n : compositionList) {
-                final InputStream nutInputStream = n.openStream();
-                is.add(new InputStream() {
-                    @Override
-                    public int read() throws IOException {
-                        final int retval = nutInputStream.read();
-
-                        if (observers != null) {
-                            for (final Observer o : observers) {
-                                o.update(null, new CompositeInputStreamReadEvent(retval, currentNut));
-                            }
-                        }
-
-                        return retval;
-                    }
-
-                    @Override
-                    public void close() throws IOException {
-                        nutInputStream.close();
-                    }
-                });
+                is.add(n.openStream());
 
                 if (streamSeparator != null) {
-                    currentNut = compositionList.get(0);
-
                     // Keep the separation position when stream is closed
                     is.add(new ByteArrayInputStream(streamSeparator) {
                         @Override
                         public void close() throws IOException {
-                            if (compositionList.size() > currentIndex + 1) {
-                                currentNut = compositionList.get(currentIndex + 1);
-                            } else {
-                                currentNut = null;
-                            }
-
                             separatorPositions[currentIndex++] = length;
                         }
                     });
@@ -344,7 +306,6 @@ public class CompositeNut extends PipedConvertibleNut {
                         @Override
                         public int read() throws IOException {
                             separatorPositions[currentIndex] = length;
-                            currentNut = compositionList.get(currentIndex++);
                             return -1;
                         }
                     });
@@ -356,28 +317,13 @@ public class CompositeNut extends PipedConvertibleNut {
 
         /**
          * <p>
-         * Adds an observer notified each time a nut is read.
+         * Gets the outer composition list.
          * </p>
          *
-         * @param o the observer
+         * @return the composition list
          */
-        public void addObserver(final Observer o) {
-            if (observers == null) {
-                observers = new ArrayList<Observer>();
-            }
-
-            observers.add(o);
-        }
-
-        /**
-         * <p>
-         * Removes an observer.
-         * </p>
-         *
-         * @param o the observer
-         */
-        public void removeObserver(final Observer o) {
-            observers.remove(o);
+        public List<ConvertibleNut> getComposition() {
+            return CompositeNut.this.compositionList;
         }
 
         /**
@@ -410,63 +356,6 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * An event that is triggered each time a byte in a {@link CompositeInputStream} is read.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.1
-     */
-    public static final class CompositeInputStreamReadEvent {
-
-        /**
-         * The read byte.
-         */
-        private final int read;
-
-        /**
-         * The nut currently read.
-         */
-        private final ConvertibleNut nut;
-
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         *
-         * @param r the byte
-         * @param n the nut
-         */
-        private CompositeInputStreamReadEvent(final int r, final ConvertibleNut n) {
-            read = r;
-            nut = n;
-        }
-
-        /**
-         * <p>
-         * Gets the byte.
-         * </p>
-         *
-         * @return the byte
-         */
-        public int getRead() {
-            return read;
-        }
-
-        /**
-         * <p>
-         * Gets the nut.
-         * </p>
-         *
-         * @return the nut
-         */
-        public ConvertibleNut getNut() {
-            return nut;
         }
     }
 

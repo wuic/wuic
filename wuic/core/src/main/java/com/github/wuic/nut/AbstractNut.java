@@ -288,6 +288,15 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
+    public String getParentFile() {
+        // Should be overridden by subclass if they could
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         final String retval = getClass().getSimpleName() + "[" + getInitialName() + "]";
         return logger.isInfoEnabled() ? (retval + " - v" + NutUtils.getVersionNumber(this)) : retval;
