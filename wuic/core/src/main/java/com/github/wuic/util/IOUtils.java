@@ -350,6 +350,49 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Lists the files ending with the given {@code Sting} in the directory path..
+     * </p>
+     *
+     * @param parent the parent
+     * @param relativePath the directory path relative to the parent
+     * @param endWith the directory path relative to the parent
+     * @param skipStartsWithList a list that contains all begin paths to ignore
+     * @return the matching files
+     * @throws IOException if any I/O error occurs
+     */
+    public static List<String> listFile(final DirectoryPath parent, final String relativePath, final String endWith, final List<String> skipStartsWithList)
+            throws IOException {
+        final String[] children = parent.list();
+        final List<String> retval = new ArrayList<String>();
+
+        // Check each child path
+        childrenLoop:
+        for (final String child : children) {
+            final Path path = parent.getChild(child);
+            final String childRelativePath = relativePath.isEmpty() ? child : mergePath(relativePath, child);
+
+            // Child is a directory, search recursively
+            if (path instanceof DirectoryPath) {
+
+                // Search recursively if and only if the beginning of the path if not in the excluding list
+                for (final String skipStartWith : skipStartsWithList) {
+                    if (childRelativePath.startsWith(skipStartWith)) {
+                        continue childrenLoop;
+                    }
+                }
+
+                retval.addAll(listFile(DirectoryPath.class.cast(path), childRelativePath, endWith, skipStartsWithList));
+                // Files matches, return
+            } else if (childRelativePath.endsWith(endWith)) {
+                retval.add(childRelativePath);
+            }
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
      * Lists the files matching the given pattern in the directory path and its subdirectory represented by
      * a specified {@code relativePath}.
      * </p>

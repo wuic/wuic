@@ -111,6 +111,7 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                         webappNutDao.getProxyUris(),
                         webappNutDao.getPollingInterval(),
                         webappNutDao.getRegularExpression(),
+                        webappNutDao.getWildcardExpression(),
                         webappNutDao.getContentBasedVersionNumber(),
                         webappNutDao.getComputeVersionAsynchronously()) {
 

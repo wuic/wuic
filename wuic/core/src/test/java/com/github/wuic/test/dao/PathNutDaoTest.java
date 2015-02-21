@@ -79,13 +79,51 @@ public class PathNutDaoTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
+
+    /**
+     * <p>
+     * Test with a wildcard + regex setting turned on.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void wildcardAndRegexTest() throws Exception {
+        new ClasspathNutDao("/", false, null, -1, true, true, false, true);
+    }
+
+    /**
+     * <p>
+     * Test with a wildcard setting.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void wildcardClasspathScanningTest() throws Exception {
+        folder.newFolder("1", "classpathScanningTest", "1");
+        folder.newFolder("2", "classpathScanningTest", "2");
+        final File file1 = folder.newFile("1/classpathScanningTest/1/foo.css");
+        final File file2 = folder.newFile("2/classpathScanningTest/2/bar.css");
+
+        final Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
+        method.setAccessible(true);
+        method.invoke(getClass().getClassLoader(), new Object[]{file1.getParentFile().getParentFile().getParentFile().toURI().toURL()});
+        method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().getParentFile().toURI().toURL()});
+
+        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, false, true, false, true);
+        Assert.assertEquals(2, dao.create("*.css").size());
+        Assert.assertEquals(1, dao.create("1/*.css").size());
+        Assert.assertEquals(1, dao.create("2/*.css").size());
+    }
+
     /**
      * Tests when one base directory corresponds to multiple classpath entries for {@link ClasspathNutDao}.
      *
      * @throws Exception if test fails
      */
     @Test
-    public void classpathScanningTest() throws Exception {
+    public void regexClasspathScanningTest() throws Exception {
         folder.newFolder("1", "classpathScanningTest");
         folder.newFolder("2", "classpathScanningTest");
         final File file1 = folder.newFile("1/classpathScanningTest/foo.css");
@@ -96,7 +134,7 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file1.getParentFile().getParentFile().toURI().toURL()});
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().toURI().toURL()});
 
-        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false, true);
+        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false, false, true);
         Assert.assertEquals(2, dao.create(".*.css").size());
     }
 

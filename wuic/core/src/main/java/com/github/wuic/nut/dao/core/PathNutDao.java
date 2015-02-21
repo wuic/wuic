@@ -51,6 +51,7 @@ import com.github.wuic.util.IOUtils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -76,9 +77,14 @@ public abstract class PathNutDao extends AbstractNutDao {
     private DirectoryPath baseDirectory;
 
     /**
-     * {@code true} if the path is a regex, {@code false} otherwise
+     * {@code true} if the path is a regex, {@code false} otherwise.
      */
     private Boolean regularExpression;
+
+    /**
+     * {@code true} if the path is a wildcard, {@code false} otherwise.
+     */
+    private Boolean wildcardExpression;
 
     /**
      * <p>
@@ -90,6 +96,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
+     * @param wildcard if the path should be considered as a wildcard or not
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
@@ -98,10 +105,17 @@ public abstract class PathNutDao extends AbstractNutDao {
                       final String[] proxies,
                       final int pollingSeconds,
                       final Boolean regex,
+                      final Boolean wildcard,
                       final Boolean contentBasedVersionNumber,
                       final Boolean computeVersionAsynchronously) {
         super(base, basePathAsSysProp, proxies, pollingSeconds, contentBasedVersionNumber, computeVersionAsynchronously);
+
+        if (regex && wildcard) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException("You can't set to true both wildcard and regex settings."));
+        }
+
         regularExpression = regex;
+        wildcardExpression = wildcard;
     }
 
     /**
@@ -113,6 +127,17 @@ public abstract class PathNutDao extends AbstractNutDao {
      */
     public Boolean getRegularExpression() {
         return regularExpression;
+    }
+
+    /**
+     * <p>
+     * Indicates if paths are a wildcard expression.
+     * </p>
+     *
+     * @return {@code true} if wildcard is used, {@code false} otherwise
+     */
+    public Boolean getWildcardExpression() {
+        return wildcardExpression;
     }
 
     /**
@@ -132,8 +157,24 @@ public abstract class PathNutDao extends AbstractNutDao {
     @Override
     public List<String> listNutsPaths(final String pattern) throws IOException {
         init();
-        final Pattern compiled = Pattern.compile(regularExpression ? pattern : Pattern.quote(pattern));
-        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), compiled, skipStartsWith());
+
+        if (regularExpression) {
+            return IOUtils.listFile(baseDirectory, Pattern.compile(pattern), skipStartsWith());
+        } else if (wildcardExpression) {
+            final int index = pattern.indexOf('*');
+
+            if (index != -1) {
+                final String endWith = pattern.substring(index + 1);
+                if (index == 0) {
+                    return IOUtils.listFile(baseDirectory, "", endWith, skipStartsWith());
+                } else {
+                    final String basePath = pattern.substring(0, index);
+                    return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory.getChild(basePath)), basePath, endWith, skipStartsWith());
+                }
+            }
+        }
+
+        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), Pattern.compile(Pattern.quote(pattern)), skipStartsWith());
     }
 
     /**

@@ -79,6 +79,7 @@ public class ClasspathNutDao extends DiskNutDao {
      * @param pollingSeconds            the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies                   the proxies URIs in front of the nut
      * @param regex                     if the path should be considered as a regex or not
+     * @param wildcard if the path should be considered as a wildcard or not
      * @param contentBasedVersionNumber {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
@@ -88,9 +89,10 @@ public class ClasspathNutDao extends DiskNutDao {
                            @ObjectConfigParam(defaultValue = "", propertyKey = PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
                            @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
                            @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
+                           @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard,
                            @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
                            @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, contentBasedVersionNumber, computeVersionAsynchronously);
+        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously);
     }
 
     /**

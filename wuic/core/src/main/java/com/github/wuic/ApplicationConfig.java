@@ -84,6 +84,11 @@ public interface ApplicationConfig {
     String REGEX = "c.g.wuic.dao.regex";
 
     /**
+     * Boolean which indicates if path are evaluated as wildcard or not.
+     */
+    String WILDCARD = "c.g.wuic.dao.wildcard";
+
+    /**
      * Proxies that can be use to access the nuts.
      */
     String PROXY_URIS = "c.g.wuic.dao.proxyUris";

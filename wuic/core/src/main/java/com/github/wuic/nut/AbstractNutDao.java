@@ -485,10 +485,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         } else {
             final List<String> paths = listNutsPaths(pathName);
             final List<String> retval = new ArrayList<String>(paths.size());
-
-            for (String p : paths) {
-                retval.add(p);
-            }
+            retval.addAll(paths);
 
             return retval;
         }

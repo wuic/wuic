@@ -91,6 +91,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
+     * @param wildcard if the path should be considered as a wildcard or not
      * @param contentBasedVersionNumber {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      */
@@ -100,10 +101,11 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.REGEX) final Boolean regex,
+            @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.WILDCARD) final Boolean wildcard,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
         // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
-        super(base, false, proxies, pollingSeconds, regex, contentBasedVersionNumber, computeVersionAsynchronously);
+        super(base, false, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously);
     }
 
     /**
