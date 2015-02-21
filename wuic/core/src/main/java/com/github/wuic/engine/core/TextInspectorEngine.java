@@ -181,8 +181,8 @@ public abstract class TextInspectorEngine
             final StringBuilder replacement = new StringBuilder();
             final List<? extends ConvertibleNut> res = inspector.appendTransformation(matcher, replacement, request, cis, original);
 
-            // Evict special $ character
-            final String evict = replacement.toString().replaceAll("\\$", "");
+            // Evict special dollar and backslash characters
+            final String evict = Matcher.quoteReplacement(replacement.toString());
 
             matcher.appendReplacement(retval, evict);
 
