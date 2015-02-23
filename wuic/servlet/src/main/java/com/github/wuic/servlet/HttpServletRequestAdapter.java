@@ -86,12 +86,28 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
     private final Map<String, Object> attributes;
 
     /**
+     * A custom path info.
+     */
+    private final String pathInfo;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     public HttpServletRequestAdapter() {
-        this(null);
+        this(null, null);
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param pathInfo the path info
+     */
+    public HttpServletRequestAdapter(final String pathInfo) {
+        this(null, pathInfo);
     }
 
     /**
@@ -102,9 +118,21 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      * @param httpServletRequest the request
      */
     public HttpServletRequestAdapter(final HttpServletRequest httpServletRequest) {
+        this(httpServletRequest, null);
+    }
+
+    /**
+     * <p>
+     * Builds a new instance with a wrapped request and a specific path info.
+     * </p>
+     *
+     * @param httpServletRequest the request
+     * @param pi the path info
+     */
+    public HttpServletRequestAdapter(final HttpServletRequest httpServletRequest, final String pi) {
         request = httpServletRequest;
         attributes = request == null ? new HashMap<String, Object>() : null;
-
+        pathInfo = pi;
     }
 
     /**
@@ -176,7 +204,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getPathInfo() {
-        return (request != null) ? request.getPathInfo() : null;
+        return (request != null) ? request.getPathInfo() : pathInfo;
     }
 
     /**

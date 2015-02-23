@@ -131,16 +131,8 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
             final RequestDispatcher rd = servletContext.getRequestDispatcher(path.charAt(0) == '/' ? path : '/' + path);
 
             // Wrap request and response since servlet container expects standard wrappers
-            rd.include(new HttpServletRequestWrapper(new HttpServletRequestAdapter() {
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public String getPathInfo() {
-                    return path;
-                }
-            }), new HttpServletResponseWrapper(response));
+            final HttpServletRequestAdapter adapter = new HttpServletRequestAdapter(path);
+            rd.include(new HttpServletRequestWrapper(adapter), new HttpServletResponseWrapper(response));
         } catch (ServletException se) {
             WuicException.throwStreamException(new IOException(se));
         }
