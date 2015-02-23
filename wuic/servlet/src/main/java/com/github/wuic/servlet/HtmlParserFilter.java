@@ -91,6 +91,11 @@ import java.util.Map;
 public class HtmlParserFilter extends ContextBuilderConfigurator implements Filter {
 
     /**
+     * If an attribute with this name is defined in the filtered request, then this filter will skip its related operation.
+     */
+    public static final String SKIP_FILTER = HtmlParserFilter.class.getName() + ".skip";
+
+    /**
      * The logger.
      */
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -185,6 +190,13 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
+
+        // Skip
+        if (request.getAttribute(SKIP_FILTER) != null) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(response);
         final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper(httpServletResponse);
 

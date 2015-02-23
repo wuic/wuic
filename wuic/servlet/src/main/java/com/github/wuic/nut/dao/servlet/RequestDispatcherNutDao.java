@@ -54,6 +54,7 @@ import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.jee.ServletContextHandler;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 import com.github.wuic.servlet.ByteArrayHttpServletResponseWrapper;
+import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.servlet.HttpServletRequestAdapter;
 
 import javax.servlet.RequestDispatcher;
@@ -132,6 +133,8 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
 
             // Wrap request and response since servlet container expects standard wrappers
             final HttpServletRequestAdapter adapter = new HttpServletRequestAdapter(path);
+
+            adapter.setAttribute(HtmlParserFilter.SKIP_FILTER, "");
             rd.include(new HttpServletRequestWrapper(adapter), new HttpServletResponseWrapper(response));
         } catch (ServletException se) {
             WuicException.throwStreamException(new IOException(se));
