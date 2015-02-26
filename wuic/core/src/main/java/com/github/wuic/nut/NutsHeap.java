@@ -43,6 +43,7 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
@@ -51,10 +52,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -126,7 +130,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * All the nuts created through through heap.
      */
-    private Set<String> created;
+    private Map<String, Set<String>> created;
 
     /**
      * <p>
@@ -142,7 +146,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nuts = other.nuts;
         this.nutTypes = other.nutTypes;
         this.paths = other.paths;
-        this.created = other.created != null ? other.created : new HashSet<String>();
+        this.created = other.created != null ? other.created : new HashMap<String, Set<String>>();
 
         if (other.composition != null) {
             this.composition = new NutsHeap[other.composition.length];
@@ -180,7 +184,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.listeners = new HashSet<HeapListener>();
         this.composition = heaps;
         this.nutTypes = new HashSet<NutType>();
-        this.created = new HashSet<String>();
+        this.created = new HashMap<String, Set<String>>();
         checkFiles();
     }
 
@@ -300,10 +304,16 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
         if (heap != null && heap.getNutDao() != null) {
             retval = heap.getNutDao().create(path, pathFormat);
-            heap.getNutDao().observe(path, this);
 
-            for (final Nut n : retval) {
-                heap.getCreated().add(n.getInitialName());
+            if (!retval.isEmpty()) {
+                // Check if a root path is appended to the nut name
+                final String rootPath = heap.getNutDao() instanceof AbstractNutDao.WithRootPathNutDao ?
+                        AbstractNutDao.WithRootPathNutDao.class.cast(heap.getNutDao()).getRootPath() : null;
+                heap.getNutDao().observe(rootPath == null ? path : IOUtils.mergePath(rootPath, path), this);
+
+                for (final Nut n : retval) {
+                    addCreate(path, n.getInitialName());
+                }
             }
         } else {
             retval = Collections.emptyList();
@@ -328,14 +338,35 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Returns all the paths used to create a nut through this heap (and not through its composition).
+     * Refers a path as a resource created by this heap for the given pattern.
      * </p>
      *
-     * @return the created paths
+     * @param pattern the pattern the is generated for
+     * @param path the created path resource
      */
-    public Set<String> getCreated() {
-        return created;
+    public final void addCreate(final String pattern, final String path) {
+        getPaths(pattern).add(path);
     }
+
+    /**
+     * <p>
+     * Get all paths created for the given pattern.
+     * </p>
+     *
+     * @param pattern the pattern
+     * @return the paths
+     */
+    private Set<String> getPaths(final String pattern) {
+        Set<String> p = created.get(pattern);
+
+        if (p == null) {
+            p = new HashSet<String>();
+            created.put(pattern, p);
+        }
+
+        return p;
+    }
+
 
     /**
      * <p>
@@ -355,12 +386,13 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
         if (paths != null) {
             for (final String path : paths) {
+                created.remove(path);
                 final List<Nut> res = nutDao.create(path);
                 nuts.addAll(res);
                 nutDao.observe(path, this);
 
                 for (final Nut nut : res) {
-                    getCreated().add(nut.getInitialName());
+                    addCreate(path, nut.getInitialName());
 
                     final int startIndex = nut.getInitialName().charAt(0) == '/' ? 1 : 0;
                     final int slashIndex = nut.getInitialName().indexOf('/', startIndex);
@@ -466,19 +498,16 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * {@inheritDoc}
      */
     @Override
-    public boolean polling(final Set<String> paths) {
-        final Set<String> current = new HashSet<String>();
-
-        for (final Nut nut : nuts) {
-            current.add(nut.getInitialName());
-        }
+    public boolean polling(final String pattern, final Set<String> paths) {
+        final Set<String> current = getPaths(pattern);
 
         // Paths have not changed if difference is empty, otherwise we notify listeners
-        boolean retval = CollectionUtils.difference(current, paths).isEmpty();
+        final Collection<String> diff = CollectionUtils.difference(current, paths);
+        boolean retval = diff.isEmpty();
 
         if (!retval) {
-            log.info("Nut(s) added and/or removed in heap {}", id);
-            retval = notifyListeners();
+            log.info("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
+            retval = notifyUpdateToListeners();
         }
 
         return retval;
@@ -508,7 +537,13 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             refOrigin = nut;
         }
 
-        return getCreated().contains(refOrigin.getInitialName());
+        for (final Set<String> p : created.values()) {
+            if (p.contains(refOrigin.getInitialName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -545,7 +580,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             // Nut has changed
             if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
                 // We don't need to be notified anymore
-                return notifyListeners();
+                return notifyUpdateToListeners();
             }
         }
 
@@ -570,7 +605,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      *
      * @return {@code false} for convenient usage in caller
      */
-    private boolean notifyListeners() {
+    private boolean notifyUpdateToListeners() {
         return notifyListeners(this);
     }
 

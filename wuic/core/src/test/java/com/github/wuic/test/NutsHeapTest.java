@@ -43,6 +43,7 @@ import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,6 +58,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -157,7 +160,7 @@ public class NutsHeapTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void illegalAbsoluteNutNameTest() throws IOException {
-        final MockNutDao dao = new MockNutDao(1);
+        final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("/000/hey.js", 1L);
         new NutsHeap(Arrays.asList(".*"), dao, "");
     }
@@ -171,7 +174,7 @@ public class NutsHeapTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void illegalRelativeNutNameTest() throws IOException {
-        final MockNutDao dao = new MockNutDao(1);
+        final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("000/hey.js", 1L);
         new NutsHeap(Arrays.asList(".*"), dao, "");
     }
@@ -268,6 +271,96 @@ public class NutsHeapTest {
         Assert.assertEquals(count.intValue(), 3);
     }
 
+    /**
+     * <p>
+     * Test polling feature with multiple patterns.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void notificationWithManyPatternPath() throws Exception {
+        final Map<String, List<String>> patterns = new HashMap<String, List<String>>();
+        patterns.put("a", Arrays.asList("a.js", "b.js"));
+        patterns.put("b", Arrays.asList("c.js", "d.js", "e.js"));
+        patterns.put("c", Arrays.asList("f.js"));
+
+        final NutDao dao = new AbstractNutDao("/", false, null, 1, false, true) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected List<String> listNutsPaths(final String pattern) throws IOException {
+                return patterns.get(pattern);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected Nut accessFor(final String realPath, final NutType type) throws IOException {
+                final Nut retval = Mockito.mock(Nut.class);
+                Mockito.when(retval.getInitialName()).thenReturn(realPath);
+                Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
+
+                return retval;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public InputStream newInputStream(final String path) throws IOException {
+                return null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Boolean exists(final String path) throws IOException {
+                return null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected Long getLastUpdateTimestampFor(final String path) throws IOException {
+                return 1L;
+            }
+        };
+
+        try {
+            final NutsHeap firstCompo = new NutsHeap(Arrays.asList("a", "b"), dao, "");
+            firstCompo.create(firstCompo.getNuts().get(0), "c", NutDao.PathFormat.ANY);
+            final CountDownLatch latch1 = new CountDownLatch(1);
+            final CountDownLatch latch2 = new CountDownLatch(1);
+            patterns.put("b", Arrays.asList("c.js", "d.js"));
+
+            firstCompo.addObserver(new HeapListener() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void nutUpdated(final NutsHeap heap) {
+                    if (latch1.getCount() == 0) {
+                        latch2.countDown();
+                    } else {
+                        latch1.countDown();
+                    }
+                }
+            });
+
+            Assert.assertTrue(latch1.await(3, TimeUnit.SECONDS));
+            Assert.assertFalse(latch2.await(3, TimeUnit.SECONDS));
+        } finally {
+            dao.shutdown();
+        }
+    }
+    
     /**
      * Test when different extensions are defined.
      *

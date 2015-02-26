@@ -60,11 +60,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -171,8 +171,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 final NutDaoListener listener = entry.getKey();
                 final Polling pollingData = entry.getValue();
 
-                final Set<String> nutPathsToPoll = new LinkedHashSet<String>();
-
                 for (final String pattern : pollingData.getPatterns()) {
                     List<String> nutPaths = nutsPathByPattern.get(pattern);
 
@@ -181,37 +179,40 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                             nutPaths = listNutsPaths(pattern);
                             nutsPathByPattern.put(pattern, nutPaths);
                         }
-
-                        nutPathsToPoll.addAll(nutPaths);
                     } catch (IOException se) {
                         log.error("Unable to list path for {}", pattern, se);
+                        continue;
                     }
-                }
 
-                // Notify listener
-                final boolean excluded = exclusions.contains(listener);
+                    // Notify listener
+                    final boolean excluded = exclusions.contains(listener);
 
-                // Not already excluded and asks for exclusion
-                if (!excluded && !listener.polling(nutPathsToPoll)) {
-                    exclusions.add(listener);
-                } else if (!excluded) {
-                    for (final String path : nutPathsToPoll) {
-                        Long timestamp = timestamps.get(path);
+                    // Not already excluded and asks for exclusion
+                    if (!excluded && !listener.polling(pattern, new HashSet<String>(nutPaths))) {
+                        exclusions.add(listener);
+                    } else if (!excluded) {
+                        for (final String path : nutPaths) {
+                            Long timestamp = timestamps.get(path);
 
-                        // Timestamps not already retrieved
-                        if (timestamp == null) {
-                            try {
-                                timestamp = getLastUpdateTimestampFor(path);
-                                timestamps.put(path, timestamp);
-                            } catch (IOException se) {
-                                log.error("Unable to poll nut {}", path, se);
+                            // Timestamps not already retrieved
+                            if (timestamp == null) {
+                                try {
+                                    timestamp = getVersionNumber(path).get();
+                                    timestamps.put(path, timestamp);
+                                } catch (IOException se) {
+                                    log.error("Unable to poll nut {}", path, se);
+                                } catch (InterruptedException ie) {
+                                    log.error("Thread retrieving the version number for {} has been interrupted", path, ie);
+                                } catch (ExecutionException ee) {
+                                    log.error("Thread retrieving the version number for {} has raised an exception", path, ee);
+                                }
                             }
-                        }
 
-                        // Stop notifying
-                        if (!listener.nutPolled(this, path, timestamp)) {
-                            exclusions.add(listener);
-                            break;
+                            // Stop notifying
+                            if (!listener.nutPolled(this, path, timestamp)) {
+                                exclusions.add(listener);
+                                break;
+                            }
                         }
                     }
                 }
@@ -359,7 +360,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @version 1.0
      * @since 0.4.1
      */
-    private final class WithRootPathNutDao implements NutDao {
+    public final class WithRootPathNutDao implements NutDao {
 
         /**
          * Root path.
@@ -375,6 +376,17 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          */
         private WithRootPathNutDao(final String rp) {
             rootPath = rp;
+        }
+
+        /**
+         * <p>
+         * Gets the root path.
+         * </p>
+         *
+         * @return the root path.
+         */
+        public String getRootPath() {
+            return rootPath;
         }
 
         /**

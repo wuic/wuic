@@ -60,7 +60,6 @@ public interface HeapListener {
      * Called when a nut has been updated in the heap.
      * </p>
      *
-     * @param heap the heap which detects the update
      */
     void nutUpdated(NutsHeap heap);
 }

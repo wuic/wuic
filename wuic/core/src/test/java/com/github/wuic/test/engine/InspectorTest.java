@@ -68,8 +68,6 @@ import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -139,7 +137,7 @@ public class InspectorTest {
             @Override
             public String getName() {
                 final String retval = createCount.get() + ".css";
-                h.getCreated().add(retval);
+                h.addCreate(retval, retval);
                 return retval;
             }
 
@@ -153,7 +151,6 @@ public class InspectorTest {
         Mockito.when(heap.getNuts()).thenReturn(nuts);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
-        Mockito.when(heap.getCreated()).thenReturn(new HashSet<String>(Arrays.asList(nut.getInitialName())));
 
         final EngineRequest request = new EngineRequestBuilder("wid", h).contextPath("cp").build();
         final List<ConvertibleNut> res = engine.parse(request);

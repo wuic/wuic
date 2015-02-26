@@ -240,7 +240,7 @@ public class AbstractNutDaoTest {
         dao.create("");
         dao.observe("", new NutDaoListener() {
             @Override
-            public boolean polling(final Set<String> paths) {
+            public boolean polling(final String p, final Set<String> paths) {
                 return true;
             }
 
@@ -281,7 +281,7 @@ public class AbstractNutDaoTest {
         dao.create("");
         dao.observe("", new NutDaoListener() {
             @Override
-            public boolean polling(Set<String> paths) {
+            public boolean polling(final String p, final Set<String> paths) {
                 return true;
             }
 
@@ -318,7 +318,7 @@ public class AbstractNutDaoTest {
 
         final NutDaoListener listener = new NutDaoListener() {
             @Override
-            public boolean polling(final Set<String> paths) {
+            public boolean polling(final String p, final Set<String> paths) {
                 logger.info("Polling nut");
                 synchronized (AbstractNutDaoTest.class) {
                     count.incrementAndGet();
@@ -366,7 +366,7 @@ public class AbstractNutDaoTest {
                         dao.create("");
                         dao.observe("", new NutDaoListener() {
                             @Override
-                            public boolean polling(Set<String> paths) {
+                            public boolean polling(final String p, final Set<String> paths) {
                                 return false;
                             }
 

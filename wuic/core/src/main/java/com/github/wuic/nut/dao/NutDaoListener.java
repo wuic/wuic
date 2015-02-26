@@ -72,10 +72,11 @@ public interface NutDaoListener {
      * operation.
      * </p>
      *
+     * @param pattern the pattern (actually the path itself or a regex) corresponding to the paths
      * @param paths all the real paths which are going to be polled
      * @return {@code false} if polling should not be done, {@code true} otherwise
      */
-    boolean polling(Set<String> paths);
+    boolean polling(String pattern, Set<String> paths);
 
     /**
      * <p>
