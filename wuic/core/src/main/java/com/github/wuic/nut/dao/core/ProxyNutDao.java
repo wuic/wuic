@@ -122,11 +122,24 @@ public class ProxyNutDao implements NutDao {
     }
 
     /**
+     * <p>
+     * Gets a DAO for a particular path.
+     * </p>
+     *
+     * @param path the proxy path
+     * @return the mapped DAO
+     */
+    public NutDao getNutDao(final String path) {
+        final NutDao dao = proxyNutDao.get(path);
+        return (dao == null) ? delegate : dao;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
-        // do not observe anything, feature not available here.
+        getNutDao(realPath).observe(realPath, listeners);
     }
 
     /**
@@ -139,14 +152,7 @@ public class ProxyNutDao implements NutDao {
 
         // Nut not mapped, delegate call
         if (nut == null) {
-            final NutDao dao = proxyNutDao.get(path);
-
-            if (dao == null) {
-                retval = delegate.create(path);
-            } else {
-                retval = dao.create(path);
-            }
-
+            retval = getNutDao(path).create(path);
         } else {
             retval = Arrays.asList(nut);
         }
@@ -160,11 +166,13 @@ public class ProxyNutDao implements NutDao {
     @Override
     public List<Nut> create(final String path, final PathFormat format) throws IOException {
         final Nut nut = proxyNut.get(path);
-        List<Nut> retval = Arrays.asList(nut);
+        List<Nut> retval;
 
         // Nut not mapped, delegate call
         if (nut == null) {
-            retval = delegate.create(path, format);
+            retval = getNutDao(path).create(path, format);
+        } else {
+            retval = Arrays.asList(nut);
         }
 
         return retval;
