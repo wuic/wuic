@@ -328,9 +328,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * </p>
      *
      * @param listener the listener
-     * @throws IOException if an I/O error occurs
      */
-    public void addObserver(final HeapListener listener) throws IOException {
+    public void addObserver(final HeapListener listener)  {
         synchronized (listeners) {
             this.listeners.add(listener);
         }

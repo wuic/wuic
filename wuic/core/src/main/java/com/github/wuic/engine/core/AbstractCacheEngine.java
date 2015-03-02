@@ -148,12 +148,8 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             log.info("Nuts for request '{}' found in cache", request);
             retval = new ArrayList<ConvertibleNut>((value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult()).values());
         } else {
-            // Nut does not exists
-            try {
-                request.getHeap().addObserver(new InvalidateCache(key));
-            } catch (IOException ioe) {
-                WuicException.throwWuicException(ioe);
-            }
+            // Removes from cache when an update is detected
+            request.getHeap().addObserver(new InvalidateCache(key));
 
             final Map<String, ConvertibleNut> toCache;
 
