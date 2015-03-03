@@ -45,6 +45,8 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.dao.core.DiskNutDao;
+import com.github.wuic.nut.dao.core.PathNutDao;
+import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -90,6 +92,25 @@ public class PathNutDaoTest {
     @Test(expected = IllegalArgumentException.class)
     public void wildcardAndRegexTest() throws Exception {
         new ClasspathNutDao("/", false, null, -1, true, true, false, true);
+    }
+
+    /**
+     * <p>
+     * Make sure an exception is raised when we configure a DAO for both wildcard and regex.
+     * </p>
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void regexAndWildcardTest() {
+        new PathNutDao("", false, null, -1, true, true, true, false) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected DirectoryPath createBaseDirectory() throws IOException {
+                return null;
+            }
+        };
     }
 
     /**
