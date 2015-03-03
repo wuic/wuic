@@ -53,6 +53,8 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -383,5 +385,26 @@ public class NutsHeapTest {
     public void noPathTest() throws IOException {
         new NutsHeap(Arrays.asList(""), new MockNutDao(-1), "");
         Assert.fail();
+    }
+
+    /**
+     * <p>
+     * Test observer removal when heap is no more referenced.
+     * </p>
+     *
+     * @throws Exception is test fails
+     */
+    @Test
+    public void removesListenerTest() throws Exception {
+        final MockNutDao dao = new MockNutDao(-1);
+        dao.mockPaths.put("1.js", 1L);
+        NutsHeap heap = new NutsHeap(Arrays.asList(".*"), dao, "");
+        final ReferenceQueue queue = new ReferenceQueue();
+        final WeakReference ref = new WeakReference(heap, queue);
+
+        // set hard reference to null: heap will be garbage collected
+        heap = null;
+        System.gc();
+        Assert.assertTrue(ref.isEnqueued());
     }
 }

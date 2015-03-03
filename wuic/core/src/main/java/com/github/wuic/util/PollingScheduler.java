@@ -42,10 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.WeakHashMap;
 import java.util.concurrent.Future;
 
 /**
@@ -84,7 +85,7 @@ public abstract class PollingScheduler<T> implements Runnable {
      * Creates a new instance.
      */
     public PollingScheduler() {
-        nutObservers = new HashMap<T, Polling>();
+        nutObservers = new WeakHashMap<T, Polling>();
     }
 
     /**
@@ -188,7 +189,7 @@ public abstract class PollingScheduler<T> implements Runnable {
         /**
          * Listener.
          */
-        private T listener;
+        private WeakReference<T> listener;
 
         /**
          * The patterns.
@@ -203,7 +204,7 @@ public abstract class PollingScheduler<T> implements Runnable {
          * @param l the listener to be notified
          */
         public Polling(final T l) {
-            listener = l;
+            listener = new WeakReference<T>(l);
             patterns = new HashSet<String>();
         }
 
@@ -237,7 +238,7 @@ public abstract class PollingScheduler<T> implements Runnable {
          * @return the listener
          */
         public T getListener() {
-            return listener;
+            return listener.get();
         }
     }
 }
