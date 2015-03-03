@@ -398,6 +398,22 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         public void nutUpdated(final NutsHeap heap) {
             removeFromCache(key);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            return obj instanceof InvalidateCache && key.equals(InvalidateCache.class.cast(obj).key);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return key.hashCode();
+        }
     }
 
     /**

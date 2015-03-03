@@ -37,10 +37,16 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.AbstractCacheEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +56,7 @@ import org.mockito.Mockito;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -62,6 +69,57 @@ import java.util.Map;
  */
 @RunWith(JUnit4.class)
 public class MemoryMapCacheEngineTest {
+
+    /**
+     * <p>
+     * Make sure the cache is notified only by one listener for several call with the same key.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void invalidationTest() throws Exception {
+        final AtomicInteger counter = new AtomicInteger();
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void removeFromCache(final EngineRequest.Key request) {
+                counter.incrementAndGet();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void putToCache(final EngineRequest.Key request, final CacheResult nuts) {
+                // Do not add to cache to ignore for test purpose
+            }
+        };
+
+        final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(nut.getInitialName()).thenReturn("foo.js");
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+
+        final NutDao dao = Mockito.mock(NutDao.class);
+        Mockito.when(dao.create(Mockito.anyString())).thenReturn(Arrays.asList(nut));
+
+        final NutsHeap heap = new NutsHeap(Arrays.asList(""), dao, "heap");
+
+        // Registers the InvalidateCache multiple time
+        engine.parse(new EngineRequestBuilder("", heap).build());
+        engine.parse(new EngineRequestBuilder("", heap).build());
+        engine.parse(new EngineRequestBuilder("", heap).build());
+
+        // Call listeners
+        heap.nutUpdated(heap);
+
+        // Only one listener is notified
+        Assert.assertEquals(1, counter.get());
+    }
 
     /**
      * Add an element then clears the cache.
