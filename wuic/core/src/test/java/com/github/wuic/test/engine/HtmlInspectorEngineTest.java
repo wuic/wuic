@@ -60,6 +60,7 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
@@ -69,7 +70,9 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -131,9 +134,11 @@ public class HtmlInspectorEngineTest {
         final ConvertibleNut js = nut.getReferencedNuts().get(8);
         Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
         final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
+
         Assert.assertTrue(script, script.contains("console.log"));
         Assert.assertTrue(script, script.contains("i+=3"));
         Assert.assertTrue(script, script.contains("i+=4"));
+
     }
 
     /**
@@ -277,5 +282,45 @@ public class HtmlInspectorEngineTest {
         }
 
         Assert.assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * <p>
+     * Tests when heap created during transformation should be strongly referenced and when it should not be the case.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void heapListenerHolderTest() throws Exception {
+        final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
+        final NutsHeap heap = new NutsHeap(Arrays.asList("index.html"), dao, "heap");
+        final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
+        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
+        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap).chains(chains).build();
+        final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8").parse(request);
+        Assert.assertEquals(1, nuts.size());
+        final ConvertibleNut nut = nuts.get(0);
+        nut.transform(new Pipe.DefaultOnReady(new OutputStream() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void write(final int b) throws IOException {
+            }
+        }));
+
+        // Make sure heap created on the fly are strongly referenced somewhere
+        Assert.assertEquals(NumberUtils.FOUR, dao.getNutObservers().size());
+        System.gc();
+        Thread.sleep(500L);
+        Assert.assertEquals(NumberUtils.FOUR, dao.getNutObservers().size());
+        NutsHeap.ListenerHolder.INSTANCE.clear();
+        heap.notifyListeners(heap);
+        System.gc();
+        Thread.sleep(500L);
+        Assert.assertEquals(1, dao.getNutObservers().size());
     }
 }

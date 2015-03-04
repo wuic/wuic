@@ -640,4 +640,62 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     public void nutUpdated(final NutsHeap heap) {
         notifyListeners(heap);
     }
+
+    /**
+     * <p>
+     * The {@link NutsHeap} is a {@link NutDaoListener} registered in the {@link NutDao}. Because the listeners are
+     * registered in weak references, we must make sure a strong reference prevents the objects from garbage collection.
+     * This class helps to keep a strong reference to the registered listener.
+     * </p>
+     *
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    public static enum ListenerHolder {
+
+        /**
+         * Singleton.
+         */
+        INSTANCE;
+
+        /**
+         * The strong references.
+         */
+        private final List<HeapListener> listeners;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        private ListenerHolder() {
+            listeners = new ArrayList<HeapListener>();
+        }
+
+        /**
+         * <p>
+         * Adds a strong reference to the listener.
+         * </p>
+         *
+         * @param l the listener
+         */
+        public void add(final HeapListener l) {
+            synchronized (listeners) {
+                listeners.add(l);
+            }
+        }
+
+        /**
+         * <p>
+         * Clears all strong references.
+         * </p>
+         */
+        public void clear() {
+            synchronized (listeners) {
+                listeners.clear();
+            }
+        }
+    }
 }

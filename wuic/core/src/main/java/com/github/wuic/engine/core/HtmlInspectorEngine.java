@@ -1029,6 +1029,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final String heapId = StringUtils.toHexString(hash);
             heap = new NutsHeap(filteredPath, proxyNutDao, heapId);
             heap.addObserver(request.getHeap());
+            NutsHeap.ListenerHolder.INSTANCE.add(heap);
         }
 
         /**

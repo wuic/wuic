@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.WuicScheduledThreadPool;
 
 import java.util.concurrent.Future;
@@ -101,6 +102,7 @@ public abstract class ScheduledCacheEngine extends AbstractCacheEngine implement
     @Override
     public void run() {
         clearCache();
+        NutsHeap.ListenerHolder.INSTANCE.clear();
     }
 
     /**

@@ -110,6 +110,11 @@ public interface NutDao {
      * The targeted nut is represented by the specified path.
      * </p>
      *
+     * <p>
+     * The listeners will be stored in a weak reference so if no strong reference to them exist, they will be
+     * garbage collected.
+     * </p>
+     *
      * @param realPath the real path name of the nut.
      * @param listeners some listeners to be notified when an update has been detected on a nut
      * @throws IOException if an I/O occurs while retrieving last update of the nut
