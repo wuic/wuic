@@ -564,6 +564,11 @@ public class ContextBuilder extends Observable {
                 for (final NutDao dao : setting.nutDaoMap.values()) {
                     dao.shutdown();
                 }
+
+                // Notifies any listeners to clear any cache
+                for (final NutsHeap heap : setting.getNutsHeaps().values()) {
+                    heap.notifyListeners(heap);
+                }
             }
 
             setChanged();
