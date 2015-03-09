@@ -261,6 +261,16 @@ public class AbstractNutDaoTest {
 
                     return true;
                 }
+
+                @Override
+                public boolean isDisposable() {
+                    return false;
+                }
+
+                @Override
+                public Object getFactory() {
+                    return this;
+                }
             });
 
             System.out.println((System.currentTimeMillis() - start) + "ms");
@@ -307,6 +317,16 @@ public class AbstractNutDaoTest {
 
                     return true;
                 }
+
+                @Override
+                public boolean isDisposable() {
+                    return false;
+                }
+
+                @Override
+                public Object getFactory() {
+                    return this;
+                }
             });
 
             Thread.sleep(1500L);
@@ -349,6 +369,16 @@ public class AbstractNutDaoTest {
                 @Override
                 public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
                     return true;
+                }
+
+                @Override
+                public boolean isDisposable() {
+                    return false;
+                }
+
+                @Override
+                public Object getFactory() {
+                    return this;
                 }
             };
 
@@ -400,6 +430,16 @@ public class AbstractNutDaoTest {
                                 public boolean nutPolled(NutDao dao, String path, Long timestamp) {
                                     return false;
                                 }
+
+                                @Override
+                                public boolean isDisposable() {
+                                    return false;
+                                }
+
+                                @Override
+                                public Object getFactory() {
+                                    return this;
+                                }
                             });
                             b.create("b");
                             b.observe("b", new NutDaoListener() {
@@ -411,6 +451,16 @@ public class AbstractNutDaoTest {
                                 @Override
                                 public boolean nutPolled(NutDao dao, String path, Long timestamp) {
                                     return false;
+                                }
+
+                                @Override
+                                public boolean isDisposable() {
+                                    return false;
+                                }
+
+                                @Override
+                                public Object getFactory() {
+                                    return this;
                                 }
                             });
 

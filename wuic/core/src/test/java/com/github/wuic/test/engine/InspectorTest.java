@@ -124,7 +124,7 @@ public class InspectorTest {
         Mockito.when(heap.getId()).thenReturn("heap");
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
-        final NutsHeap h = new NutsHeap(null, dao, "heap", heap);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
         final List<Nut> nuts = new ArrayList<Nut>();
 
         for (final String[] c : collection) {

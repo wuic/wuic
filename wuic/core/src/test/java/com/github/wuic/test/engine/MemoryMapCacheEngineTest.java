@@ -107,7 +107,7 @@ public class MemoryMapCacheEngineTest {
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString())).thenReturn(Arrays.asList(nut));
 
-        final NutsHeap heap = new NutsHeap(Arrays.asList(""), dao, "heap");
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
 
         // Registers the InvalidateCache multiple time
         engine.parse(new EngineRequestBuilder("", heap).build());

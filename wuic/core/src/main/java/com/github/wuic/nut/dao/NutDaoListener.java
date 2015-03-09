@@ -95,4 +95,28 @@ public interface NutDaoListener {
      * {@code false} otherwise
      */
     boolean nutPolled(NutDao dao, String path, Long timestamp);
+
+    /**
+     * <p>
+     * Indicates if this listener should be removed from the observable object when a call to
+     * {@link #polling(String, java.util.Set)} or {@link #nutPolled(NutDao, String, Long)} returns {@code false}.
+     * </p>
+     *
+     * <p>
+     * If a listener is going to be removed, all the other listeners created by the same {@link #getFactory() factory}
+     * must be removed if and only if they are also disposable.
+     * </p>
+     *
+     * @return {@code true} if this listener is disposable a described, {@code false} otherwise
+     */
+    boolean isDisposable();
+
+    /**
+     * <p>
+     * An arbitrary object which helps to know how the listener has been created.
+     * </p>
+     *
+     * @return the factory object
+     */
+    Object getFactory();
 }

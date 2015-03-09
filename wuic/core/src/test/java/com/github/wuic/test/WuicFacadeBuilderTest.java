@@ -192,7 +192,7 @@ public class WuicFacadeBuilderTest {
                 .contextNutDaoBuilder(ClasspathNutDao.class)
                 .property(ApplicationConfig.BASE_PATH, "/skipped/deep")
                 .toContext()
-                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), "baz.js")
+                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), new String[] { "baz.js" })
                 .releaseTag()
                 .toFacade()
                 .build();
@@ -215,7 +215,7 @@ public class WuicFacadeBuilderTest {
                 .contextNutDaoBuilder(ClasspathNutDao.class)
                 .property(ApplicationConfig.BASE_PATH, "/skipped/deep")
                 .toContext()
-                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), "baz.js")
+                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), new String[] { "baz.js" })
                 .releaseTag()
                 .toFacade()
                 .build();

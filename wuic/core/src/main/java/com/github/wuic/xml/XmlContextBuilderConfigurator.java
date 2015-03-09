@@ -131,7 +131,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
         if (target.length == 0) {
             ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), paths);
         } else {
-            ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), target, paths);
+            ctxBuilder.heap(false, heap.getId(), heap.getDaoBuilderId(), target, paths);
         }
     }
 

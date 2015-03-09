@@ -217,6 +217,23 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                     }
                 }
             }
+
+            // Dispose listeners
+            for (final NutDaoListener listener : exclusions) {
+                if (listener.isDisposable()) {
+                    final Set<NutDaoListener> set = new HashSet<NutDaoListener>(getNutObservers().keySet());
+                    final Object excludedFactory = listener.getFactory();
+
+                    // Looking for all listeners created by the same factory and also disposable
+                    for (final NutDaoListener dao : set) {
+                        final Object daoFactory = dao.getFactory();
+
+                        if (excludedFactory != null && daoFactory != null && excludedFactory.equals(daoFactory) && dao.isDisposable()) {
+                            getNutObservers().remove(dao);
+                        }
+                    }
+                }
+            }
         }
 
         log.info("Polling operation for {} run in {} seconds", getClass().getName(),

@@ -41,6 +41,7 @@ package com.github.wuic;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
@@ -415,8 +416,8 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade tag(final String tagName) {
-            super.tag(tagName);
+        public ContextBuilderFacade tag(final Object tag) {
+            super.tag(tag);
             return this;
         }
 
@@ -424,8 +425,8 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade clearTag(final String tagName) {
-            super.clearTag(tagName);
+        public ContextBuilderFacade clearTag(final Object tag) {
+            super.clearTag(tag);
             return this;
         }
 
@@ -500,8 +501,9 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade heap(final String id, final String ndbId, final String... path) throws IOException {
-            super.heap(id, ndbId, path);
+        public ContextBuilderFacade heap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
+                throws IOException {
+            super.heap(id, ndbId, path, listeners);
             return ContextBuilderFacade.this;
         }
 
@@ -509,9 +511,14 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade heap(final String id, final String ndbId, final String[] heapIds, final String... path)
+        public ContextBuilderFacade heap(final boolean disposable,
+                                         final String id,
+                                         final String ndbId,
+                                         final String[] heapIds,
+                                         final String[] path,
+                                         final HeapListener ... listeners)
                 throws IOException {
-            super.heap(id, ndbId, heapIds, path);
+            super.heap(disposable, id, ndbId, heapIds, path, listeners);
             return ContextBuilderFacade.this;
         }
 

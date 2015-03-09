@@ -46,6 +46,8 @@ import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
@@ -304,7 +306,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
             contextBuilder.tag(getClass().getName())
                     .nutDao(path, dao)
-                    .heap(workflowId, path, path);
+                    .disposableHeap(workflowId, path, new String[] { path }, new HeapListener() {
+                        @Override
+                        public void nutUpdated(final NutsHeap heap) {
+                            synchronized (workflowIds) {
+                                workflowIds.remove(path);
+                            }
+                        }
+                    });
         } finally {
             contextBuilder.releaseTag();
         }

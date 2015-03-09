@@ -47,6 +47,7 @@ import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.NutsHeap;
@@ -111,7 +112,7 @@ import java.util.regex.Pattern;
  *
  * <p>
  * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
- * {@link ContextBuilder#tag(String)} method is called, the current threads holds a lock on the object.
+ * {@link ContextBuilder#tag(Object)} method is called, the current threads holds a lock on the object.
  * It will be released when the {@link com.github.wuic.ContextBuilder#releaseTag()} will be called.
  * Consequently, it is really important to always call this last method in a finally block.
  * </p>
@@ -140,12 +141,12 @@ public class ContextBuilder extends Observable {
     /**
      * The current tag.
      */
-    private String currentTag;
+    private Object currentTag;
 
     /**
      * All settings associated to their tag.
      */
-    private Map<String, ContextSetting> taggedSettings;
+    private Map<Object, ContextSetting> taggedSettings;
 
     /**
      * Factory for engine builder.
@@ -181,7 +182,7 @@ public class ContextBuilder extends Observable {
                           final ObjectBuilderFactory<NutDao> nutDaoBuilderFactory,
                           final ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory,
                           final ObjectBuilderInspector ... inspectors) {
-        this.taggedSettings = new HashMap<String, ContextSetting>();
+        this.taggedSettings = new HashMap<Object, ContextSetting>();
         this.lock = new ReentrantLock();
         this.configureDefault = false;
 
@@ -515,7 +516,7 @@ public class ContextBuilder extends Observable {
     /**
      * <p>
      * Decorates the current builder with a new builder associated to a specified tag. Tagging the context allows to
-     * isolate a set of configurations that could be erased by calling {@link ContextBuilder#clearTag(String)}.
+     * isolate a set of configurations that could be erased by calling {@link ContextBuilder#clearTag(Object)}.
      * This way, this feature is convenient when you need to poll the configurations to reload it.
      * </p>
      *
@@ -524,12 +525,12 @@ public class ContextBuilder extends Observable {
      * method is called. If tag is currently set, then it is released when this method is called with a new tag.
      * </p>
      *
-     * @param tagName the tag name
+     * @param tag an arbitrary object which represents the current tag
      * @return the current builder which will associates all configurations to the tag
-     * @see ContextBuilder#clearTag(String)
+     * @see ContextBuilder#clearTag(Object)
      * @see com.github.wuic.ContextBuilder#releaseTag()
      */
-    public ContextBuilder tag(final String tagName) {
+    public ContextBuilder tag(final Object tag) {
         lock.lock();
         log.debug("ContextBuilder locked by {}", Thread.currentThread().toString());
 
@@ -537,9 +538,9 @@ public class ContextBuilder extends Observable {
             releaseTag();
         }
 
-        currentTag = tagName;
+        currentTag = tag;
         setChanged();
-        notifyObservers(tagName);
+        notifyObservers(tag);
         return this;
     }
 
@@ -548,16 +549,16 @@ public class ContextBuilder extends Observable {
      * Clears all configurations associated to the given tag.
      * </p>
      *
-     * @param tagName the tag name
+     * @param tag the tag
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder clearTag(final String tagName) {
+    public ContextBuilder clearTag(final Object tag) {
         try {
             if (!lock.isHeldByCurrentThread()) {
                 lock.lock();
             }
 
-            final ContextSetting setting = taggedSettings.remove(tagName);
+            final ContextSetting setting = taggedSettings.remove(tag);
 
             // Shutdown all DAO (scheduled jobs, etc)
             if (setting != null) {
@@ -572,7 +573,7 @@ public class ContextBuilder extends Observable {
             }
 
             setChanged();
-            notifyObservers(tagName);
+            notifyObservers(tag);
 
             return this;
         } finally {
@@ -1059,18 +1060,38 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Creates a new heap as specified by {@link ContextBuilder#heap(String, String, String[], String...)} without any
-     * composition.
+     * Creates a new heap as specified by {@link ContextBuilder#heap(boolean, String, String, String[], String[], HeapListener...)}
+     * without any composition and which is not disposable.
      * </p>
      *
      * @param id the heap ID
      * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
+     * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
      * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String ... path) throws IOException {
-        return heap(id, ndbId, null, path);
+    public ContextBuilder heap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
+            throws IOException {
+        return heap(false, id, ndbId, null, path, listeners);
+    }
+
+    /**
+     * <p>
+     * Creates a new disposable heap as specified by {@link ContextBuilder#heap(boolean, String, String, String[], String[], HeapListener...)}
+     * without any composition.
+     * </p>
+     *
+     * @param id the heap ID
+     * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
+     * @param path the path
+     * @param listeners some listeners for this heap
+     * @return this {@link ContextBuilder}
+     * @throws IOException if the HEAP could not be created
+     */
+    public ContextBuilder disposableHeap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
+            throws IOException {
+        return heap(true, id, ndbId, null, path, listeners);
     }
 
     /**
@@ -1090,14 +1111,17 @@ public class ContextBuilder extends Observable {
      * will be thrown.
      * </p>
      *
+     * @param disposable if the heap is disposable or not (see {@link com.github.wuic.nut.dao.NutDaoListener#isDisposable()}
      * @param id the heap ID
      * @param heapIds the heaps composition
      * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
      * @param path the path
+     * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
      * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String[] heapIds, final String ... path) throws IOException {
+    public ContextBuilder heap(final boolean disposable, final String id, final String ndbId, final String[] heapIds, final String[] path, final HeapListener ... listeners)
+            throws IOException {
         NutDao dao = null;
 
         if (NumberUtils.isNumber(id)) {
@@ -1116,8 +1140,9 @@ public class ContextBuilder extends Observable {
 
         // Check content and apply filters
         final List<String> pathList = pathList(dao, ndbId, path);
-
         final ContextSetting setting = getSetting();
+
+        final NutsHeap heap;
 
         // Composition detected, collected nested and referenced heaps
         if (heapIds != null && heapIds.length != 0) {
@@ -1127,10 +1152,16 @@ public class ContextBuilder extends Observable {
                 composition.addAll(getNutsHeap(regex));
             }
 
-            setting.getNutsHeaps().put(id, new NutsHeap(pathList, dao, id, composition.toArray(new NutsHeap[composition.size()])));
+            heap = new NutsHeap(currentTag, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
         } else {
-            setting.getNutsHeaps().put(id, new NutsHeap(pathList, dao, id));
+            heap = new NutsHeap(currentTag, pathList, disposable, dao, id);
         }
+
+        for (final HeapListener l : listeners) {
+            heap.addObserver(l);
+        }
+
+        setting.getNutsHeaps().put(id, heap);
 
         taggedSettings.put(currentTag, setting);
         setChanged();
@@ -1411,7 +1442,8 @@ public class ContextBuilder extends Observable {
             }
 
             final NutsHeap[] array = heaps.toArray(new NutsHeap[heaps.size()]);
-            setting.getWorkflowMap().put(identifier, new Workflow(template.getHead(), chains, new NutsHeap(null, null, heapIdPattern, array)));
+            final NutsHeap heap = new NutsHeap(currentTag, null, null, heapIdPattern, array);
+            setting.getWorkflowMap().put(identifier, new Workflow(template.getHead(), chains, heap));
         }
 
         taggedSettings.put(currentTag, setting);

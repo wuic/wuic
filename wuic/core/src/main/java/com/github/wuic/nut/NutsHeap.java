@@ -91,7 +91,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * The logger.
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * The paths list.
      */
@@ -133,6 +133,16 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     private Map<String, Set<String>> created;
 
     /**
+     * Disposable heap as described in {@link NutDaoListener#isDisposable()} or not.
+     */
+    private final boolean disposable;
+
+    /**
+     * Factory object as described in {@link NutDaoListener#getFactory()} and {@link NutDaoListener#isDisposable()}.
+     */
+    private final Object factory;
+
+    /**
      * <p>
      * Builds a heap by copy.
      * </p>
@@ -147,6 +157,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nutTypes = other.nutTypes;
         this.paths = other.paths;
         this.created = other.created != null ? other.created : new HashMap<String, Set<String>>();
+        this.disposable = other.disposable;
+        this.factory = other.factory;
 
         if (other.composition != null) {
             this.composition = new NutsHeap[other.composition.length];
@@ -167,17 +179,22 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * <p>
      * Some additional heaps could be specified to make a composition.
      * </p>
-     * 
+     *
+     * @param factoryObject the factory object (see {@link #factory})
+     * @param isDisposable is disposable or not (see {@link #disposable}
      * @param pathsList the paths
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
      * @param heaps some other heaps that compose this heap
      * @throws java.io.IOException if the HEAP could not be created
      */
-    public NutsHeap(final List<String> pathsList,
+    public NutsHeap(final Object factoryObject,
+                    final List<String> pathsList,
+                    final boolean isDisposable,
                     final NutDao theNutDao,
                     final String heapId,
                     final NutsHeap ... heaps) throws IOException {
+        this.factory = factoryObject;
         this.id = heapId;
         this.paths = pathsList == null ? new ArrayList<String>() : new ArrayList<String>(pathsList);
         this.nutDao = theNutDao;
@@ -185,7 +202,28 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.composition = heaps;
         this.nutTypes = new HashSet<NutType>();
         this.created = new HashMap<String, Set<String>>();
+        this.disposable = isDisposable;
         checkFiles();
+    }
+
+    /**
+     * <p>
+     * Builds a heap which is not disposable.
+     * </p>
+     *
+     * @param factoryObject the factory object ({@link #factory})
+     * @param pathsList the paths
+     * @param theNutDao the {@link NutDao}
+     * @param heapId the heap ID
+     * @param heaps some other heaps that compose this heap
+     * @throws java.io.IOException if the HEAP could not be created
+     */
+    public NutsHeap(final Object factoryObject,
+            final List<String> pathsList,
+            final NutDao theNutDao,
+            final String heapId,
+            final NutsHeap ... heaps) throws IOException {
+        this(factoryObject, pathsList, false, theNutDao, heapId, heaps);
     }
 
     /**
@@ -340,22 +378,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Refers a path as a resource created by this heap for the given pattern.
      * </p>
      *
+     *
      * @param pattern the pattern the is generated for
      * @param path the created path resource
      */
     public final void addCreate(final String pattern, final String path) {
-        getPaths(pattern).add(path);
-    }
-
-    /**
-     * <p>
-     * Get all paths created for the given pattern.
-     * </p>
-     *
-     * @param pattern the pattern
-     * @return the paths
-     */
-    private Set<String> getPaths(final String pattern) {
         Set<String> p = created.get(pattern);
 
         if (p == null) {
@@ -363,9 +390,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             created.put(pattern, p);
         }
 
-        return p;
+        p.add(path);
     }
-
 
     /**
      * <p>
@@ -498,15 +524,24 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     @Override
     public boolean polling(final String pattern, final Set<String> paths) {
-        final Set<String> current = getPaths(pattern);
+        boolean retval = true;
 
-        // Paths have not changed if difference is empty, otherwise we notify listeners
-        final Collection<String> diff = CollectionUtils.difference(current, paths);
-        boolean retval = diff.isEmpty();
+        try {
+            final Set<String> current = created.get(pattern);
 
-        if (!retval) {
-            log.info("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
-            retval = notifyUpdateToListeners();
+            if (current != null) {
+                // Paths have not changed if difference is empty, otherwise we notify listeners
+                final Collection<String> diff = CollectionUtils.difference(current, paths);
+                retval = diff.isEmpty();
+
+                if (!retval) {
+                    log.info("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
+                    checkFiles();
+                    retval = notifyUpdateToListeners();
+                }
+            }
+        } catch (IOException se) {
+            log.error("Unable to update nuts in the heap", se);
         }
 
         return retval;
@@ -575,15 +610,21 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      */
     @Override
     public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
-        for (final Nut nut : nuts) {
-            // Nut has changed
-            if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
-                // We don't need to be notified anymore
-                return notifyUpdateToListeners();
+        try {
+            for (final Nut nut : nuts) {
+                // Nut has changed
+                if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
+                    checkFiles();
+                    // We don't need to be notified anymore
+                    return notifyUpdateToListeners();
+                }
             }
-        }
 
-        return true;
+            return true;
+        } catch (IOException se) {
+            log.error("Unable to update nuts in the heap", se);
+            return true;
+        }
     }
 
     /**
@@ -617,17 +658,10 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @return {@code false} for convenient usage in caller
      */
     public boolean notifyListeners(final NutsHeap observable) {
-        try {
-            // Will update the nuts
-            checkFiles();
-
-            synchronized (listeners) {
-                for (final HeapListener l : listeners) {
-                    l.nutUpdated(observable);
-                }
+        synchronized (listeners) {
+            for (final HeapListener l : listeners) {
+                l.nutUpdated(observable);
             }
-        } catch (IOException se) {
-            log.error("Unable to update nuts in the heap", se);
         }
 
         return false;
@@ -639,6 +673,43 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     @Override
     public void nutUpdated(final NutsHeap heap) {
         notifyListeners(heap);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDisposable() {
+        return disposable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getFactory() {
+        return factory;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (o instanceof NutsHeap) {
+            final NutsHeap heap = NutsHeap.class.cast(o);
+            return heap.id.equals(id) && CollectionUtils.difference(new HashSet<Object>(paths), new HashSet<Object>(heap.paths)).isEmpty();
+        }
+
+        return false;
     }
 
     /**
