@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
@@ -535,7 +536,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                 retval = diff.isEmpty();
 
                 if (!retval) {
-                    log.info("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
+                    Logging.POLL.log("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
                     checkFiles();
                     retval = notifyUpdateToListeners();
                 }

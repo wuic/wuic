@@ -38,8 +38,7 @@
 
 package com.github.wuic.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.wuic.Logging;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -60,11 +59,6 @@ import java.util.concurrent.Future;
  * @param <T> the type of listener
  */
 public abstract class PollingScheduler<T> implements Runnable {
-
-    /**
-     * The logger.
-     */
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Polling interval in seconds (-1 to disable).
@@ -147,7 +141,7 @@ public abstract class PollingScheduler<T> implements Runnable {
 
         // Stop current scheduling
         if (pollingResult != null) {
-            log.info("Cancelling repeated polling operation for {}", getClass().getName());
+            Logging.POLL.log("Cancelling repeated polling operation for {}", getClass().getName());
             pollingResult.cancel(false);
             pollingResult = null;
         }
@@ -156,10 +150,10 @@ public abstract class PollingScheduler<T> implements Runnable {
 
         // Create new scheduling if necessary
         if (pollingInterval > 0) {
-            log.info("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterval);
+            Logging.POLL.log("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterval);
             pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterval);
         } else {
-            log.info("Won't perform any polling operation for {}", getClass().getName());
+            Logging.POLL.log("Won't perform any polling operation for {}", getClass().getName());
         }
     }
 

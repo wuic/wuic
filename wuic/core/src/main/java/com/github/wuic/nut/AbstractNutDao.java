@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
@@ -153,7 +154,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     public void run() {
         // Log duration
         final Long start = System.currentTimeMillis();
-        log.info("Running polling operation for {}", toString());
+        Logging.POLL.log("Running polling operation for {}", toString());
 
         // Keep in this set all listeners that told that they don't want to be notified until the end of the operation
         final Set<NutDaoListener> exclusions = new HashSet<NutDaoListener>();
@@ -236,7 +237,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             }
         }
 
-        log.info("Polling operation for {} run in {} seconds", getClass().getName(),
+        Logging.POLL.log("Polling operation for {} run in {} seconds", getClass().getName(),
                 (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
     }
 
