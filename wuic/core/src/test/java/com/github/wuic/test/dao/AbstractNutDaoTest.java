@@ -393,6 +393,54 @@ public class AbstractNutDaoTest {
     }
 
     /**
+     * <p>
+     * Tests when listeners should be disposed.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void disposeTest() throws Exception {
+        final AbstractNutDao a = new MockNutDaoTest(1);
+        final AbstractNutDao b = new MockNutDaoTest(-1);
+
+        try {
+            class L implements NutDaoListener {
+                @Override
+                public boolean polling(final String pattern, final Set<String> paths) {
+                    return false;
+                }
+
+                @Override
+                public boolean nutPolled(final NutDao dao, final String path, final Long timestamp) {
+                    return false;
+                }
+
+                @Override
+                public boolean isDisposable() {
+                    return true;
+                }
+
+                @Override
+                public Object getFactory() {
+                    return AbstractNutDaoTest.class;
+                }
+            }
+
+            a.observe("", new L());
+            b.observe("", new L());
+
+            Thread.sleep(1500L);
+            Assert.assertEquals(0, a.getNutObservers().size());
+            Assert.assertEquals(0, b.getNutObservers().size());
+        } finally {
+            a.shutdown();
+            b.shutdown();
+        }
+
+    }
+
+    /**
      * Concurrent test.
      *
      * @throws Exception if test fails

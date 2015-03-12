@@ -146,6 +146,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         contentBasedVersionNumber = contentBasedHash;
         computeVersionAsynchronously = asynchronous;
         setPollingInterval(pollingSeconds);
+        Disposer.INSTANCE.register(this);
     }
 
     /**
@@ -185,60 +186,64 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                         continue;
                     }
 
-                    // Notify listener
-                    final boolean excluded = exclusions.contains(listener);
-
-                    // Not already excluded and asks for exclusion
-                    if (!excluded && !listener.polling(pattern, new HashSet<String>(nutPaths))) {
-                        exclusions.add(listener);
-                    } else if (!excluded) {
-                        for (final String path : nutPaths) {
-                            Long timestamp = timestamps.get(path);
-
-                            // Timestamps not already retrieved
-                            if (timestamp == null) {
-                                try {
-                                    timestamp = getVersionNumber(path).get();
-                                    timestamps.put(path, timestamp);
-                                } catch (IOException se) {
-                                    log.error("Unable to poll nut {}", path, se);
-                                } catch (InterruptedException ie) {
-                                    log.error("Thread retrieving the version number for {} has been interrupted", path, ie);
-                                } catch (ExecutionException ee) {
-                                    log.error("Thread retrieving the version number for {} has raised an exception", path, ee);
-                                }
-                            }
-
-                            // Stop notifying
-                            if (!listener.nutPolled(this, path, timestamp)) {
-                                exclusions.add(listener);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Dispose listeners
-            for (final NutDaoListener listener : exclusions) {
-                if (listener.isDisposable()) {
-                    final Set<NutDaoListener> set = new HashSet<NutDaoListener>(getNutObservers().keySet());
-                    final Object excludedFactory = listener.getFactory();
-
-                    // Looking for all listeners created by the same factory and also disposable
-                    for (final NutDaoListener dao : set) {
-                        final Object daoFactory = dao.getFactory();
-
-                        if (excludedFactory != null && daoFactory != null && excludedFactory.equals(daoFactory) && dao.isDisposable()) {
-                            getNutObservers().remove(dao);
-                        }
-                    }
+                    evaluatePolling(timestamps, nutPaths, exclusions, listener, pattern);
                 }
             }
         }
 
+        Disposer.INSTANCE.dispose(exclusions);
+
         Logging.POLL.log("Polling operation for {} run in {} seconds", getClass().getName(),
                 (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+    }
+
+    /**
+     * <p>
+     * Evaluates each path by polling the associated resource and notifying any detected change.
+     * </p>
+     *
+     * @param timestamps the timestamps of polled resources
+     * @param nutPaths the paths of resources to poll
+     * @param exclusions the listeners asking for exclusion
+     * @param listener the listener which will evaluates the poll for this call
+     * @param pattern the pattern associated to all given paths
+     */
+    private void evaluatePolling(final Map<String, Long> timestamps,
+                                 final List<String> nutPaths,
+                                 final Set<NutDaoListener> exclusions,
+                                 final NutDaoListener listener,
+                                 final String pattern) {
+        // Notify listener
+        final boolean excluded = exclusions.contains(listener);
+
+        // Not already excluded and asks for exclusion
+        if (!excluded && !listener.polling(pattern, new HashSet<String>(nutPaths))) {
+            exclusions.add(listener);
+        } else if (!excluded) {
+            for (final String path : nutPaths) {
+                Long timestamp = timestamps.get(path);
+
+                // Timestamps not already retrieved
+                if (timestamp == null) {
+                    try {
+                        timestamp = getVersionNumber(path).get();
+                        timestamps.put(path, timestamp);
+                    } catch (IOException se) {
+                        log.error("Unable to poll nut {}", path, se);
+                    } catch (InterruptedException ie) {
+                        log.error("Thread retrieving the version number for {} has been interrupted", path, ie);
+                    } catch (ExecutionException ee) {
+                        log.error("Thread retrieving the version number for {} has raised an exception", path, ee);
+                    }
+                }
+
+                // Stop notifying
+                if (!listener.nutPolled(this, path, timestamp)) {
+                    exclusions.add(listener);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -358,6 +363,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         if (getPollingInterval() != -1) {
             setPollingInterval(-1);
         }
+
+        Disposer.INSTANCE.remove(this);
     }
 
     /**
@@ -647,6 +654,91 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 }
             } else {
                 return getLastUpdateTimestampFor(path);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * This singleton holds all new {@link AbstractNutDao} instances and helps to clean {@link #getNutObservers() observers}
+     * when a {@link com.github.wuic.nut.dao.NutDaoListener#isDisposable() disposible} object is removed in one of them.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    private enum Disposer {
+
+        /**
+         * The singleton.
+         */
+        INSTANCE;
+
+        /**
+         * The registration list.
+         */
+        private final List<AbstractNutDao> registeredDaoList;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         */
+        private Disposer() {
+            registeredDaoList = Collections.synchronizedList(new ArrayList<AbstractNutDao>());
+        }
+
+        /**
+         * <p>
+         * Adds a new DAO.
+         * </p>
+         *
+         * @param dao the DAO
+         */
+        public void register(final AbstractNutDao dao) {
+            registeredDaoList.add(dao);
+        }
+
+        /**
+         * <p>
+         * Removes the DAO.
+         * </p>
+         *
+         * @param dao the DAO
+         */
+        public void remove(final AbstractNutDao dao) {
+            registeredDaoList.remove(dao);
+        }
+
+        /**
+         * <p>
+         * Dispose a set of candidates as specified in {@link com.github.wuic.nut.dao.NutDaoListener#isDisposable()}.
+         * </p>
+         *
+         * @param exclusions the candidate list
+         */
+        public void dispose(final Set<NutDaoListener> exclusions) {
+            // Dispose listeners
+            for (final NutDaoListener listener : exclusions) {
+                if (listener.isDisposable()) {
+                    // Check each registered DAO
+                    for (final AbstractNutDao registration : registeredDaoList) {
+                        synchronized (registration.getNutObservers()) {
+                            final Set<NutDaoListener> set = new HashSet<NutDaoListener>(registration.getNutObservers().keySet());
+                            final Object excludedFactory = listener.getFactory();
+
+                            // Looking for all listeners created by the same factory and also disposable
+                            for (final NutDaoListener dao : set) {
+                                final Object daoFactory = dao.getFactory();
+
+                                if (excludedFactory != null && daoFactory != null && excludedFactory.equals(daoFactory) && dao.isDisposable()) {
+                                    registration.getNutObservers().remove(dao);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
