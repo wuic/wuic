@@ -48,9 +48,11 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.nut.filter.NutFilterService;
@@ -753,7 +755,22 @@ public class ContextBuilder extends Observable {
         /**
          * The builder.
          */
-        private ObjectBuilder<NutDao> nutDaoBuilder;
+        private final ObjectBuilder<NutDao> nutDaoBuilder;
+
+        /**
+         * Some DAO to proxy.
+         */
+        private final Map<String, NutDao> proxyDao;
+
+        /**
+         * Some nut to proxy.
+         */
+        private final Map<String, Nut> proxyNut;
+
+        /**
+         * A root path for all proxy paths.
+         */
+        private String proxyRootPath;
 
         /**
          * <p>
@@ -766,6 +783,50 @@ public class ContextBuilder extends Observable {
         public ContextNutDaoBuilder(final String id, final String type) {
             super(id);
             this.nutDaoBuilder = nutDaoBuilderFactory.create(type);
+            this.proxyDao = new HashMap<String, NutDao>();
+            this.proxyNut = new HashMap<String, Nut>();
+            this.proxyRootPath = "";
+        }
+
+        /**
+         * <p>
+         * Specifies a root path for paths to proxy.
+         * </p>
+         *
+         * @param path the root path
+         * @return this
+         */
+        public ContextNutDaoBuilder proxyRootPath(final String path) {
+            proxyRootPath = path;
+            return this;
+        }
+
+        /**
+         * <p>
+         * Specifies a path to proxy to a DAO.
+         * </p>
+         *
+         * @param path the path
+         * @param id the DAO id
+         * @return this
+         */
+        public ContextNutDaoBuilder proxyPathForDao(final String path, final String id) {
+            proxyDao.put(path, getNutDao(id));
+            return this;
+        }
+
+        /**
+         * <p>
+         * Specifies a path to proxy to a nut.
+         * </p>
+         *
+         * @param path the path
+         * @param nut the nut
+         * @return this
+         */
+        public ContextNutDaoBuilder proxyPathForNut(final String path, final Nut nut) {
+            proxyNut.put(path, nut);
+            return this;
         }
 
         /**
@@ -783,6 +844,21 @@ public class ContextBuilder extends Observable {
         @Override
         public ContextBuilder toContext() {
             nutDaoBuilder(getId(), nutDaoBuilder, getProperties());
+
+            if (!proxyNut.isEmpty() && !proxyDao.isEmpty()) {
+                final ProxyNutDao proxy = new ProxyNutDao(proxyRootPath, getNutDao(getId()));
+
+                for (final Map.Entry<String, Nut> entry : proxyNut.entrySet()) {
+                    proxy.addRule(entry.getKey(), entry.getValue());
+                }
+
+                for (final Map.Entry<String, NutDao> entry : proxyDao.entrySet()) {
+                    proxy.addRule(entry.getKey(), entry.getValue());
+                }
+
+                nutDao(getId(), proxy);
+            }
+
             return ContextBuilder.this;
         }
     }

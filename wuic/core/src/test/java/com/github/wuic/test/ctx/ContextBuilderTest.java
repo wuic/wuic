@@ -53,6 +53,7 @@ import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
@@ -65,6 +66,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -620,5 +622,36 @@ public class ContextBuilderTest {
         for (Thread t : threads) {
             t.join();
         }
+    }
+
+    /**
+     * <p>
+     * Tests the proxy support.
+     * </p>
+     */
+    @Test
+    public void proxyTest() throws IOException {
+        final Nut nut = Mockito.mock(Nut.class);
+
+        final NutDao proxy = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+                .configureDefault()
+                .tag("test")
+                .contextNutDaoBuilder(MockDao.class)
+                .proxyRootPath("proxy")
+                .proxyPathForDao("dao", ContextBuilder.getDefaultBuilderId(MockStoreDao.class))
+                .proxyPathForNut("nut", nut)
+                .toContext()
+                .nutDao(ContextBuilder.getDefaultBuilderId(MockDao.class));
+
+        // Proxy Nut
+        List<Nut> nuts = proxy.create("proxy/nut");
+        Assert.assertFalse(nuts.isEmpty());
+        Assert.assertEquals(nut, nuts.get(0));
+
+        // Proxy DAO
+        Assert.assertNull(proxy.create("proxy/dao"));
+
+        // Root DAO
+        Assert.assertEquals(1, proxy.create(ContextBuilderTest.NUT_NAME_ONE).size());
     }
 }
