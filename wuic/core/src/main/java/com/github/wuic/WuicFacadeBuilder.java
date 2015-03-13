@@ -42,7 +42,7 @@ import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
-import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
@@ -492,15 +492,6 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade nutDao(final String id, final NutDao dao) {
-            super.nutDao(id, dao);
-            return ContextBuilderFacade.this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public ContextBuilderFacade heap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
                 throws IOException {
             super.heap(id, ndbId, path, listeners);
@@ -583,6 +574,33 @@ public class WuicFacadeBuilder {
              */
             public ContextNutDaoBuilderFacade(final String id, final String type) {
                 super(id, type);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextNutDaoBuilderFacade proxyRootPath(final String path) {
+                super.proxyRootPath(path);
+                return this;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextNutDaoBuilderFacade proxyPathForDao(final String path, final String id) {
+                super.proxyPathForDao(path, id);
+                return this;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContextNutDaoBuilderFacade proxyPathForNut(final String path, final Nut nut) {
+                super.proxyPathForNut(path, nut);
+                return this;
             }
 
             /**

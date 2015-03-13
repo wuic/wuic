@@ -42,15 +42,13 @@ import com.github.wuic.ContextBuilder;
 import com.github.wuic.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
-import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.dao.core.ProxyNutDao;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
@@ -80,10 +78,11 @@ import java.util.Map;
  * </p>
  *
  * <p>
- * This filters uses an internal {@link NutDao} to retrieve referenced nuts when parsing HTML. By default, the DAO built from
- * a {@link com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao}. DAO is configured like this for consistency reason because
- * the version number must computed from content when scripts are declared inside tag. User can takes control over {@link NutDao}
- * creation by extending this class and overriding the {@link com.github.wuic.servlet.HtmlParserFilter#createDao()} method.
+ * This filters uses an internal {@link com.github.wuic.nut.dao.NutDao} to retrieve referenced nuts when parsing HTML.
+ * By default, the DAO built from a {@link com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao}. DAO is configured
+ * like this for consistency reason because the version number must be computed from content when scripts are declared
+ * inside tag. User can takes control over {@link com.github.wuic.nut.dao.NutDao} creation by extending this class and
+ * overriding the {@link #createContextNutDaoBuilder(String, com.github.wuic.ContextBuilder, String)} method.
  * </p>
  *
  * @author Guillaume DROUET
@@ -101,11 +100,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * The logger.
      */
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    /**
-     * The {@link NutDao} to use.
-     */
-    private NutDao nutDao;
 
     /**
      * {@link ContextBuilder} to use.
@@ -128,8 +122,28 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private WuicFacade wuicFacade;
 
     /**
+     * The root nut DAO builder ID;
+     */
+    private String rootNuDaoBuilderId;
+
+    /**
      * <p>
-     * Builds a new instance with a specific {@link WuicFacade}.
+     * Builds a new instance with a specific {@link WuicFacade} and a root {@link NutDao} builder.
+     * </p>
+     *
+     * @param wuicFacade the WUIC facade
+     * @param rootNuDaoBuilderId the root nut DAO builder ID
+     */
+    public HtmlParserFilter(final WuicFacade wuicFacade, final String rootNuDaoBuilderId) {
+        this.workflowIds = new HashMap<String, String>();
+        this.wuicFacade = wuicFacade;
+        this.rootNuDaoBuilderId = rootNuDaoBuilderId;
+    }
+
+    /**
+     * <p>
+     * Builds a new instance with a specific {@link WuicFacade} and the default {@link RequestDispatcherNutDao} builder
+     * as root {@link NutDao} builder.
      * </p>
      *
      * @param wuicFacade the WUIC facade
@@ -137,6 +151,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     public HtmlParserFilter(final WuicFacade wuicFacade) {
         this.workflowIds = new HashMap<String, String>();
         this.wuicFacade = wuicFacade;
+        this.rootNuDaoBuilderId = ContextBuilder.getDefaultBuilderId(RequestDispatcherNutDao.class);
     }
 
     /**
@@ -148,6 +163,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      */
     public HtmlParserFilter() {
         workflowIds = new HashMap<String, String>();
+        rootNuDaoBuilderId = ContextBuilder.getDefaultBuilderId(RequestDispatcherNutDao.class);
     }
 
     /**
@@ -161,7 +177,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             }
 
             wuicFacade.configure(this);
-            nutDao = createDao();
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
         } catch (WuicException we) {
             throw new ServletException(we);
@@ -170,19 +185,22 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Creates a new {@link NutDao} from the {@link com.github.wuic.nut.dao.jee.WebappNutDao} builder.
+     * Creates a new {@link com.github.wuic.ContextBuilder.ContextNutDaoBuilder} with the given {@link ContextBuilder}.
      * </p>
      *
+     * @param id the ID
+     * @param contextBuilder the context builder to use
+     * @param rootNutDaoBuilderId the root {@link NutDao} builder which should be extended by the new builder
      * @return the nut DAO
      */
-    protected NutDao createDao() {
-        final NutDao def = contextBuilder.nutDao("wuicDefault" + RequestDispatcherNutDao.class.getSimpleName() + "Builder");
-
-        if (def == null) {
-            final ObjectBuilder<NutDao> b = wuicFacade.newNutDaoBuilder(RequestDispatcherNutDao.class.getSimpleName() + "Builder");
-            return NutDao.class.cast(b.build());
-        } else {
-            return def;
+    protected ContextBuilder.ContextNutDaoBuilder createContextNutDaoBuilder(final String id,
+                                                                             final ContextBuilder contextBuilder,
+                                                                             final String rootNutDaoBuilderId) {
+        try {
+            return contextBuilder.cloneContextNutDaoBuilder(id, rootNutDaoBuilderId);
+        } catch (IllegalArgumentException ie) {
+            logger.info("Cannot clone the builder, create a new one", ie);
+            return contextBuilder.contextNutDaoBuilder(id, RequestDispatcherNutDao.class);
         }
     }
 
@@ -260,7 +278,8 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
         // Ignore the context path if virtual
         if (virtualContextPath) {
-            keyBuilder.append(request.getRequestURI().substring(1 + request.getServletContext().getContextPath().length()));
+            final String key = request.getRequestURI().substring(request.getServletContext().getContextPath().length());
+            keyBuilder.append(key.startsWith("/") ? key.substring(1) : key);
         } else {
             keyBuilder.append(request.getRequestURI().substring(1));
         }
@@ -300,13 +319,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     protected void configureBuilder(final ContextBuilder contextBuilder, final String workflowId, final String path, final byte[] content)
             throws IOException {
         try {
-            final ProxyNutDao dao = new ProxyNutDao("", nutDao);
             final String name = path.endsWith("/") ? (path + NutType.HTML.getExtensions()[0]) : path;
-            dao.addRule(path, new ByteArrayNut(content, name, NutType.HTML, ByteBuffer.wrap(IOUtils.digest(content)).getLong()));
-
-            contextBuilder.tag(getClass().getName())
-                    .nutDao(path, dao)
-                    .disposableHeap(workflowId, path, new String[] { path }, new HeapListener() {
+            createContextNutDaoBuilder(path, contextBuilder.tag(getClass()), rootNuDaoBuilderId)
+                    .proxyPathForNut(path, new ByteArrayNut(content, name, NutType.HTML, ByteBuffer.wrap(IOUtils.digest(content)).getLong()))
+                    .toContext()
+                    .disposableHeap(workflowId, path, new String[]{path}, new HeapListener() {
                         @Override
                         public void nutUpdated(final NutsHeap heap) {
                             synchronized (workflowIds) {
@@ -324,7 +341,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      */
     @Override
     public void destroy() {
-        nutDao.shutdown();
     }
 
     /**
@@ -333,7 +349,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     public int internalConfigure(final ContextBuilder ctxBuilder) {
         contextBuilder = ctxBuilder;
-        contextBuilder.nutDao(getClass().getName(), nutDao);
         return -1;
     }
 

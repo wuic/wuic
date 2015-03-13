@@ -44,20 +44,24 @@ import com.github.wuic.ContextBuilder;
 
 import com.github.wuic.ContextInterceptor;
 import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.TextAggregatorEngine;
+import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -66,7 +70,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -430,9 +433,11 @@ public class ContextBuilderTest {
 
     /**
      * Checks when the context is up to date or not.
+     *
+     * @throws WuicException if test fails
      */
     @Test
-    public void upToDateTest() {
+    public void upToDateTest() throws WuicException {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory);
         final Context context = builder.build();
         Assert.assertTrue(context.isUpToDate());
@@ -628,30 +633,42 @@ public class ContextBuilderTest {
      * <p>
      * Tests the proxy support.
      * </p>
+     *
+     * @throws Exception if test fails
      */
     @Test
-    public void proxyTest() throws IOException {
+    public void proxyTest() throws Exception {
         final Nut nut = Mockito.mock(Nut.class);
+        Mockito.when(nut.getInitialName()).thenReturn("nut.js");
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final NutDao proxy = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
+        final Context proxy = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
-                .contextNutDaoBuilder(MockDao.class)
+                .contextNutDaoBuilder("proxy", MockDao.class)
                 .proxyRootPath("proxy")
-                .proxyPathForDao("dao", ContextBuilder.getDefaultBuilderId(MockStoreDao.class))
-                .proxyPathForNut("nut", nut)
+                .proxyPathForDao("dao.js", ContextBuilder.getDefaultBuilderId(MockStoreDao.class))
+                .proxyPathForNut("nut.js", nut)
                 .toContext()
-                .nutDao(ContextBuilder.getDefaultBuilderId(MockDao.class));
+                .contextEngineBuilder(TextAggregatorEngine.class)
+                .property(ApplicationConfig.AGGREGATE, false)
+                .toContext()
+                .heap("proxy", "proxy", new String[]{ContextBuilderTest.NUT_NAME_ONE, "proxy/nut.js", "proxy/dao.js"})
+                .build();
 
         // Proxy Nut
-        List<Nut> nuts = proxy.create("proxy/nut");
-        Assert.assertFalse(nuts.isEmpty());
-        Assert.assertEquals(nut, nuts.get(0));
+        proxy.process("", "proxy", "nut.js", new UrlUtils.DefaultUrlProviderFactory());
 
         // Proxy DAO
-        Assert.assertNull(proxy.create("proxy/dao"));
+        try {
+            Assert.assertNull(proxy.process("", "proxy", "dao.js", new UrlUtils.DefaultUrlProviderFactory()));
+            Assert.fail();
+        } catch (NutNotFoundException nnfe) {
+            // Normal
+        }
 
         // Root DAO
-        Assert.assertEquals(1, proxy.create(ContextBuilderTest.NUT_NAME_ONE).size());
+        proxy.process("", "proxy", ContextBuilderTest.NUT_NAME_ONE, new UrlUtils.DefaultUrlProviderFactory());
     }
 }

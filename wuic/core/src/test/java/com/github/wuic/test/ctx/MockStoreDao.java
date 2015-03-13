@@ -47,6 +47,7 @@ import com.github.wuic.nut.dao.NutDaoService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -81,7 +82,7 @@ public class MockStoreDao implements NutDao {
      */
     @Override
     public List<Nut> create(final String path) throws IOException {
-        return null;
+        return Collections.emptyList();
     }
 
     /**

@@ -80,7 +80,7 @@ import java.util.regex.Pattern;
  *
  * <p>
  * The builder tracks all settings by associated to them a tag. With that tag, the user is able to delete
- * all settings defined at a moment. Example :
+ * all settings defined at a moment. Example:
  * <pre>
  *     final ContextBuilder contextBuilder = new ContextBuilder();
  *
@@ -110,7 +110,6 @@ import java.util.regex.Pattern;
  *     }
  * </pre>
  * </p>
- *
  *
  * <p>
  * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
@@ -326,6 +325,528 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * A registration for a {@link NutsHeap} to be created when the context is built.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    private final class HeapRegistration {
+
+        /**
+         * If the heap will be disposable.
+         */
+        private final boolean disposable;
+
+        /**
+         * The {@link NutDao} builder id.
+         */
+        private final String ndbId;
+
+        /**
+         * The paths not already filtered.
+         */
+        private final String[] paths;
+
+        /**
+         * The listener that will be notified by the heap.
+         */
+        private final HeapListener[] listeners;
+
+        /**
+         * The created heap.
+         */
+        private NutsHeap heap;
+
+        /**
+         * Some IDs of other heaps to create a composition.
+         */
+        private String[] heapIds;
+
+        /**
+         * <p>
+         * Builds a new registration instance.
+         * </p>
+         *
+         * @param disposable disposable or not
+         * @param ndbId ID for DAO resolution
+         * @param heapIds the composition
+         * @param paths the paths for this heap
+         * @param listeners the listeners
+         */
+        private HeapRegistration(final boolean disposable, final String ndbId, final String[] heapIds, final String[] paths, final HeapListener ... listeners) {
+            this.disposable = disposable;
+            this.ndbId = ndbId;
+            this.listeners = listeners;
+
+            this.paths = new String[paths.length];
+            System.arraycopy(paths, 0, this.paths, 0, paths.length);
+
+            if (heapIds != null) {
+                this.heapIds = new String[heapIds.length];
+                System.arraycopy(heapIds, 0, this.heapIds, 0, heapIds.length);
+            }
+        }
+
+        /**
+         * <p>
+         * Gets the {@link NutsHeap} if the object has been already created with a call to {@link #getHeap(String, java.util.Map)}.
+         * </p>
+         *
+         * @return the {@link NutsHeap} if already created, {@code null} otherwise
+         */
+        private NutsHeap getIfCreated() {
+            return heap;
+        }
+
+        /**
+         * <p>
+         * Gets the {@link NutsHeap} created by this registration. The heap is created when the first call to this
+         * method performed. Then, the same instance will be returned for future calls.
+         * </p>
+         *
+         * @param id the ID for this heap
+         * @param daoCollection a collection of DAOs where {@link #ndbId} will be resolved
+         * @return the heap
+         * @throws IOException if creation fails
+         */
+        private NutsHeap getHeap(final String id, final Map<String, NutDao> daoCollection) throws IOException{
+            if (heap != null) {
+                return heap;
+            }
+
+            NutDao dao = null;
+
+            // Find DAO
+            if (ndbId != null) {
+                dao = daoCollection.get(ndbId);
+            }
+
+            // Check content and apply filters
+            final List<String> pathList = pathList(dao, ndbId, paths);
+
+            // Composition detected, collected nested and referenced heaps
+            if (heapIds != null && heapIds.length != 0) {
+                final List<NutsHeap> composition = new ArrayList<NutsHeap>();
+
+                for (final String regex : heapIds) {
+                    for (final Map.Entry<String, HeapRegistration> registration : getNutsHeap(regex).entrySet()) {
+                        composition.add(registration.getValue().getHeap(registration.getKey(), daoCollection));
+                    }
+                }
+
+                heap = new NutsHeap(currentTag, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
+            } else {
+                heap = new NutsHeap(currentTag, pathList, disposable, dao, id);
+            }
+
+            for (final HeapListener l : listeners) {
+                heap.addObserver(l);
+            }
+
+            return heap;
+        }
+    }
+
+    /**
+     * <p>
+     * A registration for a {@link WorkflowTemplate} to be created when the context is built.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    private final class WorkflowTemplateRegistration {
+
+        /**
+         * The engine builder IDs to include in the template.
+         */
+        private final String[] ebIds;
+
+        /**
+         * The excluded IDs.
+         */
+        private final String[] ebIdsExclusion;
+
+        /**
+         * Include default engines or not.
+         */
+        private final Boolean includeDefaultEngines;
+
+        /**
+         * The DAO builder IDs to store nut.
+         */
+        private final String[] ndbIds;
+
+        /**
+         * <p>
+         * Builds a new registration.
+         * </p>
+         *
+         * @param ebIds the specific engines
+         * @param ebIdsExclusion engines to exclude
+         * @param includeDefaultEngines include default engines or not
+         * @param ndbIds some DAO builder IDs to store nut
+         */
+        private WorkflowTemplateRegistration(final String[] ebIds,
+                                             final String[] ebIdsExclusion,
+                                             final Boolean includeDefaultEngines,
+                                             final String[] ndbIds) {
+            this.includeDefaultEngines = includeDefaultEngines;
+            this.ebIds = new String[ebIds.length];
+            System.arraycopy(ebIds, 0, this.ebIds, 0, ebIds.length);
+
+            if (ebIdsExclusion != null) {
+                this.ebIdsExclusion = new String[ebIdsExclusion.length];
+                System.arraycopy(ebIdsExclusion, 0, this.ebIdsExclusion, 0, ebIdsExclusion.length);
+            } else {
+                this.ebIdsExclusion = ebIdsExclusion;
+            }
+
+            this.ndbIds = new String[ndbIds.length];
+            System.arraycopy(ndbIds, 0, this.ndbIds, 0, ndbIds.length);
+        }
+
+        /**
+         * <p>
+         * Gets a new {@link WorkflowTemplate} for this registration.
+         * </p>
+         *
+         * <p>
+         * If the registered DAO does not exists don't support save operations
+         * ({@link com.github.wuic.nut.dao.NutDao#saveSupported()}), then an {@link IllegalStateException}
+         * is thrown.
+         * </p>
+         *
+         * @param daoCollection the collection of DAO for ID resolution
+         * @return the template
+         */
+        private WorkflowTemplate getTemplate(final Map<String, NutDao> daoCollection) {
+            final NutDao[] nutDaos = collect(daoCollection);
+
+            // Retrieve each engine associated to all provided IDs and heap them by nut type
+            final Map<NutType, NodeEngine> chains = createChains(includeDefaultEngines, ebIdsExclusion);
+            HeadEngine head = null;
+
+            for (final String ebId : ebIds) {
+                // Create a different instance per chain
+                final Engine engine = newEngine(ebId);
+
+                if (engine == null) {
+                    throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineService.class.getName()));
+                } else {
+
+                    if (engine instanceof HeadEngine) {
+                        head = HeadEngine.class.cast(engine);
+                    } else {
+                        final NodeEngine node = NodeEngine.class.cast(engine);
+                        final List<NutType> nutTypes = node.getNutTypes();
+
+                        for (final NutType nt : nutTypes) {
+                            // Already exists
+                            if (chains.containsKey(nt)) {
+                                chains.put(nt, NodeEngine.chain(chains.get(nt), NodeEngine.class.cast(newEngine(ebId))));
+                            } else {
+                                // Create first entry
+                                chains.put(nt, node);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new WorkflowTemplate(head, chains, nutDaos);
+        }
+
+        /**
+         * <p>
+         * Collects in the given map the referenced DAOs.
+         * </p>
+         *
+         * @param daoCollection all the instantiated DAOs
+         * @return the collected DAOs
+         */
+        private NutDao[] collect(final Map<String, NutDao> daoCollection) {
+            // Retrieve each DAO associated to all provided IDs
+            final NutDao[] nutDaos = new NutDao[ndbIds.length];
+
+            for (int i = 0; i < ndbIds.length; i++) {
+                final String ndbId = ndbIds[i];
+                final NutDao dao = daoCollection.get(ndbId);
+
+                if (dao == null) {
+                    throw new IllegalStateException(String.format("'%s' not associated to any %s", ndbId, NutDaoService.class.getName()));
+                }
+
+                if (!dao.saveSupported()) {
+                    throw new IllegalStateException(String.format("DAO built by '%s' does not supports save", ndbId));
+                }
+
+                nutDaos[i] = dao;
+            }
+
+            return nutDaos;
+        }
+    }
+
+    /**
+     * <p>
+     * A registration for a {@link Workflow} to be created when the context is built.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    private final class WorkflowRegistration {
+
+        /**
+         * Create a workflow for each heap.
+         */
+        private final Boolean forEachHeap;
+
+        /**
+         * The heap pattern to resolve related heap.
+         */
+        private final String heapIdPattern;
+
+        /**
+         * A template ID.
+         */
+        private final String workflowTemplateId;
+
+        /**
+         * <p>
+         *  Builds a new registration
+         * </p>
+         *
+         * @param forEachHeap for each heap or not
+         * @param heapIdPattern heap resolver pattern
+         * @param workflowTemplateId an optional workflow
+         */
+        private WorkflowRegistration(final Boolean forEachHeap,
+                                     final String heapIdPattern,
+                                     final String workflowTemplateId) {
+            this.forEachHeap = forEachHeap;
+            this.heapIdPattern = heapIdPattern;
+            this.workflowTemplateId  = workflowTemplateId;
+        }
+
+        /**
+         * <p>
+         * Gets a new map of {@link Workflow} for this registration.
+         * </p>
+         *
+         * @param identifier the workflow ID
+         * @param daoCollection a collection of DAO for heap creation
+         * @return the new workflow
+         * @throws WorkflowTemplateNotFoundException if the workflow template does not exists
+         * @throws IOException if heap creation fails
+         */
+        private Map<String, Workflow> getWorkflowMap(final String identifier, final Map<String, NutDao> daoCollection)
+                throws WorkflowTemplateNotFoundException, IOException {
+            final WorkflowTemplate template = getWorkflowTemplate(workflowTemplateId, daoCollection);
+            final Map<String, Workflow> retval = new HashMap<String, Workflow>();
+
+            if (template == null) {
+                WuicException.throwWorkflowTemplateNotFoundException(workflowTemplateId);
+                return null;
+            }
+
+            final Map<NutType, ? extends NodeEngine> chains = template.getChains();
+            final NutDao[] nutDaos = template.getStores();
+
+            // Retrieve HEAP
+            final Map<String, HeapRegistration> heaps = getNutsHeap(heapIdPattern);
+
+            if (heaps.isEmpty()) {
+                throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
+            }
+
+            final String id = identifier.substring(0, identifier.length() - heapIdPattern.length());
+
+            if (forEachHeap) {
+                for (final Map.Entry<String, HeapRegistration> heap : heaps.entrySet()) {
+                    final String loopId = id + heap.getKey();
+                    if (NumberUtils.isNumber(loopId)) {
+                        WuicException.throwBadArgumentException(new IllegalArgumentException(
+                                String.format("Workflow ID %s cannot be a numeric value", loopId)));
+                    }
+
+                    retval.put(loopId, new Workflow(template.getHead(), chains, heap.getValue().getHeap(heap.getKey(), daoCollection), nutDaos));
+                }
+            } else {
+                if (NumberUtils.isNumber(id)) {
+                    WuicException.throwBadArgumentException(new IllegalArgumentException(
+                            String.format("Workflow ID %s cannot be a numeric value", id)));
+                }
+
+                final NutsHeap[] array = new NutsHeap[heaps.size()];
+                int cpt = 0;
+
+                for (final Map.Entry<String, HeapRegistration> heap : heaps.entrySet()) {
+                    array[cpt++] = heap.getValue().getHeap(heap.getKey(), daoCollection);
+                }
+
+                final NutsHeap heap = new NutsHeap(currentTag, null, null, heapIdPattern, array);
+                retval.put(id, new Workflow(template.getHead(), chains, heap));
+            }
+
+            return retval;
+        }
+    }
+
+    /**
+     * <p>
+     * A registration for a {@link NutDao} to be created when the context is built.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.1
+     */
+    private final class NutDaoRegistration {
+
+        /**
+         * The builder.
+         */
+        private final ObjectBuilder<NutDao> nutDaoBuilder;
+
+        /**
+         * Some DAO to proxy.
+         */
+        private final Map<String, NutDaoRegistration> proxyDao;
+
+        /**
+         * Some nut to proxy.
+         */
+        private final Map<String, Nut> proxyNut;
+
+        /**
+         * A root path for all proxy paths.
+         */
+        private String proxyRootPath;
+
+        /**
+         * The created DAO.
+         */
+        private NutDao dao;
+
+        /**
+         * <p>
+         * Builds a new registration for the given builder.
+         * </p>
+         *
+         * @param nutDaoBuilder the DAO builder
+         */
+        private NutDaoRegistration(final ObjectBuilder<NutDao> nutDaoBuilder) {
+            this.proxyDao = new HashMap<String, NutDaoRegistration>();
+            this.proxyNut = new HashMap<String, Nut>();
+            this.nutDaoBuilder = nutDaoBuilder;
+            this.proxyRootPath = "";
+        }
+
+        /**
+         * <p>
+         * Gets the proxy for nuts.
+         * </p>
+         *
+         * @return the proxy nut
+         */
+        private Map<String, Nut> getProxyNut() {
+            return proxyNut;
+        }
+
+        /**
+         * <p>
+         * Gets the proxy for DAO.
+         * </p>
+         *
+         * @return the DAO
+         */
+        private Map<String, NutDaoRegistration> getProxyDao() {
+            return proxyDao;
+        }
+
+        /**
+         * <p>
+         * Sets the proxy root path.
+         * </p>
+         *
+         * @param proxyRootPath the new root path
+         */
+        private void setProxyRootPath(final String proxyRootPath) {
+            this.proxyRootPath = proxyRootPath;
+        }
+
+        /**
+         * <p>
+         * Configures the wrapped builder with the specified properties.
+         * </p>
+         *
+         * @param properties the properties
+         * @return this registration
+         */
+        private NutDaoRegistration configure(final Map<String, Object> properties) {
+            ContextBuilder.this.configure(nutDaoBuilder, properties);
+            return this;
+        }
+
+        /**
+         * <p>
+         * Gets the {@link NutDao} if the object has been already created with a call to {@link #getNutDao()}.
+         * </p>
+         *
+         * @return the {@link NutDao} if already created, {@code null} otherwise
+         */
+        private NutDao getIfCreated() {
+            return dao;
+        }
+
+        /**
+         * <p>
+         * Builds a new {@link NutDao} for this registration. The DAO is created when the first call to this
+         * method performed. Then, the same instance will be returned for future calls. If the proxy settings
+         * have changed, the instance will be modified to provide an up to date state.
+         * </p>
+         *
+         * @return the DAO
+         */
+        private NutDao getNutDao() {
+            if (!proxyNut.isEmpty() || !proxyDao.isEmpty()) {
+                final ProxyNutDao proxy;
+
+                if (dao != null) {
+                    if (dao instanceof ProxyNutDao) {
+                        proxy = ProxyNutDao.class.cast(dao);
+                    } else {
+                        proxy = new ProxyNutDao(proxyRootPath, dao);
+                    }
+                } else {
+                    proxy = new ProxyNutDao(proxyRootPath, nutDaoBuilder.build());
+                }
+
+                for (final Map.Entry<String, Nut> entry : proxyNut.entrySet()) {
+                    proxy.addRule(entry.getKey(), entry.getValue());
+                }
+
+                for (final Map.Entry<String, NutDaoRegistration> entry : proxyDao.entrySet()) {
+                    proxy.addRule(entry.getKey(), entry.getValue().getNutDao());
+                }
+
+                dao = proxy;
+            } else if (dao == null) {
+                dao = nutDaoBuilder.build();
+            }
+
+            return dao;
+        }
+    }
+
+    /**
+     * <p>
      * Internal class used to track settings associated to a particular tag.
      * </p>
      *
@@ -336,9 +857,9 @@ public class ContextBuilder extends Observable {
     private static class ContextSetting {
 
         /**
-         * All {@link NutDao daos} associated to their builder ID.
+         * All DAO registration with their {@link ObjectBuilder} associated to their builder ID.
          */
-        private Map<String, NutDao> nutDaoMap = new HashMap<String, NutDao>();
+        private Map<String, NutDaoRegistration> nutDaoMap = new HashMap<String, NutDaoRegistration>();
 
         /**
          * All {@link NutFilter daos} associated to their builder ID.
@@ -346,24 +867,24 @@ public class ContextBuilder extends Observable {
         private Map<String, NutFilter> nutFilterMap = new HashMap<String, NutFilter>();
 
         /**
-         * All {@link com.github.wuic.config.ObjectBuilder} building {@link Engine} associated to their ID.
+         * All {@link com.github.wuic.config.ObjectBuilder} building {@link Engine} associated to their builder ID.
          */
         private Map<String, ObjectBuilder<Engine>> engineMap = new HashMap<String, ObjectBuilder<Engine>>();
 
         /**
-         * All {@link NutsHeap heaps} associated to their ID.
+         * All {@link HeapRegistration heaps} associated to their ID.
          */
-        private Map<String, NutsHeap> nutsHeaps = new HashMap<String, NutsHeap>();
+        private Map<String, HeapRegistration> nutsHeaps = new HashMap<String, HeapRegistration>();
 
         /**
-         * All {@link WorkflowTemplate templates} associated to their ID.
+         * All {@link WorkflowTemplate templates} {@link WorkflowTemplateRegistration registration} associated to their ID.
          */
-        private Map<String, WorkflowTemplate> templates = new HashMap<String, WorkflowTemplate>();
+        private Map<String, WorkflowTemplateRegistration> templates = new HashMap<String, WorkflowTemplateRegistration>();
 
         /**
          * All {@link Workflow workflows} associated to their ID.
          */
-        private Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
+        private Map<String, WorkflowRegistration> workflowMap = new HashMap<String, WorkflowRegistration>();
 
         /**
          * All {@link ContextInterceptor interceptors}.
@@ -377,7 +898,7 @@ public class ContextBuilder extends Observable {
          *
          * @return the map
          */
-        public Map<String, NutDao> getNutDaoMap() {
+        public Map<String, NutDaoRegistration> getNutDaoMap() {
             return nutDaoMap;
         }
 
@@ -406,34 +927,34 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the {@link NutsHeap} associated to an ID.
+         * Gets the {@link HeapRegistration} associated to an ID.
          * </p>
          *
          * @return the map
          */
-        public Map<String, NutsHeap> getNutsHeaps() {
+        public Map<String, HeapRegistration> getNutsHeaps() {
             return nutsHeaps;
         }
 
         /**
          * <p>
-         * Gets the {@link Workflow} associated to an ID.
+         * Gets the {@link WorkflowRegistration} associated to an ID.
          * </p>
          *
          * @return the map
          */
-        public Map<String, Workflow> getWorkflowMap() {
+        public Map<String, WorkflowRegistration> getWorkflowMap() {
             return workflowMap;
         }
 
         /**
          * <p>
-         * Gets the {@link WorkflowTemplate} associated to an ID.
+         * Gets the {@link WorkflowTemplateRegistration} associated to an ID.
          * </p>
          *
          * @return the map
          */
-        public Map<String, WorkflowTemplate> getTemplateMap() {
+        public Map<String, WorkflowTemplateRegistration> getTemplateMap() {
             return templates;
         }
 
@@ -564,13 +1085,21 @@ public class ContextBuilder extends Observable {
 
             // Shutdown all DAO (scheduled jobs, etc)
             if (setting != null) {
-                for (final NutDao dao : setting.nutDaoMap.values()) {
-                    dao.shutdown();
+                for (final NutDaoRegistration dao : setting.nutDaoMap.values()) {
+                    final NutDao d = dao.getIfCreated();
+
+                    if (d != null) {
+                        d.shutdown();
+                    }
                 }
 
                 // Notifies any listeners to clear any cache
-                for (final NutsHeap heap : setting.getNutsHeaps().values()) {
-                    heap.notifyListeners(heap);
+                for (final HeapRegistration heap : setting.getNutsHeaps().values()) {
+                    final NutsHeap h = heap.getIfCreated();
+
+                    if (h != null) {
+                        h.notifyListeners(h);
+                    }
                 }
             }
 
@@ -753,24 +1282,9 @@ public class ContextBuilder extends Observable {
     public class ContextNutDaoBuilder extends ContextGenericBuilder {
 
         /**
-         * The builder.
+         * The wrapped registration.
          */
-        private final ObjectBuilder<NutDao> nutDaoBuilder;
-
-        /**
-         * Some DAO to proxy.
-         */
-        private final Map<String, NutDao> proxyDao;
-
-        /**
-         * Some nut to proxy.
-         */
-        private final Map<String, Nut> proxyNut;
-
-        /**
-         * A root path for all proxy paths.
-         */
-        private String proxyRootPath;
+        private final NutDaoRegistration registration;
 
         /**
          * <p>
@@ -782,10 +1296,20 @@ public class ContextBuilder extends Observable {
          */
         public ContextNutDaoBuilder(final String id, final String type) {
             super(id);
-            this.nutDaoBuilder = nutDaoBuilderFactory.create(type);
-            this.proxyDao = new HashMap<String, NutDao>();
-            this.proxyNut = new HashMap<String, Nut>();
-            this.proxyRootPath = "";
+            this.registration = new NutDaoRegistration(nutDaoBuilderFactory.create(type));
+        }
+
+        /**
+         * <p>
+         * Builds a new instance with an existing registration.
+         * </p>
+         *
+         * @param id the builder ID
+         * @param registration the resgistration
+         */
+        public ContextNutDaoBuilder(final String id, final NutDaoRegistration registration) {
+            super(id);
+            this.registration = registration;
         }
 
         /**
@@ -797,7 +1321,7 @@ public class ContextBuilder extends Observable {
          * @return this
          */
         public ContextNutDaoBuilder proxyRootPath(final String path) {
-            proxyRootPath = path;
+            registration.setProxyRootPath(path);
             return this;
         }
 
@@ -811,7 +1335,15 @@ public class ContextBuilder extends Observable {
          * @return this
          */
         public ContextNutDaoBuilder proxyPathForDao(final String path, final String id) {
-            proxyDao.put(path, getNutDao(id));
+            for (final ContextSetting s : taggedSettings.values()) {
+                final NutDaoRegistration reg = s.getNutDaoMap().get(id);
+
+                if (reg != null) {
+                    registration.getProxyDao().put(path, reg);
+                    return this;
+                }
+            }
+
             return this;
         }
 
@@ -825,7 +1357,7 @@ public class ContextBuilder extends Observable {
          * @return this
          */
         public ContextNutDaoBuilder proxyPathForNut(final String path, final Nut nut) {
-            proxyNut.put(path, nut);
+            registration.getProxyNut().put(path, nut);
             return this;
         }
 
@@ -843,22 +1375,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ContextBuilder toContext() {
-            nutDaoBuilder(getId(), nutDaoBuilder, getProperties());
-
-            if (!proxyNut.isEmpty() && !proxyDao.isEmpty()) {
-                final ProxyNutDao proxy = new ProxyNutDao(proxyRootPath, getNutDao(getId()));
-
-                for (final Map.Entry<String, Nut> entry : proxyNut.entrySet()) {
-                    proxy.addRule(entry.getKey(), entry.getValue());
-                }
-
-                for (final Map.Entry<String, NutDao> entry : proxyDao.entrySet()) {
-                    proxy.addRule(entry.getKey(), entry.getValue());
-                }
-
-                nutDao(getId(), proxy);
-            }
-
+            nutDaoBuilder(getId(), registration, getProperties());
             return ContextBuilder.this;
         }
     }
@@ -921,6 +1438,14 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) {
+        for (final ContextSetting setting : taggedSettings.values()) {
+            final NutDaoRegistration registration = setting.getNutDaoMap().get(id);
+
+            if (registration != null) {
+                return new ContextNutDaoBuilder(id, registration);
+            }
+        }
+
         return new ContextNutDaoBuilder(id, type);
     }
 
@@ -933,7 +1458,43 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) {
-        return new ContextNutDaoBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+        return contextNutDaoBuilder(getDefaultBuilderId(type), type);
+    }
+
+    /**
+     * <p>
+     * Returns a new default context DAO builder associated to a particular ID.
+     * </p>
+     *
+     * @param id the specific ID
+     * @param type the component to build
+     * @return the specific context builder
+     */
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final Class<?> type) {
+        return contextNutDaoBuilder(id, type.getSimpleName() + "Builder");
+    }
+
+    /**
+     * <p>
+     * Returns a new context DAO builder associated to a particular ID and based on an existing context DAO builder.
+     * </p>
+     *
+     * @param id the specific ID
+     * @param cloneId the ID of the existing builder to clone
+     * @return the specific context builder
+     */
+    public ContextNutDaoBuilder cloneContextNutDaoBuilder(final String id, final String cloneId) {
+        for (final ContextSetting setting : taggedSettings.values()) {
+            final NutDaoRegistration registration = setting.getNutDaoMap().get(cloneId);
+
+            if (registration != null) {
+                return new ContextNutDaoBuilder(id, registration);
+            }
+        }
+
+        WuicException.throwBadArgumentException(new IllegalArgumentException(
+                String.format("%s must be an existing NutDao builder to be cloned", cloneId)));
+        return null;
     }
 
     /**
@@ -993,22 +1554,22 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Add a new {@link com.github.wuic.nut.dao.NutDao} identified by the specified ID.
+     * Add a new {@link NutDaoRegistration} identified by the specified ID.
      * </p>
      *
      * @param id the ID which identifies the builder in the context
-     * @param dao the dao associated to its ID
+     * @param registration the registration associated to its ID
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder nutDao(final String id, final NutDao dao) {
+    private ContextBuilder nutDao(final String id, final NutDaoRegistration registration) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.nutDaoMap.remove(id);
         }
 
-        setting.nutDaoMap.put(id, dao);
+        setting.nutDaoMap.put(id, registration);
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1029,7 +1590,7 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.nutFilterMap.remove(id);
         }
 
@@ -1054,7 +1615,7 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.engineMap.remove(id);
         }
 
@@ -1080,21 +1641,21 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the ID which identifies the builder in the context
-     * @param daoBuilder the builder associated to its ID
+     * @param daoRegistration the registration wrapping the builder associated to its ID
      * @param properties the properties to use to configure the builder
      * @return this {@link ContextBuilder}
      */
     private ContextBuilder nutDaoBuilder(final String id,
-                                         final ObjectBuilder<NutDao> daoBuilder,
+                                         final NutDaoRegistration daoRegistration,
                                          final Map<String, Object> properties) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.nutDaoMap.remove(id);
         }
 
-        setting.nutDaoMap.put(id, configure(daoBuilder, properties).build());
+        setting.nutDaoMap.put(id, daoRegistration.configure(properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1122,7 +1683,7 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        for (ContextSetting s : taggedSettings.values()) {
+        for (final ContextSetting s : taggedSettings.values()) {
             s.nutFilterMap.remove(id);
         }
 
@@ -1198,8 +1759,6 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder heap(final boolean disposable, final String id, final String ndbId, final String[] heapIds, final String[] path, final HeapListener ... listeners)
             throws IOException {
-        NutDao dao = null;
-
         if (NumberUtils.isNumber(id)) {
             WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
         }
@@ -1207,37 +1766,11 @@ public class ContextBuilder extends Observable {
         // Will override existing element
         for (final ContextSetting s : taggedSettings.values()) {
             s.getNutsHeaps().remove(id);
-
-            // Find DAO
-            if (ndbId != null && dao == null) {
-                dao = s.getNutDaoMap().get(ndbId);
-            }
         }
 
-        // Check content and apply filters
-        final List<String> pathList = pathList(dao, ndbId, path);
         final ContextSetting setting = getSetting();
 
-        final NutsHeap heap;
-
-        // Composition detected, collected nested and referenced heaps
-        if (heapIds != null && heapIds.length != 0) {
-            final List<NutsHeap> composition = new ArrayList<NutsHeap>();
-
-            for (final String regex : heapIds) {
-                composition.addAll(getNutsHeap(regex));
-            }
-
-            heap = new NutsHeap(currentTag, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
-        } else {
-            heap = new NutsHeap(currentTag, pathList, disposable, dao, id);
-        }
-
-        for (final HeapListener l : listeners) {
-            heap.addObserver(l);
-        }
-
-        setting.getNutsHeaps().put(id, heap);
+        setting.getNutsHeaps().put(id, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
 
         taggedSettings.put(currentTag, setting);
         setChanged();
@@ -1382,58 +1915,7 @@ public class ContextBuilder extends Observable {
                                    final Boolean includeDefaultEngines,
                                    final String ... ndbIds) throws IOException {
         final ContextSetting setting = getSetting();
-
-        // Retrieve each DAO associated to all provided IDs
-        final NutDao[] nutDaos = new NutDao[ndbIds.length];
-
-        for (int i = 0; i < ndbIds.length; i++) {
-            final String ndbId = ndbIds[i];
-            final NutDao dao = getNutDao(ndbId);
-
-            if (dao == null) {
-                throw new IllegalStateException(String.format("'%s' not associated to any %s", ndbId, NutDaoService.class.getName()));
-            }
-
-            if (!dao.saveSupported()) {
-                throw new IllegalStateException(String.format("DAO built by '%s' does not supports save", ndbId));
-            }
-
-            nutDaos[i] = dao;
-        }
-
-        // Retrieve each engine associated to all provided IDs and heap them by nut type
-        final Map<NutType, NodeEngine> chains = createChains(includeDefaultEngines, ebIdsExclusion);
-        HeadEngine head = null;
-
-        for (final String ebId : ebIds) {
-            // Create a different instance per chain
-            final Engine engine = newEngine(ebId);
-
-            if (engine == null) {
-                throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineService.class.getName()));
-            } else {
-
-                if (engine instanceof HeadEngine) {
-                    head = HeadEngine.class.cast(engine);
-                } else {
-                    final NodeEngine node = NodeEngine.class.cast(engine);
-                    final List<NutType> nutTypes = node.getNutTypes();
-
-                    for (final NutType nt : nutTypes) {
-                        // Already exists
-                        if (chains.containsKey(nt)) {
-                            chains.put(nt, NodeEngine.chain(chains.get(nt), NodeEngine.class.cast(newEngine(ebId))));
-                        } else {
-                            // Create first entry
-                            chains.put(nt, node);
-                        }
-                    }
-                }
-            }
-        }
-
-        setting.getTemplateMap().put(id, new WorkflowTemplate(head, chains, nutDaos));
-
+        setting.getTemplateMap().put(id, new WorkflowTemplateRegistration(ebIds, ebIdsExclusion, includeDefaultEngines, ndbIds));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1467,6 +1949,7 @@ public class ContextBuilder extends Observable {
      * @param identifier the identifier used to build the workflow ID, is the prefix if create one for each heap
      * @param forEachHeap {@code true} if a dedicated workflow must be created for each matching heap, {@code false} for a composition
      * @param heapIdPattern the regex matching the heap IDs that needs to be processed
+     * @param workflowTemplateId a template ID to initialize the workflow
      * @return this {@link ContextBuilder}
      * @throws IOException if an I/O error occurs
      * @throws WorkflowTemplateNotFoundException if the specified template ID does not exists
@@ -1477,51 +1960,14 @@ public class ContextBuilder extends Observable {
                                    final String workflowTemplateId)
             throws IOException, WorkflowTemplateNotFoundException {
         final ContextSetting setting = getSetting();
+        final String id = identifier + heapIdPattern;
 
-        final WorkflowTemplate template = getWorkflowTemplate(workflowTemplateId);
-
-        if (template == null) {
-            WuicException.throwWorkflowTemplateNotFoundException(workflowTemplateId);
-            return null;
+        // Will override existing element
+        for (final ContextSetting s : taggedSettings.values()) {
+            s.getWorkflowMap().remove(id);
         }
 
-        final Map<NutType, ? extends NodeEngine> chains = template.getChains();
-        final NutDao[] nutDaos = template.getStores();
-
-        // Retrieve HEAP
-        final List<NutsHeap> heaps = getNutsHeap(heapIdPattern);
-
-        if (heaps.isEmpty()) {
-            throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
-        }
-
-        if (forEachHeap) {
-            for (final NutsHeap heap : heaps) {
-                final String id = identifier + heap.getId();
-
-                if (NumberUtils.isNumber(id)) {
-                    WuicException.throwBadArgumentException(new IllegalArgumentException(
-                            String.format("Workflow ID %s cannot be a numeric value", id)));
-                }
-
-                // Will override existing element
-                for (final ContextSetting s : taggedSettings.values()) {
-                    s.getWorkflowMap().remove(id);
-                }
-
-                setting.getWorkflowMap().put(id, new Workflow(template.getHead(), chains, heap, nutDaos));
-            }
-        } else {
-            if (NumberUtils.isNumber(identifier)) {
-                WuicException.throwBadArgumentException(new IllegalArgumentException(
-                        String.format("Workflow ID %s cannot be a numeric value", identifier)));
-            }
-
-            final NutsHeap[] array = heaps.toArray(new NutsHeap[heaps.size()]);
-            final NutsHeap heap = new NutsHeap(currentTag, null, null, heapIdPattern, array);
-            setting.getWorkflowMap().put(identifier, new Workflow(template.getHead(), chains, heap));
-        }
-
+        setting.getWorkflowMap().put(id, new WorkflowRegistration(forEachHeap, heapIdPattern, workflowTemplateId));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(identifier);
@@ -1548,24 +1994,6 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Gets the {@link com.github.wuic.nut.dao.NutDao} identified by the specified ID.
-     * </p>
-     *
-     * @param id the ID which identifies the builder in the context
-     * @return the associated {@link NutDao}, {@code null} if not found
-     */
-    public NutDao nutDao(final String id) {
-        for (ContextSetting s : taggedSettings.values()) {
-            if (s.nutDaoMap.containsKey(id)) {
-                return s.nutDaoMap.get(id);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * <p>
      * Merges all the {@link ContextSetting settings} of the given {@link ContextBuilder} to the current setting of
      * this object.
      * </p>
@@ -1575,7 +2003,7 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder mergeSettings(final ContextBuilder other) {
         for (final ContextSetting s : other.taggedSettings.values()) {
-            for (final Map.Entry<String, NutDao> entry : s.getNutDaoMap().entrySet()) {
+            for (final Map.Entry<String, NutDaoRegistration> entry : s.getNutDaoMap().entrySet()) {
                 nutDao(entry.getKey(), entry.getValue());
             }
 
@@ -1587,21 +2015,21 @@ public class ContextBuilder extends Observable {
                 nutFilter(entry.getKey(), entry.getValue());
             }
 
-            for (final Map.Entry<String, NutsHeap> entry : s.getNutsHeaps().entrySet()) {
+            for (final Map.Entry<String, HeapRegistration> entry : s.getNutsHeaps().entrySet()) {
                 final ContextSetting setting = getSetting();
                 s.getNutsHeaps().remove(entry.getKey());
                 setting.getNutsHeaps().put(entry.getKey(), entry.getValue());
                 taggedSettings.put(currentTag, setting);
             }
 
-            for (final Map.Entry<String, WorkflowTemplate> entry : s.getTemplateMap().entrySet()) {
+            for (final Map.Entry<String, WorkflowTemplateRegistration> entry : s.getTemplateMap().entrySet()) {
                 final ContextSetting setting = getSetting();
                 s.getTemplateMap().remove(entry.getKey());
                 setting.getTemplateMap().put(entry.getKey(), entry.getValue());
                 taggedSettings.put(currentTag, setting);
             }
 
-            for (final Map.Entry<String, Workflow> entry : s.getWorkflowMap().entrySet()) {
+            for (final Map.Entry<String, WorkflowRegistration> entry : s.getWorkflowMap().entrySet()) {
                 final ContextSetting setting = getSetting();
                 s.getWorkflowMap().remove(entry.getKey());
                 setting.getWorkflowMap().put(entry.getKey(), entry.getValue());
@@ -1621,12 +2049,13 @@ public class ContextBuilder extends Observable {
     /**
      * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
-     * For instance : associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
+     * For instance: associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
      * </p>
      *
      * @return the new {@link Context}
+     * @throws WuicException if context construction fails
      */
-    public Context build() {
+    public Context build() throws WuicException {
 
         // This thread needs to lock to build the context
         // However, if it is already done, the method should not unlock at the end of the method
@@ -1639,13 +2068,22 @@ public class ContextBuilder extends Observable {
 
             final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
             final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
+            final Map<String, NutDao> daoMap = new HashMap<String, NutDao>();
+
+            for (final ContextSetting setting : taggedSettings.values()) {
+                for (final Map.Entry<String, NutDaoRegistration> dao : setting.getNutDaoMap().entrySet()) {
+                    daoMap.put(dao.getKey(), dao.getValue().getNutDao());
+                }
+            }
 
             // Add all specified workflow
             for (final ContextSetting setting : taggedSettings.values()) {
-                workflowMap.putAll(setting.workflowMap);
+                for (final Map.Entry<String, WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
+                    workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap));
+                }
 
-                for (final NutsHeap heap : setting.getNutsHeaps().values()) {
-                    heapMap.put(heap.getId(), heap);
+                for (final Map.Entry<String, HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
+                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap));
                 }
             }
 
@@ -1669,6 +2107,9 @@ public class ContextBuilder extends Observable {
             }
 
             return new Context(this, workflowMap, interceptors);
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+            return null;
         } finally {
             if (requiresLock) {
                 lock.unlock();
@@ -1801,57 +2242,40 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Gets the {@link NutDao} associated to the given builder ID.
-     * </p>
-     *
-     * @param ndbId the builder ID
-     * @return the {@link NutDao}, {@code null} if nothing is associated to the ID
-     */
-    private NutDao getNutDao(final String ndbId) {
-        for (ContextSetting setting : taggedSettings.values()) {
-            if (setting.nutDaoMap.containsKey(ndbId)) {
-                return setting.nutDaoMap.get(ndbId);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * <p>
      * Gets the {@link WorkflowTemplate} associated to the given ID.
      * </p>
      *
      * @param id the ID
+     * @param daoCollection the collection of declared {@link NutDao}
      * @return the matching {@link WorkflowTemplate template}
      */
-    private WorkflowTemplate getWorkflowTemplate(final String id) {
+    private WorkflowTemplate getWorkflowTemplate(final String id, final Map<String, NutDao> daoCollection) {
         final Iterator<ContextSetting> it = taggedSettings.values().iterator();
-        WorkflowTemplate retval = null;
+        WorkflowTemplateRegistration retval = null;
 
         while (it.hasNext() && retval == null) {
             retval = it.next().getTemplateMap().get(id);
         }
 
-        return retval;
+        return retval != null ? retval.getTemplate(daoCollection) : null;
     }
 
     /**
      * <p>
-     * Gets the {@link NutsHeap} associated to an ID matching the given regex.
+     * Gets the {@link HeapRegistration registration} associated to an ID matching the given regex.
      * </p>
      *
      * @param regex the regex ID
-     * @return the matching {@link NutsHeap heaps}
+     * @return the matching {@link HeapRegistration registration}
      */
-    private List<NutsHeap> getNutsHeap(final String regex) {
-        final List<NutsHeap> retval = new ArrayList<NutsHeap>();
+    private Map<String, HeapRegistration> getNutsHeap(final String regex) {
+        final Map<String, HeapRegistration> retval = new HashMap<String, HeapRegistration>();
         final Pattern pattern = Pattern.compile(regex);
 
         for (final ContextSetting setting : taggedSettings.values()) {
-            for (final NutsHeap heap : setting.getNutsHeaps().values()) {
-                if (pattern.matcher(heap.getId()).matches()) {
-                    retval.add(heap);
+            for (final Map.Entry<String, HeapRegistration> entry : setting.getNutsHeaps().entrySet()) {
+                if (pattern.matcher(entry.getKey()).matches()) {
+                    retval.put(entry.getKey(), entry.getValue());
                 }
             }
         }
@@ -1868,7 +2292,7 @@ public class ContextBuilder extends Observable {
      * @return the {@link Engine}, {@code null} if nothing is associated to the ID
      */
     private Engine newEngine(final String engineBuilderId) {
-        for (ContextSetting setting : taggedSettings.values()) {
+        for (final ContextSetting setting : taggedSettings.values()) {
             if (setting.engineMap.containsKey(engineBuilderId)) {
                 return setting.engineMap.get(engineBuilderId).build();
             }
