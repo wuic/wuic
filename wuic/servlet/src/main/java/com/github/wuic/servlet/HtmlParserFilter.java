@@ -48,7 +48,6 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
@@ -128,7 +127,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Builds a new instance with a specific {@link WuicFacade} and a root {@link NutDao} builder.
+     * Builds a new instance with a specific {@link WuicFacade} and a root {@link com.github.wuic.nut.dao.NutDao} builder.
      * </p>
      *
      * @param wuicFacade the WUIC facade
@@ -143,7 +142,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     /**
      * <p>
      * Builds a new instance with a specific {@link WuicFacade} and the default {@link RequestDispatcherNutDao} builder
-     * as root {@link NutDao} builder.
+     * as root {@link com.github.wuic.nut.dao.NutDao} builder.
      * </p>
      *
      * @param wuicFacade the WUIC facade
@@ -190,7 +189,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      *
      * @param id the ID
      * @param contextBuilder the context builder to use
-     * @param rootNutDaoBuilderId the root {@link NutDao} builder which should be extended by the new builder
+     * @param rootNutDaoBuilderId the root {@link com.github.wuic.nut.dao.NutDao} builder which should be extended by the new builder
      * @return the nut DAO
      */
     protected ContextBuilder.ContextNutDaoBuilder createContextNutDaoBuilder(final String id,
