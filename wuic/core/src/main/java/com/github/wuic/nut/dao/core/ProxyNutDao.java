@@ -99,17 +99,6 @@ public class ProxyNutDao implements NutDao {
 
     /**
      * <p>
-     * Sets the root path.
-     * </p>
-     *
-     * @param root root new root path
-     */
-    public void setRootPath(final String root) {
-        rootPath = root;
-    }
-
-    /**
-     * <p>
      * Adds a mapping between a path and a nut.
      * </p>
      *
@@ -218,7 +207,7 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public void shutdown() {
-        proxyNut.clear();
+        delegate.shutdown();
     }
 
     /**

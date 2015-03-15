@@ -235,7 +235,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     // Workflow not already created, compute it
                     if (!exists) {
                         workflowId = StringUtils.toHexString(IOUtils.digest(key));
-                        workflowIds.put(key, workflowId);
                     } else {
                         workflowId = workflowIds.get(key);
                     }
@@ -244,6 +243,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 if (!exists) {
                     configureBuilder(contextBuilder, workflowId, key, bytes);
                     contextBuilder.build();
+                    wuicFacade.refreshContext();
+
+                    synchronized (workflowIds) {
+                        workflowIds.put(key, workflowId);
+                    }
                 }
 
                 final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId);

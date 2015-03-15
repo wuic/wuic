@@ -391,13 +391,15 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the {@link NutsHeap} if the object has been already created with a call to {@link #getHeap(String, java.util.Map)}.
+         * Notifies the {@link NutsHeap} listeners if the object has been already created with a call to
+         * {@link #getHeap(String, java.util.Map)}. This will help to free any resource.
          * </p>
-         *
-         * @return the {@link NutsHeap} if already created, {@code null} otherwise
          */
-        private NutsHeap getIfCreated() {
-            return heap;
+        private void free() {
+            if (heap != null) {
+                heap.notifyListeners(heap);
+                heap = null;
+            }
         }
 
         /**
@@ -412,10 +414,7 @@ public class ContextBuilder extends Observable {
          * @throws IOException if creation fails
          */
         private NutsHeap getHeap(final String id, final Map<String, NutDao> daoCollection) throws IOException{
-            if (heap != null) {
-                return heap;
-            }
-
+            free();
             NutDao dao = null;
 
             // Find DAO
@@ -710,6 +709,73 @@ public class ContextBuilder extends Observable {
     private final class NutDaoRegistration {
 
         /**
+         * <p>
+         * An class representing a registration that leads a proxy creation. This creation
+         * can't be completed until referenced DAO are created. This class keeps data to update
+         * the proxy when possible/
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.1
+         */
+        private final class ProxyNutDaoRegistration {
+
+            /**
+             * The proxy path.
+             */
+            final String path;
+
+            /**
+             * The referenced DAO.
+             */
+            final String daoId;
+
+            /**
+             * The proxy instance to update.
+             */
+            final ProxyNutDao proxy;
+
+            /**
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param path the path
+             * @param daoId the DAO id
+             * @param proxyNutDao the proxy
+             */
+            private ProxyNutDaoRegistration(final String path, final String daoId, final ProxyNutDao proxyNutDao) {
+                this.path = path;
+                this.daoId = daoId;
+                this.proxy = proxyNutDao;
+            }
+
+            /**
+             * <p>
+             * Provides the referenced DAO.
+             * </p>
+             *
+             * @return the DAO id
+             */
+            private String getDaoId() {
+                return daoId;
+            }
+
+            /**
+             * <p>
+             * Adds a rule with the given DAO.
+             * </p>
+             *
+             * @param dao the referenced DAO
+             */
+            private void addRule(final NutDao dao) {
+                proxy.addRule(path, dao);
+            }
+        }
+
+
+        /**
          * The builder.
          */
         private final ObjectBuilder<NutDao> nutDaoBuilder;
@@ -717,7 +783,7 @@ public class ContextBuilder extends Observable {
         /**
          * Some DAO to proxy.
          */
-        private final Map<String, NutDaoRegistration> proxyDao;
+        private final Map<String, String> proxyDao;
 
         /**
          * Some nut to proxy.
@@ -742,7 +808,7 @@ public class ContextBuilder extends Observable {
          * @param nutDaoBuilder the DAO builder
          */
         private NutDaoRegistration(final ObjectBuilder<NutDao> nutDaoBuilder) {
-            this.proxyDao = new HashMap<String, NutDaoRegistration>();
+            this.proxyDao = new HashMap<String, String>();
             this.proxyNut = new HashMap<String, Nut>();
             this.nutDaoBuilder = nutDaoBuilder;
             this.proxyRootPath = "";
@@ -761,12 +827,12 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the proxy for DAO.
+         * Gets the proxy for DAO. The key is the map, the value the {@link NutDao} registration ID.
          * </p>
          *
          * @return the DAO
          */
-        private Map<String, NutDaoRegistration> getProxyDao() {
+        private Map<String, String> getProxyDao() {
             return proxyDao;
         }
 
@@ -796,13 +862,14 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Gets the {@link NutDao} if the object has been already created with a call to {@link #getNutDao()}.
+         * Shutdowns the {@link NutDao} if the object has been already created with a call to {@link #getNutDao(java.util.List)}.
          * </p>
-         *
-         * @return the {@link NutDao} if already created, {@code null} otherwise
          */
-        private NutDao getIfCreated() {
-            return dao;
+        private void free() {
+            if (dao != null) {
+                dao.shutdown();
+                dao = null;
+            }
         }
 
         /**
@@ -812,33 +879,28 @@ public class ContextBuilder extends Observable {
          * have changed, the instance will be modified to provide an up to date state.
          * </p>
          *
+         * @param populateProxy a list populated with created {@link ProxyNutDao} that declared rules for DAO to be set
          * @return the DAO
          */
-        private NutDao getNutDao() {
-            if (!proxyNut.isEmpty() || !proxyDao.isEmpty()) {
-                final ProxyNutDao proxy;
+        private NutDao getNutDao(final List<ProxyNutDaoRegistration> populateProxy) {
+            free();
+            final NutDao delegate = nutDaoBuilder.build();
 
-                if (dao != null) {
-                    if (dao instanceof ProxyNutDao) {
-                        proxy = ProxyNutDao.class.cast(dao);
-                    } else {
-                        proxy = new ProxyNutDao(proxyRootPath, dao);
-                    }
-                } else {
-                    proxy = new ProxyNutDao(proxyRootPath, nutDaoBuilder.build());
-                }
+            // Must NutDao wrap in a proxy
+            if (!proxyNut.isEmpty() || !proxyDao.isEmpty() || !proxyRootPath.isEmpty()) {
+                final ProxyNutDao proxy = new ProxyNutDao(proxyRootPath, delegate);
 
                 for (final Map.Entry<String, Nut> entry : proxyNut.entrySet()) {
                     proxy.addRule(entry.getKey(), entry.getValue());
                 }
 
-                for (final Map.Entry<String, NutDaoRegistration> entry : proxyDao.entrySet()) {
-                    proxy.addRule(entry.getKey(), entry.getValue().getNutDao());
+                for (final Map.Entry<String, String> entry : proxyDao.entrySet()) {
+                    populateProxy.add(new ProxyNutDaoRegistration(entry.getKey(), entry.getValue(), proxy));
                 }
 
                 dao = proxy;
-            } else if (dao == null) {
-                dao = nutDaoBuilder.build();
+            } else {
+                dao = delegate;
             }
 
             return dao;
@@ -1085,21 +1147,13 @@ public class ContextBuilder extends Observable {
 
             // Shutdown all DAO (scheduled jobs, etc)
             if (setting != null) {
-                for (final NutDaoRegistration dao : setting.nutDaoMap.values()) {
-                    final NutDao d = dao.getIfCreated();
-
-                    if (d != null) {
-                        d.shutdown();
-                    }
+                for (final NutDaoRegistration dao : setting.getNutDaoMap().values()) {
+                    dao.free();
                 }
 
                 // Notifies any listeners to clear any cache
                 for (final HeapRegistration heap : setting.getNutsHeaps().values()) {
-                    final NutsHeap h = heap.getIfCreated();
-
-                    if (h != null) {
-                        h.notifyListeners(h);
-                    }
+                    heap.free();
                 }
             }
 
@@ -1335,15 +1389,7 @@ public class ContextBuilder extends Observable {
          * @return this
          */
         public ContextNutDaoBuilder proxyPathForDao(final String path, final String id) {
-            for (final ContextSetting s : taggedSettings.values()) {
-                final NutDaoRegistration reg = s.getNutDaoMap().get(id);
-
-                if (reg != null) {
-                    registration.getProxyDao().put(path, reg);
-                    return this;
-                }
-            }
-
+            registration.getProxyDao().put(path, id);
             return this;
         }
 
@@ -1652,10 +1698,14 @@ public class ContextBuilder extends Observable {
 
         // Will override existing element
         for (final ContextSetting s : taggedSettings.values()) {
-            s.nutDaoMap.remove(id);
+            final NutDaoRegistration n = s.getNutDaoMap().remove(id);
+
+            if (n != null) {
+                n.free();
+            }
         }
 
-        setting.nutDaoMap.put(id, daoRegistration.configure(properties));
+        setting.getNutDaoMap().put(id, daoRegistration.configure(properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1765,7 +1815,11 @@ public class ContextBuilder extends Observable {
 
         // Will override existing element
         for (final ContextSetting s : taggedSettings.values()) {
-            s.getNutsHeaps().remove(id);
+            final HeapRegistration h = s.getNutsHeaps().remove(id);
+
+            if (h != null) {
+                h.free();
+            }
         }
 
         final ContextSetting setting = getSetting();
@@ -2069,11 +2123,35 @@ public class ContextBuilder extends Observable {
             final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
             final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
             final Map<String, NutDao> daoMap = new HashMap<String, NutDao>();
+            final Map<NutDaoRegistration, List<String>> registrationMap = new HashMap<NutDaoRegistration, List<String>>();
 
+            // Organize all registrations grouped by associated keys in order instantiate each registration only once
             for (final ContextSetting setting : taggedSettings.values()) {
                 for (final Map.Entry<String, NutDaoRegistration> dao : setting.getNutDaoMap().entrySet()) {
-                    daoMap.put(dao.getKey(), dao.getValue().getNutDao());
+                    List<String> keys = registrationMap.get(dao.getValue());
+
+                    if (keys == null) {
+                        keys = new ArrayList<String>();
+                        registrationMap.put(dao.getValue(), keys);
+                    }
+
+                    keys.add(dao.getKey());
                 }
+            }
+
+            // Populate the DAO map with the same instance associated to all keys sharing the same registration
+            final List<NutDaoRegistration.ProxyNutDaoRegistration> proxyRegistrations = new ArrayList<NutDaoRegistration.ProxyNutDaoRegistration>();
+            for (final Map.Entry<NutDaoRegistration, List<String>> registration : registrationMap.entrySet()) {
+                final NutDao dao = registration.getKey().getNutDao(proxyRegistrations);
+
+                for (final String key : registration.getValue()) {
+                    daoMap.put(key, dao);
+                }
+            }
+
+            // Some DAO are proxy with rules related to other DAO, set those DAO
+            for (final NutDaoRegistration.ProxyNutDaoRegistration proxyNutDaoRegistration : proxyRegistrations) {
+                proxyNutDaoRegistration.addRule(daoMap.get(proxyNutDaoRegistration.getDaoId()));
             }
 
             // Add all specified workflow
