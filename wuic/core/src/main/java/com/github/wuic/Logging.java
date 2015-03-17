@@ -60,7 +60,12 @@ public enum Logging {
     /**
      * Polling logger. Name is, 'com.github.wuic.Logging.POLL', you can see its logs by assigning the TRACE level.
      */
-    POLL;
+    POLL,
+
+    /**
+     * Timer logger. Name is, 'com.github.wuic.Logging.TIMER', you can see its logs by assigning the TRACE level.
+     */
+    TIMER;
 
     /**
      * The special logger.

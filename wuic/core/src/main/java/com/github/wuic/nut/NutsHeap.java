@@ -409,6 +409,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nuts = new ArrayList<Nut>();
 
         log.info("Checking files for heap '{}'", id);
+        final long start = System.currentTimeMillis();
 
         if (paths != null) {
             for (final String path : paths) {
@@ -450,6 +451,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         for (final NutsHeap heap : getComposition()) {
             heap.addObserver(this);
         }
+
+        Logging.TIMER.log("Files checked for heap '{}' in {}ms", id, System.currentTimeMillis() - start);
     }
 
     /**

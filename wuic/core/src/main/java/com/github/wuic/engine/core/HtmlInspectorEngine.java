@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
@@ -441,7 +442,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 convertible.addReferencedNut(ref);
             }
 
-            logger.info("HTML transformation in {}ms", System.currentTimeMillis() - now);
+            Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
         }
     }
 

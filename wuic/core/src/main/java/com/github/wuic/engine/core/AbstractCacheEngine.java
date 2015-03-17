@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.Logging;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
@@ -197,7 +198,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             }
         }
 
-        log.info("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+        Logging.TIMER.log("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }
@@ -301,7 +302,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             }
         }
 
-        log.info("'{}' retrieved from cache engine in {} ms", path, (System.currentTimeMillis() - start));
+        Logging.TIMER.log("'{}' retrieved from cache engine in {} ms", path, (System.currentTimeMillis() - start));
 
         return retval;
     }

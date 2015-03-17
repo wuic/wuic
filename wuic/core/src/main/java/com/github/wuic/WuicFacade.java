@@ -282,7 +282,7 @@ public final class WuicFacade {
         try {
             final long start = beforeRunWorkflow(id);
             final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, skip);
-            log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+            Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
             return retval;
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
@@ -330,7 +330,7 @@ public final class WuicFacade {
             throws WuicException {
         final long start = beforeRunWorkflow(id);
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(context.process(config.getContextPath(), id, urlProviderFactory, skip));
-        log.info("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+        Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }
