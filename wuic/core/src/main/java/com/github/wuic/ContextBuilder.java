@@ -365,6 +365,11 @@ public class ContextBuilder extends Observable {
         private String[] heapIds;
 
         /**
+         * The factory of the heap.
+         */
+        private final Object factory;
+
+        /**
          * <p>
          * Builds a new registration instance.
          * </p>
@@ -376,6 +381,7 @@ public class ContextBuilder extends Observable {
          * @param listeners the listeners
          */
         private HeapRegistration(final boolean disposable, final String ndbId, final String[] heapIds, final String[] paths, final HeapListener ... listeners) {
+            this.factory = currentTag;
             this.disposable = disposable;
             this.ndbId = ndbId;
             this.listeners = listeners;
@@ -392,7 +398,7 @@ public class ContextBuilder extends Observable {
         /**
          * <p>
          * Notifies the {@link NutsHeap} listeners if the object has been already created with a call to
-         * {@link #getHeap(String, java.util.Map)}. This will help to free any resource.
+         * {@link #getHeap(String, java.util.Map, java.util.Map)}. This will help to free any resource.
          * </p>
          */
         private void free() {
@@ -404,16 +410,28 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
+         * Indicates if the registration is for a composite heap.
+         * </p>
+         *
+         * @return {@code true} if heaps a referenced, {@code false} otherwise
+         */
+        public boolean isComposition() {
+            return heapIds != null && heapIds.length > 0;
+        }
+
+        /**
+         * <p>
          * Gets the {@link NutsHeap} created by this registration. The heap is created when the first call to this
-         * method performed. Then, the same instance will be returned for future calls.
+         * method performed. Then, the instance will be created for future calls to take in consideration ant change.
          * </p>
          *
          * @param id the ID for this heap
          * @param daoCollection a collection of DAOs where {@link #ndbId} will be resolved
+         * @param heapCollection a collection of heap where {@link #heapIds} will be resolved
          * @return the heap
          * @throws IOException if creation fails
          */
-        private NutsHeap getHeap(final String id, final Map<String, NutDao> daoCollection) throws IOException{
+        private NutsHeap getHeap(final String id, final Map<String, NutDao> daoCollection, final Map<String, NutsHeap> heapCollection) throws IOException{
             free();
             NutDao dao = null;
 
@@ -431,13 +449,13 @@ public class ContextBuilder extends Observable {
 
                 for (final String regex : heapIds) {
                     for (final Map.Entry<String, HeapRegistration> registration : getNutsHeap(regex).entrySet()) {
-                        composition.add(registration.getValue().getHeap(registration.getKey(), daoCollection));
+                        composition.add(heapCollection.get(registration.getKey()));
                     }
                 }
 
-                heap = new NutsHeap(currentTag, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
+                heap = new NutsHeap(factory, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
             } else {
-                heap = new NutsHeap(currentTag, pathList, disposable, dao, id);
+                heap = new NutsHeap(factory, pathList, disposable, dao, id);
             }
 
             for (final HeapListener l : listeners) {
@@ -617,6 +635,11 @@ public class ContextBuilder extends Observable {
         private final String workflowTemplateId;
 
         /**
+         * The factory the created heap.
+         */
+        private final Object factory;
+
+        /**
          * <p>
          *  Builds a new registration
          * </p>
@@ -628,6 +651,7 @@ public class ContextBuilder extends Observable {
         private WorkflowRegistration(final Boolean forEachHeap,
                                      final String heapIdPattern,
                                      final String workflowTemplateId) {
+            this.factory = currentTag;
             this.forEachHeap = forEachHeap;
             this.heapIdPattern = heapIdPattern;
             this.workflowTemplateId  = workflowTemplateId;
@@ -639,12 +663,15 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param identifier the workflow ID
-         * @param daoCollection a collection of DAO for heap creation
+         * @param daoCollection a collection of DAO for template creation
+         * @param heapCollection a collection of heap for workflow creation
          * @return the new workflow
          * @throws WorkflowTemplateNotFoundException if the workflow template does not exists
          * @throws IOException if heap creation fails
          */
-        private Map<String, Workflow> getWorkflowMap(final String identifier, final Map<String, NutDao> daoCollection)
+        private Map<String, Workflow> getWorkflowMap(final String identifier,
+                                                     final Map<String, NutDao> daoCollection,
+                                                     final Map<String, NutsHeap> heapCollection)
                 throws WorkflowTemplateNotFoundException, IOException {
             final WorkflowTemplate template = getWorkflowTemplate(workflowTemplateId, daoCollection);
             final Map<String, Workflow> retval = new HashMap<String, Workflow>();
@@ -674,7 +701,7 @@ public class ContextBuilder extends Observable {
                                 String.format("Workflow ID %s cannot be a numeric value", loopId)));
                     }
 
-                    retval.put(loopId, new Workflow(template.getHead(), chains, heap.getValue().getHeap(heap.getKey(), daoCollection), nutDaos));
+                    retval.put(loopId, new Workflow(template.getHead(), chains, heapCollection.get(heap.getKey()), nutDaos));
                 }
             } else {
                 if (NumberUtils.isNumber(id)) {
@@ -686,10 +713,10 @@ public class ContextBuilder extends Observable {
                 int cpt = 0;
 
                 for (final Map.Entry<String, HeapRegistration> heap : heaps.entrySet()) {
-                    array[cpt++] = heap.getValue().getHeap(heap.getKey(), daoCollection);
+                    array[cpt++] = heapCollection.get(heap.getKey());
                 }
 
-                final NutsHeap heap = new NutsHeap(currentTag, null, null, heapIdPattern, array);
+                final NutsHeap heap = new NutsHeap(factory, null, null, heapIdPattern, array);
                 retval.put(id, new Workflow(template.getHead(), chains, heap));
             }
 
@@ -710,9 +737,9 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * An class representing a registration that leads a proxy creation. This creation
+         * An class representing a registration that leads to a proxy creation. This creation
          * can't be completed until referenced DAO are created. This class keeps data to update
-         * the proxy when possible/
+         * the proxy when possible.
          * </p>
          *
          * @author Guillaume DROUET
@@ -773,7 +800,6 @@ public class ContextBuilder extends Observable {
                 proxy.addRule(path, dao);
             }
         }
-
 
         /**
          * The builder.
@@ -874,9 +900,9 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Builds a new {@link NutDao} for this registration. The DAO is created when the first call to this
-         * method performed. Then, the same instance will be returned for future calls. If the proxy settings
-         * have changed, the instance will be modified to provide an up to date state.
+         * Builds a new {@link NutDao} for this registration. The DAO is created when the first call to this method
+         * performed. Then, a new instance will be created for future calls to take in consideration any change. For
+         * instance, if the proxy settings have changed, the instance will be modified to provide an up to date state.
          * </p>
          *
          * @param populateProxy a list populated with created {@link ProxyNutDao} that declared rules for DAO to be set
@@ -2154,14 +2180,27 @@ public class ContextBuilder extends Observable {
                 proxyNutDaoRegistration.addRule(daoMap.get(proxyNutDaoRegistration.getDaoId()));
             }
 
-            // Add all specified workflow
+            // Create heaps
             for (final ContextSetting setting : taggedSettings.values()) {
-                for (final Map.Entry<String, WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
-                    workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap));
+
+                // The composite heap must be read after the standard heap
+                for (final Map.Entry<String, HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
+                    if (!heap.getValue().isComposition()) {
+                        heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap));
+                    }
                 }
 
                 for (final Map.Entry<String, HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap));
+                    if (heap.getValue().isComposition()) {
+                        heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap));
+                    }
+                }
+            }
+
+            // Add all specified workflow
+            for (final ContextSetting setting : taggedSettings.values()) {
+                for (final Map.Entry<String, WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
+                    workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap, heapMap));
                 }
             }
 
