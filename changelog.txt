@@ -149,3 +149,4 @@ Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.1&page=1&state=cl
 
 Breaking changes:
 - By default, WebappNutDao scans "/WEB-INF" and "/WEB-INF/lib" will be skipped
+- ContextBuilder API has been reviewed and moved to a dedicated package
