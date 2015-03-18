@@ -75,8 +75,7 @@ public abstract class Engine implements Comparable<Engine> {
      * </p>
      *
      * <p>
-     * Should throw an {@link com.github.wuic.exception.wrapper.BadArgumentException} the files type is not
-     * supported by this {@link Engine}.
+     * Should throw an {@link IllegalArgumentException} the files type is not supported by this {@link Engine}.
      * </p>
      *
      * @param request the request with nuts to parse

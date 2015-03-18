@@ -42,8 +42,7 @@
  * </p>
  *
  * <p>
- * Classes in this package don't throw WUIC exceptions like {@link com.github.wuic.exception.wrapper.StreamException}
- * or {@link com.github.wuic.exception.wrapper.BadArgumentException} to ease the reuse of this code outside WUIC.
+ * Classes in this package don't throw WUIC exceptions to ease the reuse of this code outside WUIC.
  * </p>
  *
  * @author Guillaume DROUET

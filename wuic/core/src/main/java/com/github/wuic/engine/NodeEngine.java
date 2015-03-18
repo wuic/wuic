@@ -234,7 +234,7 @@ public abstract class NodeEngine extends Engine {
      * subclass.
      * </p>
      *
-     * @return {@code true} if {@link NodeEngine} is responsible of calling next engine, {@link false} otherwise
+     * @return {@code true} if {@link NodeEngine} is responsible of calling next engine, {@code false} otherwise
      */
     protected boolean callNextEngine() {
         return true;

@@ -573,7 +573,12 @@ public class WuicFacadeBuilder {
         public final class ContextNutDaoBuilderFacade extends ContextNutDaoBuilder {
 
             /**
-             * {@inheritDoc}
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param id the ID
+             * @param type the type
              */
             public ContextNutDaoBuilderFacade(final String id, final String type) {
                 super(id, type);
@@ -637,7 +642,12 @@ public class WuicFacadeBuilder {
         public final class ContextEngineBuilderFacade extends ContextEngineBuilder {
 
             /**
-             * {@inheritDoc}
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param id the ID
+             * @param type the ID
              */
             public ContextEngineBuilderFacade(final String id, final String type) {
                 super(id, type);
@@ -674,7 +684,12 @@ public class WuicFacadeBuilder {
         public final class ContextNutFilterBuilderFacade extends ContextNutFilterBuilder {
 
             /**
-             * {@inheritDoc}
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param id the ID
+             * @param type the ID
              */
             public ContextNutFilterBuilderFacade(final String id, final String type) {
                 super(id, type);

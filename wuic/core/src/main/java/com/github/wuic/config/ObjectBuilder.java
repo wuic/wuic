@@ -111,7 +111,7 @@ public interface ObjectBuilder<T> {
      * </p>
      *
      * <p>
-     * If the {@link com.github.wuic.nut.dao.NutDao} could not be built, then {@link com.github.wuic.exception.wrapper.BadArgumentException}
+     * If the {@link com.github.wuic.nut.dao.NutDao} could not be built, then an {@link IllegalArgumentException}
      * should be thrown.
      * </p>
      *
