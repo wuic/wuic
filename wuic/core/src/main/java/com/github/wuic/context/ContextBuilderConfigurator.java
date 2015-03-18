@@ -36,7 +36,7 @@
  */
 
 
-package com.github.wuic;
+package com.github.wuic.context;
 
 import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
@@ -146,7 +146,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
     /**
      * <p>
      * Configures the given context. It tags all the settings with the value returned by
-     * the {@link com.github.wuic.ContextBuilderConfigurator#getTag()} method.
+     * the {@link ContextBuilderConfigurator#getTag()} method.
      * </p>
      *
      * <p>
@@ -186,7 +186,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
     /**
      * <p>
      * Configures the given context internally. This method is called just after the {@link ContextBuilder} has been
-     * tagged with the value returned by {@link com.github.wuic.ContextBuilderConfigurator#getTag()} method. Once the
+     * tagged with the value returned by {@link ContextBuilderConfigurator#getTag()} method. Once the
      * execution of this method is terminated, the tag is released.
      * </p>
      *

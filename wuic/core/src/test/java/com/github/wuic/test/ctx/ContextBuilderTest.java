@@ -39,11 +39,11 @@
 package com.github.wuic.test.ctx;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.Context;
-import com.github.wuic.ContextBuilder;
+import com.github.wuic.context.Context;
+import com.github.wuic.context.ContextBuilder;
 
-import com.github.wuic.ContextInterceptor;
-import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.context.ContextInterceptor;
+import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
@@ -76,7 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
- * {@link com.github.wuic.ContextBuilder} and {@link Context} tests.
+ * {@link com.github.wuic.context.ContextBuilder} and {@link Context} tests.
  * </p>
  *
  * @author Guillaume DROUET

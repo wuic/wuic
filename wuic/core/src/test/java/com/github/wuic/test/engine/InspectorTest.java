@@ -39,8 +39,8 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.Context;
-import com.github.wuic.ContextBuilder;
+import com.github.wuic.context.Context;
+import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;

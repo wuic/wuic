@@ -47,7 +47,7 @@ import java.util.Map;
 
 /**
  * <p>
- * A workflow represents a possible manner to process {@link com.github.wuic.nut.Nut nuts} in a {@link Context}.
+ * A workflow represents a possible manner to process {@link com.github.wuic.nut.Nut nuts} in a {@link com.github.wuic.context.Context}.
  * </p>
  *
  * <p>
@@ -61,7 +61,7 @@ import java.util.Map;
  * <p>
  * Finally, the workflow could have zero to many {@link NutDao} where resulting nut should be saved. Consequently,
  * {@link NutDao} must supports {@link NutDao#save(com.github.wuic.nut.Nut)}. This is something which is checked by the
- * {@link ContextBuilder}.
+ * {@link com.github.wuic.context.ContextBuilder}.
  * </p>
  *
  * @author Guillaume DROUET

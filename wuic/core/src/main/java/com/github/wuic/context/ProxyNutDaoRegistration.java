@@ -36,51 +36,73 @@
  */
 
 
-package com.github.wuic.engine;
+package com.github.wuic.context;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.core.ProxyNutDao;
 
 /**
  * <p>
- * This annotation marks a {@link com.github.wuic.engine.Engine} implementation that must be discovered
- * during classpath scanning.
+ * An class representing a registration that leads to a proxy creation. This creation
+ * can't be completed until referenced DAO are created. This class keeps data to update
+ * the proxy when possible.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.5
+ * @since 0.5.1
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface EngineService {
+public final class ProxyNutDaoRegistration {
 
     /**
-     * Default package to scan for this service.
+     * The proxy path.
      */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.engine";
+    private final String path;
 
     /**
-     * <p>
-     * Indicates to the {@link com.github.wuic.context.ContextBuilder} that this service should injected or not to any new
-     * default workflow.
-     * </p>
-     *
-     * @return {@code true} if inject by default, {@code false} otherwise
+     * The referenced DAO.
      */
-    boolean injectDefaultToWorkflow();
+    private final String daoId;
+
+    /**
+     * The proxy instance to update.
+     */
+    private final ProxyNutDao proxy;
 
     /**
      * <p>
-     * Indicates if this service provides a core engine.
-     * Default value must not be changed by WUIC extension.
+     * Builds a new instance.
      * </p>
      *
-     * @return {@code true} if this is a core engine, {@code false} otherwise
+     * @param path the path
+     * @param daoId the DAO id
+     * @param proxyNutDao the proxy
      */
-    boolean isCoreEngine() default false;
+    ProxyNutDaoRegistration(final String path, final String daoId, final ProxyNutDao proxyNutDao) {
+        this.path = path;
+        this.daoId = daoId;
+        this.proxy = proxyNutDao;
+    }
+
+    /**
+     * <p>
+     * Provides the referenced DAO.
+     * </p>
+     *
+     * @return the DAO id
+     */
+    String getDaoId() {
+        return daoId;
+    }
+
+    /**
+     * <p>
+     * Adds a rule with the given DAO.
+     * </p>
+     *
+     * @param dao the referenced DAO
+     */
+    void addRule(final NutDao dao) {
+        proxy.addRule(path, dao);
+    }
 }

@@ -39,8 +39,8 @@
 package com.github.wuic.test;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.ContextBuilder;
-import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;

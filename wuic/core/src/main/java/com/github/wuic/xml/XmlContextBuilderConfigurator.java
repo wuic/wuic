@@ -38,8 +38,8 @@
 
 package com.github.wuic.xml;
 
-import com.github.wuic.ContextBuilder;
-import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import org.xml.sax.SAXException;

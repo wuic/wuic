@@ -36,51 +36,13 @@
  */
 
 
-package com.github.wuic.engine;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
  * <p>
- * This annotation marks a {@link com.github.wuic.engine.Engine} implementation that must be discovered
- * during classpath scanning.
+ * This package provides the central {@link com.github.wuic.context.Context} component which is the lowest configuration
+ * object in WUIC. The {@link com.github.wuic.WuicFacade} relies on this object which could be build thanks to a
+ * {@link com.github.wuic.context.ContextBuilder}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.5
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface EngineService {
-
-    /**
-     * Default package to scan for this service.
-     */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.engine";
-
-    /**
-     * <p>
-     * Indicates to the {@link com.github.wuic.context.ContextBuilder} that this service should injected or not to any new
-     * default workflow.
-     * </p>
-     *
-     * @return {@code true} if inject by default, {@code false} otherwise
-     */
-    boolean injectDefaultToWorkflow();
-
-    /**
-     * <p>
-     * Indicates if this service provides a core engine.
-     * Default value must not be changed by WUIC extension.
-     * </p>
-     *
-     * @return {@code true} if this is a core engine, {@code false} otherwise
-     */
-    boolean isCoreEngine() default false;
-}
+package com.github.wuic.context;

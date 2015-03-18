@@ -39,6 +39,9 @@
 package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.context.Context;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 
@@ -74,8 +77,8 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * This enumeration allows to indicate how the {@link Context} should be initialized when
-     * {@link ContextBuilder#build()} is called.
+     * This enumeration allows to indicate how the {@link com.github.wuic.context.Context} should be initialized when
+     * {@link com.github.wuic.context.ContextBuilder#build()} is called.
      * </p>
      *
      * @author Guillaume DROUET
@@ -177,17 +180,10 @@ public final class WuicFacade {
 
         // No inspector, directly use the wrapped context builder
         if (b.getObjectBuilderInspector() == null) {
-            builder = new ContextBuilder(
-                    b.contextBuilder().getEngineBuilderFactory(),
-                    b.contextBuilder().getNutDaoBuilderFactory(),
-                    b.contextBuilder().getNutFilterBuilderFactory());
+            builder = new ContextBuilder(b.contextBuilder());
         } else {
             // build a new context builder with specific inspector and reuse the factories already declared
-            builder = new ContextBuilder(
-                    b.contextBuilder().getEngineBuilderFactory(),
-                    b.contextBuilder().getNutDaoBuilderFactory(),
-                    b.contextBuilder().getNutFilterBuilderFactory(),
-                    b.getObjectBuilderInspector());
+            builder = new ContextBuilder(b.contextBuilder(), b.getObjectBuilderInspector());
         }
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];
@@ -290,7 +286,6 @@ public final class WuicFacade {
         }
     }
 
-
     /**
      * <p>
      * Gets the nut with the given path processed by the given workflow identified by the specified ID.
@@ -311,7 +306,6 @@ public final class WuicFacade {
             throws WuicException {
         return runWorkflow(id, path, UrlUtils.urlProviderFactory(), skip);
     }
-
 
     /**
      * <p>

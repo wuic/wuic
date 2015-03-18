@@ -38,8 +38,8 @@
 
 package com.github.wuic.test;
 
-import com.github.wuic.Context;
-import com.github.wuic.ContextBuilder;
+import com.github.wuic.context.Context;
+import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.nut.ConvertibleNut;

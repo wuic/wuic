@@ -39,9 +39,9 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.ContextBuilder;
-import com.github.wuic.ContextBuilderConfigurator;
-import com.github.wuic.ContextInterceptorAdapter;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
+import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;

@@ -36,8 +36,9 @@
  */
 
 
-package com.github.wuic;
+package com.github.wuic.context;
 
+import com.github.wuic.Workflow;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.ConvertibleNut;
 

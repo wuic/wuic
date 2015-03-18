@@ -39,6 +39,9 @@
 package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
+import com.github.wuic.context.ContextInterceptor;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
@@ -107,7 +110,7 @@ public class WuicFacadeBuilder {
     private final List<ContextBuilderConfigurator> configurators;
 
     /**
-     * Central {@link ContextBuilder}.
+     * Central {@link com.github.wuic.context.ContextBuilder}.
      */
     private final ContextBuilderFacade contextBuilder;
 
@@ -281,7 +284,7 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Returns the central {@link ContextBuilder}.
+     * Returns the central {@link com.github.wuic.context.ContextBuilder}.
      * </p>
      *
      * @return the context builder
@@ -382,7 +385,7 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * This class gives a chance to directly define settings for the final {@link ContextBuilder} of the built
+     * This class gives a chance to directly define settings for the final {@link com.github.wuic.context.ContextBuilder} of the built
      * {@link WuicFacade}.
      * </p>
      *

@@ -38,8 +38,8 @@
 
 package com.github.wuic.servlet;
 
-import com.github.wuic.ContextBuilder;
-import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
@@ -81,7 +81,7 @@ import java.util.Map;
  * By default, the DAO built from a {@link com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao}. DAO is configured
  * like this for consistency reason because the version number must be computed from content when scripts are declared
  * inside tag. User can takes control over {@link com.github.wuic.nut.dao.NutDao} creation by extending this class and
- * overriding the {@link #createContextNutDaoBuilder(String, com.github.wuic.ContextBuilder, String)} method.
+ * overriding the {@link #createContextNutDaoBuilder(String, com.github.wuic.context.ContextBuilder, String)} method.
  * </p>
  *
  * @author Guillaume DROUET
@@ -184,7 +184,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Creates a new {@link com.github.wuic.ContextBuilder.ContextNutDaoBuilder} with the given {@link ContextBuilder}.
+     * Creates a new {@link com.github.wuic.context.ContextBuilder.ContextNutDaoBuilder} with the given {@link ContextBuilder}.
      * </p>
      *
      * @param id the ID

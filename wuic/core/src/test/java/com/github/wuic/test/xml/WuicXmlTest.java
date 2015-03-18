@@ -38,9 +38,9 @@
 
 package com.github.wuic.test.xml;
 
-import com.github.wuic.Context;
-import com.github.wuic.ContextBuilder;
-import com.github.wuic.ContextBuilderConfigurator;
+import com.github.wuic.context.Context;
+import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.Engine;
