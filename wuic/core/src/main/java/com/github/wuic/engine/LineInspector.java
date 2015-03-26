@@ -45,6 +45,8 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -70,6 +72,11 @@ public abstract class LineInspector {
     protected static final String STRING_LITERAL_REGEX = "(\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*')";
 
     /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
      * The pattern.
      */
     private Pattern pattern;
@@ -83,6 +90,7 @@ public abstract class LineInspector {
      */
     public LineInspector(final Pattern p) {
         pattern = p;
+        logger.info("LineInspector {} will be inspected with pattern '{}'", getClass().getName(), p.toString());
     }
 
     /**
@@ -286,6 +294,8 @@ public abstract class LineInspector {
             this.convertibleNuts = convertibleNuts;
             this.referencer = referencer;
             this.endIndex = endIndex;
+            logger.debug("Statement between position {} and {} is referenced for replacement in referencer '{}'",
+                    startIndex, endIndex, referencer.getInitialName());
         }
 
         /**
