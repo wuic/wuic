@@ -95,13 +95,8 @@ import java.util.regex.Pattern;
  * </p>
  *
  * <p>
- * Some points have to be notified:
+ * Note that version number is based on content hash because this is the unique strategy that applies to inline scripts.
  * </p>
- *
- * <ul>
- *     <li>Observing collected nuts is not possible here so polling won't be perform to invalidate any cache.</li>
- *     <li>Version number is based on content hash because this is the unique strategy that applies to inline scripts</li>
- * </ul>
  *
  * @author Guillaume DROUET
  * @version 1.1
