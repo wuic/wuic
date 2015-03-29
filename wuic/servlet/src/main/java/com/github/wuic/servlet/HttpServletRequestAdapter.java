@@ -156,7 +156,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public long getDateHeader(final String name) {
-        return (request != null) ? request.getDateHeader(name) : 0;
+        return (request != null) ? request.getDateHeader(name) : -1;
     }
 
     /**
