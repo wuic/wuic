@@ -140,7 +140,7 @@ public class HttpNutDao extends AbstractNutDao {
         final String p = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
         log.debug("Opening HTTP access for {}", p);
         final URL url = new URL(p);
-        return new HttpNut(realPath, url, type, getVersionNumber(p));
+        return new HttpNut(realPath, url, type, getVersionNumber(realPath));
     }
 
     /**
