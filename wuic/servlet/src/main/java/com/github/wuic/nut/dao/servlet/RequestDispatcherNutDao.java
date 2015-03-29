@@ -129,10 +129,11 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
                                 WuicServletContextListener.class.getName()));
             }
 
-            final RequestDispatcher rd = servletContext.getRequestDispatcher(path.charAt(0) == '/' ? path : '/' + path);
+            final String slashPath = path.charAt(0) == '/' ? path : '/' + path;
+            final RequestDispatcher rd = servletContext.getRequestDispatcher(slashPath);
 
             // Wrap request and response since servlet container expects standard wrappers
-            final HttpServletRequestAdapter adapter = new HttpServletRequestAdapter(path);
+            final HttpServletRequestAdapter adapter = new HttpServletRequestAdapter(slashPath);
 
             adapter.setAttribute(HtmlParserFilter.SKIP_FILTER, "");
             rd.include(new HttpServletRequestWrapper(adapter), new HttpServletResponseWrapper(response));
