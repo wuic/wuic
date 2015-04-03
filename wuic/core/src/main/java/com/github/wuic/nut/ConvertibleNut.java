@@ -184,4 +184,22 @@ public interface ConvertibleNut extends Nut {
      * @return {@code true} if transformed, {@code false} otherwise
      */
     boolean isTransformed();
+
+    /**
+     * <p>
+     * Indicates if the nut is compressed.
+     * </p>
+     *
+     * @param c {@code true} if the nut is compressed, {@code false} otherwise
+     */
+    void setIsCompressed(Boolean c);
+
+    /**
+     * <p>
+     * Indicates if the nut is compressed.
+     * </p>
+     *
+     * @return {@code true} if the nut is compressed, {@code false} otherwise
+     */
+    Boolean isCompressed();
 }

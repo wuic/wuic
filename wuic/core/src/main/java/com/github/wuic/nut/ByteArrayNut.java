@@ -106,7 +106,7 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * @param version the version number
      */
     public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<ConvertibleNut> originalNuts, final Long version) {
-        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, new FutureLong(version));
+        super(name, nt, new FutureLong(version), Boolean.FALSE);
         setOriginalNuts(originalNuts);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
@@ -122,7 +122,7 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * @param version the version number
      */
     public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Long version) {
-        super(name, nt, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, new FutureLong(version));
+        super(name, nt, new FutureLong(version), Boolean.FALSE);
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 

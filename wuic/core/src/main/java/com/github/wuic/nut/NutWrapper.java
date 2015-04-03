@@ -195,4 +195,20 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     public List<ConvertibleNut> getReferencedNuts() {
         return wrapped.getReferencedNuts();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIsCompressed(final Boolean c) {
+        wrapped.setIsCompressed(c);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isCompressed() {
+        return wrapped.isCompressed();
+    }
 }

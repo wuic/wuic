@@ -74,7 +74,7 @@ public class NotReachableNut extends AbstractConvertibleNut {
      * @param version the version number
      */
     public NotReachableNut(final String name, final NutType nutType, final String heapId, final Long version) {
-        super(name, nutType, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, new FutureLong(version));
+        super(name, nutType, new FutureLong(version), Boolean.FALSE);
         heap = heapId;
     }
 

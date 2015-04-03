@@ -72,7 +72,7 @@ public class HttpNut extends AbstractNut {
      * @param version the version
      */
     public HttpNut(final String name, final URL url, final NutType nutType, final Future<Long> version) {
-        super(name, nutType, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, version);
+        super(name, nutType, version);
         nutUrl = url;
     }
 

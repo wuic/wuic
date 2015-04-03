@@ -84,18 +84,14 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      *
      * @param name the name
      * @param ft the nut type
-     * @param comp if compressible or not
-     * @param c if can be cached or not
-     * @param a if can be aggregated or not
      * @param v the version
+     * @param comp if compressible or not
      */
     protected PipedConvertibleNut(final String name,
                                   final NutType ft,
-                                  final Boolean comp,
-                                  final Boolean c,
-                                  final Boolean a,
-                                  final Future<Long> v) {
-        super(name, ft, comp, c, a, v);
+                                  final Future<Long> v,
+                                  final Boolean comp) {
+        super(name, ft, v, comp);
         transformed = false;
     }
 

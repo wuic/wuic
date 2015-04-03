@@ -89,19 +89,11 @@ public class MockDao implements NutDao {
         // Prepare Nut mock
         when(mockNutOne.getInitialName()).thenReturn("foo.js");
         when(mockNutOne.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutOne.isAggregatable()).thenReturn(true);
-        when(mockNutOne.isTextReducible()).thenReturn(true);
-        when(mockNutOne.isCacheable()).thenReturn(true);
-        when(mockNutOne.isBinaryReducible()).thenReturn(true);
         when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
         when(mockNutOne.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         when(mockNutTwo.getInitialName()).thenReturn("test.js");
         when(mockNutTwo.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutTwo.isAggregatable()).thenReturn(true);
-        when(mockNutTwo.isTextReducible()).thenReturn(true);
-        when(mockNutTwo.isCacheable()).thenReturn(true);
-        when(mockNutTwo.isBinaryReducible()).thenReturn(true);
         when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
         when(mockNutTwo.getVersionNumber()).thenReturn(new FutureLong(1L));
     }

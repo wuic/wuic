@@ -53,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,6 +104,7 @@ public class MemoryMapCacheEngineTest {
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getInitialName()).thenReturn("foo.js");
         Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
 
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString())).thenReturn(Arrays.asList(nut));

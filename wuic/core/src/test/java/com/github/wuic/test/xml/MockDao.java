@@ -70,7 +70,6 @@ public class MockDao implements NutDao {
         final List<Nut> nuts = new ArrayList<Nut>();
         nuts.add(nut);
         when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        when(nut.isAggregatable()).thenReturn(true);
         when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         return nuts;
     }

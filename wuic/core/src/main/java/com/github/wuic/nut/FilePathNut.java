@@ -74,7 +74,7 @@ public class FilePathNut extends AbstractNut {
      * @param versionNumber the nut's version number
      */
     public FilePathNut(final FilePath p, final String name, final NutType ft, final Future<Long> versionNumber) {
-        super(name, ft, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, versionNumber);
+        super(name, ft, versionNumber);
         path = p;
     }
 

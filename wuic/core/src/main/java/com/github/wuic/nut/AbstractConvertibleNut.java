@@ -92,6 +92,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private List<Pipe.OnReady> onReady;
 
     /**
+     * Compressed or not.
+     */
+    private Boolean compressed;
+
+    /**
      * Converted nut.
      */
     private Nut wrap;
@@ -115,9 +120,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             setNutType(c.getNutType());
             setOriginalNuts(c.getOriginalNuts());
             referencedNuts = c.getReferencedNuts();
+            setIsCompressed(c.isCompressed());
         } else {
             setNutName(o.getInitialName());
             setNutType(o.getInitialNutType());
+            setIsCompressed(Boolean.FALSE);
         }
     }
 
@@ -128,20 +135,17 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      *
      * @param name the nut's name
      * @param ft the nut's type
-     * @param comp compressed or not
-     * @param c cacheable or not
-     * @param a aggregatable or not
      * @param v version number
+     * @param c is compressed or not
      */
     protected AbstractConvertibleNut(final String name,
                                      final NutType ft,
-                                     final Boolean comp,
-                                     final Boolean c,
-                                     final Boolean a,
-                                     final Future<Long> v) {
-        super(name, ft, comp, c, a, v);
+                                     final Future<Long> v,
+                                     final Boolean c) {
+        super(name, ft, v);
         setNutName(name);
         setNutType(ft);
+        setIsCompressed(c);
     }
 
     /**
@@ -169,6 +173,22 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public List<Pipe.OnReady> getReadyCallbacks() {
         return onReady;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final Boolean isCompressed() {
+        return compressed;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final void setIsCompressed(final Boolean compressed) {
+        this.compressed = compressed;
     }
 
     /**

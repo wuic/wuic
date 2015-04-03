@@ -228,7 +228,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
         protected RequestDispatcherNut(final String name,
                                        final NutType ft,
                                        final Future<Long> v) {
-            super(name, ft, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, v);
+            super(name, ft, v);
         }
 
         /**

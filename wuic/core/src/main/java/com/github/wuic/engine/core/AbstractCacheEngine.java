@@ -462,15 +462,11 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
                 for (final ConvertibleNut nut : nuts) {
                     final ConvertibleNut byteArray = ByteArrayNut.toByteArrayNut(nut);
-                    if (byteArray.isCacheable()) {
-                        toCache.put(byteArray.getName(), byteArray);
+                    toCache.put(byteArray.getName(), byteArray);
 
-                        if (byteArray.getReferencedNuts() != null) {
-                            for (final ConvertibleNut ref : byteArray.getReferencedNuts()) {
-                                if (ref.isCacheable()) {
-                                    toCache.put(ref.getName(), ref);
-                                }
-                            }
+                    if (byteArray.getReferencedNuts() != null) {
+                        for (final ConvertibleNut ref : byteArray.getReferencedNuts()) {
+                            toCache.put(ref.getName(), ref);
                         }
                     }
                 }
@@ -535,9 +531,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
 
                 for (final ConvertibleNut nut : nuts) {
-                    if (nut.isCacheable()) {
-                        toCache.put(nut.getName(), ByteArrayNut.toByteArrayNut(nut));
-                    }
+                    toCache.put(nut.getName(), ByteArrayNut.toByteArrayNut(nut));
                 }
 
                 CacheResult cached = getFromCache(request.getKey());

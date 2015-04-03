@@ -74,31 +74,6 @@ public abstract class AbstractNut implements Nut {
     private String originalName;
 
     /**
-     * Compressed or not.
-     */
-    private Boolean compressed;
-
-    /**
-     * Text reducible or not.
-     */
-    private Boolean textReducible;
-
-    /**
-     * Binary reducible or not.
-     */
-    private Boolean binaryReducible;
-
-    /**
-     * Cacheable or not.
-     */
-    private Boolean cacheable;
-
-    /**
-     * Aggregatable or not.
-     */
-    private Boolean aggregatable;
-
-    /**
      * The proxy URI.
      */
     private String proxyUri;
@@ -124,9 +99,7 @@ public abstract class AbstractNut implements Nut {
      * @param o the nut to copy
      */
     protected AbstractNut(final Nut o) {
-        this(o.getInitialName(), o.getInitialNutType(), o.isCompressed(), o.isCacheable(), o.isAggregatable(), o.getVersionNumber());
-        binaryReducible = o.isBinaryReducible();
-        textReducible = o.isTextReducible();
+        this(o.getInitialName(), o.getInitialNutType(),  o.getVersionNumber());
     }
 
     /**
@@ -137,16 +110,10 @@ public abstract class AbstractNut implements Nut {
      *
      * @param name the nut's name
      * @param ft the nut's type
-     * @param comp compressed or not
-     * @param c cacheable or not
-     * @param a aggregatable or not
      * @param v version number
      */
     protected AbstractNut(final String name,
                           final NutType ft,
-                          final Boolean comp,
-                          final Boolean c,
-                          final Boolean a,
                           final Future<Long> v) {
         if (ft == null) {
             WuicException.throwBadArgumentException(new IllegalArgumentException("You can't create a nut with a null NutType"));
@@ -155,11 +122,6 @@ public abstract class AbstractNut implements Nut {
         } else {
             nutType = ft;
             originalName = name;
-            compressed = comp;
-            binaryReducible = !nutType.isText();
-            textReducible = nutType.isText();
-            cacheable = c;
-            aggregatable = a;
             versionNumber = v;
         }
     }
@@ -178,86 +140,6 @@ public abstract class AbstractNut implements Nut {
     @Override
     public NutType getInitialNutType() {
         return nutType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isCompressed() {
-        return compressed;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isBinaryReducible() {
-        return binaryReducible;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isTextReducible() {
-        return textReducible;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isCacheable() {
-        return cacheable;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isAggregatable() {
-        return aggregatable;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setIsCompressed(final Boolean compressed) {
-        this.compressed = compressed;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setBinaryReducible(final Boolean bc) {
-        binaryReducible = bc;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setTextReducible(final Boolean tc) {
-        textReducible = tc;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setCacheable(final Boolean c) {
-        cacheable = c;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setAggregatable(final Boolean a) {
-        aggregatable = a;
     }
 
     /**

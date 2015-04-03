@@ -194,8 +194,6 @@ public abstract class TextInspectorEngine
                     if (r.getInitialNutType().equals(NutType.CSS)) {
                         inspect(r, new EngineRequestBuilder(request).nuts(res).build());
                     }
-
-                    configureExtracted(r);
                 }
             }
         }
@@ -203,20 +201,6 @@ public abstract class TextInspectorEngine
         matcher.appendTail(retval);
 
         return retval.toString();
-    }
-
-    /**
-     * <p>
-     * Configures the given extracted nuts to know if it should be aggregated, compressed, cached, etc.
-     * </p>
-     *
-     * @param nut the nut to configure
-     */
-    private void configureExtracted(final Nut nut) {
-        // TODO : is it really required ? Why ???
-        nut.setAggregatable(Boolean.FALSE);
-        nut.setTextReducible(nut.getInitialNutType().isText());
-        nut.setBinaryReducible(!nut.getInitialNutType().isText());
     }
 
     /**

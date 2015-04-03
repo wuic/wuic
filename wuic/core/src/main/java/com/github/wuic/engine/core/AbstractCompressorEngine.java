@@ -122,7 +122,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
      * @throws WuicException if an I/O error occurs
      */
     private void compress(final ConvertibleNut nut) throws WuicException {
-        if (!nut.isTextReducible() || (renameExtensionPrefix != null && nut.getName().contains(renameExtensionPrefix))) {
+        if (renameExtensionPrefix != null && nut.getName().contains(renameExtensionPrefix)) {
             return;
         }
 
