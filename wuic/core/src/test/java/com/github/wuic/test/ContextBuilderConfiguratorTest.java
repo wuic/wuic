@@ -38,6 +38,7 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.util.NumberUtils;
@@ -100,27 +101,38 @@ public class ContextBuilderConfiguratorTest {
             protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 return -1L;
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ProcessContext getProcessContext() {
+                return null;
+            }
         };
 
+        final ContextBuilder builder = Mockito.mock(ContextBuilder.class);
+        Mockito.when(builder.tag(Mockito.anyObject())).thenReturn(builder);
+
         cfg.setMultipleConfigurations(Boolean.FALSE);
-        cfg.configure(Mockito.mock(ContextBuilder.class));
-        cfg.configure(Mockito.mock(ContextBuilder.class));
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
+        cfg.configure(builder);
+        cfg.configure(builder);
         Assert.assertEquals(1, count.get());
 
         cfg.setMultipleConfigurations(Boolean.TRUE);
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
         Assert.assertEquals(NumberUtils.TWO, count.get());
 
         cfg.setMultipleConfigurations(Boolean.FALSE);
         tagBuilder.append("1");
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
         tagBuilder.append("1");
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
         tagBuilder.append("1");
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
         tagBuilder.append("1");
-        cfg.configure(Mockito.mock(ContextBuilder.class));
+        cfg.configure(builder);
         Assert.assertEquals(NumberUtils.SIX, count.get());
     }
 
@@ -163,9 +175,18 @@ public class ContextBuilderConfiguratorTest {
 
                 return System.currentTimeMillis();
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ProcessContext getProcessContext() {
+                return null;
+            }
         };
 
         final ContextBuilder builder = Mockito.mock(ContextBuilder.class);
+        Mockito.when(builder.tag(Mockito.anyObject())).thenReturn(builder);
         cfg.configure(builder);
 
         Assert.assertTrue(latch.await(1500, TimeUnit.MILLISECONDS));

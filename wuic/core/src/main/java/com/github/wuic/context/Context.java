@@ -38,6 +38,7 @@
 
 package com.github.wuic.context;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.Workflow;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -119,15 +120,19 @@ public class Context implements Observer {
      *
      * @param workflowId the workflow ID
      * @param contextPath the context path where nuts will be referenced
+     * @param urlProviderFactory the {@link UrlProviderFactory}
+     * @param processContext the process context
+     * @param skip the skipped engines
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
     public List<ConvertibleNut> process(final String contextPath,
                                         final String workflowId,
                                         final UrlProviderFactory urlProviderFactory,
+                                        final ProcessContext processContext,
                                         final EngineType ... skip)
             throws WuicException {
-        return process(contextPath, workflowId, getWorkflow(workflowId), urlProviderFactory, skip);
+        return process(contextPath, workflowId, getWorkflow(workflowId), urlProviderFactory, processContext, skip);
     }
 
     /**
@@ -140,13 +145,19 @@ public class Context implements Observer {
      * @param wId the workflow ID
      * @param path the nut name
      * @param urlProviderFactory the URL provider
+     * @param processContext the process context
      * @return the nut corresponding to the nut name
      * @throws WuicException if workflow fails to be processed
      * @throws IOException if any I/O error occurs
      */
-    public ConvertibleNut process(final String contextPath, final String wId, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+    public ConvertibleNut process(final String contextPath,
+                                  final String wId,
+                                  final String path,
+                                  final UrlProviderFactory urlProviderFactory,
+                                  final ProcessContext processContext,
+                                  final EngineType ... skip)
             throws WuicException, IOException {
-        return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, skip);
+        return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, processContext, skip);
     }
 
     /**
@@ -200,6 +211,7 @@ public class Context implements Observer {
      * @param contextPath the context path where nuts will be referenced
      * @param path the path corresponding to desired nut
      * @param urlProviderFactory the URL provider
+     * @param processContext the process context
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
@@ -208,6 +220,7 @@ public class Context implements Observer {
                                    final Workflow workflow,
                                    final String path,
                                    final UrlProviderFactory urlProviderFactory,
+                                   final ProcessContext processContext,
                                    final EngineType ... skip)
             throws IOException, WuicException {
         EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
@@ -215,6 +228,7 @@ public class Context implements Observer {
                 .chains(workflow.getChains())
                 .urlProviderFactory(urlProviderFactory)
                 .skip(skip)
+                .processContext(processContext)
                 .build();
 
         for (final ContextInterceptor interceptor : interceptors) {
@@ -248,6 +262,7 @@ public class Context implements Observer {
      * @param wId the workflow ID
      * @param contextPath the context path where nuts will be referenced
      * @param urlProviderFactory the URL provider
+     * @param processContext the process context
      * @return the resulting nuts
      * @throws com.github.wuic.exception.WuicException if any exception related to WUIC occurs
      */
@@ -255,12 +270,14 @@ public class Context implements Observer {
                                          final String wId,
                                          final Workflow workflow,
                                          final UrlProviderFactory urlProviderFactory,
+                                         final ProcessContext processContext,
                                          final EngineType ... skip)
             throws WuicException {
         EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
                 .contextPath(contextPath)
                 .chains(workflow.getChains())
                 .urlProviderFactory(urlProviderFactory)
+                .processContext(processContext)
                 .skip(skip)
                 .build();
 

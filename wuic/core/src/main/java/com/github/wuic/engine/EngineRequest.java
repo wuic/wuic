@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.CollectionUtils;
@@ -225,6 +226,17 @@ public final class EngineRequest {
      */
     public UrlProviderFactory getUrlProviderFactory() {
         return engineRequestBuilder.getUrlProviderFactory();
+    }
+
+    /**
+     * <p>
+     * Gets the {@link ProcessContext}.
+     * </p>
+     *
+     * @return the process context
+     */
+    public ProcessContext getProcessContext() {
+        return engineRequestBuilder.getProcessContext();
     }
 
     /**

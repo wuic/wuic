@@ -40,6 +40,7 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.HtmlUtil;
@@ -48,6 +49,7 @@ import com.github.wuic.util.IOUtils;
 import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -106,7 +108,7 @@ public class WuicTag extends TagSupport {
                 wuicFacade.clearTag(workflowId);
             }
 
-            final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId);
+            final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId, new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
 
             for (final ConvertibleNut nut : nuts) {
                 pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));

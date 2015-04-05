@@ -248,7 +248,7 @@ public class WuicXmlTest {
 
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
-        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory());
+        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), null);
     }
 
     /**
@@ -286,7 +286,7 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory());
+        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), null);
 
         // Remove test file
         tmp.delete();
@@ -311,7 +311,7 @@ public class WuicXmlTest {
         final Context ctx = builder.build();
 
         // Process implicit workflow with composed heaps
-        ctx.process("", "bind", UrlUtils.urlProviderFactory());
+        ctx.process("", "bind", UrlUtils.urlProviderFactory(), null);
     }
 
     /**
@@ -324,7 +324,7 @@ public class WuicXmlTest {
     @Test
     public void readerTest() throws Exception {
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-basic.xml").getFile()));
-        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
     }
@@ -340,11 +340,11 @@ public class WuicXmlTest {
     public void filterTest() throws Exception {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
-        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
 
-        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory()).size());
+        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory(), null).size());
     }
 
     /**
@@ -358,11 +358,11 @@ public class WuicXmlTest {
     public void filterDeepTest() throws Exception {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
-        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true);
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
 
-        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), null);
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());
@@ -394,10 +394,10 @@ public class WuicXmlTest {
         final Context ctx = builder.build();
 
         // Process implicit workflow with composed heaps
-        ctx.process("", "simple", UrlUtils.urlProviderFactory());
-        ctx.process("", "nested", UrlUtils.urlProviderFactory());
-        ctx.process("", "referenced", UrlUtils.urlProviderFactory());
-        ctx.process("", "both", UrlUtils.urlProviderFactory());
-        ctx.process("", "full", UrlUtils.urlProviderFactory());
+        ctx.process("", "simple", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "nested", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "referenced", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "both", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "full", UrlUtils.urlProviderFactory(), null);
     }
 }

@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -204,7 +205,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nutTypes = new HashSet<NutType>();
         this.created = new HashMap<String, Set<String>>();
         this.disposable = isDisposable;
-        checkFiles();
     }
 
     /**
@@ -287,9 +287,10 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     /**
      * <p>
      * Gets the {@link NutDao} of this {@link NutsHeap}. Caution, don't use its method like
-     * {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat)}, {@link NutDao#proxyUriFor(Nut)} or
-     * {@link NutDao#withRootPath(String)} but to the corresponding proxy methods in this class which check if the
-     * {@link NutDao} to actually use is not in one of the {@link NutsHeap heaps} that compose this {@link NutsHeap}.
+     * {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat, com.github.wuic.ProcessContext)},
+     * {@link NutDao#proxyUriFor(Nut)} or {@link NutDao#withRootPath(String)} but to the corresponding proxy methods
+     * in this class which check if the {@link NutDao} to actually use is not in one of the {@link NutsHeap heaps}
+     * that compose this {@link NutsHeap}.
      * </p>
      *
      * @return the {@link NutDao}
@@ -327,22 +328,26 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
     /**
      * <p>
-     * Delegates method of {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat)}.
+     * Delegates method of {@link NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat, com.github.wuic.ProcessContext)}
      * The DAO is picked from heap or its composition.
      * </p>
      *
      * @param nut the root nut
      * @param path the nut path to create
      * @param pathFormat the format
+     * @param processContext the process context
      * @return the new nut
      * @throws IOException if any I/O error occurs
      */
-    public List<Nut> create(final Nut nut, final String path, final NutDao.PathFormat pathFormat) throws IOException {
+    public List<Nut> create(final Nut nut,
+                            final String path,
+                            final NutDao.PathFormat pathFormat,
+                            final ProcessContext processContext) throws IOException {
         final NutsHeap heap = findHeapFor(nut);
         final List<Nut> retval;
 
         if (heap != null && heap.getNutDao() != null) {
-            retval = heap.getNutDao().create(path, pathFormat);
+            retval = heap.getNutDao().create(path, pathFormat, processContext);
 
             if (!retval.isEmpty()) {
                 // Check if a root path is appended to the nut name
@@ -402,9 +407,10 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * which ends with one of the possible {@link com.github.wuic.NutType#extensions extensions}.
      * </p>
      *
+     * @param processContext the process context
      * @throws IOException in I/O error case
      */
-    private void checkFiles() throws IOException {
+    public void checkFiles(final ProcessContext processContext) throws IOException {
         // Keep order with a linked data structure
         this.nuts = new ArrayList<Nut>();
 
@@ -414,7 +420,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         if (paths != null) {
             for (final String path : paths) {
                 created.remove(path);
-                final List<Nut> res = nutDao.create(path);
+                final List<Nut> res = nutDao.create(path, processContext);
                 nuts.addAll(res);
                 nutDao.observe(path, this);
 
@@ -540,7 +546,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
                 if (!retval) {
                     Logging.POLL.log("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
-                    checkFiles();
+                    checkFiles(null);
                     retval = notifyUpdateToListeners();
                 }
             }
@@ -618,7 +624,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             for (final Nut nut : nuts) {
                 // Nut has changed
                 if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
-                    checkFiles();
+                    checkFiles(null);
                     // We don't need to be notified anymore
                     return notifyUpdateToListeners();
                 }

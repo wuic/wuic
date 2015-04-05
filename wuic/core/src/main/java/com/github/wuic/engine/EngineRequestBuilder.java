@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
@@ -121,6 +122,11 @@ public final class EngineRequestBuilder {
     private boolean bestEffort;
 
     /**
+     * Process context.
+     */
+    private ProcessContext processContext;
+
+    /**
      * <p>
      * Builds a new instance with mandatory workflow ID and {@link NutsHeap}.
      * </p>
@@ -156,6 +162,7 @@ public final class EngineRequestBuilder {
         prefixCreatedNut = other.prefixCreatedNut;
         urlProviderFactory = other.urlProviderFactory;
         bestEffort = other.bestEffort;
+        processContext = other.processContext;
     }
 
     /**
@@ -329,6 +336,19 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
+     * Sets the process context.
+     * </p>
+     *
+     * @param pc the process context
+     * @return this
+     */
+    public EngineRequestBuilder processContext(final ProcessContext pc) {
+        processContext = pc;
+        return this;
+    }
+
+    /**
+     * <p>
      * Builds a bew instance. Default state is applied here if some attributes have not been initialized.
      * </p>
      *
@@ -481,5 +501,16 @@ public final class EngineRequestBuilder {
      */
     EngineType[] getSkip() {
         return skip;
+    }
+
+    /**
+     * <p>
+     * Gets the process context.
+     * </p>
+     *
+     * @return the process context
+     */
+    ProcessContext getProcessContext() {
+        return processContext;
     }
 }

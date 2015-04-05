@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -226,7 +227,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 // Timestamps not already retrieved
                 if (timestamp == null) {
                     try {
-                        timestamp = getVersionNumber(path).get();
+                        timestamp = getVersionNumber(path, null).get();
                         timestamps.put(path, timestamp);
                     } catch (IOException se) {
                         log.error("Unable to poll nut {}", path, se);
@@ -254,20 +255,21 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * <p>
      * If the {@link AbstractNutDao#contentBasedVersionNumber} value related to
      * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
-     * to compute the hash value. Howeber, it uses the last modification timestamp.
+     * to compute the hash value. However, it uses the last modification timestamp.
      * </p>
      *
+     * @param processContext the process context
      * @param path the nut's path
      * @return the version number
      * @throws IOException if version number could not be computed
      */
-    protected Future<Long> getVersionNumber(final String path) throws IOException {
+    protected Future<Long> getVersionNumber(final String path, final ProcessContext processContext) throws IOException {
         if (computeVersionAsynchronously) {
             log.debug("Computing version number asynchronously");
-            return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path));
+            return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path, processContext));
         } else {
             log.debug("Computing version number synchronously");
-            return new FutureLong(new VersionNumberCallable(path).call());
+            return new FutureLong(new VersionNumberCallable(path, processContext).call());
         }
     }
 
@@ -287,16 +289,16 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws IOException {
-        return AbstractNutDao.this.create(path, PathFormat.ANY);
+    public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
+        return AbstractNutDao.this.create(path, PathFormat.ANY, processContext);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String pathName, final PathFormat format) throws IOException {
-        final List<String> pathNames = computeRealPaths(pathName, format);
+    public List<Nut> create(final String pathName, final PathFormat format, final ProcessContext processContext) throws IOException {
+        final List<String> pathNames = computeRealPaths(pathName, format, processContext);
         final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
         for (final String p : pathNames) {
@@ -306,7 +308,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 continue;
             }
 
-            final Nut res = accessFor(p, type);
+            final Nut res = accessFor(p, type, processContext);
             res.setProxyUri(proxyUriFor(res));
 
             retval.add(res);
@@ -377,7 +379,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
-     * This class represents a modification of the the enclosing class behavior when the {@link NutDao#create(String)}
+     * This class represents a modification of the the enclosing class behavior when the {@link NutDao#create(String, ProcessContext)}
      * method is called. Each time this method is called, the given path is prefixed by a root path.
      * </p>
      *
@@ -426,16 +428,16 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public List<Nut> create(final String path) throws IOException {
-            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path));
+        public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
+            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), processContext);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public List<Nut> create(final String path, final PathFormat format) throws IOException {
-            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), format);
+        public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
+            return AbstractNutDao.this.create(IOUtils.mergePath(rootPath, path), format, processContext);
         }
 
         /**
@@ -482,16 +484,16 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws IOException {
-            return AbstractNutDao.this.newInputStream(path);
+        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+            return AbstractNutDao.this.newInputStream(path, processContext);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws IOException {
-            return AbstractNutDao.this.exists(path);
+        public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
+            return AbstractNutDao.this.exists(path, processContext);
         }
     }
 
@@ -503,13 +505,15 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      *
      * @param pathName the path access
      * @param format   the path format
+     * @param processContext the process context
      * @return the resulting real paths
      * @throws IOException if an I/O error occurs when creating the nut
      */
-    public List<String> computeRealPaths(final String pathName, final PathFormat format) throws IOException {
+    public List<String> computeRealPaths(final String pathName, final PathFormat format, final ProcessContext processContext)
+            throws IOException {
         if (!format.canBeRegex()) {
             try {
-                if (exists(pathName)) {
+                if (exists(pathName, processContext)) {
                     // Nut can be raised, return its path
                     return Arrays.asList(pathName);
                 }
@@ -589,10 +593,11 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      *
      * @param realPath the real path to use to access the nut
      * @param type     the path's type
+     * @param processContext the process context
      * @return the {@link Nut}
      * @throws IOException if an I/O error occurs while creating access
      */
-    protected abstract Nut accessFor(String realPath, NutType type) throws IOException;
+    protected abstract Nut accessFor(String realPath, NutType type, ProcessContext processContext) throws IOException;
 
     /**
      * {@inheritDoc}
@@ -617,15 +622,22 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         /**
          * The path corresponding to the resource.
          */
-        private String path;
+        private final String path;
+
+        /**
+         * The process context.
+         */
+        private final ProcessContext processContext;
 
         /**
          * Builds a new instance.
          *
          * @param p the path
+         * @param pc the process context
          */
-        private VersionNumberCallable(final String p) {
+        private VersionNumberCallable(final String p, final ProcessContext pc) {
             path = p;
+            processContext = pc;
         }
 
         /**
@@ -639,7 +651,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 InputStream is = null;
 
                 try {
-                    is = newInputStream(path);
+                    is = newInputStream(path, processContext);
                     final MessageDigest md = IOUtils.newMessageDigest();
                     final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
                     int offset;

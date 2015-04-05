@@ -38,11 +38,13 @@
 
 package com.github.wuic.servlet;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
@@ -250,12 +252,15 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     }
                 }
 
-                final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId);
+                final HttpServletRequest httpRequest = HttpServletRequest.class.cast(request);
+                final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId, new ServletProcessContext(httpRequest));
+                final ConvertibleNut htmlNut = nuts.get(0);
                 InputStream is = null;
-                final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(HttpServletRequest.class.cast(request));
+                final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(httpRequest);
+                final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
 
                 try {
-                    HttpRequestThreadLocal.INSTANCE.write(nuts.get(0), HttpServletResponse.class.cast(response));
+                    HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
                 } finally {
                     r.run();
                     IOUtils.close(is);
@@ -369,5 +374,13 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws IOException {
         return -1L;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ProcessContext getProcessContext() {
+        return null;
     }
 }

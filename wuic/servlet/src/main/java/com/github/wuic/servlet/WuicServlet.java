@@ -39,6 +39,7 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptorAdapter;
@@ -49,6 +50,7 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.UrlMatcher;
@@ -137,7 +139,7 @@ public class WuicServlet extends HttpServlet {
             final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(request);
 
             try {
-                writeNut(matcher.getWorkflowId(), matcher.getNutName(), response);
+                writeNut(matcher.getWorkflowId(), matcher.getNutName(), new ServletProcessContext(request), response);
             } catch (WorkflowNotFoundException wnfe) {
                 log.error("Workflow not found", wnfe);
                 response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
@@ -175,15 +177,19 @@ public class WuicServlet extends HttpServlet {
      *
      * @param workflowId the workflow ID
      * @param nutName the nut name
+     * @param processContext the process context
      * @param response the response
      * @throws WuicException if the nut is not found
      * @throws IOException if an I/O error occurs
      */
-    private void writeNut(final String workflowId, final String nutName, final HttpServletResponse response)
+    private void writeNut(final String workflowId,
+                          final String nutName,
+                          final ProcessContext processContext,
+                          final HttpServletResponse response)
             throws WuicException, IOException {
 
         // Get the nuts workflow
-        final ConvertibleNut nut = wuicFacade.runWorkflow(workflowId, nutName);
+        final ConvertibleNut nut = wuicFacade.runWorkflow(workflowId, nutName, processContext);
 
         // Nut found
         if (nut != null) {
@@ -227,6 +233,14 @@ public class WuicServlet extends HttpServlet {
         @Override
         protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             return -1L;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ProcessContext getProcessContext() {
+            return null;
         }
     }
 

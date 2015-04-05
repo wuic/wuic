@@ -38,6 +38,7 @@
 
 package com.github.wuic.xml;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
@@ -69,14 +70,20 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
     private Unmarshaller unmarshaller;
 
     /**
+     * The process context.
+     */
+    private final ProcessContext processContext;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
+     * @param processContext the process context
      * @throws JAXBException if an context can't be initialized
      */
-    public XmlContextBuilderConfigurator() throws JAXBException {
-        this(Boolean.TRUE);
+    public XmlContextBuilderConfigurator(final ProcessContext processContext) throws JAXBException {
+        this(Boolean.TRUE, processContext);
     }
 
     /**
@@ -84,13 +91,15 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * Creates a new instance.
      * </p>
      *
+     * @param pc the process context
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      * @throws JAXBException if an context can't be initialized
      */
-    public XmlContextBuilderConfigurator(final Boolean multiple) throws JAXBException {
+    public XmlContextBuilderConfigurator(final Boolean multiple, final ProcessContext pc) throws JAXBException {
         super(multiple);
         final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
         unmarshaller = jc.createUnmarshaller();
+        processContext = pc;
 
         try {
             final URL xsd = getClass().getResource("/wuic.xsd");
@@ -211,6 +220,14 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
                     workflow.getHeapIdPattern(),
                     workflow.getWorkflowTemplateId());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ProcessContext getProcessContext() {
+        return processContext;
     }
 
     /**

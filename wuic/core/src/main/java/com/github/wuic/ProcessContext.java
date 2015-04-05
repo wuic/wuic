@@ -36,81 +36,22 @@
  */
 
 
-package com.github.wuic.xml;
-
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.util.IOUtils;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+package com.github.wuic;
 
 /**
  * <p>
- * Represents a configurator based on XML read from an {@link URL}. Polling is supported thanks to the modification date
- * provided by the {@link URL} object.
+ * A request context is an object giving more information about the context in which a process is executed.
+ * For instance, operations could be run in a scheduled job, when the application starts or when an HTTP request is sent
+ * to a web container.
+ * </p>
+ *
+ * <p>
+ * This class should be specialized in order to give details that are specific to a particular context.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.2
+ * @since 0.5.2
  */
-public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
-
-    /**
-     * The {@link java.net.URL} pointing to the wuic.xml file.
-     */
-    private URL xmlFile;
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param wuicXml the wuic.xml file URL
-     * @throws javax.xml.bind.JAXBException if an context can't be initialized
-     */
-    public FileXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException {
-        super(null);
-
-        if (wuicXml == null) {
-            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration URL for WUIC is null"));
-        }
-
-        xmlFile = wuicXml;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getTag() {
-        return xmlFile.toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-        InputStream is = null;
-        try {
-            final URLConnection c = xmlFile.openConnection();
-            is = c.getInputStream();
-            return c.getLastModified();
-        } finally {
-            IOUtils.close(is);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
-        return (XmlWuicBean) unmarshaller.unmarshal(xmlFile);
-    }
+public class ProcessContext {
 }

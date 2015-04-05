@@ -100,7 +100,7 @@ public class JeeTest {
         public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
             try {
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).configure(
-                        new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+                        new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true, null));
             } catch (WuicException e) {
                 throw new RuntimeException(e);
             }
@@ -118,7 +118,7 @@ public class JeeTest {
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");
         final WebappNutDao dao = WebappNutDao.class.cast(builder.build());
         dao.setServletContext(server.getServletContext());
-        final List<Nut> nuts = dao.create("index.html");
+        final List<Nut> nuts = dao.create("index.html", null);
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());
         Assert.assertEquals("index.html", nuts.get(0).getInitialName());

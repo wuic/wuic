@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut.dao;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
 
 import java.io.IOException;
@@ -127,11 +128,12 @@ public interface NutDao {
      * </p>
      *
      * @param path the path representing the location of the nut(s)
+     * @param processContext the process context calling this method
      * @return the created nut(s)
      * @throws java.io.IOException if an I/O error occurs when creating the nut
-     * @see NutDao#create(String, NutDao.PathFormat)
+     * @see NutDao#create(String, com.github.wuic.nut.dao.NutDao.PathFormat, com.github.wuic.ProcessContext)
      */
-    List<Nut> create(String path) throws IOException;
+    List<Nut> create(String path, ProcessContext processContext) throws IOException;
 
     /**
      * <p>
@@ -144,10 +146,11 @@ public interface NutDao {
      *
      * @param path the path representing the location of the nut(s)
      * @param format the path format
+     * @param processContext the process context calling this method
      * @return the created nut(s)
      * @throws IOException if an I/O error occurs when creating the nut
      */
-    List<Nut> create(String path, PathFormat format) throws IOException;
+    List<Nut> create(String path, PathFormat format, ProcessContext processContext) throws IOException;
 
     /**
      * <p>
@@ -206,10 +209,11 @@ public interface NutDao {
      * </p>
      *
      * @param path the path to access
+     * @param processContext the process context calling this method
      * @return the stream
      * @throws IOException if stream could not be opened
      */
-    InputStream newInputStream(String path) throws IOException;
+    InputStream newInputStream(String path, ProcessContext processContext) throws IOException;
 
     /**
      * <p>
@@ -217,8 +221,9 @@ public interface NutDao {
      * </p>
      *
      * @param path the path the DAO should be able to resolve
+     * @param processContext the process context calling this method
      * @return {@code true} if path is resolved, {@code false} otherwise
      * @throws IOException if any I/O error occurs
      */
-    Boolean exists(String path) throws IOException;
+    Boolean exists(String path, ProcessContext processContext) throws IOException;
 }

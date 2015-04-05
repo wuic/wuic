@@ -38,6 +38,7 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.AbstractCacheEngine;
@@ -107,9 +108,10 @@ public class MemoryMapCacheEngineTest {
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
 
         final NutDao dao = Mockito.mock(NutDao.class);
-        Mockito.when(dao.create(Mockito.anyString())).thenReturn(Arrays.asList(nut));
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(nut));
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
+        heap.checkFiles(null);
 
         // Registers the InvalidateCache multiple time
         engine.parse(new EngineRequestBuilder("", heap).build());

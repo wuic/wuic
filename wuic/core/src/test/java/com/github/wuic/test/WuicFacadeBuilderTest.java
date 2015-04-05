@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
@@ -143,6 +144,11 @@ public class WuicFacadeBuilderTest {
             @Override
             protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 return -1L;
+            }
+
+            @Override
+            public ProcessContext getProcessContext() {
+                return null;
             }
         }).contextPath("/foo").build();
 

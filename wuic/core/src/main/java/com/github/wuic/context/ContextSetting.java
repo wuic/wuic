@@ -38,6 +38,7 @@
 
 package com.github.wuic.context;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.nut.filter.NutFilter;
@@ -57,6 +58,11 @@ import java.util.Map;
  * @since 0.4.0
  */
 public class ContextSetting {
+
+    /**
+     * The process context.
+     */
+    private ProcessContext processContext;
 
     /**
      * All DAO registration with their {@link com.github.wuic.config.ObjectBuilder} associated to their builder ID.
@@ -93,6 +99,28 @@ public class ContextSetting {
      * All {@link ContextInterceptor interceptors}.
      */
     private List<ContextInterceptor> interceptorsList = new ArrayList<ContextInterceptor>();
+
+    /**
+     * <p>
+     * Sets the process context.
+     * </p>
+     *
+     * @param pc the process context
+     */
+    public void setProcessContext(final ProcessContext pc) {
+        this.processContext = pc;
+    }
+
+    /**
+     * <p>
+     * Gets the process context.
+     * </p>
+     *
+     * @return the process context
+     */
+    public ProcessContext getProcessContext() {
+        return processContext;
+    }
 
     /**
      * <p>

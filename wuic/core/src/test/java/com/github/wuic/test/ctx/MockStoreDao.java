@@ -39,6 +39,7 @@
 
 package com.github.wuic.test.ctx;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -81,7 +82,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws IOException {
+    public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
         return Collections.emptyList();
     }
 
@@ -89,7 +90,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws IOException {
+    public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
         return null;
     }
 
@@ -135,7 +136,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws IOException {
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 
@@ -143,7 +144,7 @@ public class MockStoreDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws IOException {
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 }

@@ -39,6 +39,7 @@
 package com.github.wuic.test.dao;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -168,13 +169,13 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        protected Nut accessFor(final String realPath, final NutType type) throws IOException {
+        protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
             final ConvertibleNut mock = mock(ConvertibleNut.class);
             when(mock.getName()).thenReturn(realPath);
             when(mock.getInitialName()).thenReturn(realPath);
 
             try {
-                when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath).get()));
+                when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath, processContext).get()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -200,7 +201,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws IOException {
+        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
             return new ByteArrayInputStream(BYTES);
         }
 
@@ -208,7 +209,7 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws IOException {
+        public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
             return true;
         }
     }
@@ -225,9 +226,9 @@ public class AbstractNutDaoTest {
         final NutDao third = new MockNutDaoTest(false);
         final NutDao fourth = new MockNutDaoTest(false);
 
-        Assert.assertEquals(first.create("").get(0).getVersionNumber().get(), second.create("").get(0).getVersionNumber().get());
-        Assert.assertNotEquals(second.create("").get(0).getVersionNumber().get(), third.create("").get(0).getVersionNumber().get());
-        Assert.assertEquals(third.create("").get(0).getVersionNumber().get(), fourth.create("").get(0).getVersionNumber().get());
+        Assert.assertEquals(first.create("", null).get(0).getVersionNumber().get(), second.create("", null).get(0).getVersionNumber().get());
+        Assert.assertNotEquals(second.create("", null).get(0).getVersionNumber().get(), third.create("", null).get(0).getVersionNumber().get());
+        Assert.assertEquals(third.create("", null).get(0).getVersionNumber().get(), fourth.create("", null).get(0).getVersionNumber().get());
     }
 
     /**
@@ -239,7 +240,7 @@ public class AbstractNutDaoTest {
     public void pollSchedulingTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final NutDao dao = new MockNutDaoTest(1);
-        dao.create("");
+        dao.create("", null);
 
         try {
             final long start = System.currentTimeMillis();
@@ -301,7 +302,7 @@ public class AbstractNutDaoTest {
         final MockNutDaoTest dao = new MockNutDaoTest(1);
 
         try {
-            dao.create("");
+            dao.create("", null);
             dao.observe("", new NutDaoListener() {
                 @Override
                 public boolean polling(final String p, final Set<String> paths) {
@@ -351,8 +352,8 @@ public class AbstractNutDaoTest {
         final MockNutDaoTest dao = new MockNutDaoTest(1);
 
         try {
-            dao.create("1");
-            dao.create("2");
+            dao.create("1", null);
+            dao.create("2", null);
 
             final NutDaoListener listener = new NutDaoListener() {
                 @Override
@@ -467,7 +468,7 @@ public class AbstractNutDaoTest {
                     @Override
                     public void run() {
                         try {
-                            a.create("a");
+                            a.create("a", null);
                             a.observe("a", new NutDaoListener() {
                                 @Override
                                 public boolean polling(final String p, final Set<String> paths) {
@@ -489,7 +490,7 @@ public class AbstractNutDaoTest {
                                     return this;
                                 }
                             });
-                            b.create("b");
+                            b.create("b", null);
                             b.observe("b", new NutDaoListener() {
                                 @Override
                                 public boolean polling(final String p, final Set<String> paths) {
@@ -513,12 +514,12 @@ public class AbstractNutDaoTest {
                             });
 
                             a.setPollingInterval(1);
-                            a.computeRealPaths("", NutDao.PathFormat.ANY);
+                            a.computeRealPaths("", NutDao.PathFormat.ANY, null);
                             a.proxyUriFor(nut);
                             a.run();
 
                             b.setPollingInterval(1);
-                            b.computeRealPaths("", NutDao.PathFormat.ANY);
+                            b.computeRealPaths("", NutDao.PathFormat.ANY, null);
                             b.proxyUriFor(nut);
                             b.run();
 

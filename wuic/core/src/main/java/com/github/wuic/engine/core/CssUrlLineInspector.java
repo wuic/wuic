@@ -301,7 +301,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             final List<Nut> nuts;
             try {
                 // Extract the nut
-                nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE);
+                nuts = heap.create(originalNut, referencedPath, NutDao.PathFormat.RELATIVE_FILE, request.getProcessContext());
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
                 return null;

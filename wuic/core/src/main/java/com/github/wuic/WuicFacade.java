@@ -46,7 +46,6 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -263,21 +262,26 @@ public final class WuicFacade {
      *
      * <p>
      * The path should be used with the name of one nut returned when invoking
-     * {@link #runWorkflow(String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
+     * {@link #runWorkflow(String, UrlProviderFactory, ProcessContext, com.github.wuic.engine.EngineType...)}.
      * </p>
      * 
      * @param id the workflow ID
      * @param path the requested path, {@code null} to retrieve all paths
      * @param urlProviderFactory the URL provider
+     * @param processContext the process context
      * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
-    public synchronized ConvertibleNut runWorkflow(final String id, final String path, final UrlProviderFactory urlProviderFactory, final EngineType ... skip)
+    public synchronized ConvertibleNut runWorkflow(final String id,
+                                                   final String path,
+                                                   final UrlProviderFactory urlProviderFactory,
+                                                   final ProcessContext processContext,
+                                                   final EngineType ... skip)
             throws WuicException {
         try {
             final long start = beforeRunWorkflow(id);
-            final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, skip);
+            final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, processContext, skip);
             Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
             return retval;
         } catch (IOException ioe) {
@@ -293,18 +297,22 @@ public final class WuicFacade {
      *
      * <p>
      * The path should be used with the name of nuts returned when invoking
-     * {@link WuicFacade#runWorkflow(String, String, com.github.wuic.util.UrlProviderFactory, com.github.wuic.engine.EngineType...)}.
+     * {@link WuicFacade#runWorkflow(String, String, UrlProviderFactory, ProcessContext, EngineType...)}.
      * </p>
      *
      * @param id the workflow ID
      * @param path the requested path, {@code null} to retrieve all paths
+     * @param processContext the process context
      * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
-    public synchronized ConvertibleNut runWorkflow(final String id, final String path, final EngineType ... skip)
+    public synchronized ConvertibleNut runWorkflow(final String id,
+                                                   final String path,
+                                                   final ProcessContext processContext,
+                                                   final EngineType ... skip)
             throws WuicException {
-        return runWorkflow(id, path, UrlUtils.urlProviderFactory(), skip);
+        return runWorkflow(id, path, UrlUtils.urlProviderFactory(), processContext, skip);
     }
 
     /**
@@ -314,16 +322,18 @@ public final class WuicFacade {
      *
      * @param id the workflow ID
      * @param urlProviderFactory the URL provider
+     * @param processContext the process context
      * @param skip the engine types
      * @return the processed nuts
      * @throws WuicException if the context can't be processed
      */
     public synchronized List<ConvertibleNut> runWorkflow(final String id,
                                                          final UrlProviderFactory urlProviderFactory,
+                                                         final ProcessContext processContext,
                                                          final EngineType ... skip)
             throws WuicException {
         final long start = beforeRunWorkflow(id);
-        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(context.process(config.getContextPath(), id, urlProviderFactory, skip));
+        final List<ConvertibleNut> retval = context.process(config.getContextPath(), id, urlProviderFactory, processContext, skip);
         Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
@@ -340,7 +350,23 @@ public final class WuicFacade {
      * @throws WuicException if the context can't be processed
      */
     public synchronized List<ConvertibleNut> runWorkflow(final String id, final EngineType ... skip) throws WuicException {
-        return runWorkflow(id, UrlUtils.urlProviderFactory(), skip);
+        return runWorkflow(id, null, skip);
+    }
+
+    /**
+     * <p>
+     * Gets the nuts processed by the given workflow identified by the specified ID inside a specified context.
+     * </p>
+     *
+     * @param id the workflow ID
+     * @param skip the engine types
+     * @param processContext the process context
+     * @return the processed nuts
+     * @throws WuicException if the context can't be processed
+     */
+    public synchronized List<ConvertibleNut> runWorkflow(final String id, final ProcessContext processContext, final EngineType ... skip)
+            throws WuicException {
+        return runWorkflow(id, UrlUtils.urlProviderFactory(), processContext, skip);
     }
 
     /**

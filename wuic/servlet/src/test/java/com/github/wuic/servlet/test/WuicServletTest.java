@@ -99,7 +99,7 @@ public class WuicServletTest {
         public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
             try {
                 WuicServletContextListener.getWuicFacade(server.getServletContext())
-                        .configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true));
+                        .configure(new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true, null));
             } catch (WuicException e) {
                 throw new RuntimeException(e);
             }

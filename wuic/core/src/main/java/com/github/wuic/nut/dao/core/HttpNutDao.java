@@ -40,6 +40,7 @@ package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.IntegerConfigParam;
@@ -136,11 +137,11 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final NutType type) throws IOException {
+    public Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
         final String p = IOUtils.mergePath(baseUrl, IOUtils.mergePath(StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), realPath))));
         log.debug("Opening HTTP access for {}", p);
         final URL url = new URL(p);
-        return new HttpNut(realPath, url, type, getVersionNumber(realPath));
+        return new HttpNut(realPath, url, type, getVersionNumber(realPath, processContext));
     }
 
     /**
@@ -166,7 +167,7 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws IOException {
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return new URL(path).openStream();
     }
 
@@ -174,7 +175,7 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws IOException {
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         final String url = IOUtils.mergePath(baseUrl, getBasePath(), path);
         HttpURLConnection.setFollowRedirects(false);
 

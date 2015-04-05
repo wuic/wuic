@@ -39,10 +39,13 @@
 package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
@@ -99,8 +102,13 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
         try {
             // Let's load the wuic.xml file and configure the builder with it
             final BodyContent content = getBodyContent();
-            wuicFacade.configure(new ReaderXmlContextBuilderConfigurator(content.getReader(), toString(),
-                    wuicFacade.allowsMultipleConfigInTagSupport()));
+            final ContextBuilderConfigurator c =  new ReaderXmlContextBuilderConfigurator(
+                    content.getReader(),
+                    toString(),
+                    wuicFacade.allowsMultipleConfigInTagSupport(),
+                    new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
+
+            wuicFacade.configure(c);
             content.clearBody();
         } catch (WuicException we) {
             throw new JspException(we);

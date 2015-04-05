@@ -1024,6 +1024,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
             final String heapId = StringUtils.toHexString(hash);
             heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, proxyNutDao, heapId);
+            heap.checkFiles(request.getProcessContext());
             heap.addObserver(request.getHeap());
             NutsHeap.ListenerHolder.INSTANCE.add(heap);
         }

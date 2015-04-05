@@ -38,6 +38,7 @@
 
 package com.github.wuic.context;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,7 +166,7 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
 
         try {
             ctxBuilder.clearTag(getTag());
-            ctxBuilder.tag(getTag());
+            ctxBuilder.tag(getTag()).processContext(getProcessContext());
 
             // Update polling
             final int polling = internalConfigure(ctxBuilder);
@@ -208,4 +209,13 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * @return the tag
      */
     public abstract String getTag();
+
+    /**
+     * <p>
+     * Gets the process context associated to the tag while configuring.
+     * </p>
+     *
+     * @return the process context
+     */
+    public abstract ProcessContext getProcessContext();
 }

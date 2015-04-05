@@ -39,6 +39,7 @@
 package com.github.wuic.context;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
@@ -268,6 +269,14 @@ public class ContextBuilder extends Observable {
             // Never poll
             return 1L;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ProcessContext getProcessContext() {
+            return null;
+        }
     }
 
     /**
@@ -333,6 +342,14 @@ public class ContextBuilder extends Observable {
         protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             // Never poll
             return 1L;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ProcessContext getProcessContext() {
+            return null;
         }
     }
 
@@ -411,7 +428,7 @@ public class ContextBuilder extends Observable {
         /**
          * <p>
          * Notifies the {@link NutsHeap} listeners if the object has been already created with a call to
-         * {@link #getHeap(String, java.util.Map, java.util.Map)}. This will help to free any resource.
+         * {@link #getHeap(String, java.util.Map, java.util.Map, ContextSetting)} . This will help to free any resource.
          * </p>
          */
         void free() {
@@ -441,10 +458,15 @@ public class ContextBuilder extends Observable {
          * @param id the ID for this heap
          * @param daoCollection a collection of DAOs where {@link #ndbId} will be resolved
          * @param heapCollection a collection of heap where {@link #heapIds} will be resolved
+         * @param contextSetting the setting this registration belongs to
          * @return the heap
          * @throws IOException if creation fails
          */
-        NutsHeap getHeap(final String id, final Map<String, NutDao> daoCollection, final Map<String, NutsHeap> heapCollection) throws IOException{
+        NutsHeap getHeap(final String id,
+                         final Map<String, NutDao> daoCollection,
+                         final Map<String, NutsHeap> heapCollection,
+                         final ContextSetting contextSetting)
+                throws IOException {
             free();
             NutDao dao = null;
 
@@ -470,6 +492,8 @@ public class ContextBuilder extends Observable {
             } else {
                 heap = new NutsHeap(factory, pathList, disposable, dao, id);
             }
+
+            heap.checkFiles(contextSetting.getProcessContext());
 
             for (final HeapListener l : listeners) {
                 heap.addObserver(l);
@@ -679,13 +703,15 @@ public class ContextBuilder extends Observable {
          * @param identifier the workflow ID
          * @param daoCollection a collection of DAO for template creation
          * @param heapCollection a collection of heap for workflow creation
+         * @param contextSetting the setting this registration belongs to
          * @return the new workflow
          * @throws WorkflowTemplateNotFoundException if the workflow template does not exists
          * @throws IOException if heap creation fails
          */
         Map<String, Workflow> getWorkflowMap(final String identifier,
                                              final Map<String, NutDao> daoCollection,
-                                             final Map<String, NutsHeap> heapCollection)
+                                             final Map<String, NutsHeap> heapCollection,
+                                             final ContextSetting contextSetting)
                 throws WorkflowTemplateNotFoundException, IOException {
             final WorkflowTemplate template = taggedSettings.getWorkflowTemplate(workflowTemplateId, daoCollection);
             final Map<String, Workflow> retval = new HashMap<String, Workflow>();
@@ -731,6 +757,7 @@ public class ContextBuilder extends Observable {
                 }
 
                 final NutsHeap heap = new NutsHeap(factory, null, null, heapIdPattern, array);
+                heap.checkFiles(contextSetting.getProcessContext());
                 retval.put(id, new Workflow(template.getHead(), chains, heap));
             }
 
@@ -894,13 +921,14 @@ public class ContextBuilder extends Observable {
             throw new IllegalStateException("Call tag() method first");
         }
 
-        final ContextSetting setting = taggedSettings.get(currentTag);
+        ContextSetting setting = taggedSettings.get(currentTag);
 
         if (setting == null) {
-            return new ContextSetting();
-        } else {
-            return setting;
+            setting = new ContextSetting();
+            taggedSettings.put(currentTag, setting);
         }
+
+        return setting;
     }
 
     /**
@@ -975,6 +1003,21 @@ public class ContextBuilder extends Observable {
         currentTag = tag;
         setChanged();
         notifyObservers(tag);
+        return this;
+    }
+
+    /**
+     * <p>
+     * Sets the process context for the setting associated to the current tag.
+     * </p>
+     *
+     * @param processContext the {@link ProcessContext}
+     * @return this builder
+     */
+    public ContextBuilder processContext(final ProcessContext processContext) {
+        getSetting().setProcessContext(processContext);
+        setChanged();
+        notifyObservers();
         return this;
     }
 

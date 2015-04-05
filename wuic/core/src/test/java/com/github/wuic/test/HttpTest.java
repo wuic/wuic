@@ -101,8 +101,8 @@ public class HttpTest extends WuicTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
-        Assert.assertTrue(dao.exists("images/reject-block.png"));
-        Assert.assertFalse(dao.exists("images/unknw.png"));
+        Assert.assertTrue(dao.exists("images/reject-block.png", null));
+        Assert.assertFalse(dao.exists("images/unknw.png", null));
     }
 
     /**
@@ -117,7 +117,7 @@ public class HttpTest extends WuicTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
-        final InputStream is = dao.create("images/reject-block.png").get(0).openStream();
+        final InputStream is = dao.create("images/reject-block.png", null).get(0).openStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
@@ -137,7 +137,7 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final Collection<ConvertibleNut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory());
+        final Collection<ConvertibleNut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory(), null);
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 

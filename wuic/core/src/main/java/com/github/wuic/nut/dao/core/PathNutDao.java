@@ -39,6 +39,7 @@
 package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.FilePathNut;
@@ -180,7 +181,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final NutType type) throws IOException {
+    public Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
         init();
 
         final Path p = baseDirectory.getChild(realPath);
@@ -190,7 +191,7 @@ public abstract class PathNutDao extends AbstractNutDao {
         }
 
         final FilePath fp = FilePath.class.cast(p);
-        return new FilePathNut(fp, realPath, type, getVersionNumber(realPath));
+        return new FilePathNut(fp, realPath, type, getVersionNumber(realPath, processContext));
     }
 
     /**
@@ -272,7 +273,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws IOException {
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         final Path p = resolve(path);
 
         if (!(p instanceof FilePath)) {
@@ -286,7 +287,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws IOException {
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         try {
             return resolve(path) != null;
         } catch (FileNotFoundException fne) {

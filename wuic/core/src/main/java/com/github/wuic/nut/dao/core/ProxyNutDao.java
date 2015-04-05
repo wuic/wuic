@@ -38,6 +38,7 @@
 
 package com.github.wuic.nut.dao.core;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -146,13 +147,13 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws IOException {
+    public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
         final Nut nut = proxyNut.get(path);
         List<Nut> retval;
 
         // Nut not mapped, delegate call
         if (nut == null) {
-            retval = getNutDao(path).create(path);
+            retval = getNutDao(path).create(path, processContext);
         } else {
             retval = Arrays.asList(nut);
         }
@@ -164,13 +165,13 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws IOException {
+    public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
         final Nut nut = proxyNut.get(path);
         List<Nut> retval;
 
         // Nut not mapped, delegate call
         if (nut == null) {
-            retval = getNutDao(path).create(path, format);
+            retval = getNutDao(path).create(path, format, processContext);
         } else {
             retval = Arrays.asList(nut);
         }
@@ -222,12 +223,12 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws IOException {
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         final Nut nut = proxyNut.get(path);
 
         // Path not mapped, call delegate
         if (nut == null) {
-            return delegate.newInputStream(path);
+            return delegate.newInputStream(path, processContext);
         } else {
             return nut.openStream();
         }
@@ -237,7 +238,7 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws IOException {
-        return delegate.exists(path);
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
+        return delegate.exists(path, processContext);
     }
 }

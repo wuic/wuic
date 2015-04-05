@@ -93,7 +93,7 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withoutAggregation() throws Exception {
-        final List<ConvertibleNut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(3, nuts.size());
         assertOneReference(nuts);
     }
@@ -107,7 +107,7 @@ public class ImageAggregatorEngineTest {
      */
     @Test
     public void withAggregation() throws Exception {
-        final List<ConvertibleNut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory());
+        final List<ConvertibleNut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(1, nuts.size());
         assertOneReference(nuts);
     }

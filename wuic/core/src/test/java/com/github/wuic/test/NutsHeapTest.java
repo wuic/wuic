@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
@@ -120,7 +121,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        protected Nut accessFor(final String realPath, final NutType type) throws IOException {
+        protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
             final Nut retval = Mockito.mock(Nut.class);
             Mockito.when(retval.getInitialName()).thenReturn(realPath);
             Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
@@ -140,7 +141,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path) throws IOException {
+        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
             return null;
         }
 
@@ -148,7 +149,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public Boolean exists(final String path) throws IOException {
+        public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
             return null;
         }
     }
@@ -164,7 +165,7 @@ public class NutsHeapTest {
     public void illegalAbsoluteNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("/000/hey.js", 1L);
-        new NutsHeap(this, Arrays.asList(".*"), dao, "");
+        new NutsHeap(this, Arrays.asList(".*"), dao, "").checkFiles(null);
     }
 
     /**
@@ -178,7 +179,7 @@ public class NutsHeapTest {
     public void illegalRelativeNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("000/hey.js", 1L);
-        new NutsHeap(this, Arrays.asList(".*"), dao, "");
+        new NutsHeap(this, Arrays.asList(".*"), dao, "").checkFiles(null);
     }
 
     /**
@@ -193,6 +194,7 @@ public class NutsHeapTest {
         final MockNutDao dao = new MockNutDao(1);
         dao.mockPaths.put("hey.js", 1L);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "");
+        heap.checkFiles(null);
         final AtomicInteger count = new AtomicInteger();
 
         heap.addObserver(new HeapListener() {
@@ -233,14 +235,17 @@ public class NutsHeapTest {
         final MockNutDao firstDao = new MockNutDao(1);
         firstDao.mockPaths.put("1.js", 1L);
         final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList(".*"), firstDao, "");
+        firstCompo.checkFiles(null);
         final MockNutDao secondDao = new MockNutDao(1);
         secondDao.mockPaths.put("2.js", 1L);
         final NutsHeap secondCompo = new NutsHeap(this, Arrays.asList(".*"), secondDao, "");
+        secondCompo.checkFiles(null);
 
         final MockNutDao dao = new MockNutDao(1);
         dao.mockPaths.put("hey.js", 1L);
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "", firstCompo, secondCompo);
+        heap.checkFiles(null);
         final AtomicInteger count = new AtomicInteger();
 
         heap.addObserver(new HeapListener() {
@@ -301,7 +306,7 @@ public class NutsHeapTest {
              * {@inheritDoc}
              */
             @Override
-            protected Nut accessFor(final String realPath, final NutType type) throws IOException {
+            protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
                 final Nut retval = Mockito.mock(Nut.class);
                 Mockito.when(retval.getInitialName()).thenReturn(realPath);
                 Mockito.when(retval.getVersionNumber()).thenReturn(new FutureLong(getLastUpdateTimestampFor(realPath)));
@@ -313,7 +318,7 @@ public class NutsHeapTest {
              * {@inheritDoc}
              */
             @Override
-            public InputStream newInputStream(final String path) throws IOException {
+            public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
                 return null;
             }
 
@@ -321,7 +326,7 @@ public class NutsHeapTest {
              * {@inheritDoc}
              */
             @Override
-            public Boolean exists(final String path) throws IOException {
+            public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
                 return null;
             }
 
@@ -336,7 +341,8 @@ public class NutsHeapTest {
 
         try {
             final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList("a", "b"), dao, "");
-            firstCompo.create(firstCompo.getNuts().get(0), "c", NutDao.PathFormat.ANY);
+            firstCompo.checkFiles(null);
+            firstCompo.create(firstCompo.getNuts().get(0), "c", NutDao.PathFormat.ANY, null);
             final CountDownLatch latch1 = new CountDownLatch(1);
             final CountDownLatch latch2 = new CountDownLatch(1);
             patterns.put("b", Arrays.asList("c.js", "d.js"));
@@ -373,7 +379,7 @@ public class NutsHeapTest {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("hey.js", 1L);
         dao.mockPaths.put("hey.css", 1L);
-        new NutsHeap(this, Arrays.asList(""), dao, "");
+        new NutsHeap(this, Arrays.asList(""), dao, "").checkFiles(null);
     }
 
     /**
@@ -383,7 +389,7 @@ public class NutsHeapTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void noPathTest() throws IOException {
-        new NutsHeap(this, Arrays.asList(""), new MockNutDao(-1), "");
+        new NutsHeap(this, Arrays.asList(""), new MockNutDao(-1), "").checkFiles(null);
         Assert.fail();
     }
 
@@ -399,6 +405,7 @@ public class NutsHeapTest {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("1.js", 1L);
         NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "");
+        heap.checkFiles(null);
         final ReferenceQueue queue = new ReferenceQueue();
         final WeakReference ref = new WeakReference(heap, queue);
 

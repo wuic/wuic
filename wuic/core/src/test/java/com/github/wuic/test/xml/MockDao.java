@@ -1,6 +1,7 @@
 package com.github.wuic.test.xml;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.nut.ConvertibleNut;
@@ -53,15 +54,15 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path) throws IOException {
-        return create(path, null);
+    public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
+        return create(path, null, processContext);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<Nut> create(final String path, final PathFormat format) throws IOException {
+    public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
         final ConvertibleNut nut = mock(ConvertibleNut.class);
         when(nut.getInitialNutType()).thenReturn(NutType.CSS);
         when(nut.getNutType()).thenReturn(NutType.CSS);
@@ -116,7 +117,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path) throws IOException {
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 
@@ -124,7 +125,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path) throws IOException {
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 }

@@ -36,85 +36,55 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.jee;
 
 import com.github.wuic.ProcessContext;
-import com.github.wuic.exception.WuicException;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.IOException;
-import java.io.Reader;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>
- * Represents a configurator based on XML read from a {@link Reader}. Polling is not supported by this kind of
- * configurator.
+ * A {@link ProcessContext} created in a {@link javax.servlet.http.HttpServletRequest} execution scope.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.2
+ * @since 0.5.2
  */
-public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
+public class ServletProcessContext extends ProcessContext {
 
     /**
-     * The tag.
+     * The wrapped request.
      */
-    private String tag;
-
-    /**
-     * The {@link  Reader} pointing to the XML stream.
-     */
-    private Reader reader;
+    private final HttpServletRequest httpServletRequest;
 
     /**
      * <p>
-     * Creates a new instance.
+     * Builds a new instance with a {@link HttpServletRequest request} to wrap.
      * </p>
      *
-     * @param r the reader to XML
-     * @param t the tag
-     * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
-     * @param processContext the process context
-     * @throws JAXBException if an context can't be initialized
+     * @param request the request to wrap
      */
-    public ReaderXmlContextBuilderConfigurator(final Reader r,
-                                               final String t,
-                                               final Boolean multiple,
-                                               final ProcessContext processContext)
-            throws JAXBException {
-        super(multiple, processContext);
+    public ServletProcessContext(final HttpServletRequest request) {
+        httpServletRequest = request;
+    }
 
-        if (r == null) {
-            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration reader for WUIC is null"));
-        }
-
-        reader = r;
-        tag = t;
+    /**
+     * <p>
+     * Gets the wrapped request.
+     * </p>
+     *
+     * @return the request
+     */
+    public HttpServletRequest getHttpServletRequest() {
+        return httpServletRequest;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getTag() {
-        return tag;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-        return -1L;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
-        return (XmlWuicBean) unmarshaller.unmarshal(reader);
+    public String toString() {
+        return String.format("ProcessContext[request=%s]", httpServletRequest);
     }
 }

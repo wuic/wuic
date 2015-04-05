@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.nut;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class NutUtilTest {
         final NutDao delegate = Mockito.mock(NutDao.class);
         final Nut delegateNut = Mockito.mock(Nut.class);
         Mockito.when(delegateNut.getInitialName()).thenReturn("delegate");
-        Mockito.when(delegate.create(Mockito.anyString())).thenReturn(Arrays.asList(delegateNut));
+        Mockito.when(delegate.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(delegateNut));
 
         final Nut proxyNut = Mockito.mock(Nut.class);
         Mockito.when(proxyNut.getInitialName()).thenReturn("nut");
@@ -83,22 +84,22 @@ public class NutUtilTest {
         final NutDao proxyDao = Mockito.mock(NutDao.class);
         final Nut proxyDaoNut = Mockito.mock(Nut.class);
         Mockito.when(proxyDaoNut.getInitialName()).thenReturn("dao");
-        Mockito.when(proxyDao.create(Mockito.anyString())).thenReturn(Arrays.asList(proxyDaoNut));
+        Mockito.when(proxyDao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(proxyDaoNut));
 
         final ProxyNutDao proxy = new ProxyNutDao("", delegate);
         proxy.addRule("nut", proxyNut);
         proxy.addRule("dao", proxyDao);
 
-        Assert.assertNotNull(proxy.create("delegate"));
-        Assert.assertEquals(1, proxy.create("delegate").size());
-        Assert.assertEquals("delegate", proxy.create("delegate").get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("delegate", null, null));
+        Assert.assertEquals(1, proxy.create("delegate", null, null).size());
+        Assert.assertEquals("delegate", proxy.create("delegate", null, null).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("dao"));
-        Assert.assertEquals(1, proxy.create("dao").size());
-        Assert.assertEquals("dao", proxy.create("dao").get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("dao", null, null));
+        Assert.assertEquals(1, proxy.create("dao", null, null).size());
+        Assert.assertEquals("dao", proxy.create("dao", null, null).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("nut"));
-        Assert.assertEquals(1, proxy.create("nut").size());
-        Assert.assertEquals("nut", proxy.create("nut").get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("nut", null, null));
+        Assert.assertEquals(1, proxy.create("nut", null, null).size());
+        Assert.assertEquals("nut", proxy.create("nut", null, null).get(0).getInitialName());
     }
 }

@@ -434,13 +434,13 @@ public class TaggedSettings {
             // The composite heap must be read after the standard heap
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (!heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap));
+                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, setting));
                 }
             }
 
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap));
+                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, setting));
                 }
             }
         }
@@ -465,7 +465,7 @@ public class TaggedSettings {
         // Add all specified workflow
         for (final ContextSetting setting : taggedSettings.values()) {
             for (final Map.Entry<String, ContextBuilder.WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
-                workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap, heapMap));
+                workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap, heapMap, setting));
             }
         }
 

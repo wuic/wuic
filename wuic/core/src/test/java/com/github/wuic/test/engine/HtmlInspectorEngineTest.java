@@ -116,6 +116,7 @@ public class HtmlInspectorEngineTest {
     public void parseTest() throws Exception {
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
+        heap.checkFiles(null);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
@@ -295,6 +296,7 @@ public class HtmlInspectorEngineTest {
     public void heapListenerHolderTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
+        heap.checkFiles(null);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
