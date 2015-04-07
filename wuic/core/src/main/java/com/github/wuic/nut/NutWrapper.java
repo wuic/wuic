@@ -211,4 +211,20 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     public Boolean isCompressed() {
         return wrapped.isCompressed();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSubResource() {
+        return wrapped.isSubResource();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setIsSubResource(final boolean subResource) {
+        wrapped.setIsSubResource(subResource);
+    }
 }

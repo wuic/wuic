@@ -204,6 +204,8 @@ public abstract class AbstractNut implements Nut {
         return getInitialName().hashCode();
     }
 
+
+
     /**
      * <p>
      * Sets internal version number.

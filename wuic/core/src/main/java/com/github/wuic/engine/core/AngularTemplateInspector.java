@@ -62,6 +62,10 @@ import java.util.regex.Pattern;
  * An AngularJS support that detects template URL.
  * </p>
  *
+ * <p>
+ * A template is not considered as a sub resource as angular loads it only when needed.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.1
@@ -135,6 +139,10 @@ public class AngularTemplateInspector extends LineInspector {
             replacement.append("templateUrl:").append('"');
             res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
             replacement.append('"');
+
+            for (final ConvertibleNut nut : res) {
+                nut.setIsSubResource(false);
+            }
         } else {
             log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
             replacement.append(matcher.group());

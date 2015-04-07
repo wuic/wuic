@@ -202,4 +202,23 @@ public interface ConvertibleNut extends Nut {
      * @return {@code true} if the nut is compressed, {@code false} otherwise
      */
     Boolean isCompressed();
+
+    /**
+     * <p>
+     * Indicates if this nut is a sub resource of the nut referencing it. If this is {@code true}, then this means that
+     * the referencer must loads this nut in order to work.
+     * </p>
+     *
+     * @return {@code true} if the nut is a sub resource, {@code false} otherwise
+     */
+    boolean isSubResource();
+
+    /**
+     * <p>
+     * Mark this nut as a sub resource or not.
+     * </p>
+     *
+     * @param subResource {@code true} if the nut is a sub resource, {@code false} otherwise
+     */
+    void setIsSubResource(boolean subResource);
 }

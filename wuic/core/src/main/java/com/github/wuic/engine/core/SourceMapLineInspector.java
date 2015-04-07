@@ -64,6 +64,10 @@ import java.util.regex.Pattern;
  * Otherwise, extracts the source map.
  * </p>
  *
+ * <p>
+ * A source map is not a sub resource since this is not required before loading a page.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.5
@@ -147,8 +151,12 @@ public class SourceMapLineInspector extends LineInspector {
 
         if (!nuts.isEmpty()) {
             res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
+
+            for (final ConvertibleNut nut : res) {
+                nut.setIsSubResource(false);
+            }
         } else {
-            log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
+            log.warn("{} is referenced as a relative file but not found in the DAO. Keeping same value...", referencedPath);
             replacement.append(matcher.group());
             res = null;
         }

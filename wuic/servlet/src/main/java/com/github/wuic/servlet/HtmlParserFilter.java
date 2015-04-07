@@ -53,6 +53,9 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlProviderFactory;
+import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +71,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,9 +154,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @param wuicFacade the WUIC facade
      */
     public HtmlParserFilter(final WuicFacade wuicFacade) {
-        this.workflowIds = new HashMap<String, String>();
-        this.wuicFacade = wuicFacade;
-        this.rootNuDaoBuilderId = ContextBuilder.getDefaultBuilderId(RequestDispatcherNutDao.class);
+        this(wuicFacade, ContextBuilder.getDefaultBuilderId(RequestDispatcherNutDao.class));
     }
 
     /**
@@ -163,8 +165,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * </p>
      */
     public HtmlParserFilter() {
-        workflowIds = new HashMap<String, String>();
-        rootNuDaoBuilderId = ContextBuilder.getDefaultBuilderId(RequestDispatcherNutDao.class);
+        this(null);
     }
 
     /**
@@ -258,6 +259,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 InputStream is = null;
                 final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(httpRequest);
                 final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
+                final UrlProvider provider = getUrlProvider(httpRequest).create(workflowId);
+                final Map<String, Boolean> collectedNut = collectReferenceNut(provider, htmlNut);
+
+                // Adds to the given response all referenced nuts URLs associated to the "Link" header.
+                for (final Map.Entry<String, Boolean> entry : collectedNut.entrySet()) {
+                    final String strategy = entry.getValue() ? "subresource" : "preload";
+                    httpResponse.addHeader("Link", String.format("<%s>; rel=%s", entry.getKey(), strategy));
+                }
 
                 try {
                     HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
@@ -269,6 +278,43 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Retrieves an optional {@link UrlProviderFactory} instance registered in request's attributes.
+     * </p>
+     *
+     * @param httpServletRequest the request
+     * @return the factory bound to the request, {@link com.github.wuic.util.UrlUtils.DefaultUrlProviderFactory} otherwise
+     */
+    private UrlProviderFactory getUrlProvider(final HttpServletRequest httpServletRequest) {
+        final Object attribute = httpServletRequest.getAttribute(UrlProviderFactory.class.getName());
+        return attribute != null ? UrlProviderFactory.class.cast(attribute) : new UrlUtils.DefaultUrlProviderFactory();
+    }
+
+    /**
+     * <p>
+     * Adds recursively all URLs from referenced nuts of the given nut in the returned list
+     * </p>
+     *
+     * @param urlProvider the provider
+     * @param nut the referenced nuts owner
+     * @return a map of all collected URLs associated to a boolean indicating if it refers a sub resource ot not
+     */
+    private Map<String, Boolean> collectReferenceNut(final UrlProvider urlProvider, final ConvertibleNut nut) {
+        if (nut.getReferencedNuts() != null && !nut.getReferencedNuts().isEmpty()) {
+            final Map<String, Boolean> retval = new HashMap<String, Boolean>();
+
+            for (final ConvertibleNut ref : nut.getReferencedNuts()) {
+                retval.put(urlProvider.getUrl(ref), ref.isSubResource());
+                retval.putAll(collectReferenceNut(urlProvider, ref));
+            }
+
+            return retval;
+        } else {
+            return Collections.emptyMap();
         }
     }
 

@@ -97,6 +97,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private Boolean compressed;
 
     /**
+     * Sub resource or not.
+     */
+    private boolean subResource;
+
+    /**
      * Converted nut.
      */
     private Nut wrap;
@@ -121,10 +126,12 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             setOriginalNuts(c.getOriginalNuts());
             referencedNuts = c.getReferencedNuts();
             setIsCompressed(c.isCompressed());
+            setIsSubResource(c.isSubResource());
         } else {
             setNutName(o.getInitialName());
             setNutType(o.getInitialNutType());
             setIsCompressed(Boolean.FALSE);
+            setIsSubResource(true);
         }
     }
 
@@ -146,6 +153,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         setNutName(name);
         setNutType(ft);
         setIsCompressed(c);
+        setIsSubResource(true);
     }
 
     /**
@@ -205,6 +213,19 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public final void setNutType(final NutType nutType) {
         this.nutType = nutType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final void setIsSubResource(final boolean sr) {
+        subResource = sr;
+    }
+
+    @Override
+    public final boolean isSubResource() {
+        return subResource;
     }
 
     /**

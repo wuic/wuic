@@ -108,10 +108,10 @@ public abstract class LineInspector {
      * @throws WuicException if processing fails
      */
     public static List<? extends ConvertibleNut> manageAppend(final ConvertibleNut nut,
-                                                     final StringBuilder replacement,
-                                                     final EngineRequest request,
-                                                     final NutsHeap heap,
-                                                     final EngineType ... skippedEngine) throws WuicException {
+                                                              final StringBuilder replacement,
+                                                              final EngineRequest request,
+                                                              final NutsHeap heap,
+                                                              final EngineType ... skippedEngine) throws WuicException {
         List<? extends ConvertibleNut> res;
 
         // If nut name is null, it means that nothing has been changed by the inspector
