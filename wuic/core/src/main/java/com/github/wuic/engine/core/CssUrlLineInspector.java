@@ -308,8 +308,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
             }
 
             if (nuts.isEmpty()) {
-                log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
-                replacement.append(referencedPath);
+                fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
                 res = Collections.emptyList();
             } else {
                 res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap, SKIPPED_ENGINE);

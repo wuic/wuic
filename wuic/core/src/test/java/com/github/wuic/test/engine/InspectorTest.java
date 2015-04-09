@@ -69,6 +69,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -94,10 +95,16 @@ public class InspectorTest {
      * @param builder the builder used to append the content
      * @param message failure message
      * @param count expected number of detected nut
+     * @param autoCreate creates a nut each time the engine calls the DAO
      * @return the transformation result
      * @throws Exception if test fails
      */
-    public String assertInspection(final String[][] collection, final StringBuilder builder, final String message, final int count, final Engine engine)
+    public String assertInspection(final String[][] collection,
+                                   final StringBuilder builder,
+                                   final String message,
+                                   final int count,
+                                   final Engine engine,
+                                   final boolean autoCreate)
             throws Exception {
         final AtomicInteger createCount = new AtomicInteger(0);
         final NutDao dao = Mockito.mock(NutDao.class);
@@ -109,6 +116,10 @@ public class InspectorTest {
              */
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                if (!autoCreate) {
+                    return Collections.emptyList();
+                }
+
                 final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
@@ -198,7 +209,7 @@ public class InspectorTest {
         // ignore comments
         builder.append("/*background: url('sprite5.png');*/");
         builder.append("/*background:\n url('sprite6.png');*/");
-        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, new CssInspectorEngine(true, "UTF-8")));
+        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, new CssInspectorEngine(true, "UTF-8"), true));
     }
 
     /**
@@ -232,7 +243,7 @@ public class InspectorTest {
         };
 
 
-        assertInspection(collection, sb, "Must handle font URLs.", collection.length, new CssInspectorEngine(true, "UTF-8"));
+        assertInspection(collection, sb, "Must handle font URLs.", collection.length, new CssInspectorEngine(true, "UTF-8"), true);
     }
 
     /**
@@ -252,7 +263,7 @@ public class InspectorTest {
                 new String[]{"// @sourceMappingURL=%s", "sourcemap4.js.map"}
         };
 
-        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"));
+        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"), true);
     }
 
     /**
@@ -287,7 +298,7 @@ public class InspectorTest {
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
                 collection.length - 2,
-                new JavascriptInspectorEngine(true, "UTF-8", ""));
+                new JavascriptInspectorEngine(true, "UTF-8", ""), true);
     }
 
     /**
@@ -312,7 +323,42 @@ public class InspectorTest {
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
                 collection.length,
-                new JavascriptInspectorEngine(true, "UTF-8", "fn('%s')"));
+                new JavascriptInspectorEngine(true, "UTF-8", "fn('%s')"), true);
+    }
+
+    /**
+     * <p>
+     * Test for URL rewrite when nut has not been found.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void angularFallbackTest() throws Exception {
+        String[][] collection = new String[][]{
+                new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
+                        ".directive('myCustomer', function() {\n" +
+                        "  return {\n" +
+                        "    templateUrl  : 'template.html'\n" +
+                        "  };\n" +
+                        "});", "my-customer.html"},
+                {"angular.module('docsTemplateUrlDirective2', [])\n" +
+                        ".directive('myCustomer2', function() {\n" +
+                        "  return {\n" +
+                        "    templateUrl  : 'template2.html?foo'\n" +
+                        "  };\n" +
+                        "});", "my-customer2.html"}
+        };
+
+        final String value = assertInspection(collection,
+                new StringBuilder(),
+                "Should create nuts for templateUrl urls.",
+                0,
+                new JavascriptInspectorEngine(true, "UTF-8", ""), false);
+
+        Assert.assertTrue(value.contains("template.html?versionNumber=1"));
+        Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
+
     }
 
     /**
@@ -341,7 +387,7 @@ public class InspectorTest {
                 new String[]{"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
         };
 
-        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, new CssInspectorEngine(true, "UTF-8"));
+        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, new CssInspectorEngine(true, "UTF-8"), true);
     }
 
     /**

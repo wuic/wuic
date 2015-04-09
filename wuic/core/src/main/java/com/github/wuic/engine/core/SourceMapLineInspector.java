@@ -50,8 +50,6 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NutUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -73,11 +71,6 @@ import java.util.regex.Pattern;
  * @since 0.4.5
  */
 public class SourceMapLineInspector extends LineInspector {
-
-    /**
-     * Logger.
-     */
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * The engine that uses this inspector.
@@ -156,8 +149,8 @@ public class SourceMapLineInspector extends LineInspector {
                 nut.setIsSubResource(false);
             }
         } else {
-            log.warn("{} is referenced as a relative file but not found in the DAO. Keeping same value...", referencedPath);
-            replacement.append(matcher.group());
+            replacement.append("sourceMappingURL=");
+            fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
             res = null;
         }
 

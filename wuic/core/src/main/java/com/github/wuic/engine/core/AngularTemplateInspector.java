@@ -49,8 +49,6 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -83,11 +81,6 @@ public class AngularTemplateInspector extends LineInspector {
     private static final String START_REGEX =
             String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s\\s*?\\:\\s*?",
                     QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL);
-
-    /**
-     * The logger.
-     */
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * <p>
@@ -134,20 +127,20 @@ public class AngularTemplateInspector extends LineInspector {
         }
 
         final List<? extends ConvertibleNut> res;
+        replacement.append("templateUrl:").append('"');
 
         if (!nuts.isEmpty()) {
-            replacement.append("templateUrl:").append('"');
             res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
-            replacement.append('"');
 
             for (final ConvertibleNut nut : res) {
                 nut.setIsSubResource(false);
             }
         } else {
-            log.warn("{} is referenced as a relative file but not found with in the DAO. Keeping same value...", referencedPath);
-            replacement.append(matcher.group());
+            fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
             res = null;
         }
+
+        replacement.append('"');
 
         return res;
     }

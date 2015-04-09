@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,7 +75,7 @@ public abstract class LineInspector {
     /**
      * Logger.
      */
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LineInspector.class);
 
     /**
      * The pattern.
@@ -90,7 +91,38 @@ public abstract class LineInspector {
      */
     public LineInspector(final Pattern p) {
         pattern = p;
-        logger.info("LineInspector {} will be inspected with pattern '{}'", getClass().getName(), p.toString());
+        LOGGER.info("LineInspector {} will be inspected with pattern '{}'", getClass().getName(), p.toString());
+    }
+
+    /**
+     * <p>
+     * When the nut resolution fails (no nut found), the path is keep in the source file. However, this method allows
+     * to append this path to a {@link StringBuilder} with a version number retrieved from the referencer in order to
+     * give a chance to evict client cache.
+     * </p>
+     *
+     * @param sb the string builder to append
+     * @param referencedPath the unresolved path
+     * @param originalNut the referencer with the version number
+     * @throws WuicException if version number resolution fails
+     */
+    public static void fallbackToVersionNumberInQueryString(final StringBuilder sb,
+                                                            final String referencedPath,
+                                                            final Nut originalNut) throws WuicException {
+
+        LOGGER.warn("{} is referenced as a relative file but it was not found with in the DAO. "
+                + "Keeping same value with the referencer version number in a query string to evict client cache.",
+                referencedPath);
+        try {
+            sb.append(referencedPath)
+                    .append(referencedPath.indexOf('?') == -1 ? '?' : '&')
+                    .append("versionNumber=")
+                    .append(originalNut.getVersionNumber().get());
+        } catch (ExecutionException ee) {
+            WuicException.throwWuicException(ee);
+        } catch (InterruptedException ie) {
+            WuicException.throwWuicException(ie);
+        }
     }
 
     /**
@@ -294,7 +326,7 @@ public abstract class LineInspector {
             this.convertibleNuts = convertibleNuts;
             this.referencer = referencer;
             this.endIndex = endIndex;
-            logger.debug("Statement between position {} and {} is referenced for replacement in referencer '{}'",
+            LOGGER.debug("Statement between position {} and {} is referenced for replacement in referencer '{}'",
                     startIndex, endIndex, referencer.getInitialName());
         }
 
