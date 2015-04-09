@@ -50,6 +50,11 @@ package com.github.wuic;
 public interface ApplicationConfig {
 
     /**
+     * The fixed version number.
+     */
+    String FIXED_VERSION_NUMBER = "c.g.wuic.fixedVersionNumber";
+
+    /**
      * Authorize WUIC to compute version number asynchronously or not.
      */
     String COMPUTE_VERSION_ASYNCHRONOUSLY = "c.g.wuic.computeVersionAsynchronously";

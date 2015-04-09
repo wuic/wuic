@@ -82,6 +82,7 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      * @param wildcard if the path should be considered as a wildcard or not
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
     @ConfigConstructor
     public DiskNutDao(@StringConfigParam(defaultValue = ".", propertyKey = BASE_PATH) final String base,
@@ -91,8 +92,10 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
                       @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
                       @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard,
                       @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
-                      @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously);
+                      @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+                      @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard,
+                new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
     }
 
     /**

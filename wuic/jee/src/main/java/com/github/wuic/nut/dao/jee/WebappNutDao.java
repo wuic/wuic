@@ -94,6 +94,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
      * @param wildcard if the path should be considered as a wildcard or not
      * @param contentBasedVersionNumber {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
     @ConfigConstructor
     public WebappNutDao(
@@ -103,9 +104,11 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.REGEX) final Boolean regex,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.WILDCARD) final Boolean wildcard,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
+            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
         // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
-        super(base, false, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously);
+        super(base, false, proxies, pollingSeconds, regex, wildcard,
+                new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
     }
 
     /**

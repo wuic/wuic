@@ -107,14 +107,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     private final AtomicInteger nextProxyIndex;
 
     /**
-     * Computes the version number from content or on timestamp.
+     * The version number management strategy.
      */
-    private Boolean contentBasedVersionNumber;
-
-    /**
-     * For version number computation.
-     */
-    private final Boolean computeVersionAsynchronously;
+    private final VersionNumberStrategy versionNumberStrategy;
 
     /**
      * <p>
@@ -125,15 +120,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
-     * @param contentBasedHash  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
-     * @param asynchronous      activates asynchronous version number computation
+     * @param vns               fixed version number
      */
     public AbstractNutDao(final String base,
                           final Boolean basePathAsSysProp,
                           final String[] proxies,
                           final int pollingSeconds,
-                          final Boolean contentBasedHash,
-                          final Boolean asynchronous) {
+                          final VersionNumberStrategy vns) {
         final String b = basePathAsSysProp ? System.getProperty(base) : base;
 
         if (b == null) {
@@ -142,10 +135,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
         }
 
+        versionNumberStrategy = vns;
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
-        contentBasedVersionNumber = contentBasedHash;
-        computeVersionAsynchronously = asynchronous;
         setPollingInterval(pollingSeconds);
         Disposer.INSTANCE.register(this);
     }
@@ -253,7 +245,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      * <p/>
      * <p>
-     * If the {@link AbstractNutDao#contentBasedVersionNumber} value related to
+     * If the {@link AbstractNutDao#versionNumberStrategy#contentBasedVersionNumber} value related to
      * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
      * to compute the hash value. However, it uses the last modification timestamp.
      * </p>
@@ -264,7 +256,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @throws IOException if version number could not be computed
      */
     protected Future<Long> getVersionNumber(final String path, final ProcessContext processContext) throws IOException {
-        if (computeVersionAsynchronously) {
+        if (versionNumberStrategy.getFixedVersionNumber() != null) {
+            return new FutureLong(versionNumberStrategy.getFixedVersionNumber());
+        } else if (versionNumberStrategy.getComputeVersionAsynchronously()) {
             log.debug("Computing version number asynchronously");
             return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path, processContext));
         } else {
@@ -375,6 +369,93 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     @Override
     public NutDao withRootPath(final String rootPath) {
         return new WithRootPathNutDao(rootPath);
+    }
+
+    /**
+     * <p>
+     * This class wraps all information required by the {@link AbstractNutDao} regarding version number management.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.4.1
+     */
+    public static final class VersionNumberStrategy {
+
+        /**
+         * Computes the version number from content or on timestamp.
+         */
+        private final Boolean contentBasedVersionNumber;
+
+        /**
+         * For version number computation.
+         */
+        private final Boolean computeVersionAsynchronously;
+
+        /**
+         * A fixed version number. If {@code null}, then the last modification timestamp or the hashed content is used
+         * regarding {@link #contentBasedVersionNumber} attribute.
+         */
+        private final Long fixedVersionNumber;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param contentBasedVersionNumber content based version number or not
+         * @param computeVersionAsynchronously asynchronous computation or not
+         * @param fixedVersionNumber fixed version number ({@code null} if version number is not fixed)
+         */
+        public VersionNumberStrategy(final Boolean contentBasedVersionNumber,
+                                     final Boolean computeVersionAsynchronously,
+                                     final String fixedVersionNumber) {
+            if (fixedVersionNumber == null || "".equals(fixedVersionNumber)) {
+                this.fixedVersionNumber = null;
+            } else if (!NumberUtils.isNumber(fixedVersionNumber)) {
+                this.fixedVersionNumber = null;
+                WuicException.throwBadArgumentException(new IllegalArgumentException(
+                        String.format("Fixed version must be a number: %s", fixedVersionNumber)));
+            } else {
+                this.fixedVersionNumber = Long.parseLong(fixedVersionNumber);
+            }
+
+            this.contentBasedVersionNumber = contentBasedVersionNumber;
+            this.computeVersionAsynchronously = computeVersionAsynchronously;
+        }
+
+        /**
+         * <p>
+         * Indicates if the version number is based on the content.
+         * </p>
+         *
+         * @return {@code true} if version number is content based, {@code false} otherwise
+         */
+        public Boolean getContentBasedVersionNumber() {
+            return contentBasedVersionNumber;
+        }
+
+        /**
+         * <p>
+         * Indicates if the version number is computed asynchronously.
+         * </p>
+         *
+         * @return {@code true} if version number is computed asynchronously, {@code false} otherwise
+         */
+        public Boolean getComputeVersionAsynchronously() {
+            return computeVersionAsynchronously;
+        }
+
+        /**
+         * <p>
+         * Gets the fixed version number.
+         * </p>
+         *
+         * @return the version number, {@code null} if the version number is not fixed
+         */
+        public Long getFixedVersionNumber() {
+            return fixedVersionNumber;
+        }
     }
 
     /**
@@ -556,24 +637,13 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
-     * Gets the hash version strategy.
+     * Gets the version management strategy.
      * </p>
      *
-     * @return {@code true} if version number is based on content, {@code false} otherwise (last modification timestamp).
+     * @return the strategy
      */
-    public Boolean getContentBasedVersionNumber() {
-        return contentBasedVersionNumber;
-    }
-
-    /**
-     * <p>
-     * Gets the flag indicating if the version number is computed asynchronously or not.
-     * </p>
-     *
-     * @return {@code true} if version number is computed asynchronously, {@code false} otherwise
-     */
-    public Boolean getComputeVersionAsynchronously() {
-        return computeVersionAsynchronously;
+    public VersionNumberStrategy getVersionNumberStrategy() {
+        return versionNumberStrategy;
     }
 
     /**
@@ -610,7 +680,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     /**
      * <p>
      * This {@link Callable} is used to compute asynchronously the version number according to the value set to
-     * {@link #contentBasedVersionNumber} member.
+     * {@link #versionNumberStrategy#contentBasedVersionNumber} member.
      * </p>
      *
      * @author Guillaume DROUET
@@ -645,9 +715,9 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          */
         @Override
         public Long call() throws IOException {
-            log.debug("Computing asynchronously version number for path '{}'. Content based: {}", path, contentBasedVersionNumber);
+            log.debug("Computing asynchronously version number for path '{}'. Content based: {}", path, versionNumberStrategy.getContentBasedVersionNumber());
 
-            if (contentBasedVersionNumber) {
+            if (versionNumberStrategy.getContentBasedVersionNumber()) {
                 InputStream is = null;
 
                 try {

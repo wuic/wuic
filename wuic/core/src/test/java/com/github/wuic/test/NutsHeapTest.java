@@ -106,7 +106,7 @@ public class NutsHeapTest {
          * @param pollingSeconds polling interval
          */
         MockNutDao(final int pollingSeconds) {
-            super("/", false, null, pollingSeconds, false, true);
+            super("/", false, null, pollingSeconds, new VersionNumberStrategy(false, true, null));
         }
 
         /**
@@ -292,7 +292,7 @@ public class NutsHeapTest {
         patterns.put("b", Arrays.asList("c.js", "d.js", "e.js"));
         patterns.put("c", Arrays.asList("f.js"));
 
-        final NutDao dao = new AbstractNutDao("/", false, null, 1, false, true) {
+        final NutDao dao = new AbstractNutDao("/", false, null, 1, new AbstractNutDao.VersionNumberStrategy(false, true, null)) {
 
             /**
              * {@inheritDoc}

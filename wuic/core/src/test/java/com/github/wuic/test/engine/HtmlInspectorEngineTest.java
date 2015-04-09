@@ -114,7 +114,7 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void parseTest() throws Exception {
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(null);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
@@ -153,7 +153,7 @@ public class HtmlInspectorEngineTest {
     public void bestEffortTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")))
                 .replace("<script src=\"script/foo.ts\"></script>", "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>\n");
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
         final Engine engine = new AbstractCacheEngine(true, true) {
@@ -256,7 +256,7 @@ public class HtmlInspectorEngineTest {
      */
     public void concurrencyTest(final Engine cache) throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
+        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -294,7 +294,7 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void heapListenerHolderTest() throws Exception {
-        final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true);
+        final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(null);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();

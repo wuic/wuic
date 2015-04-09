@@ -128,9 +128,10 @@ public class AbstractNutDaoTest {
          * @param pollingSeconds polling interval
          * @param updateAfter change timestamps after x ms
          * @param contentBasedVersionNumber use version number computed from content
+         * @param fixedVersion the fixed version
          */
-        private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, contentBasedVersionNumber, true);
+        private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber, final String fixedVersion) {
+            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, new VersionNumberStrategy(contentBasedVersionNumber, true, fixedVersion));
             age = BEGIN_AGE;
             updateAfterMs = updateAfter;
         }
@@ -143,7 +144,7 @@ public class AbstractNutDaoTest {
          * @param pollingSeconds polling interval
          */
         private MockNutDaoTest(final int pollingSeconds) {
-            this(pollingSeconds, 1500L, false);
+            this(pollingSeconds, 1500L, false, null);
         }
 
         /**
@@ -152,9 +153,10 @@ public class AbstractNutDaoTest {
          * </p>
          *
          * @param contentBasedVersionNumber use version number computed from content
+         * @param fixedVersion the fixed version
          */
-        private MockNutDaoTest(final Boolean contentBasedVersionNumber) {
-            this(-1, null, contentBasedVersionNumber);
+        private MockNutDaoTest(final Boolean contentBasedVersionNumber, final String fixedVersion) {
+            this(-1, null, contentBasedVersionNumber, fixedVersion);
         }
 
         /**
@@ -221,14 +223,33 @@ public class AbstractNutDaoTest {
      */
     @Test
     public void versionNumberTest() throws Exception  {
-        final NutDao first = new MockNutDaoTest(true);
-        final NutDao second = new MockNutDaoTest(true);
-        final NutDao third = new MockNutDaoTest(false);
-        final NutDao fourth = new MockNutDaoTest(false);
+        final NutDao first = new MockNutDaoTest(true, null);
+        final NutDao second = new MockNutDaoTest(true, null);
+        final NutDao third = new MockNutDaoTest(false, null);
+        final NutDao fourth = new MockNutDaoTest(false, null);
 
         Assert.assertEquals(first.create("", null).get(0).getVersionNumber().get(), second.create("", null).get(0).getVersionNumber().get());
         Assert.assertNotEquals(second.create("", null).get(0).getVersionNumber().get(), third.create("", null).get(0).getVersionNumber().get());
         Assert.assertEquals(third.create("", null).get(0).getVersionNumber().get(), fourth.create("", null).get(0).getVersionNumber().get());
+    }
+
+    /**
+     * Test fixed version number computation.
+     *
+     * @throws Exception e
+     */
+    @Test
+    public void fixedVersionNumberTest() throws Exception  {
+        final Long version = 19860606L;
+        Assert.assertEquals(version, new MockNutDaoTest(true, version.toString()).create("", null).get(0).getVersionNumber().get());
+    }
+
+    /**
+     * Test when fixed version is not a number.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badFixedVersionNumberTest() {
+        new MockNutDaoTest(false, "bad number");
     }
 
     /**

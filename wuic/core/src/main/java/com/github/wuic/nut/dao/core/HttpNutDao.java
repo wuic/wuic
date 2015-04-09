@@ -101,6 +101,7 @@ public class HttpNutDao extends AbstractNutDao {
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
     @ConfigConstructor
     public HttpNutDao(@BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.SECRET_PROTOCOL)final Boolean https,
@@ -110,8 +111,9 @@ public class HttpNutDao extends AbstractNutDao {
                       @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
                       @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
                       @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean contentBasedVersionNumber,
-                      @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
-        super(path, basePathAsSysProp, null, pollingSeconds, contentBasedVersionNumber, computeVersionAsynchronously);
+                      @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+                      @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+        super(path, basePathAsSysProp, null, pollingSeconds, new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
         final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
 
         if (port != null) {

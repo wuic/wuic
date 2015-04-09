@@ -135,6 +135,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
     @ConfigConstructor
     public RequestDispatcherNutDao(
@@ -142,9 +143,11 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
+            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
         // path can correspond dynamic resources (JSP, servlet) so this DAO can support only content-based version number
-        super(base, basePathAsSysProp, proxies, pollingSeconds, true, computeVersionAsynchronously);
+        super(base, basePathAsSysProp, proxies, pollingSeconds,
+                new VersionNumberStrategy(true, computeVersionAsynchronously, fixedVersionNumber));
     }
 
     /**

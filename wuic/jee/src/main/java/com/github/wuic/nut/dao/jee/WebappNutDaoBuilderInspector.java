@@ -104,6 +104,7 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
             if (isExploded) {
                 // and then pre compute real path
                 basePath = servletContext.getRealPath(basePath);
+                final Long fixedVersionNumber = webappNutDao.getVersionNumberStrategy().getFixedVersionNumber();
 
                 // We pre compute specifically base path so we pass false to indicate that base path is not a system property
                 return (T) new DiskNutDao(WAR_BASE_PATH.equals(basePath) ? EXPLODED_BASE_PATH : basePath,
@@ -112,8 +113,9 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                         webappNutDao.getPollingInterval(),
                         webappNutDao.getRegularExpression(),
                         webappNutDao.getWildcardExpression(),
-                        webappNutDao.getContentBasedVersionNumber(),
-                        webappNutDao.getComputeVersionAsynchronously()) {
+                        webappNutDao.getVersionNumberStrategy().getContentBasedVersionNumber(),
+                        webappNutDao.getVersionNumberStrategy().getComputeVersionAsynchronously(),
+                        fixedVersionNumber == null ? null : fixedVersionNumber.toString()) {
 
                     /**
                      * {@inheritDoc}

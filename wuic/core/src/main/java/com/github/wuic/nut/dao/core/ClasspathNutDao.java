@@ -91,8 +91,9 @@ public class ClasspathNutDao extends DiskNutDao {
                            @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
                            @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard,
                            @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
-                           @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously);
+                           @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+                           @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard, contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber);
     }
 
     /**

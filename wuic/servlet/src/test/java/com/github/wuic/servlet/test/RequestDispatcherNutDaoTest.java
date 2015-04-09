@@ -102,7 +102,7 @@ public class RequestDispatcherNutDaoTest {
         }).when(requestDispatcher).include(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
         final ServletContext sc = Mockito.mock(ServletContext.class);
         Mockito.when(sc.getRequestDispatcher(Mockito.anyString())).thenReturn(requestDispatcher);
-        dao = new RequestDispatcherNutDao("/", false, null, -1, false);
+        dao = new RequestDispatcherNutDao("/", false, null, -1, false, null);
         dao.setServletContext(sc);
     }
 
