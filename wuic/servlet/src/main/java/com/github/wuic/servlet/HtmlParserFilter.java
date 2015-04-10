@@ -90,11 +90,26 @@ import java.util.Map;
  * overriding the {@link #createContextNutDaoBuilder(String, com.github.wuic.context.ContextBuilder, String)} method.
  * </p>
  *
+ * <p>
+ * This filter supports server-hint mode. Server-hint is enabled by default. It associates to all resources that should
+ * be loaded as soon as possible by the HTML page a "Link" header with "subresource" rel value (supported by Chrome).
+ * Other resources are associated to a "preload" rel value to tell the browser to download them with a low priority.
+ * Proxy like "nghttpx" can use this header to push the resource over HTTP/2. The push will be enabled only for response
+ * with "preload" rel value in the Link header, which is in conflict with chrome "subresource" design. If you want to
+ * use "nghttpx" HTTP/2 push feature, set the {@link #PRE_LOAD_SUB_RESOURCES} init-param to {@code true} in order to
+ * associate the "preload" rel value to sub resources and "preconnect" to others.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.4
  */
 public class HtmlParserFilter extends ContextBuilderConfigurator implements Filter {
+
+    /**
+     * Adds a "preload" rel value instead of "subresource" in Link Header for the sub resources.
+     */
+    public static final String PRE_LOAD_SUB_RESOURCES = "c.g.wuic.preLoadSubResources";
 
     /**
      * If an attribute with this name is defined in the filtered request, then this filter will skip its related operation.
@@ -130,6 +145,16 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * The root nut DAO builder ID;
      */
     private String rootNuDaoBuilderId;
+
+    /**
+     * The "rel" value in link header for sub resources.
+     */
+    private String subResourceRel;
+
+    /**
+     * The "rel" value in link header for non sub resources.
+     */
+    private String nonSubResourceRel;
 
     /**
      * <p>
@@ -180,6 +205,8 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
             wuicFacade.configure(this);
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
+
+            configureServerHint(filterConfig);
         } catch (WuicException we) {
             throw new ServletException(we);
         }
@@ -264,7 +291,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
                 // Adds to the given response all referenced nuts URLs associated to the "Link" header.
                 for (final Map.Entry<String, Boolean> entry : collectedNut.entrySet()) {
-                    final String strategy = entry.getValue() ? "subresource" : "preload";
+                    final String strategy = entry.getValue() ? subResourceRel : nonSubResourceRel;
                     httpResponse.addHeader("Link", String.format("<%s>; rel=%s", entry.getKey(), strategy));
                 }
 
@@ -278,6 +305,25 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Configures the server hint support regarding the {@link #PRE_LOAD_SUB_RESOURCES} setting.
+     * </p>
+     *
+     * @param filterConfig the filter config instance
+     */
+    private void configureServerHint(final FilterConfig filterConfig) {
+        final String psr = filterConfig.getInitParameter(PRE_LOAD_SUB_RESOURCES);
+
+        if ("true".equals(psr)) {
+            subResourceRel = "preload";
+            nonSubResourceRel = "preconnect";
+        } else {
+            subResourceRel = "subresource";
+            nonSubResourceRel = "preload";
         }
     }
 
