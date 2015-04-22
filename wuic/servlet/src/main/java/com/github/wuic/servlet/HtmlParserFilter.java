@@ -44,6 +44,7 @@ import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.jee.PushService;
 import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
@@ -75,6 +76,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * <p>
@@ -100,11 +102,22 @@ import java.util.Map;
  * associate the "preload" rel value to sub resources and "preconnect" to others.
  * </p>
  *
+ * <p>
+ * Server-push is also supported. It relies on a {@link PushService} implementation discovered in the classpath.
+ * It will be enabled by default if an implementation is found by the {@link ServiceLoader}. You can disable the
+ * server-push with the {@link #DISABLE_SERVER_PUSH} init-param.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.4
  */
 public class HtmlParserFilter extends ContextBuilderConfigurator implements Filter {
+
+    /**
+     * Property that tells the filter to use or not HTTP2 server push. Server push is enabled by default.
+     */
+    public static final String DISABLE_SERVER_PUSH = "c.g.wuic.filter.disableServerPush";
 
     /**
      * Adds a "preload" rel value instead of "subresource" in Link Header for the sub resources.
@@ -157,6 +170,11 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private String nonSubResourceRel;
 
     /**
+     * HTTP/2 server push support.
+     */
+    private PushService pushService;
+
+    /**
      * <p>
      * Builds a new instance with a specific {@link WuicFacade} and a root {@link com.github.wuic.nut.dao.NutDao} builder.
      * </p>
@@ -206,6 +224,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             wuicFacade.configure(this);
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
 
+            configureServerPush(filterConfig);
             configureServerHint(filterConfig);
         } catch (WuicException we) {
             throw new ServletException(we);
@@ -289,22 +308,66 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 final UrlProvider provider = getUrlProvider(httpRequest).create(workflowId);
                 final Map<String, Boolean> collectedNut = collectReferenceNut(provider, htmlNut);
 
-                // Adds to the given response all referenced nuts URLs associated to the "Link" header.
-                for (final Map.Entry<String, Boolean> entry : collectedNut.entrySet()) {
-                    final String strategy = entry.getValue() ? subResourceRel : nonSubResourceRel;
-                    httpResponse.addHeader("Link", String.format("<%s>; rel=%s", entry.getKey(), strategy));
-                }
+                if (pushService != null) {
+                    pushService.push(httpRequest, httpResponse, collectedNut.keySet());
 
-                try {
-                    HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
-                } finally {
-                    r.run();
-                    IOUtils.close(is);
+                    try {
+                        HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
+                    } finally {
+                        r.run();
+                        IOUtils.close(is);
+                    }
+                } else {
+                    // Adds to the given response all referenced nuts URLs associated to the "Link" header.
+                    for (final Map.Entry<String, Boolean> entry : collectedNut.entrySet()) {
+                        final String strategy = entry.getValue() ? subResourceRel : nonSubResourceRel;
+                        httpResponse.addHeader("Link", String.format("<%s>; rel=%s", entry.getKey(), strategy));
+                    }
+
+                    try {
+                        HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
+                    } finally {
+                        r.run();
+                        IOUtils.close(is);
+                    }
                 }
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Configures the server push support retarding the {@link #DISABLE_SERVER_PUSH} setting.
+     * </p>
+     *
+     * @param filterConfig the filter config instance
+     */
+    private void configureServerPush(final FilterConfig filterConfig) {
+        final String sp = filterConfig.getInitParameter(DISABLE_SERVER_PUSH);
+
+        if (sp == null || "true".equals(sp)) {
+            logger.info("HTTP/2 server push is enabled. Discovering server push support in the classpath...");
+
+            final ServiceLoader<PushService> serviceLoader = ServiceLoader.load(PushService.class);
+
+            for (final PushService ps : serviceLoader) {
+                if (pushService == null) {
+                    pushService = ps;
+                    logger.info("Server push support '{}' has been installed.", pushService);
+                } else {
+                    logger.warn("Duplicate server push support: '{}' has been found but '{}' is already installed."
+                            + " This support will be ignored.", ps.getClass().getName(), pushService.getClass().getName());
+                }
+            }
+
+            if (pushService == null) {
+                logger.info("No HTTP/2 server push support found! No resource will be pushed.");
+            }
+        } else {
+            logger.info("HTTP/2 server push is disabled, no resource will be pushed.");
         }
     }
 
@@ -354,7 +417,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             final Map<String, Boolean> retval = new HashMap<String, Boolean>();
 
             for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                retval.put(urlProvider.getUrl(ref), ref.isSubResource());
+                retval.put('/' + urlProvider.getUrl(ref), ref.isSubResource());
                 retval.putAll(collectReferenceNut(urlProvider, ref));
             }
 
