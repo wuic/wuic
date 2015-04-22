@@ -136,6 +136,7 @@ public enum HttpRequestThreadLocal implements Runnable {
      * @throws IOException if stream could not be opened
      */
     public void write(final ConvertibleNut nut, final HttpServletResponse response) throws IOException {
+        logger.info("Writing to the response the content read from nut '{}'", nut.getName());
         response.setCharacterEncoding(charset);
         response.setContentType(nut.getNutType().getMimeType());
 
