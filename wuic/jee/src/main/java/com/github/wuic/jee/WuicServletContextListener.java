@@ -46,12 +46,16 @@ import com.github.wuic.nut.dao.jee.WebappNutDaoBuilderInspector;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * <p>
@@ -69,6 +73,11 @@ public class WuicServletContextListener implements ServletContextListener {
      * Message logged when a custom implementation could not be applied.
      */
     private static final String CUSTOM_PARAM_PROVIDER_MESSAGE = "Cannot apply custom parameter provider";
+
+    /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * <p>
@@ -163,9 +172,18 @@ public class WuicServletContextListener implements ServletContextListener {
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
 
         try {
+            final URL classesWuicXmlPath = sce.getServletContext().getResource("/WEB-INF/classes/wuic.xml");
+
+            if (classesWuicXmlPath != null) {
+                builder.wuicXmlPath(classesWuicXmlPath);
+                log.info("Installing 'wuic.xml' located in {}", classesWuicXmlPath.toString());
+            }
+
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
             WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
+        } catch (MalformedURLException mue) {
+            log.error("Unexpected exception", mue);
         }
     }
 
