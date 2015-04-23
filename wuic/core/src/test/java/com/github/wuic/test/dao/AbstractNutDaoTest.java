@@ -41,6 +41,7 @@ package com.github.wuic.test.dao;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.AbstractNutDao;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
@@ -175,6 +176,7 @@ public class AbstractNutDaoTest {
             final ConvertibleNut mock = mock(ConvertibleNut.class);
             when(mock.getName()).thenReturn(realPath);
             when(mock.getInitialName()).thenReturn(realPath);
+            when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
 
             try {
                 when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath, processContext).get()));
@@ -242,6 +244,24 @@ public class AbstractNutDaoTest {
     public void fixedVersionNumberTest() throws Exception  {
         final Long version = 19860606L;
         Assert.assertEquals(version, new MockNutDaoTest(true, version.toString()).create("", null).get(0).getVersionNumber().get());
+    }
+
+
+    /**
+     * Test fixed version number computation in a composition.
+     *
+     * @throws Exception e
+     */
+    @Test
+    public void compositeFixedVersionNumberTest() throws Exception  {
+        final Long version = 19860606L;
+        NutDao dao = new MockNutDaoTest(true, version.toString());
+        Assert.assertEquals(version, new CompositeNut(false,
+                "composite.js",
+                null,
+                ConvertibleNut.class.cast(dao.create("", null).get(0)),
+                ConvertibleNut.class.cast(dao.create("", null).get(0)),
+                ConvertibleNut.class.cast(dao.create("", null).get(0))).getVersionNumber().get());
     }
 
     /**

@@ -49,6 +49,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
@@ -161,10 +163,23 @@ public final class NutUtils {
             return getVersionNumber(nuts.get(0));
         }
 
+        final List<Long> versionNumbers = new ArrayList<Long>();
+
+        // Collect all version number
+        for (final Nut o : nuts) {
+            versionNumbers.add(getVersionNumber(o));
+        }
+
+        // When a fixed version number is set, all version number should be the same
+        // In that case, we want to apply the fixed version to the composition instead of digesting a new one
+        if (new HashSet<Long>(versionNumbers).size() == 1) {
+            return versionNumbers.get(0);
+        }
+
         final MessageDigest md = IOUtils.newMessageDigest();
 
-        for (final Nut o : nuts) {
-            md.update(ByteBuffer.allocate(NumberUtils.HEIGHT).putLong(getVersionNumber(o)).array());
+        for (final Long v : versionNumbers) {
+            md.update(ByteBuffer.allocate(NumberUtils.HEIGHT).putLong(v).array());
         }
 
         return ByteBuffer.wrap(md.digest()).getLong();
