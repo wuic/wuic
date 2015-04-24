@@ -314,16 +314,16 @@ public class InspectorTest {
                 new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
                         ".directive('myCustomer', function() {\n" +
                         "  return {\n" +
-                        "    templateUrl  : fn('%s')\n" +
+                        "    templateUrl  : fn(%s)\n" +
                         "  };\n" +
-                        "});", "my-customer.html"},
+                        "});", "'my-customer.html'"},
         };
 
         assertInspection(collection,
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
                 collection.length,
-                new JavascriptInspectorEngine(true, "UTF-8", "fn('%s')"), true);
+                new JavascriptInspectorEngine(true, "UTF-8", "fn(%s)"), true);
     }
 
     /**

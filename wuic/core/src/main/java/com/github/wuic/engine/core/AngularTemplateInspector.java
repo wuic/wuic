@@ -90,7 +90,7 @@ public class AngularTemplateInspector extends LineInspector {
      * @param wrapPattern a regex describing a pattern wrapping the URL, could be {@code null}
      */
     public AngularTemplateInspector(final String wrapPattern) {
-        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_REGEX : String.format(wrapPattern, "(.*?)")), Pattern.MULTILINE));
+        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_REGEX : '(' + String.format(wrapPattern, "(.*?)") + ')'), Pattern.MULTILINE));
     }
 
     /**
@@ -103,9 +103,12 @@ public class AngularTemplateInspector extends LineInspector {
                                                                final CompositeNut.CompositeInputStream cis,
                                                                final ConvertibleNut originalNut)
             throws WuicException {
+        // group 4 when wrap pattern exists, group 3 otherwise
+        final int groupIndex = matcher.groupCount() > NumberUtils.THREE ? NumberUtils.FOUR : NumberUtils.THREE;
+        final String pathGroup = matcher.group(groupIndex);
 
         // Removes quotes
-        String referencedPath = matcher.group(NumberUtils.THREE);
+        String referencedPath = pathGroup;
 
         // Comment
         if (referencedPath == null) {
@@ -127,7 +130,9 @@ public class AngularTemplateInspector extends LineInspector {
         }
 
         final List<? extends ConvertibleNut> res;
-        replacement.append("templateUrl:").append('"');
+        final String group = matcher.group();
+        final int pathGroupIndex = group.indexOf(pathGroup);
+        replacement.append(group.substring(0, pathGroupIndex)).append('"');
 
         if (!nuts.isEmpty()) {
             res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
@@ -141,6 +146,7 @@ public class AngularTemplateInspector extends LineInspector {
         }
 
         replacement.append('"');
+        replacement.append(group.substring(pathGroupIndex + pathGroup.length()));
 
         return res;
     }
