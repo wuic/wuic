@@ -42,6 +42,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -113,14 +114,19 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdap
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     /**
-     * Print writer built on top of byte array.
+     * Wrapped char array.
      */
-    private PrintWriter pw = new PrintWriter(baos);
+    final CharArrayWriter charArrayWriter = new CharArrayWriter();
+
+    /**
+     * Print writer built on top of char array.
+     */
+    private PrintWriter pw;
 
     /**
      * Servlet output stream built on top of byte array.
      */
-    private ServletOutputStream sos = new ByteArrayServletStream(baos);
+    private ServletOutputStream sos;
 
     /**
      * <p>
@@ -146,6 +152,14 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdap
      */
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
+        if (pw != null) {
+            throw new IllegalStateException("getWriter() already called!");
+        }
+
+        if (sos == null) {
+            sos = new ByteArrayServletStream(baos);
+        }
+
         return sos;
     }
 
@@ -154,6 +168,14 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdap
      */
     @Override
     public PrintWriter getWriter() throws IOException {
+        if (sos != null) {
+            throw new IllegalStateException("getOutputStream() already called!");
+        }
+
+        if (pw == null) {
+            pw = new PrintWriter(charArrayWriter);
+        }
+
         return pw;
     }
 
@@ -238,6 +260,12 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdap
      * @return the byte array
      */
     public byte[] toByteArray() {
-        return baos.toByteArray();
+        if (pw != null) {
+            return charArrayWriter.toString().getBytes();
+        } else if (sos != null) {
+            return baos.toByteArray();
+        } else {
+            return new byte[0];
+        }
     }
 }
