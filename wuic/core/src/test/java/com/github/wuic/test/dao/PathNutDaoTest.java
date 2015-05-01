@@ -199,15 +199,16 @@ public class PathNutDaoTest {
      * Test with {@link DiskNutDao}.
      * </p>
      *
-     * @throws IOException if test fails
+     * @throws Exception if test fails
      */
     @Test
-    public void diskReadTest() throws IOException {
+    public void diskReadTest() throws Exception {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, DiskNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");
+        builder.property(ApplicationConfig.BASE_PATH, getClass().getResource("/images").toURI().getPath());
         final NutDao dao = builder.build();
-        Assert.assertTrue(dao.exists("src/test/resources/images/reject-block.png", null));
-        final InputStream is = dao.create("src/test/resources/images/reject-block.png", null).get(0).openStream();
+        Assert.assertTrue(dao.exists("reject-block.png", null));
+        final InputStream is = dao.create("reject-block.png", null).get(0).openStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
