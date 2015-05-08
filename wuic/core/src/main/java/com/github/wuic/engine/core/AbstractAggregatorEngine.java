@@ -39,15 +39,18 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.nut.PipedConvertibleNut;
 
 /**
  * <p>
@@ -94,7 +97,19 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     @Override
     public final List<ConvertibleNut> internalParse(final EngineRequest request)
             throws WuicException {
-        final List<ConvertibleNut> retval = aggregationParse(request);
+        // Aggregate only static nuts
+        final List<Nut> staticNuts = new ArrayList<Nut>();
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+
+        for (final Nut nut : request.getNuts()) {
+            if (nut.isDynamic()) {
+                retval.add(nut instanceof ConvertibleNut ? ConvertibleNut.class.cast(nut) : new PipedConvertibleNut(nut));
+            } else {
+                staticNuts.add(nut);
+            }
+        }
+
+        retval.addAll(aggregationParse(new EngineRequestBuilder(request).nuts(staticNuts).build()));
 
         // Compute proxy URIs
         for (final Nut nut : retval) {

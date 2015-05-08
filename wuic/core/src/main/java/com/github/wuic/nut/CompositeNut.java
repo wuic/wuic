@@ -164,6 +164,14 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
+    public boolean isDynamic() {
+        return compositionList.get(0).isDynamic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void transform(final Pipe.OnReady... onReady) throws IOException {
         if (isTransformed()) {
             throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");

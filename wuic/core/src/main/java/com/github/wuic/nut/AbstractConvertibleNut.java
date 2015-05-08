@@ -39,6 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
@@ -273,6 +274,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      */
     @Override
     public void addReferencedNut(final ConvertibleNut referenced) {
+        if (referenced.isDynamic()) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException(
+                    String.format("Nut '%s' is dynamic and could not be referenced by '%s'.", referenced.getName(), getName())));
+        }
+
         if (referencedNuts == null) {
             referencedNuts = new ArrayList<ConvertibleNut>();
         }
@@ -307,6 +313,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public InputStream openStream() throws IOException {
         return wrap.openStream();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDynamic() {
+        return wrap.isDynamic();
     }
 
     /**

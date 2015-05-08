@@ -179,6 +179,16 @@ public abstract class AbstractNut implements Nut {
      * {@inheritDoc}
      */
     @Override
+    public boolean isDynamic() {
+        // Should be overridden by subclass if content is not dynamic
+        return false;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         final String retval = getClass().getSimpleName() + "[" + getInitialName() + "]";
         return logger.isInfoEnabled() ? (retval + " - v" + NutUtils.getVersionNumber(this)) : retval;
@@ -203,8 +213,6 @@ public abstract class AbstractNut implements Nut {
     public int hashCode() {
         return getInitialName().hashCode();
     }
-
-
 
     /**
      * <p>

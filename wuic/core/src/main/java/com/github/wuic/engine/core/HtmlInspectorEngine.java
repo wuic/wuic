@@ -98,6 +98,11 @@ import java.util.regex.Pattern;
  * Note that version number is based on content hash because this is the unique strategy that applies to inline scripts.
  * </p>
  *
+ * <p>
+ * When a {@link ConvertibleNut} is parsed, the registered a transformer which is able to cache transformation operations
+ * is added for future usages.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @version 1.1
  * @since 0.4.4
@@ -219,7 +224,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         if (works()) {
             for (final ConvertibleNut nut : request.getNuts()) {
-                retval.add(transformHtml(nut, request.getContextPath(), request));
+                nut.addTransformer(new HtmlTransformer(request));
+                retval.add(nut);
             }
         }
 
@@ -248,12 +254,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         /**
          * The request.
          */
-        private EngineRequest request;
+        private final EngineRequest request;
 
         /**
-         * The context path.
+         * All replacements performed by the transformer.
          */
-        private String contextPath;
+        private Map<String, List<String>> replacements;
 
         /**
          * <p>
@@ -261,11 +267,9 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * </p>
          *
          * @param r the request
-         * @param cp the context path
          */
-        private HtmlTransformer(final EngineRequest r, final String cp) {
+        private HtmlTransformer(final EngineRequest r) {
             this.request = r;
-            this.contextPath = cp;
         }
 
         /**
@@ -304,12 +308,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 // There is something to parse
                 if (!matcher.group().trim().isEmpty()) {
 
-                /*
-                 * We've already matched some scripts and there is something (excluding comment and whitespace) between
-                 * the previous script and the script currently matched that implies that they should not be imported
-                 * together. Consequently, we create here a separate heap.
-                 */
-                    if (previousGroupEnd != -1 && !content.substring(previousGroupEnd + 1, matcher.start()).trim().isEmpty()) {
+                    /*
+                     * We've already matched some scripts and there is something (excluding comment and whitespace) between
+                     * the previous script and the script currently matched that implies that they should not be imported
+                     * together. Consequently, we create here a separate heap.
+                     */
+                    if (previousGroupEnd != -1 && !content.substring(previousGroupEnd, matcher.start()).trim().isEmpty()) {
                         new ParseInfo(nutName + (no++), paths, proxy, rootPath, request).addTo(retval);
                         paths.clear();
                     }
@@ -344,100 +348,111 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 throws IOException {
             final long now = System.currentTimeMillis();
             final String content = IOUtils.readString(new InputStreamReader(is, charset));
-            final int endParent = convertible.getName().lastIndexOf('/');
-            final String rootPath = endParent == -1 ? "" : convertible.getName().substring(0, endParent);
-            final List<ParseInfo> parseInfoList;
-
-            try {
-                parseInfoList = parse(convertible.getName(), content, request.getHeap().findDaoFor(convertible), rootPath);
-            } catch (WuicException we) {
-                throw new IOException(we);
-            }
-
             final StringBuilder transform = new StringBuilder(content);
             int end = 0;
-            final List<ConvertibleNut> referenced = new ArrayList<ConvertibleNut>();
 
-            final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(IOUtils.mergePath(contextPath, request.getWorkflowId()));
-
-            // A workflow have been created for each heap
-            for (final ParseInfo parseInfo : parseInfoList) {
-                final EngineType[] skip;
-
-                // Do not generate sprite, just compress "img"
-                if (NutType.PNG.equals(parseInfo.getHeap().getNuts().get(0).getInitialNutType())) {
-                    skip = new EngineType[SKIPPED_ENGINE.length + 1];
-                    System.arraycopy(SKIPPED_ENGINE, 0, skip, 0, SKIPPED_ENGINE.length);
-                    skip[skip.length -1] = EngineType.INSPECTOR;
-                } else {
-                    skip = SKIPPED_ENGINE;
+            // Perform cached replacement
+            if (this.replacements != null) {
+                for (final Map.Entry<String, List<String>> entry : this.replacements.entrySet()) {
+                    final String replacement = entry.getKey();
+                    end = replace(transform, replacement, entry.getValue(), end);
                 }
-
-                // Render HTML for workflow result
-                final StringBuilder html = new StringBuilder();
-                final EngineRequest parseRequest = new EngineRequestBuilder(request)
-                        .nuts(parseInfo.getHeap().getNuts())
-                        .heap(parseInfo.getHeap())
-                        .skip(skip)
-                        .build();
-                final List<ConvertibleNut> merged;
+            } else {
+                this.replacements = new LinkedHashMap<String, List<String>>();
+                final int endParent = convertible.getName().lastIndexOf('/');
+                final String rootPath = endParent == -1 ? "" : convertible.getName().substring(0, endParent);
+                final List<ParseInfo> parseInfoList;
 
                 try {
-                    merged = HeadEngine.runChains(parseRequest);
+                    parseInfoList = parse(convertible.getName(), content, request.getHeap().findDaoFor(convertible), rootPath);
                 } catch (WuicException we) {
                     throw new IOException(we);
                 }
 
-                for (final ConvertibleNut n : merged) {
-                    // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
-                    if (request.getPrefixCreatedNut().isEmpty()){
-                        n.setNutName(parseInfo.getHeap().getId() + n.getName());
-                    } else {
-                        n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), parseInfo.getHeap().getId() + n.getName()));
-                    }
+                final List<ConvertibleNut> referenced = new ArrayList<ConvertibleNut>();
 
-                    referenced.add(n);
+                final String prefix = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
+                final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(prefix);
 
-                    // Some additional attributes
-                    if (parseInfo.getAttributes() != null) {
-                        final String[] attributes = new String[parseInfo.getAttributes().size()];
-                        int index = 0;
-
-                        for (final Map.Entry<String, String> entry : parseInfo.getAttributes().entrySet()) {
-                            attributes[index++] = entry.getKey() + "=\"" + entry.getValue() + '"';
-                        }
-
-                        html.append(HtmlUtil.writeScriptImport(n, urlProvider, attributes)).append("\r\n");
-                    } else {
-                        html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
-                    }
+                // A workflow have been created for each heap
+                for (final ParseInfo parseInfo : parseInfoList) {
+                    // Perform replacement
+                    final String replacement = parseInfo.replacement(request, urlProvider, referenced);
+                    end = replace(transform, replacement, parseInfo.getCapturedStatements(), end);
+                    this.replacements.put(replacement, parseInfo.getCapturedStatements());
                 }
 
-                // Replace all captured statements with HTML generated from WUIC process
-                for (int i = 0; i < parseInfo.getCapturedStatements().size(); i++) {
-                    final String toReplace = parseInfo.getCapturedStatements().get(i);
-                    int start = transform.indexOf(toReplace, end);
-                    end = start + toReplace.length();
-
-                    // Add the WUIC result in place of the first statement
-                    if (i == 0) {
-                        final String replacement = html.toString();
-                        transform.replace(start, end, replacement);
-                        end = start + replacement.length();
-                    } else {
-                        transform.replace(start, end, "");
-                        end = start;
-                    }
+                for (final ConvertibleNut ref : referenced) {
+                    convertible.addReferencedNut(ref);
                 }
             }
 
             IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
 
-            for (final ConvertibleNut ref : referenced) {
-                convertible.addReferencedNut(ref);
+            Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
+        }
+
+        /**
+         * <p>
+         * Replaces in the given {@link StringBuilder} all the statements specified in parameter by an empty
+         * {@code String} except the first one which will be replaced by a particular replacement also specified
+         * in parameter.
+         * </p>
+         *
+         * @param transform the builder
+         * @param replacement the replacement
+         * @param statements the statements to replace
+         * @param startIndex the index where the method could start to search statements in the builder
+         * @return the updated index
+         */
+        private int replace(final StringBuilder transform,
+                            final String replacement,
+                            final List<String> statements,
+                            final int startIndex) {
+            int end = startIndex;
+
+            // Replace all captured statements with HTML generated from WUIC process
+            for (int i = 0; i < statements.size(); i++) {
+                final String toReplace = statements.get(i);
+                end = replace(transform, replacement, toReplace, end, i == 0);
             }
 
-            Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
+            return end;
+        }
+
+        /**
+         * <p>
+         * Replaces in the given {@link StringBuilder} the statement specified in parameter by an empty {@code String}
+         * except if the statement is the first one which will be replaced by a particular replacement also specified
+         * in parameter.
+         * </p>
+         *
+         * @param transform the builder
+         * @param replacement the replacement
+         * @param startIndex the index where the method could start to search statements in the builder
+         * @param toReplace the string to replace
+         * @param isFirst if the given statement is the first one
+         * @return the updated index
+         */
+        private int replace(final StringBuilder transform,
+                            final String replacement,
+                            final String toReplace,
+                            final int startIndex,
+                            final boolean isFirst) {
+
+            final int start = transform.indexOf(toReplace, startIndex);
+            int end = start + toReplace.length();
+
+            // Add the WUIC result in place of the first statement
+            if (isFirst) {
+                transform.replace(start, end, replacement);
+                end = start + replacement.length();
+            } else {
+                transform.replace(start, end, "");
+                end = start;
+            }
+
+            return end;
         }
     }
 
@@ -677,7 +692,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 // Sign content
                 final MessageDigest md = IOUtils.newMessageDigest();
                 md.update(content);
-                proxy.addRule(retval, new ByteArrayNut(content, retval, nt, ByteBuffer.wrap(md.digest()).getLong()));
+                proxy.addRule(retval, new ByteArrayNut(content, retval, nt, ByteBuffer.wrap(md.digest()).getLong(), false));
 
                 return new ApplyResult(retval, null);
             } else {
@@ -947,49 +962,16 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
                         // If we are in best effort and the captured path corresponds to a NutType processed by any
                         // converter engine, we must capture the statement to transform it
-                        NodeEngine e = request.getChainFor(nutType);
-
-                        boolean canRemove;
-
-                        if (request.isBestEffort()) {
-                            canRemove = true;
-
-                            while (e != null && canRemove) {
-                                canRemove = !EngineType.CONVERTER.equals(e.getEngineType());
-                                e = e.getNext();
-                            }
-                        } else {
-                            canRemove = false;
-                        }
+                        final boolean canRemove = canRemove(request.getChainFor(nutType), request);
 
                         if (canRemove) {
                             this.capturedStatements.remove(entry.getKey());
                         } else {
-                            final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
-                            final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
-
-                            if (simplified == null) {
-                                WuicException.throwBadArgumentException(new IllegalArgumentException(
-                                        String.format("%s does not represents a reachable path", simplify)));
-                            }
+                            final String simplified = sanitize(rootPath, path);
 
                             // Now we collect the attributes of the tag to add them in the future statement
                             if (result.getAttributes() != null) {
-                                if (attributes == null) {
-                                    attributes = new HashMap<String, String>();
-                                }
-
-                                for (final Map.Entry<String, String> attrEntry : result.getAttributes().entrySet()) {
-                                    final String old = attributes.put(attrEntry.getKey(), attrEntry.getValue());
-
-                                    // Conflict
-                                    if (old != null && !old.equals(attrEntry.getValue())) {
-                                        logger.info("Possibly merged tags have different values for the attribute {}, keeping {} instead of {}",
-                                                attrEntry.getKey(),
-                                                attrEntry.getValue(),
-                                                old);
-                                    }
-                                }
+                                populateAttributes(result.getAttributes());
                             }
 
                             groupPaths[cpt++] = simplified;
@@ -1021,12 +1003,168 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 }
             }
 
+            createHeap(filteredPath, request, proxyNutDao);
+        }
+
+        /**
+         * <p>
+         * Simplifies the result of concatenation between the two given strings and make sure the result if valid.
+         * </p>
+         *
+         * @param rootPath the left side
+         * @param path the right side
+         * @return both sides concatenated and sanitized
+         */
+        private String sanitize(final String rootPath, final String path) {
+            final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
+            final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
+
+            if (simplified == null) {
+                WuicException.throwBadArgumentException(new IllegalArgumentException(
+                        String.format("%s does not represents a reachable path", simplify)));
+            }
+
+            return simplified;
+        }
+
+        /**
+         * <p>
+         * Populates the cached attributes with the map retrieved from the given map/
+         * </p>
+         *
+         * @param result the attributes to cache
+         */
+        private void populateAttributes(final Map<String, String> result) {
+            if (attributes == null) {
+                attributes = new HashMap<String, String>();
+            }
+
+            for (final Map.Entry<String, String> attrEntry : result.entrySet()) {
+                final String old = attributes.put(attrEntry.getKey(), attrEntry.getValue());
+
+                // Conflict
+                if (old != null && !old.equals(attrEntry.getValue())) {
+                    logger.info("Possibly merged tags have different values for the attribute {}, keeping {} instead of {}",
+                            attrEntry.getKey(),
+                            attrEntry.getValue(),
+                            old);
+                }
+            }
+        }
+
+        /**
+         * <p>
+         * Indicates if we can remove a path to skip processing or not according to the given request and the chain that
+         * will process it.
+         * </p>
+         *
+         * @param engine the engine chain
+         * @param request the request
+         * @return {@code true} if path could be skipped, {@code false} otherwise
+         */
+        private boolean canRemove(final NodeEngine engine, final EngineRequest request) {
+            NodeEngine e = engine;
+            boolean retval;
+
+            if (request.isBestEffort()) {
+                retval = true;
+
+                while (e != null && retval) {
+                    retval = !EngineType.CONVERTER.equals(e.getEngineType());
+                    e = e.getNext();
+                }
+            } else {
+                retval = false;
+            }
+
+            return retval;
+        }
+
+        /**
+         * <p>
+         * Creates the internal heap with given parameters.
+         * </p>
+         *
+         * @param filteredPath the paths
+         * @param request the request
+         * @param dao the DAO
+         * @throws IOException if creation fails
+         */
+        private void createHeap(final List<String> filteredPath, final EngineRequest request, final NutDao dao)
+                throws IOException {
             final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
             final String heapId = StringUtils.toHexString(hash);
-            heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, proxyNutDao, heapId);
+            heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId);
             heap.checkFiles(request.getProcessContext());
             heap.addObserver(request.getHeap());
             NutsHeap.ListenerHolder.INSTANCE.add(heap);
+        }
+
+        /**
+         * <p>
+         * Creates a replacement for this information
+         * </p>
+         *
+         * @param request the request
+         * @param urlProvider object that computes URL
+         * @param referenced any nut created nut will be added to this list
+         * @return the replacement {@code String}
+         * @throws IOException if any I/O error occurs
+         */
+        public String replacement(final EngineRequest request, final UrlProvider urlProvider, final List<ConvertibleNut> referenced)
+                throws IOException {
+            final EngineType[] skip;
+
+            // Do not generate sprite, just compress "img"
+            if (NutType.PNG.equals(getHeap().getNuts().get(0).getInitialNutType())) {
+                skip = new EngineType[SKIPPED_ENGINE.length + 1];
+                System.arraycopy(SKIPPED_ENGINE, 0, skip, 0, SKIPPED_ENGINE.length);
+                skip[skip.length -1] = EngineType.INSPECTOR;
+            } else {
+                skip = SKIPPED_ENGINE;
+            }
+
+            // Render HTML for workflow result
+            final StringBuilder html = new StringBuilder();
+            final EngineRequest parseRequest = new EngineRequestBuilder(request)
+                    .nuts(getHeap().getNuts())
+                    .heap(getHeap())
+                    .skip(skip)
+                    .build();
+            final List<ConvertibleNut> merged;
+
+            try {
+                merged = HeadEngine.runChains(parseRequest);
+            } catch (WuicException we) {
+                throw new IOException(we);
+            }
+
+            for (final ConvertibleNut n : merged) {
+                // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
+                if (request.getPrefixCreatedNut().isEmpty()){
+                    n.setNutName(getHeap().getId() + n.getName());
+                } else {
+                    n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), getHeap().getId() + n.getName()));
+                }
+
+                referenced.add(n);
+
+                // Some additional attributes
+                if (getAttributes() != null) {
+                    final String[] attributes = new String[getAttributes().size()];
+                    int index = 0;
+
+                    for (final Map.Entry<String, String> entry : getAttributes().entrySet()) {
+                        attributes[index++] = entry.getKey() + "=\"" + entry.getValue() + '"';
+                    }
+
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider, attributes)).append("\r\n");
+                } else {
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
+                }
+            }
+
+            return html.toString();
         }
 
         /**
@@ -1074,24 +1212,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 list.add(this);
             }
         }
-    }
-
-    /**
-     * <p>
-     * Transforms the given HTML content and returns the replacements done with the collected parse information.
-     * </p>
-     *
-     * @param nut the HTML content to parse
-     * @param request the request
-     * @return the nut wrapping parsed HTML
-     * @throws WuicException if WUIC fails to configure context or process created workflow
-     */
-    public ConvertibleNut transformHtml(final ConvertibleNut nut,
-                                        final String contextPath,
-                                        final EngineRequest request)
-            throws WuicException {
-        nut.addTransformer(new HtmlTransformer(request, contextPath));
-        return nut;
     }
 
     /**

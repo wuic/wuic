@@ -93,7 +93,10 @@ public final class NutUtils {
         String parsedName = StringUtils.simplifyPathWithDoubleDot(nut.getName());
 
         // Nut found : write the stream and return
-        if (parsedName.equals(nutName) || ("/" + parsedName).equals(nutName) || parsedName.equals("/" + nutName)) {
+        if (parsedName.equals(nutName)
+                || ('/' + parsedName).equals(nutName)
+                || parsedName.equals('/' + nutName)
+                || IOUtils.mergePath("best-effort", nutName).equals(parsedName)) {
             return nut;
         } else if (nut.getReferencedNuts() != null) {
             // Find in referenced nuts

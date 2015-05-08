@@ -123,4 +123,14 @@ public interface Nut {
      * @return the parent directory, {@code null} if the nut is not directly accessible on the file system
      */
     String getParentFile();
+
+    /**
+     * <p>
+     * Indicates if this nut has a dynamic content, meaning that it could be changed each time {@link #openStream()} is
+     * invoked. In this case the nut should not be added to any cache and transformation chain should be applied.
+     * </p>
+     *
+     * @return {@code true} if content is dynamic, {@code false} otherwise
+     */
+    boolean isDynamic();
 }

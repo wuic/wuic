@@ -40,6 +40,7 @@ package com.github.wuic.test.engine;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
@@ -59,6 +60,7 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
@@ -68,7 +70,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -136,10 +141,106 @@ public class HtmlInspectorEngineTest {
         Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
         final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
 
-        Assert.assertTrue(script, script.contains("console.log"));
+        Assert.assertTrue(script, script.contains("console.log(i);"));
         Assert.assertTrue(script, script.contains("i+=3"));
         Assert.assertTrue(script, script.contains("i+=4"));
+    }
 
+    //@Test
+    public void checkInlineScript() throws Exception {
+        final String script = "var j; for (j = 0; < 100; j++) { console.log(j);}";
+        final byte[] bytes = ("<script>" + script + "</script>").getBytes();
+        final HtmlInspectorEngine engine = new HtmlInspectorEngine(true, "UTF-8");
+        ConvertibleNut nut = new ByteArrayNut(bytes, "index.html", NutType.HTML, 1L, true);
+        final ConvertibleNut finalNut = nut;
+        final NutDao dao = Mockito.mock(NutDao.class);
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                final String name = invocationOnMock.getArguments()[0].toString();
+
+                if (finalNut.getInitialName().equals(name)) {
+                    return Arrays.asList(finalNut);
+                }
+
+                final Nut n = Mockito.mock(Nut.class);
+                Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
+                Mockito.when(n.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+                Mockito.when(n.getInitialName()).thenReturn(name);
+                Mockito.when(n.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+                return Arrays.asList(n);
+            }
+        });
+
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
+        heap.checkFiles(null);
+
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("", heap).build());
+        Assert.assertEquals(1, res.size());
+        final ConvertibleNut n = res.get(0);
+        n.transform(new Pipe.DefaultOnReady(Mockito.mock(ByteArrayOutputStream.class)));
+        Assert.assertNotNull(n.getReferencedNuts());
+        Assert.assertEquals(1, n.getReferencedNuts().size());
+        String content = NutUtils.readTransform(n.getReferencedNuts().get(0));
+        Assert.assertTrue(content, script.equals(content));
+    }
+
+    /**
+     * <p>
+     * Tests cached transformation by added transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void transformationCacheTest() throws Exception {
+        final byte[] bytes = "<script src='foo.js'></script>"
+                .concat("<script src='bar.js'></script>")
+                .concat("<script src='baz.js'></script>").getBytes();
+        final HtmlInspectorEngine engine = new HtmlInspectorEngine(true, "UTF-8");
+        ConvertibleNut nut = new ByteArrayNut(bytes, "index.html", NutType.HTML, 1L, true);
+        final ConvertibleNut finalNut = nut;
+        final NutDao dao = Mockito.mock(NutDao.class);
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                final String name = invocationOnMock.getArguments()[0].toString();
+
+                if (finalNut.getInitialName().equals(name)) {
+                    return Arrays.asList(finalNut);
+                }
+
+                final Nut n = Mockito.mock(Nut.class);
+                Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
+                Mockito.when(n.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+                Mockito.when(n.getInitialName()).thenReturn(name);
+                Mockito.when(n.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+                return Arrays.asList(n);
+            }
+        });
+
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
+        heap.checkFiles(null);
+
+        // First call
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("", heap).build());
+        Assert.assertEquals(1, res.size());
+        String content = NutUtils.readTransform(res.get(0));
+        Assert.assertNotNull(res.get(0).getReferencedNuts());
+        Assert.assertEquals(3, res.get(0).getReferencedNuts().size());
+        Assert.assertTrue(content.contains("1/000000004034EFC6foo.js"));
+        Assert.assertTrue(content.contains("1/000000004034EFC6bar.js"));
+        Assert.assertTrue(content.contains("1/000000004034EFC6baz.js"));
+
+        // Second call
+        final Pipe.Transformer<ConvertibleNut> transformer = res.get(0).getTransformers().iterator().next();
+        nut = new ByteArrayNut(bytes, "index.html", NutType.HTML, 1L, true);
+        nut.addTransformer(transformer);
+        content = NutUtils.readTransform(nut);
+        Assert.assertNull(nut.getReferencedNuts());
+        Assert.assertTrue(content.contains("1/000000004034EFC6foo.js"));
+        Assert.assertTrue(content.contains("1/000000004034EFC6bar.js"));
+        Assert.assertTrue(content.contains("1/000000004034EFC6baz.js"));
     }
 
     /**
@@ -189,7 +290,7 @@ public class HtmlInspectorEngineTest {
         };
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L);
+        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L, false);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
@@ -210,7 +311,7 @@ public class HtmlInspectorEngineTest {
 
             @Override
             protected List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException {
-                final ConvertibleNut nut = new ByteArrayNut("".getBytes(), "foo.ts.js", NutType.JAVASCRIPT, 0L);
+                final ConvertibleNut nut = new ByteArrayNut("".getBytes(), "foo.ts.js", NutType.JAVASCRIPT, 0L, false);
                 return Arrays.asList(nut);
             }
 
@@ -260,7 +361,7 @@ public class HtmlInspectorEngineTest {
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
-        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L);
+        final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L, false);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);

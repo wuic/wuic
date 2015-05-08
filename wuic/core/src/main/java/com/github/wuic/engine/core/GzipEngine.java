@@ -177,6 +177,9 @@ public class GzipEngine extends NodeEngine {
             final GZIPOutputStream gos = new GZIPOutputStream(os);
             IOUtils.copyStream(is, gos);
             gos.close();
+
+            // Make sure the nut state is changed in case of this transformer is reused.
+            convertibleNut.setIsCompressed(Boolean.TRUE);
         }
     }
 }

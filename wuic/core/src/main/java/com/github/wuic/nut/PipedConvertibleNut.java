@@ -47,6 +47,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
@@ -96,6 +97,47 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
     }
 
     /**
+     * <p>
+     * Apply transformers by chaining each transformer specified in the given list.
+     * </p>
+     *
+     * @param convertibleNut nut to transform
+     * @param transformers the transformers chain
+     * @param callbacks callbacks to call
+     * @throws IOException if transformation fails
+     */
+    public static void transform(final ConvertibleNut convertibleNut,
+                                 final Set<Pipe.Transformer<ConvertibleNut>> transformers,
+                                 final List<Pipe.OnReady> callbacks)
+            throws IOException {
+
+        InputStream is = null;
+
+        try {
+            if (transformers != null) {
+                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(convertibleNut, convertibleNut.openStream());
+
+                for (final Pipe.Transformer<ConvertibleNut> transformer : transformers) {
+                    pipe.register(transformer);
+                }
+
+                pipe.execute(callbacks.toArray(new Pipe.OnReady[callbacks.size()]));
+            } else {
+                is = convertibleNut.openStream();
+                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                IOUtils.copyStream(is, bos);
+                final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
+
+                for (final Pipe.OnReady cb : callbacks) {
+                    cb.ready(execution);
+                }
+            }
+        } finally {
+            IOUtils.close(is);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -109,10 +151,8 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
     @Override
     public void transform(final Pipe.OnReady ... onReady) throws IOException {
         if (isTransformed()) {
-            throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
+            throw new IllegalStateException("Could not call transform(Pipe.OnReady...) method twice.");
         }
-
-        InputStream is = null;
 
         try {
             final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
@@ -121,26 +161,8 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                 merge.addAll(getReadyCallbacks());
             }
 
-            if (getTransformers() != null) {
-                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(this, openStream());
-
-                for (final Pipe.Transformer<ConvertibleNut> transformer : getTransformers()) {
-                    pipe.register(transformer);
-                }
-
-                pipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
-            } else {
-                is = openStream();
-                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                IOUtils.copyStream(is, bos);
-                final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
-
-                for (final Pipe.OnReady cb : onReady) {
-                    cb.ready(execution);
-                }
-            }
+            transform(this, getTransformers(), merge);
         } finally {
-            IOUtils.close(is);
             setTransformed(true);
         }
     }

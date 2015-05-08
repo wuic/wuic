@@ -71,7 +71,7 @@ public class TransformedNutTest {
      */
     @Test
     public void transformTest() throws IOException {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L));
+        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         nut.transform(new Pipe.DefaultOnReady(bos));
         Assert.assertEquals(new String(bos.toByteArray()), ".foo{}");
@@ -93,7 +93,7 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void setNutNameTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L));
+        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.setNutName("");
     }
 
@@ -102,7 +102,7 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void addTransformerTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L));
+        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addTransformer(Mockito.mock(Pipe.Transformer.class));
     }
 
@@ -111,7 +111,7 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void addReferencedNutTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L));
+        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addReferencedNut(Mockito.mock(ConvertibleNut.class));
     }
 

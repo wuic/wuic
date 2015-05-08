@@ -148,7 +148,7 @@ public class ConverterEngineTest {
      */
     @Test(expected = IllegalStateException.class)
     public void nutTypeNotChangedTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L);
+        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true) {
@@ -176,7 +176,7 @@ public class ConverterEngineTest {
      */
     @Test
     public void enableConversionTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L);
+        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true);
@@ -203,7 +203,7 @@ public class ConverterEngineTest {
      */
     @Test
     public void disableConversionTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L);
+        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(false);

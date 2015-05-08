@@ -81,7 +81,7 @@ public class GzipEngineTest {
     public void enableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine(true);
 
-        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L);
+        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
@@ -109,7 +109,7 @@ public class GzipEngineTest {
     public void disableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine(false);
 
-        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L);
+        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 

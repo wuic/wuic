@@ -123,6 +123,13 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
         wrapped.setNutName(nutName);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDynamic() {
+        return wrapped.isDynamic();
+    }
 
     /**
      * {@inheritDoc}

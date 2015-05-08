@@ -132,6 +132,10 @@ public class SpriteInspectorEngine extends NodeEngine {
 
             // Calculate type and dimensions of the final image
             for (final ConvertibleNut n : res) {
+                if (request.isBestEffort()) {
+                    n.setNutName(IOUtils.mergePath("best-effort", n.getName()));
+                }
+
                 // Clear previous work
                 initSpriteProviders(n);
 

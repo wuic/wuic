@@ -51,6 +51,7 @@ import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -147,7 +149,13 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         // Nuts exist in cache, returns them
         if (value != null) {
             log.info("Nuts for request '{}' found in cache", request);
-            retval = new ArrayList<ConvertibleNut>((value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult()).values());
+            final Map<String, CacheResult.Entry> entries = value.getDefaultResult() != null ? value.getDefaultResult() : value.getBestEffortResult();
+            final Map<String, ConvertibleNut> nuts = toConvertibleNut(request, entries);
+            retval = new ArrayList<ConvertibleNut>(nuts.size());
+
+            for (final Map.Entry<String, ConvertibleNut> entry : nuts.entrySet()) {
+                retval.add(entry.getValue());
+            }
         } else {
             // Removes from cache when an update is detected
             request.getHeap().addObserver(new InvalidateCache(key));
@@ -156,41 +164,14 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
-                final EngineRequest req = new EngineRequestBuilder(request)
-                        .prefixCreatedNut("best-effort")
-                        .skip(EngineType.AGGREGATOR, EngineType.BINARY_COMPRESSION, EngineType.MINIFICATION)
-                        .bestEffort()
-                        .build();
-
-                final List<ConvertibleNut> result = runChains(req);
-                final List<ConvertibleNut> prefixed = new ArrayList<ConvertibleNut>(result.size());
-
-                for (final ConvertibleNut nut : result) {
-                    // Nut will differ from full processed version thanks to its prefix
-                    prefixed.add(new PrefixedNut(nut, "best-effort"));
-                }
-
                 try {
-                    retval = ByteArrayNut.toByteArrayNut(prefixed);
+                    retval = ByteArrayNut.toByteArrayNut(runBestEffortChain(request));
                 } catch (IOException ioe) {
                     WuicException.throwWuicException(ioe);
                     return null;
                 }
 
-                final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(retval.size());
-
-                for (final ConvertibleNut nut : retval) {
-                    bestEffortResult.put(nut.getName(), nut);
-                }
-
-                // Get and create if not exists the job that parse nuts
-                synchronized (parsingBestEffort) {
-                    if (parsingBestEffort.get(key) == null) {
-                        final ParseBestEffortCall call = new ParseBestEffortCall(request, bestEffortResult);
-                        WuicScheduledThreadPool.getInstance().executeAsap(call);
-                        parsingBestEffort.put(key, call);
-                    }
-                }
+                scheduleBestEffort(key, request, retval);
             } else {
                 // Not in best effort, we can wait for the end of the job
                 toCache = new ParseDefaultCall(request).call();
@@ -224,16 +205,84 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      */
     @Override
     public ConvertibleNut parse(final EngineRequest request, final String path) throws WuicException {
+        return parse(request, path, 0);
+    }
+
+    /**
+     * <p>
+     * Executes the given request in best effort.
+     * </p>
+     *
+     * @param request the request
+     * @return the processed nut prefixed according to best effort mode
+     * @throws WuicException if execution fails
+     */
+    private List<ConvertibleNut> runBestEffortChain(final EngineRequest request) throws WuicException {
+        final EngineRequest req = new EngineRequestBuilder(request)
+                .prefixCreatedNut("best-effort")
+                .skip(EngineType.AGGREGATOR, EngineType.BINARY_COMPRESSION, EngineType.MINIFICATION)
+                .bestEffort()
+                .build();
+
+        final List<ConvertibleNut> result = runChains(req);
+        final List<ConvertibleNut> prefixed = new ArrayList<ConvertibleNut>(result.size());
+
+        for (final ConvertibleNut nut : result) {
+            // Nut will differ from full processed version thanks to its prefix
+            prefixed.add(new PrefixedNut(nut, "best-effort"));
+        }
+
+        return prefixed;
+    }
+
+    /**
+     * <p>
+     * Schedules the best effort job.
+     * </p>
+     *
+     * @param key the key associated to the request
+     * @param request the request that initiates the call
+     * @param nuts the result
+     */
+    private void scheduleBestEffort(final EngineRequest.Key key, final EngineRequest request, final List<ConvertibleNut> nuts) {
+        final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(nuts.size());
+
+        for (final ConvertibleNut nut : nuts) {
+            bestEffortResult.put(nut.getName(), nut);
+        }
+
+        // Get and create if not exists the job that parse nuts
+        synchronized (parsingBestEffort) {
+            if (parsingBestEffort.get(key) == null) {
+                final ParseBestEffortCall call = new ParseBestEffortCall(request, bestEffortResult);
+                WuicScheduledThreadPool.getInstance().executeAsap(call);
+                parsingBestEffort.put(key, call);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Like {@link #parse(com.github.wuic.engine.EngineRequest, String)} with a parameter indicating a number of
+     * recursive call.
+     * </p>
+     *
+     * @param request the request
+     * @param path the path
+     * @param callee number of recursive call
+     * @return the nut
+     * @throws WuicException if an error occurs
+     */
+    private ConvertibleNut parse(final EngineRequest request, final String path, final int callee) throws WuicException {
         // Log duration
         final Long start = System.currentTimeMillis();
-        ConvertibleNut retval = null;
+        ConvertibleNut retval;
 
         // Apply cache support
         if (works()) {
             // Retrieving the result form the cache first
             final EngineRequest.Key key = request.getKey();
             final Future<Map<String, ConvertibleNut>> future;
-            final Map<String, ConvertibleNut> value;
 
             // Indicates if we are looking for a nut from best effort process or not
             final Boolean isBestEffort = path.startsWith("best-effort");
@@ -245,16 +294,22 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 }
 
                 if (call != null) {
-                    value = call.bestEffortResult;
+                    // Find the value
+                    retval = call.find(path);
                 } else {
                     CacheResult result = getFromCache(key);
 
                     if (result == null) {
-                        parse(request, path);
+                        if (callee > 0) {
+                            parse(request);
+                        } else {
+                            parse(request, path, callee + 1);
+                        }
+
                         result = getFromCache(key);
                     }
 
-                    value = result.bestEffortResult;
+                    retval = result.find(request, path, true);
                 }
             } else {
                 synchronized (parsingDefault) {
@@ -269,40 +324,41 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
                 if (result == null) {
                     parse(request);
-                    return parse(request, path);
+                    retval = parse(request, path);
                 } else {
-                    value = result.defaultResult;
-                }
-            }
-
-            // Find the value
-            retval = value.get(path);
-
-            // TODO : we should also add the referenced nut in the map to not iterate in the list which is slower
-            if (retval == null) {
-                for (final Map.Entry<String, ConvertibleNut> entry : value.entrySet()) {
-                    if (entry.getValue().getReferencedNuts() != null) {
-                        retval = NutUtils.findByName(entry.getValue().getReferencedNuts(), path);
-
-                        if (retval != null) {
-                            break;
-                        }
-                    }
+                    retval = result.find(request, path, false);
                 }
             }
         // we don't cache so just call the next engine if exists
         } else {
-            final List<ConvertibleNut> list = runChains(request);
-
-            for (final ConvertibleNut nut : list) {
-                if (nut.getName().equals(path)) {
-                    retval = nut;
-                    break;
-                }
-            }
+            retval = runAndFind(request, path);
         }
 
         Logging.TIMER.log("'{}' retrieved from cache engine in {} ms", path, (System.currentTimeMillis() - start));
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Run chains for the given request and just after that find the nut corresponding to the given path in the result.
+     * </p>
+     *
+     * @param request the request
+     * @param path the nut name
+     * @return the nut, {@code null} if not found
+     * @throws WuicException if request can't be processed
+     */
+    private ConvertibleNut runAndFind(final EngineRequest request, final String path) throws WuicException {
+        ConvertibleNut retval = null;
+        final List<ConvertibleNut> list = runChains(request);
+
+        for (final ConvertibleNut nut : list) {
+            if (nut.getName().equals(path)) {
+                retval = nut;
+                break;
+            }
+        }
 
         return retval;
     }
@@ -333,6 +389,62 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         }
 
         return null;
+    }
+
+    /**
+     * <p>
+     * Reads the given nuts, converts them to {@link Serializable} objects and returns them in a map to add in the cache.
+     * The given map is also populated with concrete nut when they are prepared to be cached.
+     * </p>
+     *
+     * @param nuts the nut to serialize
+     * @param processed the map where serialized and static nuts will be stored
+     * @return the map of processed nuts
+     * @throws IOException if an I/O error occurs
+     */
+    private Map<String, CacheResult.Entry> prepareCacheableNuts(final List<ConvertibleNut> nuts,
+                                                                final Map<String, ConvertibleNut> processed)
+            throws IOException {
+        final Map<String, CacheResult.Entry> retval = new HashMap<String, CacheResult.Entry>();
+
+        for (final ConvertibleNut nut : nuts) {
+            final List<ConvertibleNut> referenced;
+            final ConvertibleNut byteArray = ByteArrayNut.toByteArrayNut(nut);
+            referenced = byteArray.getReferencedNuts();
+
+            // Nut content is static, cache it entirely
+            // otherwise transformation will be applied each time the cache entry is retrieved
+            if (!nut.isDynamic()) {
+                retval.put(nut.getName(), new CacheResult.Entry(byteArray));
+            } else {
+                retval.put(nut.getName(), new CacheResult.Entry(referenced, nut.getName(), nut.getTransformers()));
+            }
+
+            if (processed != null) {
+                processed.put(nut.getName(), byteArray);
+            }
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Converts the given entries to {@link ConvertibleNut convertible} nut.
+     * </p>
+     *
+     * @param request the request
+     * @param entries the entries
+     * @return the converted entries
+     */
+    private Map<String, ConvertibleNut> toConvertibleNut(final EngineRequest request, final Map<String, CacheResult.Entry> entries) {
+        final Map<String, ConvertibleNut> retval = new HashMap<String, ConvertibleNut>(entries.size());
+
+        for (final Map.Entry<String, CacheResult.Entry> entry : entries.entrySet()) {
+            retval.put(entry.getKey(), entry.getValue().toConvertibleNut(request));
+        }
+
+        return retval;
     }
 
     /**
@@ -452,27 +564,45 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         }
 
         /**
+         * <p>
+         * Finds the nut corresponding to the given path.
+         * </p>
+         *
+         * @param path the nut name
+         * @return the nut, {@code null} if not found
+         */
+        private ConvertibleNut find(final String path) {
+            ConvertibleNut retval = bestEffortResult.get(path);
+
+            // TODO : we should also add the referenced nut in the map to not iterate in the list which is slower
+            if (retval == null) {
+                for (final Map.Entry<String, ConvertibleNut> entry : bestEffortResult.entrySet()) {
+                    if (entry.getValue().getReferencedNuts() != null) {
+                        retval = NutUtils.findByName(entry.getValue().getReferencedNuts(), path);
+
+                        if (retval != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return retval;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         public Map<String, ConvertibleNut> call() throws WuicException {
             try {
-                final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
+                final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
                 final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>(bestEffortResult.values());
-
-                for (final ConvertibleNut nut : nuts) {
-                    final ConvertibleNut byteArray = ByteArrayNut.toByteArrayNut(nut);
-                    toCache.put(byteArray.getName(), byteArray);
-
-                    if (byteArray.getReferencedNuts() != null) {
-                        for (final ConvertibleNut ref : byteArray.getReferencedNuts()) {
-                            toCache.put(ref.getName(), ref);
-                        }
-                    }
-                }
+                final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
 
                 log.debug("Caching nut with key '{}'", request);
-                putToCache(request.getKey(), new CacheResult(toCache, null));
+                final CacheResult result = new CacheResult(toCache, null);
+                putToCache(request.getKey(), result);
 
                 // Now let's parse the default result asynchronously
                 final Future<Map<String, ConvertibleNut>> future = WuicScheduledThreadPool.getInstance().executeAsap(new ParseDefaultCall(request));
@@ -481,7 +611,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     parsingDefault.put(request.getKey(), future);
                 }
 
-                return toCache;
+                return retval;
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
                 return null;
@@ -528,12 +658,8 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         public Map<String, ConvertibleNut> call() throws WuicException {
             try {
                 final List<ConvertibleNut> nuts = runChains(new EngineRequestBuilder(request).disableBestEffort().build());
-                final Map<String, ConvertibleNut> toCache = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
-
-                for (final ConvertibleNut nut : nuts) {
-                    toCache.put(nut.getName(), ByteArrayNut.toByteArrayNut(nut));
-                }
-
+                final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
+                final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
                 CacheResult cached = getFromCache(request.getKey());
 
                 // Not in best effort mode
@@ -548,7 +674,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 log.debug("Caching nuts with key '{}'", request);
                 putToCache(request.getKey(), cached);
 
-                return toCache;
+                return retval;
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
                 return null;
@@ -574,26 +700,209 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     public static class CacheResult implements Serializable {
 
         /**
+         * <p>
+         * An entry wraps dynamic and static nuts for a cache result.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @version 1.0
+         * @since 0.5.2
+         */
+        public static class Entry {
+
+            /**
+             * The logger.
+             */
+            private Logger log = LoggerFactory.getLogger(getClass());
+
+            /**
+             * Nut transformers if the entry represents a dynamic nut.
+             */
+            private final Set<Pipe.Transformer<ConvertibleNut>> dynamicTransformers;
+
+            /**
+             * Dynamic nut name if the entry represents a dynamic nut.
+             */
+            private final String dynamicName;
+
+            /**
+             * All referenced nuts in a collection if the entry represents a dynamic nut.
+             */
+            private final List<ConvertibleNut> dynamicReferencedNuts;
+
+            /**
+             * Nut to entirely cache when the entry represents a static nut.
+             */
+            private final ConvertibleNut staticNut;
+
+            /**
+             * <p>
+             * Builds an entry wrapping a dynamic nut.
+             * </p>
+             *
+             * @param dynamicReferencedNuts nuts to reference
+             * @param dynamicName the name
+             * @param dynamicTransformers the transformers
+             */
+            public Entry(final List<ConvertibleNut> dynamicReferencedNuts,
+                         final String dynamicName,
+                         final Set<Pipe.Transformer<ConvertibleNut>> dynamicTransformers) {
+                this.dynamicReferencedNuts = dynamicReferencedNuts;
+                this.dynamicName = dynamicName;
+                this.dynamicTransformers = dynamicTransformers;
+                this.staticNut = null;
+            }
+
+            /**
+             * <p>
+             * Builds an entry wrapping a static nut.
+             * </p>
+             *
+             * @param staticNut the static nut
+             */
+            public Entry(final ConvertibleNut staticNut) {
+                this.dynamicReferencedNuts = null;
+                this.dynamicName = null;
+                this.dynamicTransformers = null;
+                this.staticNut = staticNut;
+            }
+
+            /**
+             * <p>
+             * Finds the nut with the given name if wrapped in this entry
+             * </p>
+             *
+             * @param request the request that requires the nut
+             * @param name the nut name
+             * @return the nut, {@code null} if not found
+             */
+            ConvertibleNut find(final EngineRequest request, final String name) {
+                List<ConvertibleNut> referenced;
+
+                if (staticNut != null) {
+                    if (name.equals(staticNut.getName())) {
+                        return staticNut;
+                    } else {
+                        referenced = staticNut.getReferencedNuts();
+                    }
+                } else if (name.equals(dynamicName)) {
+                    return toConvertibleNut(request);
+                } else {
+                    referenced = dynamicReferencedNuts;
+                }
+
+                if (referenced != null) {
+                    final ConvertibleNut ref = NutUtils.findByName(referenced, name);
+
+                    if (ref != null) {
+                        return ref;
+                    }
+                }
+
+                return null;
+            }
+
+            /**
+             * <p>
+             * Converts this entry to a {@link ConvertibleNut}.
+             * </p>
+             *
+             * <p>
+             * If the entry represents a dynamic nut, the method simulates a parsing from the given request by
+             * reusing the wrapped transformers.
+             * </p>
+             *
+             * @param request the request
+             * @return the converted nut
+             */
+            ConvertibleNut toConvertibleNut(final EngineRequest request) {
+                ConvertibleNut retval = staticNut;
+
+                if (staticNut == null) {
+                    for (final ConvertibleNut nut : request.getNuts()) {
+                        if (nut.isDynamic() && nut.getInitialName().equals(dynamicName)) {
+                            retval = nut;
+                            break;
+                        }
+                    }
+
+                    if (retval == null) {
+                        WuicException.throwBadStateException(
+                                new IllegalStateException(
+                                        String.format("Cached dynamic nut %s for workflow %s does not exists in request.",
+                                                dynamicName, request.getWorkflowId())));
+                    } else {
+                        if (dynamicTransformers == null) {
+                            log.warn("Nut {} in workflow {} is dynamic but cached entry does not contains it transformers.",
+                                    dynamicName, request.getWorkflowId());
+                        } else {
+                            for (final Pipe.Transformer<ConvertibleNut> t : dynamicTransformers) {
+                                retval.addTransformer(t);
+                            }
+                        }
+
+                        if (dynamicReferencedNuts != null) {
+                            for (final ConvertibleNut ref : dynamicReferencedNuts) {
+                                retval.addReferencedNut(ref);
+                            }
+                        }
+                    }
+                }
+
+                return retval;
+            }
+        }
+
+        /**
          * The best effort result.
          */
-        private Map<String, ConvertibleNut> bestEffortResult;
+        private Map<String, Entry> bestEffortResult;
 
         /**
          * The default result.
          */
-        private Map<String, ConvertibleNut> defaultResult;
+        private Map<String, Entry> defaultResult;
 
         /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param bestEffortResult the best effort map
-         * @param defaultResult the default map
+         * @param bestEffortResult the best effort
+         * @param defaultResult the default
          */
-        public CacheResult(final Map<String, ConvertibleNut> bestEffortResult, final Map<String, ConvertibleNut> defaultResult) {
+        public CacheResult(final Map<String, Entry> bestEffortResult,
+                           final Map<String, Entry> defaultResult) {
             this.bestEffortResult = bestEffortResult;
             this.defaultResult = defaultResult;
+        }
+
+        /**
+         * <p>
+         * Finds the entry that wraps the nut with the given name and return it.
+         * </p>
+         *
+         * @param request the request
+         * @param bestEffort find in the best effort result
+         * @param name the nut name
+         * @return the found nut, {@code null} if no nut has been found
+         */
+        ConvertibleNut find(final EngineRequest request, final String name, final boolean bestEffort) {
+            final Map<String, Entry> map = !bestEffort ? defaultResult : bestEffortResult;
+
+            if (map == null) {
+                return null;
+            }
+
+            for (final Map.Entry<String, Entry> entry : map.entrySet()) {
+                final ConvertibleNut retval = entry.getValue().find(request, name);
+
+                if (retval != null) {
+                    return retval;
+                }
+            }
+
+            return null;
         }
 
         /**
@@ -603,7 +912,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          *
          * @return the default result
          */
-        public Map<String, ConvertibleNut> getDefaultResult() {
+        public Map<String, Entry> getDefaultResult() {
             return defaultResult;
         }
 
@@ -614,18 +923,18 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          *
          * @return the best effort result
          */
-        public Map<String, ConvertibleNut> getBestEffortResult() {
+        public Map<String, Entry> getBestEffortResult() {
             return bestEffortResult;
         }
 
         /**
          * <p>
-         * Sets the default result
+         * Sets the default result.
          * </p>
          *
          * @param defaultResult the default result
          */
-        public void setDefaultResult(final Map<String, ConvertibleNut> defaultResult) {
+        public void setDefaultResult(final Map<String, Entry> defaultResult) {
             this.defaultResult = defaultResult;
         }
     }

@@ -43,6 +43,7 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.jee.ServletProcessContext;
 import com.github.wuic.jee.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
 
@@ -104,6 +105,8 @@ public class WuicTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         try {
+            pageContext.getRequest().setAttribute(HtmlParserFilter.FORCE_DYNAMIC_CONTENT, "");
+
             if (wuicFacade.allowsMultipleConfigInTagSupport()) {
                 wuicFacade.clearTag(workflowId);
             }
@@ -111,7 +114,7 @@ public class WuicTag extends TagSupport {
             final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId, new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
 
             for (final ConvertibleNut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
+                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId), "data-wuic-skip"));
             }
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", ioe);

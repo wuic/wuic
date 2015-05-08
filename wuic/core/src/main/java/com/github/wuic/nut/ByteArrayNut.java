@@ -76,10 +76,15 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
     private static final long serialVersionUID = 7883435600781576457L;
 
     /**
+     * Indicates if the content is subject to change or not.
+     */
+    private boolean dynamicContent;
+
+    /**
      * The bytes.
      */
     private byte[] byteArray;
-    
+
     /**
      * <p>
      * Builds a new {@code Nut} transformed nut based on a given byte array and only one original nut.
@@ -96,7 +101,8 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
 
     /**
      * <p>
-     * Builds a new {@code Nut} transformed nut based on a specified byte array.
+     * Builds a new {@code Nut} transformed nut based on a specified byte array. Content will be static and call to
+     * {@link #setByteArray(byte[])} will be avoided.
      * </p>
      *
      * @param bytes the byte array
@@ -107,8 +113,9 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      */
     public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<ConvertibleNut> originalNuts, final Long version) {
         super(name, nt, new FutureLong(version), Boolean.FALSE);
+        dynamicContent = false;
         setOriginalNuts(originalNuts);
-        byteArray = Arrays.copyOf(bytes, bytes.length);
+        setByteArray(bytes, false);
     }
 
     /**
@@ -120,10 +127,12 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * @param name the nut name
      * @param nt the {@link NutType}
      * @param version the version number
+     * @param dynamicContent {@code true} if you will call {@link #setByteArray(byte[])} in the future
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Long version) {
+    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Long version, final boolean dynamicContent) {
         super(name, nt, new FutureLong(version), Boolean.FALSE);
-        byteArray = Arrays.copyOf(bytes, bytes.length);
+        this.dynamicContent = dynamicContent;
+        setByteArray(bytes, false);
     }
 
     /**
@@ -160,12 +169,12 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             final ByteArrayOutputStream os = new ByteArrayOutputStream();
             nut.transform(new Pipe.DefaultOnReady(os));
 
-            final ConvertibleNut bytes;
+            final ByteArrayNut bytes;
             final String name = IOUtils.mergePath(nut.getName());
 
             // This is an original nut
             if (nut.getOriginalNuts() == null) {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut));
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut), nut.isDynamic());
             } else {
                 final List<ConvertibleNut> o = nut.getOriginalNuts();
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
@@ -195,10 +204,45 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
     }
 
     /**
+     * <p>
+     * Sets the content.
+     * </p>
+     *
+     * @param bytes the new content
+     */
+    public void setByteArray(final byte[] bytes) {
+        setByteArray(bytes, true);
+    }
+
+    /**
+     * <p>
+     * Sets the content.
+     * </p>
+     *
+     * @param checkDynamic {@code true} if we make sure this nut is dynamic to allow this method call
+     * @param bytes the new content
+     */
+    private void setByteArray(final byte[] bytes, final boolean checkDynamic) {
+        if (checkDynamic && !isDynamic()) {
+            throw new IllegalStateException("isDynamic() returns false, which means that setByteArray(byte[]) can't be called.");
+        }
+
+        byteArray = Arrays.copyOf(bytes, bytes.length);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public InputStream openStream() {
         return new ByteArrayInputStream(byteArray);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDynamic() {
+        return dynamicContent;
     }
 }

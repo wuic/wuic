@@ -146,7 +146,7 @@ public class InspectorTest {
             builder.append(String.format(rule, path));
         }
 
-        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS, 1L)) {
+        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS, 1L, false)) {
             @Override
             public String getName() {
                 final String retval = createCount.get() + ".css";
