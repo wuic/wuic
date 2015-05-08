@@ -452,7 +452,7 @@ public class ContextBuilder extends Observable {
         /**
          * <p>
          * Gets the {@link NutsHeap} created by this registration. The heap is created when the first call to this
-         * method performed. Then, the instance will be created for future calls to take in consideration ant change.
+         * method performed. Then, the instance will be created for future calls to take in consideration any change.
          * </p>
          *
          * @param id the ID for this heap
