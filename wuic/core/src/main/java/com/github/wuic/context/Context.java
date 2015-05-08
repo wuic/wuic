@@ -203,6 +203,46 @@ public class Context implements Observer {
 
     /**
      * <p>
+     * Builds a new request to submit to a chain.
+     * </p>
+     *
+     * @param contextPath the context path
+     * @param wId the workflow ID
+     * @param workflow the workflow associated to the ID
+     * @param path a nut name to particularly retrieve in the result (could be {@code null})
+     * @param urlProviderFactory the URL provider
+     * @param processContext the process context
+     * @param skip the engines to skip
+     * @return the created request
+     */
+    private EngineRequest newRequest(final String contextPath,
+                                     final String wId,
+                                     final Workflow workflow,
+                                     final String path,
+                                     final UrlProviderFactory urlProviderFactory,
+                                     final ProcessContext processContext,
+                                     final EngineType ... skip) {
+        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap(), this)
+                .contextPath(contextPath)
+                .chains(workflow.getChains())
+                .urlProviderFactory(urlProviderFactory)
+                .skip(skip)
+                .processContext(processContext)
+                .build();
+
+        for (final ContextInterceptor interceptor : interceptors) {
+            if (path == null) {
+                request = interceptor.beforeProcess(request);
+            } else {
+                request = interceptor.beforeProcess(request, path);
+            }
+        }
+
+        return request;
+    }
+
+    /**
+     * <p>
      * Processes a workflow with its associated ID and returns the resulting nut associated to the given path.
      * </p>
      *
@@ -223,17 +263,7 @@ public class Context implements Observer {
                                    final ProcessContext processContext,
                                    final EngineType ... skip)
             throws IOException, WuicException {
-        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
-                .contextPath(contextPath)
-                .chains(workflow.getChains())
-                .urlProviderFactory(urlProviderFactory)
-                .skip(skip)
-                .processContext(processContext)
-                .build();
-
-        for (final ContextInterceptor interceptor : interceptors) {
-            request = interceptor.beforeProcess(request, path);
-        }
+        final EngineRequest request = newRequest(contextPath, wId, workflow, path, urlProviderFactory, processContext, skip);
 
         ConvertibleNut retval;
         if (workflow.getHead() != null) {
@@ -273,17 +303,7 @@ public class Context implements Observer {
                                          final ProcessContext processContext,
                                          final EngineType ... skip)
             throws WuicException {
-        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap())
-                .contextPath(contextPath)
-                .chains(workflow.getChains())
-                .urlProviderFactory(urlProviderFactory)
-                .processContext(processContext)
-                .skip(skip)
-                .build();
-
-        for (final ContextInterceptor interceptor : interceptors) {
-            request = interceptor.beforeProcess(request);
-        }
+        final EngineRequest request = newRequest(contextPath, wId, workflow, null, urlProviderFactory, processContext, skip);
 
         List<ConvertibleNut> retval;
 

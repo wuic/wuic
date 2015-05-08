@@ -50,6 +50,7 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
@@ -135,6 +136,9 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         {
             put(NumberUtils.FIFTEEN, new ImgParser());
         }
+        {
+            put(NumberUtils.TWENTY, new HtmlParser());
+        }
     };
 
     /**
@@ -168,10 +172,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     private static final String HTML_COMMENT_PATTERN = "(<!--.*?-->)";
 
     /**
+     * Regex that matches HTML import.
+     */
+    private static final String HTML_IMPORT_PATTERN = "(<wuic:html-import.*?/>)";
+
+    /**
      * The entire regex that collects desired data.
      */
-    private static final String REGEX =
-            String.format("%s|%s|%s|%s|%s", JS_SCRIPT_PATTERN, HREF_SCRIPT_PATTERN, CSS_SCRIPT_PATTERN, HTML_COMMENT_PATTERN, IMG_PATTERN);
+    private static final String REGEX = String.format("%s|%s|%s|%s|%s|%s",
+            JS_SCRIPT_PATTERN, HREF_SCRIPT_PATTERN, CSS_SCRIPT_PATTERN, HTML_COMMENT_PATTERN, IMG_PATTERN, HTML_IMPORT_PATTERN);
 
     /**
      * The pattern that collects desired data
@@ -835,6 +844,52 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         }
     }
 
+
+    /**
+     * <p>
+     * This class parses '<wuic:html-import/>' tags.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.0
+     */
+    private static class HtmlParser extends ResourceParser {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String urlToken() {
+            return "workflowId";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected String[] otherTokens() {
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean readInlineIfTokenNotFound() {
+            return Boolean.FALSE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutType getNutType() {
+            return null;
+        }
+    }
+
+
     /**
      * <p>
      * This class parses inline CSS.
@@ -936,74 +991,71 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param rootPath the root path of content
          * @param request the associated request
          * @throws IOException if any I/O error occurs
+         * @throws WorkflowNotFoundException if a workflow is described
          */
         private ParseInfo(final String groupName,
                           final Map<String, Integer> groups,
                           final ProxyNutDao proxyNutDao,
                           final String rootPath,
                           final EngineRequest request)
-                throws IOException {
+                throws IOException, WorkflowNotFoundException {
             final String[] groupPaths = new String[groups.size()];
+            final List<NutsHeap> composition = new ArrayList<NutsHeap>();
             this.capturedStatements = new ArrayList<String>(groups.keySet());
 
+            int start = 0;
             int cpt = 0;
 
             // Gets the appropriate parser for each captured group according to their position and compute path
             for (final Map.Entry<String, Integer> entry : groups.entrySet()) {
-                final ResourceParser.ApplyResult result = PARSERS.get(entry.getValue()).apply(entry.getKey(), proxyNutDao, groupName + cpt);
+                final TerFunction<String, ProxyNutDao, String, ResourceParser.ApplyResult> parser = PARSERS.get(entry.getValue());
+                final ResourceParser.ApplyResult result = parser.apply(entry.getKey(), proxyNutDao, groupName + cpt);
 
-                // Path is null, do not replace anything
                 if (result != null) {
-                    final String path = result.getUrl();
-
-                    try {
-                        // Will raise an exception if type is not supported
-                        final NutType nutType = NutType.getNutType(path);
-
-                        // If we are in best effort and the captured path corresponds to a NutType processed by any
-                        // converter engine, we must capture the statement to transform it
-                        final boolean canRemove = canRemove(request.getChainFor(nutType), request);
-
-                        if (canRemove) {
-                            this.capturedStatements.remove(entry.getKey());
-                        } else {
-                            final String simplified = sanitize(rootPath, path);
-
-                            // Now we collect the attributes of the tag to add them in the future statement
-                            if (result.getAttributes() != null) {
-                                populateAttributes(result.getAttributes());
-                            }
-
-                            groupPaths[cpt++] = simplified;
+                    if (parser instanceof HtmlParser) {
+                        if (cpt > 0) {
+                            composition.add(createHeap(groupPaths, start, cpt, request, proxyNutDao));
+                            start += cpt;
+                            cpt = 0;
                         }
-                    } catch (Exception e) {
-                        logger.debug("Fail to get the NutType", e);
-                        logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
-                        this.capturedStatements.remove(entry.getKey());
+
+                        composition.add(request.getHeap(result.getUrl()));
+                    } else {
+                        final String path = result.getUrl();
+
+                        try {
+                            // Will raise an exception if type is not supported
+                            final NutType nutType = NutType.getNutType(path);
+
+                            // If we are in best effort and the captured path corresponds to a NutType processed by any
+                            // converter engine, we must capture the statement to transform it
+                            final boolean canRemove = canRemove(request.getChainFor(nutType), request);
+
+                            if (canRemove) {
+                                this.capturedStatements.remove(entry.getKey());
+                            } else {
+                                final String simplified = sanitize(rootPath, path);
+
+                                // Now we collect the attributes of the tag to add them in the future statement
+                                if (result.getAttributes() != null) {
+                                    populateAttributes(result.getAttributes());
+                                }
+
+                                groupPaths[start + cpt++] = simplified;
+                            }
+                        } catch (Exception e) {
+                            logger.debug("Fail to get the NutType", e);
+                            logger.warn("{} does not ends with an extension supported by WUIC, skipping...", path);
+                            this.capturedStatements.remove(entry.getKey());
+                        }
                     }
                 } else {
+                    // Path is null, do not replace anything
                     this.capturedStatements.remove(entry.getKey());
                 }
             }
 
-            // No info have been collected
-            if (cpt == 0) {
-                return;
-            }
-
-            // All paths computed from captured statements.
-            final String[] paths = new String[cpt];
-            System.arraycopy(groupPaths, 0, paths, 0, cpt);
-
-            List<String> filteredPath = CollectionUtils.newList(paths);
-
-            if (nutFilters != null) {
-                for (final NutFilter filter : nutFilters) {
-                    filteredPath = filter.filterPaths(filteredPath);
-                }
-            }
-
-            createHeap(filteredPath, request, proxyNutDao);
+            createHeap(cpt, start, groupPaths, request, composition, proxyNutDao);
         }
 
         /**
@@ -1082,22 +1134,109 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         /**
          * <p>
-         * Creates the internal heap with given parameters.
+         * Creates the heap for this object. Any remaining paths will be used to create a heap. If the composition
+         * contains only on heap, then this one will be used, otherwise a composite heap will be created.
          * </p>
          *
-         * @param filteredPath the paths
+         * @param count the number of remaining paths
+         * @param start the first remaining path position
+         * @param groupPaths all the paths
+         * @param request the request
+         * @param composition the composition of already created heaps
+         * @param proxyNutDao the dao
+         * @throws IOException if any I/O error occurs
+         */
+        private void createHeap(final int count,
+                                final int start,
+                                final String[] groupPaths,
+                                final EngineRequest request,
+                                final List<NutsHeap> composition,
+                                final NutDao proxyNutDao) throws IOException {
+            // Create a heap remaining paths
+            if (count > 0) {
+                composition.add(createHeap(groupPaths, start, count, request, proxyNutDao));
+            }
+
+            if (!composition.isEmpty()) {
+                if (composition.size() == 1) {
+                    heap = composition.get(0);
+                } else {
+                    heap = createHeap(null, request, proxyNutDao, composition.toArray(new NutsHeap[composition.size()]));
+                }
+            }
+        }
+
+        /**
+         * <p>
+         * Creates an internal heap with given parameters.
+         * </p>
+         *
+         * @param groupPaths all the captured statements
+         * @param start the first statement index
+         * @param count number of statements in the heap
          * @param request the request
          * @param dao the DAO
+         * @return the heap
          * @throws IOException if creation fails
          */
-        private void createHeap(final List<String> filteredPath, final EngineRequest request, final NutDao dao)
+        private NutsHeap createHeap(final String[] groupPaths,
+                                    final int start,
+                                    final int count,
+                                    final EngineRequest request,
+                                    final NutDao dao)
                 throws IOException {
-            final byte[] hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
+            // All paths computed from captured statements.
+            final String[] paths = new String[count];
+            System.arraycopy(groupPaths, start, paths, 0, count);
+
+            List<String> filteredPath = CollectionUtils.newList(paths);
+
+            if (nutFilters != null) {
+                for (final NutFilter filter : nutFilters) {
+                    filteredPath = filter.filterPaths(filteredPath);
+                }
+            }
+
+            return createHeap(filteredPath, request, dao);
+        }
+
+        /**
+         * <p>
+         * Creates an internal heap with given parameters.
+         * </p>
+         *
+         * @param filteredPath the heap paths
+         * @param request the request
+         * @param dao the DAO
+         * @param composition the composition
+         * @return the heap
+         * @throws IOException if any I/O error occurs
+         */
+        private NutsHeap createHeap(final List<String> filteredPath,
+                                    final EngineRequest request,
+                                    final NutDao dao,
+                                    final NutsHeap ... composition)
+                throws IOException {
+            final byte[] hash;
+
+            if (filteredPath != null) {
+                hash = IOUtils.digest(filteredPath.toArray(new String[filteredPath.size()]));
+            } else {
+                final String[] ids = new String[composition.length];
+
+                for (int i = 0; i < composition.length; i++) {
+                    ids[i] = composition[i].getId();
+                }
+
+                hash = IOUtils.digest(ids);
+            }
+
             final String heapId = StringUtils.toHexString(hash);
-            heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId);
+            final NutsHeap heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, composition);
             heap.checkFiles(request.getProcessContext());
             heap.addObserver(request.getHeap());
             NutsHeap.ListenerHolder.INSTANCE.add(heap);
+            return heap;
         }
 
         /**

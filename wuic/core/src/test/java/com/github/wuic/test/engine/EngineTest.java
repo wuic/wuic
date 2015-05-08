@@ -164,7 +164,7 @@ public class EngineTest {
         Mockito.when(nut.getInitialNutType()).thenReturn(NutType.GIF);
         Mockito.when(nut.getInitialName()).thenReturn("foo.gif");
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
-        final EngineRequestBuilder builder = new EngineRequestBuilder("", heap);
+        final EngineRequestBuilder builder = new EngineRequestBuilder("", heap, null);
         final EngineRequest request = builder.build();
 
         a.parse(request);

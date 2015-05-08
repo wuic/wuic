@@ -361,6 +361,7 @@ public class WuicXmlTest {
         final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
+        builder.tag(this).heap("heap", "defaultDao", new String[] {"images/reject-block.png"}).releaseTag();
 
         final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), null);
 

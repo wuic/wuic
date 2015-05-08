@@ -40,6 +40,7 @@ package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.CollectionUtils;
@@ -267,6 +268,19 @@ public final class EngineRequest {
         }
 
         return retval;
+    }
+
+    /**
+     * <p>
+     * Gets the heap associated to the given workflow.
+     * </p>
+     *
+     * @param workflowId the workflow ID
+     * @return the associated heap
+     * @throws WorkflowNotFoundException if workflow has not been found
+     */
+    public NutsHeap getHeap(final String workflowId) throws WorkflowNotFoundException {
+        return getBuilder().getContext().getWorkflow(workflowId).getHeap();
     }
 
     /**

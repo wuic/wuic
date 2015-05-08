@@ -89,7 +89,7 @@ public class AbstractAggregatorEngineTest {
         final NutsHeap h = Mockito.mock(NutsHeap.class);
         Mockito.when(h.getNuts()).thenReturn(nuts);
 
-        final List<ConvertibleNut> res = e.parse(new EngineRequestBuilder("", h).build());
+        final List<ConvertibleNut> res = e.parse(new EngineRequestBuilder("", h, null).build());
         Assert.assertEquals(4, res.size());
     }
 }

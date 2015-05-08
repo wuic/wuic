@@ -158,7 +158,7 @@ public class ConverterEngineTest {
             }
         };
 
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap)
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
                 .chain(NutType.CSS, converter)
                 .chain(NutType.JAVASCRIPT, new I())
                 .build());
@@ -180,7 +180,7 @@ public class ConverterEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true);
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap)
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
                 .chain(NutType.CSS, converter)
                 .chain(NutType.JAVASCRIPT, new I())
                 .build());
@@ -207,7 +207,7 @@ public class ConverterEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(false);
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap)
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
                 .chain(NutType.CSS, converter)
                 .chain(NutType.JAVASCRIPT, new I())
                 .build());

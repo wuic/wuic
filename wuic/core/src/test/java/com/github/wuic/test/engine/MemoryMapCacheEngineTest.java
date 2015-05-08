@@ -139,7 +139,7 @@ public class MemoryMapCacheEngineTest {
 
         for (int i = 0; i < transformers.length; i++) {
             final Pipe.Transformer transformer = transformers[i];
-            final List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap).chain(NutType.JAVASCRIPT, new NodeEngine() {
+            final List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, null).chain(NutType.JAVASCRIPT, new NodeEngine() {
                 @Override
                 public List<NutType> getNutTypes() {
                     return Arrays.asList(NutType.JAVASCRIPT);
@@ -219,7 +219,7 @@ public class MemoryMapCacheEngineTest {
 
         // Registers the InvalidateCache multiple time
         for (int i = 0; i < 3; i++) {
-            engine.parse(new EngineRequestBuilder("", heap).build());
+            engine.parse(new EngineRequestBuilder("", heap, null).build());
         }
 
         // Call listeners

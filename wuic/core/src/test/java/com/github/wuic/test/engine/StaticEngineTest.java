@@ -81,7 +81,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("workflow", heap).build());
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("workflow", heap, null).build());
         Assert.assertEquals(res.size(), 3);
 
         try {
@@ -92,7 +92,7 @@ public class StaticEngineTest {
         }
 
         // Test cache
-        res = engine.parse(new EngineRequestBuilder("workflow", heap).build());
+        res = engine.parse(new EngineRequestBuilder("workflow", heap, null).build());
         Assert.assertEquals(res.size(), 3);
     }
 
@@ -108,7 +108,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         try {
-            engine.parse(new EngineRequestBuilder("foo", heap).build());
+            engine.parse(new EngineRequestBuilder("foo", heap, null).build());
             Assert.fail();
         } catch (WuicException we) {
             // Normal behavior

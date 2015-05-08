@@ -165,7 +165,7 @@ public class InspectorTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
 
-        final EngineRequest request = new EngineRequestBuilder("wid", h).contextPath("cp").build();
+        final EngineRequest request = new EngineRequestBuilder("wid", h, null).contextPath("cp").build();
         final List<ConvertibleNut> res = engine.parse(request);
         final StringBuilder sb = new StringBuilder();
 

@@ -90,6 +90,11 @@ public final class NumberUtils {
     public static final int FIFTEEN = 15;
 
     /**
+     * Twenty.
+     */
+    public static final int TWENTY = 20;
+
+    /**
      * Two hundred and fifty five.
      */
     public static final int TWO_FIVE_FIVE = 255;

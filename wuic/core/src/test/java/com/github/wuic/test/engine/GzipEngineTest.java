@@ -85,7 +85,7 @@ public class GzipEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals(1, res.size());
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -113,7 +113,7 @@ public class GzipEngineTest {
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals("var foo = 1;", NutUtils.readTransform(res.get(0)));
     }
