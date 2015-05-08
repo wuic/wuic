@@ -769,7 +769,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
             /**
              * <p>
-             * Finds the nut with the given name if wrapped in this entry
+             * Finds the nut with the given name if wrapped in this entry.
              * </p>
              *
              * @param request the request that requires the nut

@@ -1029,7 +1029,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         /**
          * <p>
-         * Populates the cached attributes with the map retrieved from the given map/
+         * Populates the cached attributes with the map retrieved from the given map.
          * </p>
          *
          * @param result the attributes to cache
