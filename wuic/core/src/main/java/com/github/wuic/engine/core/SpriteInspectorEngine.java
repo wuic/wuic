@@ -56,6 +56,7 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.UrlProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,62 +124,119 @@ public class SpriteInspectorEngine extends NodeEngine {
          * If the configuration says that no inspection should be done or if no sprite provider is defined,
          * then we return the given request nuts
          */
-        if (!works() || spriteProviders.length == 0) {
-            return request.getNuts();
-        } else {
-            int spriteCpt = 0;
-            final List<ConvertibleNut> res = getNext() == null ? request.getNuts() : getNext().parse(request);
-            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+        return !works() || spriteProviders.length == 0 ? request.getNuts() : process(request);
+    }
 
-            // Calculate type and dimensions of the final image
-            for (final ConvertibleNut n : res) {
-                if (request.isBestEffort()) {
-                    n.setNutName(IOUtils.mergePath("best-effort", n.getName()));
-                }
+    /**
+     * <p>
+     * Process the given request.
+     * </p>
+     *
+     * @param request the request
+     * @return the result
+     * @throws WuicException if process fails
+     */
+    private List<ConvertibleNut> process(final EngineRequest request) throws WuicException {
+        int spriteCpt = 0;
 
-                // Clear previous work
-                initSpriteProviders(n);
+        // Isolate nuts excluded from sprite computation
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+        final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
+        split(request, nuts, retval);
 
-                if (n.getOriginalNuts() != null) {
-                    final List<ConvertibleNut> originalNuts = n.getOriginalNuts();
+        if (nuts.isEmpty()) {
+            return retval;
+        }
 
-                    for (final ConvertibleNut origin : originalNuts) {
-                        if (origin instanceof ImageNut) {
-                            addRegionToSpriteProviders(ImageNut.class.cast(origin).getRegion(), origin.getName());
-                        } else {
-                            WuicException.throwBadArgumentException(new IllegalArgumentException("Processed nuts must refer ImageNut instances as original nuts"));
-                        }
-                    }
-                } else {
-                    InputStream is = null;
+        final List<ConvertibleNut> res = getNext() == null ?
+                nuts : getNext().parse(new EngineRequestBuilder(request).nuts(nuts).build());
 
-                    try {
-                        is = n.openStream();
-                        final ImageInputStream iis = ImageIO.createImageInputStream(is);
-
-                        ImageReader reader = ImageIO.getImageReaders(iis).next();
-                        reader.setInput(iis);
-                        addRegionToSpriteProviders(new Region(0, 0, reader.getWidth(0) - 1, reader.getHeight(0) - 1), n.getName());
-                    } catch (IOException ioe) {
-                        WuicException.throwWuicException(ioe);
-                    } finally {
-                        IOUtils.close(is);
-                    }
-                }
-
-                // Process referenced nut
-                final String suffix;
-
-                if (request.getPrefixCreatedNut().isEmpty()) {
-                    suffix  = String.valueOf(spriteCpt++);
-                } else {
-                    suffix  = IOUtils.mergePath(request.getPrefixCreatedNut(), String.valueOf(spriteCpt++));
-                }
-
-                retval.add(applySpriteProviders(request.getContextPath(), request.getHeap().getId(), suffix, n, request));
+        // Calculate type and dimensions of the final image
+        for (final ConvertibleNut n : res) {
+            if (request.isBestEffort()) {
+                n.setNutName(IOUtils.mergePath("best-effort", n.getName()));
             }
 
-            return retval;
+            // Clear previous work
+            initSpriteProviders(n);
+            processNut(n);
+
+            // Process referenced nut
+            final String suffix;
+
+            if (request.getPrefixCreatedNut().isEmpty()) {
+                suffix  = String.valueOf(spriteCpt++);
+            } else {
+                suffix  = IOUtils.mergePath(request.getPrefixCreatedNut(), String.valueOf(spriteCpt++));
+            }
+
+            retval.add(applySpriteProviders(suffix, n, request));
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Processes the given nut.
+     * </p>
+     *
+     * @param nut the nut
+     * @throws WuicException if processing fails
+     */
+    private void processNut(final ConvertibleNut nut) throws WuicException {
+        if (nut.getOriginalNuts() != null) {
+            final List<ConvertibleNut> originalNuts = nut.getOriginalNuts();
+
+            for (final ConvertibleNut origin : originalNuts) {
+                if (origin instanceof ImageNut) {
+                    addRegionToSpriteProviders(ImageNut.class.cast(origin).getRegion(), origin.getName());
+                } else {
+                    WuicException.throwBadArgumentException(
+                            new IllegalArgumentException("Processed nuts must refer ImageNut instances as original nuts"));
+                }
+            }
+        } else {
+            InputStream is = null;
+
+            try {
+                is = nut.openStream();
+                final ImageInputStream iis = ImageIO.createImageInputStream(is);
+
+                ImageReader reader = ImageIO.getImageReaders(iis).next();
+                reader.setInput(iis);
+                addRegionToSpriteProviders(new Region(0, 0, reader.getWidth(0) - 1, reader.getHeight(0) - 1), nut.getName());
+            } catch (IOException ioe) {
+                WuicException.throwWuicException(ioe);
+            } finally {
+                IOUtils.close(is);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Splits the request nuts in two list to separate nuts excluded from sprite computation from others.
+     * </p>
+     *
+     * @param request the request
+     * @param computeSprite nuts to include in sprite computation
+     * @param excludeSprite nuts to exclude from sprite computation
+     * @throws WuicException if parsing fails
+     */
+    private void split(final EngineRequest request,
+                       final List<ConvertibleNut> computeSprite,
+                       final List<ConvertibleNut> excludeSprite) throws WuicException {
+        for (final ConvertibleNut nut : request.getNuts()) {
+            if (request.isExcludedFromSpriteComputation(nut)) {
+                if (getNext() == null) {
+                    excludeSprite.add(nut);
+                } else {
+                    excludeSprite.addAll(getNext().parse(new EngineRequestBuilder(request).skip(EngineType.AGGREGATOR).build()));
+                }
+            } else {
+                computeSprite.add(nut);
+            }
         }
     }
 
@@ -214,16 +272,12 @@ public class SpriteInspectorEngine extends NodeEngine {
      * Generates sprites from all sprite providers and add it to the given nut.
      * </p>
      *
-     * @param url the base URL
-     * @param heapId the HEAP id
      * @param suffix the name suffix
      * @param n the nut
      * @param request the initial engine request
      * @throws WuicException if generation fails
      */
-    private ConvertibleNut applySpriteProviders(final String url,
-                                                final String heapId,
-                                                final String suffix,
+    private ConvertibleNut applySpriteProviders(final String suffix,
                                                 final ConvertibleNut n,
                                                 final EngineRequest request)
             throws WuicException {
@@ -237,7 +291,10 @@ public class SpriteInspectorEngine extends NodeEngine {
             final ConvertibleNut nut;
 
             try {
-                nut = sp.getSprite(url, heapId, request.getUrlProviderFactory(), suffix, Arrays.asList(n));
+                final String group = request.getHeap().findHeapFor(n).getId();
+                final String basePath = IOUtils.mergePath("/", request.getContextPath(), request.getWorkflowId());
+                final UrlProvider urlProvider = request.getUrlProviderFactory().create(basePath);
+                nut = sp.getSprite(group, urlProvider, suffix, Arrays.asList(n));
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
                 return null;
@@ -252,7 +309,6 @@ public class SpriteInspectorEngine extends NodeEngine {
                  */
                 final EngineType[] skip = request.alsoSkip(EngineType.CACHE, EngineType.INSPECTOR);
                 final List<ConvertibleNut> parsed = chain.parse(new EngineRequestBuilder(request)
-                        .workflowId(heapId)
                         .nuts(Arrays.asList(nut))
                         .skip(skip)
                         .build());

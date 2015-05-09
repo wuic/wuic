@@ -52,6 +52,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -111,11 +112,20 @@ public class WuicTag extends TagSupport {
                 wuicFacade.clearTag(workflowId);
             }
 
-            final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId, new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
+            final JspWriter out = pageContext.getOut();
 
-            for (final ConvertibleNut nut : nuts) {
-                pageContext.getOut().println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId), "data-wuic-skip"));
+            if (pageContext.getRequest().getAttribute(HtmlParserFilter.class.getName()) == null) {
+                final List<ConvertibleNut> nuts = wuicFacade.runWorkflow(workflowId, new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
+
+                for (final ConvertibleNut nut : nuts) {
+                    out.println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
+                }
+            } else {
+                out.print("<wuic:html-import workflowId='");
+                out.print(workflowId);
+                out.println("'/>");
             }
+
         } catch (IOException ioe) {
             throw new JspException("Can't write import statements into JSP output stream", ioe);
         } catch (WuicException we) {

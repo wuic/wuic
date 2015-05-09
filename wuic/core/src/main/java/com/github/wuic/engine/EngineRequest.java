@@ -42,6 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.UrlProviderFactory;
@@ -281,6 +282,18 @@ public final class EngineRequest {
      */
     public NutsHeap getHeap(final String workflowId) throws WorkflowNotFoundException {
         return getBuilder().getContext().getWorkflow(workflowId).getHeap();
+    }
+
+    /**
+     * <p>
+     * Indicates if the given nut should be excluded from any sprite computation.
+     * </p>
+     *
+     * @param nut the nut to exclude or not
+     * @return {@code true} if nut is excluded, {@code false} otherwise
+     */
+    public boolean isExcludedFromSpriteComputation(final Nut nut) {
+        return getBuilder().getExcludeFromSprite() != null && getBuilder().getExcludeFromSprite().contains(nut.getInitialName());
     }
 
     /**

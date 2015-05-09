@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -128,6 +129,11 @@ public final class EngineRequestBuilder {
     private ProcessContext processContext;
 
     /**
+     * All image nut names that should not be included in any sprite.
+     */
+    private Set<String> excludeFromSprite;
+
+    /**
      * The context that created this builder.
      */
     private final Context context;
@@ -171,6 +177,7 @@ public final class EngineRequestBuilder {
         bestEffort = other.bestEffort;
         processContext = other.processContext;
         context = other.context;
+        excludeFromSprite = other.excludeFromSprite;
     }
 
     /**
@@ -304,6 +311,19 @@ public final class EngineRequestBuilder {
      */
     public EngineRequestBuilder heap(final NutsHeap h) {
         heap = h;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Excludes any nut with a name in the given set from sprite computation.
+     * </p>
+     *
+     * @param efs the set
+     * @return this
+     */
+    public EngineRequestBuilder excludeFromSprite(final Set<String> efs) {
+        excludeFromSprite = efs;
         return this;
     }
 
@@ -531,5 +551,16 @@ public final class EngineRequestBuilder {
      */
     Context getContext() {
         return context;
+    }
+
+    /**
+     * <p>
+     * Get the set containing excluded nuts from sprite computation.
+     * </p>
+     *
+     * @return the excluded names
+     */
+    Set<String> getExcludeFromSprite() {
+        return excludeFromSprite;
     }
 }

@@ -42,10 +42,8 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Region;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProvider;
-import com.github.wuic.util.UrlProviderFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -65,15 +63,13 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
      * {@inheritDoc}
      */
     @Override
-    public ConvertibleNut getSprite(final String url,
-                                    final String workflowId,
-                                    final UrlProviderFactory urlProviderFactory,
+    public ConvertibleNut getSprite(final String workflowId,
+                                    final UrlProvider urlProvider,
                                     final String nutNameSuffix,
                                     final List<ConvertibleNut> originals)
             throws IOException {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder cssBuilder = new StringBuilder();
-        final UrlProvider urlProvider = urlProviderFactory.create(IOUtils.mergePath("/", url, workflowId));
 
         for (String name : getRegions().keySet()) {
             final Region reg = getRegions().get(name);

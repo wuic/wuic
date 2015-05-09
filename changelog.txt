@@ -150,3 +150,11 @@ Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.1&page=1&state=cl
 Breaking changes:
 - By default, WebappNutDao scans "/WEB-INF" and "/WEB-INF/lib" will be skipped
 - ContextBuilder API has been reviewed and moved to a dedicated package
+
+
+##### v0.5.2 #####
+
+Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.2&page=1&state=closed
+
+Breaking changes:
+- Sprites are now identified with the ID of the heap containing the path, not a potential enclosing composition

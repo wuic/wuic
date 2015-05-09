@@ -82,9 +82,11 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -844,7 +846,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         }
     }
 
-
     /**
      * <p>
      * This class parses '<wuic:html-import/>' tags.
@@ -981,6 +982,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         private Map<String, String> attributes;
 
         /**
+         * Nut name corresponding to a captured image that should not be considered as a sprite.
+         */
+        private Set<String> skipSprites;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -1002,6 +1008,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final String[] groupPaths = new String[groups.size()];
             final List<NutsHeap> composition = new ArrayList<NutsHeap>();
             this.capturedStatements = new ArrayList<String>(groups.keySet());
+            this.skipSprites = new HashSet<String>();
 
             int start = 0;
             int cpt = 0;
@@ -1042,6 +1049,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                 }
 
                                 groupPaths[start + cpt++] = simplified;
+
+                                // Any <img> tag should not be converted to a sprite
+                                if (NutType.PNG.equals(nutType)) {
+                                    skipSprites.add(simplified);
+                                }
                             }
                         } catch (Exception e) {
                             logger.debug("Fail to get the NutType", e);
@@ -1232,11 +1244,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             }
 
             final String heapId = StringUtils.toHexString(hash);
-            final NutsHeap heap = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, composition);
-            heap.checkFiles(request.getProcessContext());
-            heap.addObserver(request.getHeap());
-            NutsHeap.ListenerHolder.INSTANCE.add(heap);
-            return heap;
+            final NutsHeap h = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, composition);
+            h.checkFiles(request.getProcessContext());
+            h.addObserver(request.getHeap());
+            NutsHeap.ListenerHolder.INSTANCE.add(h);
+            return h;
         }
 
         /**
@@ -1252,23 +1264,13 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         public String replacement(final EngineRequest request, final UrlProvider urlProvider, final List<ConvertibleNut> referenced)
                 throws IOException {
-            final EngineType[] skip;
-
-            // Do not generate sprite, just compress "img"
-            if (NutType.PNG.equals(getHeap().getNuts().get(0).getInitialNutType())) {
-                skip = new EngineType[SKIPPED_ENGINE.length + 1];
-                System.arraycopy(SKIPPED_ENGINE, 0, skip, 0, SKIPPED_ENGINE.length);
-                skip[skip.length -1] = EngineType.INSPECTOR;
-            } else {
-                skip = SKIPPED_ENGINE;
-            }
-
             // Render HTML for workflow result
             final StringBuilder html = new StringBuilder();
             final EngineRequest parseRequest = new EngineRequestBuilder(request)
-                    .nuts(getHeap().getNuts())
-                    .heap(getHeap())
-                    .skip(skip)
+                    .nuts(heap.getNuts())
+                    .heap(heap)
+                    .excludeFromSprite(skipSprites)
+                    .skip(SKIPPED_ENGINE)
                     .build();
             final List<ConvertibleNut> merged;
 
@@ -1281,23 +1283,23 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             for (final ConvertibleNut n : merged) {
                 // Just add the heap ID as prefix to refer many nuts with same name but from different heaps
                 if (request.getPrefixCreatedNut().isEmpty()){
-                    n.setNutName(getHeap().getId() + n.getName());
+                    n.setNutName(heap.getId() + n.getName());
                 } else {
-                    n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), getHeap().getId() + n.getName()));
+                    n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), heap.getId() + n.getName()));
                 }
 
                 referenced.add(n);
 
                 // Some additional attributes
                 if (getAttributes() != null) {
-                    final String[] attributes = new String[getAttributes().size()];
+                    final String[] attr = new String[getAttributes().size()];
                     int index = 0;
 
                     for (final Map.Entry<String, String> entry : getAttributes().entrySet()) {
-                        attributes[index++] = entry.getKey() + "=\"" + entry.getValue() + '"';
+                        attr[index++] = entry.getKey() + "=\"" + entry.getValue() + '"';
                     }
 
-                    html.append(HtmlUtil.writeScriptImport(n, urlProvider, attributes)).append("\r\n");
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider, attr)).append("\r\n");
                 } else {
                     html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
                 }
@@ -1326,17 +1328,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         public List<String> getCapturedStatements() {
             return capturedStatements;
-        }
-
-        /**
-         * <p>
-         * Returns the computed heap.
-         * </p>
-         *
-         * @return the heap
-         */
-        public NutsHeap getHeap() {
-            return heap;
         }
 
         /**
