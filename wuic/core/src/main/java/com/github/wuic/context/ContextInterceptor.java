@@ -39,7 +39,7 @@
 package com.github.wuic.context;
 
 import com.github.wuic.Workflow;
-import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.List;
@@ -47,8 +47,12 @@ import java.util.List;
 /**
  * <p>
  * Represents an interceptor that is called just before and just after a workflow is processed. This gives a last chance
- * to modify input and output of several services. For instance, an interceptor could intercept an {@link EngineRequest}
- * the {@link Context} is going to use and the list of {@link ConvertibleNut nuts} it returns when the job is done.
+ * to modify input and output of several services.
+ * </p>
+ *
+ * <p>
+ * For instance, an interceptor could intercept an {@link EngineRequestBuilder} the {@link Context} is going to use and
+ * the list of {@link ConvertibleNut nuts} it returns when the job is done.
  * </p>
  *
  * @author Guillaume DROUET
@@ -84,21 +88,21 @@ public interface ContextInterceptor {
      * Called just before the workflow is executed.
      * </p>
      *
-     * @param request the request
+     * @param request the request builder
      * @return the request to use
      */
-    EngineRequest beforeProcess(EngineRequest request);
+    EngineRequestBuilder beforeProcess(EngineRequestBuilder request);
 
     /**
      * <p>
      * Called just before the workflow is executed to retrieve one path.
      * </p>
      *
-     * @param request the request
+     * @param request the request builder
      * @param path the path
      * @return the request to use
      */
-    EngineRequest beforeProcess(EngineRequest request, String path);
+    EngineRequestBuilder beforeProcess(EngineRequestBuilder request, String path);
 
     /**
      * Called just after the workflow has been executed.

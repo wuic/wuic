@@ -134,6 +134,11 @@ public final class EngineRequestBuilder {
     private Set<String> excludeFromSprite;
 
     /**
+     * Indicates if WUIC will serve the result or not.
+     */
+    private boolean staticsServedByWuicServlet;
+
+    /**
      * The context that created this builder.
      */
     private final Context context;
@@ -154,6 +159,7 @@ public final class EngineRequestBuilder {
         contextPath("");
         bestEffort = false;
         context = ctx;
+        staticsServedByWuicServlet = false;
     }
 
     /**
@@ -178,6 +184,7 @@ public final class EngineRequestBuilder {
         processContext = other.processContext;
         context = other.context;
         excludeFromSprite = other.excludeFromSprite;
+        staticsServedByWuicServlet = other.staticsServedByWuicServlet;
     }
 
     /**
@@ -377,6 +384,18 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
+     * Indicates that result will be served by WUIC servlet.
+     * </p>
+     *
+     * @return this
+     */
+    public EngineRequestBuilder staticsServedByWuicServlet() {
+        staticsServedByWuicServlet = true;
+        return this;
+    }
+
+    /**
+     * <p>
      * Builds a bew instance. Default state is applied here if some attributes have not been initialized.
      * </p>
      *
@@ -562,5 +581,16 @@ public final class EngineRequestBuilder {
      */
     Set<String> getExcludeFromSprite() {
         return excludeFromSprite;
+    }
+
+    /**
+     * <p>
+     * Indicates if result is served by WUIC servlet.
+     * </p>
+     *
+     * @return {@code true} if statics are served by WUIC servlet, {@code false} otherwise
+     */
+    boolean isStaticsServedByWuicServlet() {
+        return staticsServedByWuicServlet;
     }
 }

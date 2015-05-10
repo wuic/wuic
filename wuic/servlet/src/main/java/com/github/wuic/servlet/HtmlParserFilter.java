@@ -104,12 +104,9 @@ import java.util.ServiceLoader;
  *
  * <p>
  * This filter supports server-hint mode. Server-hint is enabled by default. It associates to all resources that should
- * be loaded as soon as possible by the HTML page a "Link" header with "subresource" rel value (supported by Chrome).
- * Other resources are associated to a "preload" rel value to tell the browser to download them with a low priority.
- * Proxy like "nghttpx" can use this header to push the resource over HTTP/2. The push will be enabled only for response
- * with "preload" rel value in the Link header, which is in conflict with chrome "subresource" design. If you want to
- * use "nghttpx" HTTP/2 push feature, set the {@link #PRE_LOAD_SUB_RESOURCES} init-param to {@code true} in order to
- * associate the "preload" rel value to sub resources and "preconnect" to others.
+ * be loaded as soon as possible by the HTML page a "Link" header with "preload" rel value. Other resources are
+ * associated to a "prefetch" rel value to tell the browser to download them with a low priority. Note that proxy like
+ * "nghttpx" can use this header to push the resource over HTTP/2.
  * </p>
  *
  * <p>
@@ -128,11 +125,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * Property that tells the filter to use or not HTTP2 server push. Server push is enabled by default.
      */
     public static final String DISABLE_SERVER_PUSH = "c.g.wuic.filter.disableServerPush";
-
-    /**
-     * Adds a "preload" rel value instead of "subresource" in Link Header for the sub resources.
-     */
-    public static final String PRE_LOAD_SUB_RESOURCES = "c.g.wuic.preLoadSubResources";
 
     /**
      * An init parameter that tells the filter how to consider the filtered content dynamic or not.
@@ -175,17 +167,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     private String rootNuDaoBuilderId;
 
     /**
-     * The "rel" value in link header for sub resources.
-     */
-    private String subResourceRel;
-
-    /**
-     * The "rel" value in link header for non sub resources.
-     */
-    private String nonSubResourceRel;
-
-    /**
-     * HTTP/2 server push support.
+     * HTTP/2 server push support. Default is server-hint.
      */
     private PushService pushService;
 
@@ -245,7 +227,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             virtualContextPath = !filterConfig.getServletContext().getContextPath().isEmpty();
 
             configureServerPush(filterConfig);
-            configureServerHint(filterConfig);
             forceDynamicContent = "true".equals(filterConfig.getInitParameter(FORCE_DYNAMIC_CONTENT));
         } catch (WuicException we) {
             throw new ServletException(we);
@@ -312,35 +293,42 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                 final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(httpRequest);
                 final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
                 final UrlProvider provider = getUrlProvider(httpRequest).create(workflowId);
-                final Map<String, Boolean> collectedNut = collectReferenceNut(provider, htmlNut);
+                final Map<String, ConvertibleNut> collectedNut = collectReferenceNut(provider, htmlNut);
 
                 if (pushService != null) {
                     pushService.push(httpRequest, httpResponse, collectedNut.keySet());
-
-                    try {
-                        HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
-                    } finally {
-                        r.run();
-                        IOUtils.close(is);
-                    }
                 } else {
-                    // Adds to the given response all referenced nuts URLs associated to the "Link" header.
-                    for (final Map.Entry<String, Boolean> entry : collectedNut.entrySet()) {
-                        final String strategy = entry.getValue() ? subResourceRel : nonSubResourceRel;
-                        httpResponse.addHeader("Link", String.format("<%s>; rel=%s", entry.getKey(), strategy));
-                    }
+                    hint(collectedNut, httpResponse);
+                }
 
-                    try {
-                        HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
-                    } finally {
-                        r.run();
-                        IOUtils.close(is);
-                    }
+                try {
+                    HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
+                } finally {
+                    r.run();
+                    IOUtils.close(is);
                 }
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Initiates server-hint.
+     * </p>
+     *
+     * @param collectedNut nuts to hint
+     * @param httpResponse the response where headers will be added
+     */
+    private void hint(final Map<String, ConvertibleNut> collectedNut, final HttpServletResponse httpResponse) {
+        // Adds to the given response all referenced nuts URLs associated to the "Link" header.
+        for (final Map.Entry<String, ConvertibleNut> entry : collectedNut.entrySet()) {
+            final String strategy = entry.getValue().isSubResource() ? "preload" : "prefetch";
+            final String as = entry.getValue().getNutType().getHintInfo();
+            httpResponse.addHeader("Link",
+                    String.format("<%s>; rel=%s%s", entry.getKey(), strategy, as == null ? "" : "; as=".concat(as)));
         }
     }
 
@@ -428,25 +416,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
 
     /**
      * <p>
-     * Configures the server hint support regarding the {@link #PRE_LOAD_SUB_RESOURCES} setting.
-     * </p>
-     *
-     * @param filterConfig the filter config instance
-     */
-    private void configureServerHint(final FilterConfig filterConfig) {
-        final String psr = filterConfig.getInitParameter(PRE_LOAD_SUB_RESOURCES);
-
-        if ("true".equals(psr)) {
-            subResourceRel = "preload";
-            nonSubResourceRel = "preconnect";
-        } else {
-            subResourceRel = "subresource";
-            nonSubResourceRel = "preload";
-        }
-    }
-
-    /**
-     * <p>
      * Retrieves an optional {@link UrlProviderFactory} instance registered in request's attributes.
      * </p>
      *
@@ -465,14 +434,14 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      *
      * @param urlProvider the provider
      * @param nut the referenced nuts owner
-     * @return a map of all collected URLs associated to a boolean indicating if it refers a sub resource ot not
+     * @return a map of all collected URLs associated to the nut
      */
-    private Map<String, Boolean> collectReferenceNut(final UrlProvider urlProvider, final ConvertibleNut nut) {
+    private Map<String, ConvertibleNut> collectReferenceNut(final UrlProvider urlProvider, final ConvertibleNut nut) {
         if (nut.getReferencedNuts() != null && !nut.getReferencedNuts().isEmpty()) {
-            final Map<String, Boolean> retval = new HashMap<String, Boolean>();
+            final Map<String, ConvertibleNut> retval = new HashMap<String, ConvertibleNut>();
 
             for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                retval.put('/' + urlProvider.getUrl(ref), ref.isSubResource());
+                retval.put('/' + urlProvider.getUrl(ref), ref);
                 retval.putAll(collectReferenceNut(urlProvider, ref));
             }
 

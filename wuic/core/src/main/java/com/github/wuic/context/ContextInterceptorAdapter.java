@@ -39,7 +39,7 @@
 package com.github.wuic.context;
 
 import com.github.wuic.Workflow;
-import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.nut.ConvertibleNut;
 
 import java.util.List;
@@ -75,7 +75,7 @@ public class ContextInterceptorAdapter implements ContextInterceptor {
      * {@inheritDoc}
      */
     @Override
-    public EngineRequest beforeProcess(final EngineRequest request) {
+    public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
         return request;
     }
 
@@ -83,7 +83,7 @@ public class ContextInterceptorAdapter implements ContextInterceptor {
      * {@inheritDoc}
      */
     @Override
-    public EngineRequest beforeProcess(final EngineRequest request, final String path) {
+    public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
         return request;
     }
 

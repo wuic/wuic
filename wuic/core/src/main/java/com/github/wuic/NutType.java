@@ -59,86 +59,112 @@ public enum NutType {
     /**
      * HTML files support. Keep this as first enum to improve {@link #getNutTypeForMimeType(String)} often use for HTML.
      */
-    HTML(new String[] { ".html" }, "text/html", Boolean.FALSE),
+    HTML(new String[] { ".html" }, "text/html", NutType.HTML_PAGE),
 
     /**
      * EOT path support.
      */
-    EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", Boolean.TRUE),
+    EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", NutType.FONT),
 
     /**
      * EOT path support.
      */
-    OTF(new String[] {".otf", ".OTF"}, "font/opentype", Boolean.TRUE),
+    OTF(new String[] {".otf", ".OTF"}, "font/opentype", NutType.FONT),
 
     /**
      * TTF path support.
      */
-    TTF(new String[] {".ttf", ".TTF"}, "application/octet-stream", Boolean.TRUE),
+    TTF(new String[] {".ttf", ".TTF"}, "application/octet-stream", NutType.FONT),
 
     /**
      * WOFF path support.
      */
-    WOFF(new String[] {".woff", ".WOFF"}, "application/x-font-woff", Boolean.TRUE),
+    WOFF(new String[] {".woff", ".WOFF"}, "application/x-font-woff", NutType.FONT),
 
     /**
      * SVG path support.
      */
-    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", Boolean.TRUE),
+    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", NutType.IMAGE),
 
     /**
      * ICO file.
      */
-    ICO(new String[] {".ico", ".ICO"}, "image/x-icon", Boolean.TRUE),
+    ICO(new String[] {".ico", ".ICO"}, "image/x-icon", NutType.IMAGE),
 
     /**
      * PNG path support.
      */
-    PNG(new String[] {".png", ".PNG"}, "image/png", Boolean.TRUE),
+    PNG(new String[] {".png", ".PNG"}, "image/png", NutType.IMAGE),
 
     /**
      * GIF path support.
      */
-    GIF(new String[] {".gif", ".GIF"}, "image/gif", Boolean.TRUE),
+    GIF(new String[] {".gif", ".GIF"}, "image/gif", NutType.IMAGE),
 
     /**
      * Javascript files support.
      */
-    JAVASCRIPT(new String[] { ".js" }, "text/javascript", Boolean.FALSE),
+    JAVASCRIPT(new String[] { ".js" }, "text/javascript", NutType.SCRIPT),
     
     /**
      * CSS files support.
      */
-    CSS(new String[] { ".css" }, "text/css", Boolean.FALSE),
+    CSS(new String[] { ".css" }, "text/css", NutType.STYLESHEET),
 
     /**
      * Typescript files support.
      */
-    TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", Boolean.FALSE),
+    TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", null),
 
     /**
      * MAP files support.
      */
-    MAP(new String[] { ".map" }, "application/json", Boolean.FALSE);
+    MAP(new String[] { ".map" }, "application/json", null);
 
     /**
      * The logger.
      */
     private static final Logger LOG = LoggerFactory.getLogger(NutType.class);
+
+    /**
+     * Constant to hint images.
+     */
+    private static final String IMAGE = "image";
+
+    /**
+     * Constant to hint fonts.
+     */
+    private static final String FONT = "font";
+
+    /**
+     * Constant to hint scripts.
+     */
+    private static final String SCRIPT = "script";
+
+    /**
+     * Constant to hint CSS.
+     */
+    private static final String STYLESHEET = "stylesheet";
+
+    /**
+     * Constant to hint HTML pages.
+     */
+    private static final String HTML_PAGE = "html";
+
     /**
      * Possible extensions.
      */
-    private String[] extensions;
+    private final String[] extensions;
     
     /**
      * MIME type.
      */
-    private String mimeType;
+    private final String mimeType;
 
     /**
-     * Text or binary.
+     * Server hint information.
      */
-    private Boolean isText;
+    private final String hintInfo;
 
     /**
      * <p>
@@ -148,12 +174,11 @@ public enum NutType {
      * 
      * @param exts the extensions
      * @param mime the MIME type
-     * @param isBinary if the path type is binary or not
      */
-    private NutType(final String[] exts, final String mime, final Boolean isBinary) {
+    private NutType(final String[] exts, final String mime, final String hint) {
         extensions = Arrays.copyOf(exts, exts.length);
         mimeType = mime;
-        isText = !isBinary;
+        hintInfo = hint;
     }
     
     /**
@@ -180,13 +205,13 @@ public enum NutType {
 
     /**
      * <p>
-     * Indicates if this nut is in a text format.
+     * Gets the information for server hint.
      * </p>
      *
-     * @return {@code true} if the nut is a text, {@code false} otherwise
+     * @return the information, {@code null} if none
      */
-    public Boolean isText() {
-        return isText;
+    public String getHintInfo() {
+        return hintInfo;
     }
 
     /**

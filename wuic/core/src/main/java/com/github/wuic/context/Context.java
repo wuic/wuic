@@ -222,13 +222,12 @@ public class Context implements Observer {
                                      final UrlProviderFactory urlProviderFactory,
                                      final ProcessContext processContext,
                                      final EngineType ... skip) {
-        EngineRequest request = new EngineRequestBuilder(wId, workflow.getHeap(), this)
+        EngineRequestBuilder request = new EngineRequestBuilder(wId, workflow.getHeap(), this)
                 .contextPath(contextPath)
                 .chains(workflow.getChains())
                 .urlProviderFactory(urlProviderFactory)
                 .skip(skip)
-                .processContext(processContext)
-                .build();
+                .processContext(processContext);
 
         for (final ContextInterceptor interceptor : interceptors) {
             if (path == null) {
@@ -238,7 +237,7 @@ public class Context implements Observer {
             }
         }
 
-        return request;
+        return request.build();
     }
 
     /**

@@ -296,7 +296,16 @@ public interface ApplicationConfig {
     String CHARSET = "c.g.wuic.engine.charset";
 
     /**
+     * <p>
+     * Indicates if the server hint is enabled or not.
+     * </p>
+     */
+    String SERVER_HINT = "c.g.wuic.engine.serverHint";
+
+    /**
+     * <p>
      * A pattern wrapping a value to capture.
+     * </p>
      */
     String WRAP_PATTERN = "c.g.wuic.engine.wrapPattern";
 

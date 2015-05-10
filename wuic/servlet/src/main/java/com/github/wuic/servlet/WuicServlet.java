@@ -44,7 +44,6 @@ import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
-import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
@@ -59,7 +58,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -98,6 +99,31 @@ public class WuicServlet extends HttpServlet {
     private WuicFacade wuicFacade;
 
     /**
+     * <p>
+     * Indicates if the WuicServlet is installed in the given context.
+     * </p>
+     *
+     * @param servletContext the context
+     * @return {@code true} if the servlet is installed, {@code false} otherwise
+     */
+    public static boolean isWuicServletInstalled(final ServletContext servletContext) {
+        try {
+            // We consider that path match the mapping defined for any WuicServlet
+            for (final ServletRegistration r : servletContext.getServletRegistrations().values()) {
+
+                // There is a WuicServlet registered
+                if (WuicServlet.class.isAssignableFrom(Class.forName(r.getClassName()))) {
+                    return true;
+                }
+            }
+        } catch (ClassNotFoundException cnfe) {
+            WuicException.throwBadStateException(cnfe);
+        }
+
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -115,7 +141,7 @@ public class WuicServlet extends HttpServlet {
 
         try {
             wuicFacade = WuicServletContextListener.getWuicFacade(config.getServletContext());
-            wuicFacade.configure(new WuicServletContextBuilderConfigurator());
+            wuicFacade.configure(new WuicServletContextBuilderConfigurator(config.getServletContext()));
         } catch (WuicException we) {
             throw new ServletException(we);
         }
@@ -211,11 +237,27 @@ public class WuicServlet extends HttpServlet {
     private final class WuicServletContextBuilderConfigurator extends ContextBuilderConfigurator {
 
         /**
+         * The servlet context.
+         */
+        private final ServletContext servletContext;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param sc the servlet context
+         */
+        private WuicServletContextBuilderConfigurator(final ServletContext sc) {
+            servletContext = sc;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
-            ctxBuilder.interceptor(new WuicServletContextInterceptor());
+            ctxBuilder.interceptor(new WuicServletContextInterceptor(servletContext));
             return -1;
         }
 
@@ -256,6 +298,22 @@ public class WuicServlet extends HttpServlet {
     private final class WuicServletContextInterceptor extends ContextInterceptorAdapter {
 
         /**
+         * The servlet context.
+         */
+        private final boolean isWuicServletInstalled;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param sc the servlet context
+         */
+        private WuicServletContextInterceptor(final ServletContext sc) {
+            isWuicServletInstalled = isWuicServletInstalled(sc);
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -267,21 +325,25 @@ public class WuicServlet extends HttpServlet {
          * {@inheritDoc}
          */
         @Override
-        public EngineRequest beforeProcess(final EngineRequest request) {
+        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
             final Boolean canGzip = HttpRequestThreadLocal.INSTANCE.canGzip();
 
             if (canGzip != null && !canGzip) {
-                return new EngineRequestBuilder(request).workflowId(request.getWorkflowId()).contextPath(request.getWorkflowId() + "-ungzip").build();
-            } else {
-                return request;
+                request.workflowId(request.getWorkflowId()).contextPath(request.getWorkflowId() + "-ungzip");
             }
+
+            if (isWuicServletInstalled) {
+                request.staticsServedByWuicServlet();
+            }
+
+            return request;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public EngineRequest beforeProcess(final EngineRequest request, final String path) {
+        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
             return beforeProcess(request);
         }
     }

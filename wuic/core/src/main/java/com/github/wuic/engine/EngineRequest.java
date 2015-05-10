@@ -206,6 +206,17 @@ public final class EngineRequest {
 
     /**
      * <p>
+     * Indicates if result is served by WUIC servlet.
+     * </p>
+     *
+     * @return {@code true} if statics are served by WUIC servlet, {@code false} otherwise
+     */
+    public boolean isStaticsServedByWuicServlet() {
+        return engineRequestBuilder.isStaticsServedByWuicServlet();
+    }
+
+    /**
+     * <p>
      * Creates a new key that identifies this request if {@code null} and return it.
      * </p>
      *

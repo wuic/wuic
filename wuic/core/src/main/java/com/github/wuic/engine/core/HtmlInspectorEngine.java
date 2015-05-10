@@ -210,19 +210,27 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     private String charset;
 
     /**
+     * Use server hint.
+     */
+    private Boolean serverHint;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
      * @param cs files charset
+     * @param sh activate server hint or not
      */
     @ConfigConstructor
     public HtmlInspectorEngine(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String cs) {
+            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String cs,
+            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.SERVER_HINT) final Boolean sh) {
         doInspection = inspect;
         charset = cs;
+        serverHint = sh;
     }
 
     /**
@@ -270,7 +278,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         /**
          * All replacements performed by the transformer.
          */
-        private Map<String, List<String>> replacements;
+        private Map<Object, List<String>> replacements;
 
         /**
          * <p>
@@ -364,12 +372,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             // Perform cached replacement
             if (this.replacements != null) {
-                for (final Map.Entry<String, List<String>> entry : this.replacements.entrySet()) {
-                    final String replacement = entry.getKey();
+                for (final Map.Entry<Object, List<String>> entry : this.replacements.entrySet()) {
+                    final Object replacement = entry.getKey();
                     end = replace(transform, replacement, entry.getValue(), end);
                 }
             } else {
-                this.replacements = new LinkedHashMap<String, List<String>>();
+                this.replacements = new LinkedHashMap<Object, List<String>>();
                 final int endParent = convertible.getName().lastIndexOf('/');
                 final String rootPath = endParent == -1 ? "" : convertible.getName().substring(0, endParent);
                 final List<ParseInfo> parseInfoList;
@@ -393,6 +401,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     this.replacements.put(replacement, parseInfo.getCapturedStatements());
                 }
 
+                // The hint resource
+                if (!request.isStaticsServedByWuicServlet() && serverHint) {
+                     hintResources(urlProvider, transform, referenced);
+                }
+
                 for (final ConvertibleNut ref : referenced) {
                     convertible.addReferencedNut(ref);
                 }
@@ -401,6 +414,78 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
 
             Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
+        }
+
+        /**
+         * <p>
+         * Inserts in the given HTML content all resources hint computed from the given nuts. The "link" tag will be
+         * inserted in a "head" tag that could be created in it does not exists. Nothing will be done if the given
+         * content does not contain any "html" tag.
+         * </p>
+         *
+         * @param urlProvider the provider
+         * @param content the content
+         * @param convertibleNuts the nuts
+         */
+        private void hintResources(final UrlProvider urlProvider,
+                                   final StringBuilder content,
+                                   final List<ConvertibleNut> convertibleNuts) {
+            int index = content.indexOf("<head>");
+
+            if (index == -1) {
+                index = content.indexOf("<head ");
+            }
+
+            if (index == -1) {
+                index = content.indexOf("<html>");
+
+                if (index == -1) {
+                    index = content.indexOf("<html ");
+                }
+
+                if (index == -1) {
+                    logger.warn("Filtered HTML does not have any <html>. Server hint directives won't be inserted.");
+                    return;
+                } else {
+                    // Closing <html> tag
+                    index = content.indexOf(">", index) + 1;
+                    content.insert(index, "<head></head>");
+                    index += NumberUtils.FIVE;
+                }
+            } else {
+                // Closing <head> tag
+                index = content.indexOf(">", index);
+            }
+
+            final StringBuilder hints = new StringBuilder();
+            appendHint(urlProvider, hints, convertibleNuts);
+            index++;
+            final String replacement = hints.toString();
+            content.insert(index, replacement);
+            this.replacements.put(index, Arrays.asList(replacement));
+        }
+
+        /**
+         * <p>
+         * Appends recursively to the given builder all the hints corresponding to each nut specified in parameter
+         * </p>
+         *
+         * @param urlProvider the URL provider
+         * @param builder the builder
+         * @param convertibleNuts the resource hints
+         */
+        private void appendHint(final UrlProvider urlProvider,
+                                final StringBuilder builder,
+                                final List<ConvertibleNut> convertibleNuts) {
+            for (final ConvertibleNut ref : convertibleNuts) {
+                final NutType nutType = ref.getNutType();
+                final String as = nutType.getHintInfo() == null ? "" : " as=\"" + nutType.getHintInfo() + "\"";
+                builder.append(String.format("<link rel=\"preload\" href=\"%s\"%s />\n", urlProvider.getUrl(ref), as));
+
+                if (ref.getReferencedNuts() != null) {
+                    appendHint(urlProvider, builder, ref.getReferencedNuts());
+                }
+            }
         }
 
         /**
@@ -417,18 +502,29 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @return the updated index
          */
         private int replace(final StringBuilder transform,
-                            final String replacement,
+                            final Object replacement,
                             final List<String> statements,
                             final int startIndex) {
-            int end = startIndex;
+            if (replacement instanceof Integer) {
+                final int index = Integer.class.cast(replacement);
 
-            // Replace all captured statements with HTML generated from WUIC process
-            for (int i = 0; i < statements.size(); i++) {
-                final String toReplace = statements.get(i);
-                end = replace(transform, replacement, toReplace, end, i == 0);
+                // Insert all captured statements at the given index
+                for (final String statement : statements) {
+                    transform.insert(index, statement);
+                }
+
+                return startIndex;
+            } else {
+                int end = startIndex;
+
+                // Replace all captured statements with HTML generated from WUIC process
+                for (int i = 0; i < statements.size(); i++) {
+                    final String toReplace = statements.get(i);
+                    end = replace(transform, replacement.toString(), toReplace, end, i == 0);
+                }
+
+                return end;
             }
-
-            return end;
         }
 
         /**
@@ -549,7 +645,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * Returns the {@link NutType} of created nut.
          * </p>
          *
-         * @return the nut type
          */
         protected abstract NutType getNutType();
 

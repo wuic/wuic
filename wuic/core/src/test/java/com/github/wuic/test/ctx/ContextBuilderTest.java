@@ -49,7 +49,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.NutNotFoundException;
@@ -242,14 +242,14 @@ public class ContextBuilderTest {
                 .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
                 .interceptor(new ContextInterceptorAdapter() {
                     @Override
-                    public EngineRequest beforeProcess(final EngineRequest request) {
+                    public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
                         super.beforeProcess(request);
                         count.decrementAndGet();
                         return request;
                     }
 
                     @Override
-                    public EngineRequest beforeProcess(final EngineRequest request, final String path) {
+                    public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
                         super.beforeProcess(request, path);
                         count.decrementAndGet();
                         return request;
