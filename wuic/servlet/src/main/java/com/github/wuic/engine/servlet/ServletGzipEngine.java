@@ -38,16 +38,17 @@
 
 package com.github.wuic.engine.servlet;
 
+import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.dao.jee.ServletContextHandler;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.servlet.HttpRequestThreadLocal;
-import com.github.wuic.servlet.WuicServlet;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRegistration;
+import java.util.List;
 
 /**
  * <p>
@@ -59,12 +60,7 @@ import javax.servlet.ServletRegistration;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
-public class ServletGzipEngine extends GzipEngine implements ServletContextHandler {
-
-    /**
-     * Indicates if statics will be served by {@link com.github.wuic.servlet.WuicServlet}, which suppots internal GZIP mechanism
-     */
-    private boolean staticsServedByWuicServlet;
+public class ServletGzipEngine extends GzipEngine {
 
     /**
      * <p>
@@ -73,36 +69,19 @@ public class ServletGzipEngine extends GzipEngine implements ServletContextHandl
      *
      */
     @ConfigConstructor
-    public ServletGzipEngine() {
-        // works() is overridden
-        super(Boolean.FALSE);
-        staticsServedByWuicServlet = false;
+    public ServletGzipEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
+        super(compress);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return staticsServedByWuicServlet && HttpRequestThreadLocal.INSTANCE.canGzip();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setServletContext(final ServletContext sc) {
-        try {
-            // We consider that path match the mapping defined for any WuicServlet
-            for (final ServletRegistration r : sc.getServletRegistrations().values()) {
-
-                // There is a WuicServlet registered
-                if (WuicServlet.class.isAssignableFrom(Class.forName(r.getClassName()))) {
-                    staticsServedByWuicServlet = true;
-                }
-            }
-        } catch (ClassNotFoundException cnfe) {
-            WuicException.throwBadStateException(cnfe);
+    public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
+        if (request.isStaticsServedByWuicServlet() && HttpRequestThreadLocal.INSTANCE.canGzip()) {
+            return super.parse(request);
+        } else {
+            return request.getNuts();
         }
     }
 }
