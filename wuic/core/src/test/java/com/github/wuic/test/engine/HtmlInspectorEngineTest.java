@@ -153,7 +153,7 @@ public class HtmlInspectorEngineTest {
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         Assert.assertTrue(html.contains("<html "));
         Assert.assertTrue(html.contains("<head>"));
-        assertHint(proxy, html);
+        assertHintAppCache(proxy, html);
     }
 
     /**
@@ -170,12 +170,12 @@ public class HtmlInspectorEngineTest {
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         Assert.assertTrue(html.contains("<html "));
         Assert.assertTrue(html.contains("<head>"));
-        assertHint(proxy, html.replace("<head>", ""));
+        assertHintAppCache(proxy, html.replace("<head>", ""));
     }
 
     /**
      * <p>
-     * Performs transformations and hint.
+     * Performs transformations and hint/application cache detection.
      * </p>
      *
      * @param proxy the proxy
@@ -183,7 +183,7 @@ public class HtmlInspectorEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    private void assertHint(final ProxyNutDao proxy, final String html) throws WuicException, IOException {
+    private void assertHintAppCache(final ProxyNutDao proxy, final String html) throws WuicException, IOException {
         final Nut bytes = new ByteArrayNut(html.getBytes(), "index.html", NutType.HTML, 1L, false);
         proxy.addRule("index.html", bytes);
 
@@ -201,8 +201,11 @@ public class HtmlInspectorEngineTest {
         Assert.assertFalse(nut.getReferencedNuts().isEmpty());
         final UrlProvider p = request.getUrlProviderFactory().create("workflow");
 
+        Assert.assertTrue(content.contains("<html manifest="));
         for (final ConvertibleNut n : nut.getReferencedNuts()) {
-            Assert.assertTrue(content.contains("<link rel=\"preload\" href=\"/" + p.getUrl(n) + "\""));
+            if (n.getNutType() != NutType.APP_CACHE) {
+                Assert.assertTrue(content.contains("<link rel=\"preload\" href=\"/" + p.getUrl(n) + "\""));
+            }
         }
     }
 
@@ -232,7 +235,7 @@ public class HtmlInspectorEngineTest {
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
         Assert.assertNotNull(nut.getReferencedNuts());
-        Assert.assertEquals(10, nut.getReferencedNuts().size());
+        Assert.assertEquals(11, nut.getReferencedNuts().size());
 
         final ConvertibleNut js = nut.getReferencedNuts().get(9);
         Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
@@ -421,7 +424,7 @@ public class HtmlInspectorEngineTest {
 
         List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, newContext()).chains(chains).build());
         String res = NutUtils.readTransform(nuts.get(0));
-        Assert.assertEquals(content, res);
+        Assert.assertEquals(content.replace("<html ", "<html manifest=\"/1/index.html.appcache\" "), res);
 
         countDownLatch.await(5, TimeUnit.SECONDS);
 

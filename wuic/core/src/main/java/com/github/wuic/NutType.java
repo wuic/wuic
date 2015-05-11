@@ -119,7 +119,12 @@ public enum NutType {
     /**
      * MAP files support.
      */
-    MAP(new String[] { ".map" }, "application/json", null);
+    MAP(new String[] { ".map" }, "application/json", null),
+
+    /**
+     * Application cache files support.
+     */
+    APP_CACHE(new String[] { ".appcache" }, "text/cache-manifest", null);
 
     /**
      * The logger.

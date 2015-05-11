@@ -59,6 +59,7 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.TerFunction;
 import com.github.wuic.util.CollectionUtils;
@@ -104,6 +105,12 @@ import java.util.regex.Pattern;
  * <p>
  * When a {@link ConvertibleNut} is parsed, the registered a transformer which is able to cache transformation operations
  * is added for future usages.
+ * </p>
+ *
+ * <p>
+ * If the result of the transformation performed by this engine is not served by WUIC, it means that some information
+ * like caching or hints won't be specified in the HTTP response headers. In that case, this engines fallback to the
+ * Application cache and the "link" tags mechanism by modifying the HTML content.
  * </p>
  *
  * @author Guillaume DROUET
@@ -425,19 +432,83 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     this.replacements.put(replacement, parseInfo.getCapturedStatements());
                 }
 
-                // The hint resource
-                if (!request.isStaticsServedByWuicServlet() && serverHint) {
-                     hintResources(urlProvider, transform, referenced);
-                }
-
                 for (final ConvertibleNut ref : referenced) {
                     convertible.addReferencedNut(ref);
+                }
+
+                // Modify the content to give more information to the client directly inside the page
+                if (!request.isStaticsServedByWuicServlet()) {
+
+                    // The hint resource
+                    if (serverHint) {
+                         hintResources(urlProvider, transform, referenced);
+                    }
+
+                    applicationCache(convertible, urlProvider, transform);
                 }
             }
 
             IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
 
             Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
+        }
+
+        /**
+         * <p>
+         * Inserts in the given HTML content a application cache file as an attribute in the "html" tag.
+         * If the tag is missing, nothing is done.
+         * </p>
+         *
+         * @param nut the nut representing the HTML page
+         * @param urlProvider the URL provider
+         * @param content the page content
+         */
+        private void applicationCache(final ConvertibleNut nut,
+                                      final UrlProvider urlProvider,
+                                      final StringBuilder content) {
+            int index = content.indexOf("<html");
+
+            if (index == -1) {
+                logger.warn("Filtered HTML does not have any <html>. Application cache file won't be inserted.");
+            } else {
+                // Compute content
+                final StringBuilder sb = new StringBuilder();
+                final List<ConvertibleNut> cached = CollectionUtils.newList(nut);
+                collect(urlProvider, sb, cached);
+                final Long versionNumber = NutUtils.getVersionNumber(cached);
+                sb.insert(0, String.format("CACHE MANIFEST\n# Version number: %d", versionNumber));
+
+                // Create the nut
+                final String name = nut.getName().concat(".appcache");
+                final byte[] bytes = sb.toString().getBytes();
+                final ConvertibleNut appCache = new ByteArrayNut(bytes, name, NutType.APP_CACHE, versionNumber, false);
+                nut.addReferencedNut(appCache);
+
+                // Modify the HTML content
+                index += NumberUtils.FIVE;
+                final String replacement = String.format(" manifest=\"%s\"", urlProvider.getUrl(appCache));
+                content.insert(index, replacement);
+                this.replacements.put(index, Arrays.asList(replacement));
+            }
+        }
+
+        /**
+         * <p>
+         * Creates nut representing an 'appcache' for the given nuts.
+         * </p>
+         *
+         * @param urlProvider the URL provider
+         * @param sb the string builder where cached nuts URL will be added
+         * @param nuts the nuts to put in cache
+         */
+        private void collect(final UrlProvider urlProvider, final StringBuilder sb, final List<ConvertibleNut> nuts) {
+            for (final ConvertibleNut nut : nuts) {
+                sb.append("\n").append(urlProvider.getUrl(nut));
+
+                if (nut.getReferencedNuts() != null) {
+                    collect(urlProvider, sb, nut.getReferencedNuts());
+                }
+            }
         }
 
         /**
