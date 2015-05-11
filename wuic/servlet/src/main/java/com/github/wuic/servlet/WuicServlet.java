@@ -45,6 +45,7 @@ import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.engine.EngineRequestBuilder;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
@@ -162,8 +163,6 @@ public class WuicServlet extends HttpServlet {
             response.getWriter().println(UrlMatcher.MATCHER_MESSAGE);
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
-            final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(request);
-
             try {
                 writeNut(matcher.getWorkflowId(), matcher.getNutName(), new ServletProcessContext(request), response);
             } catch (WorkflowNotFoundException wnfe) {
@@ -190,8 +189,6 @@ public class WuicServlet extends HttpServlet {
                     response.setStatus(HttpURLConnection.HTTP_INTERNAL_ERROR);
                     response.getWriter().println(we.getMessage());
                 }
-            } finally {
-                r.run();
             }
         }
     }
@@ -219,7 +216,7 @@ public class WuicServlet extends HttpServlet {
 
         // Nut found
         if (nut != null) {
-            HttpRequestThreadLocal.INSTANCE.write(nut, response);
+            HttpUtil.INSTANCE.write(nut, response);
         } else {
             WuicException.throwNutNotFoundException(nutName, workflowId);
         }
@@ -326,10 +323,10 @@ public class WuicServlet extends HttpServlet {
          */
         @Override
         public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
-            final Boolean canGzip = HttpRequestThreadLocal.INSTANCE.canGzip();
+            final ProcessContext context = request.getProcessContext();
 
-            if (canGzip != null && !canGzip) {
-                request.workflowId(request.getWorkflowId()).contextPath(request.getWorkflowId() + "-ungzip");
+            if (!HttpUtil.INSTANCE.canGzip(ServletProcessContext.cast(context).getHttpServletRequest())) {
+                request.skip(EngineType.BINARY_COMPRESSION);
             }
 
             if (isWuicServletInstalled) {

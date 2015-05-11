@@ -71,7 +71,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -289,8 +288,6 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     WuicException.throwBadStateException(new IllegalStateException("The filtered page has not been found is parsed result."));
                 }
 
-                InputStream is = null;
-                final Runnable r = HttpRequestThreadLocal.INSTANCE.canGzip(httpRequest);
                 final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
                 final UrlProvider provider = getUrlProvider(httpRequest).create(workflowId);
                 final Map<String, ConvertibleNut> collectedNut = collectReferenceNut(provider, htmlNut);
@@ -301,12 +298,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
                     hint(collectedNut, httpResponse);
                 }
 
-                try {
-                    HttpRequestThreadLocal.INSTANCE.write(htmlNut, httpResponse);
-                } finally {
-                    r.run();
-                    IOUtils.close(is);
-                }
+                HttpUtil.INSTANCE.write(htmlNut, httpResponse);
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));

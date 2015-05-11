@@ -41,18 +41,12 @@ package com.github.wuic.engine.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.GzipEngine;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ConvertibleNut;
-import com.github.wuic.servlet.HttpRequestThreadLocal;
-
-import java.util.List;
 
 /**
  * <p>
- * This engine GZIP nut content served requested by {@link HttpRequestThreadLocal}.
+ * This engine GZIP nut content only if the original HTTP request supports it.
  * </p>
  *
  * @author Guillaume DROUET
@@ -71,17 +65,5 @@ public class ServletGzipEngine extends GzipEngine {
     @ConfigConstructor
     public ServletGzipEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
         super(compress);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
-        if (request.isStaticsServedByWuicServlet() && HttpRequestThreadLocal.INSTANCE.canGzip()) {
-            return super.parse(request);
-        } else {
-            return request.getNuts();
-        }
     }
 }

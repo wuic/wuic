@@ -530,6 +530,17 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
+     * Gets the process context.
+     * </p>
+     *
+     * @return the process context
+     */
+    public ProcessContext getProcessContext() {
+        return processContext;
+    }
+
+    /**
+     * <p>
      * Gets the workflow key. Package access for {@link EngineRequest} only.
      * </p>
      *
@@ -548,17 +559,6 @@ public final class EngineRequestBuilder {
      */
     EngineType[] getSkip() {
         return skip;
-    }
-
-    /**
-     * <p>
-     * Gets the process context.
-     * </p>
-     *
-     * @return the process context
-     */
-    ProcessContext getProcessContext() {
-        return processContext;
     }
 
     /**

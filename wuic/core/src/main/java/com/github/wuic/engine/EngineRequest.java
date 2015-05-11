@@ -224,7 +224,7 @@ public final class EngineRequest {
      */
     public Key getKey() {
         if (key == null) {
-            key = new Key(engineRequestBuilder.getWorkflowKey(), engineRequestBuilder.getNuts());
+            key = new Key(engineRequestBuilder.getWorkflowKey(), engineRequestBuilder.getNuts(), engineRequestBuilder.getSkip());
         }
 
         return key;

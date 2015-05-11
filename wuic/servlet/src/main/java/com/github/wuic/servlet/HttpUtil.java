@@ -39,30 +39,25 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.nut.ConvertibleNut;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
 
 /**
  * <p>
- * Tool that can be used to bind to a {@link ThreadLocal} an HTTP request state to know if GZIP is supported and then
- * write according to this information a {@link ConvertibleNut} to the HTTP response.
+ * Tool that can be used to deal with an HTTP request state to know if GZIP is supported and then write according to
+ * this information a {@link ConvertibleNut} to the HTTP response.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
  */
-public enum HttpRequestThreadLocal implements Runnable {
+public enum HttpUtil {
 
     /**
      * Singleton.
@@ -75,11 +70,6 @@ public enum HttpRequestThreadLocal implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
-     * Servlet request supporting GZIP or not during workflow processing.
-     */
-    private final ThreadLocal<Boolean> canGzipThreadLocal = new ThreadLocal<Boolean>();
-
-    /**
      * The charset used to write the response.
      */
     private final String charset;
@@ -87,31 +77,20 @@ public enum HttpRequestThreadLocal implements Runnable {
     /**
      * Builds a new instance.
      */
-    private HttpRequestThreadLocal() {
+    private HttpUtil() {
         charset = System.getProperty("file.encoding");
     }
 
     /**
      * <p>
-     * Indicates if the {@link javax.servlet.http.HttpServletRequest} bound to the current {@link #canGzipThreadLocal}
-     * thread local supports GZIP.
+     * Indicates if the given {@link javax.servlet.http.HttpServletRequest} supports GZIP or not.
      * </p>
      *
-     * @return {@code true} if it supports GZIP or if not http request is bound, {@code false} otherwise
+     * @param request the request indicating GZIP support
+     * @return {@code true} if GZIP is supported, {@code false} otherwise
      */
-    public boolean canGzip() {
-        final Boolean canGzip = canGzipThreadLocal.get();
-        return canGzip == null || canGzip;
-    }
-
-    /**
-     * <p>
-     * Indicates if the given {@link javax.servlet.http.HttpServletRequest} supports GZIP or not in
-     * {@link #canGzipThreadLocal} thread local.
-     * </p>
-     */
-    public Runnable canGzip(final HttpServletRequest request) {
-        final Boolean can;
+    public boolean canGzip(final HttpServletRequest request) {
+        final boolean can;
 
         if (request != null) {
             final String acceptEncoding = request.getHeader("Accept-Encoding");
@@ -119,11 +98,10 @@ public enum HttpRequestThreadLocal implements Runnable {
             // Accept-Encoding must be set and GZIP specific
             can = acceptEncoding != null && acceptEncoding.contains("gzip");
         } else {
-            can = Boolean.TRUE;
+            can = true;
         }
 
-        canGzipThreadLocal.set(can);
-        return this;
+        return can;
     }
 
     /**
@@ -135,7 +113,8 @@ public enum HttpRequestThreadLocal implements Runnable {
      * @param response the response
      * @throws IOException if stream could not be opened
      */
-    public void write(final ConvertibleNut nut, final HttpServletResponse response) throws IOException {
+    public void write(final ConvertibleNut nut, final HttpServletResponse response)
+            throws IOException {
         logger.info("Writing to the response the content read from nut '{}'", nut.getName());
         response.setCharacterEncoding(charset);
         response.setContentType(nut.getNutType().getMimeType());
@@ -143,14 +122,6 @@ public enum HttpRequestThreadLocal implements Runnable {
         // We set a far expiration date because we assume that polling will change the timestamp in path
         response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
         nut.transform(new WriteResponseOnReady(response, nut));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void run() {
-        canGzipThreadLocal.remove();
     }
 
     /**
@@ -167,23 +138,23 @@ public enum HttpRequestThreadLocal implements Runnable {
         /**
          * The response.
          */
-        private HttpServletResponse response;
+        private final HttpServletResponse response;
 
         /**
          * The nut.
          */
-        private ConvertibleNut nut;
+        private final ConvertibleNut nut;
 
         /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param r the response
+         * @param res the response
          * @param n the nut
          */
-        private WriteResponseOnReady(final HttpServletResponse r, final ConvertibleNut n) {
-            this.response = r;
+        private WriteResponseOnReady(final HttpServletResponse res, final ConvertibleNut n) {
+            this.response = res;
             this.nut = n;
         }
 
@@ -193,36 +164,13 @@ public enum HttpRequestThreadLocal implements Runnable {
         @Override
         public void ready(final Pipe.Execution e) {
             try {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                if (canGzip() && nut.isCompressed()) {
-                    // Response accept GZIP and content is compressed: we directly write it
+                if (nut.isCompressed()) {
                     response.setHeader("Content-Encoding", "gzip");
                     response.setHeader("Vary", "Accept-Encoding");
-                    response.setContentLength(e.getContentLength());
-                    e.writeResultTo(response.getOutputStream());
-                } else if (nut.isCompressed()) {
-                    e.writeResultTo(bos);
-
-                    // Nut is compressed but response does not expect GZIP, unzip content
-                    InputStream is = null;
-
-                    try {
-                        is = new GZIPInputStream(new ByteArrayInputStream(bos.toByteArray()));
-                        bos = new ByteArrayOutputStream();
-                        IOUtils.copyStream(is, bos);
-                    } finally {
-                        IOUtils.close(is);
-                    }
-
-                    response.setContentLength(bos.toByteArray().length);
-                    response.getOutputStream().write(bos.toByteArray());
-                    response.getOutputStream().close();
-                } else {
-                    // Nut is not compressed and response does not expect GZIP, we directly write content
-                    response.setContentLength(e.getContentLength());
-                    e.writeResultTo(response.getOutputStream());
                 }
+
+                response.setContentLength(e.getContentLength());
+                e.writeResultTo(response.getOutputStream());
             } catch (IOException ioe) {
                 logger.error("Cannot write response.", ioe);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

@@ -39,6 +39,7 @@
 package com.github.wuic.jee;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.exception.WuicException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -67,6 +68,24 @@ public class ServletProcessContext extends ProcessContext {
      */
     public ServletProcessContext(final HttpServletRequest request) {
         httpServletRequest = request;
+    }
+
+    /**
+     * <p>
+     * Try to cast the given object in the instance of this class. An {@link IllegalStateException} will be thrown if
+     * the process context is {@code null} or an instance of a different class.
+     * </p>
+     *
+     * @param processContext the process context
+     * @return the process context
+     */
+    public static ServletProcessContext cast(final ProcessContext processContext) {
+        if (processContext == null || !(processContext instanceof ServletProcessContext)) {
+            WuicException.throwBadStateException(new IllegalStateException(
+                    "Process context must wrap an HTTP request when WUIC is deployed in any servlet container."));
+        }
+
+        return ServletProcessContext.class.cast(processContext);
     }
 
     /**

@@ -151,11 +151,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     };
 
     /**
-     * Engines types that will be skipped when processing referenced nuts.
-     */
-    private static final EngineType[] SKIPPED_ENGINE = new EngineType[] { EngineType.CACHE, };
-
-    /**
      * Regex that matches JS script import or JS declaration.
      */
     private static final String JS_SCRIPT_PATTERN = String.format("(<%1$s.*?(%2$s=)?(([^>]*>[^<]*</%1$s>)|([^/]*/>)))", "script", SRC);
@@ -1461,7 +1456,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     .nuts(heap.getNuts())
                     .heap(heap)
                     .excludeFromSprite(skipSprites)
-                    .skip(SKIPPED_ENGINE)
+                    .skip(request.alsoSkip(EngineType.CACHE))
                     .build();
             final List<ConvertibleNut> merged;
 
