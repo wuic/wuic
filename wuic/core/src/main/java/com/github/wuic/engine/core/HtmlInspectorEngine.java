@@ -255,6 +255,30 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * {@inheritDoc}
      */
     @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.HTML);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.INSPECTOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return doInspection;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setNutFilter(final List<NutFilter> nutFilters) {
         this.nutFilters = nutFilters;
     }
@@ -480,7 +504,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             for (final ConvertibleNut ref : convertibleNuts) {
                 final NutType nutType = ref.getNutType();
                 final String as = nutType.getHintInfo() == null ? "" : " as=\"" + nutType.getHintInfo() + "\"";
-                builder.append(String.format("<link rel=\"preload\" href=\"%s\"%s />\n", urlProvider.getUrl(ref), as));
+                final String strategy = ref.isSubResource() ? "preload" : "prefetch";
+                builder.append(String.format("<link rel=\"%s\" href=\"%s\"%s />\n", strategy, urlProvider.getUrl(ref), as));
 
                 if (ref.getReferencedNuts() != null) {
                     appendHint(urlProvider, builder, ref.getReferencedNuts());
@@ -1437,29 +1462,5 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 list.add(this);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.HTML);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean works() {
-        return doInspection;
     }
 }
