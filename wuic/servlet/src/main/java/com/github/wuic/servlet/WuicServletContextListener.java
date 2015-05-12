@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.ServletRegistration;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -124,7 +125,7 @@ public class WuicServletContextListener implements ServletContextListener {
     public void contextInitialized(final ServletContextEvent sce) {
         final ServletContext sc = sce.getServletContext();
         final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
-        final BiFunction<String, String, String> paramProvider;
+        BiFunction<String, String, String> paramProvider;
 
         // No specific provider, use default
         if (paramClass == null) {
@@ -167,6 +168,7 @@ public class WuicServletContextListener implements ServletContextListener {
             }
         }
 
+        paramProvider = new PropertiesWrapper(sce.getServletContext(), paramProvider);
         sc.setAttribute(ApplicationConfig.INIT_PARAM_FUNCTION, paramProvider);
         final WuicFacadeBuilder builder = new WuicFacadeBuilder(paramProvider)
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
@@ -209,6 +211,73 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
+     * A properties that delegate call to a wrapped instance and modify the value associated to
+     * {@link ApplicationConfig#WUIC_SERVLET_CONTEXT_PARAM} to make sure it starts with the servlet
+     * context's path. If the value is {@code null}, then it tries first to retrieve a mapping from
+     * any installed {@link WuicServlet}. If no mapping can be retrieved, then the default value is applied.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.2
+     */
+    public static final class PropertiesWrapper implements BiFunction<String, String, String> {
+
+        /**
+         * Wraps the function.
+         */
+        private final BiFunction<String, String, String> wrap;
+
+        /**
+         * Servlet context.
+         */
+        private final ServletContext servletContext;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param sc the servlet context
+         * @param w the function
+         */
+        private PropertiesWrapper(final ServletContext sc, final BiFunction<String, String, String> w) {
+            wrap = w;
+            servletContext = sc;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String apply(final String key, final String defaultValue) {
+            String retval = wrap.apply(key, defaultValue);
+
+            if (ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM.equals(key)) {
+                if (retval == null) {
+                    final ServletRegistration r = WuicServlet.findServletRegistration(servletContext);
+
+                    if (r != null && r.getMappings() != null && !r.getMappings().isEmpty()) {
+                        final String mapping = r.getMappings().iterator().next();
+                        final int star = mapping.indexOf('*');
+
+                        if (star != -1) {
+                            retval = mapping.substring(0, star);
+                        }
+                    } else {
+                        retval = defaultValue;
+                    }
+                }
+
+                return IOUtils.mergePath(servletContext.getContextPath(), retval);
+            } else {
+                return retval == null ? defaultValue : retval;
+            }
+        }
+    }
+
+    /**
+     * <p>
      * A class that retrieves properties from init-param configured inside a servlet context.
      * </p>
      *
@@ -239,16 +308,7 @@ public class WuicServletContextListener implements ServletContextListener {
          */
         @Override
         public String apply(final String key, final String defaultValue) {
-            String retval = servletContext.getInitParameter(key);
-            if (retval == null) {
-                retval = defaultValue;
-            }
-
-            if (ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM.equals(key)) {
-                return IOUtils.mergePath(servletContext.getContextPath(), retval);
-            } else {
-                return retval;
-            }
+            return servletContext.getInitParameter(key);
         }
     }
 }

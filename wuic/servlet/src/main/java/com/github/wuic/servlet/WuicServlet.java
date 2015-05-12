@@ -50,8 +50,6 @@ import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.servlet.ServletProcessContext;
-import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.UrlMatcher;
 import com.github.wuic.util.UrlUtils;
@@ -108,20 +106,31 @@ public class WuicServlet extends HttpServlet {
      * @return {@code true} if the servlet is installed, {@code false} otherwise
      */
     public static boolean isWuicServletInstalled(final ServletContext servletContext) {
-        try {
-            // We consider that path match the mapping defined for any WuicServlet
-            for (final ServletRegistration r : servletContext.getServletRegistrations().values()) {
+        return findServletRegistration(servletContext) != null;
+    }
 
+    /**
+     * <p>
+     * Finds the registration for this servlet class.
+     * </p>
+     *
+     * @param servletContext the context
+     * @return the registration, {@code null} if not found
+     */
+    public static ServletRegistration findServletRegistration(final ServletContext servletContext) {
+        for (final ServletRegistration r : servletContext.getServletRegistrations().values()) {
+
+            try  {
                 // There is a WuicServlet registered
                 if (WuicServlet.class.isAssignableFrom(Class.forName(r.getClassName()))) {
-                    return true;
+                    return r;
                 }
+            } catch (ClassNotFoundException cnfe) {
+                WuicException.throwBadStateException(cnfe);
             }
-        } catch (ClassNotFoundException cnfe) {
-            WuicException.throwBadStateException(cnfe);
         }
 
-        return false;
+        return null;
     }
 
     /**
