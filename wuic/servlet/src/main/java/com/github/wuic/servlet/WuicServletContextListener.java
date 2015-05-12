@@ -53,6 +53,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRegistration;
+import javax.servlet.annotation.WebListener;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -68,6 +69,7 @@ import java.net.URL;
  * @version 1.2
  * @since 0.4.1
  */
+@WebListener
 public class WuicServletContextListener implements ServletContextListener {
 
     /**
