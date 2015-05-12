@@ -40,8 +40,8 @@ package com.github.wuic.tag;
 
 import com.github.wuic.WuicFacade;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.ServletProcessContext;
-import com.github.wuic.jee.WuicServletContextListener;
+import com.github.wuic.servlet.ServletProcessContext;
+import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.util.HtmlUtil;

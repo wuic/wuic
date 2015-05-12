@@ -41,8 +41,8 @@ package com.github.wuic.tag;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.ServletProcessContext;
-import com.github.wuic.jee.WuicServletContextListener;
+import com.github.wuic.servlet.ServletProcessContext;
+import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 
 import javax.servlet.http.HttpServletRequest;

@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,65 +35,37 @@
  * licenses."
  */
 
-package com.github.wuic.nut.dao.jee;
 
-import com.github.wuic.NutType;
-import com.github.wuic.nut.AbstractNut;
+package com.github.wuic.servlet;
 
-import javax.servlet.ServletContext;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.Future;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
 
 /**
  * <p>
- * Represents a nut on the path system provided or to be managed by the WUIC framework. Thanks to
- * {@link com.github.wuic.path.FilePath}, the nut could also be a ZIP entry.
+ * A service that implements HTTP/2 server-push and pushes all the given paths to the response initiated by the
+ * specified request.
+ * </p>
+ *
+ * <p>
+ * If the request is not sent over HTTP/2 or push is simply not supported, then the service should do nothing.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.2
+ * @version 1.0
+ * @version 0.5.2
  */
-public class WebappNut extends AbstractNut {
-
-    /**
-     * Serial version UID.
-     */
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The servlet context which can open stream.
-     */
-    private ServletContext context;
-
-    /**
-     * Path in webapp.
-     */
-    private String path;
+public interface PushService {
 
     /**
      * <p>
-     * Builds a new {@code Nut} based on a context and path.
+     * Pushes to the client associated to the specified request/response the resources associated to the given paths.
      * </p>
      *
-     * @param ctx the context path
-     * @param p the path
-     * @param name the nut name
-     * @param ft the path type
-     * @param versionNumber the nuts's version number
+     * @param request the request
+     * @param response the response
+     * @param paths the pahts
      */
-    public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft, final Future<Long> versionNumber) {
-        super(name, ft, versionNumber);
-        context = ctx;
-        path = p;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws IOException {
-        return context.getResourceAsStream(path);
-    }
+    void push(HttpServletRequest request, HttpServletResponse response, Collection<String> paths);
 }

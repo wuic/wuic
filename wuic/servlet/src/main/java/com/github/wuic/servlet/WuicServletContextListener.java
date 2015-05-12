@@ -36,13 +36,13 @@
  */
 
 
-package com.github.wuic.jee;
+package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.dao.jee.WebappNutDaoBuilderInspector;
+import com.github.wuic.nut.dao.servlet.WebappNutDaoBuilderInspector;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;

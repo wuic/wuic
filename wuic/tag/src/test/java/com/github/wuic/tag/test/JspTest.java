@@ -38,7 +38,7 @@
 
 package com.github.wuic.tag.test;
 
-import com.github.wuic.jee.WuicServletContextListener;
+import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicRunnerConfiguration;

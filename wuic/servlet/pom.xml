@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>com.github.wuic</groupId>
-            <artifactId>wuic-jee</artifactId>
+            <artifactId>wuic-core</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

@@ -36,29 +36,39 @@
  */
 
 
-package com.github.wuic.jee.path;
+package com.github.wuic.servlet.path;
 
+import com.github.wuic.path.AbstractDirectoryPath;
 import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.FilePath;
-import com.github.wuic.path.core.SimplePath;
+import com.github.wuic.path.Path;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Set;
 
 /**
  * <p>
- * Represents a file in the war file.
+ * Represents a directory in the war file.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.4.2
  */
-public class WebappFilePath extends SimplePath implements FilePath {
+public class WebappDirectoryPath extends AbstractDirectoryPath {
 
     /**
-     * Servlet context.
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * The servlet context.
      */
     private ServletContext context;
 
@@ -67,13 +77,52 @@ public class WebappFilePath extends SimplePath implements FilePath {
      * Creates a new instance.
      * </p>
      *
-     * @param n the name
-     * @param dp the parent
-     * @param context the servlet context used to access nut's stream
+     * @param name the name
+     * @param parent the parent
+     * @param context the servlet context used to create children
      */
-    public WebappFilePath(final String n, final DirectoryPath dp, final ServletContext context) {
-        super(n, dp);
+    public WebappDirectoryPath(final String name, final DirectoryPath parent, final ServletContext context) {
+        super(name, parent);
         this.context = context;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Path buildChild(final String child) throws IOException {
+        final String absoluteParent = getAbsolutePath();
+        final String absoluteChild = IOUtils.mergePath(absoluteParent, child);
+        final Set paths = context.getResourcePaths(absoluteParent);
+
+        if (paths == null) {
+            logger.warn("Path {} in {} was not found in webapp directory path.", absoluteParent, absoluteChild);
+            throw new FileNotFoundException();
+        // If child is a directory, it will ends with a '/' and won't be match the absolute child path in returned set
+        } else if (paths.contains(absoluteChild)) {
+            return new WebappFilePath(child, this, context);
+        } else {
+            return new WebappDirectoryPath(child, this, context);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public String[] list() throws IOException {
+        final Set<String> res = context.getResourcePaths(getAbsolutePath());
+        final String[] retval = new String[res.size()];
+        int i = 0;
+
+        for (final String path : res) {
+            // Removes the parent path part
+            final int index = path.lastIndexOf('/', path.length() - NumberUtils.TWO);
+            retval[i++] = index == -1 ? path : path.substring(index + 1);
+        }
+
+        return retval;
     }
 
     /**
@@ -83,13 +132,5 @@ public class WebappFilePath extends SimplePath implements FilePath {
     public long getLastUpdate() throws IOException {
         // In JEE, war is can't be reached so we are not able to get last timestamp
         return -1L;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws IOException {
-        return context.getResourceAsStream(getAbsolutePath());
     }
 }

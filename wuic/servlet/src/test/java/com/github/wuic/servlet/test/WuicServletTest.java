@@ -39,7 +39,7 @@
 package com.github.wuic.servlet.test;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicServletContextListener;
+import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.servlet.WuicServlet;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;

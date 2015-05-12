@@ -36,44 +36,74 @@
  */
 
 
-package com.github.wuic.jee.path;
+package com.github.wuic.servlet;
 
-import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.path.DirectoryPathFactory;
+import com.github.wuic.ProcessContext;
+import com.github.wuic.exception.WuicException;
 
-import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>
- * {@link DirectoryPathFactory} in charge of creating new {@link WebappDirectoryPath}.
+ * A {@link ProcessContext} created in a {@link javax.servlet.http.HttpServletRequest} execution scope.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.2
+ * @since 0.5.2
  */
-public class WebappDirectoryPathFactory implements DirectoryPathFactory {
+public class ServletProcessContext extends ProcessContext {
 
     /**
-     * The servlet context used by any created {@link WebappDirectoryPath}.
+     * The wrapped request.
      */
-    private ServletContext context;
+    private final HttpServletRequest httpServletRequest;
 
     /**
      * <p>
-     * Creates a new instance.
+     * Builds a new instance with a {@link HttpServletRequest request} to wrap.
      * </p>
      *
-     * @param ctx the servlet context used to create {@link WebappDirectoryPath}
+     * @param request the request to wrap
      */
-    public WebappDirectoryPathFactory(final ServletContext ctx) {
-        context = ctx;
+    public ServletProcessContext(final HttpServletRequest request) {
+        httpServletRequest = request;
+    }
+
+    /**
+     * <p>
+     * Try to cast the given object in the instance of this class. An {@link IllegalStateException} will be thrown if
+     * the process context is {@code null} or an instance of a different class.
+     * </p>
+     *
+     * @param processContext the process context
+     * @return the process context
+     */
+    public static ServletProcessContext cast(final ProcessContext processContext) {
+        if (processContext == null || !(processContext instanceof ServletProcessContext)) {
+            WuicException.throwBadStateException(new IllegalStateException(
+                    "Process context must wrap an HTTP request when WUIC is deployed in any servlet container."));
+        }
+
+        return ServletProcessContext.class.cast(processContext);
+    }
+
+    /**
+     * <p>
+     * Gets the wrapped request.
+     * </p>
+     *
+     * @return the request
+     */
+    public HttpServletRequest getHttpServletRequest() {
+        return httpServletRequest;
     }
 
     /**
      * {@inheritDoc}
      */
-    public DirectoryPath create(final String path) {
-        return new WebappDirectoryPath(path, null, context);
+    @Override
+    public String toString() {
+        return String.format("ProcessContext[request=%s]", httpServletRequest);
     }
 }

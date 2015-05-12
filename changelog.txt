@@ -158,3 +158,4 @@ Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.2&page=1&state=cl
 
 Breaking changes:
 - Sprites are now identified with the ID of the heap containing the path, not a potential enclosing composition
+- "wuic-jee" artifact has been deleted is now part of "wuic-servlet" artifact

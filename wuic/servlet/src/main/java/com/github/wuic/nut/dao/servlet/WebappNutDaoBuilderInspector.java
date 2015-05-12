@@ -36,7 +36,7 @@
  */
 
 
-package com.github.wuic.nut.dao.jee;
+package com.github.wuic.nut.dao.servlet;
 
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.nut.dao.core.DiskNutDao;

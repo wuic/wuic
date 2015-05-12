@@ -36,74 +36,28 @@
  */
 
 
-package com.github.wuic.jee;
+package com.github.wuic.nut.dao.servlet;
 
-import com.github.wuic.ProcessContext;
-import com.github.wuic.exception.WuicException;
-
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletContext;
 
 /**
  * <p>
- * A {@link ProcessContext} created in a {@link javax.servlet.http.HttpServletRequest} execution scope.
+ * This interface represents an object which handles a {@link javax.servlet.ServletContext}. Objects of this type should
+ * be modified by {@link WebappNutDaoBuilderInspector} when WUIC bootstrap to wrap a not {@code null} context.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.5.2
+ * @since 0.5
  */
-public class ServletProcessContext extends ProcessContext {
-
-    /**
-     * The wrapped request.
-     */
-    private final HttpServletRequest httpServletRequest;
+public interface ServletContextHandler {
 
     /**
      * <p>
-     * Builds a new instance with a {@link HttpServletRequest request} to wrap.
+     * Sets the servlet context.
      * </p>
      *
-     * @param request the request to wrap
+     * @param sc the context
      */
-    public ServletProcessContext(final HttpServletRequest request) {
-        httpServletRequest = request;
-    }
-
-    /**
-     * <p>
-     * Try to cast the given object in the instance of this class. An {@link IllegalStateException} will be thrown if
-     * the process context is {@code null} or an instance of a different class.
-     * </p>
-     *
-     * @param processContext the process context
-     * @return the process context
-     */
-    public static ServletProcessContext cast(final ProcessContext processContext) {
-        if (processContext == null || !(processContext instanceof ServletProcessContext)) {
-            WuicException.throwBadStateException(new IllegalStateException(
-                    "Process context must wrap an HTTP request when WUIC is deployed in any servlet container."));
-        }
-
-        return ServletProcessContext.class.cast(processContext);
-    }
-
-    /**
-     * <p>
-     * Gets the wrapped request.
-     * </p>
-     *
-     * @return the request
-     */
-    public HttpServletRequest getHttpServletRequest() {
-        return httpServletRequest;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return String.format("ProcessContext[request=%s]", httpServletRequest);
-    }
+    void setServletContext(final ServletContext sc);
 }

@@ -36,28 +36,11 @@
  */
 
 
-package com.github.wuic.nut.dao.jee;
-
-import javax.servlet.ServletContext;
-
 /**
  * <p>
- * This interface represents an object which handles a {@link javax.servlet.ServletContext}. Objects of this type should
- * be modified by {@link WebappNutDaoBuilderInspector} when WUIC bootstrap to wrap a not {@code null} context.
+ * This package provides webapp support for {@link com.github.wuic.path.Path} manipulations.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.5
  */
-public interface ServletContextHandler {
-
-    /**
-     * <p>
-     * Sets the servlet context.
-     * </p>
-     *
-     * @param sc the context
-     */
-    void setServletContext(final ServletContext sc);
-}
+package com.github.wuic.servlet.path;

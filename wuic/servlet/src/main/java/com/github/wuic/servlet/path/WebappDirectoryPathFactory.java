@@ -36,36 +36,44 @@
  */
 
 
-package com.github.wuic.jee;
+package com.github.wuic.servlet.path;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
+import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.DirectoryPathFactory;
+
+import javax.servlet.ServletContext;
 
 /**
  * <p>
- * A service that implements HTTP/2 server-push and pushes all the given paths to the response initiated by the
- * specified request.
- * </p>
- *
- * <p>
- * If the request is not sent over HTTP/2 or push is simply not supported, then the service should do nothing.
+ * {@link DirectoryPathFactory} in charge of creating new {@link WebappDirectoryPath}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @version 0.5.2
+ * @since 0.4.2
  */
-public interface PushService {
+public class WebappDirectoryPathFactory implements DirectoryPathFactory {
+
+    /**
+     * The servlet context used by any created {@link WebappDirectoryPath}.
+     */
+    private ServletContext context;
 
     /**
      * <p>
-     * Pushes to the client associated to the specified request/response the resources associated to the given paths.
+     * Creates a new instance.
      * </p>
      *
-     * @param request the request
-     * @param response the response
-     * @param paths the pahts
+     * @param ctx the servlet context used to create {@link WebappDirectoryPath}
      */
-    void push(HttpServletRequest request, HttpServletResponse response, Collection<String> paths);
+    public WebappDirectoryPathFactory(final ServletContext ctx) {
+        context = ctx;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public DirectoryPath create(final String path) {
+        return new WebappDirectoryPath(path, null, context);
+    }
 }

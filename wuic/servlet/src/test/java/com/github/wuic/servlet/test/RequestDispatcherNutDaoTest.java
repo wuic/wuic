@@ -38,7 +38,7 @@
 
 package com.github.wuic.servlet.test;
 
-import com.github.wuic.jee.ServletProcessContext;
+import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import org.junit.Assert;
 import org.junit.Before;

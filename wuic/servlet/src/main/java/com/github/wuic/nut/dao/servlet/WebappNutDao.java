@@ -36,7 +36,7 @@
  */
 
 
-package com.github.wuic.nut.dao.jee;
+package com.github.wuic.nut.dao.servlet;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
@@ -45,8 +45,8 @@ import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicServletContextListener;
-import com.github.wuic.jee.path.WebappDirectoryPathFactory;
+import com.github.wuic.servlet.WuicServletContextListener;
+import com.github.wuic.servlet.path.WebappDirectoryPathFactory;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.PathNutDao;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;

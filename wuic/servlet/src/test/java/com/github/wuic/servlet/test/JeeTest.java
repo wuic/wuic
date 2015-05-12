@@ -36,13 +36,13 @@
  */
 
 
-package com.github.wuic.jee.test;
+package com.github.wuic.servlet.test;
 
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.jee.WuicServletContextListener;
+import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
-import com.github.wuic.nut.dao.jee.WebappNutDao;
+import com.github.wuic.nut.dao.servlet.WebappNutDao;
 import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;

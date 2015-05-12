@@ -36,11 +36,60 @@
  */
 
 
+package com.github.wuic.servlet.path;
+
+import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.path.FilePath;
+import com.github.wuic.path.core.SimplePath;
+
+import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * <p>
- * This package provides webapp support for {@link com.github.wuic.path.Path} manipulations.
+ * Represents a file in the war file.
  * </p>
  *
  * @author Guillaume DROUET
+ * @version 1.0
+ * @since 0.4.2
  */
-package com.github.wuic.jee.path;
+public class WebappFilePath extends SimplePath implements FilePath {
+
+    /**
+     * Servlet context.
+     */
+    private ServletContext context;
+
+    /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param n the name
+     * @param dp the parent
+     * @param context the servlet context used to access nut's stream
+     */
+    public WebappFilePath(final String n, final DirectoryPath dp, final ServletContext context) {
+        super(n, dp);
+        this.context = context;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getLastUpdate() throws IOException {
+        // In JEE, war is can't be reached so we are not able to get last timestamp
+        return -1L;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream openStream() throws IOException {
+        return context.getResourceAsStream(getAbsolutePath());
+    }
+}
