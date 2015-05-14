@@ -1,0 +1,28 @@
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder type="DiskNutDaoBuilder"></nut-dao-builder>
+        <nut-dao-builder type="ClasspathNutDaoBuilder"></nut-dao-builder>
+    </nut-dao-builders>
+    <engine-builders>
+        <engine-builder type="GzipEngineBuilder">
+            <properties>
+                <property key="c.g.wuic.engine.compress">false</property>
+            </properties>
+        </engine-builder>
+    </engine-builders>
+    <heaps>
+        <heap id="heap">
+            <nut-path>skipped/bar.js</nut-path>
+        </heap>
+    </heaps>
+    <workflow-templates>
+        <workflow-template id="tpl">
+            <engine-chain>
+                <engine-builder-id>wuicDefaultGzipEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+    </workflow-templates>
+    <workflows>
+        <workflow id-prefix="wf-" workflow-template-id="tpl" heap-id-pattern="heap" />
+    </workflows>
+</wuic>

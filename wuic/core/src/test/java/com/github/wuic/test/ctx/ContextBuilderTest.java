@@ -51,6 +51,7 @@ import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
@@ -60,8 +61,10 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
+import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
@@ -71,6 +74,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -694,5 +698,31 @@ public class ContextBuilderTest {
 
         // Root DAO
         proxy.process("", "proxy", ContextBuilderTest.NUT_NAME_ONE, new UrlUtils.DefaultUrlProviderFactory(), null);
+    }
+
+    /**
+     * <p>
+     * Checks that conventions regarding {@code null} builder ID are applied.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void conventionTest() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        new ContextBuilder(engine, dao, filter)
+                .tag("test")
+                .contextNutDaoBuilder(null, ClasspathNutDao.class)
+                .toContext()
+                .heap("heap", null, new String[] { "images/template-img.png" })
+                .contextEngineBuilder(null, GzipEngine.class)
+                .toContext()
+                .contextNutFilterBuilder(null, RegexRemoveNutFilter.class)
+                .toContext()
+                .build();
     }
 }

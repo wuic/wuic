@@ -44,9 +44,13 @@ import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.core.GzipEngine;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.IOUtils;
@@ -69,11 +73,13 @@ import org.junit.runners.JUnit4;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
 import java.util.List;
@@ -220,7 +226,6 @@ public class WuicXmlTest {
             Assert.assertNotNull(workflow.getHeapIdPattern());
         }
     }
-
 
     /**
      * <p>
@@ -400,5 +405,32 @@ public class WuicXmlTest {
         ctx.process("", "referenced", UrlUtils.urlProviderFactory(), null);
         ctx.process("", "both", UrlUtils.urlProviderFactory(), null);
         ctx.process("", "full", UrlUtils.urlProviderFactory(), null);
+    }
+
+    /**
+     * <p>
+     * Checks that conventions regarding {@code null} builder ID are applied.
+     * </p>
+     *
+     * @throws java.io.IOException if test fails
+     * @throws com.github.wuic.exception.WuicException if test fails
+     */
+    @Test
+    public void conventionTest() throws JAXBException, IOException, WuicException {
+        // Add custom DAO and engine required
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class, DiskNutDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
+
+        // Load configuration
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-conventions.xml"));
+        cfg.configure(builder);
+        final List<ConvertibleNut> res = builder.build().process("", "wf-heap", UrlUtils.urlProviderFactory(), null);
+        Assert.assertNotNull(res);
+        Assert.assertEquals(1, res.size());
+        final ConvertibleNut n = res.get(0);
+        n.transform();
+        Assert.assertFalse(n.isCompressed());
     }
 }

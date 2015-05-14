@@ -56,6 +56,7 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
@@ -410,7 +411,11 @@ public class ContextBuilder extends Observable {
          * @param paths the paths for this heap
          * @param listeners the listeners
          */
-        private HeapRegistration(final boolean disposable, final String ndbId, final String[] heapIds, final String[] paths, final HeapListener ... listeners) {
+        private HeapRegistration(final boolean disposable,
+                                 final String ndbId,
+                                 final String[] heapIds,
+                                 final String[] paths,
+                                 final HeapListener ... listeners) {
             this.factory = currentTag;
             this.disposable = disposable;
             this.ndbId = ndbId;
@@ -940,7 +945,30 @@ public class ContextBuilder extends Observable {
      * @return the default ID
      */
     public static String getDefaultBuilderId(final Class<?> component) {
-        return "wuicDefault" + component.getSimpleName() + "Builder";
+        return getDefaultBuilderId(component.getSimpleName() + "Builder");
+    }
+
+    /**
+     * <p>
+     * Gets the default builder ID for the given builder name.
+     * </p>
+     *
+     * @param builderName the builder name
+     * @return the default builder ID
+     */
+    public static String getDefaultBuilderId(final String builderName) {
+        return "wuicDefault" + builderName;
+    }
+
+    /**
+     * <p>
+     * Gets the default builder ID.
+     * </p>
+     *
+     * @return the default ID
+     */
+    public static String getDefaultBuilderId() {
+        return getDefaultBuilderId(ClasspathNutDao.class);
     }
 
     /**
@@ -1251,7 +1279,7 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param id the builder ID
-         * @param registration the resgistration
+         * @param registration the registration
          */
         public ContextNutDaoBuilder(final String id, final NutDaoRegistration registration) {
             super(id);
@@ -1343,7 +1371,7 @@ public class ContextBuilder extends Observable {
          * @param type the builder type
          */
         public ContextNutFilterBuilder(final String id, final String type) {
-            super(id);
+            super(id == null ? getDefaultBuilderId(type) : id);
             this.nutFilterBuilder = nutFilterBuilderFactory.create(type);
         }
 
@@ -1371,11 +1399,12 @@ public class ContextBuilder extends Observable {
      * Returns a new context DAO builder.
      * </p>
      *
-     * @param id the final builder's ID
+     * @param userId the final builder's ID, default ID if {@code null}
      * @param type the final builder's type
      * @return the specific context builder
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final String type) {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String userId, final String type) {
+        final String id = userId == null ? getDefaultBuilderId(type) : userId;
         final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(id);
         return registration == null ? new ContextNutDaoBuilder(id, type) : new ContextNutDaoBuilder(id, registration);
     }
@@ -1411,10 +1440,11 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param id the specific ID
-     * @param cloneId the ID of the existing builder to clone
+     * @param userId the ID of the existing builder to clone, if {@code null} then the default DAO is used
      * @return the specific context builder
      */
-    public ContextNutDaoBuilder cloneContextNutDaoBuilder(final String id, final String cloneId) {
+    public ContextNutDaoBuilder cloneContextNutDaoBuilder(final String id, final String userId) {
+        final String cloneId = userId == null ? getDefaultBuilderId() : userId;
         final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(cloneId);
 
         if (registration == null) {
@@ -1440,6 +1470,19 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Returns a new context filter builder.
+     * </p>
+     *
+     * @param id the final builder's ID
+     * @param type the final builder's type
+     * @return the specific context builder
+     */
+    public ContextNutFilterBuilder contextNutFilterBuilder(final String id, final Class<? extends NutFilter> type) {
+        return contextNutFilterBuilder(id, type.getSimpleName() + "Builder");
+    }
+
+    /**
+     * <p>
      * Returns a new context engine builder.
      * </p>
      *
@@ -1448,7 +1491,7 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextEngineBuilder contextEngineBuilder(final String id, final String type) {
-        return new ContextEngineBuilder(id, type);
+        return new ContextEngineBuilder(id == null ? getDefaultBuilderId(type) : id, type);
     }
 
     /**
@@ -1461,6 +1504,19 @@ public class ContextBuilder extends Observable {
      */
     public ContextEngineBuilder contextEngineBuilder(final Class<?> type) {
         return new ContextEngineBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+    }
+
+    /**
+     * <p>
+     * Returns a new default context engine builder associated to a particular ID.
+     * </p>
+     *
+     * @param id the specific ID, if {@code null} then the default ID is used
+     * @param type the component to build
+     * @return the specific context builder
+     */
+    public ContextEngineBuilder contextEngineBuilder(final String id, final Class<?> type) {
+        return contextEngineBuilder(id == null ? getDefaultBuilderId(type) : id, type.getSimpleName() + "Builder");
     }
 
     /**
@@ -1669,13 +1725,18 @@ public class ContextBuilder extends Observable {
      * @param disposable if the heap is disposable or not (see {@link com.github.wuic.nut.dao.NutDaoListener#isDisposable()}
      * @param id the heap ID
      * @param heapIds the heaps composition
-     * @param ndbId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on
+     * @param nutDaoId the {@link com.github.wuic.nut.dao.NutDao} builder the heap is based on, default is used if {@code null}
      * @param path the path
      * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
      * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final boolean disposable, final String id, final String ndbId, final String[] heapIds, final String[] path, final HeapListener ... listeners)
+    public ContextBuilder heap(final boolean disposable,
+                               final String id,
+                               final String nutDaoId,
+                               final String[] heapIds,
+                               final String[] path,
+                               final HeapListener ... listeners)
             throws IOException {
         if (NumberUtils.isNumber(id)) {
             WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
@@ -1686,6 +1747,7 @@ public class ContextBuilder extends Observable {
 
         final ContextSetting setting = getSetting();
 
+        final String ndbId = nutDaoId != null ? nutDaoId : getDefaultBuilderId();
         setting.getNutsHeaps().put(id, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
 
         taggedSettings.put(currentTag, setting);
