@@ -70,9 +70,9 @@ public class ContextSetting {
     private Map<String, ContextBuilder.NutDaoRegistration> nutDaoMap = new HashMap<String, ContextBuilder.NutDaoRegistration>();
 
     /**
-     * All {@link com.github.wuic.nut.filter.NutFilter daos} associated to their builder ID.
+     * All {@link com.github.wuic.config.ObjectBuilder} building {@link NutFilter} associated to their builder ID.
      */
-    private Map<String, NutFilter> nutFilterMap = new HashMap<String, NutFilter>();
+    private Map<String, ObjectBuilder<NutFilter>> nutFilterMap = new HashMap<String, ObjectBuilder<NutFilter>>();
 
     /**
      * All {@link com.github.wuic.config.ObjectBuilder} building {@link com.github.wuic.engine.Engine} associated to their builder ID.
@@ -140,7 +140,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, NutFilter> getNutFilterMap() {
+    Map<String, ObjectBuilder<NutFilter>> getNutFilterMap() {
         return nutFilterMap;
     }
 

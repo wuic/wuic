@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 /**
@@ -227,26 +228,6 @@ public class TaggedSettings {
 
     /**
      * <p>
-     * Filters the given path with the registered filters and return the result.
-     * </p>
-     *
-     * @param pathList the list to filter
-     * @return the filtered list
-     */
-    List<String> filter(final List<String> pathList) {
-        List<String> retval = pathList;
-
-        for (final ContextSetting s : taggedSettings.values()) {
-            for (final NutFilter filter : s.getNutFilterMap().values()) {
-                retval = filter.filterPaths(retval);
-            }
-        }
-
-        return retval;
-    }
-
-    /**
-     * <p>
      * Merges all the specified settings to the given builder.
      * </p>
      *
@@ -264,7 +245,7 @@ public class TaggedSettings {
                 contextBuilder.engineBuilder(entry.getKey(), entry.getValue());
             }
 
-            for (final Map.Entry<String, NutFilter> entry : s.getNutFilterMap().entrySet()) {
+            for (final Map.Entry<String, ObjectBuilder<NutFilter>> entry : s.getNutFilterMap().entrySet()) {
                 contextBuilder.nutFilter(entry.getKey(), entry.getValue());
             }
 
@@ -297,16 +278,18 @@ public class TaggedSettings {
 
     /**
      * <p>
-     * Gets the {@link NutFilter filters} currently configured in all settings.
+     * Gets the {@link NutFilter filters} associated to their ID currently configured in all settings.
      * </p>
      *
      * @return the filters
      */
-    List<NutFilter> getFilters() {
-        final List<NutFilter> retval = new ArrayList<NutFilter>();
+    Map<String, NutFilter> getFilterMap() {
+        final Map<String, NutFilter> retval = new HashMap<String, NutFilter>();
 
         for (final ContextSetting setting : taggedSettings.values()) {
-            retval.addAll(setting.getNutFilterMap().values());
+            for (final Map.Entry<String, ObjectBuilder<NutFilter>> objectBuilder : setting.getNutFilterMap().entrySet()) {
+                retval.put(objectBuilder.getKey(), objectBuilder.getValue().build());
+            }
         }
 
         return retval;
@@ -425,7 +408,7 @@ public class TaggedSettings {
      *
      * @return the {@link NutsHeap} associated to their registration ID
      */
-    Map<String, NutsHeap> getNutsHeapMap(final Map<String, NutDao> daoMap)
+    Map<String, NutsHeap> getNutsHeapMap(final Map<String, NutDao> daoMap, final Map<String, NutFilter> nutFilterMap)
             throws IOException {
         final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
 
@@ -434,13 +417,13 @@ public class TaggedSettings {
             // The composite heap must be read after the standard heap
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (!heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, setting));
+                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
 
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, setting));
+                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
         }
@@ -600,5 +583,73 @@ public class TaggedSettings {
         }
 
         return chains;
+    }
+
+    /**
+     * <p>
+     * Applies the given property object to all registered components.
+     * </p>
+     *
+     * @param properties the property object
+     * @see TaggedSettings#applyProperty(String, String)
+     */
+    void applyProperties(final Properties properties) {
+        for (final Object key : properties.keySet()) {
+            final String property = key.toString();
+            applyProperty(property, properties.getProperty(property));
+        }
+    }
+
+    /**
+     * <p>
+     * Applies the given property to the registered {@link NutFilter}, {@link Engine} and {@link NutDao}.
+     * </p>
+     *
+     * @param property the property
+     * @param value the property value
+     * @see TaggedSettings#applyProperty(java.util.Map, String, String)
+     */
+    private void applyProperty(final String property, final String value) {
+        if (property.startsWith("c.g.wuic.engine.")) {
+            for (final ContextSetting ctx : taggedSettings.values()) {
+                applyProperty(ctx.getEngineMap(), property, value);
+            }
+        } else if (property.startsWith("c.g.wuic.dao.")) {
+            for (final ContextSetting ctx : taggedSettings.values()) {
+                applyProperty(ctx.getNutDaoMap(), property, value);
+            }
+        } else if (property.startsWith("c.g.wuic.filter.")) {
+            for (final ContextSetting ctx : taggedSettings.values()) {
+                applyProperty(ctx.getNutFilterMap(), property, value);
+            }
+        } else {
+            for (final ContextSetting ctx : taggedSettings.values()) {
+                applyProperty(ctx.getEngineMap(), property, value);
+                applyProperty(ctx.getNutDaoMap(), property, value);
+                applyProperty(ctx.getNutFilterMap(), property, value);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Applies the given key/value property to all components read from the builder map specified in parameter. If the
+     * map is null, nothing is done. If the property is not supported by one component, then it is just ignored.
+     * </p>
+     *
+     * @param builders the components
+     * @param property the property to set
+     * @param value the value associated to the property
+     */
+    private void applyProperty(final Map builders, final String property, final String value) {
+        if (builders != null) {
+            for (final Object component : builders.values()) {
+                try {
+                    ObjectBuilder.class.cast(component).property(property, value);
+                } catch (IllegalArgumentException iae) {
+                    log.trace("The property has not been set", iae);
+                }
+            }
+        }
     }
 }

@@ -144,18 +144,10 @@ public class WuicServletContextListener implements ServletContextListener {
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
 
         try {
-            final URL classesWuicXmlPath = sce.getServletContext().getResource("/WEB-INF/classes/wuic.xml");
-
-            if (classesWuicXmlPath != null) {
-                builder.wuicXmlPath(classesWuicXmlPath);
-                log.info("Installing 'wuic.xml' located in {}", classesWuicXmlPath.toString());
-            }
-
+            detectInClassesLocation(builder, sce.getServletContext(), "wuic.xml", "wuic.properties");
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
             WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
-        } catch (MalformedURLException mue) {
-            log.error("Unexpected exception", mue);
         }
     }
 
@@ -169,13 +161,54 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
+     * Detects the given list of file in the "/WEB-INF/classes" directory and install them with
+     * {@link WuicFacadeBuilder#wuicXmlPath(java.net.URL)} and {@link WuicFacadeBuilder#wuicPropertiesPath(java.net.URL)}
+     * regarding their extension.
+     * </p>
+     *
+     * @param builder the builder to configure
+     * @param servletContext the context giving access to base directory
+     * @param files all files to test
+     */
+    private void detectInClassesLocation(final WuicFacadeBuilder builder, final ServletContext servletContext, final String... files) {
+        for (final String file : files) {
+            try {
+                final URL classesPath = servletContext.getResource("/WEB-INF/classes/" + file);
+
+                if (classesPath != null) {
+                    final boolean configured;
+
+                    if (file.endsWith(".properties")) {
+                        builder.wuicPropertiesPath(classesPath);
+                        configured = true;
+                    } else if (file.endsWith(".xml")) {
+                        builder.wuicXmlPath(classesPath);
+                        configured = true;
+                    } else {
+                        configured = false;
+                    }
+
+                    if (configured) {
+                        log.info("Installing '{}' located in {}", file, classesPath.toString());
+                    } else {
+                        log.warn("Configuration file {} must ends with .properties or .xml ot be installed.", classesPath.toString());
+                    }
+                }
+            } catch (MalformedURLException mue) {
+                log.error("Unexpected exception", mue);
+            }
+        }
+    }
+
+    /**
+     * <p>
      * Builds a {@link BiFunction} with the given class. The class BiFunction implementation must be parameterized only
      * with java.lang.String types. If it does not expose a default constructor, it must provide a constructor expecting
      * a ServletContext.
      * </p>
      *
      * @param paramClass the class
-     * @param sc the context
+     * @param sc         the context
      * @return the function
      * @throws Exception if class can't be instantiated
      */

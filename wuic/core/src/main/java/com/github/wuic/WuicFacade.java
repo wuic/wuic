@@ -179,10 +179,10 @@ public final class WuicFacade {
 
         // No inspector, directly use the wrapped context builder
         if (b.getObjectBuilderInspector() == null) {
-            builder = new ContextBuilder(b.contextBuilder());
+            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath());
         } else {
             // build a new context builder with specific inspector and reuse the factories already declared
-            builder = new ContextBuilder(b.contextBuilder(), b.getObjectBuilderInspector());
+            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(), b.getObjectBuilderInspector());
         }
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];

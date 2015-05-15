@@ -62,17 +62,22 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
+import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -168,6 +173,11 @@ public class ContextBuilder extends Observable {
     private ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory;
 
     /**
+     * A property file URL containing properties to apply to all registered components.
+     */
+    private URL propertySet;
+
+    /**
      * Indicates that {@link #configureDefault()} has been called and default entries are injected.
      */
     private boolean configureDefault;
@@ -178,10 +188,12 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param b the builder providing the components factories (engine, dao, filter)
+     * @param properties the property set to apply to all components
      * @param inspectors the inspectors to add to the factories
      */
-    public ContextBuilder(final ContextBuilder b, final ObjectBuilderInspector ... inspectors) {
+    public ContextBuilder(final ContextBuilder b, final URL properties, final ObjectBuilderInspector ... inspectors) {
         this(b.getEngineBuilderFactory(), b.getNutDaoBuilderFactory(), b.getNutFilterBuilderFactory(), inspectors);
+        propertySet = properties;
     }
 
     /**
@@ -232,56 +244,6 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * This class configures default engines in the {@link ContextBuilder}.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.1
-     * @since 0.4.0
-     */
-    class DefaultEngineContextBuilderConfigurator extends ContextBuilderConfigurator {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int internalConfigure(final ContextBuilder ctxBuilder) {
-            for (final ObjectBuilderFactory.KnownType type : engineBuilderFactory.knownTypes()) {
-                ctxBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
-            }
-
-            // Never poll
-            return -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getTag() {
-            return "default.engine";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-            // Never poll
-            return 1L;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public ProcessContext getProcessContext() {
-            return null;
-        }
-    }
-
-    /**
-     * <p>
      * Sets the filters configured in the given instance if it's a {@link NutFilterHolder}.
      * </p>
      *
@@ -306,22 +268,50 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * This class configures default DAOs in the {@link ContextBuilder}.
+     * This class configures by default builder's components from a particular {@link ObjectBuilderFactory} in the
+     * {@link ContextBuilder}.
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
-     * @since 0.4.0
+     * @version 1.0
+     * @since 0.5.2
      */
-    final class DefaultDaoContextBuilderConfigurator extends ContextBuilderConfigurator {
+    abstract class DefaultContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+        /**
+         * The object builder factory.
+         */
+        private final ObjectBuilderFactory<?> objectBuilderFactory;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param obf the factory
+         */
+        private DefaultContextBuilderConfigurator(final ObjectBuilderFactory<?> obf) {
+            objectBuilderFactory = obf;
+        }
+
+        /**
+         * <p>
+         * Applies default configuration for the given {@link com.github.wuic.config.ObjectBuilderFactory.KnownType}
+         * to the specified builder.
+         * </p>
+         *
+         * @param type the type
+         * @param contextBuilder the builder
+         */
+        abstract void internalConfigure(ContextBuilder contextBuilder, ObjectBuilderFactory.KnownType type);
 
         /**
          * {@inheritDoc}
          */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
-            for (final ObjectBuilderFactory.KnownType type : nutDaoBuilderFactory.knownTypes()) {
-                ctxBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+            for (final ObjectBuilderFactory.KnownType type : objectBuilderFactory.knownTypes()) {
+                internalConfigure(ctxBuilder, type);
             }
 
             // Never poll
@@ -333,7 +323,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public String getTag() {
-            return "default.dao";
+            return Arrays.deepToString(objectBuilderFactory.knownTypes().toArray());
         }
 
         /**
@@ -433,7 +423,8 @@ public class ContextBuilder extends Observable {
         /**
          * <p>
          * Notifies the {@link NutsHeap} listeners if the object has been already created with a call to
-         * {@link #getHeap(String, java.util.Map, java.util.Map, ContextSetting)} . This will help to free any resource.
+         * {@link #getHeap(String, java.util.Map, java.util.Map, java.util.Map, ContextSetting)}.
+         * This will help to free any resource.
          * </p>
          */
         void free() {
@@ -463,6 +454,7 @@ public class ContextBuilder extends Observable {
          * @param id the ID for this heap
          * @param daoCollection a collection of DAOs where {@link #ndbId} will be resolved
          * @param heapCollection a collection of heap where {@link #heapIds} will be resolved
+         * @param filterCollection the filter collection
          * @param contextSetting the setting this registration belongs to
          * @return the heap
          * @throws IOException if creation fails
@@ -470,6 +462,7 @@ public class ContextBuilder extends Observable {
         NutsHeap getHeap(final String id,
                          final Map<String, NutDao> daoCollection,
                          final Map<String, NutsHeap> heapCollection,
+                         final Map<String, NutFilter> filterCollection,
                          final ContextSetting contextSetting)
                 throws IOException {
             free();
@@ -481,7 +474,7 @@ public class ContextBuilder extends Observable {
             }
 
             // Check content and apply filters
-            final List<String> pathList = pathList(dao, ndbId, paths);
+            final List<String> pathList = pathList(dao, filterCollection.values(), ndbId, paths);
 
             // Composition detected, collected nested and referenced heaps
             if (heapIds != null && heapIds.length != 0) {
@@ -779,7 +772,7 @@ public class ContextBuilder extends Observable {
      * @version 1.0
      * @since 0.5.1
      */
-    final class NutDaoRegistration {
+    final class NutDaoRegistration implements ObjectBuilder<NutDao> {
 
         /**
          * The builder.
@@ -818,6 +811,46 @@ public class ContextBuilder extends Observable {
             this.proxyNut = new HashMap<String, Nut>();
             this.nutDaoBuilder = nutDaoBuilder;
             this.proxyRootPath = "";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ObjectBuilder<NutDao> property(final String key, final Object value) {
+            return nutDaoBuilder.property(key, value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ObjectBuilder<NutDao> disableSupport(final String key, final Object value) {
+            return nutDaoBuilder.disableSupport(key, value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object property(final String key) {
+            return nutDaoBuilder.property(key);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Map<String, Object> getProperties() {
+            return nutDaoBuilder.getProperties();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NutDao build() {
+            return nutDaoBuilder.build();
         }
 
         /**
@@ -983,8 +1016,27 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder configureDefault() throws IOException {
         if (!configureDefault) {
-            new DefaultEngineContextBuilderConfigurator().configure(this);
-            new DefaultDaoContextBuilderConfigurator().configure(this);
+            new DefaultContextBuilderConfigurator(engineBuilderFactory){
+                @Override
+                void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
+                    contextBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                }
+            }.configure(this);
+
+            new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
+                @Override
+                void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
+                    contextBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                }
+            }.configure(this);
+
+            new DefaultContextBuilderConfigurator(nutFilterBuilderFactory) {
+                @Override
+                void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
+                    contextBuilder.contextNutFilterBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                }
+            }.configure(this);
+
             configureDefault = true;
         }
 
@@ -1561,14 +1613,14 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Add a new {@link com.github.wuic.nut.filter.NutFilter} identified by the specified ID.
+     * Add a new {@link com.github.wuic.nut.filter.NutFilter} builder identified by the specified ID.
      * </p>
      *
      * @param id the ID which identifies the builder in the context
-     * @param filter the filter associated to its ID
+     * @param filter the filter builder associated to its ID
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder nutFilter(final String id, final NutFilter filter) {
+    public ContextBuilder nutFilter(final String id, final ObjectBuilder<NutFilter> filter) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1673,7 +1725,7 @@ public class ContextBuilder extends Observable {
         // Will override existing element
         taggedSettings.removeNutFilter(id);
 
-        setting.getNutFilterMap().put(id, configure(filterBuilder, properties).build());
+        setting.getNutFilterMap().put(id, configure(filterBuilder, properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1779,11 +1831,12 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @param dao the {@link NutDao} that creates {@link com.github.wuic.nut.Nut} with given path
+     * @param filters the filter collection
      * @param ndbId the ID associated to the DAO
      * @param path the paths that represent the {@link com.github.wuic.nut.Nut nuts}
      * @return the filtered paths
      */
-    private List<String> pathList(final NutDao dao, final String ndbId, final String ... path) {
+    private List<String> pathList(final NutDao dao, final Collection<NutFilter> filters, final String ndbId, final String ... path) {
         List<String> pathList;
 
         if (path.length != 0) {
@@ -1793,8 +1846,12 @@ public class ContextBuilder extends Observable {
                 WuicException.throwBadArgumentException(new IllegalArgumentException(msg));
                 return null;
             } else {
+                pathList = CollectionUtils.newList(path);
+
                 // Going to filter the list with all declared filters
-                pathList = taggedSettings.filter(CollectionUtils.newList(path));
+                for (final NutFilter filter : filters) {
+                    pathList = filter.filterPaths(pathList);
+                }
             }
         } else {
             pathList = Arrays.asList();
@@ -1963,7 +2020,9 @@ public class ContextBuilder extends Observable {
      * @return the filters
      */
     public List<NutFilter> getFilters() {
-        return taggedSettings.getFilters();
+        final List<NutFilter> retval = new ArrayList<NutFilter>();
+        retval.addAll(taggedSettings.getFilterMap().values());
+        return retval;
     }
 
     /**
@@ -2002,8 +2061,22 @@ public class ContextBuilder extends Observable {
                 lock.lock();
             }
 
+            if (propertySet != null) {
+                InputStream is = null;
+
+                try {
+                    is = propertySet.openStream();
+                    final Properties properties = new Properties();
+                    properties.load(is);
+                    taggedSettings.applyProperties(properties);
+                } finally {
+                    IOUtils.close(is);
+                }
+            }
+
+            final Map<String, NutFilter> filterMap = taggedSettings.getFilterMap();
             final Map<String, NutDao> daoMap = taggedSettings.getNutDaoMap();
-            final Map<String, NutsHeap> heapMap = taggedSettings.getNutsHeapMap(daoMap);
+            final Map<String, NutsHeap> heapMap = taggedSettings.getNutsHeapMap(daoMap, filterMap);
             final Map<String, Workflow> workflowMap =
                     taggedSettings.getWorkflowMap(configureDefault, daoMap, heapMap, engineBuilderFactory.knownTypes());
 

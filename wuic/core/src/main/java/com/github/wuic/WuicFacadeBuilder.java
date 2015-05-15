@@ -90,6 +90,11 @@ public class WuicFacadeBuilder {
     private Boolean multipleConfigInTagSupport;
 
     /**
+     * The URL where wuic.properties file is located.
+     */
+    private URL wuicPropertiesPath;
+
+    /**
      * The URL where wuic.xml file is located.
      */
     private URL wuicXmlPath;
@@ -124,6 +129,7 @@ public class WuicFacadeBuilder {
         warmUpStrategy = WuicFacade.WarmupStrategy.NONE;
         multipleConfigInTagSupport = Boolean.TRUE;
         wuicXmlPath = getClass().getResource("/wuic.xml");
+        wuicPropertiesPath = getClass().getResource("/wuic.properties");
         useDefaultContextBuilderConfigurator = Boolean.TRUE;
         objectBuilderInspector = null;
         configurators = new ArrayList<ContextBuilderConfigurator>();
@@ -158,6 +164,7 @@ public class WuicFacadeBuilder {
             final WuicFacade.WarmupStrategy warmupStrategy = WuicFacade.WarmupStrategy.valueOf(warmupStrategyStr);
 
             final String xmlPath = properties.apply(ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM, null);
+            final String propertyPath = properties.apply(ApplicationConfig.WUIC_PROPERTIES_PATH_PARAM, null);
             contextPath(wuicCp);
             warmUpStrategy(warmupStrategy);
             disableMultipleConfigInTagSupport();
@@ -176,6 +183,15 @@ public class WuicFacadeBuilder {
                     wuicXmlPath(new URL(xmlPath));
                 }
             }
+
+            // Choose specific location for property file
+            if (propertyPath != null) {
+                if (Boolean.parseBoolean(properties.apply(ApplicationConfig.WUIC_PROPERTIES_SYS_PROP_PARAM, "false"))) {
+                    wuicPropertiesPath(new URL(System.getProperty(propertyPath)));
+                } else {
+                    wuicPropertiesPath(new URL(xmlPath));
+                }
+            }
         } catch (MalformedURLException mue) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
         }
@@ -191,6 +207,19 @@ public class WuicFacadeBuilder {
      */
     public final WuicFacadeBuilder wuicXmlPath(final URL xml) {
         this.wuicXmlPath = xml;
+        return this;
+    }
+
+    /**
+     * <p>
+     * Sets a new location for wuic.properties file.
+     * </p>
+     *
+     * @param properties the new location
+     * @return this
+     */
+    public final WuicFacadeBuilder wuicPropertiesPath(final URL properties) {
+        this.wuicPropertiesPath = properties;
         return this;
     }
 
@@ -330,7 +359,7 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Indicates if multiple configurations inside tag are allowed
+     * Indicates if multiple configurations inside tag are allowed.
      * </p>
      *
      * @return {@code true} or {@code false}
@@ -341,13 +370,24 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Gets the wuic.xml location if any
+     * Gets the wuic.xml location if any.
      * </p>
      *
      * @return the location
      */
     URL getWuicXmlPath() {
         return wuicXmlPath;
+    }
+
+    /**
+     * <p>
+     * Gets the wuic.properties location if any.
+     * </p>
+     *
+     * @return the wuic.properties path
+     */
+    URL getWuicPropertiesPath() {
+        return wuicPropertiesPath;
     }
 
     /**
@@ -374,7 +414,7 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Gets extra configurators if any
+     * Gets extra configurators if any.
      * </p>
      *
      * @return the configurators

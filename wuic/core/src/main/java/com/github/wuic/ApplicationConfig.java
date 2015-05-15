@@ -335,6 +335,16 @@ public interface ApplicationConfig {
     String WUIC_SERVLET_CONTEXT_PARAM = "c.g.wuic.facade.contextPath";
 
     /**
+     * Init parameter which indicates the WUIC property file.
+     */
+    String WUIC_PROPERTIES_PATH_PARAM = "c.g.wuic.facade.propertiesPath";
+
+    /**
+     * Init parameter which indicates that the WUIC property path is a system property.
+     */
+    String WUIC_PROPERTIES_SYS_PROP_PARAM = "c.g.wuic.facade.propertiesPathAsSystemProperty";
+
+    /**
      * Init parameter which indicates the WUIC xml file.
      */
     String WUIC_SERVLET_XML_PATH_PARAM = "c.g.wuic.facade.xmlPath";
@@ -343,6 +353,7 @@ public interface ApplicationConfig {
      * Init parameter which indicates that the WUIC context path is a system property.
      */
     String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.wuic.facade.xmlPathAsSystemProperty";
+
 
     /**
      * Init parameter which indicates to use or not context builder configurators which inject default DAOs and engines.

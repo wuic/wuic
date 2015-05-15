@@ -47,8 +47,10 @@ import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.NumberUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +58,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -79,6 +82,27 @@ public class WuicFacadeBuilderTest {
     public void noXmlTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         Assert.assertTrue(builder.noXmlConfiguration().build().workflowIds().isEmpty());
+    }
+
+    /**
+     * <p>
+     * Tests that properties are applied.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void propertiesFileTest() throws Exception {
+        final WuicFacadeBuilder builder = new WuicFacadeBuilder()
+                .wuicPropertiesPath(getClass().getResource("/wuic-test.properties"));
+
+        final List<ConvertibleNut> res = builder.build().runWorkflow("css-scripts", Mockito.mock(ProcessContext.class));
+        Assert.assertNotNull(res);
+        Assert.assertEquals(NumberUtils.TWO, res.size());
+
+        for (final ConvertibleNut c : res) {
+            Assert.assertEquals(1L, c.getVersionNumber().get().longValue());
+        }
     }
 
     /**
