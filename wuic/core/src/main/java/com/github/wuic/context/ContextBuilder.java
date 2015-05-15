@@ -945,7 +945,7 @@ public class ContextBuilder extends Observable {
      * @return the default ID
      */
     public static String getDefaultBuilderId(final Class<?> component) {
-        return getDefaultBuilderId(component.getSimpleName() + "Builder");
+        return getDefaultBuilderId(builderName(component.getSimpleName()));
     }
 
     /**
@@ -1431,7 +1431,7 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final Class<?> type) {
-        return contextNutDaoBuilder(id, type.getSimpleName() + "Builder");
+        return contextNutDaoBuilder(id, builderName(type.getSimpleName()));
     }
 
     /**
@@ -1478,7 +1478,7 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextNutFilterBuilder contextNutFilterBuilder(final String id, final Class<? extends NutFilter> type) {
-        return contextNutFilterBuilder(id, type.getSimpleName() + "Builder");
+        return contextNutFilterBuilder(id, builderName(type.getSimpleName()));
     }
 
     /**
@@ -1503,7 +1503,7 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextEngineBuilder contextEngineBuilder(final Class<?> type) {
-        return new ContextEngineBuilder(getDefaultBuilderId(type), type.getSimpleName() + "Builder");
+        return new ContextEngineBuilder(getDefaultBuilderId(type), builderName(type.getSimpleName()));
     }
 
     /**
@@ -1516,7 +1516,7 @@ public class ContextBuilder extends Observable {
      * @return the specific context builder
      */
     public ContextEngineBuilder contextEngineBuilder(final String id, final Class<?> type) {
-        return contextEngineBuilder(id == null ? getDefaultBuilderId(type) : id, type.getSimpleName() + "Builder");
+        return contextEngineBuilder(id == null ? getDefaultBuilderId(type) : id, builderName(type.getSimpleName()));
     }
 
     /**
@@ -1637,6 +1637,18 @@ public class ContextBuilder extends Observable {
         notifyObservers(id);
 
         return this;
+    }
+
+    /**
+     * <p>
+     * Builds the builder's name based on the given type.
+     * </p>
+     *
+     * @param type the component type
+     * @return the component builder name
+     */
+    private static String builderName(final String type) {
+        return type + "Builder";
     }
 
     /**

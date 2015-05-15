@@ -164,7 +164,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      *
      * @param o the original nuts
      */
-    protected void setOriginalNuts(final List<ConvertibleNut> o) {
+    protected final void setOriginalNuts(final List<ConvertibleNut> o) {
         this.originalNuts = o;
     }
 

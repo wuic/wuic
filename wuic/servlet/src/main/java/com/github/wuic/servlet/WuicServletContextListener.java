@@ -55,7 +55,6 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRegistration;
 import javax.servlet.annotation.WebListener;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -123,7 +122,6 @@ public class WuicServletContextListener implements ServletContextListener {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public void contextInitialized(final ServletContextEvent sce) {
         final ServletContext sc = sce.getServletContext();
         final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
@@ -134,39 +132,9 @@ public class WuicServletContextListener implements ServletContextListener {
             paramProvider = paramProvider(sc);
         } else {
             try {
-                // The class BiFunction implementation must be parameterized only with java.lang.String types
-                // If it does not expose a default constructor, it must provide a constructor expected a ServletContext
-                Constructor<?> defaultConstructor = null;
-                Constructor<?> scConstructor = null;
-                final Class<?> clazz = Class.forName(paramClass);
-
-                // Lookup constructor
-                for (final Constructor<?> c : clazz.getDeclaredConstructors()) {
-                    if (c.getParameterTypes().length == 0) {
-                        defaultConstructor = c;
-                    } else if (c.getParameterTypes().length == 1 && c.getParameterTypes()[0].equals(ServletContext.class)) {
-                        scConstructor = c;
-                    }
-                }
-
-                // Check if constructor exists
-                if (scConstructor != null) {
-                    paramProvider = (BiFunction<String, String, String>) scConstructor.newInstance(sc);
-                } else if (defaultConstructor != null) {
-                    paramProvider = (BiFunction<String, String, String>) defaultConstructor.newInstance();
-                } else {
-                    throw new IllegalStateException(
-                            String.format("'%s' provide at least a default constructor or a constructor expecting one parameter of type '%s'",
-                                    paramClass, ServletContext.class.getName()));
-                }
-            } catch (ClassNotFoundException cnfe) {
-                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, cnfe);
-            } catch (IllegalAccessException iae) {
-                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, iae);
-            } catch (InvocationTargetException ite) {
-                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, ite);
-            } catch (InstantiationException ie) {
-                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, ie);
+                paramProvider = newParamClassInstance(paramClass, sc);
+            } catch (Exception ex) {
+                throw new IllegalStateException(CUSTOM_PARAM_PROVIDER_MESSAGE, ex);
             }
         }
 
@@ -197,6 +165,47 @@ public class WuicServletContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         WuicScheduledThreadPool.getInstance().shutdown();
+    }
+
+    /**
+     * <p>
+     * Builds a {@link BiFunction} with the given class. The class BiFunction implementation must be parameterized only
+     * with java.lang.String types. If it does not expose a default constructor, it must provide a constructor expecting
+     * a ServletContext.
+     * </p>
+     *
+     * @param paramClass the class
+     * @param sc the context
+     * @return the function
+     * @throws Exception if class can't be instantiated
+     */
+    @SuppressWarnings("unchecked")
+    private BiFunction<String, String, String> newParamClassInstance(final String paramClass, final ServletContext sc)
+            throws Exception {
+        final Class<?> clazz = Class.forName(paramClass);
+
+        Constructor<?> defaultConstructor = null;
+        Constructor<?> scConstructor = null;
+
+        // Lookup constructor
+        for (final Constructor<?> c : clazz.getDeclaredConstructors()) {
+            if (c.getParameterTypes().length == 0) {
+                defaultConstructor = c;
+            } else if (c.getParameterTypes().length == 1 && c.getParameterTypes()[0].equals(ServletContext.class)) {
+                scConstructor = c;
+            }
+        }
+
+        // Check if constructor exists
+        if (scConstructor != null) {
+            return (BiFunction<String, String, String>) scConstructor.newInstance(sc);
+        } else if (defaultConstructor != null) {
+            return (BiFunction<String, String, String>) defaultConstructor.newInstance();
+        } else {
+            throw new IllegalStateException(
+                    String.format("'%s' provide at least a default constructor or a constructor expecting one parameter of type '%s'",
+                            paramClass, ServletContext.class.getName()));
+        }
     }
 
     /**
@@ -241,7 +250,7 @@ public class WuicServletContextListener implements ServletContextListener {
          * </p>
          *
          * @param sc the servlet context
-         * @param w the function
+         * @param w  the function
          */
         private PropertiesWrapper(final ServletContext sc, final BiFunction<String, String, String> w) {
             wrap = w;

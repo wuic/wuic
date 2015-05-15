@@ -116,7 +116,7 @@ public class ByteArrayHttpServletResponseWrapper extends HttpServletResponseAdap
     /**
      * Wrapped char array.
      */
-    final CharArrayWriter charArrayWriter = new CharArrayWriter();
+    private final CharArrayWriter charArrayWriter = new CharArrayWriter();
 
     /**
      * Print writer built on top of char array.
