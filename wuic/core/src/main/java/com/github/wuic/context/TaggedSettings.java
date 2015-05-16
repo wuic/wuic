@@ -38,6 +38,7 @@
 
 package com.github.wuic.context;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
@@ -610,15 +611,15 @@ public class TaggedSettings {
      * @see TaggedSettings#applyProperty(java.util.Map, String, String)
      */
     private void applyProperty(final String property, final String value) {
-        if (property.startsWith("c.g.wuic.engine.")) {
+        if (property.startsWith(ApplicationConfig.ENGINE_PREFIX)) {
             for (final ContextSetting ctx : taggedSettings.values()) {
                 applyProperty(ctx.getEngineMap(), property, value);
             }
-        } else if (property.startsWith("c.g.wuic.dao.")) {
+        } else if (property.startsWith(ApplicationConfig.DAO_PREFIX)) {
             for (final ContextSetting ctx : taggedSettings.values()) {
                 applyProperty(ctx.getNutDaoMap(), property, value);
             }
-        } else if (property.startsWith("c.g.wuic.filter.")) {
+        } else if (property.startsWith(ApplicationConfig.FILTER_PREFIX)) {
             for (final ContextSetting ctx : taggedSettings.values()) {
                 applyProperty(ctx.getNutFilterMap(), property, value);
             }

@@ -50,14 +50,34 @@ package com.github.wuic;
 public interface ApplicationConfig {
 
     /**
+     * Basic prefix for all properties.
+     */
+    String PREFIX = "c.g.wuic.";
+
+    /**
+     * Prefix for engine properties.
+     */
+    String ENGINE_PREFIX = PREFIX + "engine.";
+
+    /**
+     * Prefix for filter properties.
+     */
+    String FILTER_PREFIX = PREFIX + "filter.";
+
+    /**
+     * Prefix for DAO properties.
+     */
+    String DAO_PREFIX = PREFIX + "dao.";
+
+    /**
      * The fixed version number.
      */
-    String FIXED_VERSION_NUMBER = "c.g.wuic.fixedVersionNumber";
+    String FIXED_VERSION_NUMBER = PREFIX + "fixedVersionNumber";
 
     /**
      * Authorize WUIC to compute version number asynchronously or not.
      */
-    String COMPUTE_VERSION_ASYNCHRONOUSLY = "c.g.wuic.computeVersionAsynchronously";
+    String COMPUTE_VERSION_ASYNCHRONOUSLY = PREFIX + "computeVersionAsynchronously";
 
     /**
      * <p>
@@ -71,52 +91,52 @@ public interface ApplicationConfig {
      * wuic/test : search in "wuic/test/*"
      * </p>
      */
-    String BASE_PATH = "c.g.wuic.dao.basePath";
+    String BASE_PATH = DAO_PREFIX + "basePath";
 
     /**
      * Consider the base path as a system property associated to actual value.
      */
-    String BASE_PATH_AS_SYS_PROP = "c.g.wuic.dao.basePathAsSystemProperty";
+    String BASE_PATH_AS_SYS_PROP = DAO_PREFIX + "basePathAsSystemProperty";
 
     /**
      * Polling interval for nuts refresher.
      */
-    String POLLING_INTERVAL = "c.g.wuic.dao.pollingInterval";
+    String POLLING_INTERVAL = DAO_PREFIX + "pollingInterval";
 
     /**
      * Boolean which indicates if path are evaluated as regex or not.
      */
-    String REGEX = "c.g.wuic.dao.regex";
+    String REGEX = DAO_PREFIX + "regex";
 
     /**
      * Boolean which indicates if path are evaluated as wildcard or not.
      */
-    String WILDCARD = "c.g.wuic.dao.wildcard";
+    String WILDCARD = DAO_PREFIX + "wildcard";
 
     /**
      * Proxies that can be use to access the nuts.
      */
-    String PROXY_URIS = "c.g.wuic.dao.proxyUris";
+    String PROXY_URIS = DAO_PREFIX + "proxyUris";
 
     /**
      * The server's domain when accessing nuts remotely.
      */
-    String SERVER_DOMAIN = "c.g.wuic.dao.serverDomain";
+    String SERVER_DOMAIN = DAO_PREFIX + "serverDomain";
 
     /**
      * The server's port when accessing nuts remotely.
      */
-    String SERVER_PORT = "c.g.wuic.dao.serverPort";
+    String SERVER_PORT = DAO_PREFIX + "serverPort";
 
     /**
      * The bucket usually defined in cloud storage services.
      */
-    String CLOUD_BUCKET = "c.g.wuic.dao.cloudBucket";
+    String CLOUD_BUCKET = DAO_PREFIX + "cloudBucket";
 
     /**
      * Use the secured version of the protocol.
      */
-    String SECRET_PROTOCOL = "c.g.wuic.dao.secret";
+    String SECRET_PROTOCOL = DAO_PREFIX + "secret";
 
     /**
      * <p>
@@ -131,7 +151,7 @@ public interface ApplicationConfig {
      * - Copy here the "Email address" field, "xxxxx-yyyyy@developer.gserviceaccount.com
      * </p>
      */
-    String LOGIN = "c.g.wuic.dao.login";
+    String LOGIN = DAO_PREFIX + "login";
 
     /**
      * <p>
@@ -145,14 +165,14 @@ public interface ApplicationConfig {
      * - Download key path or Generate new key
      * </p>
      */
-    String PASSWORD = "c.g.wuic.dao.password";
+    String PASSWORD = DAO_PREFIX + "password";
 
     /**
      * <p>
      * Tells the DAO to computes version number not with the last modification timestamp but with the whole content.
      * </p>
      */
-    String CONTENT_BASED_VERSION_NUMBER = "c.g.wuic.dao.contentBasedVersionNumber";
+    String CONTENT_BASED_VERSION_NUMBER = DAO_PREFIX + "contentBasedVersionNumber";
 
     /**
      * <p>
@@ -160,75 +180,75 @@ public interface ApplicationConfig {
      * resources should be stored on disk and not in an in memory byte array.
      * </p>
      */
-    String DOWNLOAD_TO_DISK = "c.g.wuic.dao.downloadToDisk";
+    String DOWNLOAD_TO_DISK = DAO_PREFIX + "downloadToDisk";
 
     /**
      * <p>
      * Indicates if the engine should cache or not.
      * </p>
      */
-    String CACHE = "c.g.wuic.engine.cache";
+    String CACHE = ENGINE_PREFIX + "cache";
 
     /**
      * Indicates the time to live for a cache.
      */
-    String TIME_TO_LIVE = "c.g.wuic.engine.timeToLive";
+    String TIME_TO_LIVE = ENGINE_PREFIX + "timeToLive";
 
     /**
      * <p>
      * Indicates a particular {@link com.github.wuic.engine.CacheProvider} implementation.
      * </p>
      */
-    String CACHE_PROVIDER_CLASS = "c.g.wuic.engine.cacheProviderClass";
+    String CACHE_PROVIDER_CLASS = ENGINE_PREFIX + "cacheProviderClass";
 
     /**
      * <p>
      * Specify the best effort mode.
      * </p>
      */
-    String BEST_EFFORT = "c.g.wuic.engine.bestEffort";
+    String BEST_EFFORT = ENGINE_PREFIX + "bestEffort";
 
     /**
      * <p>
      * Indicates if the engine should compress or not.
      * </p>
      */
-    String COMPRESS = "c.g.wuic.engine.compress";
+    String COMPRESS = ENGINE_PREFIX + "compress";
 
     /**
      * <p>
      * Indicates if the engine should convert or not.
      * </p>
      */
-    String CONVERT = "c.g.wuic.engine.convert";
+    String CONVERT = ENGINE_PREFIX + "convert";
 
     /**
      * <p>
      * Indicates if the engine should use NodeJS command line or not.
      * </p>
      */
-    String USE_NODE_JS = "c.g.wuic.engine.useNodeJs";
+    String USE_NODE_JS = ENGINE_PREFIX + "useNodeJs";
 
     /**
      * <p>
      * Indicates the ECMA script version the engine should use to compile javascript.
      * </p>
      */
-    String ECMA_SCRIPT_VERSION = "c.g.wuic.engine.ecmaScriptVersion";
+    String ECMA_SCRIPT_VERSION = ENGINE_PREFIX + "ecmaScriptVersion";
 
     /**
      * <p>
      * Indicates if the engine should aggregate or not.
      * </p>
      */
-    String AGGREGATE = "c.g.wuic.engine.aggregate";
+    String AGGREGATE = ENGINE_PREFIX + "aggregate";
 
     /**
      * <p>
      * Indicates if the engine should inspects and eventually transform or not.
      * </p>
      */
-    String INSPECT = "c.g.wuic.engine.inspect";
+    String INSPECT = ENGINE_PREFIX + "inspect";
 
     /**
      * <p>
@@ -236,7 +256,7 @@ public interface ApplicationConfig {
      * aggregating images.
      * </p>
      */
-    String PACKER_CLASS_NAME = "c.g.wuic.engine.packerClassName";
+    String PACKER_CLASS_NAME = ENGINE_PREFIX + "packerClassName";
 
     /**
      * <p>
@@ -244,115 +264,115 @@ public interface ApplicationConfig {
      * aggregating images.
      * </p>
      */
-    String SPRITE_PROVIDER_CLASS_NAME = "c.g.wuic.engine.spriteProviderClassName";
+    String SPRITE_PROVIDER_CLASS_NAME = ENGINE_PREFIX + "spriteProviderClassName";
 
     /**
      * <p>
      * Position where \n is inserted in text compressor.
      * </p>
      */
-    String LINE_BREAK_POS = "c.g.wuic.engine.lineBreakPos";
+    String LINE_BREAK_POS = ENGINE_PREFIX + "lineBreakPos";
 
     /**
      * <p>
      * Indicates if javascript processor should obfuscate code.
      * </p>
      */
-    String OBFUSCATE = "c.g.wuic.engine.obfuscate";
+    String OBFUSCATE = ENGINE_PREFIX + "obfuscate";
 
     /**
      * <p>
      * Indicates if javascript processor should preserve unnecessary semicolons.
      * </p>
      */
-    String PRESERVE_SEMICOLONS = "c.g.wuic.engine.preserveSemiColons";
+    String PRESERVE_SEMICOLONS = ENGINE_PREFIX + "preserveSemiColons";
 
     /**
      * <p>
      * Indicates if html processor should preserve line break position.
      * </p>
      */
-    String PRESERVE_LINE_BREAK = "c.g.wuic.engine.preserveLineBreakPos";
+    String PRESERVE_LINE_BREAK = ENGINE_PREFIX + "preserveLineBreakPos";
 
     /**
      * <p>
      * Indicates if javascript processor should not apply extra optimizations.
      * </p>
      */
-    String DISABLE_OPTIMIZATIONS = "c.g.wuic.engine.disableOptimizations";
+    String DISABLE_OPTIMIZATIONS = ENGINE_PREFIX + "disableOptimizations";
 
     /**
      * <p>
      * Indicates if the engine should be verbose when processing nuts.
      * </p>
      */
-    String VERBOSE = "c.g.wuic.engine.verbose";
+    String VERBOSE = ENGINE_PREFIX + "verbose";
 
     /**
      * <p>
      * Indicates the charset for text processor.
      * </p>
      */
-    String CHARSET = "c.g.wuic.engine.charset";
+    String CHARSET = ENGINE_PREFIX + "charset";
 
     /**
      * <p>
      * Indicates if the server hint is enabled or not.
      * </p>
      */
-    String SERVER_HINT = "c.g.wuic.engine.serverHint";
+    String SERVER_HINT = ENGINE_PREFIX + "serverHint";
 
     /**
      * <p>
      * A pattern wrapping a value to capture.
      * </p>
      */
-    String WRAP_PATTERN = "c.g.wuic.engine.wrapPattern";
+    String WRAP_PATTERN = ENGINE_PREFIX + "wrapPattern";
 
     /**
      * <p>
      * Indicates all the regex expressions configured in a filter.
      * </p>
      */
-    String REGEX_EXPRESSIONS = "c.g.wuic.filter.regexExpressions";
+    String REGEX_EXPRESSIONS = FILTER_PREFIX + "regexExpressions";
 
     /**
      * <p>
      * Specify the filter activation.
      * </p>
      */
-    String ENABLE = "c.g.wuic.filter.enable";
+    String ENABLE = FILTER_PREFIX + "enable";
 
     /**
      * Init parameter which indicates if configurations injected by tag supports (JSP, Thymeleaf, etc) should be done
      * each time a page is processed or not.
      */
-    String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = "c.g.wuic.facade.multipleConfigInTagSupport";
+    String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = PREFIX + "facade.multipleConfigInTagSupport";
 
     /**
      * Init parameter which indicates the WUIC context path.
      */
-    String WUIC_SERVLET_CONTEXT_PARAM = "c.g.wuic.facade.contextPath";
+    String WUIC_SERVLET_CONTEXT_PARAM = PREFIX + "facade.contextPath";
 
     /**
      * Init parameter which indicates the WUIC property file.
      */
-    String WUIC_PROPERTIES_PATH_PARAM = "c.g.wuic.facade.propertiesPath";
+    String WUIC_PROPERTIES_PATH_PARAM = PREFIX + "facade.propertiesPath";
 
     /**
      * Init parameter which indicates that the WUIC property path is a system property.
      */
-    String WUIC_PROPERTIES_SYS_PROP_PARAM = "c.g.wuic.facade.propertiesPathAsSystemProperty";
+    String WUIC_PROPERTIES_SYS_PROP_PARAM = PREFIX + "facade.propertiesPathAsSystemProperty";
 
     /**
      * Init parameter which indicates the WUIC xml file.
      */
-    String WUIC_SERVLET_XML_PATH_PARAM = "c.g.wuic.facade.xmlPath";
+    String WUIC_SERVLET_XML_PATH_PARAM = PREFIX + "facade.xmlPath";
 
     /**
      * Init parameter which indicates that the WUIC context path is a system property.
      */
-    String WUIC_SERVLET_XML_SYS_PROP_PARAM = "c.g.wuic.facade.xmlPathAsSystemProperty";
+    String WUIC_SERVLET_XML_SYS_PROP_PARAM = PREFIX + "facade.xmlPathAsSystemProperty";
 
 
     /**
@@ -364,15 +384,15 @@ public interface ApplicationConfig {
      * Which warmup strategy to use when {@link WuicFacade} initializes the context. Possible values are enumerated by
      * {@link com.github.wuic.WuicFacade.WarmupStrategy}.
      */
-    String WUIC_WARMUP_STRATEGY = "c.g.wuic.facade.warmupStrategy";
+    String WUIC_WARMUP_STRATEGY = PREFIX + "facade.warmupStrategy";
 
     /**
      * This is the property name of the {@link WuicFacade} instance shared inside a web context.
      */
-    String WEB_WUIC_FACADE = "c.g.wuic.webWuicFacade";
+    String WEB_WUIC_FACADE = PREFIX + "webWuicFacade";
 
     /**
      * This class provides the {@link com.github.wuic.util.BiFunction} that provides parameters.
      */
-    String INIT_PARAM_FUNCTION = "c.g.wuic.initParameterClass";
+    String INIT_PARAM_FUNCTION = PREFIX + "initParameterClass";
 }
