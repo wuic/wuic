@@ -375,7 +375,7 @@ public class WuicXmlTest {
         Assert.assertEquals(1, nuts.size());
         nuts.get(0).transform();
         Assert.assertNotNull(nuts.get(0).getReferencedNuts());
-        Assert.assertEquals(NumberUtils.SIX, nuts.get(0).getReferencedNuts().size());
+        Assert.assertEquals(7, nuts.get(0).getReferencedNuts().size());
 
         // Assert that ref.css is removed
         final List<ConvertibleNut> ref = nuts.get(0).getReferencedNuts().get(1).getReferencedNuts();

@@ -235,9 +235,9 @@ public class HtmlInspectorEngineTest {
         final String content = new String(os.toByteArray());
         Assert.assertTrue(content, Pattern.compile(REGEX, Pattern.DOTALL).matcher(content).matches());
         Assert.assertNotNull(nut.getReferencedNuts());
-        Assert.assertEquals(11, nut.getReferencedNuts().size());
+        Assert.assertEquals(12, nut.getReferencedNuts().size());
 
-        final ConvertibleNut js = nut.getReferencedNuts().get(9);
+        final ConvertibleNut js = nut.getReferencedNuts().get(10);
         Assert.assertEquals(js.getInitialNutType(), NutType.JAVASCRIPT);
         final String script = IOUtils.readString(new InputStreamReader(js.openStream()));
 

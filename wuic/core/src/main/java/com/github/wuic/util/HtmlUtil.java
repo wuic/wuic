@@ -100,6 +100,9 @@ public final class HtmlUtil {
             case PNG :
                 insertIndex = imgImport(nut, urlProvider, sb);
                 break;
+            case ICO :
+                insertIndex = iconImport(nut, urlProvider, sb);
+                break;
             default :
                 return "";
         }
@@ -109,6 +112,25 @@ public final class HtmlUtil {
         }
 
         return sb.toString();
+    }
+
+
+    /**
+     * <p>
+     * Generates import for icons.
+     * </p>
+     *
+     * @param urlProvider the {@link UrlProvider}
+     * @param nut the .ICO nut
+     * @param sb the builder where statement is appended
+     * @return the index where attributes could be inserted
+     */
+    public static int iconImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
+        sb.append("<link rel=\"shortcut icon\" href=\"");
+        sb.append(urlProvider.getUrl(nut));
+        sb.append("\" />");
+
+        return "<link".length();
     }
 
     /**

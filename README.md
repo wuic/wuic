@@ -20,10 +20,8 @@ We are working on [0.5.2](https://github.com/wuic/wuic/issues?q=is%3Aissue+label
 
 TODO before next RC:
 - Fixes polling sample with jetty 9
-- favicon.ico returns 404
 - Random NPE on JS sprite sample
 - Bootstrap sample is broken when HTTP/2 is enabled
-- Fix #150 with a property file for common component properties.
 
 ### Migration guides
 
