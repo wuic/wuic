@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.xml;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
@@ -253,7 +254,7 @@ public class WuicXmlTest {
 
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
-        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), null);
+        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
     }
 
     /**
@@ -291,7 +292,7 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
 
         // Remove test file
         tmp.delete();
@@ -329,7 +330,7 @@ public class WuicXmlTest {
     @Test
     public void readerTest() throws Exception {
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-basic.xml").getFile()));
-        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, ProcessContext.DEFAULT);
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
     }
@@ -349,7 +350,7 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder();
         cfg.configure(builder);
 
-        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory(), null).size());
+        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
     }
 
     /**
@@ -363,12 +364,12 @@ public class WuicXmlTest {
     public void filterDeepTest() throws Exception {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
-        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, null);
+        final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, ProcessContext.DEFAULT);
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         cfg.configure(builder);
-        builder.tag(this).heap("heap", "defaultDao", new String[] {"images/reject-block.png"}).releaseTag();
+        builder.tag(this).processContext(ProcessContext.DEFAULT).heap("heap", "defaultDao", new String[] {"images/reject-block.png"}).releaseTag();
 
-        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), null);
+        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());

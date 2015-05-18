@@ -52,7 +52,6 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
-import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,14 +108,9 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     private Boolean bestEffort;
 
     /**
-     * The future default parsing done asynchronously.
+     * The default parsing done asynchronously.
      */
     private final Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
-
-    /**
-     * The future best effort parsing done asynchronously.
-     */
-    private final Map<EngineRequest.Key, ParseBestEffortCall> parsingBestEffort;
 
     /**
      * <p>
@@ -130,7 +124,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         doCache = work;
         bestEffort = be;
         parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, ConvertibleNut>>>();
-        parsingBestEffort = new HashMap<EngineRequest.Key, ParseBestEffortCall>();
     }
 
     /**
@@ -171,7 +164,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                     return null;
                 }
 
-                scheduleBestEffort(key, request, retval);
+                scheduleBestEffort(request, retval);
             } else {
                 // Not in best effort, we can wait for the end of the job
                 toCache = new ParseDefaultCall(request).call();
@@ -240,24 +233,34 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * Schedules the best effort job.
      * </p>
      *
-     * @param key the key associated to the request
-     * @param request the request that initiates the call
-     * @param nuts the result
+     * @param processResult the result
+     * @throws WuicException if any exception occurs
      */
-    private void scheduleBestEffort(final EngineRequest.Key key, final EngineRequest request, final List<ConvertibleNut> nuts) {
-        final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(nuts.size());
+    private void scheduleBestEffort(final EngineRequest request, final List<ConvertibleNut> processResult)
+            throws WuicException {
+        final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(processResult.size());
 
-        for (final ConvertibleNut nut : nuts) {
+        for (final ConvertibleNut nut : processResult) {
             bestEffortResult.put(nut.getName(), nut);
         }
 
-        // Get and create if not exists the job that parse nuts
-        synchronized (parsingBestEffort) {
-            if (parsingBestEffort.get(key) == null) {
-                final ParseBestEffortCall call = new ParseBestEffortCall(request, bestEffortResult);
-                WuicScheduledThreadPool.getInstance().executeAsap(call);
-                parsingBestEffort.put(key, call);
+        try {
+            final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
+            final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>(bestEffortResult.values());
+            final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
+
+            log.debug("Caching nut with key '{}'", request);
+            final CacheResult result = new CacheResult(toCache, null);
+            putToCache(request.getKey(), result);
+
+            // Now let's parse the default result
+            final Future<Map<String, ConvertibleNut>> future = request.getProcessContext().executeAsap(new ParseDefaultCall(request));
+
+            synchronized (parsingDefault) {
+                parsingDefault.put(request.getKey(), future);
             }
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
         }
     }
 
@@ -288,29 +291,19 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             final Boolean isBestEffort = path.startsWith("best-effort");
 
             if (isBestEffort) {
-                final ParseBestEffortCall call;
-                synchronized (parsingBestEffort) {
-                    call = parsingBestEffort.get(key);
-                }
+                CacheResult result = getFromCache(key);
 
-                if (call != null) {
-                    // Find the value
-                    retval = call.find(path);
-                } else {
-                    CacheResult result = getFromCache(key);
-
-                    if (result == null) {
-                        if (callee > 0) {
-                            parse(request);
-                        } else {
-                            parse(request, path, callee + 1);
-                        }
-
-                        result = getFromCache(key);
+                if (result == null) {
+                    if (callee > 0) {
+                        parse(request);
+                    } else {
+                        parse(request, path, callee + 1);
                     }
 
-                    retval = result.find(request, path, true);
+                    result = getFromCache(key);
                 }
+
+                retval = result.find(request, path, true);
             } else {
                 synchronized (parsingDefault) {
                     future = parsingDefault.get(key);
@@ -526,101 +519,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         @Override
         public int hashCode() {
             return key.hashCode();
-        }
-    }
-
-    /**
-     * <p>
-     * This callable put the best effort result into the cache.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.4
-     */
-    private final class ParseBestEffortCall implements Callable<Map<String, ConvertibleNut>> {
-
-        /**
-         * The request to parse.
-         */
-        private EngineRequest request;
-
-        /**
-         * The best effort result.
-         */
-        private Map<String, ConvertibleNut> bestEffortResult;
-
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         *
-         * @param er the engine request
-         * @param ber the best effort result
-         */
-        private ParseBestEffortCall(final EngineRequest er, final Map<String, ConvertibleNut> ber) {
-            request = er;
-            bestEffortResult = ber;
-        }
-
-        /**
-         * <p>
-         * Finds the nut corresponding to the given path.
-         * </p>
-         *
-         * @param path the nut name
-         * @return the nut, {@code null} if not found
-         */
-        private ConvertibleNut find(final String path) {
-            ConvertibleNut retval = bestEffortResult.get(path);
-
-            // TODO : we should also add the referenced nut in the map to not iterate in the list which is slower
-            if (retval == null) {
-                for (final Map.Entry<String, ConvertibleNut> entry : bestEffortResult.entrySet()) {
-                    if (entry.getValue().getReferencedNuts() != null) {
-                        retval = NutUtils.findByName(entry.getValue().getReferencedNuts(), path);
-
-                        if (retval != null) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return retval;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Map<String, ConvertibleNut> call() throws WuicException {
-            try {
-                final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
-                final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>(bestEffortResult.values());
-                final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
-
-                log.debug("Caching nut with key '{}'", request);
-                final CacheResult result = new CacheResult(toCache, null);
-                putToCache(request.getKey(), result);
-
-                // Now let's parse the default result asynchronously
-                final Future<Map<String, ConvertibleNut>> future = WuicScheduledThreadPool.getInstance().executeAsap(new ParseDefaultCall(request));
-
-                synchronized (parsingDefault) {
-                    parsingDefault.put(request.getKey(), future);
-                }
-
-                return retval;
-            } catch (IOException ioe) {
-                WuicException.throwWuicException(ioe);
-                return null;
-            } finally {
-                // Finished parsing
-                synchronized (parsingBestEffort) {
-                    parsingBestEffort.remove(request.getKey());
-                }
-            }
         }
     }
 

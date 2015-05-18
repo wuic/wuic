@@ -99,7 +99,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
         super(multiple);
         final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
         unmarshaller = jc.createUnmarshaller();
-        processContext = pc;
+        processContext = pc == null ? ProcessContext.DEFAULT : pc;
 
         try {
             final URL xsd = getClass().getResource("/wuic.xsd");

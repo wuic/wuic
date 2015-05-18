@@ -36,45 +36,79 @@
  */
 
 
-package com.github.wuic;
+package com.github.wuic.util;
 
-import com.github.wuic.util.WuicScheduledThreadPool;
-
-import java.util.concurrent.Callable;
+import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * <p>
- * A request context is an object giving more information about the context in which a process is executed.
- * For instance, operations could be run in a scheduled job, when the application starts or when an HTTP request is sent
- * to a web container.
- * </p>
- *
- * <p>
- * This class should be specialized in order to give details that are specific to a particular context.
+ * This {@link Future} wraps a result computed synchronously and consequently return it as soon as {@link #get()} is
+ * called.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.2
  */
-public class ProcessContext {
+public class SyncFuture<T> implements Future<T>, Serializable {
 
     /**
-     * Default install that could be installed anywhere.
+     * The wrapped value.
      */
-    public static final ProcessContext DEFAULT = new ProcessContext();
+    private T value;
 
     /**
      * <p>
-     * Executes as soon as possible the given job and returns the related {@link Future}.
-     * This method delegates the job to {@link WuicScheduledThreadPool} singleton.
+     * Builds a new instance.
      * </p>
      *
-     * @param job the job to execute
-     * @return the future result
+     * @param val the wrapped value
      */
-    public synchronized <T> Future<T> executeAsap(final Callable<T> job) {
-        return WuicScheduledThreadPool.getInstance().executeAsap(job);
+    public SyncFuture(final T val) {
+        this.value = val;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCancelled() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDone() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public T get() throws InterruptedException, ExecutionException {
+        return value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return value;
     }
 }

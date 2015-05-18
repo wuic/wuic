@@ -105,6 +105,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
         retval.add(new CompositeNut(canReadNutAsynchronously,
                 request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
                 "\r\n".getBytes(),
+                request.getProcessContext(),
                 request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()])));
 
         return retval;

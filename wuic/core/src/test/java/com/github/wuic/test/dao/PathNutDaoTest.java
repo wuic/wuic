@@ -39,6 +39,7 @@
 package com.github.wuic.test.dao;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.nut.AbstractNutDao;
@@ -134,9 +135,9 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().getParentFile().toURI().toURL()});
 
         final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, false, true, false, true, null);
-        Assert.assertEquals(2, dao.create("*.css", null).size());
-        Assert.assertEquals(1, dao.create("1/*.css", null).size());
-        Assert.assertEquals(1, dao.create("2/*.css", null).size());
+        Assert.assertEquals(2, dao.create("*.css", ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, dao.create("1/*.css", ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, dao.create("2/*.css", ProcessContext.DEFAULT).size());
     }
 
     /**
@@ -157,7 +158,7 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().toURI().toURL()});
 
         final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false, false, true, null);
-        Assert.assertEquals(2, dao.create(".*.css", null).size());
+        Assert.assertEquals(2, dao.create(".*.css", ProcessContext.DEFAULT).size());
     }
 
     /**
@@ -173,7 +174,7 @@ public class PathNutDaoTest {
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
         Assert.assertTrue(dao.exists("reject-block.png", null));
-        Assert.assertFalse(dao.exists("unknown.png", null));
+        Assert.assertFalse(dao.exists("unknown.png", ProcessContext.DEFAULT));
     }
 
     /**
@@ -188,8 +189,8 @@ public class PathNutDaoTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
-        Assert.assertTrue(dao.exists("reject-block.png", null));
-        final InputStream is = dao.create("reject-block.png", null).get(0).openStream();
+        Assert.assertTrue(dao.exists("reject-block.png", ProcessContext.DEFAULT));
+        final InputStream is = dao.create("reject-block.png", ProcessContext.DEFAULT).get(0).openStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
@@ -207,8 +208,8 @@ public class PathNutDaoTest {
         final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");
         builder.property(ApplicationConfig.BASE_PATH, getClass().getResource("/images").toURI().getPath());
         final NutDao dao = builder.build();
-        Assert.assertTrue(dao.exists("reject-block.png", null));
-        final InputStream is = dao.create("reject-block.png", null).get(0).openStream();
+        Assert.assertTrue(dao.exists("reject-block.png", ProcessContext.DEFAULT));
+        final InputStream is = dao.create("reject-block.png", ProcessContext.DEFAULT).get(0).openStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }

@@ -188,8 +188,8 @@ public class HtmlInspectorEngineTest {
         proxy.addRule("index.html", bytes);
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), proxy, "heap");
-        heap.checkFiles(null);
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).build();
+        heap.checkFiles(ProcessContext.DEFAULT);
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).build();
         final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -221,11 +221,11 @@ public class HtmlInspectorEngineTest {
         final Context ctx = newContext();
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx).chains(chains).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx).chains(chains).processContext(ProcessContext.DEFAULT).build();
         final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -273,7 +273,7 @@ public class HtmlInspectorEngineTest {
         });
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
 
         List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("", heap, null).build());
         Assert.assertEquals(1, res.size());
@@ -320,7 +320,7 @@ public class HtmlInspectorEngineTest {
         });
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
 
         // First call
         List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("", heap, null).build());
@@ -422,7 +422,7 @@ public class HtmlInspectorEngineTest {
             }
         });
 
-        List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, newContext()).chains(chains).build());
+        List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, newContext()).processContext(ProcessContext.DEFAULT).chains(chains).build());
         String res = NutUtils.readTransform(nuts.get(0));
         Assert.assertEquals(content.replace("<html ", "<html manifest=\"/1/index.html.appcache\" "), res);
 
@@ -475,7 +475,7 @@ public class HtmlInspectorEngineTest {
                 @Override
                 public void run() {
                     try {
-                        cache.parse(new EngineRequestBuilder("", heap, ctx).chains(chains).build());
+                        cache.parse(new EngineRequestBuilder("", heap, ctx).processContext(ProcessContext.DEFAULT).chains(chains).build());
                         countDownLatch.countDown();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -499,11 +499,11 @@ public class HtmlInspectorEngineTest {
     public void heapListenerHolderTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).chains(chains).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).chains(chains).build();
         final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
         Assert.assertEquals(1, nuts.size());
         final ConvertibleNut nut = nuts.get(0);

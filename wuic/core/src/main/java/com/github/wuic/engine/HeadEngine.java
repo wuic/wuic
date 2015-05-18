@@ -99,7 +99,7 @@ public abstract class HeadEngine extends Engine {
         }
 
         // Merges all nuts with same type (for instance two 'aggregate.js' nuts will be wrapped by one composite nut
-        return CompositeNut.mergeNuts(retval);
+        return CompositeNut.mergeNuts(request.getProcessContext(), retval);
     }
 
     /**

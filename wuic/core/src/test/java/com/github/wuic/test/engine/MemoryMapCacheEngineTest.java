@@ -129,7 +129,7 @@ public class MemoryMapCacheEngineTest {
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(nut1, nut2));
         final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
 
         final Pipe.Transformer[] transformers = new Pipe.Transformer[3];
 
@@ -215,7 +215,7 @@ public class MemoryMapCacheEngineTest {
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(nut));
 
         final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
-        heap.checkFiles(null);
+        heap.checkFiles(ProcessContext.DEFAULT);
 
         // Registers the InvalidateCache multiple time
         for (int i = 0; i < 3; i++) {

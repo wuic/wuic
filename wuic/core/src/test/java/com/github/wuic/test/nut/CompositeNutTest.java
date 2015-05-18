@@ -39,6 +39,7 @@
 package com.github.wuic.test.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
@@ -89,7 +90,8 @@ public class CompositeNutTest {
         Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
         Mockito.when(n2.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final Nut composite = new CompositeNut(true, "composite", null, ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
+        final Nut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+                ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
 }

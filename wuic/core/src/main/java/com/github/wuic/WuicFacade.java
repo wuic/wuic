@@ -134,7 +134,7 @@ public final class WuicFacade {
          */
         @Override
         public List<ConvertibleNut> call() throws WuicException {
-            return runWorkflow(workflowId);
+            return runWorkflow(workflowId, ProcessContext.DEFAULT);
         }
     }
 
@@ -341,20 +341,6 @@ public final class WuicFacade {
 
     /**
      * <p>
-     * Gets the nuts processed by the given workflow identified by the specified ID.
-     * </p>
-     *
-     * @param id the workflow ID
-     * @param skip the engine types
-     * @return the processed nuts
-     * @throws WuicException if the context can't be processed
-     */
-    public synchronized List<ConvertibleNut> runWorkflow(final String id, final EngineType ... skip) throws WuicException {
-        return runWorkflow(id, null, skip);
-    }
-
-    /**
-     * <p>
      * Gets the nuts processed by the given workflow identified by the specified ID inside a specified context.
      * </p>
      *
@@ -456,7 +442,7 @@ public final class WuicFacade {
                 log.info("Building the context with synchronous call for each workflow");
 
                 for (final String wId : workflowIds()) {
-                    runWorkflow(wId);
+                    runWorkflow(wId, ProcessContext.DEFAULT);
                 }
 
                 break;

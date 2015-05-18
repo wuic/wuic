@@ -60,6 +60,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -75,6 +76,7 @@ import java.net.HttpURLConnection;
  * @version 2.0
  * @since 0.1.1
  */
+@WebServlet(name = "wuic", asyncSupported = true)
 public class WuicServlet extends HttpServlet {
 
     /**

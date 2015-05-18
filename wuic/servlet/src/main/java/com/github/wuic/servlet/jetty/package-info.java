@@ -36,45 +36,13 @@
  */
 
 
-package com.github.wuic;
-
-import com.github.wuic.util.WuicScheduledThreadPool;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-
 /**
  * <p>
- * A request context is an object giving more information about the context in which a process is executed.
- * For instance, operations could be run in a scheduled job, when the application starts or when an HTTP request is sent
- * to a web container.
- * </p>
- *
- * <p>
- * This class should be specialized in order to give details that are specific to a particular context.
+ * This package folks jetty code that implements the servlet path specification.
+ * The code has been updated to be JDK6 compliant and to inline some dependent classes code.
+ * The classes just works and should not be maintained, except when an update is pushed to upstream.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.5.2
  */
-public class ProcessContext {
-
-    /**
-     * Default install that could be installed anywhere.
-     */
-    public static final ProcessContext DEFAULT = new ProcessContext();
-
-    /**
-     * <p>
-     * Executes as soon as possible the given job and returns the related {@link Future}.
-     * This method delegates the job to {@link WuicScheduledThreadPool} singleton.
-     * </p>
-     *
-     * @param job the job to execute
-     * @return the future result
-     */
-    public synchronized <T> Future<T> executeAsap(final Callable<T> job) {
-        return WuicScheduledThreadPool.getInstance().executeAsap(job);
-    }
-}
+package com.github.wuic.servlet.jetty;

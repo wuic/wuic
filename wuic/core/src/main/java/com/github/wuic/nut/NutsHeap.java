@@ -546,7 +546,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
 
                 if (!retval) {
                     Logging.POLL.log("Nut(s) added and/or removed in heap {}: {}", id, Arrays.toString(diff.toArray()));
-                    checkFiles(null);
+                    checkFiles(ProcessContext.DEFAULT);
                     retval = notifyUpdateToListeners();
                 }
             }
@@ -624,7 +624,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
             for (final Nut nut : nuts) {
                 // Nut has changed
                 if (nut.getInitialName().equals(path) && !NutUtils.getVersionNumber(nut).equals(timestamp)) {
-                    checkFiles(null);
+                    checkFiles(ProcessContext.DEFAULT);
                     // We don't need to be notified anymore
                     return notifyUpdateToListeners();
                 }

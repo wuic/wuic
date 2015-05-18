@@ -137,6 +137,7 @@ public class ContextBuilderTest {
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
+                .processContext(ProcessContext.DEFAULT)
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
                 .toContext()
                 .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
@@ -148,7 +149,7 @@ public class ContextBuilderTest {
                 .build();
 
         // Should be aggregated now
-        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), null).size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
     }
 
     /**
@@ -376,6 +377,7 @@ public class ContextBuilderTest {
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
+                .processContext(ProcessContext.DEFAULT)
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
                 .toContext()
                 .heap("heap-one", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
@@ -387,8 +389,8 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), null).size() == 1);
-        Assert.assertTrue(context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), null).size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
+        Assert.assertTrue(context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
     }
 
 
@@ -434,8 +436,8 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), null).size());
-        Assert.assertEquals(1, context.process("", "heap-two", UrlUtils.urlProviderFactory(), null).size());
+        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, context.process("", "heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
     }
 
     /**
@@ -456,7 +458,7 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), null).size() > 1);
+        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() > 1);
     }
 
     /**
@@ -531,10 +533,10 @@ public class ContextBuilderTest {
                 .template("tpl", new String[]{"engine"})
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag();
-        builder.build().process("", "workflow-heap", UrlUtils.urlProviderFactory(), null);
+        builder.build().process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
 
         try {
-            builder.clearTag("tag").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), null);
+            builder.clearTag("tag").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
@@ -545,10 +547,10 @@ public class ContextBuilderTest {
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build()
-                .process("", "workflow-heap", UrlUtils.urlProviderFactory(), null);
+                .process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
 
         try {
-            builder.clearTag("test").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), null);
+            builder.clearTag("test").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
@@ -716,6 +718,7 @@ public class ContextBuilderTest {
 
         new ContextBuilder(engine, dao, filter)
                 .tag("test")
+                .processContext(ProcessContext.DEFAULT)
                 .contextNutDaoBuilder(null, ClasspathNutDao.class)
                 .toContext()
                 .heap("heap", null, new String[] { "images/template-img.png" })

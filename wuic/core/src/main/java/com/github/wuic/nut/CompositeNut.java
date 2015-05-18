@@ -38,12 +38,12 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
-import com.github.wuic.util.WuicScheduledThreadPool;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -96,10 +96,12 @@ public class CompositeNut extends PipedConvertibleNut {
      * @param composition the nuts of this composition
      * @param separator the bytes between each stream, {@code null} if nothing
      * @param specificName the name of the composition
+     * @param processContext the process context
      */
     public CompositeNut(final Boolean avn,
                         final String specificName,
                         final byte[] separator,
+                        final ProcessContext processContext,
                         final ConvertibleNut ... composition) {
         super(composition[0]);
         asynchronousVersionNumber = avn;
@@ -121,7 +123,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
         // Make a composite version number
         if (asynchronousVersionNumber) {
-            setVersionNumber(WuicScheduledThreadPool.getInstance().executeAsap(new Callable<Long>() {
+            setVersionNumber(processContext.executeAsap(new Callable<Long>() {
 
                 /**
                  * {@inheritDoc}
@@ -369,7 +371,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(java.util.List)}
+     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(ProcessContext, List)}
      * It ensures that every names will be unique in returned lists during the entire lifecycle of its instance.
      * </p>
      *
@@ -405,10 +407,11 @@ public class CompositeNut extends PipedConvertibleNut {
          * </p>
          *
          * @param nuts the nuts to merge
+         * @param processContext the process context
          * @return the merged nuts
-         * @see CompositeNut#mergeNuts(java.util.List)
+         * @see CompositeNut#mergeNuts(com.github.wuic.ProcessContext, java.util.List)
          */
-        public List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
+        public List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts) {
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
             int start = 0;
             int end = 1;
@@ -439,7 +442,7 @@ public class CompositeNut extends PipedConvertibleNut {
                         compositionName = new StringBuilder(name).insert(name.lastIndexOf('/') + 1, prefixCount).toString();
                     }
 
-                    final CompositeNut compositeNut = new CompositeNut(asynchronous, compositionName, null, composition);
+                    final CompositeNut compositeNut = new CompositeNut(asynchronous, compositionName, null, processContext, composition);
                     retval.add(compositeNut);
 
                     if (nut != null) {
@@ -471,10 +474,11 @@ public class CompositeNut extends PipedConvertibleNut {
      * where the first element is a composition and where "prefixCountStart" equals to 0.
      * </p>
      *
+     * @param processContext the process context
      * @param nuts the nuts to merge
      * @return a list containing all the nuts with some compositions
      */
-    public static List<ConvertibleNut> mergeNuts(final List<ConvertibleNut> nuts) {
-        return new Combiner().mergeNuts(nuts);
+    public static List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts) {
+        return new Combiner().mergeNuts(processContext, nuts);
     }
 }

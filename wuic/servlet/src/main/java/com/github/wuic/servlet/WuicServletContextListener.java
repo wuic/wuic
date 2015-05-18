@@ -43,12 +43,15 @@ import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.servlet.WebappNutDaoBuilderInspector;
+import com.github.wuic.servlet.jetty.PathMap;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.FilterRegistration;
+import javax.servlet.Registration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -57,6 +60,8 @@ import javax.servlet.annotation.WebListener;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
@@ -126,6 +131,7 @@ public class WuicServletContextListener implements ServletContextListener {
         final ServletContext sc = sce.getServletContext();
         final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
         BiFunction<String, String, String> paramProvider;
+        detectFilter(sc);
 
         // No specific provider, use default
         if (paramClass == null) {
@@ -157,6 +163,77 @@ public class WuicServletContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         WuicScheduledThreadPool.getInstance().shutdown();
+    }
+
+    /**
+     * <p>
+     * Detects if the {@link HtmlParserFilter} is installed. In that case, the servlet {@link ServletRegistration registrations}
+     * will be scanned to find which ones serves the resources filtered by the filter. This servlet will be wrapped in
+     * a servlet with the 'async-supported' flag turned to on. In that case, the filter will be able to create asynchronous
+     * tasks since all chained components will support it.
+     * </p>
+     *
+     * @param servletContext the servlet context
+     */
+    private void detectFilter(final ServletContext servletContext) {
+        FilterRegistration filterRegistration = null;
+
+        for (final FilterRegistration registration : servletContext.getFilterRegistrations().values()) {
+            if (registration.getClassName().equals(HtmlParserFilter.class.getName())) {
+                filterRegistration = registration;
+                break;
+            }
+        }
+
+
+        if (filterRegistration != null) {
+            setAsyncSupported(servletContext, filterRegistration);
+        }
+    }
+
+    /**
+     * <p>
+     * Takes the given filter and tries to detect if async-supported flag is {@code true}.
+     * If the flag is set to {@code true}, we try to set the same state for filtered servlet.
+     *
+     * </p>
+     * @param servletContext the context providing registrations
+     * @param filterRegistration the filter
+     */
+    private void setAsyncSupported(final ServletContext servletContext, final FilterRegistration filterRegistration) {
+        log.info("Collecting servlet mapping do detect which ones are filtered by {}", filterRegistration.getClassName());
+        final PathMap<ServletRegistration> pathMap = new PathMap<ServletRegistration>();
+
+        // We use the PathMap implemented by jetty
+        for (final ServletRegistration registration : servletContext.getServletRegistrations().values()) {
+            for (final String mapping : registration.getMappings()) {
+                pathMap.put(mapping, registration);
+            }
+        }
+
+        final Set<ServletRegistration> servletRegistrations = new HashSet<ServletRegistration>();
+
+        // Collect the servlet targeted by the filter mapping
+        for (final String mapping : filterRegistration.getUrlPatternMappings()) {
+            servletRegistrations.add(pathMap.match(mapping));
+        }
+
+        // Collect the servlet explicitly mapped
+        for (final String servletName : filterRegistration.getServletNameMappings()) {
+            servletRegistrations.add(servletContext.getServletRegistration(servletName));
+        }
+
+        // Now try to turn on async-supported flag
+        for (final ServletRegistration registration : servletRegistrations) {
+            if (registration instanceof Registration.Dynamic) {
+                log.info("{}");
+                Registration.Dynamic.class.cast(registration).setAsyncSupported(true);
+            } else {
+                log.warn("ServletRegistration {} should be an instance of Dynamic.", registration.getClassName());
+                log.warn("If {} has the async-supported flag turned on, make sure the targeted servlet is in the same state.",
+                        filterRegistration.getClassName());
+            }
+        }
     }
 
     /**

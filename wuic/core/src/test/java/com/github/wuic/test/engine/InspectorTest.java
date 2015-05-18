@@ -137,7 +137,7 @@ public class InspectorTest {
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
-        h.checkFiles(null);
+        h.checkFiles(ProcessContext.DEFAULT);
         final List<Nut> nuts = new ArrayList<Nut>();
 
         for (final String[] c : collection) {
@@ -405,14 +405,14 @@ public class InspectorTest {
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
-        List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory(), null);
+        List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
         Assert.assertEquals(2, group.size());
         group.get(0).transform();
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
         Assert.assertEquals(1, group.get(1).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
-        group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory(), null);
+        group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
         Assert.assertEquals(1, group.size());
         group.get(0).transform();
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
@@ -430,6 +430,6 @@ public class InspectorTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
-        ctx.process("", "composite", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "composite", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
     }
 }

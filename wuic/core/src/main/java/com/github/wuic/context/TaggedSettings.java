@@ -238,6 +238,8 @@ public class TaggedSettings {
      */
     void mergeSettings(final ContextBuilder contextBuilder, final TaggedSettings other, final Object currentTag) {
         for (final ContextSetting s : other.taggedSettings.values()) {
+            contextBuilder.processContext(s.getProcessContext());
+
             for (final Map.Entry<String, ContextBuilder.NutDaoRegistration> entry : s.getNutDaoMap().entrySet()) {
                 contextBuilder.nutDao(entry.getKey(), entry.getValue());
             }

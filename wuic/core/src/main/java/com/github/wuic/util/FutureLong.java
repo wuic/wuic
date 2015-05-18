@@ -38,27 +38,16 @@
 
 package com.github.wuic.util;
 
-import java.io.Serializable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 /**
  * <p>
- * This {@link Future} wraps a {@code Long} to directly return when it's retrieved.
+ * This {@link java.util.concurrent.Future} wraps a {@code Long} to directly return when it's retrieved.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
  * @since 0.5.0
  */
-public class FutureLong implements Future<Long>, Serializable {
-
-    /**
-     * The wrapped value.
-     */
-    private Long l;
+public class FutureLong extends SyncFuture<Long> {
 
     /**
      * <p>
@@ -68,46 +57,6 @@ public class FutureLong implements Future<Long>, Serializable {
      * @param longValue the wrapped value
      */
     public FutureLong(final Long longValue) {
-        this.l = longValue;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean cancel(final boolean mayInterruptIfRunning) {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCancelled() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDone() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long get() throws InterruptedException, ExecutionException {
-        return l;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        return l;
+        super(longValue);
     }
 }

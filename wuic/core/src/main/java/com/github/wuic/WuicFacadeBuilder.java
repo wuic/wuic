@@ -486,6 +486,15 @@ public class WuicFacadeBuilder {
          * {@inheritDoc}
          */
         @Override
+        public ContextBuilderFacade processContext(final ProcessContext processContext) {
+            super.processContext(processContext);
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public ContextNutDaoBuilderFacade contextNutDaoBuilder(final String id, final String type) {
             return new ContextNutDaoBuilderFacade(id, type);
         }

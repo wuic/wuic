@@ -38,6 +38,7 @@
 
 package com.github.wuic.servlet.test;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.nut.Nut;
@@ -118,7 +119,7 @@ public class JeeTest {
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");
         final WebappNutDao dao = WebappNutDao.class.cast(builder.build());
         dao.setServletContext(server.getServletContext());
-        final List<Nut> nuts = dao.create("index.html", null);
+        final List<Nut> nuts = dao.create("index.html", ProcessContext.DEFAULT);
         Assert.assertNotNull(nuts);
         Assert.assertEquals(1, nuts.size());
         Assert.assertEquals("index.html", nuts.get(0).getInitialName());

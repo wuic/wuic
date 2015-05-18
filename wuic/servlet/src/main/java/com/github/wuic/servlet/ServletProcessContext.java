@@ -40,8 +40,16 @@ package com.github.wuic.servlet;
 
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.SyncFuture;
+import com.github.wuic.util.WuicScheduledThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 /**
  * <p>
@@ -58,6 +66,11 @@ public class ServletProcessContext extends ProcessContext {
      * The wrapped request.
      */
     private final HttpServletRequest httpServletRequest;
+
+    /**
+     * The logger.
+     */
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * <p>
@@ -97,6 +110,48 @@ public class ServletProcessContext extends ProcessContext {
      */
     public HttpServletRequest getHttpServletRequest() {
         return httpServletRequest;
+    }
+
+    /**
+     * <p>
+     * Executes as soon as possible the given job and returns the related {@link java.util.concurrent.Future}.
+     * The method uses the {@link javax.servlet.AsyncContext} started from the given request.
+     * </p>
+     *
+     * @param job the job to execute
+     * @return the future result
+     */
+    @Override
+    public <T> Future<T> executeAsap(final Callable<T> job) {
+        if (!httpServletRequest.isAsyncSupported()) {
+            final Exception ex = new IllegalStateException("isAsyncSupported() returns false in the current request.");
+            logger.warn("Trying to directly use the internal executor, which is possibly not allowed by the servlet container.", ex);
+            logger.warn("Make sure all your filter/servlet have their async-supported flag turned on. Otherwise disable asynchronous operations.");
+            return super.executeAsap(job);
+        } else {
+            if (httpServletRequest.isAsyncStarted()) {
+                logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
+
+                try {
+                    return new SyncFuture<T>(job.call());
+                } catch (Exception e) {
+                    WuicException.throwBadStateException(e);
+                    return null;
+                }
+            } else {
+                final AsyncContext asyncContext = httpServletRequest.startAsync();
+                final FutureTask<T> task = new FutureTask<T>(new WuicScheduledThreadPool.CallExceptionLogger<T>(
+                        new WuicScheduledThreadPool.CallExceptionLogger<T>(job))) {
+                    @Override
+                    protected void done() {
+                        asyncContext.complete();
+                    }
+                };
+
+                asyncContext.start(task);
+                return task;
+            }
+        }
     }
 
     /**

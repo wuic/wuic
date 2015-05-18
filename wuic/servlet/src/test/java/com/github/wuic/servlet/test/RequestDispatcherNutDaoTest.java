@@ -38,6 +38,7 @@
 
 package com.github.wuic.servlet.test;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import org.junit.Assert;
@@ -115,7 +116,7 @@ public class RequestDispatcherNutDaoTest {
      */
     @Test
     public void existsTest() throws Exception {
-        Assert.assertTrue(dao.exists("foo.js", null));
+        Assert.assertTrue(dao.exists("foo.js", ProcessContext.DEFAULT));
     }
 
     /**

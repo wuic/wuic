@@ -90,16 +90,16 @@ public class NutUtilTest {
         proxy.addRule("nut", proxyNut);
         proxy.addRule("dao", proxyDao);
 
-        Assert.assertNotNull(proxy.create("delegate", null, null));
-        Assert.assertEquals(1, proxy.create("delegate", null, null).size());
-        Assert.assertEquals("delegate", proxy.create("delegate", null, null).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("delegate", null, ProcessContext.DEFAULT));
+        Assert.assertEquals(1, proxy.create("delegate", null, ProcessContext.DEFAULT).size());
+        Assert.assertEquals("delegate", proxy.create("delegate", null, ProcessContext.DEFAULT).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("dao", null, null));
-        Assert.assertEquals(1, proxy.create("dao", null, null).size());
-        Assert.assertEquals("dao", proxy.create("dao", null, null).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("dao", null, ProcessContext.DEFAULT));
+        Assert.assertEquals(1, proxy.create("dao", null, ProcessContext.DEFAULT).size());
+        Assert.assertEquals("dao", proxy.create("dao", null, ProcessContext.DEFAULT).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("nut", null, null));
-        Assert.assertEquals(1, proxy.create("nut", null, null).size());
-        Assert.assertEquals("nut", proxy.create("nut", null, null).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("nut", null, ProcessContext.DEFAULT));
+        Assert.assertEquals(1, proxy.create("nut", null, ProcessContext.DEFAULT).size());
+        Assert.assertEquals("nut", proxy.create("nut", null, ProcessContext.DEFAULT).get(0).getInitialName());
     }
 }

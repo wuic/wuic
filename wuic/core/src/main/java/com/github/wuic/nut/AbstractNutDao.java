@@ -49,7 +49,6 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
 import com.github.wuic.util.StringUtils;
-import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,7 +218,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 // Timestamps not already retrieved
                 if (timestamp == null) {
                     try {
-                        timestamp = getVersionNumber(path, null).get();
+                        timestamp = getVersionNumber(path, ProcessContext.DEFAULT).get();
                         timestamps.put(path, timestamp);
                     } catch (IOException se) {
                         log.error("Unable to poll nut {}", path, se);
@@ -260,7 +259,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             return new FutureLong(versionNumberStrategy.getFixedVersionNumber());
         } else if (versionNumberStrategy.getComputeVersionAsynchronously()) {
             log.debug("Computing version number asynchronously");
-            return WuicScheduledThreadPool.getInstance().executeAsap(new VersionNumberCallable(path, processContext));
+            return processContext.executeAsap(new VersionNumberCallable(path, processContext));
         } else {
             log.debug("Computing version number synchronously");
             return new FutureLong(new VersionNumberCallable(path, processContext).call());

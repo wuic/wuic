@@ -213,12 +213,17 @@ public final class WuicScheduledThreadPool extends Thread {
      * @version 1.0
      * @since 0.4.4
      */
-    private final class CallExceptionLogger<T> implements Callable<T> {
+    public static final class CallExceptionLogger<T> implements Callable<T> {
 
         /**
          * Wrapped callable.
          */
         private Callable<T> delegate;
+
+        /**
+         * Logger.
+         */
+        private Logger log = LoggerFactory.getLogger(getClass());
 
         /**
          * <p>
@@ -227,7 +232,7 @@ public final class WuicScheduledThreadPool extends Thread {
          *
          * @param c the callable
          */
-        private CallExceptionLogger(final Callable<T> c) {
+        public CallExceptionLogger(final Callable<T> c) {
             delegate = c;
         }
 

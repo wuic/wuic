@@ -41,6 +41,7 @@ package com.github.wuic.test;
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.path.FilePath;
@@ -158,7 +159,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        List<ConvertibleNut> output = CompositeNut.mergeNuts(input);
+        List<ConvertibleNut> output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -178,7 +179,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar2.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts( input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
 
         Assert.assertEquals(5, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -199,7 +200,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts( input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
 
         Assert.assertEquals(3, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -218,7 +219,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("foo.js");
 
-        output = CompositeNut.mergeNuts(input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());

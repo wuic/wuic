@@ -38,6 +38,7 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.WuicFacade;
@@ -104,7 +105,7 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<ConvertibleNut> group = facade.runWorkflow("util-js");
+        List<ConvertibleNut> group = facade.runWorkflow("util-js", ProcessContext.DEFAULT);
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -118,7 +119,7 @@ public class CoreTest extends WuicTest {
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.runWorkflow("util-js");
+        group = facade.runWorkflow("util-js", ProcessContext.DEFAULT);
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -146,13 +147,13 @@ public class CoreTest extends WuicTest {
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
         InputStream is;
-        final Nut nut = facade.runWorkflow("css-image", "aggregate.css", null);
+        final Nut nut = facade.runWorkflow("css-image", "aggregate.css", ProcessContext.DEFAULT);
         is = nut.openStream();
         Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
         is.close();
         writeToDisk(nut, "sprite.css");
 
-        List<ConvertibleNut> group = facade.runWorkflow("css-scripts");
+        List<ConvertibleNut> group = facade.runWorkflow("css-scripts", ProcessContext.DEFAULT);
         int i = 0;
 
         for (Nut res : group) {
@@ -176,7 +177,7 @@ public class CoreTest extends WuicTest {
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<ConvertibleNut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory(), null);
+        List<ConvertibleNut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());

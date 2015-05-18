@@ -1,6 +1,7 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -89,7 +90,7 @@ public class AbstractAggregatorEngineTest {
         final NutsHeap h = Mockito.mock(NutsHeap.class);
         Mockito.when(h.getNuts()).thenReturn(nuts);
 
-        final List<ConvertibleNut> res = e.parse(new EngineRequestBuilder("", h, null).build());
+        final List<ConvertibleNut> res = e.parse(new EngineRequestBuilder("", h, null).processContext(ProcessContext.DEFAULT).build());
         Assert.assertEquals(4, res.size());
     }
 }

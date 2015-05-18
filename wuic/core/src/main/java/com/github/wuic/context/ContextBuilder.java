@@ -340,7 +340,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public ProcessContext getProcessContext() {
-            return null;
+            return ProcessContext.DEFAULT;
         }
     }
 
