@@ -20,7 +20,6 @@ We are working on [0.5.2](https://github.com/wuic/wuic/issues?q=is%3Aissue+label
 
 TODO before next RC:
 - Fixes polling sample with jetty 9
-- Random NPE on JS sprite sample
 - Bootstrap sample is broken when HTTP/2 is enabled
 
 ### Migration guides

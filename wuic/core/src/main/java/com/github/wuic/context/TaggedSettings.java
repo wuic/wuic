@@ -415,15 +415,17 @@ public class TaggedSettings {
             throws IOException {
         final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
 
+        // The composite heap must be read after the standard heap
         for (final ContextSetting setting : taggedSettings.values()) {
-
-            // The composite heap must be read after the standard heap
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (!heap.getValue().isComposition()) {
                     heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
+        }
 
+        // Now read all compositions
+        for (final ContextSetting setting : taggedSettings.values()) {
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (heap.getValue().isComposition()) {
                     heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
@@ -464,7 +466,7 @@ public class TaggedSettings {
                 }
             }
 
-            // No workflow has been found : create a default with the heap ID as ID
+            // No workflow has been found: create a default with the heap ID as ID
             workflowMap.put(heap.getId(),
                     new Workflow(createHead(knownTypes, Boolean.TRUE, null), createChains(configureDefault, knownTypes, Boolean.TRUE, null), heap));
         }
