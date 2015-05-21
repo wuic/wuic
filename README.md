@@ -18,9 +18,6 @@ Please help us by testing this new version!
 
 We are working on [0.5.2](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.2+is%3Aopen).
 
-TODO before next RC:
-- Spring sample is broken with jetty
-
 ### Migration guides
 
 * [0.3.x to 0.4.0](https://github.com/wuic/wuic/wiki/Migrating-to-0.4.x)

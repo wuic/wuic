@@ -129,27 +129,30 @@ public class ServletProcessContext extends ProcessContext {
             logger.warn("Make sure all your filter/servlet have their async-supported flag turned on. Otherwise disable asynchronous operations.");
             return super.executeAsap(job);
         } else {
-            if (httpServletRequest.isAsyncStarted()) {
-                logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
+            synchronized (httpServletRequest) {
+                if (httpServletRequest.getAttribute(getClass().getName()) != null) {
+                    logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
 
-                try {
-                    return new SyncFuture<T>(job.call());
-                } catch (Exception e) {
-                    WuicException.throwBadStateException(e);
-                    return null;
-                }
-            } else {
-                final AsyncContext asyncContext = httpServletRequest.startAsync();
-                final FutureTask<T> task = new FutureTask<T>(new WuicScheduledThreadPool.CallExceptionLogger<T>(
-                        new WuicScheduledThreadPool.CallExceptionLogger<T>(job))) {
-                    @Override
-                    protected void done() {
-                        asyncContext.complete();
+                    try {
+                        return new SyncFuture<T>(job.call());
+                    } catch (Exception e) {
+                        WuicException.throwBadStateException(e);
+                        return null;
                     }
-                };
+                } else {
+                    final AsyncContext asyncContext = httpServletRequest.startAsync();
+                    httpServletRequest.setAttribute(getClass().getName(), "");
+                    final FutureTask<T> task = new FutureTask<T>(new WuicScheduledThreadPool.CallExceptionLogger<T>(
+                            new WuicScheduledThreadPool.CallExceptionLogger<T>(job))) {
+                        @Override
+                        protected void done() {
+                            asyncContext.complete();
+                        }
+                    };
 
-                asyncContext.start(task);
-                return task;
+                    asyncContext.start(task);
+                    return task;
+                }
             }
         }
     }
