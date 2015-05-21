@@ -19,8 +19,7 @@ Please help us by testing this new version!
 We are working on [0.5.2](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.2+is%3Aopen).
 
 TODO before next RC:
-- Fixes polling sample with jetty 9
-- Bootstrap sample is broken when HTTP/2 is enabled
+- Spring sample is broken with jetty
 
 ### Migration guides
 

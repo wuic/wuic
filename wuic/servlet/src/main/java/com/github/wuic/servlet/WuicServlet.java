@@ -60,7 +60,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -76,7 +75,6 @@ import java.net.HttpURLConnection;
  * @version 2.0
  * @since 0.1.1
  */
-@WebServlet(name = "wuic", asyncSupported = true)
 public class WuicServlet extends HttpServlet {
 
     /**
@@ -87,7 +85,7 @@ public class WuicServlet extends HttpServlet {
     /**
      * The logger.
      */
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * Servlet mapping.
@@ -121,14 +119,9 @@ public class WuicServlet extends HttpServlet {
      */
     public static ServletRegistration findServletRegistration(final ServletContext servletContext) {
         for (final ServletRegistration r : servletContext.getServletRegistrations().values()) {
-
-            try  {
-                // There is a WuicServlet registered
-                if (WuicServlet.class.isAssignableFrom(Class.forName(r.getClassName()))) {
-                    return r;
-                }
-            } catch (ClassNotFoundException cnfe) {
-                WuicException.throwBadStateException(cnfe);
+            // There is a WuicServlet registered
+            if (WuicServlet.class.getName().equals(r.getClassName())) {
+                return r;
             }
         }
 
