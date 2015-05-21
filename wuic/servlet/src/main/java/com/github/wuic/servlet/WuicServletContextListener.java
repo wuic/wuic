@@ -185,7 +185,6 @@ public class WuicServletContextListener implements ServletContextListener {
             }
         }
 
-
         if (filterRegistration != null) {
             setAsyncSupported(servletContext, filterRegistration);
         }
@@ -195,8 +194,8 @@ public class WuicServletContextListener implements ServletContextListener {
      * <p>
      * Takes the given filter and tries to detect if async-supported flag is {@code true}.
      * If the flag is set to {@code true}, we try to set the same state for filtered servlet.
-     *
      * </p>
+     *
      * @param servletContext the context providing registrations
      * @param filterRegistration the filter
      */
