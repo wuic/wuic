@@ -19,8 +19,6 @@
 package com.github.wuic.servlet.jetty;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
 
 /**
  * Abstract Trie implementation.
@@ -100,11 +98,6 @@ abstract class AbstractTrie<V>
     public V getBest(String s)
     {
         return getBest(s,0,s.length());
-    }
-
-    public V getBest(byte[] b, int offset, int len)
-    {
-        return getBest(new String(b,offset,len,StandardCharsets.ISO_8859_1));
     }
 
     public boolean isCaseInsensitive()
