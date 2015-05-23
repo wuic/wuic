@@ -17,6 +17,15 @@ Please help us by testing this new version!
 ```
 
 We are working on [0.5.2](https://github.com/wuic/wuic/issues?q=is%3Aissue+label%3A0.5.2+is%3Aopen).
+The release candidate is already available:
+
+```xml
+  <dependency>
+      <groupId>com.github.wuic</groupId>
+      <artifactId>wuic-core</artifactId>
+      <version>0.5.2.RC2</version>
+  </dependency>
+```
 
 ### Migration guides
 
