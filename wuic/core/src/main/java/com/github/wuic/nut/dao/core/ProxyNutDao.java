@@ -241,4 +241,17 @@ public class ProxyNutDao implements NutDao {
     public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         return delegate.exists(path, processContext);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "\nDelegate: "
+                + delegate
+                + "\nProxy DAO: "
+                + Arrays.deepToString(proxyNutDao.keySet().toArray())
+                + "\nProxy Nuts: "
+                + Arrays.deepToString(proxyNut.keySet().toArray());
+    }
 }
