@@ -471,6 +471,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 final List<ConvertibleNut> cached = CollectionUtils.newList(nut);
                 collect(urlProvider, sb, cached);
                 final Long versionNumber = NutUtils.getVersionNumber(cached);
+                sb.append("\nNETWORK:\n*");
                 sb.insert(0, String.format("CACHE MANIFEST\n# Version number: %d", versionNumber));
 
                 // Create the nut
