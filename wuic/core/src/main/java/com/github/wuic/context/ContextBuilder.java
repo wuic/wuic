@@ -87,37 +87,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * </p>
  *
  * <p>
- * The builder tracks all settings by associated to them a tag. With that tag, the user is able to delete
- * all settings defined at a moment. Example:
- * <pre>
- *     final ContextBuilder contextBuilder = new ContextBuilder();
- *
- *     try {
- *         // Create a context with some settings tagged as "custom"
- *         final Context ctx = contextBuilder.tag("custom")
- *                      .contextNutDaoBuilder("FtpNutDaoBuilder", "FtpNutDaoBuilder")
- *                      .property("c.g.wuic.dao.basePath", "/statics)"
- *                      .toContext()
- *                      .heap("heap", "FtpNutDaoBuilder", "darth.js", "vader.js")
- *                      .contextNutDaoBuilder("engineId", "TextAggregatorEngineBuilder")
- *                      .toContext()
- *                      .contextNutFilterBuilder("filterId", "RegexRemoveNutFilterBuilder")
- *                      .property(ApplicationConfig.REGEX_EXPRESSION, "(.*)?reload.*")
- *                      .toContext()
- *                      .template("tpl", new String[]{"engineId"}, null, false)
- *                      .workflow("starwarsWorkflow", true, "heap", "tpl")
- *                      .releaseTag()
- *                      .build();
- *         ctx.isUpToDate(); // returns true
- *
- *         // Clear settings
- *         contextBuilder.clearTag("custom");
- *         ctx.isUpToDate(); // returns false
- *     } finally {
- *         contextBuilder.releaseTag();
- *     }
- * </pre>
- * </p>
+ * The builder tracks all settings by associating to them a tag. With that tag, the user is able to delete all settings
+ * defined at a moment using the {@link #clearTag(Object)} method. To check if a setting has changed, you can rely on
+ * the {@link com.github.wuic.context.Context#isUpToDate()} method.
  *
  * <p>
  * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
