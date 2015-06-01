@@ -41,6 +41,7 @@ package com.github.wuic.servlet.test;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
+import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +57,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -94,16 +97,30 @@ public class RequestDispatcherNutDaoTest {
         Mockito.doAnswer(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                capturedRequest.set(HttpServletRequest.class.cast(invocationOnMock.getArguments()[0]));
-                final PrintWriter pw = HttpServletResponse.class.cast(invocationOnMock.getArguments()[1]).getWriter();
-                pw.print("var foo;");
-                pw.flush();
+                final HttpServletRequest req = HttpServletRequest.class.cast(invocationOnMock.getArguments()[0]);
+
+                if (req.getPathInfo().contains("foo.js")) {
+                    capturedRequest.set(req);
+                    final PrintWriter pw = HttpServletResponse.class.cast(invocationOnMock.getArguments()[1]).getWriter();
+                    pw.print("var foo;");
+                    pw.flush();
+                }
+
                 return null;
             }
         }).when(requestDispatcher).include(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
+
         final ServletContext sc = Mockito.mock(ServletContext.class);
+
+        Mockito.doAnswer(new Answer() {
+            @Override
+            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
+                return new ByteArrayInputStream("var bar;".getBytes());
+            }
+        }).when(sc).getResourceAsStream("bar.js");
+
         Mockito.when(sc.getRequestDispatcher(Mockito.anyString())).thenReturn(requestDispatcher);
-        dao = new RequestDispatcherNutDao("/", false, null, -1, false, null);
+        dao = new RequestDispatcherNutDao("/", false, null, -1, false, null, "foo.*");
         dao.setServletContext(sc);
     }
 
@@ -117,6 +134,23 @@ public class RequestDispatcherNutDaoTest {
     @Test
     public void existsTest() throws Exception {
         Assert.assertTrue(dao.exists("foo.js", ProcessContext.DEFAULT));
+        Assert.assertTrue(dao.exists("bar.js", ProcessContext.DEFAULT));
+        Assert.assertFalse(dao.exists("foo.css", ProcessContext.DEFAULT));
+        Assert.assertFalse(dao.exists("bar.css", ProcessContext.DEFAULT));
+    }
+
+    /**
+     * <p>
+     * Tests when {@link ServletContext#getResourceAsStream(String)} is performed.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void resourceAsStreamTest() throws Exception {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        IOUtils.copyStream(dao.create("bar.js", ProcessContext.DEFAULT).get(0).openStream(), bos);
+        Assert.assertEquals("var bar;", new String(bos.toByteArray()));
     }
 
     /**

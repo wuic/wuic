@@ -94,6 +94,13 @@ public interface ApplicationConfig {
     String BASE_PATH = DAO_PREFIX + "basePath";
 
     /**
+     * <p>
+     * Uses the {@code include} method from {@code RequestDispatcher} to create nut from any path matching the corresponding pattern.
+     * </p>
+     */
+    String USE_INCLUDE_FOR_PATH_PATTERN = DAO_PREFIX + "useIncludeForPathPattern";
+
+    /**
      * Consider the base path as a system property associated to actual value.
      */
     String BASE_PATH_AS_SYS_PROP = DAO_PREFIX + "basePathAsSystemProperty";

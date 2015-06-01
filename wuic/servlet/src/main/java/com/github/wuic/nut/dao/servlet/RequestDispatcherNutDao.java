@@ -57,6 +57,7 @@ import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
 import com.github.wuic.servlet.ByteArrayHttpServletResponseWrapper;
 import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.servlet.HttpServletRequestAdapter;
+import com.github.wuic.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,34 +69,40 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 
 /**
  * <p>
- * This {@link com.github.wuic.nut.dao.NutDao} relies on {@link ServletContext#getRequestDispatcher(String)} to create
- * {@link Nut nuts}.
+ * This {@link com.github.wuic.nut.dao.NutDao} relies on {@link ServletContext#getResourceAsStream(String)}
+ * and {@link ServletContext#getRequestDispatcher(String)} to create {@link Nut nuts}.
+ * The former is used by default and this class fallback to the later only if the path matches the regex corresponding
+ * to the {@link ApplicationConfig#USE_INCLUDE_FOR_PATH_PATTERN} setting. Default behavior should be fine for most of
+ * the case except when the resource behind the path is generated dynamically with for instance a {@code Servlet} or a
+ * {@code JSP}. In that case, use the {@link ApplicationConfig#USE_INCLUDE_FOR_PATH_PATTERN} setting to specify which
+ * resources are dynamic in your application to retrieve their content correctly.
  * </p>
  *
- * <p>
- * User should be aware that servlet specifications only require to use a request dispatcher with a real {@link HttpServletRequest}.
- * This real request is only available when an instance is created when a client requires its creation (e.g a workflow result
- * is not in the cache). When WUIC is configured to use a RequestDispatcherNutDao when the server starts (warm up) or when
- * a polling operation is going to be performed (polling interval activated), a mocked request is created. It is not
- * mandatory for a servlet container work with a mocked request, so using the RequestDispatcherNutDao may fail in that case.
- * </p>
+ * <b
+ * Important notes about {@link RequestDispatcher#include(javax.servlet.ServletRequest, javax.servlet.ServletResponse)} usage:
+ * </b>
  *
  * <p>
- * Here is the state of the different servlet containers not supporting polling or warm up with RequestDispatcherNutDao:
+ * If you decide to enable {@link RequestDispatcher} in order to process some dynamic resource, read carefully this
+ * paragraph. User should be aware that servlet specifications only require to use a request dispatcher with a real
+ * {@link HttpServletRequest}. This real request is only available when an instance is created when a client requires
+ * its creation (e.g a workflow result is not in the cache). When WUIC is configured to use a {@code RequestDispatcherNutDao}
+ * when the server starts (warm up) or when a polling operation is going to be performed (polling interval activated), a
+ * mocked request is created. It is not mandatory for a servlet container work with a mocked request, so using the
+ * RequestDispatcherNutDao may fail in that case. Moreover, the servlet container can also fail if the real request is a
+ * bound to an already closed response, which is the case when running in best effort. Be careful before activating the
+ * {@link RequestDispatcher} and make sure it works correctly in the servlet container(s) that will deploy your application.
  * </p>
- * <ul>
- *     <li>Undertow does not support mocked {@link HttpServletRequest} until undertow 1.2</li>
- *     <li>Jetty as removed support for mocked {@link HttpServletRequest} starting jetty 9.3</li>
- *     <li>Tomcat supports mocked {@link HttpServletRequest}</li>
- * </ul>
  *
  * @author Guillaume DROUET
  * @version 1.0
@@ -112,16 +119,21 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
                     + "Supporting it is not required by specs and could not be supported by the servlet container! "
                     + "Check the documentation for more information.",
                     RequestDispatcher.class.getName(), HttpServletRequest.class.getName());
+    /**
+     * The logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * {@link Nut} will be created with {@link RequestDispatcher#include(javax.servlet.ServletRequest, javax.servlet.ServletResponse)}
+     * for any path matching this pattern.
+     */
+    private final String useIncludePattern;
 
     /**
      * The servlet context providing the request dispatcher.
      */
     private ServletContext servletContext;
-
-    /**
-     * The logger.
-     */
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * <p>
@@ -135,6 +147,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * @param proxies the proxies URIs in front of the nut
      * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
      * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
+     * @param pathPattern use {@code include} in {@code RequestDispatcher} when creating a {@link Nut} with any path matching this pattern
      */
     @ConfigConstructor
     public RequestDispatcherNutDao(
@@ -143,10 +156,12 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
-            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.USE_INCLUDE_FOR_PATH_PATTERN) final String pathPattern) {
         // path can correspond dynamic resources (JSP, servlet) so this DAO can support only content-based version number
         super(base, basePathAsSysProp, proxies, pollingSeconds,
                 new VersionNumberStrategy(true, computeVersionAsynchronously, fixedVersionNumber));
+        useIncludePattern = pathPattern == null || pathPattern.isEmpty() ? null : pathPattern;
     }
 
     /**
@@ -162,12 +177,6 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
     private void include(final String path, final HttpServletRequest request, final HttpServletResponse response)
             throws IOException {
         try {
-            if (servletContext == null) {
-                throw new IllegalArgumentException(
-                        String.format("context is null! Use setServletContext first or add %s in your descriptor file",
-                                WuicServletContextListener.class.getName()));
-            }
-
             final RequestDispatcher rd = servletContext.getRequestDispatcher(slashPath(path));
 
             // Wrap request and response since servlet container expects standard wrappers
@@ -179,18 +188,47 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
 
     /**
      * <p>
-     * Includes the resources at given path in the returned wrapper.
+     * Reads the resource content located at the given path.
      * </p>
      *
      * @param path the path
-     * @param request the request
+     * @param exceptionWhenNullStream {@code true} when a {@link IOException} is thrown if the resource stream if {@code null}
      * @return the wrapper
      * @throws IOException if include fails
      */
-    private ByteArrayHttpServletResponseWrapper include(final String path, final HttpServletRequest request) throws IOException {
-        final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper();
-        include(path, request, wrapper);
-        return wrapper;
+    private byte[] readContent(final String path, final ProcessContext processContext, final boolean exceptionWhenNullStream)
+            throws IOException  {
+        if (servletContext == null) {
+            throw new IllegalArgumentException(
+                    String.format("context is null! Use setServletContext first or add %s in your descriptor file",
+                            WuicServletContextListener.class.getName()));
+        }
+
+        if (callInclude(path)) {
+            final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper();
+            include(path, getRequest(path, processContext), wrapper);
+            return wrapper.toByteArray();
+        } else {
+            InputStream is = null;
+
+            try {
+                is = servletContext.getResourceAsStream(slashPath(path));
+
+                if (is == null) {
+                    if (exceptionWhenNullStream) {
+                        throw new IOException("Unable to retrieve the stream for the resource associated to the path " + path);
+                    } else {
+                        return new byte[0];
+                    }
+                } else {
+                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    IOUtils.copyStream(is, bos);
+                    return bos.toByteArray();
+                }
+            } finally {
+                IOUtils.close(is);
+            }
+        }
     }
 
     /**
@@ -203,6 +241,19 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      */
     private String slashPath(final String path) {
         return path.charAt(0) == '/' ? path : '/' + path;
+    }
+
+    /**
+     * <p>
+     * Indicates if the resource content associated given path should be resolved with
+     * {@link RequestDispatcher#include(javax.servlet.ServletRequest, javax.servlet.ServletResponse)} or not.
+     * </p>
+     *
+     * @param path the path
+     * @return {@code true} if {@code include} should be called, {@code false} otherwise
+     */
+    private boolean callInclude(final String path) {
+        return useIncludePattern != null && Pattern.matches(useIncludePattern, path);
     }
 
     /**
@@ -275,7 +326,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      */
     @Override
     public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
-        return new ByteArrayInputStream(include(path, getRequest(path, processContext)).toByteArray());
+        return new ByteArrayInputStream(readContent(path, processContext, true));
     }
 
     /**
@@ -283,7 +334,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      */
     @Override
     public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
-        return include(path, getRequest(path, processContext)).toByteArray().length > 0;
+        return readContent(path, processContext, false).length > 0;
     }
 
     /**
