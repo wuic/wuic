@@ -38,20 +38,32 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.DiskNutDao;
+import com.github.wuic.util.HtmlUtil;
+import com.github.wuic.util.IOUtils;
+import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -158,39 +170,82 @@ public class ApiTutorial {
             log.error("Unable to build the facade.", ioe);
         }
         // end::RunWorkflowAPI[]
+
+        String workflowId = "";
+
+        try {
+            // tag::WriteScriptImport[]
+            final List<ConvertibleNut> nuts = facade.runWorkflow(workflowId, ProcessContext.DEFAULT);
+
+            for (final ConvertibleNut nut : nuts) {
+                final String i = HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(facade.getContextPath(), workflowId));
+            }
+            // end::WriteScriptImport[]
+
+            final Reader reader = Mockito.mock(Reader.class);
+
+            // tag::Configure[]
+            facade.configure(new ReaderXmlContextBuilderConfigurator(reader,
+                    toString(),
+                    facade.allowsMultipleConfigInTagSupport(),
+                    ProcessContext.DEFAULT));
+            // end::Configure[]
+        } catch (Exception e) {
+
+        }
     }
+
+    // tag::EngineService[]
+    @EngineService(injectDefaultToWorkflow = true)
+    public class MyCompressEngine extends NodeEngine {
+
+        @ConfigConstructor
+        public MyCompressEngine(
+                @BooleanConfigParam(propertyKey = "c.g.wuic.engine.compress", defaultValue = true)
+                Boolean compress) {
+        }
+
+        @Override
+        public List<NutType> getNutTypes() {
+            return Arrays.asList(NutType.values());
+        }
+
+        @Override
+        public EngineType getEngineType() {
+            return EngineType.CACHE;
+        }
+
+        @Override
+        protected List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException {
+            return request.getNuts();
+        }
+
+        @Override
+        public Boolean works() {
+            return true;
+        }
+    }
+    // end::EngineService[]
 
     // tag::CustomConfiguratorAPI[]
     public class MyContextBuilderConfigurator extends ContextBuilderConfigurator {
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             // ...
             return -1;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getTag() {
             return "myCfg";
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public ProcessContext getProcessContext() {
             return ProcessContext.DEFAULT;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         protected Long getLastUpdateTimestampFor(final String path) throws IOException {
             return -1L;
