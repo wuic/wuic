@@ -117,7 +117,7 @@ public class RequestDispatcherNutDaoTest {
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
                 return new ByteArrayInputStream("var bar;".getBytes());
             }
-        }).when(sc).getResourceAsStream("bar.js");
+        }).when(sc).getResourceAsStream("/bar.js");
 
         Mockito.when(sc.getRequestDispatcher(Mockito.anyString())).thenReturn(requestDispatcher);
         dao = new RequestDispatcherNutDao("/", false, null, -1, false, null, "foo.*");
