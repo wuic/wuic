@@ -1475,7 +1475,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), heap.getId() + n.getName()));
                 }
 
-                referenced.add(n);
+                referenced.add(ByteArrayNut.toByteArrayNut(n));
 
                 // Some additional attributes
                 if (getAttributes() != null) {
