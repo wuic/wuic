@@ -78,6 +78,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -192,11 +193,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     private static final Pattern PATTERN = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /**
-     * The logger.
-     */
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    /**
      * The applied filters
      */
     private List<NutFilter> nutFilters;
@@ -245,7 +241,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         if (works()) {
             for (final ConvertibleNut nut : request.getNuts()) {
-                nut.addTransformer(new HtmlTransformer(request));
+                nut.addTransformer(new HtmlTransformer(request, charset, serverHint, nutFilters));
                 retval.add(nut);
             }
         }
@@ -294,12 +290,33 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.0
      * @since 0.5.0
      */
-    private final class HtmlTransformer extends Pipe.DefaultTransformer<ConvertibleNut> {
+    private static final class HtmlTransformer extends Pipe.DefaultTransformer<ConvertibleNut> implements Serializable {
 
         /**
-         * The request.
+         * Logger.
          */
-        private final EngineRequest request;
+        private static final Logger LOGGER = LoggerFactory.getLogger(HtmlTransformer.class);
+
+        /**
+         * The request. This transformer should not be serialized before a first call to
+         * {@link #transform(InputStream, OutputStream, ConvertibleNut)} is performed.
+         */
+        private final transient EngineRequest request;
+
+        /**
+         * The nut filters.
+         */
+        private final transient List<NutFilter> nutFilters;
+
+        /**
+         * Charset.
+         */
+        private final String charset;
+
+        /**
+         * Server hint activation.
+         */
+        private final boolean serverHint;
 
         /**
          * All replacements performed by the transformer.
@@ -312,9 +329,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * </p>
          *
          * @param r the request
+         * @param cs the charset
+         * @param sh server hint
+         * @param nutFilterList the nut filters
          */
-        private HtmlTransformer(final EngineRequest r) {
+        private HtmlTransformer(final EngineRequest r, final String cs, final boolean sh, final List<NutFilter> nutFilterList) {
             this.request = r;
+            this.charset = cs;
+            this.serverHint = sh;
+            this.nutFilters = nutFilterList;
         }
 
         /**
@@ -334,7 +357,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @throws WuicException if WUIC fails to configure context or process created workflow
          * @throws IOException if any I/O error occurs
          */
-        private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath) throws WuicException, IOException {
+        private List<ParseInfo> parse(final String nutName, final String content, final NutDao dao, final String rootPath)
+                throws WuicException, IOException {
             // Create a proxy that maps inline scripts
             final ProxyNutDao proxy = new ProxyNutDao(rootPath, dao);
 
@@ -359,7 +383,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                      * together. Consequently, we create here a separate heap.
                      */
                     if (previousGroupEnd != -1 && !content.substring(previousGroupEnd, matcher.start()).trim().isEmpty()) {
-                        new ParseInfo(nutName + (no++), paths, proxy, rootPath, request).addTo(retval);
+                        new ParseInfo(nutName + (no++), paths, proxy, rootPath, request, nutFilters).addTo(retval);
                         paths.clear();
                     }
 
@@ -379,7 +403,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             // Create a heap for remaining paths
             if (!paths.isEmpty()) {
-                new ParseInfo(nutName + (no), paths, proxy, rootPath, request).addTo(retval);
+                new ParseInfo(nutName + (no), paths, proxy, rootPath, request, nutFilters).addTo(retval);
             }
 
             return retval;
@@ -464,7 +488,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             int index = content.indexOf("<html");
 
             if (index == -1) {
-                logger.warn("Filtered HTML does not have any <html>. Application cache file won't be inserted.");
+                LOGGER.warn("Filtered HTML does not have any <html>. Application cache file won't be inserted.");
             } else {
                 // Compute content
                 final StringBuilder sb = new StringBuilder();
@@ -535,7 +559,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 }
 
                 if (index == -1) {
-                    logger.warn("Filtered HTML does not have any <html>. Server hint directives won't be inserted.");
+                    LOGGER.warn("Filtered HTML does not have any <html>. Server hint directives won't be inserted.");
                     return;
                 } else {
                     // Closing <html> tag
@@ -1151,7 +1175,12 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * @version 1.0
      * @since 0.4.4
      */
-    public final class ParseInfo {
+    public static final class ParseInfo {
+
+        /**
+         * Logger.
+         */
+        private final Logger logger = LoggerFactory.getLogger(getClass());
 
         /**
          * The heap generated during collect.
@@ -1174,6 +1203,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         private Set<String> skipSprites;
 
         /**
+         * Nut filters.
+         */
+        private List<NutFilter> nutFilters;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -1183,6 +1217,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param proxyNutDao the DAO to use when computing path from collected data
          * @param rootPath the root path of content
          * @param request the associated request
+         * @param nutFilterList the nut filters
          * @throws IOException if any I/O error occurs
          * @throws WorkflowNotFoundException if a workflow is described
          */
@@ -1190,12 +1225,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                           final Map<String, Integer> groups,
                           final ProxyNutDao proxyNutDao,
                           final String rootPath,
-                          final EngineRequest request)
+                          final EngineRequest request,
+                          final List<NutFilter> nutFilterList)
                 throws IOException, WorkflowNotFoundException {
             final String[] groupPaths = new String[groups.size()];
             final List<NutsHeap> composition = new ArrayList<NutsHeap>();
             this.capturedStatements = new ArrayList<String>(groups.keySet());
             this.skipSprites = new HashSet<String>();
+            this.nutFilters = nutFilterList;
 
             int start = 0;
             int cpt = 0;

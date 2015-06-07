@@ -60,6 +60,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -606,17 +607,12 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * @version 1.0
          * @since 0.5.2
          */
-        public static class Entry {
+        public static class Entry implements Serializable {
 
             /**
              * The logger.
              */
             private Logger log = LoggerFactory.getLogger(getClass());
-
-            /**
-             * Nut transformers if the entry represents a dynamic nut.
-             */
-            private final Set<Pipe.Transformer<ConvertibleNut>> dynamicTransformers;
 
             /**
              * Dynamic nut name if the entry represents a dynamic nut.
@@ -634,6 +630,11 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             private final ConvertibleNut staticNut;
 
             /**
+             * Nut transformers if the entry represents a dynamic nut.
+             */
+            private Set<Pipe.Transformer<ConvertibleNut>> dynamicTransformers;
+
+            /**
              * <p>
              * Builds an entry wrapping a dynamic nut.
              * </p>
@@ -647,8 +648,21 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                          final Set<Pipe.Transformer<ConvertibleNut>> dynamicTransformers) {
                 this.dynamicReferencedNuts = dynamicReferencedNuts;
                 this.dynamicName = dynamicName;
-                this.dynamicTransformers = dynamicTransformers;
                 this.staticNut = null;
+
+                if (dynamicTransformers != null) {
+                    this.dynamicTransformers = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
+
+                    for (final Pipe.Transformer<ConvertibleNut> t : dynamicTransformers) {
+                        if (t instanceof Serializable) {
+                            this.dynamicTransformers.add(t);
+                        } else {
+                            log.info("{} is not a {} and can't be cached for future dynamic transformation.",
+                                    t.toString(),
+                                    Serializable.class.getName());
+                        }
+                    }
+                }
             }
 
             /**
