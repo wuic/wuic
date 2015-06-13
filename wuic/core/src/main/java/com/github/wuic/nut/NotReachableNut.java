@@ -102,4 +102,20 @@ public class NotReachableNut extends AbstractConvertibleNut {
     public boolean isTransformed() {
         return false;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDynamic() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getParentFile() {
+        return null;
+    }
 }
