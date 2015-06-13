@@ -249,7 +249,7 @@ public class WuicException extends Exception {
      */
     public static void throwStaticWorkflowNotFoundException(final String fileName) throws StaticWorkflowNotFoundException {
         throw new StaticWorkflowNotFoundException(
-                String.format("[Err n. %d] The %s was not found '%s' in classpath",
+                String.format("[Err n. %d] The engine '%s' did not found workflow '%s' in classpath",
                         ErrorCode.STATIC_WORKFLOW_NOT_FOUND, StaticEngine.class.getName(), fileName));
     }
 }
