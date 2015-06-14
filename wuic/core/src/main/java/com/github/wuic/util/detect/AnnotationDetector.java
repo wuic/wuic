@@ -313,103 +313,109 @@ public final class AnnotationDetector {
         final Set<InputStream> streams = new HashSet<InputStream>();
 
         for (final String packageName : pkgNameFilter) {
-            final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            final Enumeration<URL> resourceEnum = loader.getResources(packageName);
-            while (resourceEnum.hasMoreElements()) {
-                final URL url = resourceEnum.nextElement();
-                // Handle JBoss VFS URL's which look like (example package 'nl.dvelop'):
-                // vfs:/foo/bar/website.war/WEB-INF/classes/nl/dvelop/
-                // vfs:/foo/bar/website.war/WEB-INF/lib/dwebcore-0.0.1.jar/nl/dvelop/
-                // Different vfs protocols include vfs, vfsfile, vfszip, vfsjar, and vfsmemory
-                final boolean isVfs = url.getProtocol() != null && url.getProtocol().startsWith("vfs");
-                if ("file".equals(url.getProtocol()) || isVfs) {
-                    final File dir = toFile(url);
-                    if (dir.isDirectory()) {
-                        files.add(dir);
-                        if (debug) print("Add directory: '%s'", dir);
-                    } else if (isVfs) {
-                        //Jar file via JBoss VFS protocol - strip package name
-                        String jarPath = dir.getPath();
-                        final int idx = jarPath.indexOf(".jar");
-                        if (idx > -1) {
-                            jarPath = jarPath.substring(0, idx + 4);
-                            final File jarFile = new File(jarPath);
-                            if (jarFile.isFile() && jarFile.exists()) {
-                                files.add(jarFile);
-                                if (debug) print("Add jar file from VFS: '%s'", jarFile);
-                            } else {
-                                try {
-                                	// VirtualFile#getChildren(java.lang.String) may return an object which refers a .jar managed by the deployer
-                                	// The problem is that this .jar file does not contains .class in sub-directories
-                                	// Ex: if your original file contains /foo/bar/Baz.class and /foo/Bar.class, VFS returns a .jar file with:
-                                	// - /foo
-                                	// - /foo/Bar.class
-                                	// - /foo/bar
-                                	// ==> /foo/bar/Baz.class is missing!
-                                	// Resolving child directories recursively solves the issue
-                                    List<org.jboss.vfs.VirtualFile> vfs = getVfsChildren(org.jboss.vfs.VFS.getChild(dir.getPath()));
-                                    for (org.jboss.vfs.VirtualFile f : vfs) {
-                                        files.add(f.getPhysicalFile());
-                                    }
-                                } catch (Throwable ex) {
-                                    vfs(url, packageName, streams);
-                                }
-                            }
-                        } else {
-                            vfs(url, packageName, streams);
-                        }
-                    }
-                } else if (isRunningJavaWebStart()) {
-                    try {
-                        loadJarContent((JarURLConnection) url.openConnection(), packageName, streams);
-                    } catch (ClassCastException cce) {
-                        throw new AssertionError("Not a File: " + url.toExternalForm());
-                    }
-                } else {
-                    // Resource in Jar File
-                    File jarFile;
-
-                    try {
-                        jarFile = toFile(((JarURLConnection) url.openConnection()).getJarFileURL());
-                    } catch (ClassCastException cce) {
-                        try {
-                            // Weblogic crap
-                            String u = url.toExternalForm();
-                            if (u.startsWith("zip:")) {
-                                u = u.substring(4);
-                                if (!u.startsWith("file:")) {
-                                    u = "file:" + u;
-                                }
-                                u = u.substring(0, u.indexOf("!"));
-                            }
-                            jarFile = toFile(new URL(u));
-                        } catch (Exception ex) {
-                            throw new AssertionError("Not a File: " + url.toExternalForm());
-                        }
-                    }
-                    try {
-                        if (jarFile.isFile()) {
-                            files.add(jarFile);
-                            if (debug) print("Add jar file: '%s'", jarFile);
-                        } else {
-                            final URLConnection urlConnection = url.openConnection();
-                            if (urlConnection instanceof JarURLConnection) {
-                                loadJarContent((JarURLConnection) (url.openConnection()), packageName, streams);
-                            } else {
-                                streams.add(url.openConnection().getInputStream());
-                            }
-                        }
-                    } catch (Exception ex) {
-                        print("Cannot load from jar file", ex);
-                    }
-                }
-            }
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            Enumeration<URL> resourceEnum = loader.getResources(packageName);
+            detect(files, resourceEnum, packageName, streams);
+            detect(files, getClass().getClassLoader().getResources(packageName), packageName, streams);
         }
 
         if (!files.isEmpty()) {
             detect(new ClassFileIterator(files.toArray(new File[files.size()]), pkgNameFilter));
         } else if (!streams.isEmpty()) {
             detect(new ClassFileIterator(streams.toArray(new InputStream[streams.size()]), pkgNameFilter));
+        }
+    }
+
+    private void detect(final Set<File> files, final Enumeration<URL> resourceEnum, final String packageName, final Set<InputStream> streams)
+            throws IOException {
+        while (resourceEnum.hasMoreElements()) {
+            final URL url = resourceEnum.nextElement();
+            // Handle JBoss VFS URL's which look like (example package 'nl.dvelop'):
+            // vfs:/foo/bar/website.war/WEB-INF/classes/nl/dvelop/
+            // vfs:/foo/bar/website.war/WEB-INF/lib/dwebcore-0.0.1.jar/nl/dvelop/
+            // Different vfs protocols include vfs, vfsfile, vfszip, vfsjar, and vfsmemory
+            final boolean isVfs = url.getProtocol() != null && url.getProtocol().startsWith("vfs");
+            if ("file".equals(url.getProtocol()) || isVfs) {
+                final File dir = toFile(url);
+                if (dir.isDirectory()) {
+                    files.add(dir);
+                    if (debug) print("Add directory: '%s'", dir);
+                } else if (isVfs) {
+                    //Jar file via JBoss VFS protocol - strip package name
+                    String jarPath = dir.getPath();
+                    final int idx = jarPath.indexOf(".jar");
+                    if (idx > -1) {
+                        jarPath = jarPath.substring(0, idx + 4);
+                        final File jarFile = new File(jarPath);
+                        if (jarFile.isFile() && jarFile.exists()) {
+                            files.add(jarFile);
+                            if (debug) print("Add jar file from VFS: '%s'", jarFile);
+                        } else {
+                            try {
+                                // VirtualFile#getChildren(java.lang.String) may return an object which refers a .jar managed by the deployer
+                                // The problem is that this .jar file does not contains .class in sub-directories
+                                // Ex: if your original file contains /foo/bar/Baz.class and /foo/Bar.class, VFS returns a .jar file with:
+                                // - /foo
+                                // - /foo/Bar.class
+                                // - /foo/bar
+                                // ==> /foo/bar/Baz.class is missing!
+                                // Resolving child directories recursively solves the issue
+                                List<org.jboss.vfs.VirtualFile> vfs = getVfsChildren(org.jboss.vfs.VFS.getChild(dir.getPath()));
+                                for (org.jboss.vfs.VirtualFile f : vfs) {
+                                    files.add(f.getPhysicalFile());
+                                }
+                            } catch (Throwable ex) {
+                                vfs(url, packageName, streams);
+                            }
+                        }
+                    } else {
+                        vfs(url, packageName, streams);
+                    }
+                }
+            } else if (isRunningJavaWebStart()) {
+                try {
+                    loadJarContent((JarURLConnection) url.openConnection(), packageName, streams);
+                } catch (ClassCastException cce) {
+                    throw new AssertionError("Not a File: " + url.toExternalForm());
+                }
+            } else {
+                // Resource in Jar File
+                File jarFile;
+
+                try {
+                    jarFile = toFile(((JarURLConnection) url.openConnection()).getJarFileURL());
+                } catch (ClassCastException cce) {
+                    try {
+                        // Weblogic crap
+                        String u = url.toExternalForm();
+                        if (u.startsWith("zip:")) {
+                            u = u.substring(4);
+                            if (!u.startsWith("file:")) {
+                                u = "file:" + u;
+                            }
+                            u = u.substring(0, u.indexOf("!"));
+                        }
+                        jarFile = toFile(new URL(u));
+                    } catch (Exception ex) {
+                        throw new AssertionError("Not a File: " + url.toExternalForm());
+                    }
+                }
+                try {
+                    if (jarFile.isFile()) {
+                        files.add(jarFile);
+                        if (debug) print("Add jar file: '%s'", jarFile);
+                    } else {
+                        final URLConnection urlConnection = url.openConnection();
+                        if (urlConnection instanceof JarURLConnection) {
+                            loadJarContent((JarURLConnection) (url.openConnection()), packageName, streams);
+                        } else {
+                            streams.add(url.openConnection().getInputStream());
+                        }
+                    }
+                } catch (Exception ex) {
+                    print("Cannot load from jar file", ex);
+                }
+            }
         }
     }
 

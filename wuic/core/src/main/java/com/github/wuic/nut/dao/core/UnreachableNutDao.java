@@ -36,117 +36,81 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.nut.dao.core;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.nut.AbstractNutDao;
+import com.github.wuic.nut.NotReachableNut;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.dao.NutDaoService;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * <p>
- * This class describes the XML representation of a {@link com.github.wuic.nut.NutsHeap}.
+ * A {@link com.github.wuic.nut.dao.NutDao} implementation for unreachable nuts used in coordination with
+ * {@link com.github.wuic.engine.core.StaticEngine}.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.0
+ * @since 0.5.2
  */
-public class XmlHeapBean {
-
-    /**
-     * The ID.
-     */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The ID of the DAO builder.
-     */
-    @XmlAttribute(name = "dao-builder-id")
-    private String daoBuilderId;
-
-    /**
-     * The paths representing the nuts of the heap.
-     */
-    @XmlElement(name = "nut-path")
-    private List<String> nutPaths;
-
-    /**
-     * Composition from other nested heaps.
-     */
-    @XmlElement(name = "heap")
-    private List<XmlHeapBean> nestedComposition;
-
-
-    /**
-     * Composition from other referenced heaps.
-     */
-    @XmlElement(name = "heap-id")
-    private List<String> referencedComposition;
+@NutDaoService
+public class UnreachableNutDao extends AbstractNutDao {
 
     /**
      * <p>
-     * Gets the paths.
+     * Builds a new instance.
      * </p>
-     *
-     * @return the paths corresponding to the {@link com.github.wuic.nut.Nut nuts}
      */
-    public List<String> getNutPaths() {
-        return nutPaths;
+    @ConfigConstructor
+    public UnreachableNutDao() {
+        super("/", false, null, -1, new VersionNumberStrategy(Boolean.FALSE, Boolean.FALSE, null));
     }
 
     /**
-     * <p>
-     * Gets the DAO builder's ID.
-     * </p>
-     *
-     * @return an ID identifying a DAO builder
+     * {@inheritDoc}
      */
-    public String getDaoBuilderId() {
-        return daoBuilderId;
+    @Override
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
+        return -1L;
     }
 
     /**
-     * <p>
-     * Sets the DAO builder's ID.
-     * </p>
-     *
-     * @param daoBuilderId  the new ID identifying the DAO builder
+     * {@inheritDoc}
      */
-    public void setBuilderId(final String daoBuilderId) {
-        this.daoBuilderId = daoBuilderId;
+    @Override
+    protected List<String> listNutsPaths(final String pattern) throws IOException {
+        return Arrays.asList(pattern);
     }
 
     /**
-     * <p>
-     * Gets the ID.
-     * </p>
-     *
-     * @return the ID identifying the heap
+     * {@inheritDoc}
      */
-    public String getId() {
-        return id;
+    @Override
+    protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
+        return new NotReachableNut(realPath, type, "unknown heap", -1L);
     }
 
     /**
-     * <p>
-     * Gets nested heaps.
-     * </p>
-     *
-     * @return the heaps
+     * {@inheritDoc}
      */
-    public List<XmlHeapBean> getNestedComposition() {
-        return nestedComposition;
+    @Override
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+        throw new IOException("Nut content is unreachable.");
     }
 
     /**
-     * <p>
-     * Gets referenced heaps.
-     * </p>
-     *
-     * @return the heaps
+     * {@inheritDoc}
      */
-    public List<String> getReferencedComposition() {
-        return referencedComposition;
+    @Override
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
+        return Boolean.TRUE;
     }
 }

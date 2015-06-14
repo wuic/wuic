@@ -205,6 +205,17 @@ public class XmlWuicBean {
 
     /**
      * <p>
+     * Sets the DAO builders.
+     * </p>
+     *
+     * @param daoBuilders the builders
+     */
+    public void setDaoBuilders(final List<XmlBuilderBean> daoBuilders) {
+        this.daoBuilders = daoBuilders;
+    }
+
+    /**
+     * <p>
      * Sets the engine builders.
      * </p>
      *

@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.WuicTask;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.WuicFacade;
@@ -211,5 +212,42 @@ public class CoreTest extends WuicTest {
                 }
             }
         }
+    }
+
+    /**
+     * <p>
+     * Task test.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void taskTest() throws Exception {
+        final String wuicXml = IOUtils.normalizePathSeparator(getClass().getResource("/wuic.xml").toString());
+        final String currentDir = IOUtils.normalizePathSeparator(new File(".").toURI().toURL().toString());
+        final String relative =  wuicXml.substring(currentDir.length() - 2);
+        final File out = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test");
+
+        // Create MOJO
+        final WuicTask task = new WuicTask();
+        task.setXml(relative);
+        task.setOutput(new File(out, "generated").toString());
+        task.setRelocateTransformedXmlTo(out.toString());
+
+        // Invoke
+        task.execute();
+
+        // Verify
+        final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
+        Assert.assertTrue(new File(parent, "util-js").listFiles()[0].list()[0].equals("aggregate.js"));
+
+        Boolean found = Boolean.FALSE;
+        File[] files = new File(parent, "css-scripts").listFiles();
+
+        for (int i = 0; i < files.length && !found; found = files[i++].list()[0].equals("aggregate.css"));
+        Assert.assertTrue(found);
+
+        // Assert resources are closed
+        TestHelper.delete(out);
     }
 }
