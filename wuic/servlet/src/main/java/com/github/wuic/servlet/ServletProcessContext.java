@@ -93,7 +93,7 @@ public class ServletProcessContext extends ProcessContext {
      * @return the process context
      */
     public static ServletProcessContext cast(final ProcessContext processContext) {
-        if (processContext == null || !(processContext instanceof ServletProcessContext)) {
+        if (!(processContext instanceof ServletProcessContext)) {
             WuicException.throwBadStateException(new IllegalStateException(
                     "Process context must wrap an HTTP request when WUIC is deployed in any servlet container."));
         }
