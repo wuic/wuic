@@ -239,7 +239,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      */
     private void scheduleBestEffort(final EngineRequest request, final List<ConvertibleNut> processResult)
             throws WuicException {
-        final Map<String, ConvertibleNut> bestEffortResult = new HashMap<String, ConvertibleNut>(processResult.size());
+        final Map<String, ConvertibleNut> bestEffortResult = new LinkedHashMap<String, ConvertibleNut>(processResult.size());
 
         for (final ConvertibleNut nut : processResult) {
             bestEffortResult.put(nut.getName(), nut);
@@ -399,7 +399,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     private Map<String, CacheResult.Entry> prepareCacheableNuts(final List<ConvertibleNut> nuts,
                                                                 final Map<String, ConvertibleNut> processed)
             throws IOException {
-        final Map<String, CacheResult.Entry> retval = new HashMap<String, CacheResult.Entry>();
+        final Map<String, CacheResult.Entry> retval = new LinkedHashMap<String, CacheResult.Entry>();
 
         for (final ConvertibleNut nut : nuts) {
             final List<ConvertibleNut> referenced;
@@ -432,7 +432,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * @return the converted entries
      */
     private Map<String, ConvertibleNut> toConvertibleNut(final EngineRequest request, final Map<String, CacheResult.Entry> entries) {
-        final Map<String, ConvertibleNut> retval = new HashMap<String, ConvertibleNut>(entries.size());
+        final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(entries.size());
 
         for (final Map.Entry<String, CacheResult.Entry> entry : entries.entrySet()) {
             retval.put(entry.getKey(), entry.getValue().toConvertibleNut(request));
