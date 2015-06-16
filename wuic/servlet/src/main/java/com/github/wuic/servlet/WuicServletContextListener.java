@@ -371,27 +371,21 @@ public class WuicServletContextListener implements ServletContextListener {
          */
         @Override
         public String apply(final String key, final String defaultValue) {
-            String retval = wrap.apply(key, defaultValue);
-
             if (ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM.equals(key)) {
-                if (retval == null) {
-                    final ServletRegistration r = WuicServlet.findServletRegistration(servletContext);
+                final ServletRegistration r = WuicServlet.findServletRegistration(servletContext);
+                final String retval;
 
-                    if (r != null && r.getMappings() != null && !r.getMappings().isEmpty()) {
-                        final String mapping = r.getMappings().iterator().next();
-                        final int star = mapping.indexOf('*');
-
-                        if (star != -1) {
-                            retval = mapping.substring(0, star);
-                        }
-                    } else {
-                        retval = defaultValue;
-                    }
+                if (r != null && r.getMappings() != null && !r.getMappings().isEmpty()) {
+                    final String mapping = r.getMappings().iterator().next();
+                    final int star = mapping.indexOf('*');
+                    retval = star != -1 ? mapping.substring(0, star) : defaultValue;
+                } else {
+                    retval = defaultValue;
                 }
 
                 return IOUtils.mergePath(servletContext.getContextPath(), retval);
             } else {
-                return retval == null ? defaultValue : retval;
+                return wrap.apply(key, defaultValue);
             }
         }
     }
@@ -428,7 +422,8 @@ public class WuicServletContextListener implements ServletContextListener {
          */
         @Override
         public String apply(final String key, final String defaultValue) {
-            return servletContext.getInitParameter(key);
+            final String retval = servletContext.getInitParameter(key);
+            return retval == null ? defaultValue : key;
         }
     }
 }
