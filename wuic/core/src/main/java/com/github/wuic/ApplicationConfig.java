@@ -70,6 +70,11 @@ public interface ApplicationConfig {
     String DAO_PREFIX = PREFIX + "dao.";
 
     /**
+     * Prefix for facade properties.
+     */
+    String FACADE_PREFIX = PREFIX + "facade.";
+
+    /**
      * The fixed version number.
      */
     String FIXED_VERSION_NUMBER = PREFIX + "fixedVersionNumber";
@@ -359,39 +364,44 @@ public interface ApplicationConfig {
     /**
      * Init parameter which indicates the WUIC context path.
      */
-    String WUIC_SERVLET_CONTEXT_PARAM = PREFIX + "facade.contextPath";
+    String WUIC_SERVLET_CONTEXT_PARAM = FACADE_PREFIX + "contextPath";
 
     /**
      * Init parameter which indicates the WUIC property file.
      */
-    String WUIC_PROPERTIES_PATH_PARAM = PREFIX + "facade.propertiesPath";
+    String WUIC_PROPERTIES_PATH_PARAM = FACADE_PREFIX + "propertiesPath";
 
     /**
      * Init parameter which indicates that the WUIC property path is a system property.
      */
-    String WUIC_PROPERTIES_SYS_PROP_PARAM = PREFIX + "facade.propertiesPathAsSystemProperty";
+    String WUIC_PROPERTIES_SYS_PROP_PARAM = FACADE_PREFIX + "propertiesPathAsSystemProperty";
 
     /**
      * Init parameter which indicates the WUIC xml file.
      */
-    String WUIC_SERVLET_XML_PATH_PARAM = PREFIX + "facade.xmlPath";
+    String WUIC_SERVLET_XML_PATH_PARAM = FACADE_PREFIX + "xmlPath";
 
     /**
      * Init parameter which indicates that the WUIC context path is a system property.
      */
-    String WUIC_SERVLET_XML_SYS_PROP_PARAM = PREFIX + "facade.xmlPathAsSystemProperty";
+    String WUIC_SERVLET_XML_SYS_PROP_PARAM = FACADE_PREFIX + "xmlPathAsSystemProperty";
 
+    /**
+     * A list of comma-separated class names extending {@link com.github.wuic.context.ContextBuilderConfigurator} with
+     * a default constructor that will be used in the facade.
+     */
+    String WUIC_ADDITIONAL_BUILDER_CONFIGURATORS = FACADE_PREFIX + "additionalBuilderConfiguratorClasses";
 
     /**
      * Init parameter which indicates to use or not context builder configurators which inject default DAOs and engines.
      */
-    String WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS = "c.g.w.useDefaultContextBuilderConfigurators";
+    String WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS = FACADE_PREFIX + "useDefaultContextBuilderConfigurators";
 
     /**
      * Which warmup strategy to use when {@link WuicFacade} initializes the context. Possible values are enumerated by
      * {@link com.github.wuic.WuicFacade.WarmupStrategy}.
      */
-    String WUIC_WARMUP_STRATEGY = PREFIX + "facade.warmupStrategy";
+    String WUIC_WARMUP_STRATEGY = FACADE_PREFIX + "warmupStrategy";
 
     /**
      * This is the property name of the {@link WuicFacade} instance shared inside a web context.

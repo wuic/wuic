@@ -192,9 +192,46 @@ public class WuicFacadeBuilder {
                     wuicPropertiesPath(new URL(xmlPath));
                 }
             }
+
+            additionalContextBuilderConfigurators(properties);
         } catch (MalformedURLException mue) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
         }
+    }
+
+    /**
+     * <p>
+     * Adds to the facade a list of additional {@link ContextBuilderConfigurator configurators} according to the
+     * {@link ApplicationConfig#WUIC_ADDITIONAL_BUILDER_CONFIGURATORS} property.
+     * </p>
+     *
+     * @param properties the properties
+     * @return this
+     */
+    public final WuicFacadeBuilder additionalContextBuilderConfigurators(final BiFunction<String, String, String> properties) {
+        final String[] classes = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "").split(",");
+
+        if (classes.length > 0) {
+            final ContextBuilderConfigurator[] configurators = new ContextBuilderConfigurator[classes.length];
+
+            for (int i = 0; i < classes.length; i++) {
+                final String clazz = classes[i];
+
+                try {
+                    configurators[i] = ContextBuilderConfigurator.class.cast(Class.forName(clazz).newInstance());
+                } catch (ClassNotFoundException cnfe) {
+                    WuicException.throwBadStateException(cnfe);
+                } catch (InstantiationException ie) {
+                    WuicException.throwBadStateException(ie);
+                } catch (IllegalAccessException iae) {
+                    WuicException.throwBadStateException(iae);
+                }
+            }
+
+            contextBuilderConfigurators(configurators);
+        }
+
+        return this;
     }
 
     /**
