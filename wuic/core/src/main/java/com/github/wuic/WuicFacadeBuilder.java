@@ -189,7 +189,7 @@ public class WuicFacadeBuilder {
                 if (Boolean.parseBoolean(properties.apply(ApplicationConfig.WUIC_PROPERTIES_SYS_PROP_PARAM, "false"))) {
                     wuicPropertiesPath(new URL(System.getProperty(propertyPath)));
                 } else {
-                    wuicPropertiesPath(new URL(xmlPath));
+                    wuicPropertiesPath(new URL(propertyPath));
                 }
             }
 
