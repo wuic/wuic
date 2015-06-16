@@ -167,7 +167,6 @@ public class WuicFacadeBuilder {
             final String propertyPath = properties.apply(ApplicationConfig.WUIC_PROPERTIES_PATH_PARAM, null);
             contextPath(wuicCp);
             warmUpStrategy(warmupStrategy);
-            disableMultipleConfigInTagSupport();
 
             final String useDefaultConfStr = properties.apply(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS, "true");
 
@@ -209,9 +208,10 @@ public class WuicFacadeBuilder {
      * @return this
      */
     public final WuicFacadeBuilder additionalContextBuilderConfigurators(final BiFunction<String, String, String> properties) {
-        final String[] classes = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "").split(",");
+        final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "");
 
-        if (classes.length > 0) {
+        if (!value.isEmpty()) {
+            final String[] classes = value.split(",");
             final ContextBuilderConfigurator[] configurators = new ContextBuilderConfigurator[classes.length];
 
             for (int i = 0; i < classes.length; i++) {
