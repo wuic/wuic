@@ -2015,6 +2015,17 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Applies all properties in the given parameter that are supported by any component configured in this builder.
+     * </p>
+     *
+     * @param properties the properties object
+     */
+    public void applyProperties(final Properties properties) {
+        taggedSettings.applyProperties(properties);
+    }
+
+    /**
+     * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
      * For instance: associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
      * </p>
@@ -2040,7 +2051,7 @@ public class ContextBuilder extends Observable {
                     is = propertySet.openStream();
                     final Properties properties = new Properties();
                     properties.load(is);
-                    taggedSettings.applyProperties(properties);
+                    applyProperties(properties);
                 } finally {
                     IOUtils.close(is);
                 }
