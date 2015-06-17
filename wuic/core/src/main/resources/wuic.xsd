@@ -74,7 +74,7 @@
     </xs:complexType>
 
     <xs:complexType name="xmlHeapBean">
-        <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
             <xs:element name="nut-path" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                     <xs:simpleContent>
@@ -84,7 +84,7 @@
             </xs:element>
             <xs:element name="heap-id" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="heap" type="xmlHeapBean" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
+        </xs:choice>
         <xs:attribute name="id" type="xs:string" use="required"/>
         <xs:attribute name="dao-builder-id" type="xs:string" use="optional"/>
     </xs:complexType>
