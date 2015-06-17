@@ -156,8 +156,8 @@ public class WuicXmlTest {
         for (XmlHeapBean heap : xml.getHeaps()) {
             Assert.assertNotNull(heap.getId());
             Assert.assertNotNull(heap.getDaoBuilderId());
-            Assert.assertNotNull(heap.getNutPaths());
-            Assert.assertEquals(NumberUtils.TWO, heap.getNutPaths().size());
+            Assert.assertNotNull(heap.getElements());
+            Assert.assertEquals(NumberUtils.TWO, heap.getElements().size());
         }
 
         // DAO field
@@ -406,6 +406,7 @@ public class WuicXmlTest {
         ctx.process("", "referenced", UrlUtils.urlProviderFactory(), null);
         ctx.process("", "both", UrlUtils.urlProviderFactory(), null);
         ctx.process("", "full", UrlUtils.urlProviderFactory(), null);
+        ctx.process("", "any-order", UrlUtils.urlProviderFactory(), null);
     }
 
     /**

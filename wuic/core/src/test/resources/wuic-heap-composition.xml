@@ -38,6 +38,11 @@
                 <nut-path>css/full-nested.css</nut-path>
             </heap>
         </heap>
+
+        <heap id="any-order" dao-builder-id="defaultDao">
+            <heap-id>simple</heap-id>
+            <nut-path>css/full.css</nut-path>
+        </heap>
     </heaps>
 
     <workflow-templates>

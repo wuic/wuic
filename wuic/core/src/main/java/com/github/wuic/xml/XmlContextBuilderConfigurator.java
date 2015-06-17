@@ -43,6 +43,8 @@ import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -52,6 +54,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
@@ -63,6 +67,11 @@ import java.net.URL;
  * @since 0.4.0
  */
 public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+    /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(XmlContextBuilderConfigurator.class);
 
     /**
      * To read wuic.xml content.
@@ -119,28 +128,17 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @throws IOException if any I/O error occurs
      */
     public static void configureHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws IOException {
-        final String[] paths = heap.getNutPaths() == null ? new String[0] : heap.getNutPaths().toArray(new String[heap.getNutPaths().size()]);
-        final String[] nested = configureNestedHeap(ctxBuilder, heap);
-        final String[] referenced = getReferencedHeap(heap);
+        final List<String> paths = new ArrayList<String>();
+        final List<String> heaps = new ArrayList<String>();
+        collectElements(ctxBuilder, heap, paths, heaps);
 
-        // Merges referenced and nested heap into one array to give to context builder
-        final String[] target = new String[(referenced == null ? 0 : referenced.length) + (nested == null ? 0 : nested.length)];
-
-        // Nested exist
-        if (nested != null) {
-            System.arraycopy(nested, 0, target, 0, nested.length);
-        }
-
-        // Referenced exist
-        if (referenced != null) {
-            System.arraycopy(referenced, 0, target, nested == null ? 0 : nested.length, referenced.length);
-        }
+        final String[] pathArray = paths.toArray(new String[paths.size()]);
 
         // The heap is not a composition
-        if (target.length == 0) {
-            ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), paths);
+        if (heaps.isEmpty()) {
+            ctxBuilder.heap(heap.getId(), heap.getDaoBuilderId(), pathArray);
         } else {
-            ctxBuilder.heap(false, heap.getId(), heap.getDaoBuilderId(), target, paths);
+            ctxBuilder.heap(false, heap.getId(), heap.getDaoBuilderId(), heaps.toArray(new String[heaps.size()]), pathArray);
         }
     }
 
@@ -284,50 +282,52 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
     /**
      * <p>
-     * Gets nested declaration of a heap inside the given heap and configure the given context builder with them.
+     * Collects different elements that compose the heap specified in parameter.
      * </p>
+     *
+     * Supported operations are:
+     * <ul>
+     *  <li>Gets nested declaration of a heap inside the given heap and configure the given context builder with them.</li>
+     *  <li>Gets referenced declaration of a heap inside the given heap.</li>
+     *  <li>Gets all paths that represent the nuts.</li>
+     * </ul>
      *
      * @param ctxBuilder the context builder
      * @param heap the enclosing heap
      * @return the extracted heaps
      * @throws IOException if an I/O error occurs
      */
-    private static String[] configureNestedHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws IOException {
-        if (heap.getNestedComposition() == null || heap.getNestedComposition().isEmpty()) {
-            return null;
-        } else {
-            final String[] retval = new String[heap.getNestedComposition().size()];
+    private static void collectElements(final ContextBuilder ctxBuilder,
+                                        final XmlHeapBean heap,
+                                        final List<String> paths,
+                                        final List<String> heaps) throws IOException {
+        if (heap.getElements() != null) {
+            for (final Object element : heap.getElements()) {
+                if (element instanceof XmlHeapBean)  {
+                    final XmlHeapBean nested = XmlHeapBean.class.cast(element);
 
-            for (int i = 0; i < heap.getNestedComposition().size(); i++) {
-                final XmlHeapBean nested = heap.getNestedComposition().get(i);
-                final String[] paths = nested.getNutPaths() == null ? new String[0] : nested.getNutPaths().toArray(new String[nested.getNutPaths().size()]);
-                ctxBuilder.heap(nested.getId(), nested.getDaoBuilderId(), paths);
-                retval[i] = nested.getId();
+                    if (nested.getElements() == null) {
+                        continue;
+                    }
+
+                    final List<String> nestedPaths = new ArrayList<String>();
+
+                    for (final Object nestedPath : nested.getElements()) {
+                        if (nestedPath instanceof String) {
+                            nestedPaths.add(String.valueOf(nestedPath));
+                        } else {
+                            LOGGER.warn("Nested heap {} should only declare nut-path and avoid heap declaration.", nested.getId());
+                        }
+                    }
+
+                    ctxBuilder.heap(nested.getId(), nested.getDaoBuilderId(), nestedPaths.toArray(new String[nestedPaths.size()]));
+                    heaps.add(nested.getId());
+                } else if (element instanceof XmlHeapReference) {
+                    heaps.add(XmlHeapReference.class.cast(element).getValue());
+                } else {
+                    paths.add(element.toString());
+                }
             }
-
-            return retval;
-        }
-    }
-
-    /**
-     * <p>
-     * Gets referenced declaration of a heap inside the given heap.
-     * </p>
-     *
-     * @param heap the enclosing heap
-     * @return the extracted heaps
-     */
-    private static String[] getReferencedHeap(final XmlHeapBean heap) {
-        if (heap.getReferencedComposition() == null || heap.getReferencedComposition().isEmpty()) {
-            return null;
-        } else {
-            final String[] retval = new String[heap.getReferencedComposition().size()];
-
-            for (int i = 0; i < heap.getReferencedComposition().size(); i++) {
-                retval[i] = heap.getReferencedComposition().get(i);
-            }
-
-            return retval;
         }
     }
 
