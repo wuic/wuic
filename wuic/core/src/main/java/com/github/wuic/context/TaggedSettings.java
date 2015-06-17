@@ -40,6 +40,7 @@ package com.github.wuic.context;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
@@ -602,6 +603,25 @@ public class TaggedSettings {
         for (final Object key : properties.keySet()) {
             final String property = key.toString();
             applyProperty(property, properties.getProperty(property));
+        }
+    }
+
+    /**
+     * <p>
+     * Sets the process context for all the settings owning an existing process context that is an instance of the same
+     * given object class. If given object is {@code null} it will be ignored.
+     * </p>
+     *
+     * @param processContext the {@link com.github.wuic.ProcessContext}
+     * @return this builder
+     */
+    public void setProcessContext(final ProcessContext processContext) {
+        if (processContext != null) {
+            for (final ContextSetting setting : taggedSettings.values()) {
+                if (setting.getProcessContext() != null && setting.getProcessContext().getClass().equals(processContext.getClass())) {
+                    setting.setProcessContext(processContext);
+                }
+            }
         }
     }
 

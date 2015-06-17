@@ -1060,13 +1060,15 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Sets the process context for the setting associated to the current tag.
+     * Sets the process context for the setting associated to the current tag and to any setting owning an non-null
+     * process context that is an instance of the same given object class.
      * </p>
      *
      * @param processContext the {@link ProcessContext}
      * @return this builder
      */
     public ContextBuilder processContext(final ProcessContext processContext) {
+        taggedSettings.setProcessContext(processContext);
         getSetting().setProcessContext(processContext);
         setChanged();
         notifyObservers();
