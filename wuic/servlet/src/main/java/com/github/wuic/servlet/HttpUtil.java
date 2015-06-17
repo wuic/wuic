@@ -65,6 +65,16 @@ public enum HttpUtil {
     INSTANCE;
 
     /**
+     * Attribute set when a forward is initiated.
+     */
+    public static final String FORWARD_REQUEST_URI_ATTRIBUTE = "javax.servlet.forward.request_uri";
+
+    /**
+     * Attribute set when an include is initiated.
+     */
+    public static final String INCLUDE_REQUEST_URI_ATTRIBUTE = "javax.servlet.include.request_uri";
+
+    /**
      * The logger.
      */
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -79,6 +89,44 @@ public enum HttpUtil {
      */
     private HttpUtil() {
         charset = System.getProperty("file.encoding");
+    }
+
+    /**
+     * <p>
+     * Generates a tag name for the {@link com.github.wuic.context.ContextBuilderConfigurator} that will apply the
+     * configuration defined in a page. The tag must not be the same between several statements on several pages.
+     * Consequently, the method computes the tag from the servlet path, any include/forward request URI and an incremented
+     * integer stored in attributes from page scope.
+     * </p>
+     *
+     * @param request the HTTP request
+     * @return the tag
+     */
+    public String computeUniqueTag(final HttpServletRequest request) {
+        Integer inc = Integer.class.cast(request.getAttribute(getClass().getName()));
+
+        if (inc == null) {
+            inc = 1;
+        } else {
+            inc++;
+        }
+
+        request.setAttribute(getClass().getName(), inc);
+
+        final StringBuilder retval = new StringBuilder(request.getServletPath());
+
+        final Object includeUri = request.getAttribute(INCLUDE_REQUEST_URI_ATTRIBUTE);
+        final Object forwardUri = request.getAttribute(FORWARD_REQUEST_URI_ATTRIBUTE);
+
+        if (includeUri != null) {
+            retval.append(',').append(includeUri);
+        }
+
+        if (forwardUri != null) {
+            retval.append(',').append(forwardUri);
+        }
+
+        return retval.append(',').append(inc).toString();
     }
 
     /**

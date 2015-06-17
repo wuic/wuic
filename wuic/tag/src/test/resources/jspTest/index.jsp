@@ -11,7 +11,11 @@
                     </properties>
                 </nut-dao-builder>
             </nut-dao-builders>
+        </wuic>
+    </wuic-conf:xml-configuration>
 
+    <wuic-conf:xml-configuration>
+        <wuic>
             <heaps>
                 <heap id="foo" dao-builder-id="cssDao">
                     <nut-path>foo.css</nut-path>

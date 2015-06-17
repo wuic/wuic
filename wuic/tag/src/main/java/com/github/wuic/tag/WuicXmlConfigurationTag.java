@@ -41,6 +41,7 @@ package com.github.wuic.tag;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.servlet.HttpUtil;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
@@ -102,9 +103,9 @@ public class WuicXmlConfigurationTag extends BodyTagSupport {
         try {
             // Let's load the wuic.xml file and configure the builder with it
             final BodyContent content = getBodyContent();
-            final ContextBuilderConfigurator c =  new ReaderXmlContextBuilderConfigurator(
+            final ContextBuilderConfigurator c = new ReaderXmlContextBuilderConfigurator(
                     content.getReader(),
-                    toString(),
+                    HttpUtil.INSTANCE.computeUniqueTag(HttpServletRequest.class.cast(pageContext.getRequest())),
                     wuicFacade.allowsMultipleConfigInTagSupport(),
                     new ServletProcessContext(HttpServletRequest.class.cast(pageContext.getRequest())));
 
