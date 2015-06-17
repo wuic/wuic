@@ -80,7 +80,7 @@ public class ServletProcessContext extends ProcessContext {
      * @param request the request to wrap
      */
     public ServletProcessContext(final HttpServletRequest request) {
-        httpServletRequest = request;
+        httpServletRequest = new SynchronizedHttpServletRequestWrapper(request);
     }
 
     /**
@@ -130,7 +130,7 @@ public class ServletProcessContext extends ProcessContext {
             return super.executeAsap(job);
         } else {
             synchronized (httpServletRequest) {
-                if (httpServletRequest.getAttribute(getClass().getName()) != null) {
+                if (!httpServletRequest.isAsyncStarted() && httpServletRequest.getAttribute(getClass().getName()) != null) {
                     logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
 
                     try {
@@ -140,8 +140,8 @@ public class ServletProcessContext extends ProcessContext {
                         return null;
                     }
                 } else {
-                    final AsyncContext asyncContext = httpServletRequest.startAsync();
                     httpServletRequest.setAttribute(getClass().getName(), "");
+                    final AsyncContext asyncContext = httpServletRequest.startAsync();
                     final FutureTask<T> task = new FutureTask<T>(new WuicScheduledThreadPool.CallExceptionLogger<T>(
                             new WuicScheduledThreadPool.CallExceptionLogger<T>(job))) {
                         @Override
