@@ -747,7 +747,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      * {@inheritDoc}
      */
     @Override
-    public AsyncContext startAsync() throws IllegalStateException {
+    public AsyncContext startAsync() {
         synchronized (mutex) {
             return super.startAsync();
         }
@@ -757,7 +757,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      * {@inheritDoc}
      */
     @Override
-    public AsyncContext startAsync(final ServletRequest servletRequest, final ServletResponse servletResponse) throws IllegalStateException {
+    public AsyncContext startAsync(final ServletRequest servletRequest, final ServletResponse servletResponse) {
         synchronized (mutex) {
             return super.startAsync(servletRequest, servletResponse);
         }

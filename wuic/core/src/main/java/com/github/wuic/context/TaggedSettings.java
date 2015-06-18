@@ -613,7 +613,6 @@ public class TaggedSettings {
      * </p>
      *
      * @param processContext the {@link com.github.wuic.ProcessContext}
-     * @return this builder
      */
     public void setProcessContext(final ProcessContext processContext) {
         if (processContext != null) {
