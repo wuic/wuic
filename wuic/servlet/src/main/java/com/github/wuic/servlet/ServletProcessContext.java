@@ -130,7 +130,7 @@ public class ServletProcessContext extends ProcessContext {
             return super.executeAsap(job);
         } else {
             synchronized (httpServletRequest) {
-                if (!httpServletRequest.isAsyncStarted() && httpServletRequest.getAttribute(getClass().getName()) != null) {
+                if (!httpServletRequest.isAsyncStarted() || httpServletRequest.getAttribute(getClass().getName()) != null) {
                     logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
 
                     try {
