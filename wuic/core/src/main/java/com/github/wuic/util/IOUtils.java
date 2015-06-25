@@ -244,8 +244,34 @@ public final class IOUtils {
         final byte[] buffer = new byte[WUIC_BUFFER_LEN];
 
         while ((offset = is.read(buffer)) != -1) {
-            writer.write(new String(Arrays.copyOf(buffer, offset), cs));
+            final String str;
+            final byte[] bytes = Arrays.copyOf(buffer, offset);
+
+            if (cs == null) {
+                str = new String(bytes);
+            } else {
+                str = new String(bytes, cs);
+            }
+
+            writer.write(str);
         }
+
+        writer.flush();
+    }
+
+
+    /**
+     * <p>
+     * Copies the data from the given input stream into the given writer and does not wrap the {@link IOException}.
+     * </p>
+     *
+     * @param is the {@code InputStream}
+     * @param writer the {@code Writer}
+     * @throws IOException in an I/O error occurs
+     */
+    public static void copyStreamToWriterIoe(final InputStream is, final Writer writer)
+            throws IOException {
+        copyStreamToWriterIoe(is, writer, null);
     }
 
     /**

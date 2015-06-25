@@ -119,6 +119,11 @@ public class WuicTask {
     private String properties;
 
     /**
+     * Charset to use when writing to the disk.
+     */
+    private String charset;
+
+    /**
      * <p>
      * Builds a new instance. {@link #relocateTransformedXml} is {@code null} and default {@link #contextPath} is '/'.
      * </p>
@@ -126,6 +131,7 @@ public class WuicTask {
     public WuicTask() {
         this.relocateTransformedXmlTo = null;
         this.contextPath = "/";
+        this.charset = "UTF-8";
     }
 
     /**
@@ -138,13 +144,20 @@ public class WuicTask {
      * @param output the output location
      * @param contextPath the context path
      * @param props the properties path
+     * @param charset the charset
      */
-    public WuicTask(final String xml, final String relocateTransformedXml, final String output, final String contextPath, final String props) {
+    public WuicTask(final String xml,
+                    final String relocateTransformedXml,
+                    final String output,
+                    final String contextPath,
+                    final String props,
+                    final String charset) {
         this.xml = xml;
         this.relocateTransformedXmlTo = relocateTransformedXml;
         this.output = output;
         this.contextPath = contextPath;
         this.properties = props;
+        this.charset = charset;
     }
 
     /**
@@ -339,7 +352,12 @@ public class WuicTask {
         }
 
         final OutputStream os = new FileOutputStream(file);
-        nut.transform(new Pipe.DefaultOnReady(os));
+
+        if (!nut.getNutType().isText()) {
+            nut.transform(new Pipe.DefaultOnReady(os));
+        } else {
+            nut.transform(new Pipe.DefaultOnReady(os, "UTF-8"));
+        }
 
         // Recursive call on referenced nuts
         if (nut.getReferencedNuts() != null) {
@@ -402,5 +420,12 @@ public class WuicTask {
      */
     public void setContextPath(final String contextPath) {
         this.contextPath = contextPath;
+    }
+
+    /**
+     * Charset to use when writing to the disk.
+     */
+    public void setCharset(final String charset) {
+        this.charset = charset;
     }
 }

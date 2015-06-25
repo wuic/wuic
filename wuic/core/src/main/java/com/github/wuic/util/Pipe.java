@@ -43,6 +43,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -152,7 +153,7 @@ public final class Pipe<T> {
 
     /**
      * <p>
-     * Default implementation which writes the result to a wrapped output stream and close if automatically.
+     * Default implementation which writes the result to a wrapped output stream (binary) or writer (text) and close if automatically.
      * </p>
      *
      * @author Guillaume DROUET
@@ -167,14 +168,32 @@ public final class Pipe<T> {
         private OutputStream outputStream;
 
         /**
+         * The charset.
+         */
+        private String charset;
+
+        /**
          * <p>
-         * Builds a new instance.
+         * Builds a new instance for binary copy.
          * </p>
          *
          * @param os the stream to write
          */
         public DefaultOnReady(final OutputStream os) {
+            this(os, null);
+        }
+
+        /**
+         * <p>
+         * Builds a new instance for text copy.
+         * </p>
+         *
+         * @param os the stream to write
+         * @param cs the charset for character stream
+         */
+        public DefaultOnReady(final OutputStream os, final String cs) {
             this.outputStream = os;
+            this.charset = cs;
         }
 
         /**
@@ -183,7 +202,7 @@ public final class Pipe<T> {
         @Override
         public void ready(final Pipe.Execution e) throws IOException {
             try {
-                e.writeResultTo(outputStream);
+                e.writeResultTo(outputStream, charset);
             } finally {
                 IOUtils.close(outputStream);
             }
@@ -261,18 +280,36 @@ public final class Pipe<T> {
 
         /**
          * <p>
-         * Writes the result to the given output stream.
+         * Writes the result to the given output stream (for binary stream).
          * </p>
          *
          * @param os the output stream
          * @throws IOException if copy fails
          */
         public void writeResultTo(final OutputStream os) throws IOException {
+            writeResultTo(os, null);
+        }
+
+        /**
+         * <p>
+         * Writes the result to the given output stream. Charset could be specified for char stream.
+         * </p>
+         *
+         * @param os the output stream
+         * @param charset the charset for character stream ({@code null} for binary stream)
+         * @throws IOException if copy fails
+         */
+        public void writeResultTo(final OutputStream os, final String charset) throws IOException {
             InputStream is = null;
 
             try {
                 is = new ByteArrayInputStream(result);
-                IOUtils.copyStream(is, os);
+
+                if (charset == null) {
+                    IOUtils.copyStream(is, os);
+                } else {
+                    IOUtils.copyStreamToWriterIoe(is, new OutputStreamWriter(os, charset));
+                }
             } finally {
                 IOUtils.close(is);
             }
