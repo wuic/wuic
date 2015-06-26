@@ -878,7 +878,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final String url = extractValue(s, urlToken());
 
             if (url != null && !url.isEmpty()) {
-                if (url.startsWith("http://") || url.startsWith("https://")) {
+                if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) {
                     return null;
                 } else {
                     Map<String, String> attributes = null;
