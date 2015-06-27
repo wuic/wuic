@@ -257,7 +257,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
             return;
         }
 
-        request.setAttribute(getClass().getName(), Boolean.TRUE);
+        request.setAttribute(HtmlParserFilter.class.getName(), Boolean.TRUE);
         final HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(response);
         final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper(httpServletResponse);
 
