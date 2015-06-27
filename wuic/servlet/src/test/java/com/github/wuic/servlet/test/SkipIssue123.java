@@ -40,11 +40,13 @@ package com.github.wuic.servlet.test;
 
 import com.github.wuic.NutType;
 import com.github.wuic.servlet.HtmlParserFilter;
+import com.github.wuic.util.NumberUtils;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
@@ -77,4 +79,18 @@ public class SkipIssue123 extends HtmlParserFilter {
             }
         }, chain);
     }
+
+    // tag::extractWorkflowId[]
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected byte[][] extractWorkflowId(final HttpServletRequest httpRequest) {
+        final byte[][] bytes = new byte[NumberUtils.TWO][];
+        bytes[0] = httpRequest.getServletPath().getBytes();
+        bytes[1] = httpRequest.getQueryString() != null ? httpRequest.getQueryString().getBytes() : new byte[0];
+
+        return bytes;
+    }
+    // tag::extractWorkflowId[]
 }

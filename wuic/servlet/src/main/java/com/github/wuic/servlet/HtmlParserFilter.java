@@ -268,7 +268,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         if (bytes.length > 0) {
             try {
                 final HttpServletRequest httpRequest = HttpServletRequest.class.cast(request);
-                final String workflowId = StringUtils.toHexString(IOUtils.digest(httpRequest.getServletPath().getBytes()));
+                final String workflowId = StringUtils.toHexString(IOUtils.digest(extractWorkflowId(httpRequest)));
                 final String path = buildPath(httpRequest, httpServletResponse);
                 updateWorkflow(httpRequest, bytes, workflowId, path);
 
@@ -473,6 +473,25 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      */
     private boolean isDynamic(final HttpServletRequest request) {
         return forceDynamicContent || request.getAttribute(FORCE_DYNAMIC_CONTENT) != null;
+    }
+
+    /**
+     * <p>
+     * Extracts the workflow ID from the HTTP request.
+     * </p>
+     *
+     * <p>
+     * The method can return any array of byte array containing all the data that represent an unique ID for the filtered page.
+     * By default, {@link javax.servlet.http.HttpServletRequest#getServletPath()} is used but if many pages serve different
+     * statics and share the save servlet path, this method can be overridden to indicate more data, for instance the parameter
+     * values.
+     * </p>
+     *
+     * @param httpRequest the HTTP request associated to the returned workflow ID
+     * @return the ID
+     */
+    protected byte[][] extractWorkflowId(final HttpServletRequest httpRequest) {
+        return new byte[][] { httpRequest.getServletPath().getBytes(), };
     }
 
     /**
