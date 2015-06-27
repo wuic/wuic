@@ -154,7 +154,8 @@ public enum HttpUtil {
 
     /**
      * <p>
-     * Serves the given nut by changing the specified response's state. The method sets headers and writes response.
+     * Calls {@link #write(com.github.wuic.nut.ConvertibleNut, javax.servlet.http.HttpServletResponse, boolean)} and
+     * sets the expire header.
      * </p>
      *
      * @param nut the nut to write
@@ -163,12 +164,30 @@ public enum HttpUtil {
      */
     public void write(final ConvertibleNut nut, final HttpServletResponse response)
             throws IOException {
+        write(nut, response, true);
+    }
+
+    /**
+     * <p>
+     * Serves the given nut by changing the specified response's state. The method sets headers and writes response.
+     * </p>
+     *
+     * @param nut the nut to write
+     * @param response the response
+     * @param expireHeader sets a far expire header
+     * @throws IOException if stream could not be opened
+     */
+    public void write(final ConvertibleNut nut, final HttpServletResponse response, final boolean expireHeader)
+            throws IOException {
         logger.info("Writing to the response the content read from nut '{}'", nut.getName());
         response.setCharacterEncoding(charset);
         response.setContentType(nut.getNutType().getMimeType());
 
         // We set a far expiration date because we assume that polling will change the timestamp in path
-        response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
+        if (expireHeader) {
+            response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
+        }
+
         nut.transform(new WriteResponseOnReady(response, nut));
     }
 
