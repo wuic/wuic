@@ -356,7 +356,7 @@ public class WuicTask {
         if (!nut.getNutType().isText()) {
             nut.transform(new Pipe.DefaultOnReady(os));
         } else {
-            nut.transform(new Pipe.DefaultOnReady(os, "UTF-8"));
+            nut.transform(new Pipe.DefaultOnReady(os, charset));
         }
 
         // Recursive call on referenced nuts
