@@ -423,7 +423,7 @@ public class WuicServletContextListener implements ServletContextListener {
         @Override
         public String apply(final String key, final String defaultValue) {
             final String retval = servletContext.getInitParameter(key);
-            return retval == null ? defaultValue : key;
+            return retval == null ? defaultValue : retval;
         }
     }
 }
