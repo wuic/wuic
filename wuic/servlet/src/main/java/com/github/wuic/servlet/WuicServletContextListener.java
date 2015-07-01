@@ -341,7 +341,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @version 1.0
      * @since 0.5.2
      */
-    public static final class PropertiesWrapper implements BiFunction<String, String, String> {
+    public final class PropertiesWrapper implements BiFunction<String, String, String> {
 
         /**
          * Wraps the function.
@@ -370,22 +370,47 @@ public class WuicServletContextListener implements ServletContextListener {
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String key, final String defaultValue) {
+        public String apply(final String key, final String defaultVal) {
+            final String wrapResult = wrap.apply(key, defaultVal);
+
             if (ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM.equals(key)) {
                 final ServletRegistration r = WuicServlet.findServletRegistration(servletContext);
                 final String retval;
 
+                // There is a registration for WUIC servlet, try extract the value from mapping instead of using the context param
                 if (r != null && r.getMappings() != null && !r.getMappings().isEmpty()) {
                     final String mapping = r.getMappings().iterator().next();
                     final int star = mapping.indexOf('*');
-                    retval = star != -1 ? mapping.substring(0, star) : defaultValue;
+
+                    // We expect a star in the mapping
+                    if (star != -1) {
+                        // The user has defined a context-param explicitly, it will be ignored and replace by servlet mapping
+                        if (wrapResult != null && !wrapResult.equals(defaultVal)) {
+                            WuicServletContextListener.this.log.warn(
+                                    "WuicServlet is installed and its mapping will be used to resolve '{}' property. 'context-param' configured with value '{}' will be ignored.",
+                                    ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM,
+                                    wrapResult,
+                                    new IllegalStateException());
+                        }
+
+                        retval = mapping.substring(0, star);
+                    } else {
+                        // The user does not specified any star in the mapping, fallback to initial result
+                        WuicServletContextListener.this.log.warn("WuicServlet mapping '{}' does not contain any '*' character. Using '{}' as property for '{}'.",
+                                mapping,
+                                wrapResult,
+                                ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM,
+                                new IllegalStateException());
+
+                        retval = wrapResult;
+                    }
                 } else {
-                    retval = defaultValue;
+                    retval = wrapResult;
                 }
 
                 return IOUtils.mergePath(servletContext.getContextPath(), retval);
             } else {
-                return wrap.apply(key, defaultValue);
+                return wrapResult;
             }
         }
     }
