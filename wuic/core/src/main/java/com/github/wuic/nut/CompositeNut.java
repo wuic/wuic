@@ -55,8 +55,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -153,6 +155,23 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
+     * Indicates if at least one nut of the composition has a transformer.
+     * </p>
+     *
+     * @return {@code true} is a transformer exists inside the composition, {@code false} otherwise
+     */
+    public boolean hasTransformers() {
+        for (final ConvertibleNut nut : compositionList) {
+            if (nut.getTransformers() != null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * <p>
      * Indicates if version number is computed asynchronously.
      * </p>
      *
@@ -187,44 +206,44 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             final Pipe<ConvertibleNut> finalPipe;
+            final boolean hasTransformers = hasTransformers();
 
             // Collect transformer executed for each nut and group transformers for aggregated content
-            if (getTransformers() != null) {
-                final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
+            if (hasTransformers) {
+                // Get transformers
                 final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
+                final Map<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> nuts = new LinkedHashMap<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>>();
+                populateTransformers(aggregatedStream, nuts);
 
-                for (final Pipe.Transformer<ConvertibleNut> transformer : getTransformers()) {
-                    if (transformer.canAggregateTransformedStream()) {
-                        separateStream.add(transformer);
-                    } else {
-                        aggregatedStream.add(transformer);
-                    }
-                }
-
-                final List<InputStream> is =
-                        new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
+                final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
 
                 // First we transform each nut with transformers producing content which could be aggregated
-                for (final ConvertibleNut nut : compositionList) {
+                for (final Map.Entry<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> entry : nuts.entrySet()) {
                     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
 
-                        /**
-                         * {@inheritDoc}
-                         */
-                        @Override
-                        public String getName() {
-                            return nut.getInitialName();
+                    if (!entry.getValue().isEmpty()) {
+
+                        // We pass this composition in order to receive any referenced nut or whatever state change
+                        final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
+
+                            /**
+                             * {@inheritDoc}
+                             */
+                            @Override
+                            public String getName() {
+                                return entry.getKey().getName();
+                            }
+                        }, entry.getKey().openStream());
+
+                        for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getValue()) {
+                            pipe.register(transformer);
                         }
-                    }, nut.openStream());
 
-                    for (final Pipe.Transformer<ConvertibleNut> transformer :separateStream) {
-                        pipe.register(transformer);
+                        Pipe.executeAndWriteTo(pipe, entry.getKey().getReadyCallbacks(), bos);
+                        is.add(new ByteArrayInputStream(bos.toByteArray()));
+                    } else {
+                        is.add(entry.getKey().openStream());
                     }
-
-                    Pipe.executeAndWriteTo(pipe, nut.getReadyCallbacks(), bos);
-
-                    is.add(new ByteArrayInputStream(bos.toByteArray()));
 
                     if (streamSeparator != null) {
                         is.add(new ByteArrayInputStream(streamSeparator));
@@ -252,8 +271,46 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
+    public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
+        compositionList.get(0).addTransformer(transformer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public InputStream openStream() throws IOException {
         return new CompositeInputStream();
+    }
+
+    /**
+     * <p>
+     * Populates the given {@code Set} and {@code Map} with the transformers inside the composition.
+     * If the {@link com.github.wuic.util.Pipe.Transformer#canAggregateTransformedStream()} returns {@code true}, then
+     * it's added to a list associated to the nut with the given map. Otherwise the transformer will be added in the
+     * set specified in parameter.
+     * </p>
+     *
+     * @param aggregatedStream transformer that operate on aggregated streams
+     * @param nuts all nuts with their transformer that produce a stream that can be aggregated later
+     */
+    private void populateTransformers(final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream,
+                                      final Map<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> nuts) {
+        for (final ConvertibleNut nut : compositionList) {
+            final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
+
+            if (nut.getTransformers() != null) {
+                for (final Pipe.Transformer<ConvertibleNut> transformer : nut.getTransformers()) {
+                    if (transformer.canAggregateTransformedStream()) {
+                        separateStream.add(transformer);
+                    } else {
+                        aggregatedStream.add(transformer);
+                    }
+                }
+            }
+
+            nuts.put(nut, separateStream);
+        }
     }
 
     /**
