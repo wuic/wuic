@@ -41,10 +41,12 @@ package com.github.wuic.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
+import com.github.wuic.WuicTask;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.servlet.WebappNutDaoBuilderInspector;
 import com.github.wuic.servlet.jetty.PathMap;
 import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.Consumer;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
@@ -57,10 +59,13 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletRegistration;
 import javax.servlet.annotation.WebListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -106,6 +111,29 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
+     * Completes some configurations from information generated at build time thanks to the {@link WuicTask}.
+     * </p>
+     *
+     * @param buildInfoUrl the detected file information location
+     * @param builder the builder to configure
+     */
+    private void installBuildInfo(final URL buildInfoUrl, final WuicFacadeBuilder builder) {
+        final Properties properties = new Properties();
+        InputStream is = null;
+
+        try {
+            is = buildInfoUrl.openStream();
+            properties.load(is);
+            builder.contextPath(properties.getProperty(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM));
+        } catch (IOException ioe) {
+            WuicException.throwBadStateException(new IllegalStateException(ioe));
+        } finally {
+            IOUtils.close(is);
+        }
+    }
+
+    /**
+     * <p>
      * Gets the {@link BiFunction} providing parameters..
      * </p>
      *
@@ -115,6 +143,7 @@ public class WuicServletContextListener implements ServletContextListener {
     @SuppressWarnings("unchecked")
     public static BiFunction<String, String, String> getParamProvider(final ServletContext servletContext) {
         final Object fct = servletContext.getAttribute(ApplicationConfig.INIT_PARAM_FUNCTION);
+
         if (fct == null) {
             final String message = String.format("BiFunction is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
             WuicException.throwBadStateException(new IllegalArgumentException(message));
@@ -150,7 +179,38 @@ public class WuicServletContextListener implements ServletContextListener {
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
 
         try {
-            detectInClassesLocation(builder, sce.getServletContext(), "wuic.xml", "wuic.properties");
+            detectInClassesLocation(sce.getServletContext(), "wuic.xml", new Consumer<URL>() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void apply(final URL consumed) {
+                    builder.wuicXmlPath(consumed);
+                }
+            });
+
+            detectInClassesLocation(sce.getServletContext(), "wuic.properties", new Consumer<URL>() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void apply(final URL consumed) {
+                    builder.wuicPropertiesPath(consumed);
+                }
+            });
+
+            detectInClassesLocation(sce.getServletContext(), WuicTask.BUILD_INFO_FILE, new Consumer<URL>() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void apply(final URL consumed) {
+                    installBuildInfo(consumed, builder);
+                }
+            });
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
             WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
@@ -237,42 +297,23 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
-     * Detects the given list of file in the "/WEB-INF/classes" directory and install them with
-     * {@link WuicFacadeBuilder#wuicXmlPath(java.net.URL)} and {@link WuicFacadeBuilder#wuicPropertiesPath(java.net.URL)}
-     * regarding their extension.
+     * Detects the given file in the "/WEB-INF/classes" directory and install them thanks to the given callback.
      * </p>
      *
-     * @param builder the builder to configure
      * @param servletContext the context giving access to base directory
-     * @param files all files to test
+     * @param file file to test
+     * @param callback the callback that install the file
      */
-    private void detectInClassesLocation(final WuicFacadeBuilder builder, final ServletContext servletContext, final String... files) {
-        for (final String file : files) {
-            try {
-                final URL classesPath = servletContext.getResource("/WEB-INF/classes/" + file);
+    private void detectInClassesLocation(final ServletContext servletContext, final String file, final Consumer<URL> callback) {
+        try {
+            final URL classesPath = servletContext.getResource("/WEB-INF/classes/" + file);
 
-                if (classesPath != null) {
-                    final boolean configured;
-
-                    if (file.endsWith(".properties")) {
-                        builder.wuicPropertiesPath(classesPath);
-                        configured = true;
-                    } else if (file.endsWith(".xml")) {
-                        builder.wuicXmlPath(classesPath);
-                        configured = true;
-                    } else {
-                        configured = false;
-                    }
-
-                    if (configured) {
-                        log.info("Installing '{}' located in {}", file, classesPath.toString());
-                    } else {
-                        log.warn("Configuration file {} must ends with .properties or .xml ot be installed.", classesPath.toString());
-                    }
-                }
-            } catch (MalformedURLException mue) {
-                log.error("Unexpected exception", mue);
+            if (classesPath != null) {
+                log.info("Installing '{}' located in {}", file, classesPath.toString());
+                callback.apply(classesPath);
             }
+        } catch (MalformedURLException mue) {
+            log.error("Unexpected exception", mue);
         }
     }
 

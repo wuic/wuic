@@ -84,10 +84,15 @@ import java.util.List;
 public class WuicTask {
 
     /**
+     * Information file generated at build time that help to configure the servlet container at runtime.
+     */
+    public static final String BUILD_INFO_FILE = "wuic-build-info.properties";
+
+    /**
      * XML file name.
      */
     private static final String XML_FILE = "wuic.xml";
-    
+
     /**
      * The logger.
      */
@@ -287,30 +292,47 @@ public class WuicTask {
             facade = facadeBuilder.wuicPropertiesPath(propertyFile.toURI().toURL()).build();
         }
 
-        // Now write each workflow result to disk with its description file
-        for (final String wId : facade.workflowIds()) {
-            PrintWriter pw = null;
+        PrintWriter buildInfo = null;
 
-            try {
-                if  (relocateTransformedXmlTo != null) {
-                    final File file = new File(relocateTransformedXmlTo, String.format(StaticEngine.STATIC_WORKFLOW_FILE, wId));
+        try {
+            if (relocateTransformedXmlTo != null) {
+                final File buildInfoFile = new File(relocateTransformedXmlTo, BUILD_INFO_FILE);
 
-                    if (!file.getParentFile().mkdirs()) {
-                        log.error("Unable to create '{}' directory", file.getParent());
+                if (!buildInfoFile.getParentFile().mkdirs()) {
+                    log.error("Unable to create '{}' directory", buildInfoFile.getParent());
+                }
+
+                buildInfo = new PrintWriter(buildInfoFile);
+                buildInfo.write((ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM + '=' + contextPath).toCharArray());
+            }
+
+            // Now write each workflow result to disk with its description file
+            for (final String wId : facade.workflowIds()) {
+                PrintWriter pw = null;
+
+                try {
+                    if  (relocateTransformedXmlTo != null) {
+                        final File file = new File(relocateTransformedXmlTo, String.format(StaticEngine.STATIC_WORKFLOW_FILE, wId));
+
+                        if (!file.getParentFile().mkdirs()) {
+                            log.error("Unable to create '{}' directory", file.getParent());
+                        }
+
+                        retval.add(file.getName());
+                        pw = new PrintWriter(file);
                     }
 
-                    retval.add(file.getName());
-                    pw = new PrintWriter(file);
-                }
+                    final List<ConvertibleNut> nuts = facade.runWorkflow(wId, ProcessContext.DEFAULT);
 
-                final List<ConvertibleNut> nuts = facade.runWorkflow(wId, ProcessContext.DEFAULT);
-
-                for (final ConvertibleNut nut : nuts) {
-                    write(nut, wId, pw, 0);
+                    for (final ConvertibleNut nut : nuts) {
+                        write(nut, wId, pw, 0);
+                    }
+                } finally {
+                    IOUtils.close(pw);
                 }
-            } finally {
-                IOUtils.close(pw);
             }
+        } finally {
+            IOUtils.close(buildInfo);
         }
 
         // No need to continue if we don't want to generate wuic.xml file too
