@@ -40,6 +40,8 @@ package com.github.wuic.test.ctx;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 
@@ -49,8 +51,11 @@ import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.NutNotFoundException;
@@ -76,6 +81,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -228,13 +234,87 @@ public class ContextBuilderTest {
 
     /**
      * <p>
+     * Test {@link ObjectBuilderInspector} usage.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void objectInterceptorTest() throws Exception {
+        @EngineService(injectDefaultToWorkflow = false)
+        class E extends NodeEngine {
+
+            /**
+             * Builds a new instance.
+             */
+            @ConfigConstructor
+            public E() {
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public List<NutType> getNutTypes() {
+                return Arrays.asList(NutType.JAVASCRIPT);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public EngineType getEngineType() {
+                return EngineType.AGGREGATOR;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
+                return request.getNuts();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Boolean works() {
+                return null;
+            }
+        }
+
+        final ObjectBuilderInspector i = new ObjectBuilderInspector() {
+            @Override
+            public <T> T inspect(T object) {
+                return object instanceof Engine ? (T) new E() : object;
+            }
+        };
+
+        final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory, i)
+                .tag(this)
+                .contextNutDaoBuilder("dao", "MockDaoBuilder")
+                .toContext()
+                .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
+                .contextEngineBuilder("e", "MockEngineBuilder")
+                .toContext()
+                .template("tpl", new String[]{"e"})
+                .workflow("workflow-", true, "heap", "tpl")
+                .releaseTag()
+                .build();
+
+        Assert.assertTrue(context.getWorkflow("workflow-heap").getChains().get(NutType.JAVASCRIPT) instanceof E);
+    }
+
+    /**
+     * <p>
      * Test {@link ContextInterceptor} usage.
      * </p>
      *
      * @throws Exception if test fails
      */
     @Test
-    public void interceptorTest() throws Exception {
+    public void contextInterceptorTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(4);
         final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);

@@ -193,6 +193,7 @@ public class WuicFacadeBuilderTest {
         Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM), Mockito.anyString())).thenReturn("true");
         Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("true");
         Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("");
+        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR), Mockito.anyString())).thenReturn("");
         new WuicFacadeBuilder(propsTrue).build();
 
         final BiFunction<String, String, String> propsFalse = Mockito.mock(BiFunction.class);
@@ -202,6 +203,7 @@ public class WuicFacadeBuilderTest {
         Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM), Mockito.anyString())).thenReturn("false");
         Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("false");
         Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("");
+        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR), Mockito.anyString())).thenReturn("");
         new WuicFacadeBuilder(propsFalse).build();
     }
 

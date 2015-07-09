@@ -387,6 +387,12 @@ public interface ApplicationConfig {
     String WUIC_SERVLET_XML_SYS_PROP_PARAM = FACADE_PREFIX + "xmlPathAsSystemProperty";
 
     /**
+     * A list of comma-separated class names implementing {@link com.github.wuic.config.ObjectBuilderInspector} with
+     * a default constructor that will be used in the facade.
+     */
+    String WUIC_ADDITIONAL_BUILDER_INSPECTOR = FACADE_PREFIX + "additionalBuilderInspectorClasses";
+
+    /**
      * A list of comma-separated class names extending {@link com.github.wuic.context.ContextBuilderConfigurator} with
      * a default constructor that will be used in the facade.
      */

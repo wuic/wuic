@@ -39,6 +39,7 @@
 package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilder;
+import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
@@ -177,12 +178,15 @@ public final class WuicFacade {
             WuicException.throwWuicXmlReadException(je) ;
         }
 
+        final List<ObjectBuilderInspector> inspectors = b.getObjectBuilderInspectors();
+
         // No inspector, directly use the wrapped context builder
-        if (b.getObjectBuilderInspector() == null) {
+        if (inspectors.isEmpty()) {
             builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath());
         } else {
             // build a new context builder with specific inspector and reuse the factories already declared
-            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(), b.getObjectBuilderInspector());
+            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(),
+                    inspectors.toArray(new ObjectBuilderInspector[inspectors.size()]));
         }
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];

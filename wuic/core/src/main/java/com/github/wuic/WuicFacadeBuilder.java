@@ -105,9 +105,9 @@ public class WuicFacadeBuilder {
     private Boolean useDefaultContextBuilderConfigurator;
 
     /**
-     * An inspector of any built object.
+     * An list of inspectors of any built object.
      */
-    private ObjectBuilderInspector objectBuilderInspector;
+    private final List<ObjectBuilderInspector> inspectors;
 
     /**
      * Additional custom context configurators.
@@ -131,7 +131,7 @@ public class WuicFacadeBuilder {
         wuicXmlPath = getClass().getResource("/wuic.xml");
         wuicPropertiesPath = getClass().getResource("/wuic.properties");
         useDefaultContextBuilderConfigurator = Boolean.TRUE;
-        objectBuilderInspector = null;
+        inspectors = new ArrayList<ObjectBuilderInspector>();
         configurators = new ArrayList<ContextBuilderConfigurator>();
         contextBuilder = new ContextBuilderFacade();
     }
@@ -193,6 +193,7 @@ public class WuicFacadeBuilder {
             }
 
             additionalContextBuilderConfigurators(properties);
+            additionalObjectBuilderInspectors(properties);
         } catch (MalformedURLException mue) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
         }
@@ -229,6 +230,44 @@ public class WuicFacadeBuilder {
             }
 
             contextBuilderConfigurators(configurators);
+        }
+
+        return this;
+    }
+
+
+
+    /**
+     * <p>
+     * Adds to the facade a list of additional {@link ObjectBuilderInspector inspectors} according to the
+     * {@link ApplicationConfig#WUIC_ADDITIONAL_BUILDER_INSPECTOR} property.
+     * </p>
+     *
+     * @param properties the properties
+     * @return this
+     */
+    public final WuicFacadeBuilder additionalObjectBuilderInspectors(final BiFunction<String, String, String> properties) {
+        final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR, "");
+
+        if (!value.isEmpty()) {
+            final String[] classes = value.split(",");
+            final ObjectBuilderInspector[] inspectors = new ObjectBuilderInspector[classes.length];
+
+            for (int i = 0; i < classes.length; i++) {
+                final String clazz = classes[i];
+
+                try {
+                    inspectors[i] = ObjectBuilderInspector.class.cast(Class.forName(clazz).newInstance());
+                } catch (ClassNotFoundException cnfe) {
+                    WuicException.throwBadStateException(cnfe);
+                } catch (InstantiationException ie) {
+                    WuicException.throwBadStateException(ie);
+                } catch (IllegalAccessException iae) {
+                    WuicException.throwBadStateException(iae);
+                }
+            }
+
+            objectBuilderInspector(inspectors);
         }
 
         return this;
@@ -324,14 +363,14 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Sets an inspector for any object creation.
+     * Adds additional object builder inspector for any object creation.
      * </p>
      *
-     * @param obi the {@link ObjectBuilderInspector}
+     * @param obi the {@link ObjectBuilderInspector inspectors}
      * @return this
      */
-    public final WuicFacadeBuilder objectBuilderInspector(final ObjectBuilderInspector obi) {
-        this.objectBuilderInspector = obi;
+    public final WuicFacadeBuilder objectBuilderInspector(final ObjectBuilderInspector ... obi) {
+        Collections.addAll(this.inspectors, obi);
         return this;
     }
 
@@ -440,13 +479,13 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
-     * Gets the interceptor if any.
+     * Gets the extra interceptors if any.
      * </p>
      *
-     * @return the interceptor
+     * @return the interceptors
      */
-    ObjectBuilderInspector getObjectBuilderInspector() {
-        return objectBuilderInspector;
+    List<ObjectBuilderInspector> getObjectBuilderInspectors() {
+        return inspectors;
     }
 
     /**
