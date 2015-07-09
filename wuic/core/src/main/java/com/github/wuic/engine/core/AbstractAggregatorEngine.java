@@ -51,6 +51,7 @@ import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.PipedConvertibleNut;
+import com.github.wuic.util.Pipe;
 
 /**
  * <p>
@@ -66,7 +67,12 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     /**
      * Activate aggregation or not.
      */
-    private Boolean doAggregation;
+    private final Boolean doAggregation;
+
+    /**
+     * Transformers.
+     */
+    private final List<Pipe.Transformer<ConvertibleNut>> transformers;
 
     /**
      * <p>
@@ -77,6 +83,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
      */
     public AbstractAggregatorEngine(final Boolean aggregate)  {
         this.doAggregation = aggregate;
+        this.transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
     }
 
     /**
@@ -111,24 +118,18 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
 
         retval.addAll(aggregationParse(new EngineRequestBuilder(request).nuts(staticNuts).build()));
 
-        // Compute proxy URIs
-        for (final Nut nut : retval) {
+        // Compute proxy URIs and add transformers
+        for (final ConvertibleNut nut : retval) {
             nut.setProxyUri(request.getHeap().proxyUriFor(nut));
+
+            for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
+                nut.addTransformer(t);
+            }
         }
 
         return retval;
     }
 
-    /**
-     * <p>
-     * Do aggregation parsing.
-     * </p>
-     *
-     * @param request the request
-     * @return the aggregated nuts
-     * @throws WuicException if an error occurs
-     */
-    protected abstract List<ConvertibleNut> aggregationParse(EngineRequest request) throws WuicException ;
 
     /**
      * {@inheritDoc}
@@ -145,4 +146,26 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     public final EngineType getEngineType() {
         return EngineType.AGGREGATOR;
     }
+
+    /**
+     * <p>
+     * Adds some transformers this engine should add to the parsed nuts.
+     * </p>
+     *
+     * @param transformer the transformer to add
+     */
+    public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
+        this.transformers.add(transformer);
+    }
+
+    /**
+     * <p>
+     * Do aggregation parsing.
+     * </p>
+     *
+     * @param request the request
+     * @return the aggregated nuts
+     * @throws WuicException if an error occurs
+     */
+    protected abstract List<ConvertibleNut> aggregationParse(EngineRequest request) throws WuicException ;
 }
