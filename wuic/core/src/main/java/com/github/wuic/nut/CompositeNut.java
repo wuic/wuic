@@ -212,16 +212,16 @@ public class CompositeNut extends PipedConvertibleNut {
             if (hasTransformers) {
                 // Get transformers
                 final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
-                final Map<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> nuts = new LinkedHashMap<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>>();
+                final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts = new LinkedHashMap<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut>();
                 populateTransformers(aggregatedStream, nuts);
 
                 final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
 
                 // First we transform each nut with transformers producing content which could be aggregated
-                for (final Map.Entry<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> entry : nuts.entrySet()) {
+                for (final Map.Entry<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> entry : nuts.entrySet()) {
                     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-                    if (!entry.getValue().isEmpty()) {
+                    if (!entry.getKey().isEmpty()) {
 
                         // We pass this composition in order to receive any referenced nut or whatever state change
                         final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
@@ -231,18 +231,18 @@ public class CompositeNut extends PipedConvertibleNut {
                              */
                             @Override
                             public String getName() {
-                                return entry.getKey().getName();
+                                return entry.getValue().getName();
                             }
-                        }, entry.getKey().openStream());
+                        }, entry.getValue().openStream());
 
-                        for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getValue()) {
+                        for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getKey()) {
                             pipe.register(transformer);
                         }
 
-                        Pipe.executeAndWriteTo(pipe, entry.getKey().getReadyCallbacks(), bos);
+                        Pipe.executeAndWriteTo(pipe, entry.getValue().getReadyCallbacks(), bos);
                         is.add(new ByteArrayInputStream(bos.toByteArray()));
                     } else {
-                        is.add(entry.getKey().openStream());
+                        is.add(entry.getValue().openStream());
                     }
 
                     if (streamSeparator != null) {
@@ -295,7 +295,7 @@ public class CompositeNut extends PipedConvertibleNut {
      * @param nuts all nuts with their transformer that produce a stream that can be aggregated later
      */
     private void populateTransformers(final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream,
-                                      final Map<ConvertibleNut, List<Pipe.Transformer<ConvertibleNut>>> nuts) {
+                                      final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts) {
         for (final ConvertibleNut nut : compositionList) {
             final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
 
@@ -309,7 +309,7 @@ public class CompositeNut extends PipedConvertibleNut {
                 }
             }
 
-            nuts.put(nut, separateStream);
+            nuts.put(separateStream, nut);
         }
     }
 
