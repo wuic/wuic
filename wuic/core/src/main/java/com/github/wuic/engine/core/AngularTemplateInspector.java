@@ -79,7 +79,7 @@ public class AngularTemplateInspector extends LineInspector {
      * Start of regex.
      */
     private static final String START_REGEX =
-            String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s\\s*?\\:\\s*?",
+            String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s'?\"?\\s*?\\:\\s*?",
                     QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL);
 
     /**

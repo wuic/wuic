@@ -347,7 +347,19 @@ public class InspectorTest {
                         "  return {\n" +
                         "    templateUrl  : 'template2.html?foo'\n" +
                         "  };\n" +
-                        "});", "my-customer2.html"}
+                        "});", "my-customer2.html"},
+                {"angular.module('docsTemplateUrlDirective3', [])\n" +
+                        ".directive('myCustomer3', function() {\n" +
+                        "  return {\n" +
+                        "    'templateUrl'  : 'template3.html?foo'\n" +
+                        "  };\n" +
+                        "});", "my-customer3.html"},
+                {"angular.module('docsTemplateUrlDirective4', [])\n" +
+                        ".directive('myCustomer4', function() {\n" +
+                        "  return {\n" +
+                        "    \"templateUrl\"  : 'template4.html?foo'\n" +
+                        "  };\n" +
+                        "});", "my-customer4.html"}
         };
 
         final String value = assertInspection(collection,
@@ -358,6 +370,8 @@ public class InspectorTest {
 
         Assert.assertTrue(value.contains("template.html?versionNumber=1"));
         Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
+        Assert.assertTrue(value.contains("template3.html?foo&versionNumber=1"));
+        Assert.assertTrue(value.contains("template4.html?foo&versionNumber=1"));
 
     }
 
