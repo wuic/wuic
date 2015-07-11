@@ -123,6 +123,8 @@ public class ServletProcessContext extends ProcessContext {
      */
     @Override
     public <T> Future<T> executeAsap(final Callable<T> job) {
+
+        // Asynchronous service not available
         if (!httpServletRequest.isAsyncSupported()) {
             final Exception ex = new IllegalStateException("isAsyncSupported() returns false in the current request.");
             logger.warn("Trying to directly use the internal executor, which is possibly not allowed by the servlet container.", ex);
@@ -130,26 +132,37 @@ public class ServletProcessContext extends ProcessContext {
             return super.executeAsap(job);
         } else {
             synchronized (httpServletRequest) {
+
+                // Already running in an asynchronous job
                 if (!httpServletRequest.isAsyncStarted() || httpServletRequest.getAttribute(getClass().getName()) != null) {
                     logger.debug("This thread is already running asynchronously. The job will be run now synchronously.");
 
                     try {
+                        // Run synchronously
                         return new SyncFuture<T>(job.call());
                     } catch (Exception e) {
                         WuicException.throwBadStateException(e);
                         return null;
                     }
                 } else {
+                    // Make sure we track the fact that we run in an asynchronous job
                     httpServletRequest.setAttribute(getClass().getName(), "");
+
+                    // Call the service
                     final AsyncContext asyncContext = httpServletRequest.startAsync();
                     final FutureTask<T> task = new FutureTask<T>(new WuicScheduledThreadPool.CallExceptionLogger<T>(
                             new WuicScheduledThreadPool.CallExceptionLogger<T>(job))) {
+
+                        /**
+                         * {@inheritDoc}
+                         */
                         @Override
                         protected void done() {
                             asyncContext.complete();
                         }
                     };
 
+                    // Schedules the job to run asynchronously
                     asyncContext.start(task);
                     return task;
                 }

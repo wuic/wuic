@@ -100,6 +100,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getAuthType() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getAuthType();
         }
@@ -110,6 +111,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Cookie[] getCookies() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getCookies();
         }
@@ -120,6 +122,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public long getDateHeader(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getDateHeader(name);
         }
@@ -130,6 +133,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getHeader(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getHeader(name);
         }
@@ -140,6 +144,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Enumeration<String> getHeaders(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getHeaders(name);
         }
@@ -150,6 +155,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Enumeration<String> getHeaderNames() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getHeaderNames();
         }
@@ -160,6 +166,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public int getIntHeader(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getIntHeader(name);
         }
@@ -170,6 +177,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getMethod() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getMethod();
         }
@@ -180,6 +188,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getPathInfo() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getPathInfo();
         }
@@ -190,6 +199,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getPathTranslated() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getPathTranslated();
         }
@@ -200,6 +210,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getContextPath() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getContextPath();
         }
@@ -210,6 +221,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getQueryString() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getQueryString();
         }
@@ -220,6 +232,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRemoteUser() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRemoteUser();
         }
@@ -230,6 +243,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isUserInRole(final String role) {
+        // Synchronized access
         synchronized (mutex) {
             return super.isUserInRole(role);
         }
@@ -240,6 +254,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Principal getUserPrincipal() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getUserPrincipal();
         }
@@ -250,6 +265,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRequestedSessionId() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRequestedSessionId();
         }
@@ -260,6 +276,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRequestURI() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRequestURI();
         }
@@ -270,6 +287,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public StringBuffer getRequestURL() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRequestURL();
         }
@@ -280,6 +298,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getServletPath() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getServletPath();
         }
@@ -290,6 +309,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public HttpSession getSession(final boolean create) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getSession(create);
         }
@@ -300,6 +320,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public HttpSession getSession() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getSession();
         }
@@ -310,6 +331,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String changeSessionId() {
+        // Synchronized access
         synchronized (mutex) {
             return super.changeSessionId();
         }
@@ -320,6 +342,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isRequestedSessionIdValid() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isRequestedSessionIdValid();
         }
@@ -330,6 +353,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isRequestedSessionIdFromCookie() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isRequestedSessionIdFromCookie();
         }
@@ -340,6 +364,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isRequestedSessionIdFromURL() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isRequestedSessionIdFromURL();
         }
@@ -350,6 +375,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isRequestedSessionIdFromUrl() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isRequestedSessionIdFromUrl();
         }
@@ -360,6 +386,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean authenticate(final HttpServletResponse response) throws IOException, ServletException {
+        // Synchronized access
         synchronized (mutex) {
             return super.authenticate(response);
         }
@@ -370,6 +397,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void login(final String username, final String password) throws ServletException {
+        // Synchronized access
         synchronized (mutex) {
             super.login(username, password);
         }
@@ -380,6 +408,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void logout() throws ServletException {
+        // Synchronized access
         synchronized (mutex) {
             super.logout();
         }
@@ -390,6 +419,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Collection<Part> getParts() throws IOException, ServletException {
+        // Synchronized access
         synchronized (mutex) {
             return super.getParts();
         }
@@ -400,6 +430,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Part getPart(final String name) throws IOException, ServletException {
+        // Synchronized access
         synchronized (mutex) {
             return super.getPart(name);
         }
@@ -410,6 +441,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void upgrade(final ProtocolHandler handler) throws IOException {
+        // Synchronized access
         synchronized (mutex) {
             super.upgrade(handler);
         }
@@ -420,6 +452,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public ServletRequest getRequest() {
+        // Synchronized access
         return super.getRequest();
     }
 
@@ -428,6 +461,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void setRequest(final ServletRequest request) {
+        // Synchronized access
         synchronized (mutex) {
             super.setRequest(request);
         }
@@ -438,6 +472,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Object getAttribute(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getAttribute(name);
         }
@@ -448,6 +483,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Enumeration<String> getAttributeNames() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getAttributeNames();
         }
@@ -458,6 +494,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getCharacterEncoding() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getCharacterEncoding();
         }
@@ -468,6 +505,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void setCharacterEncoding(final String enc) throws UnsupportedEncodingException {
+        // Synchronized access
         synchronized (mutex) {
             super.setCharacterEncoding(enc);
         }
@@ -478,6 +516,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public int getContentLength() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getContentLength();
         }
@@ -488,6 +527,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public long getContentLengthLong() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getContentLengthLong();
         }
@@ -498,6 +538,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getContentType() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getContentType();
         }
@@ -508,6 +549,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public ServletInputStream getInputStream() throws IOException {
+        // Synchronized access
         synchronized (mutex) {
             return super.getInputStream();
         }
@@ -518,6 +560,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getParameter(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getParameter(name);
         }
@@ -528,6 +571,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Map<String, String[]> getParameterMap() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getParameterMap();
         }
@@ -538,6 +582,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Enumeration<String> getParameterNames() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getParameterNames();
         }
@@ -548,6 +593,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String[] getParameterValues(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getParameterValues(name);
         }
@@ -558,6 +604,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getProtocol() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getProtocol();
         }
@@ -568,6 +615,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getScheme() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getScheme();
         }
@@ -578,6 +626,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getServerName() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getServerName();
         }
@@ -588,6 +637,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public int getServerPort() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getServerPort();
         }
@@ -598,6 +648,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public BufferedReader getReader() throws IOException {
+        // Synchronized access
         synchronized (mutex) {
             return super.getReader();
         }
@@ -608,6 +659,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRemoteAddr() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRemoteAddr();
         }
@@ -618,6 +670,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRemoteHost() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRemoteHost();
         }
@@ -628,6 +681,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void setAttribute(final String name, final Object o) {
+        // Synchronized access
         synchronized (mutex) {
             super.setAttribute(name, o);
         }
@@ -638,6 +692,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public void removeAttribute(final String name) {
+        // Synchronized access
         synchronized (mutex) {
             super.removeAttribute(name);
         }
@@ -648,6 +703,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Locale getLocale() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getLocale();
         }
@@ -658,6 +714,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public Enumeration<Locale> getLocales() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getLocales();
         }
@@ -668,6 +725,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isSecure() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isSecure();
         }
@@ -678,6 +736,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public RequestDispatcher getRequestDispatcher(final String path) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRequestDispatcher(path);
         }
@@ -688,6 +747,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getRealPath(final String path) {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRealPath(path);
         }
@@ -698,6 +758,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public int getRemotePort() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getRemotePort();
         }
@@ -708,6 +769,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getLocalName() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getLocalName();
         }
@@ -718,6 +780,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public String getLocalAddr() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getLocalAddr();
         }
@@ -728,6 +791,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public int getLocalPort() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getLocalPort();
         }
@@ -738,6 +802,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public ServletContext getServletContext() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getServletContext();
         }
@@ -748,6 +813,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public AsyncContext startAsync() {
+        // Synchronized access
         synchronized (mutex) {
             return super.startAsync();
         }
@@ -758,6 +824,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public AsyncContext startAsync(final ServletRequest servletRequest, final ServletResponse servletResponse) {
+        // Synchronized access
         synchronized (mutex) {
             return super.startAsync(servletRequest, servletResponse);
         }
@@ -768,6 +835,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isAsyncStarted() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isAsyncStarted();
         }
@@ -778,6 +846,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isAsyncSupported() {
+        // Synchronized access
         synchronized (mutex) {
             return super.isAsyncSupported();
         }
@@ -788,6 +857,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public AsyncContext getAsyncContext() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getAsyncContext();
         }
@@ -798,6 +868,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isWrapperFor(final ServletRequest wrapped) {
+        // Synchronized access
         synchronized (mutex) {
             return super.isWrapperFor(wrapped);
         }
@@ -808,6 +879,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public boolean isWrapperFor(final Class<?> wrappedType) {
+        // Synchronized access
         synchronized (mutex) {
             return super.isWrapperFor(wrappedType);
         }
@@ -818,6 +890,7 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      */
     @Override
     public DispatcherType getDispatcherType() {
+        // Synchronized access
         synchronized (mutex) {
             return super.getDispatcherType();
         }

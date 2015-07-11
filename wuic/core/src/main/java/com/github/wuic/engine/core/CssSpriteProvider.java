@@ -71,21 +71,32 @@ public class CssSpriteProvider extends AbstractSpriteProvider {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder cssBuilder = new StringBuilder();
 
-        for (String name : getRegions().keySet()) {
+        // Define each region within the image
+        for (final String name : getRegions().keySet()) {
             final Region reg = getRegions().get(name);
             final String className = convertAllowedName(workflowId, name);
 
-            // Define region within the image
+            // declare class name
             cssBuilder.append(".");
             cssBuilder.append(className);
+
+            // adds background URL
             cssBuilder.append("{display:inline-block;background:url('");
             cssBuilder.append(urlProvider.getUrl(getImage()));
             cssBuilder.append("') ");
+
+            // x position
             cssBuilder.append(String.valueOf(reg.getxPosition() * -1));
             cssBuilder.append("px ");
+
+            // y position
             cssBuilder.append(String.valueOf(reg.getyPosition() * -1));
+
+            // width
             cssBuilder.append("px;width:");
             cssBuilder.append(String.valueOf((int) reg.getWidth()));
+
+            // height
             cssBuilder.append("px;height:");
             cssBuilder.append(String.valueOf((int) reg.getHeight()));
             cssBuilder.append("px;}");

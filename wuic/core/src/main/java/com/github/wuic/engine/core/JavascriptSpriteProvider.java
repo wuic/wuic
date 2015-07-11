@@ -94,6 +94,7 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
         jsBuilder.append(" = {};\n");
         jsBuilder.append("}\n");
 
+        // Define each region within the image
         for (final String name : getRegions().keySet()) {
             final Region reg = getRegions().get(name);
             
@@ -101,14 +102,24 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
             jsBuilder.append(JS_CONSTANT);
             jsBuilder.append("['");
             jsBuilder.append(convertAllowedName(workflowId, name));
+
+            // x position
             jsBuilder.append("'] = {\n\tx : \"");
             jsBuilder.append(reg.getxPosition());
+
+            // y position
             jsBuilder.append("\",\n\ty : \"");
             jsBuilder.append(reg.getyPosition());
+
+            // Width
             jsBuilder.append("\",\n\tw : \"");
             jsBuilder.append(reg.getWidth());
+
+            // Height
             jsBuilder.append("\",\n\th : \"");
             jsBuilder.append(reg.getHeight());
+
+            // Add URL
             jsBuilder.append("\",\n\turl : \"");
             jsBuilder.append(urlProvider.getUrl(getImage()));
             jsBuilder.append("\"\n};\n");

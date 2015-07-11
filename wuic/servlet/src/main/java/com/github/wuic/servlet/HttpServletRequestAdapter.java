@@ -94,31 +94,11 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      * <p>
      * Builds a new instance.
      * </p>
-     */
-    public HttpServletRequestAdapter() {
-        this(null, null);
-    }
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
      *
      * @param pathInfo the path info
      */
     public HttpServletRequestAdapter(final String pathInfo) {
         this(null, pathInfo);
-    }
-
-    /**
-     * <p>
-     * Builds a new instance with a wrapped request.
-     * </p>
-     *
-     * @param httpServletRequest the request
-     */
-    public HttpServletRequestAdapter(final HttpServletRequest httpServletRequest) {
-        this(httpServletRequest, null);
     }
 
     /**
@@ -140,6 +120,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getAuthType() {
+        // Delegate call
         return (request != null) ? request.getAuthType() : null;
     }
 
@@ -148,6 +129,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Cookie[] getCookies() {
+        // Delegate call
         return (request != null) ? request.getCookies() : null;
     }
 
@@ -156,6 +138,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public long getDateHeader(final String name) {
+        // Delegate call
         return (request != null) ? request.getDateHeader(name) : -1;
     }
 
@@ -164,6 +147,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getHeader(final String name) {
+        // Delegate call
         return (request != null) ? request.getHeader(name) : null;
     }
 
@@ -172,6 +156,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<String> getHeaders(final String name) {
+        // Delegate call
         return (request != null) ? request.getHeaders(name) : null;
     }
 
@@ -180,6 +165,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<String> getHeaderNames() {
+        // Delegate call
         return (request != null) ? request.getHeaderNames() : null;
     }
 
@@ -188,6 +174,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public int getIntHeader(final String name) {
+        // Delegate call
         return (request != null) ? request.getIntHeader(name) : 0;
     }
 
@@ -196,6 +183,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getMethod() {
+        // Delegate call
         return (request != null) ? request.getMethod() : "GET";
     }
 
@@ -204,6 +192,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getPathInfo() {
+        // Delegate call
         return (request != null) ? request.getPathInfo() : pathInfo;
     }
 
@@ -212,6 +201,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getPathTranslated() {
+        // Delegate call
         return (request != null) ? request.getPathTranslated() : null;
     }
 
@@ -220,6 +210,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getContextPath() {
+        // Delegate call
         return (request != null) ? request.getContextPath() : null;
     }
 
@@ -228,6 +219,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getQueryString() {
+        // Delegate call
         return (request != null) ? request.getQueryString() : null;
     }
 
@@ -236,6 +228,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRemoteUser() {
+        // Delegate call
         return (request != null) ? request.getRemoteUser() : null;
     }
 
@@ -244,6 +237,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isUserInRole(final String role) {
+        // Delegate call
         return (request != null) && request.isUserInRole(role);
     }
 
@@ -252,6 +246,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Principal getUserPrincipal() {
+        // Delegate call
         return (request != null) ? request.getUserPrincipal() : null;
     }
 
@@ -260,6 +255,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRequestedSessionId() {
+        // Delegate call
         return (request != null) ? request.getRequestedSessionId() : null;
     }
 
@@ -268,6 +264,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRequestURI() {
+        // Delegate call
         return (request != null) ? request.getRequestURI() : null;
     }
 
@@ -276,6 +273,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public StringBuffer getRequestURL() {
+        // Delegate call
         return (request != null) ? request.getRequestURL() : null;
     }
 
@@ -284,6 +282,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getServletPath() {
+        // Delegate call
         return (request != null) ? request.getServletPath() : null;
     }
 
@@ -292,6 +291,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public HttpSession getSession(boolean create) {
+        // Delegate call
         return (request != null) ? request.getSession(create) : null;
     }
 
@@ -300,6 +300,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public HttpSession getSession() {
+        // Delegate call
         return (request != null) ? request.getSession() : null;
     }
 
@@ -308,6 +309,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String changeSessionId() {
+        // Delegate call
         return (request != null) ? request.changeSessionId() : null;
     }
 
@@ -316,6 +318,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isRequestedSessionIdValid() {
+        // Delegate call
         return (request != null) && request.isRequestedSessionIdValid();
     }
 
@@ -324,6 +327,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isRequestedSessionIdFromCookie() {
+        // Delegate call
         return (request != null) && request.isRequestedSessionIdFromCookie();
     }
 
@@ -332,6 +336,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isRequestedSessionIdFromURL() {
+        // Delegate call
         return (request != null) && request.isRequestedSessionIdFromURL();
     }
 
@@ -340,6 +345,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isRequestedSessionIdFromUrl() {
+        // Delegate call
         return (request != null) && request.isRequestedSessionIdFromUrl();
     }
 
@@ -348,6 +354,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean authenticate(final HttpServletResponse response) throws IOException, ServletException {
+        // Delegate call
         return (request != null) && request.authenticate(response);
     }
 
@@ -356,6 +363,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void login(final String username, final String password) throws ServletException {
+        // Delegate call
         if (request != null) {
             request.login(username, password);
         }
@@ -366,6 +374,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void logout() throws ServletException {
+        // Delegate call
         if (request != null) {
             request.logout();
         }
@@ -376,6 +385,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Collection<Part> getParts() throws IOException, ServletException {
+        // Delegate call
         return (request != null) ? request.getParts() : null;
     }
 
@@ -384,6 +394,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Part getPart(final String name) throws IOException, ServletException {
+        // Delegate call
         return (request != null) ? request.getPart(name) : null;
     }
 
@@ -392,6 +403,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void upgrade(final ProtocolHandler handler) throws IOException {
+        // Delegate call
         if (request != null) {
             request.upgrade(handler);
         }
@@ -402,6 +414,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Object getAttribute(final String name) {
+        // Delegate call
         return (request != null) ? request.getAttribute(name) : attributes.get(name);
     }
 
@@ -410,6 +423,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<String> getAttributeNames() {
+        // Delegate call
         return (request != null) ? request.getAttributeNames() : Collections.enumeration(attributes.keySet());
     }
 
@@ -418,6 +432,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getCharacterEncoding() {
+        // Delegate call
         return (request != null) ? request.getCharacterEncoding() : null;
     }
 
@@ -426,6 +441,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void setCharacterEncoding(final String env) throws UnsupportedEncodingException {
+        // Delegate call
         if (request != null) {
             request.setCharacterEncoding(env);
         }
@@ -436,6 +452,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public int getContentLength() {
+        // Delegate call
         return (request != null) ? request.getContentLength() : 0;
     }
 
@@ -444,6 +461,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public long getContentLengthLong() {
+        // Delegate call
         return (request != null) ? request.getContentLengthLong() : 0;
     }
 
@@ -452,6 +470,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getContentType() {
+        // Delegate call
         return (request != null) ? request.getContentType() : null;
     }
 
@@ -460,6 +479,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public ServletInputStream getInputStream() throws IOException {
+        // Delegate call
         return (request != null) ? request.getInputStream() : null;
     }
 
@@ -468,6 +488,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getParameter(final String name) {
+        // Delegate call
         return (request != null) ? request.getParameter(name) : null;
     }
 
@@ -476,6 +497,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<String> getParameterNames() {
+        // Delegate call
         return (request != null) ? request.getParameterNames() : null;
     }
 
@@ -484,6 +506,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String[] getParameterValues(final String name) {
+        // Delegate call
         return (request != null) ? request.getParameterValues(name) : null;
     }
 
@@ -492,6 +515,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Map<String, String[]> getParameterMap() {
+        // Delegate call
         return (request != null) ? request.getParameterMap() : null;
     }
 
@@ -500,6 +524,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getProtocol() {
+        // Delegate call
         return (request != null) ? request.getProtocol() : null;
     }
 
@@ -508,6 +533,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getScheme() {
+        // Delegate call
         return (request != null) ? request.getScheme() : null;
     }
 
@@ -516,6 +542,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getServerName() {
+        // Delegate call
         return (request != null) ? request.getServerName() : null;
     }
 
@@ -524,6 +551,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public int getServerPort() {
+        // Delegate call
         return (request != null) ? request.getServerPort() : 0;
     }
 
@@ -532,6 +560,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public BufferedReader getReader() throws IOException {
+        // Delegate call
         return (request != null) ? request.getReader() : null;
     }
 
@@ -540,6 +569,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRemoteAddr() {
+        // Delegate call
         return (request != null) ? request.getRemoteAddr() : null;
     }
 
@@ -548,6 +578,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRemoteHost() {
+        // Delegate call
         return (request != null) ? request.getRemoteHost() : null;
     }
 
@@ -556,6 +587,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void setAttribute(final String name, final Object o) {
+        // Delegate call
         if (request != null) {
             request.setAttribute(name, o);
         } else {
@@ -568,6 +600,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public void removeAttribute(final String name) {
+        // Delegate call
         if (request != null) {
             request.removeAttribute(name);
         } else {
@@ -580,6 +613,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Locale getLocale() {
+        // Delegate call
         return (request != null) ? request.getLocale() : null;
     }
 
@@ -588,6 +622,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public Enumeration<Locale> getLocales() {
+        // Delegate call
         return (request != null) ? request.getLocales() : null;
     }
 
@@ -596,6 +631,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isSecure() {
+        // Delegate call
         return (request != null) && request.isSecure();
     }
 
@@ -604,6 +640,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public RequestDispatcher getRequestDispatcher(final String path) {
+        // Delegate call
         return (request != null) ? request.getRequestDispatcher(path) : null;
     }
 
@@ -612,6 +649,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getRealPath(final String path) {
+        // Delegate call
         return (request != null) ? request.getRealPath(path) : null;
     }
 
@@ -620,6 +658,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public int getRemotePort() {
+        // Delegate call
         return (request != null) ? request.getRemotePort() : 0;
     }
 
@@ -628,6 +667,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getLocalName() {
+        // Delegate call
         return (request != null) ? request.getLocalName() : null;
     }
 
@@ -636,6 +676,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public String getLocalAddr() {
+        // Delegate call
         return (request != null) ? request.getLocalAddr() : null;
     }
 
@@ -644,6 +685,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public int getLocalPort() {
+        // Delegate call
         return (request != null) ? request.getLocalPort() : 0;
     }
 
@@ -652,6 +694,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public ServletContext getServletContext() {
+        // Delegate call
         return (request != null) ? request.getServletContext() : null;
     }
 
@@ -660,6 +703,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public AsyncContext startAsync() {
+        // Delegate call
         return (request != null) ? request.startAsync() : null;
     }
 
@@ -668,6 +712,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public AsyncContext startAsync(final ServletRequest servletRequest, final ServletResponse servletResponse) {
+        // Delegate call
         return (request != null) ? request.startAsync(servletRequest, servletResponse) : null;
     }
 
@@ -676,6 +721,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isAsyncStarted() {
+        // Delegate call
         return (request != null) && request.isAsyncStarted();
     }
 
@@ -684,6 +730,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public boolean isAsyncSupported() {
+        // Delegate call
         return  (request != null) && request.isAsyncSupported();
     }
 
@@ -692,6 +739,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public AsyncContext getAsyncContext() {
+        // Delegate call
         return (request != null) ? request.getAsyncContext() : null;
     }
 
@@ -700,6 +748,7 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      */
     @Override
     public DispatcherType getDispatcherType() {
+        // Delegate call
         return (request != null) ? request.getDispatcherType() : null;
     }
 }

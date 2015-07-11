@@ -93,6 +93,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void addCookie(final Cookie cookie) {
+        // Delegate call
         if (response != null) {
             response.addCookie(cookie);
         }
@@ -103,6 +104,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public boolean containsHeader(final String name) {
+        // Delegate call
         return response != null && response.containsHeader(name);
     }
 
@@ -111,6 +113,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String encodeURL(final String url) {
+        // Delegate call
         return (response != null) ? response.encodeURL(url) : url;
     }
 
@@ -119,6 +122,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String encodeRedirectURL(final String url) {
+        // Delegate call
         return (response != null) ? response.encodeRedirectURL(url) : url;
     }
 
@@ -127,6 +131,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String encodeUrl(final String url) {
+        // Delegate call
         return (response != null) ? response.encodeUrl(url) : url;
     }
 
@@ -135,6 +140,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String encodeRedirectUrl(final String url) {
+        // Delegate call
         return (response != null) ? response.encodeRedirectUrl(url) : url;
     }
 
@@ -143,6 +149,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void sendError(final int sc, final String msg) throws IOException {
+        // Delegate call
         if (response != null) {
             response.sendError(sc, msg);
         }
@@ -153,6 +160,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void sendError(final int sc) throws IOException {
+        // Delegate call
         if (response != null) {
             response.sendError(sc);
         }
@@ -163,6 +171,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void sendRedirect(final String location) throws IOException {
+        // Delegate call
         if (response != null) {
             response.sendRedirect(location);
         }
@@ -173,6 +182,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setDateHeader(final String name, final long date) {
+        // Delegate call
         if (response != null) {
             response.setDateHeader(name, date);
         }
@@ -183,6 +193,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void addDateHeader(final String name, final long date) {
+        // Delegate call
         if (response != null) {
             response.addDateHeader(name, date);
         }
@@ -193,6 +204,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setHeader(final String name, final String value) {
+        // Delegate call
         if (response != null) {
             response.setHeader(name, value);
         }
@@ -203,6 +215,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void addHeader(final String name, String value) {
+        // Delegate call
         if (response != null) {
             response.addHeader(name, value);
         }
@@ -213,6 +226,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setIntHeader(final String name, final int value) {
+        // Delegate call
         if (response != null) {
             response.setIntHeader(name, value);
         }
@@ -223,6 +237,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void addIntHeader(final String name, final int value) {
+        // Delegate call
         if (response != null) {
             response.addIntHeader(name, value);
         }
@@ -233,6 +248,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setStatus(final int sc) {
+        // Delegate call
         if (response != null) {
             response.setStatus(sc);
         } else {
@@ -245,6 +261,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setStatus(final int sc, final String sm) {
+        // Delegate call
         if (response != null) {
             response.setStatus(sc, sm);
         } else {
@@ -257,6 +274,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public int getStatus() {
+        // Delegate call
         return (response != null) ? response.getStatus() : status;
     }
 
@@ -265,6 +283,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String getHeader(final String name) {
+        // Delegate call
         return (response != null) ? response.getHeader(name) : name;
     }
 
@@ -273,6 +292,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public Collection<String> getHeaders(final String name) {
+        // Delegate call
         return (response != null) ? response.getHeaders(name) : null;
     }
 
@@ -281,6 +301,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public Collection<String> getHeaderNames() {
+        // Delegate call
         return (response != null) ? response.getHeaderNames() : null;
     }
 
@@ -289,6 +310,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String getCharacterEncoding() {
+        // Delegate call
         return (response != null) ? response.getCharacterEncoding() : null;
     }
 
@@ -297,6 +319,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public String getContentType() {
+        // Delegate call
         return (response != null) ? response.getContentType() : null;
     }
 
@@ -305,6 +328,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
+        // Delegate call
         return (response != null) ? response.getOutputStream() : null;
     }
 
@@ -313,6 +337,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public PrintWriter getWriter() throws IOException {
+        // Delegate call
         return (response != null) ? response.getWriter() : null;
     }
 
@@ -321,6 +346,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setCharacterEncoding(final String charset) {
+        // Delegate call
         if (response != null) {
             response.setCharacterEncoding(charset);
         }
@@ -331,6 +357,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setContentLength(final int len) {
+        // Delegate call
         if (response != null) {
             response.setContentLength(len);
         }
@@ -341,6 +368,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setContentLengthLong(final long len) {
+        // Delegate call
         if (response != null) {
             response.setContentLengthLong(len);
         }
@@ -351,6 +379,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setContentType(final String type) {
+        // Delegate call
         if (response != null) {
             response.setContentType(type);
         }
@@ -361,6 +390,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setBufferSize(final int size) {
+        // Delegate call
         if (response != null) {
             response.setBufferSize(size);
         }
@@ -371,6 +401,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public int getBufferSize() {
+        // Delegate call
         return (response != null) ? response.getBufferSize() : 0;
     }
 
@@ -379,6 +410,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void flushBuffer() throws IOException {
+        // Delegate call
         if (response != null) {
             response.flushBuffer();
         }
@@ -389,6 +421,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void resetBuffer() {
+        // Delegate call
         if (response != null) {
             response.resetBuffer();
         }
@@ -399,6 +432,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public boolean isCommitted() {
+        // Delegate call
         return response != null && response.isCommitted();
     }
 
@@ -407,6 +441,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void reset() {
+        // Delegate call
         if (response != null) {
             response.reset();
         }
@@ -417,6 +452,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public void setLocale(final Locale loc) {
+        // Delegate call
         if (response != null) {
             response.setLocale(loc);
         }
@@ -427,6 +463,7 @@ public class HttpServletResponseAdapter implements HttpServletResponse {
      */
     @Override
     public Locale getLocale() {
+        // Delegate call
         return (response != null) ? response.getLocale() : null;
     }
 }

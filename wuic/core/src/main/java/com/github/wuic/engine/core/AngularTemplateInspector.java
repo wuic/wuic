@@ -134,13 +134,16 @@ public class AngularTemplateInspector extends LineInspector {
         final int pathGroupIndex = group.indexOf(pathGroup);
         replacement.append(group.substring(0, pathGroupIndex)).append('"');
 
+        // URL is resolved successfully
         if (!nuts.isEmpty()) {
             res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
 
+            // Set low download priority for templates
             for (final ConvertibleNut nut : res) {
                 nut.setIsSubResource(false);
             }
         } else {
+            // Can't resolve the URL but at least we can append a version number to it
             fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
             res = null;
         }
