@@ -215,40 +215,8 @@ public class CompositeNut extends PipedConvertibleNut {
                 final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts = new LinkedHashMap<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut>();
                 populateTransformers(aggregatedStream, nuts);
 
-                final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
-
-                // First we transform each nut with transformers producing content which could be aggregated
-                for (final Map.Entry<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> entry : nuts.entrySet()) {
-                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                    if (!entry.getKey().isEmpty()) {
-
-                        // We pass this composition in order to receive any referenced nut or whatever state change
-                        final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
-
-                            /**
-                             * {@inheritDoc}
-                             */
-                            @Override
-                            public String getName() {
-                                return entry.getValue().getName();
-                            }
-                        }, entry.getValue().openStream());
-
-                        for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getKey()) {
-                            pipe.register(transformer);
-                        }
-
-                        Pipe.executeAndWriteTo(pipe, entry.getValue().getReadyCallbacks(), bos);
-                        is.add(new ByteArrayInputStream(bos.toByteArray()));
-                    } else {
-                        is.add(entry.getValue().openStream());
-                    }
-
-                    if (streamSeparator != null) {
-                        is.add(new ByteArrayInputStream(streamSeparator));
-                    }
-                }
+                // First: transform each nut
+                final List<InputStream> is = transformBeforeAggregate(nuts);
 
                 // Aggregate the results
                 finalPipe = new Pipe<ConvertibleNut>(this, new SequenceInputStream(Collections.enumeration(is)));
@@ -265,6 +233,54 @@ public class CompositeNut extends PipedConvertibleNut {
         } finally {
             setTransformed(true);
         }
+    }
+
+    /**
+     * <p>
+     * Transforms each nut with transformers producing content which could be aggregated
+     * </p>
+     *
+     * @param nuts the nuts to transform with their transformers
+     * @return the input stream where transformed content is accessible
+     * @throws IOException if transformation fails
+     */
+    private List<InputStream> transformBeforeAggregate(final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts)
+            throws IOException {
+        final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
+
+        for (final Map.Entry<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> entry : nuts.entrySet()) {
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            if (!entry.getKey().isEmpty()) {
+
+                // We pass this composition in order to receive any referenced nut or whatever state change
+                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
+
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public String getName() {
+                        return entry.getValue().getName();
+                    }
+                }, entry.getValue().openStream());
+
+                for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getKey()) {
+                    pipe.register(transformer);
+                }
+
+                Pipe.executeAndWriteTo(pipe, entry.getValue().getReadyCallbacks(), bos);
+                is.add(new ByteArrayInputStream(bos.toByteArray()));
+            } else {
+                is.add(entry.getValue().openStream());
+            }
+
+            if (streamSeparator != null) {
+                is.add(new ByteArrayInputStream(streamSeparator));
+            }
+        }
+
+        return is;
     }
 
     /**
