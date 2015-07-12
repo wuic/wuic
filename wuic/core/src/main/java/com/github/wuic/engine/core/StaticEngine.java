@@ -108,68 +108,84 @@ public class StaticEngine extends NodeEngine {
     }
 
     /**
+     * <p>
+     * Gets the the result information associated to the given workflow processed at build time.
+     * </p>
+     *
+     * @param workflowId the workflow ID
+     * @return the data file
+     * @throws WuicException if the workflow has not been found or could not be processed
+     */
+    public static List<ConvertibleNut> getNuts(final String workflowId) throws WuicException {
+        final String fileName = String.format(STATIC_WORKFLOW_FILE, workflowId);
+        final InputStream is = StaticEngine.class.getResourceAsStream(fileName);
+        InputStreamReader isr = null;
+
+        // Not well packaged
+        if (is == null) {
+            WuicException.throwStaticWorkflowNotFoundException(workflowId);
+        }
+
+        try {
+            isr = new InputStreamReader(is);
+            final String paths = IOUtils.readString(isr);
+            final Matcher matcher = PATTERN_KEY_VALUE.matcher(paths);
+            final Map<Integer, ConvertibleNut> nutPerDepth = new LinkedHashMap<Integer, ConvertibleNut>();
+            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+
+            // Read each file associated to its type
+            while (matcher.find()) {
+                final NutType nutType = NutType.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
+                final String pathLine = matcher.group(1);
+                int depth = 0;
+
+                while (pathLine.charAt(depth) == '\t') {
+                    depth++;
+                }
+
+                final String path = pathLine.substring(depth);
+                final ConvertibleNut nut;
+
+                if (!path.contains("http://")) {
+                    final int versionDelimiterIndex = path.indexOf('/');
+                    final String name = path.substring(versionDelimiterIndex + 1);
+                    final Long version = Long.parseLong(path.substring(0, versionDelimiterIndex));
+                    nut = new NotReachableNut(name, nutType, workflowId, version);
+                } else {
+                    nut = new NotReachableNut(path, nutType, workflowId, 0L);
+                }
+
+                if (depth == 0) {
+                    retval.add(nut);
+                } else {
+                    nutPerDepth.get(depth - 1).addReferencedNut(nut);
+                }
+
+                nutPerDepth.put(depth, nut);
+            }
+
+            return retval;
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+            return null;
+        } finally {
+            IOUtils.close(is, isr);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        final String fileName = String.format(STATIC_WORKFLOW_FILE, request.getWorkflowId());
-        List<ConvertibleNut> retval = retrievedWorkflow.get(fileName);
+        List<ConvertibleNut> retval = retrievedWorkflow.get(request.getWorkflowId());
 
         // Workflow already retrieved
         if (retval != null) {
             return retval;
         } else {
-            final InputStream is = getClass().getResourceAsStream(fileName);
-            InputStreamReader isr = null;
-
-            // Not well packaged
-            if (is == null) {
-                WuicException.throwStaticWorkflowNotFoundException(request.getWorkflowId());
-            }
-
-            try {
-                isr = new InputStreamReader(is);
-                final String paths = IOUtils.readString(isr);
-                final Matcher matcher = PATTERN_KEY_VALUE.matcher(paths);
-                final Map<Integer, ConvertibleNut> nutPerDepth = new LinkedHashMap<Integer, ConvertibleNut>();
-                retval = new ArrayList<ConvertibleNut>();
-
-                // Read each file associated to its type
-                while (matcher.find()) {
-                    final NutType nutType = NutType.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
-                    final String pathLine = matcher.group(1);
-                    int depth = 0;
-
-                    while (pathLine.charAt(depth) == '\t') {
-                        depth++;
-                    }
-
-                    final String path = pathLine.substring(depth);
-                    final ConvertibleNut nut;
-
-                    if (!path.contains("http://")) {
-                        final int versionDelimiterIndex = path.indexOf('/');
-                        final String name = path.substring(versionDelimiterIndex + 1);
-                        final Long version = Long.parseLong(path.substring(0, versionDelimiterIndex));
-                        nut = new NotReachableNut(name, nutType, request.getHeap().getId(), version);
-                    } else {
-                        nut = new NotReachableNut(path, nutType, request.getHeap().getId(), 0L);
-                    }
-
-                    if (depth == 0) {
-                        retval.add(nut);
-                        nutPerDepth.put(0, nut);
-                    } else {
-                        nutPerDepth.get(depth - 1).addReferencedNut(nut);
-                    }
-                }
-
-                retrievedWorkflow.put(fileName, retval);
-            } catch (IOException ioe) {
-                WuicException.throwWuicException(ioe);
-            } finally {
-                IOUtils.close(is, isr);
-            }
+            retval = getNuts(request.getWorkflowId());
+            retrievedWorkflow.put(request.getWorkflowId(), retval);
         }
 
         return retval;

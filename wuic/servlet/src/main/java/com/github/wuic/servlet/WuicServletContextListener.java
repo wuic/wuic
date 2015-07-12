@@ -42,16 +42,21 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.WuicTask;
+import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.servlet.WebappNutDaoBuilderInspector;
 import com.github.wuic.servlet.jetty.PathMap;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.Consumer;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.Registration;
 import javax.servlet.ServletContext;
@@ -64,7 +69,9 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -116,19 +123,65 @@ public class WuicServletContextListener implements ServletContextListener {
      *
      * @param buildInfoUrl the detected file information location
      * @param builder the builder to configure
+     * @param servletContext the servlet context
      */
-    private void installBuildInfo(final URL buildInfoUrl, final WuicFacadeBuilder builder) {
+    private void installBuildInfo(final URL buildInfoUrl, final WuicFacadeBuilder builder, final ServletContext servletContext) {
         final Properties properties = new Properties();
         InputStream is = null;
 
         try {
+            // Load properties
             is = buildInfoUrl.openStream();
             properties.load(is);
-            builder.contextPath(properties.getProperty(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM));
+
+            // Configure context path defined at build time
+            builder.contextPath(properties.getProperty(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM));
+
+            // Install a filter for each URLs corresponding to a nut owned by a workflow
+            final String[] workflowList = properties.getProperty("workflowList").split("0");
+            final FilterRegistration filterRegistration = servletContext.addFilter("staticWorkflowFilter", ResponseOptimizerFilter.class);
+
+            // Already registered elsewhere
+            if (filterRegistration == null) {
+                return;
+            }
+
+            // Register the mapping for each URL
+            for (final String workflow : workflowList) {
+                final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(workflow);
+                final List<ConvertibleNut> result = StaticEngine.getNuts(workflow);
+
+                // Recursive call on referenced nuts
+                addFilterMapping(result, filterRegistration, urlProvider);
+            }
         } catch (IOException ioe) {
             WuicException.throwBadStateException(new IllegalStateException(ioe));
+        } catch (WuicException we) {
+            WuicException.throwBadStateException(new IllegalStateException(we));
         } finally {
             IOUtils.close(is);
+        }
+    }
+
+    /**
+     * <p>
+     * Adds a mapping in the given filter for each nut
+     * </p>
+     *
+     * @param nuts the nuts
+     * @param registration the registration
+     * @param provider the provider computing nut URL
+     */
+    public void addFilterMapping(final List<ConvertibleNut> nuts, final FilterRegistration registration, final UrlProvider provider) {
+
+        // Not referenced nuts
+        if (nuts != null) {
+            for (final ConvertibleNut nut : nuts) {
+                registration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, '/' + provider.getUrl(nut));
+
+                // Call recursively on referenced nuts
+                addFilterMapping(nut.getReferencedNuts(), registration, provider);
+            }
         }
     }
 
@@ -208,7 +261,7 @@ public class WuicServletContextListener implements ServletContextListener {
                  */
                 @Override
                 public void apply(final URL consumed) {
-                    installBuildInfo(consumed, builder);
+                    installBuildInfo(consumed, builder, sc);
                 }
             });
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());

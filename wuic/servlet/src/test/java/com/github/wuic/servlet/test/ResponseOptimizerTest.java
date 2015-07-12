@@ -36,86 +36,47 @@
  */
 
 
-package com.github.wuic.nut;
+package com.github.wuic.servlet.test;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.util.FutureLong;
-import com.github.wuic.util.Pipe;
+import com.github.wuic.servlet.ResponseOptimizerFilter;
+import com.github.wuic.test.Server;
+import com.github.wuic.test.WuicRunnerConfiguration;
+import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>
- * This class represents a nut that is not reachable. Usually instantiated by the
- * {@link com.github.wuic.engine.core.StaticEngine}.
+ * Tests the {@link ResponseOptimizerFilter}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.1
+ * @version 1.0
+ * @since 0.5.2
  */
-public class NotReachableNut extends AbstractConvertibleNut {
+@RunWith(JUnit4.class)
+@WuicRunnerConfiguration(installFilter = ResponseOptimizerFilter.class, webApplicationPath = "/servletTest")
+public class ResponseOptimizerTest {
 
     /**
-     * The nut's workflow.
+     * The server running during tests.
      */
-    private String workflow;
+    @ClassRule
+    public static com.github.wuic.test.Server server = new Server();
 
     /**
      * <p>
-     * Creates a new instance.
+     * Executes a basic HTTP request and checks the header.
      * </p>
      *
-     * @param name the nut name
-     * @param nutType the nut type
-     * @param workflowId the nut's workflow
-     * @param version the version number
+     * @throws java.io.IOException if any I/O error occurs
      */
-    public NotReachableNut(final String name, final NutType nutType, final String workflowId, final Long version) {
-        super(name, nutType, new FutureLong(version), Boolean.FALSE);
-        workflow = workflowId;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputStream openStream() throws IOException {
-        WuicException.throwNutNotFoundException(getInitialName(), workflow);
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
-        WuicException.throwNutNotFoundException(getInitialName(), workflow);
-    }
-
-    /**
-     *{@inheritDoc}
-     */
-    @Override
-    public boolean isTransformed() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDynamic() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getParentFile() {
-        return null;
+    @Test
+    public void expiresTest() throws IOException {
+        Assert.assertNotNull(server.get("/index.html").getFirstHeader("Expires"));
     }
 }

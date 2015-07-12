@@ -185,10 +185,21 @@ public enum HttpUtil {
 
         // We set a far expiration date because we assume that polling will change the timestamp in path
         if (expireHeader) {
-            response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
+            setExpireHeader(response);
         }
 
         nut.transform(new WriteResponseOnReady(response, nut));
+    }
+
+    /**
+     * <p>
+     * Sets a far expiry header.
+     * </p>
+     *
+     * @param response the response
+     */
+    public void setExpireHeader(final HttpServletResponse response) {
+        response.setHeader("Expires", "Sat, 06 Jun 2086 09:35:00 GMT");
     }
 
     /**

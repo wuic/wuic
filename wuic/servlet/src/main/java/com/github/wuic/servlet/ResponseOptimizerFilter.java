@@ -36,86 +36,57 @@
  */
 
 
-package com.github.wuic.nut;
+package com.github.wuic.servlet;
 
-import com.github.wuic.NutType;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.util.FutureLong;
-import com.github.wuic.util.Pipe;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>
- * This class represents a nut that is not reachable. Usually instantiated by the
- * {@link com.github.wuic.engine.core.StaticEngine}.
+ * The filter sets far "Expiry" header since the URL should be versioned by WUIC.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.1
+ * @version 1.0
+ * @since 0.5.2
  */
-public class NotReachableNut extends AbstractConvertibleNut {
+public class ResponseOptimizerFilter implements Filter {
 
     /**
-     * The nut's workflow.
+     * {@inheritDoc}
      */
-    private String workflow;
-
-    /**
-     * <p>
-     * Creates a new instance.
-     * </p>
-     *
-     * @param name the nut name
-     * @param nutType the nut type
-     * @param workflowId the nut's workflow
-     * @param version the version number
-     */
-    public NotReachableNut(final String name, final NutType nutType, final String workflowId, final Long version) {
-        super(name, nutType, new FutureLong(version), Boolean.FALSE);
-        workflow = workflowId;
+    @Override
+    public void init(final FilterConfig filterConfig) throws ServletException {
+        // Nothing to do
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        WuicException.throwNutNotFoundException(getInitialName(), workflow);
-        return null;
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+        final HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(response);
+
+        // Set header
+        HttpUtil.INSTANCE.setExpireHeader(httpServletResponse);
+
+        // Delegate call to the chain
+        chain.doFilter(request, response);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
-        WuicException.throwNutNotFoundException(getInitialName(), workflow);
-    }
-
-    /**
-     *{@inheritDoc}
-     */
-    @Override
-    public boolean isTransformed() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDynamic() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getParentFile() {
-        return null;
+    public void destroy() {
+        // Nothing to do
     }
 }

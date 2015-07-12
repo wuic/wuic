@@ -293,20 +293,24 @@ public class WuicTask {
         }
 
         PrintWriter buildInfo = null;
+        final File buildInfoFile = new File(relocateTransformedXmlTo, BUILD_INFO_FILE);
 
         try {
+            // Going to embed the result in order to server it from the webapp, add information for runtime initialization
             if (relocateTransformedXmlTo != null) {
-                final File buildInfoFile = new File(relocateTransformedXmlTo, BUILD_INFO_FILE);
-
                 if (!buildInfoFile.getParentFile().mkdirs()) {
                     log.error("Unable to create '{}' directory", buildInfoFile.getParent());
                 }
 
                 buildInfo = new PrintWriter(buildInfoFile);
-                buildInfo.write((ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM + '=' + contextPath).toCharArray());
+                buildInfo.write(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM + '=' + contextPath);
+                buildInfo.write("\nworkflowList=");
             }
 
             // Now write each workflow result to disk with its description file
+            int cpt = 0;
+            int len = facade.workflowIds().size();
+
             for (final String wId : facade.workflowIds()) {
                 PrintWriter pw = null;
 
@@ -320,6 +324,11 @@ public class WuicTask {
 
                         retval.add(file.getName());
                         pw = new PrintWriter(file);
+                        buildInfo.write(wId);
+
+                        if (cpt++ < len - 1) {
+                            buildInfo.write('0');
+                        }
                     }
 
                     final List<ConvertibleNut> nuts = facade.runWorkflow(wId, ProcessContext.DEFAULT);
@@ -338,6 +347,7 @@ public class WuicTask {
         // No need to continue if we don't want to generate wuic.xml file too
         if (relocateTransformedXmlTo != null) {
             retval.add(relocateTransformedXml(xmlFile));
+            retval.add(buildInfoFile.getName());
         }
 
         return retval;
