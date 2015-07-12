@@ -94,11 +94,33 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      * <p>
      * Builds a new instance.
      * </p>
+     */
+    public HttpServletRequestAdapter() {
+        // For test purpose only
+        this(null, null);
+    }
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
      *
      * @param pathInfo the path info
      */
     public HttpServletRequestAdapter(final String pathInfo) {
         this(null, pathInfo);
+    }
+
+    /**
+     * <p>
+     * Builds a new instance with a wrapped request.
+     * </p>
+     *
+     * @param httpServletRequest the request
+     */
+    public HttpServletRequestAdapter(final HttpServletRequest httpServletRequest) {
+        // For test purpose only
+        this(httpServletRequest, null);
     }
 
     /**
