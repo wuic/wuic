@@ -44,6 +44,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
@@ -51,6 +52,7 @@ import java.io.IOException;
 /**
  * <p>
  * The filter sets far "Expiry" header since the URL should be versioned by WUIC.
+ * If the client supports GZIP, this optimizer also GZIP the response.
  * </p>
  *
  * @author Guillaume DROUET
@@ -78,8 +80,15 @@ public class ResponseOptimizerFilter implements Filter {
         // Set header
         HttpUtil.INSTANCE.setExpireHeader(httpServletResponse);
 
-        // Delegate call to the chain
-        chain.doFilter(request, response);
+        // Delegate call to the chain with a wrapper that GZIP the stream
+        if (HttpUtil.INSTANCE.canGzip(HttpServletRequest.class.cast(request))) {
+            final GzipHttpServletResponseWrapper gzip = new GzipHttpServletResponseWrapper(httpServletResponse);
+            chain.doFilter(request, gzip);
+            gzip.close();
+        } else {
+            // Delegate call to the chain
+            chain.doFilter(request, response);
+        }
     }
 
     /**

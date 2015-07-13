@@ -193,6 +193,19 @@ public enum HttpUtil {
 
     /**
      * <p>
+     * Sets the headers indicating that the response content in gzipped.
+     * </p>
+     *
+     * @param httpServletResponse the response
+     */
+    public void setGzipHeader(final HttpServletResponse httpServletResponse) {
+        // Set headers assuming the content will compressed with GZIP
+        httpServletResponse.setHeader("Content-Encoding", "gzip");
+        httpServletResponse.setHeader("Vary", "Accept-Encoding");
+    }
+
+    /**
+     * <p>
      * Sets a far expiry header.
      * </p>
      *
@@ -243,8 +256,7 @@ public enum HttpUtil {
         public void ready(final Pipe.Execution e) {
             try {
                 if (nut.isCompressed()) {
-                    response.setHeader("Content-Encoding", "gzip");
-                    response.setHeader("Vary", "Accept-Encoding");
+                    setGzipHeader(response);
                 }
 
                 response.setContentLength(e.getContentLength());

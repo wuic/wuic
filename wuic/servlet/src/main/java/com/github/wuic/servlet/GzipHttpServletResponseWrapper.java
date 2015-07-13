@@ -78,21 +78,21 @@ package com.github.wuic.servlet;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.CharArrayWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * <p>
- * Wraps an {@link HttpServletResponse} to capture the written stream.
+ * This class can wrap a {@link ServletOutputStream} and GZIP the stream on the fly.
  * </p>
  *
  * @author Guillaume DROUET
  * @version 1.0
- * @since 0.4.4
+ * @since 0.5.2
  */
-public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
+public class GzipHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
 
     /**
      * <p>
@@ -101,24 +101,38 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      *
      * @author Guillaume DROUET
      * @version 1.0
-     * @since 0.4.4
+     * @since 0.5.2
      */
-    private final class ByteArrayServletStream extends ServletOutputStream {
+    private final class GzipServletStream extends ServletOutputStream {
 
         /**
-         * The byte array.
+         * The servlet output stream.
          */
-        private ByteArrayOutputStream baos;
+        private final ServletOutputStream sos;
+
+        /**
+         * The GZIP output stream
+         */
+        private final GZIPOutputStream gos;
 
         /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param baos the wrapped byte array
+         * @param sos the wrapper stream
+         * @throws IOException if an I/O error occurs
          */
-        private ByteArrayServletStream(final ByteArrayOutputStream baos) {
-            this.baos = baos;
+        private GzipServletStream(final ServletOutputStream sos) throws IOException{
+            this.sos = sos;
+            this.gos = new GZIPOutputStream(sos);
+        }
+
+        /**
+         * Makes sures that all gzipped bytes are actually committed to the response.
+         */
+        public void close() throws IOException {
+            gos.close();
         }
 
         /**
@@ -126,7 +140,8 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
          */
         @Override
         public void write(final int param) throws IOException {
-            baos.write(param);
+            // This is where we GZIP what is written
+            gos.write(param);
         }
 
         /**
@@ -134,7 +149,8 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
          */
         @Override
         public boolean canWrite() {
-            return false;
+            // delegate to wrapper output stream
+            return sos.canWrite();
         }
 
         /**
@@ -142,18 +158,15 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
          */
         @Override
         public void setWriteListener(final WriteListener writeListener) {
+            // delegate to wrapper output stream
+            sos.setWriteListener(writeListener);
         }
     }
 
     /**
-     * Wrapped byte array.
+     * Wrapped stream.
      */
-    private ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-    /**
-     * Wrapped char array.
-     */
-    private final CharArrayWriter charArrayWriter = new CharArrayWriter();
+    private GzipServletStream gss;
 
     /**
      * Print writer built on top of char array.
@@ -161,27 +174,31 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
     private PrintWriter pw;
 
     /**
-     * Servlet output stream built on top of byte array.
-     */
-    private ServletOutputStream sos;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     */
-    public ByteArrayHttpServletResponseWrapper() {
-    }
-
-    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param httpServletResponse a response to wrap
+     * @param httpServletResponse the response to wrap
      */
-    public ByteArrayHttpServletResponseWrapper(final HttpServletResponse httpServletResponse) {
+    public GzipHttpServletResponseWrapper(final HttpServletResponse httpServletResponse) {
         super(httpServletResponse);
+        HttpUtil.INSTANCE.setGzipHeader(httpServletResponse);
+    }
+
+    /**
+     * <p>
+     * Closes the response and flush the stream.
+     * </p>
+     *
+     * @throws IOException if an I/O error occurs
+     */
+    public void close() throws IOException {
+        // Delegate call
+        if (gss != null) {
+            gss.close();
+        } else if (pw != null) {
+            pw.close();
+        }
     }
 
     /**
@@ -189,15 +206,16 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      */
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
+        // Makes sure both methods are not called since this is not allowed
         if (pw != null) {
             throw new IllegalStateException("getWriter() already called!");
         }
 
-        if (sos == null) {
-            sos = new ByteArrayServletStream(baos);
+        if (gss == null) {
+            gss = new GzipServletStream(super.getOutputStream());
         }
 
-        return sos;
+        return gss;
     }
 
     /**
@@ -205,31 +223,17 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      */
     @Override
     public PrintWriter getWriter() throws IOException {
-        if (sos != null) {
+        // Makes sure both methods are not called since this is not allowed
+        if (gss != null) {
             throw new IllegalStateException("getOutputStream() already called!");
         }
 
         if (pw == null) {
-            pw = new PrintWriter(charArrayWriter);
+            // Force UTF-8 encoding
+            pw = new PrintWriter(new OutputStreamWriter(new GzipServletStream(super.getOutputStream()), "UTF-8"));
+            super.setCharacterEncoding("UTF-8");
         }
 
         return pw;
-    }
-
-    /**
-     * <p>
-     * Gets the byte array.
-     * </p>
-     *
-     * @return the byte array
-     */
-    public byte[] toByteArray() {
-        if (pw != null) {
-            return charArrayWriter.toString().getBytes();
-        } else if (sos != null) {
-            return baos.toByteArray();
-        } else {
-            return new byte[0];
-        }
     }
 }
