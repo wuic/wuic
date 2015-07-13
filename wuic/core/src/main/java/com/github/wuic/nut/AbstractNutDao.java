@@ -244,7 +244,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      * <p/>
      * <p>
-     * If the {@link AbstractNutDao#versionNumberStrategy#contentBasedVersionNumber} value related to
+     * If the {@link VersionNumberStrategy#contentBasedVersionNumber} value related to
      * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
      * to compute the hash value. However, it uses the last modification timestamp.
      * </p>
