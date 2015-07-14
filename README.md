@@ -23,7 +23,7 @@ The release candidate is already available:
   <dependency>
       <groupId>com.github.wuic</groupId>
       <artifactId>wuic-core</artifactId>
-      <version>0.5.2.RC5</version>
+      <version>0.5.2.RC6</version>
   </dependency>
 ```
 
