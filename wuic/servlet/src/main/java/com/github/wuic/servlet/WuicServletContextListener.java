@@ -138,7 +138,7 @@ public class WuicServletContextListener implements ServletContextListener {
             builder.contextPath(properties.getProperty(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM));
 
             // Install a filter for each URLs corresponding to a nut owned by a workflow
-            final String[] workflowList = properties.getProperty("workflowList").split("0");
+            final String[] workflowList = properties.getProperty("workflowList").split("\\t");
             final FilterRegistration filterRegistration = servletContext.addFilter("staticWorkflowFilter", ResponseOptimizerFilter.class);
 
             // Already registered elsewhere

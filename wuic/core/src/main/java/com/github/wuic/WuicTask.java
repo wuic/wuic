@@ -327,7 +327,7 @@ public class WuicTask {
                         buildInfo.write(wId);
 
                         if (cpt++ < len - 1) {
-                            buildInfo.write('0');
+                            buildInfo.write('\t');
                         }
                     }
 
