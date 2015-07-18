@@ -82,6 +82,11 @@ public enum NutType {
     WOFF(new String[] {".woff", ".WOFF"}, "application/x-font-woff", NutType.FONT, false),
 
     /**
+     * WOFF2 path support.
+     */
+    WOFF2(new String[] {".woff2", ".WOFF2"}, "application/font-woff2", NutType.FONT, false),
+
+    /**
      * SVG path support.
      */
     SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", NutType.IMAGE, true),
