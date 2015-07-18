@@ -94,11 +94,6 @@ public final class EngineRequestBuilder {
     private String workflowId;
 
     /**
-     * The key this request uses to compute the key.
-     */
-    private String workflowKey;
-
-    /**
      * The engine chains for each type.
      */
     private Map<NutType, NodeEngine> chains;
@@ -154,7 +149,6 @@ public final class EngineRequestBuilder {
     public EngineRequestBuilder(final String wId, final NutsHeap h, final Context ctx) {
         workflowId(wId);
         heap(h);
-        workflowKey("");
         prefixCreatedNut("");
         contextPath("");
         bestEffort = false;
@@ -175,7 +169,6 @@ public final class EngineRequestBuilder {
         contextPath = other.contextPath;
         heap = other.heap;
         workflowId = other.workflowId;
-        workflowKey = other.workflowKey;
         chains = other.chains;
         skip = other.skip;
         prefixCreatedNut = other.prefixCreatedNut;
@@ -226,19 +219,6 @@ public final class EngineRequestBuilder {
             nuts.add(new PipedConvertibleNut(nut));
         }
 
-        return this;
-    }
-
-    /**
-     * <p>
-     * Sets the workflow key.
-     * </p>
-     *
-     * @param wk the key
-     * @return this
-     */
-    public EngineRequestBuilder workflowKey(final String wk) {
-        workflowKey = wk;
         return this;
     }
 
@@ -537,17 +517,6 @@ public final class EngineRequestBuilder {
      */
     public ProcessContext getProcessContext() {
         return processContext;
-    }
-
-    /**
-     * <p>
-     * Gets the workflow key. Package access for {@link EngineRequest} only.
-     * </p>
-     *
-     * @return the key
-     */
-    String getWorkflowKey() {
-        return workflowKey;
     }
 
     /**
