@@ -46,6 +46,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import java.io.IOException;
 
@@ -83,7 +84,7 @@ public class ResponseOptimizerFilter implements Filter {
         // Delegate call to the chain with a wrapper that GZIP the stream
         if (HttpUtil.INSTANCE.canGzip(HttpServletRequest.class.cast(request))) {
             final GzipHttpServletResponseWrapper gzip = new GzipHttpServletResponseWrapper(httpServletResponse);
-            chain.doFilter(request, gzip);
+            chain.doFilter(request, new HttpServletResponseWrapper(gzip));
             gzip.close();
         } else {
             // Delegate call to the chain
