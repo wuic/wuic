@@ -786,6 +786,20 @@ public class ContextBuilder extends Observable {
         }
 
         /**
+         * <p>
+         * Builds a new registration as a copy of the given registration.
+         * </p>
+         *
+         * @param other the other registration to copy
+         */
+        private NutDaoRegistration(final NutDaoRegistration other) {
+            this.proxyDao = other.proxyDao == null ? null : new HashMap<String, String>(other.proxyDao);
+            this.proxyNut = other.proxyNut == null ? null : new HashMap<String, Nut>(other.proxyNut);
+            this.nutDaoBuilder = other.nutDaoBuilder;
+            this.proxyRootPath = other.proxyRootPath;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -1478,7 +1492,7 @@ public class ContextBuilder extends Observable {
                     String.format("%s must be an existing NutDao builder to be cloned", cloneId)));
         }
 
-        return new ContextNutDaoBuilder(id, registration);
+        return new ContextNutDaoBuilder(id, new NutDaoRegistration(registration));
     }
 
     /**
