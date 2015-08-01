@@ -1036,7 +1036,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         @Override
         protected String[] otherTokens() {
             return new String[] {
-                    "align", "alt", "border", "crossorigin", "height", "hspace", "ismap", "longdesc", "usemap", "vspace", "width",
+                    "align", "alt", "border", "crossorigin", "height", "hspace", "ismap", "longdesc", "usemap", "vspace", "width", "class", "style"
             };
         }
 
