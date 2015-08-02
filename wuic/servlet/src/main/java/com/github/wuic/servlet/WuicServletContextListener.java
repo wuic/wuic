@@ -39,7 +39,7 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.ClasspathResourceResolver;
+import com.github.wuic.ClassPathResourceResolver;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.WuicTask;
@@ -129,7 +129,7 @@ public class WuicServletContextListener implements ServletContextListener {
      *
      * @param buildInfoUrl the detected file information location
      * @param builder the builder to configure
-     * @param classpathResourceResolver the {@link ClasspathResourceResolver} based on the {@link ServletContext}
+     * @param classpathResourceResolver the {@link com.github.wuic.ClassPathResourceResolver} based on the {@link ServletContext}
      */
     private void installBuildInfo(final URL buildInfoUrl,
                                   final WuicFacadeBuilder builder,
@@ -369,7 +369,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @param file file to test
      * @param callback the callback that install the file
      */
-    private void detectInClassesLocation(final ClasspathResourceResolver classpathResourceResolver,
+    private void detectInClassesLocation(final ClassPathResourceResolver classpathResourceResolver,
                                          final String file,
                                          final Consumer<URL> callback) {
         try {
@@ -439,7 +439,7 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
-     * A {@link ClasspathResourceResolver} that checks thanks to the {@link Class} class if any resource is in the
+     * A {@link com.github.wuic.ClassPathResourceResolver} that checks thanks to the {@link Class} class if any resource is in the
      * classpath. If the result is {@code null}, it fallback to a wrapped {@link ServletContext} where path is read
      * under "WEB-INF/classes" folder.
      * </p>
@@ -448,7 +448,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @version 1.0
      * @since 0.5.2
      */
-    public static final class ServletContextClasspathResourceResolver implements ClasspathResourceResolver {
+    public static final class ServletContextClasspathResourceResolver implements ClassPathResourceResolver {
 
         /**
          * The servlet context.
