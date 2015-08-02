@@ -39,6 +39,7 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.ClasspathResourceResolver;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.WuicTask;
@@ -79,6 +80,11 @@ import java.util.Set;
  * <p>
  * Servlet context listener that injects into the {@link javax.servlet.ServletContext} the {@link WuicFacade} as an
  * attribute mapped to {@link ApplicationConfig#WEB_WUIC_FACADE} name.
+ * </p>
+ *
+ * <p>
+ * The {@link ServletContext} is also used when retrieving classpath resources if necessary
+ * (see {@link ServletContextClasspathResourceResolver}).
  * </p>
  *
  * @author Guillaume DROUET
@@ -123,9 +129,11 @@ public class WuicServletContextListener implements ServletContextListener {
      *
      * @param buildInfoUrl the detected file information location
      * @param builder the builder to configure
-     * @param servletContext the servlet context
+     * @param classpathResourceResolver the {@link ClasspathResourceResolver} based on the {@link ServletContext}
      */
-    private void installBuildInfo(final URL buildInfoUrl, final WuicFacadeBuilder builder, final ServletContext servletContext) {
+    private void installBuildInfo(final URL buildInfoUrl,
+                                  final WuicFacadeBuilder builder,
+                                  final ServletContextClasspathResourceResolver classpathResourceResolver) {
         final Properties properties = new Properties();
         InputStream is = null;
 
@@ -139,7 +147,8 @@ public class WuicServletContextListener implements ServletContextListener {
 
             // Install a filter for each URLs corresponding to a nut owned by a workflow
             final String[] workflowList = properties.getProperty("workflowList").split("\\t");
-            final FilterRegistration filterRegistration = servletContext.addFilter("staticWorkflowFilter", ResponseOptimizerFilter.class);
+            final ServletContext sc = classpathResourceResolver.getServletContext();
+            final FilterRegistration filterRegistration = sc.addFilter("staticWorkflowFilter", ResponseOptimizerFilter.class);
 
             // Already registered elsewhere
             if (filterRegistration == null) {
@@ -149,7 +158,7 @@ public class WuicServletContextListener implements ServletContextListener {
             // Register the mapping for each URL
             for (final String workflow : workflowList) {
                 final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(workflow);
-                final List<ConvertibleNut> result = StaticEngine.getNuts(workflow);
+                final List<ConvertibleNut> result = StaticEngine.getNuts(classpathResourceResolver, workflow);
 
                 // Recursive call on referenced nuts
                 addFilterMapping(result, filterRegistration, urlProvider);
@@ -228,11 +237,14 @@ public class WuicServletContextListener implements ServletContextListener {
 
         paramProvider = new PropertiesWrapper(sce.getServletContext(), paramProvider);
         sc.setAttribute(ApplicationConfig.INIT_PARAM_FUNCTION, paramProvider);
+
+        final ServletContextClasspathResourceResolver classpathResourceResolver = new ServletContextClasspathResourceResolver(sc);
         final WuicFacadeBuilder builder = new WuicFacadeBuilder(paramProvider)
-                .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc));
+                .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc))
+                .classpathResourceResolver(classpathResourceResolver);
 
         try {
-            detectInClassesLocation(sce.getServletContext(), "wuic.xml", new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, "wuic.xml", new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
@@ -243,7 +255,7 @@ public class WuicServletContextListener implements ServletContextListener {
                 }
             });
 
-            detectInClassesLocation(sce.getServletContext(), "wuic.properties", new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, "wuic.properties", new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
@@ -254,14 +266,14 @@ public class WuicServletContextListener implements ServletContextListener {
                 }
             });
 
-            detectInClassesLocation(sce.getServletContext(), WuicTask.BUILD_INFO_FILE, new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, WuicTask.BUILD_INFO_FILE, new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
                  */
                 @Override
                 public void apply(final URL consumed) {
-                    installBuildInfo(consumed, builder, sc);
+                    installBuildInfo(consumed, builder, classpathResourceResolver);
                 }
             });
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
@@ -353,13 +365,15 @@ public class WuicServletContextListener implements ServletContextListener {
      * Detects the given file in the "/WEB-INF/classes" directory and install them thanks to the given callback.
      * </p>
      *
-     * @param servletContext the context giving access to base directory
+     * @param classpathResourceResolver the resolver giving access to base directory
      * @param file file to test
      * @param callback the callback that install the file
      */
-    private void detectInClassesLocation(final ServletContext servletContext, final String file, final Consumer<URL> callback) {
+    private void detectInClassesLocation(final ClasspathResourceResolver classpathResourceResolver,
+                                         final String file,
+                                         final Consumer<URL> callback) {
         try {
-            final URL classesPath = servletContext.getResource("/WEB-INF/classes/" + file);
+            final URL classesPath = classpathResourceResolver.getResource(file);
 
             if (classesPath != null) {
                 log.info("Installing '{}' located in {}", file, classesPath.toString());
@@ -421,6 +435,67 @@ public class WuicServletContextListener implements ServletContextListener {
      */
     protected BiFunction<String, String, String> paramProvider(final ServletContext sc) {
         return new InitParamProperties(sc);
+    }
+
+    /**
+     * <p>
+     * A {@link ClasspathResourceResolver} that checks thanks to the {@link Class} class if any resource is in the
+     * classpath. If the result is {@code null}, it fallback to a wrapped {@link ServletContext} where path is read
+     * under "WEB-INF/classes" folder.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.2
+     */
+    public static final class ServletContextClasspathResourceResolver implements ClasspathResourceResolver {
+
+        /**
+         * The servlet context.
+         */
+        private ServletContext servletContext;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param servletContext the servlet context
+         */
+        public ServletContextClasspathResourceResolver(final ServletContext servletContext) {
+            this.servletContext = servletContext;
+        }
+
+        /**
+         * <p>
+         * Gets the servlet context
+         * </p>
+         *
+         * @return the servlet context
+         */
+        public ServletContext getServletContext() {
+            return servletContext;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public URL getResource(final String resourcePath) throws MalformedURLException {
+            final URL retval = getClass().getResource(resourcePath);
+
+            return retval == null ? servletContext.getResource("/WEB-INF/classes/" + resourcePath) : retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public InputStream getResourceAsStream(final String resourcePath) {
+            final InputStream retval = getClass().getResourceAsStream(resourcePath);
+
+            return retval == null ? servletContext.getResourceAsStream("/WEB-INF/classes/" + resourcePath) : retval;
+        }
     }
 
     /**

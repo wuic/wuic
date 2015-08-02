@@ -73,7 +73,7 @@ import javax.xml.bind.JAXBException;
  * @version 1.9
  * @since 0.1.0
  */
-public final class WuicFacade {
+public final class WuicFacade implements ObjectBuilderInspector {
 
     /**
      * <p>
@@ -180,14 +180,11 @@ public final class WuicFacade {
 
         final List<ObjectBuilderInspector> inspectors = b.getObjectBuilderInspectors();
 
-        // No inspector, directly use the wrapped context builder
-        if (inspectors.isEmpty()) {
-            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath());
-        } else {
-            // build a new context builder with specific inspector and reuse the factories already declared
-            builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(),
-                    inspectors.toArray(new ObjectBuilderInspector[inspectors.size()]));
-        }
+        // This inspector will configure any ClassPathResourceResolverHandler
+        inspectors.add(this);
+
+        builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(),
+                inspectors.toArray(new ObjectBuilderInspector[inspectors.size()]));
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];
         configure(b.getUseDefaultContextBuilderConfigurator(), b.getConfigurators().toArray(array));
@@ -426,6 +423,18 @@ public final class WuicFacade {
      */
     public Boolean allowsMultipleConfigInTagSupport() {
         return config.getMultipleConfigInTagSupport();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T inspect(final T object) {
+        if (object instanceof ClassPathResourceResolverHandler) {
+            ClassPathResourceResolverHandler.class.cast(object).setClasspathResourceResolver(config.getClasspathResourceResolver());
+        }
+
+        return object;
     }
 
     /**

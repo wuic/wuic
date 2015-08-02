@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ import java.util.List;
  * @version 1.0
  * @since 0.5.0
  */
-public class WuicFacadeBuilder {
+public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * The logger.
@@ -105,6 +106,11 @@ public class WuicFacadeBuilder {
     private Boolean useDefaultContextBuilderConfigurator;
 
     /**
+     * The classpath resource resolver.
+     */
+    private ClassPathResourceResolver classpathResourceResolver;
+
+    /**
      * An list of inspectors of any built object.
      */
     private final List<ObjectBuilderInspector> inspectors;
@@ -134,6 +140,7 @@ public class WuicFacadeBuilder {
         inspectors = new ArrayList<ObjectBuilderInspector>();
         configurators = new ArrayList<ContextBuilderConfigurator>();
         contextBuilder = new ContextBuilderFacade();
+        classpathResourceResolver = this;
     }
 
     /**
@@ -201,6 +208,19 @@ public class WuicFacadeBuilder {
 
     /**
      * <p>
+     * Defines the {@link ClassPathResourceResolver} of this builder.
+     * </p>
+     *
+     * @param crr the new {@link ClassPathResourceResolver}
+     * @return this
+     */
+    public final WuicFacadeBuilder classpathResourceResolver(final ClassPathResourceResolver crr) {
+        this.classpathResourceResolver = crr;
+        return this;
+    }
+
+    /**
+     * <p>
      * Adds to the facade a list of additional {@link ContextBuilderConfigurator configurators} according to the
      * {@link ApplicationConfig#WUIC_ADDITIONAL_BUILDER_CONFIGURATORS} property.
      * </p>
@@ -234,8 +254,6 @@ public class WuicFacadeBuilder {
 
         return this;
     }
-
-
 
     /**
      * <p>
@@ -412,6 +430,33 @@ public class WuicFacadeBuilder {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public URL getResource(final String resourcePath) {
+        return getClass().getResource(resourcePath);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream getResourceAsStream(final String resourcePath) {
+        return getClass().getResourceAsStream(resourcePath);
+    }
+
+    /**
+     * <p>
+     * Gets the {@link ClassPathResourceResolver}.
+     * </p>
+     *
+     * @return the instance of {@link ClassPathResourceResolver}
+     */
+    ClassPathResourceResolver getClasspathResourceResolver() {
+        return classpathResourceResolver;
+    }
+
+    /**
      * <p>
      * Gets the context path.
      * </p>
@@ -521,6 +566,8 @@ public class WuicFacadeBuilder {
         public WuicFacadeBuilder toFacade() {
             return WuicFacadeBuilder.this;
         }
+
+
 
         /**
          * {@inheritDoc}
