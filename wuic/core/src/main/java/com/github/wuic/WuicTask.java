@@ -316,13 +316,16 @@ public class WuicTask {
 
                 try {
                     if  (relocateTransformedXmlTo != null) {
-                        final File file = new File(relocateTransformedXmlTo, String.format(StaticEngine.STATIC_WORKFLOW_FILE, wId));
+                        final String fileName = String.format(StaticEngine.STATIC_WORKFLOW_FILE, wId);
+                        final File file = new File(relocateTransformedXmlTo, fileName);
 
                         if (!file.getParentFile().mkdirs()) {
                             log.error("Unable to create '{}' directory", file.getParent());
                         }
 
-                        retval.add(file.getName());
+                        // Adds file name without '/' at the beginning
+                        retval.add(fileName.substring(1));
+
                         pw = new PrintWriter(file);
                         buildInfo.write(wId);
 
