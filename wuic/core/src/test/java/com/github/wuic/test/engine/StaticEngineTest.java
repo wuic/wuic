@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.ClassPathResourceResolver;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
@@ -51,6 +52,9 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,6 +81,18 @@ public class StaticEngineTest {
     @Test
     public void staticExistingWorkflowTest() throws WuicException, IOException {
         final StaticEngine engine = new StaticEngine();
+        engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
+            @Override
+            public URL getResource(String resourcePath) throws MalformedURLException {
+                return getClass().getResource(resourcePath);
+            }
+
+            @Override
+            public InputStream getResourceAsStream(String resourcePath) {
+                return getClass().getResourceAsStream(resourcePath);
+            }
+        });
+
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
@@ -104,6 +120,17 @@ public class StaticEngineTest {
     @Test
     public void staticWorkflowNotFoundTest() throws WuicException {
         final StaticEngine engine = new StaticEngine();
+        engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
+            @Override
+            public URL getResource(String resourcePath) throws MalformedURLException {
+                return getClass().getResource(resourcePath);
+            }
+
+            @Override
+            public InputStream getResourceAsStream(String resourcePath) {
+                return getClass().getResourceAsStream(resourcePath);
+            }
+        });
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 

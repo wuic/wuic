@@ -38,6 +38,8 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.ClassPathResourceResolver;
+import com.github.wuic.ClassPathResourceResolverHandler;
 import com.github.wuic.NutType;
 import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineRequest;
@@ -80,7 +82,7 @@ import java.util.regex.Pattern;
  * @since 0.4.1
  */
 @EngineService(injectDefaultToWorkflow = false, isCoreEngine = true)
-public class StaticEngine extends NodeEngine {
+public class StaticEngine extends NodeEngine implements ClassPathResourceResolverHandler {
 
     /**
      * File pattern.
@@ -98,6 +100,11 @@ public class StaticEngine extends NodeEngine {
     private Map<String, List<ConvertibleNut>> retrievedWorkflow;
 
     /**
+     * The classpath resource resolver.
+     */
+    private ClassPathResourceResolver classpathResourceResolver;
+    
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -112,13 +119,15 @@ public class StaticEngine extends NodeEngine {
      * Gets the the result information associated to the given workflow processed at build time.
      * </p>
      *
+     * @param classpathResourceResolver the {@link com.github.wuic.ClassPathResourceResolver} to use
      * @param workflowId the workflow ID
      * @return the data file
      * @throws WuicException if the workflow has not been found or could not be processed
      */
-    public static List<ConvertibleNut> getNuts(final String workflowId) throws WuicException {
+    public static List<ConvertibleNut> getNuts(final ClassPathResourceResolver classpathResourceResolver, final String workflowId)
+            throws WuicException {
         final String fileName = String.format(STATIC_WORKFLOW_FILE, workflowId);
-        final InputStream is = StaticEngine.class.getResourceAsStream(fileName);
+        final InputStream is = classpathResourceResolver.getResourceAsStream(fileName);
         InputStreamReader isr = null;
 
         // Not well packaged
@@ -177,6 +186,14 @@ public class StaticEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
+    public void setClasspathResourceResolver(final ClassPathResourceResolver crr) {
+        classpathResourceResolver = crr;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         List<ConvertibleNut> retval = retrievedWorkflow.get(request.getWorkflowId());
 
@@ -184,7 +201,7 @@ public class StaticEngine extends NodeEngine {
         if (retval != null) {
             return retval;
         } else {
-            retval = getNuts(request.getWorkflowId());
+            retval = getNuts(classpathResourceResolver, request.getWorkflowId());
             retrievedWorkflow.put(request.getWorkflowId(), retval);
         }
 
