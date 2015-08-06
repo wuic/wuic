@@ -92,7 +92,7 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
     /**
      * Pattern that matches a key/value pair pattern. One key/value pair per line is detected.
      */
-    public static final Pattern PATTERN_KEY_VALUE = Pattern.compile("(.+)\\s\"*((?<=\")[^\"]+(?=\")|([^\\r\\n]+))\"*");
+    public static final Pattern PATTERN_KEY_VALUE = Pattern.compile("(.+)[ ]\"*((?<=\")[^\"]+(?=\")|([^" + System.getProperty("line.separator") + "]+))\"*");
 
     /**
      * Cached workflow already retrieved.
