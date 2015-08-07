@@ -87,6 +87,7 @@
 		</heap>
         <heap id="image" dao-builder-id="imgSourceRootProvider">
             <nut-path>images/.*.png</nut-path>
+            <nut-path>images/.*.jpg</nut-path>
         </heap>
         <heap id="css-scripts" dao-builder-id="cssSourceRootProvider">
             <nut-path>jquery-ui.css</nut-path>

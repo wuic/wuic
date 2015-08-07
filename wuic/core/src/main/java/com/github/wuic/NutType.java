@@ -102,6 +102,11 @@ public enum NutType {
     PNG(new String[] {".png", ".PNG"}, "image/png", NutType.IMAGE, false),
 
     /**
+     * JPG path support.
+     */
+    JPG(new String[] {".jpg", ".JPG", ".jpeg", ".JPEG"}, "image/jpeg", NutType.IMAGE, false),
+
+    /**
      * GIF path support.
      */
     GIF(new String[] {".gif", ".GIF"}, "image/gif", NutType.IMAGE, false),
