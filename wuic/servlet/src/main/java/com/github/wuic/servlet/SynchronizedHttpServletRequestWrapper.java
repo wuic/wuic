@@ -453,7 +453,9 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
     @Override
     public ServletRequest getRequest() {
         // Synchronized access
-        return super.getRequest();
+        synchronized (mutex) {
+            return super.getRequest();
+        }
     }
 
     /**
