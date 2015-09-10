@@ -185,8 +185,10 @@ public class SpriteInspectorEngine extends NodeEngine {
      * @throws WuicException if processing fails
      */
     private void processNut(final ConvertibleNut nut) throws WuicException {
-        if (nut.getOriginalNuts() != null) {
-            final List<ConvertibleNut> originalNuts = nut.getOriginalNuts();
+
+        // Aggregated nut references all single images
+        if (!nut.getSource().getOriginalNuts().isEmpty()) {
+            final List<ConvertibleNut> originalNuts = nut.getSource().getOriginalNuts();
 
             for (final ConvertibleNut origin : originalNuts) {
                 if (origin instanceof ImageNut) {
@@ -197,6 +199,7 @@ public class SpriteInspectorEngine extends NodeEngine {
                 }
             }
         } else {
+            // Aggregation is not activated
             InputStream is = null;
 
             try {

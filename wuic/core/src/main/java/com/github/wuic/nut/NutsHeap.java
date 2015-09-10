@@ -572,8 +572,8 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         if (ConvertibleNut.class.isAssignableFrom(nut.getClass())) {
             ConvertibleNut convertibleNut = ConvertibleNut.class.cast(nut);
 
-            while (convertibleNut.getOriginalNuts() != null && !convertibleNut.getOriginalNuts().isEmpty()) {
-                convertibleNut = convertibleNut.getOriginalNuts().get(0);
+            while (!convertibleNut.getSource().getOriginalNuts().isEmpty()) {
+                convertibleNut = convertibleNut.getSource().getOriginalNuts().get(0);
             }
 
             refOrigin = convertibleNut;

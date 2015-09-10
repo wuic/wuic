@@ -80,7 +80,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     /**
      * The original nuts.
      */
-    private List<ConvertibleNut> originalNuts;
+    private final Source source;
 
     /**
      * Some transformers.
@@ -122,9 +122,9 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             final ConvertibleNut c = ConvertibleNut.class.cast(o);
             transformers = c.getTransformers();
             onReady = c.getReadyCallbacks();
+            source = c.getSource();
             setNutName(c.getName());
             setNutType(c.getNutType());
-            setOriginalNuts(c.getOriginalNuts());
             referencedNuts = c.getReferencedNuts();
             setIsCompressed(c.isCompressed());
             setIsSubResource(c.isSubResource());
@@ -133,6 +133,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             setNutType(o.getInitialNutType());
             setIsCompressed(Boolean.FALSE);
             setIsSubResource(true);
+            source = new SourceImpl();
         }
     }
 
@@ -155,6 +156,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         setNutType(ft);
         setIsCompressed(c);
         setIsSubResource(true);
+        source = new SourceImpl();
     }
 
     /**
@@ -165,7 +167,9 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * @param o the original nuts
      */
     protected final void setOriginalNuts(final List<ConvertibleNut> o) {
-        this.originalNuts = o;
+        for (final ConvertibleNut c : o) {
+            source.addOriginalNut(c);
+        }
     }
 
     /**
@@ -303,8 +307,8 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
-    public List<ConvertibleNut> getOriginalNuts() {
-        return originalNuts;
+    public Source getSource() {
+        return source;
     }
 
     /**

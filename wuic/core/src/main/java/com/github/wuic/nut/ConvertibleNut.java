@@ -66,14 +66,18 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
-     * When this nut is the result of the transformation of another one, then it is actually a processed nut. This returns
-     * a list of original nuts that have been transformed to obtain this nut. When this nut is actually an non-transformed
-     * one, say an original nut, then the returned value should be {@code null}.
+     * When this nut is the result of the transformation of another one, then it is actually a processed nut.
+     * This method returns a source object that provides the list of original nuts that have been transformed to obtain this nut.
+     * When this nut is actually a non-transformed one, say an original nut, then the returned value won't provide any nut.
      * </p>
      *
-     * @return the original nuts of this nut, {@code null} if this nut is actually original
+     * <p>
+     * The type of returned object can be extended to add more information about the sources (like source map).
+     * </p>
+     *
+     * @return the source object of this nut, an object with an empty list if this nut is actually original
      */
-    List<ConvertibleNut> getOriginalNuts();
+    Source getSource();
 
     /**
      * <p>

@@ -95,9 +95,9 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * @param nt the {@link NutType}
      * @param originalNut the original nut
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final ConvertibleNut originalNut) {
-        this(bytes, name, nt, Arrays.asList(originalNut), NutUtils.getVersionNumber(originalNut));
-    }
+    //public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final ConvertibleNut originalNut) {
+    //    this(bytes, name, nt, Arrays.asList(originalNut), NutUtils.getVersionNumber(originalNut));
+    //}
 
     /**
      * <p>
@@ -173,10 +173,10 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             final String name = IOUtils.mergePath(nut.getName());
 
             // This is an original nut
-            if (nut.getOriginalNuts() == null) {
+            if (nut.getSource().getOriginalNuts().isEmpty()) {
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut), nut.isDynamic());
             } else {
-                final List<ConvertibleNut> o = nut.getOriginalNuts();
+                final List<ConvertibleNut> o = nut.getSource().getOriginalNuts();
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
             }
 
@@ -185,7 +185,7 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
 
             if (nut.getReferencedNuts() != null && nut.getReferencedNuts() != bytes.getReferencedNuts()) {
                 for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                    final List<ConvertibleNut> o = bytes.getOriginalNuts();
+                    final List<ConvertibleNut> o = bytes.getSource().getOriginalNuts();
                     final int index = o == null ? -1 : o.indexOf(ref);
 
                     // If original is also a referenced nut (cases like image aggregation), its already transformed

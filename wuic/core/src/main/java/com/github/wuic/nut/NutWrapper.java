@@ -103,8 +103,8 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public List<ConvertibleNut> getOriginalNuts() {
-        return wrapped.getOriginalNuts();
+    public Source getSource() {
+        return wrapped.getSource();
     }
 
     /**
