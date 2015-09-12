@@ -67,6 +67,6 @@
 
     <properties>
         <annotation-detector.version>3.0.4</annotation-detector.version>
-        <sonar.exclusions>**/detect/**/*.java,**/jetty/*.java</sonar.exclusions>
+        <sonar.exclusions>**/detect/**/*.java,**/jetty/*.java,**/sourcemap/**/*.java</sonar.exclusions>
     </properties>
 </project>

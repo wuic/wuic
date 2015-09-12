@@ -1,0 +1,1 @@
+See Jetty notice here: https://github.com/eclipse/jetty.project/blob/master/NOTICE.txt
