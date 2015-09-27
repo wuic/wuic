@@ -236,13 +236,15 @@ public abstract class LineInspector {
      * @param endIndex the end index
      * @param referencer the referencer
      * @param convertibleNuts the nuts
+     * @param string the {@code String} to use as replacement
      * @return the new instance
      */
     public ReplacementInfo replacementInfo(final int startIndex,
                                            final int endIndex,
                                            final Nut referencer,
-                                           final List<? extends ConvertibleNut> convertibleNuts) {
-        return new ReplacementInfo(startIndex, endIndex, referencer, convertibleNuts);
+                                           final List<? extends ConvertibleNut> convertibleNuts,
+                                           final String string) {
+        return new ReplacementInfo(startIndex, endIndex, referencer, convertibleNuts, string);
     }
 
     /**
@@ -282,31 +284,41 @@ public abstract class LineInspector {
      * This object indicates the index of the rewritten statement and the associated list of nuts.
      * </p>
      *
+     * <p>
+     * The {@link Comparable} is implemented to order a set of {@link ReplacementInfo} from the greatest {@link #startIndex}
+     * to the smallest.
+     * </p>
+     *
      * @author Guillaume DROUET
      * @version 1.0
      * @since 0.5.1
      */
-    public final class ReplacementInfo {
+    public final class ReplacementInfo implements Comparable<ReplacementInfo> {
 
         /**
          * Start index.
          */
-        private int startIndex;
+        private final int startIndex;
 
         /**
          * End index.
          */
-        private int endIndex;
+        private final int endIndex;
 
         /**
          * The nut referencing the convertibles nuts.
          */
-        private Nut referencer;
+        private final Nut referencer;
 
         /**
          * The convertible nut.
          */
-        private List<? extends ConvertibleNut> convertibleNuts;
+        private final List<? extends ConvertibleNut> convertibleNuts;
+
+        /**
+         * The {@code String} to use for replacement.
+         */
+        private final String string;
 
         /**
          * <p>
@@ -317,39 +329,53 @@ public abstract class LineInspector {
          * @param endIndex the end index
          * @param referencer the referencer
          * @param convertibleNuts the nuts
+         * @param string the {@code String} to use for replacement.
          */
         private ReplacementInfo(final int startIndex,
                                 final int endIndex,
                                 final Nut referencer,
-                                final List<? extends ConvertibleNut> convertibleNuts) {
+                                final List<? extends ConvertibleNut> convertibleNuts,
+                                final String string) {
             this.startIndex = startIndex;
             this.convertibleNuts = convertibleNuts;
             this.referencer = referencer;
             this.endIndex = endIndex;
+            this.string = string;
             LOGGER.debug("Statement between position {} and {} is referenced for replacement in referencer '{}'",
                     startIndex, endIndex, referencer.getInitialName());
         }
 
         /**
          * <p>
-         * Gets the start index.
+         * Performs a replacement inside the given {@code StringBuilder} by replacing the portion delimited by the
+         * {@link #startIndex} and {@link #endIndex} positions with the {@link #string} value.
          * </p>
          *
-         * @return the index
+         * @param stringBuilder the builder
          */
-        public int getStartIndex() {
-            return startIndex;
+        public void replace(final StringBuilder stringBuilder) {
+            replace(stringBuilder, string);
         }
 
         /**
          * <p>
-         * Gets the end index.
+         * Performs a replacement inside the given {@code StringBuilder} by replacing the portion delimited by the
+         * {@link #startIndex} and {@link #endIndex} positions with the given value.
          * </p>
          *
-         * @return the index
+         * @param stringBuilder the builder
+         * @param str the replacement {@code String}
          */
-        public int getEndIndex() {
-            return endIndex;
+        public void replace(final StringBuilder stringBuilder, final String str) {
+            stringBuilder.replace(startIndex, endIndex, str);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compareTo(final ReplacementInfo o) {
+            return o.startIndex - startIndex;
         }
 
         /**
