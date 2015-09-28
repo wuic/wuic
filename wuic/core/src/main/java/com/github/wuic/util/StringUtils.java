@@ -135,7 +135,7 @@ public final class StringUtils {
                 continue;
             }
 
-            // Parent path reference detected : could be simplified
+            // Parent path reference detected: could be simplified
             if ("..".equals(path)) {
                 countSkip++;
             } else if (countSkip > 0) {

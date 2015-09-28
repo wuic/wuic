@@ -391,7 +391,7 @@ public abstract class LineInspector {
 
         /**
          * <p>
-         * Gets the nuts
+         * Gets the nuts.
          * </p>
          *
          * @return the list

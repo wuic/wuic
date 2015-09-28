@@ -87,20 +87,6 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
 
     /**
      * <p>
-     * Builds a new {@code Nut} transformed nut based on a given byte array and only one original nut.
-     * </p>
-     * 
-     * @param bytes the byte array
-     * @param name the nut name
-     * @param nt the {@link NutType}
-     * @param originalNut the original nut
-     */
-    //public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final ConvertibleNut originalNut) {
-    //    this(bytes, name, nt, Arrays.asList(originalNut), NutUtils.getVersionNumber(originalNut));
-    //}
-
-    /**
-     * <p>
      * Builds a new {@code Nut} transformed nut based on a specified byte array. Content will be static and call to
      * {@link #setByteArray(byte[])} will be avoided.
      * </p>
