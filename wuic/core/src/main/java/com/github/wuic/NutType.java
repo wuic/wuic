@@ -127,6 +127,11 @@ public enum NutType {
     TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", null, true),
 
     /**
+     * LESS files support.
+     */
+    LESS(new String[] { ".less" }, "text/css", null, true),
+
+    /**
      * MAP files support.
      */
     MAP(new String[] { ".map" }, "application/json", null, true),
