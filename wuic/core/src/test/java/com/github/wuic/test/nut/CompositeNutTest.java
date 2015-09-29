@@ -81,30 +81,74 @@ public class CompositeNutTest {
      */
     @Test
     public void compositeTest() throws IOException {
-        final ConvertibleNut n1 = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(n1.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
-        Mockito.when(n1.getInitialNutType()).thenReturn(NutType.CSS);
-        Mockito.when(n1.getName()).thenReturn("n1.css");
-        Mockito.when(n1.getInitialName()).thenReturn("n1.css");
-        Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
-        Mockito.when(n1.getVersionNumber()).thenReturn(new FutureLong(1L));
-
-        final ConvertibleNut n2 = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(n2.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
-        Mockito.when(n2.getInitialNutType()).thenReturn(NutType.CSS);
-        Mockito.when(n2.getName()).thenReturn("n2.css");
-        Mockito.when(n2.getInitialName()).thenReturn("n2.css");
-        Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
-        Mockito.when(n2.getVersionNumber()).thenReturn(new FutureLong(1L));
-
+        final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
+        final ConvertibleNut n2 = newNut("n2", NutType.CSS, "some css rules");
         final Nut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
 
     /**
+     * Tests when stream is read as character stream or byte stream.
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void readCharOrByteTest() throws IOException {
+        final int len = 4;
+
+        // on 3 bytes
+        final char character = '€';
+        String content = "";
+
+        for (int i = 0; i < len; i++) {
+            content += character;
+        }
+
+        final int bytesLen = content.getBytes().length;
+
+        ConvertibleNut n1 = newNut("n1", NutType.CSS, content);
+        ConvertibleNut n2 = newNut("n2", NutType.CSS, content);
+
+        Nut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+                ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
+
+        CompositeNut.CompositeInputStream is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
+        IOUtils.copyStream(is, new ByteArrayOutputStream());
+
+        for (int i = 0; i < content.length(); i++) {
+            Assert.assertEquals(is.toString(), n1, is.nutAt(i));
+        }
+
+        for (int i = content.length(); i < content.length() * 2; i++) {
+            Assert.assertEquals(is.toString(), n2, is.nutAt(i));
+        }
+
+        Assert.assertNull(is.toString(), is.nutAt(content.length() * 2));
+
+        n1 = newNut("n1", NutType.PNG, content);
+        n2 = newNut("n2", NutType.PNG, content);
+
+        composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+                ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
+
+        is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
+        IOUtils.copyStream(is, new ByteArrayOutputStream());
+
+        for (int i = 0; i < bytesLen; i++) {
+            Assert.assertEquals(is.toString(), n1, is.nutAt(i));
+        }
+
+        for (int i = bytesLen; i < bytesLen * 2; i++) {
+            Assert.assertEquals(is.toString(), n2, is.nutAt(i));
+        }
+
+        Assert.assertNull(is.toString(), is.nutAt(bytesLen * 2));
+    }
+
+    /**
      * <p>
-     * Checks that transformer are correctly applied in a compisition.
+     * Checks that transformer are correctly applied in a composition.
      * </p>
      *
      * @throws java.io.IOException if test fails
@@ -150,27 +194,37 @@ public class CompositeNutTest {
             }
         };
 
-        final ConvertibleNut n1 = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(n1.openStream()).thenReturn(new ByteArrayInputStream("some css rules".getBytes()));
-        Mockito.when(n1.getInitialNutType()).thenReturn(NutType.CSS);
-        Mockito.when(n1.getName()).thenReturn("n1.css");
-        Mockito.when(n1.getInitialName()).thenReturn("n1.css");
-        Mockito.when(n1.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
-        Mockito.when(n1.getVersionNumber()).thenReturn(new FutureLong(1L));
+        final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
         Mockito.when(n1.getTransformers()).thenReturn(new HashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t1, t3)));
-        
-        final ConvertibleNut n2 = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(n2.openStream()).thenReturn(new ByteArrayInputStream("other css rules".getBytes()));
-        Mockito.when(n2.getInitialNutType()).thenReturn(NutType.CSS);
-        Mockito.when(n2.getName()).thenReturn("n2.css");
-        Mockito.when(n2.getInitialName()).thenReturn("n2.css");
-        Mockito.when(n2.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
-        Mockito.when(n2.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+        final ConvertibleNut n2 = newNut("n2", NutType.CSS, "other css rules");
         Mockito.when(n2.getTransformers()).thenReturn(new HashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
 
         final ConvertibleNut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         Assert.assertEquals("some css rules t1other css rules t2 this is the end", NutUtils.readTransform(composite));
+    }
+
+    /**
+     * <p>
+     * Builds a new nut.
+     * </p>
+     *
+     * @param nutType the type
+     * @param content the content
+     * @return the nut
+     * @throws IOException if creation fails
+     */
+    private ConvertibleNut newNut(final String name, final NutType nutType, final String content) throws IOException {
+        final ConvertibleNut n = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(n.openStream()).thenReturn(new ByteArrayInputStream(content.getBytes()));
+        Mockito.when(n.getInitialNutType()).thenReturn(nutType);
+        Mockito.when(n.getNutType()).thenReturn(nutType);
+        Mockito.when(n.getName()).thenReturn(name + nutType.getExtensions()[0]);
+        Mockito.when(n.getInitialName()).thenReturn(name + nutType.getExtensions()[0]);
+        Mockito.when(n.getReferencedNuts()).thenReturn(CollectionUtils.newList(Mockito.mock(ConvertibleNut.class)));
+        Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
+        return n;
     }
 }

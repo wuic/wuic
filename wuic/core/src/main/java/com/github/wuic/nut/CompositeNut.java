@@ -49,7 +49,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.SequenceInputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -331,8 +335,9 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * This class keeps the position of each nut in the read content. When this stream has been entirely read,
-     * it's possible to retrieve the nut containing the byte at a specified position.
+     * This class use the position of each nut in the read content to update the source map.
+     * When this stream has been entirely read, it's possible to use the source map to retrieve the nut containing the
+     * byte at a specified position.
      * </p>
      *
      * @author Guillaume DROUET
@@ -345,6 +350,21 @@ public class CompositeNut extends PipedConvertibleNut {
          * The sequence containing each steam of this composition and their separator.
          */
         private InputStream sequence;
+
+        /**
+         * In case of text stream, the reader used to count read characters.
+         */
+        private InputStreamReader sequenceReader;
+
+        /**
+         * The byte array corresponding to the character currently read if the stream is text.
+         */
+        private byte[] charBuffer;
+
+        /**
+         * Current byte in the {@link #charBuffer}.
+         */
+        private int charOffset;
 
         /**
          * The position of each separator between streams.
@@ -388,7 +408,7 @@ public class CompositeNut extends PipedConvertibleNut {
                     is.add(new InputStream() {
                         @Override
                         public int read() throws IOException {
-                            separatorPositions[currentIndex] = length;
+                            separatorPositions[currentIndex++] = length;
                             return -1;
                         }
                     });
@@ -396,6 +416,10 @@ public class CompositeNut extends PipedConvertibleNut {
             }
 
             sequence = new SequenceInputStream(Collections.enumeration(is));
+
+            if (CompositeNut.this.getNutType().isText()) {
+                sequenceReader = new InputStreamReader(sequence);
+            }
         }
 
         /**
@@ -431,11 +455,46 @@ public class CompositeNut extends PipedConvertibleNut {
          * {@inheritDoc}
          */
         @Override
-        public int read() throws IOException {
-            final int retval = sequence.read();
+        public String toString() {
+            return String.format("separatorPositions: %s\nisText: %b", Arrays.toString(separatorPositions), sequenceReader != null);
+        }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int read() throws IOException {
+
+            // Reading an array of bytes corresponding to a character
+            if (charBuffer != null) {
+
+                // End of character reached
+                if (charOffset == charBuffer.length) {
+                    charBuffer = null;
+                    charOffset = 0;
+                } else {
+                    // Read the next byte
+                    return charBuffer[charOffset++];
+                }
+            }
+
+            // Read a byte or a character
+            final int retval = sequenceReader != null ? sequenceReader.read() : sequence.read();
+
+            // Count stream
             if (retval != -1) {
                 length++;
+
+                if (sequenceReader != null) {
+
+                    // Just read a character, convert it to a byte array
+                    final CharBuffer cbuf = CharBuffer.wrap(Character.toChars(retval));
+
+                    // TODO: avoid default Charset
+                    final ByteBuffer bbuf = Charset.forName("UTF-8").encode(cbuf);
+                    charBuffer = bbuf.array();
+                    return charBuffer[charOffset++];
+                }
             }
 
             return retval;
