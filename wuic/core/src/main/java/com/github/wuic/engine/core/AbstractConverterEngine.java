@@ -147,7 +147,7 @@ public abstract class AbstractConverterEngine
 
             log.debug("Converting {}", convertibleNut.getName());
 
-            final ConvertibleNut nut = new PipedConvertibleNut(convertibleNut);
+            ConvertibleNut nut = new PipedConvertibleNut(convertibleNut);
 
             // Set target state
             nut.setNutName(nut.getName() + targetNutType().getExtensions()[0]);
@@ -159,10 +159,16 @@ public abstract class AbstractConverterEngine
             NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                chain.parse(new EngineRequestBuilder(request)
+                final List<ConvertibleNut> res = chain.parse(new EngineRequestBuilder(request)
                         .skip(request.alsoSkip(EngineType.CACHE))
                         .nuts(Arrays.asList(nut))
                         .build());
+
+                if (res.isEmpty()) {
+                    log.warn("No result found after parsing the nut '{}'.", nut.getName());
+                } else {
+                    nut = res.get(0);
+                }
             }
 
             // Also convert referenced nuts
