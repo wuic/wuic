@@ -118,6 +118,8 @@ public final class CollectionUtils {
     /**
      * <p>
      * Returns a set containing all the elements which are not contained by the two given sets.
+     * The set will be a {@link LinkedHashSet} if one parameter is an instance of this class, otherwise a {@link HashSet}
+     * will be returned.
      * </p>
      *
      * @param first the first set
@@ -126,7 +128,8 @@ public final class CollectionUtils {
      * @return the difference between two sets
      */
     public static <T> Set<T> difference(final Set<T> first, final Set<T> second) {
-        final Set<T> retval = new HashSet<T>();
+        final Set<T> retval = first instanceof LinkedHashSet || second instanceof LinkedHashMap ?
+                new LinkedHashSet<T>() : new HashSet<T>();
 
         for (final T e : first) {
             if (!second.contains(e)) {
