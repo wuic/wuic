@@ -145,7 +145,9 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
             // Also compress referenced nuts
             if (nut.getReferencedNuts() != null) {
                 for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                    compress(ref);
+                    if (getNutTypes().contains(ref.getNutType())) {
+                        compress(ref);
+                    }
                 }
             }
         } finally {
