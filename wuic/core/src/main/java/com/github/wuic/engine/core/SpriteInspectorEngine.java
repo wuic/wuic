@@ -54,6 +54,8 @@ import com.github.wuic.engine.setter.SpriteProviderPropertySetter;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
+import com.github.wuic.nut.Source;
+import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProvider;
@@ -297,7 +299,10 @@ public class SpriteInspectorEngine extends NodeEngine {
                 final String group = request.getHeap().findHeapFor(n).getId();
                 final String basePath = IOUtils.mergePath("/", request.getContextPath(), request.getWorkflowId());
                 final UrlProvider urlProvider = request.getUrlProviderFactory().create(basePath);
-                nut = sp.getSprite(group, urlProvider, suffix, Arrays.asList(n));
+                final Source source = new SourceImpl();
+
+                nut = sp.getSprite(group, urlProvider, suffix, source);
+                nut.addReferencedNut(n);
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
                 return null;
@@ -401,6 +406,14 @@ public class SpriteInspectorEngine extends NodeEngine {
         public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
             convertible.addReferencedNut(ref);
             super.transform(is, os, convertible);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean canAggregateTransformedStream() {
+            return false;
         }
     }
 }

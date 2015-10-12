@@ -41,13 +41,12 @@ package com.github.wuic.test.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
-import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.core.AbstractCompressorEngine;
 import com.github.wuic.engine.core.AbstractConverterEngine;
-import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
@@ -58,13 +57,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Tests {@link AbstractConverterEngine} base class.
@@ -75,23 +73,25 @@ public class ConverterEngineTest {
     /**
      * An inspector that must be invoked by the converter.
      */
-    public static class I extends JavascriptInspectorEngine {
-        public I() {
-            super(true, "UTF-8", "");
-            addInspector(new LineInspector(Pattern.compile(Pattern.quote("function myFunctionSetsCssStyle() {}"))) {
-                protected String toString(final ConvertibleNut convertibleNut) throws IOException {
-                    return null;
-                }
+    public static class I extends AbstractCompressorEngine {
 
-                public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
-                                                                           final StringBuilder replacement,
-                                                                           final EngineRequest request,
-                                                                           final CompositeNut.CompositeInputStream cis,
-                                                                           final ConvertibleNut originalNut) throws WuicException {
-                    replacement.append("function myReplacedFunctionSetsCssStyle() {}");
-                    return null;
-                }
-            });
+        public I() {
+            super(true, null);
+        }
+
+        @Override
+        public List<NutType> getNutTypes() {
+            return Arrays.asList(NutType.JAVASCRIPT);
+        }
+
+        @Override
+        public EngineType getEngineType() {
+            return EngineType.MINIFICATION;
+        }
+
+        @Override
+        public void transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
+            os.write("function myReplacedFunctionSetsCssStyle() {}".getBytes());
         }
     }
 
@@ -131,10 +131,11 @@ public class ConverterEngineTest {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest e)
+        public InputStream transform(final InputStream is,
+                                     final ConvertibleNut convertible,
+                                     final EngineRequest e)
                 throws IOException {
-            os.write("function myFunctionSetsCssStyle() {}".getBytes());
-            convertible.setNutType(NutType.JAVASCRIPT);
+            return new ByteArrayInputStream("function myFunctionSetsCssStyle() {}".getBytes());
         }
     }
 
@@ -190,7 +191,7 @@ public class ConverterEngineTest {
         Assert.assertEquals(NutType.CSS, nuts.get(0).getInitialNutType());
         Assert.assertEquals("aggregate.css.js", nuts.get(0).getName());
         Assert.assertEquals("foo.css", nuts.get(0).getInitialName());
-        Assert.assertEquals("function myReplacedFunctionSetsCssStyle() {}\n", content);
+        Assert.assertEquals("function myReplacedFunctionSetsCssStyle() {}", content);
     }
 
     /**

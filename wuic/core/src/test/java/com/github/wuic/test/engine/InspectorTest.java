@@ -46,13 +46,17 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
+import com.github.wuic.engine.core.SourceMapLineInspector;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
+import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
@@ -72,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 
 /**
  * <p>
@@ -122,10 +127,34 @@ public class InspectorTest {
 
                 final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
-                Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(createCount.incrementAndGet()));
-                Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
-                Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("content of " + invocationOnMock.getArguments()[0]).getBytes()));
+                createCount.incrementAndGet();
+
+                Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(invocationOnMock.getArguments()[0]));
+                Mockito.when(nut.getInitialNutType()).thenReturn(NutType.getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+                if (nut.getInitialNutType().equals(NutType.MAP)) {
+                    Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("{"
+                            + "  \"version\": 3,"
+                            + "  \"file\": \"testcode.js\","
+                            + "  \"sections\": ["
+                            + "    {"
+                            + "      \"map\": {"
+                            + "         \"version\": 3,"
+                            + "         \"mappings\": \"AAAAA,QAASA,UAAS,EAAG;\","
+                            + "         \"sources\": [\"testcode.js\"],"
+                            + "         \"names\": [\"foo\"]"
+                            + "      },"
+                            + "      \"offset\": {"
+                            + "        \"line\": 1,"
+                            + "        \"column\": 1"
+                            + "      }"
+                            + "    }"
+                            + "  ]"
+                            + "}").getBytes()));
+                } else {
+                    Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("content of " + invocationOnMock.getArguments()[0]).getBytes()));
+                }
 
                 retval.add(nut);
                 return retval;
@@ -146,7 +175,7 @@ public class InspectorTest {
             builder.append(String.format(rule, path));
         }
 
-        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.CSS, 1L, false)) {
+        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.JAVASCRIPT, 1L, false)) {
             @Override
             public String getName() {
                 final String retval = createCount.get() + ".css";
@@ -256,14 +285,14 @@ public class InspectorTest {
     @Test
     public void sourceMappingUrlTest() throws Exception {
         String[][] collection = new String[][]{
-                new String[]{"//sourceMappingURL=%s", "sourcemap.js.map"},
-                new String[]{"//# sourceMappingURL=%s", "sourcemap1.js.map"},
-                new String[]{"//@ sourceMappingURL=%s", "sourcemap2.js.map"},
-                new String[]{"// #sourceMappingURL=%s", "sourcemap3.js.map"},
-                new String[]{"// @sourceMappingURL=%s", "sourcemap4.js.map"}
+                new String[]{"//sourceMappingURL=%s ", "sourcemap.js.map"},
+                new String[]{"//# sourceMappingURL=%s ", "sourcemap1.js.map"},
+                new String[]{"//@ sourceMappingURL=%s ", "sourcemap2.js.map"},
+                new String[]{"// #sourceMappingURL=%s ", "sourcemap3.js.map"},
+                new String[]{"// @sourceMappingURL=%s ", "sourcemap4.js.map"}
         };
 
-        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length, new CssInspectorEngine(true, "UTF-8"), true);
+        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, new CssInspectorEngine(true, "UTF-8"), true);
     }
 
     /**
@@ -372,7 +401,50 @@ public class InspectorTest {
         Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
         Assert.assertTrue(value.contains("template3.html?foo&versionNumber=1"));
         Assert.assertTrue(value.contains("template4.html?foo&versionNumber=1"));
+    }
 
+    /**
+     * Test source map inspection.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void sourceMapInspection() throws Exception {
+        final NodeEngine engine = Mockito.mock(NodeEngine.class);
+        final NodeEngine next = Mockito.mock(NodeEngine.class);
+        Mockito.when(next.getEngineType()).thenReturn(EngineType.AGGREGATOR);
+        Mockito.when(engine.getNext()).thenReturn(next);
+        final SourceMapLineInspector inspector = new SourceMapLineInspector(engine);
+        final Matcher matcher = SourceMapLineInspector.SOURCE_MAPPING_PATTERN.matcher("//# sourceMappingURL=foo.map");
+        matcher.find();
+
+        final NutDao dao = Mockito.mock(NutDao.class);
+
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
+        Mockito.when(heap.getId()).thenReturn("heap");
+        Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
+        Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
+        Mockito.when(heap.getNutDao()).thenReturn(dao);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
+        h.checkFiles(ProcessContext.DEFAULT);
+
+        final StringBuilder sb = new StringBuilder();
+        final EngineRequest req = new EngineRequestBuilder("", h, null).build();
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(nut.getSource()).thenReturn(new SourceImpl());
+        Mockito.when(nut.getName()).thenReturn("nut");
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(next.works()).thenReturn(true);
+
+        // rewrite statement
+        inspector.appendTransformation(matcher, sb, req, null, nut);
+        Assert.assertEquals(0, sb.length());
+
+        // do not rewrite statement
+        Mockito.when(next.getEngineType()).thenReturn(EngineType.MINIFICATION);
+        Mockito.when(next.works()).thenReturn(false);
+        inspector.appendTransformation(matcher, sb, req, null, nut);
+        Assert.assertNotEquals(0, sb.length());
     }
 
     /**

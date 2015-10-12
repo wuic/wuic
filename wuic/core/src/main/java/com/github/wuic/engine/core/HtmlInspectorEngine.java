@@ -1477,7 +1477,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         /**
          * <p>
-         * Creates a replacement for this information
+         * Creates a replacement for this information.
          * </p>
          *
          * @param request the request

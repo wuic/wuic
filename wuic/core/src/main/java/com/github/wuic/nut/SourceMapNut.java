@@ -36,81 +36,57 @@
  */
 
 
-package com.github.wuic.engine;
+package com.github.wuic.nut;
 
-import com.github.wuic.util.CollectionUtils;
+import java.io.IOException;
 
 /**
  * <p>
- * This enumeration describes the different kind of {@link Engine} that may exist.
+ * This interface relies on a sourcemap protocol to exposes more information about original nuts.
+ * The sources are {@link ConvertibleNut} instead of {@link Nut} to allow any transformer to fully generate any source
+ * (sprites are a good example).
  * </p>
  *
  * <p>
- * In a chain of responsibility, the {@link Engine engines} should be sorted following their {@link EngineType}.
- * Sorting could be performed with this {@link Comparable} implementation. This way, a chain will always as the same
- * behavior:
- * <ul>
- *     <li>See if result is already cached or not.</li>
- *     <li>Inspects all nuts and eventually transform them</li>
- *     <li>Perform text compression on text files like scripts</li>
- *     <li>Perform aggregation</li>
- *     <li>Compress bytes</li>
- * </ul>
+ * According to transformation (inspection that detect existing sourcemap, aggregation, etc), the mapping should be updated.
+ * </p>
+ *
+ * <p>
+ * The {@link ConvertibleNut} is implemented for convenient usage by different APIs, but the contract that must be really
+ * be implemented is defined by {@link Nut}. Methods inherited from {@link ConvertibleNut} can do nothing, as a source map
+ * is not supposed to be transformed.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
- * @since 0.4.0
+ * @version 1.2
+ * @since 0.5.3
  */
-public enum EngineType {
-
-    /**
-     * First type in a chain. Cache the result.
-     */
-    CACHE,
-
-    /**
-     * Second type in a chain. Inspects and eventually transforms the {@link com.github.wuic.nut.ConvertibleNut}.
-     */
-    INSPECTOR,
-
-    /**
-     * Third type in a chain. Compress the text only.
-     */
-    MINIFICATION,
-
-    /**
-     * Fourth type in a chain. Aggregates the text only.
-     */
-    AGGREGATOR,
-
-    /**
-     * Fifth type in the chain. Convert the result from a type to another type.
-     */
-    CONVERTER,
-
-    /**
-     * Sixth type in a chain. Compress bytes.
-     */
-    BINARY_COMPRESSION;
+public interface SourceMapNut extends Source, ConvertibleNut {
 
     /**
      * <p>
-     * Returns all the {@link EngineType} without the specified one.
+     * Adds the given {@link ConvertibleNut} to this source mapping.
+     * The source mapping of the nut specified in parameter is inserted in this source map.
+     * The given positions indicate the position of the specified nut in the owner's content.
      * </p>
      *
-     * @param type the object to exclude
-     * @return the values without the given type
+     * @param nut the source
+     * @param startColumn the column of starting position
+     * @param startLine the line of starting position
+     * @param endColumn the column of ending position
+     * @param endLine the line of ending position
      */
-    public static EngineType[] without(final EngineType ... type) {
-        final EngineType[] retval = new EngineType[values().length - type.length];
-        final int[] exclude = new int[type.length];
+    void addSource(int startLine, int startColumn, int endLine, int endColumn, ConvertibleNut nut);
 
-        for (int i = 0; i < type.length; i++) {
-            exclude[i] = type[i].ordinal();
-        }
-
-        CollectionUtils.without(values(), retval, exclude);
-        return retval;
-    }
+    /**
+     * <p>
+     * Gets the source at the given line and column in the owner's content.
+     * </p>
+     *
+     * @param line the line
+     * @param column the column
+     * @return the source
+     * @throws IOException if any I/O error occurs
+     */
+    ConvertibleNut getNutAt(int line, int column) throws IOException;
 }

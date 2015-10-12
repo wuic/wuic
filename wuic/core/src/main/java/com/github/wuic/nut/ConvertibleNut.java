@@ -81,6 +81,15 @@ public interface ConvertibleNut extends Nut {
 
     /**
      * <p>
+     * Sets the source object for this nut.
+     * </p>
+     *
+     * @param source the new source object
+     */
+    void setSource(Source source);
+
+    /**
+     * <p>
      * Returns the name potentially altered by other components like transformers.
      * </p>
      *
@@ -125,6 +134,18 @@ public interface ConvertibleNut extends Nut {
      * @throws java.io.IOException if an I/O error occurs
      */
     void transform(Pipe.OnReady ... onReady) throws IOException;
+
+    /**
+     * <p>
+     * When {@link #transform(com.github.wuic.util.Pipe.OnReady...)} is called execute the list of {@link Transformer transformers},
+     * the {@code InputStream} can be a {@link com.github.wuic.nut.CompositeNut.CompositeInputStream} that should be treated
+     * specifically by default. In fact, this type of stream is an aggregation of different streams that should be separately
+     * transformed. This method tells the nut to not do this if it returns {@code false}.
+     * </p>
+     *
+     * @return {@code true} to ignores the {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}, {@code false} otherwise
+     */
+    boolean ignoreCompositeStreamOnTransformation();
 
     /**
      * <p>

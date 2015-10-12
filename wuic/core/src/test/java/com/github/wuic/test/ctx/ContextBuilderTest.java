@@ -79,6 +79,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -752,6 +753,7 @@ public class ContextBuilderTest {
         Mockito.when(nut.getInitialName()).thenReturn("nut.js");
         Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
 
         final Context proxy = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()

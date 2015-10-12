@@ -94,13 +94,16 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      * @param bytes the byte array
      * @param name the nut name
      * @param nt the {@link NutType}
-     * @param originalNuts the original nuts
      * @param version the version number
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final List<ConvertibleNut> originalNuts, final Long version) {
+    public ByteArrayNut(final byte[] bytes,
+                        final String name,
+                        final NutType nt,
+                        final Source source,
+                        final Long version) {
         super(name, nt, new FutureLong(version), Boolean.FALSE);
         dynamicContent = false;
-        setOriginalNuts(originalNuts);
+        setSource(source);
         setByteArray(bytes, false);
     }
 
@@ -156,14 +159,35 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             nut.transform(new Pipe.DefaultOnReady(os));
 
             final ByteArrayNut bytes;
-            final String name = IOUtils.mergePath(nut.getName());
+            final String name = nut.getName();
 
             // This is an original nut
             if (nut.getSource().getOriginalNuts().isEmpty()) {
                 bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut), nut.isDynamic());
             } else {
-                final List<ConvertibleNut> o = nut.getSource().getOriginalNuts();
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), toByteArrayNut(o), NutUtils.getVersionNumber(o));
+                final Source s = nut.getSource();
+
+                // Builds the sources
+                final List<ConvertibleNut> o = new ArrayList<ConvertibleNut>(s.getOriginalNuts().size());
+
+                for (final ConvertibleNut sourceNut : s.getOriginalNuts()) {
+                    // Source is already a byte array
+                    if (sourceNut instanceof ByteArrayNut) {
+                        o.add(sourceNut);
+                    } else {
+                        // Convert the source to byte array
+                        final ByteArrayOutputStream sourceOs = new ByteArrayOutputStream();
+                        IOUtils.copyStream(sourceNut.openStream(), sourceOs);
+                        final Long v = NutUtils.getVersionNumber(sourceNut);
+                        o.add(new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getName(), sourceNut.getNutType(), v, false));
+                    }
+                }
+
+                // Switch nuts to their byte array version
+                s.getOriginalNuts().clear();
+                s.getOriginalNuts().addAll(o);
+
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), s, NutUtils.getVersionNumber(o));
             }
 
             bytes.setIsCompressed(nut.isCompressed());

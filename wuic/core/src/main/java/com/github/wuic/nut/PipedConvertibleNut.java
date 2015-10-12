@@ -121,7 +121,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                     pipe.register(transformer);
                 }
 
-                pipe.execute(callbacks.toArray(new Pipe.OnReady[callbacks.size()]));
+                pipe.execute(convertibleNut.ignoreCompositeStreamOnTransformation(), callbacks.toArray(new Pipe.OnReady[callbacks.size()]));
             } else {
                 is = convertibleNut.openStream();
                 final ByteArrayOutputStream bos = new ByteArrayOutputStream();

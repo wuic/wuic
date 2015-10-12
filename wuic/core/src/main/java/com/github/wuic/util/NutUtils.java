@@ -40,6 +40,7 @@ package com.github.wuic.util;
 
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,13 +93,22 @@ public final class NutUtils {
     public static ConvertibleNut findByName(final ConvertibleNut nut, final String nutName) {
         String parsedName = StringUtils.simplifyPathWithDoubleDot(nut.getName());
 
-        // Nut found : write the stream and return
+        // Nut found: write the stream and return
         if (parsedName.equals(nutName)
                 || ('/' + parsedName).equals(nutName)
                 || parsedName.equals('/' + nutName)
                 || IOUtils.mergePath("best-effort", nutName).equals(parsedName)) {
             return nut;
-        } else if (nut.getReferencedNuts() != null) {
+        } else if (!(nut instanceof Source) && (nut.getSource() instanceof ConvertibleNut)) {
+            // Source map
+            final ConvertibleNut sourceMap = findByName(ConvertibleNut.class.cast(nut.getSource()), nutName);
+
+            if (sourceMap != null) {
+                return sourceMap;
+            }
+        }
+
+        if (nut.getReferencedNuts() != null) {
             // Find in referenced nuts
             final ConvertibleNut ref = findByName(nut.getReferencedNuts(), nutName);
 
@@ -132,7 +142,6 @@ public final class NutUtils {
         return null;
     }
 
-
     /**
      * <p>
      * Gets the version number from the given nut.
@@ -151,6 +160,19 @@ public final class NutUtils {
         }
 
         return 0L;
+    }
+
+
+    /**
+     * <p>
+     * Gets the version number from the given source.
+     * </p>
+     *
+     * @param source the source nut
+     * @return the version number string representation, 0 if can't retrieve it
+     */
+    public static Long getVersionNumber(final Source source) {
+        return getVersionNumber(source.getOriginalNuts());
     }
 
     /**

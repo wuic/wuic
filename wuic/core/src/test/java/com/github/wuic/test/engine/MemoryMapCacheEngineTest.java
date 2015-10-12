@@ -173,7 +173,7 @@ public class MemoryMapCacheEngineTest {
                 if (n.isDynamic()) {
                     Assert.assertTrue(s.contains(String.valueOf(counter2.get() - 1)));
                 } else {
-                    Assert.assertTrue(s.contains(String.valueOf(0)));
+                    Assert.assertTrue(s.contains(String.valueOf(1)));
                 }
             }
         }

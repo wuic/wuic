@@ -51,6 +51,8 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.Source;
+import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
@@ -66,7 +68,6 @@ import java.awt.image.RGBImageFilter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
             return request.getNuts();
         } else {
             final Map<Region, ConvertibleNut> packed = pack(request.getNuts());
-            final List<ConvertibleNut> originals = new ArrayList<ConvertibleNut>(packed.size());
+            final Source source = new SourceImpl();
 
             // Initializing the final image
             final Dimension finalDim = getDimensionPack();
@@ -143,7 +144,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
                     final Region r = entry.getKey();
                     transparentImage.createGraphics().drawImage(buff, r.getxPosition(), r.getyPosition(), null);
 
-                    originals.add(new ImageNut(entry.getValue(), r));
+                    source.addOriginalNut(new ImageNut(entry.getValue(), r));
                 } catch (IOException ioe) {
                     WuicException.throwWuicException(ioe);
                 } finally {
@@ -160,7 +161,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
                 WuicException.throwWuicException(ioe);
             }
 
-            final ConvertibleNut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, originals, NutUtils.getVersionNumber(originals));
+            final ConvertibleNut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, source, NutUtils.getVersionNumber(source.getOriginalNuts()));
 
             return Arrays.asList(res);
         }

@@ -47,6 +47,7 @@ import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
+import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NutUtils;
@@ -58,8 +59,8 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * This inspector removes from scripts the "sourceMappingURL" statement when the chain is going to minify/aggregate it.
- * Otherwise, extracts the source map.
+ * This inspector extracts the source map. It removes from scripts the "sourceMappingURL" statement when the path can't
+ * be resolved and the chain is going to minify/aggregate it.
  * </p>
  *
  * <p>
@@ -71,6 +72,11 @@ import java.util.regex.Pattern;
  * @since 0.4.5
  */
 public class SourceMapLineInspector extends LineInspector {
+
+    /**
+     * The pattern of 'sourceMappingURL'.
+     */
+    public static final Pattern SOURCE_MAPPING_PATTERN = Pattern.compile("sourceMappingURL=([^\\s]*)");
 
     /**
      * The engine that uses this inspector.
@@ -85,7 +91,7 @@ public class SourceMapLineInspector extends LineInspector {
      * @param enclosingEngine the engine that uses this injector
      */
     public SourceMapLineInspector(final NodeEngine enclosingEngine) {
-        super(Pattern.compile("sourceMappingURL=([^\\s]*)"));
+        super(SOURCE_MAPPING_PATTERN);
         engine = enclosingEngine;
     }
 
@@ -115,20 +121,6 @@ public class SourceMapLineInspector extends LineInspector {
             return null;
         }
 
-        // .map will be broken in case of minification
-        NodeEngine next = engine.getNext();
-
-        while (next != null) {
-            // Do not rewrite the statement
-            if ((next.getEngineType().equals(EngineType.AGGREGATOR)
-                    || next.getEngineType().equals(EngineType.MINIFICATION))
-                    && next.works()) {
-                return null;
-            }
-
-            next = next.getNext();
-        }
-
         // Extract the nut
         final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
         final List<Nut> nuts;
@@ -140,20 +132,55 @@ public class SourceMapLineInspector extends LineInspector {
             return null;
         }
 
-        final List<? extends ConvertibleNut> res;
-
+        // There is a result
         if (!nuts.isEmpty()) {
-            res = manageAppend(new PipedConvertibleNut(nuts.iterator().next()), replacement, request, heap);
+            final Nut n = nuts.iterator().next();
+            replacement.append("sourceMappingURL=");
 
+            final List<? extends ConvertibleNut> res = manageAppend(new PipedConvertibleNut(n), replacement, request, heap);
+
+            // Should have only one nut
             for (final ConvertibleNut nut : res) {
                 nut.setIsSubResource(false);
+                originalNut.setSource(new SourceMapNutImpl(heap, originalNut, nut, request.getProcessContext()));
             }
         } else {
+            // .map will be broken in case of minification or aggregation
+            if (!rewriteStatement()) {
+                return null;
+            }
+
+            // No result, at least add the version number in query string
             replacement.append("sourceMappingURL=");
             fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
-            res = null;
         }
 
-        return res;
+        // We don't need to do anything more with the source map
+        return null;
+    }
+
+    /**
+     * <p>
+     * Indicates if an engine in the chain is either a working engine of type {@link EngineType#AGGREGATOR} or
+     * {@link EngineType#MINIFICATION}. In that case, the source map URL statement should not be rewritten.
+     * </p>
+     *
+     * @return {@code true} if source map URL can be written, {@code false} otherwise
+     */
+    private boolean rewriteStatement() {
+        NodeEngine next = engine.getNext();
+
+        while (next != null) {
+            // Do not rewrite the statement
+            if ((next.getEngineType().equals(EngineType.AGGREGATOR)
+                    || next.getEngineType().equals(EngineType.MINIFICATION))
+                    && next.works()) {
+                return false;
+            }
+
+            next = next.getNext();
+        }
+
+        return true;
     }
 }

@@ -42,6 +42,7 @@ import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.path.FilePath;
@@ -75,6 +76,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -125,15 +127,23 @@ public class UtilityTest extends WuicTest {
 
     /**
      * Test when nuts with same name are merged.
+     *
+     * @throws IOException if test fails
      */
     @Test
-    public void mergeNutTest() {
+    public void mergeNutTest() throws IOException {
         final ConvertibleNut first = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut second = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut third = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut fourth = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut fifth = Mockito.mock(ConvertibleNut.class);
         final List<ConvertibleNut> input = Arrays.asList(first, second, third, fourth, fifth);
+
+        Mockito.when(first.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(second.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(third.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(fourth.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(fifth.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
 
         Mockito.when(first.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(second.getVersionNumber()).thenReturn(new FutureLong(1L));
@@ -233,6 +243,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void simplifyPathTest() {
+        Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("foo/bar/../../baz.css"), "baz.css");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("./foo"), "foo");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/./foo"), "/bar/foo");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("/bar/./foo/."), "/bar/foo");
@@ -414,8 +425,35 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void differenceTest() {
-        final Set<String> first = new HashSet<String>();
-        final Set<String> second = new HashSet<String>();
+        final Set<String> res = diff(new HashSet<String>(), new HashSet<String>());
+        Assert.assertTrue("must be instance of HashSet", res instanceof HashSet);
+    }
+
+    /**
+     * Test difference with ordered sets.
+     */
+    @Test
+    public void orderedDiffTest() {
+        final Set<String> first = new LinkedHashSet<String>();
+        final Set<String> second = new LinkedHashSet<String>();
+        final Set<String> res = diff(first, second);
+        Assert.assertTrue("must be instance of LinkedHashSet", res instanceof LinkedHashSet);
+    }
+
+    /**
+     * Test that EngineType exclusion.
+     */
+    @Test
+    public void withoutEngineTest() {
+        Assert.assertEquals(EngineType.values().length - 2, EngineType.without(EngineType.INSPECTOR, EngineType.AGGREGATOR).length);
+    }
+
+    /**
+     * Difference assumptions.
+     *
+     * @return diff result
+     */
+    public Set<String> diff(final Set<String> first, final Set<String> second) {
         Set<String> diff = CollectionUtils.difference(first, second);
         Assert.assertTrue(diff.isEmpty());
 
@@ -435,6 +473,7 @@ public class UtilityTest extends WuicTest {
         first.add("c");
         diff = CollectionUtils.difference(first, second);
         Assert.assertTrue(diff.isEmpty());
+        return diff;
     }
 
     /**
@@ -685,7 +724,7 @@ public class UtilityTest extends WuicTest {
     @Test
     public void pipeTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(10);
-        final Pipe p = new Pipe(new Object(), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
+        final Pipe p = new Pipe(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
         class T extends Pipe.DefaultTransformer {
             @Override
             public void transform(final InputStream is, final OutputStream os, final Object o) throws IOException {

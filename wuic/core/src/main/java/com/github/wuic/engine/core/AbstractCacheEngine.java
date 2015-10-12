@@ -44,11 +44,13 @@ import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.Source;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
@@ -411,7 +413,16 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             if (!nut.isDynamic()) {
                 retval.put(nut.getName(), new CacheResult.Entry(byteArray));
             } else {
-                retval.put(nut.getName(), new CacheResult.Entry(referenced, nut.getName(), nut.getTransformers()));
+                final Set<Pipe.Transformer<ConvertibleNut>> transformers;
+
+                // Try to retrieve the transformers from the composition
+                if ((nut.getTransformers() == null || nut.getTransformers().isEmpty()) && (nut instanceof CompositeNut)) {
+                    transformers = CompositeNut.class.cast(nut).getCompositionList().get(0).getTransformers();
+                } else {
+                    transformers = nut.getTransformers();
+                }
+
+                retval.put(nut.getName(), new CacheResult.Entry(referenced, nut.getName(), transformers));
             }
 
             if (processed != null) {
@@ -690,24 +701,40 @@ public abstract class AbstractCacheEngine extends HeadEngine {
              */
             ConvertibleNut find(final EngineRequest request, final String name) {
                 List<ConvertibleNut> referenced;
+                Source source;
 
                 if (staticNut != null) {
                     if (name.equals(staticNut.getName())) {
                         return staticNut;
                     } else {
                         referenced = staticNut.getReferencedNuts();
+                        source = staticNut.getSource();
                     }
                 } else if (name.equals(dynamicName)) {
                     return toConvertibleNut(request);
                 } else {
                     referenced = dynamicReferencedNuts;
+                    source = null;
                 }
 
+                // Look for nut inside referenced nuts
                 if (referenced != null) {
                     final ConvertibleNut ref = NutUtils.findByName(referenced, name);
 
                     if (ref != null) {
                         return ref;
+                    }
+                }
+
+                // Look for nut inside sources
+                if (source instanceof ConvertibleNut) {
+                    // Source map
+                    final ConvertibleNut src = NutUtils.findByName(ConvertibleNut.class.cast(source), name);
+
+                    if (src != null) {
+                        return src;
+                    } else {
+                        return NutUtils.findByName(source.getOriginalNuts(), name);
                     }
                 }
 

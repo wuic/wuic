@@ -178,6 +178,7 @@ public class AbstractNutDaoTest {
             when(mock.getName()).thenReturn(realPath);
             when(mock.getInitialName()).thenReturn(realPath);
             when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+            when(mock.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
 
             try {
                 when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath, processContext).get()));
@@ -256,7 +257,8 @@ public class AbstractNutDaoTest {
     @Test
     public void compositeFixedVersionNumberTest() throws Exception  {
         final Long version = 19860606L;
-        NutDao dao = new MockNutDaoTest(true, version.toString());
+        final NutDao dao = new MockNutDaoTest(true, version.toString());
+
         Assert.assertEquals(version, new CompositeNut(false,
                 "composite.js",
                 null,

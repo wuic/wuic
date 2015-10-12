@@ -60,7 +60,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 /**
  * <p>
@@ -195,10 +195,10 @@ public class CompositeNutTest {
         };
 
         final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
-        Mockito.when(n1.getTransformers()).thenReturn(new HashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t1, t3)));
+        Mockito.when(n1.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t1, t3)));
 
         final ConvertibleNut n2 = newNut("n2", NutType.CSS, "other css rules");
-        Mockito.when(n2.getTransformers()).thenReturn(new HashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
+        Mockito.when(n2.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
 
         final ConvertibleNut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));

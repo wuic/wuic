@@ -46,13 +46,20 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.nut.SourceMapNut;
+import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 
 /**
  * <p>
@@ -60,13 +67,19 @@ import com.github.wuic.util.IOUtils;
  * Files are aggregated in the order of apparition in the given list. Note that
  * nothing will be done if {@link TextAggregatorEngine#doAggregation} flag is {@code false}.
  * </p>
+ *
+ * <p>
+ * When aggregation is enabled, this {@link com.github.wuic.engine.Engine} is added as a
+ * {@link com.github.wuic.util.Pipe.Transformer} that captures all the "sourceMappingURL" statements
+ * and create a new one that aggregates all of them.
+ * </p>
  * 
  * @author Guillaume DROUET
  * @version 2.0
  * @since 0.1.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
-public class TextAggregatorEngine extends AbstractAggregatorEngine {
+public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pipe.Transformer<ConvertibleNut> {
 
     /**
      * For version number computation.
@@ -88,7 +101,88 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
         super(aggregate);
         canReadNutAsynchronously = asynchronous;
     }
-    
+
+    /**
+     * <p>
+     * Builds a new composite nut.
+     * </p>
+     *
+     * @param request the request that initiates this call
+     * @return the composition
+     */
+    public CompositeNut newCompositeNut(final EngineRequest request) {
+        final String name = aggregationName(request.getNuts().get(0).getInitialNutType());
+        return new CompositeNut(canReadNutAsynchronously,
+                request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
+                "\r\n".getBytes(),
+                request.getProcessContext(),
+                request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()]));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+
+        // Erase all sourceMappingURL occurrences
+        final String content = IOUtils.readString(new InputStreamReader(is));
+        os.write(content.replaceAll(SourceMapLineInspector.SOURCE_MAPPING_PATTERN.pattern(), "").getBytes());
+
+        // We are able to compute the source map
+        if (is instanceof CompositeNut.CompositeInputStream) {
+            final CompositeNut.CompositeInputStream cis = CompositeNut.CompositeInputStream.class.cast(is);
+            final List<ConvertibleNut> composition = cis.getCompositeNut().getCompositionList();
+
+            try {
+                //
+                boolean firstNut = true;
+                final ConvertibleNut first = composition.get(0);
+                final SourceMapNut sourceMapNut;
+
+                // Try to reuse the source map of the first nut if it already exists
+                if (first.getSource() instanceof SourceMapNutImpl) {
+                    sourceMapNut = SourceMapNutImpl.class.cast(first.getSource());
+                    sourceMapNut.setNutName(convertible.getName() + NutType.MAP.getExtensions()[0]);
+                } else {
+                    sourceMapNut = new SourceMapNutImpl(convertible);
+                    addToSource(sourceMapNut, first, cis);
+                }
+
+                // Add the range covered by each convertible nut to the source map
+                for (final ConvertibleNut convertibleNut : composition) {
+
+                    // Ignore the first nut as it source map is the composite one
+                    if (firstNut) {
+                        firstNut = false;
+                        continue;
+                    }
+
+                    addToSource(sourceMapNut, convertibleNut, cis);
+                }
+
+                // Set the aggregated source map
+                convertible.setSource(sourceMapNut);
+
+                // Write the statement at the end of the stream
+                os.write("\n//# sourceMappingURL=".getBytes());
+                os.write((sourceMapNut instanceof ConvertibleNut ?
+                        ConvertibleNut.class.cast(sourceMapNut).getName() : sourceMapNut.getInitialName()).getBytes());
+                os.write("\n".getBytes());
+            } catch (WuicException ex) {
+                throw new IOException("Unable to build aggregated source map.", ex);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canAggregateTransformedStream() {
+        return false;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -101,12 +195,12 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
         }
         
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
-        final String name = aggregationName(request.getNuts().get(0).getInitialNutType());
-        retval.add(new CompositeNut(canReadNutAsynchronously,
-                request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
-                "\r\n".getBytes(),
-                request.getProcessContext(),
-                request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()])));
+        final CompositeNut compositeNut = newCompositeNut(request);
+
+        // Proceed source map of each nut to aggregate all of them
+        compositeNut.addTransformer(this);
+
+        retval.add(compositeNut);
 
         return retval;
     }
@@ -117,5 +211,27 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine {
     @Override
     public List<NutType> getNutTypes() {
         return Arrays.asList(NutType.CSS, NutType.JAVASCRIPT);
+    }
+
+    /**
+     * <p>
+     * Adds to the given source a the mapping corresponding to the given {@link ConvertibleNut}.
+     * </p>
+     *
+     * @param sourceMapNut the source to populate
+     * @param convertibleNut the mapped nut
+     * @param cis the {@link com.github.wuic.nut.CompositeNut.CompositeInputStream} indicating where mapping starts and ends
+     */
+    private void addToSource(final SourceMapNut sourceMapNut, final ConvertibleNut convertibleNut, final CompositeNut.CompositeInputStream cis) {
+        // Get the start and end positions covered form the composite stream
+        final CompositeNut.CompositeInputStream.Position lastPosition = cis.position(convertibleNut);
+        final CompositeNut.CompositeInputStream.Position startPosition = lastPosition.startPosition();
+
+        // Add the source mapping for the entire content
+        sourceMapNut.addSource(startPosition.getLine(),
+                startPosition.getColumn(),
+                lastPosition.getLine(),
+                lastPosition.getColumn(),
+                convertibleNut);
     }
 }

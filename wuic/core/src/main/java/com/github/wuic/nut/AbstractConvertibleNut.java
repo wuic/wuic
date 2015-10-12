@@ -80,7 +80,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     /**
      * The original nuts.
      */
-    private final Source source;
+    private Source source;
 
     /**
      * Some transformers.
@@ -103,6 +103,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private boolean subResource;
 
     /**
+     * Ignores the composite stream during transformation.
+     */
+    private boolean ignoreCompositeStreamOnTransformation;
+
+    /**
      * Converted nut.
      */
     private Nut wrap;
@@ -120,9 +125,10 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
 
         if (ConvertibleNut.class.isAssignableFrom(o.getClass())) {
             final ConvertibleNut c = ConvertibleNut.class.cast(o);
-            transformers = c.getTransformers();
+            transformers = c.getTransformers() != null ? new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(c.getTransformers()) : null;
             onReady = c.getReadyCallbacks();
             source = c.getSource();
+            ignoreCompositeStreamOnTransformation = c.ignoreCompositeStreamOnTransformation();
             setNutName(c.getName());
             setNutType(c.getNutType());
             referencedNuts = c.getReferencedNuts();
@@ -134,6 +140,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             setIsCompressed(Boolean.FALSE);
             setIsSubResource(true);
             source = new SourceImpl();
+            ignoreCompositeStreamOnTransformation = false;
         }
     }
 
@@ -157,18 +164,19 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         setIsCompressed(c);
         setIsSubResource(true);
         source = new SourceImpl();
+        ignoreCompositeStreamOnTransformation = false;
     }
 
     /**
      * <p>
-     * Sets the original nuts.
+     * Sets the original nuts for the given {@link Source object}.
      * </p>
      *
      * @param o the original nuts
      */
-    protected final void setOriginalNuts(final List<ConvertibleNut> o) {
+    protected final void setOriginalNuts(final Source src, final List<ConvertibleNut> o) {
         for (final ConvertibleNut c : o) {
-            source.addOriginalNut(c);
+            src.addOriginalNut(c);
         }
     }
 
@@ -315,6 +323,15 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
+    public void setSource(final Source src) {
+        setOriginalNuts(src, source.getOriginalNuts());
+        this.source = src;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public InputStream openStream() throws IOException {
         return wrap.openStream();
     }
@@ -333,6 +350,14 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public String getParentFile() {
         return wrap.getParentFile();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreCompositeStreamOnTransformation() {
+        return ignoreCompositeStreamOnTransformation;
     }
 
     /**

@@ -111,6 +111,14 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
+    public void setSource(final Source source) {
+        wrapped.setSource(source);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getName() {
         return wrapped.getName();
     }
@@ -233,5 +241,13 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     @Override
     public void setIsSubResource(final boolean subResource) {
         wrapped.setIsSubResource(subResource);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreCompositeStreamOnTransformation() {
+        return wrapped.ignoreCompositeStreamOnTransformation();
     }
 }

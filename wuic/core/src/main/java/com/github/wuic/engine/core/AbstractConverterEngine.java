@@ -39,22 +39,30 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
-import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.NutWrapper;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -72,9 +80,91 @@ import java.util.List;
  * @version 1.0
  * @since 0.5.1
  */
-public abstract class AbstractConverterEngine
-        extends NodeEngine
-        implements EngineRequestTransformer.RequireEngineRequestTransformer {
+public abstract class AbstractConverterEngine extends NodeEngine {
+
+    /**
+     * <p>
+     * This {@link com.github.wuic.util.Pipe.Transformer} is an adapter that calls
+     * {@link #transform(InputStream, OutputStream, ConvertibleNut, EngineRequest)}
+     * from the enclosing instance.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public final class ConverterTransformer
+            implements EngineRequestTransformer.RequireEngineRequestTransformer, Pipe.Transformer<ConvertibleNut> {
+
+        /**
+         * The transformers.
+         */
+        private final List<Pipe.Transformer<ConvertibleNut>> transformers;
+
+        /**
+         * The request transformer that calls this instance.
+         */
+        private final EngineRequestTransformer engineRequestTransformer;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param request the request
+         * @param transformerList the transformer list
+         */
+        public ConverterTransformer(final EngineRequest request,
+                                    final List<Pipe.Transformer<ConvertibleNut>> transformerList) {
+            transformers = transformerList;
+            engineRequestTransformer = new EngineRequestTransformer(request, this);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut nut, final EngineRequest request)
+                throws IOException {
+            InputStream result = null;
+
+            try {
+                result = AbstractConverterEngine.this.transform(is, nut, request);
+
+                if (transformers.isEmpty()) {
+                    IOUtils.copyStream(result, os);
+                } else {
+                    // Continue transformation of conversion result
+                    final ByteArrayOutputStream conversionOs = new ByteArrayOutputStream();
+                    IOUtils.copyStream(result, conversionOs);
+                    final Pipe<ConvertibleNut> finalPipe = new Pipe<ConvertibleNut>(nut, new ByteArrayInputStream(conversionOs.toByteArray()));
+
+                    for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
+                        finalPipe.register(t);
+                    }
+
+                    Pipe.executeAndWriteTo(finalPipe, null, os);
+                }
+            } finally {
+                IOUtils.close(result);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+           engineRequestTransformer.transform(is, os, convertible);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean canAggregateTransformedStream() {
+            return false;
+        }
+    }
 
     /**
      * Logger.
@@ -89,7 +179,7 @@ public abstract class AbstractConverterEngine
     /**
      * Aggregator.
      */
-    private final Engine aggregator;
+    private final TextAggregatorEngine aggregator;
 
     /**
      * <p>
@@ -112,15 +202,20 @@ public abstract class AbstractConverterEngine
 
         // Compress only if needed
         if (works()) {
-            final List<ConvertibleNut> aggregate = aggregator.parse(request);
-            final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(aggregate.size());
+            if (aggregator.works()) {
+                return Arrays.asList(convert(aggregator.newCompositeNut(request), request));
+            } else {
+                final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(request.getNuts().size());
 
-            // Compress each path
-            for (final ConvertibleNut nut : aggregate) {
-                retval.add(convert(nut, request));
+                // Compress each path
+                for (final ConvertibleNut nut : request.getNuts()) {
+
+                    // Transformer from the aggregator is not required here
+                    retval.add(convert(nut, request));
+                }
+
+                return retval;
             }
-
-            return retval;
         } else {
             return request.getNuts();
         }
@@ -153,22 +248,25 @@ public abstract class AbstractConverterEngine
             nut.setNutName(nut.getName() + targetNutType().getExtensions()[0]);
             nut.setNutType(targetNutType());
 
-            nut.addTransformer(new EngineRequestTransformer(request, this));
-
             // Apply transformation for target type
             NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
+                final Set<Pipe.Transformer<ConvertibleNut>> initialTransformers = nut.getTransformers() != null ?
+                        new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(nut.getTransformers()) : Collections.EMPTY_SET;
                 final List<ConvertibleNut> res = chain.parse(new EngineRequestBuilder(request)
-                        .skip(request.alsoSkip(EngineType.CACHE))
+                        .skip(request.alsoSkip(EngineType.CACHE, EngineType.AGGREGATOR, EngineType.INSPECTOR))
                         .nuts(Arrays.asList(nut))
                         .build());
 
                 if (res.isEmpty()) {
                     log.warn("No result found after parsing the nut '{}'.", nut.getName());
+                    nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
                 } else {
-                    nut = res.get(0);
+                    nut = adapt(initialTransformers, request, res.get(0));
                 }
+            } else {
+                nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
             }
 
             // Also convert referenced nuts
@@ -184,6 +282,55 @@ public abstract class AbstractConverterEngine
         } finally {
             IOUtils.close(is);
         }
+    }
+
+    /**
+     * <p>
+     * Adapts the given {@code ConvertibleNut} by adding the right transformers.
+     * </p>
+     *
+     * @param request the request the request
+     * @param convertibleNut the convertible nut
+     * @return the adapted nut
+     */
+    private ConvertibleNut adapt(final Set<Pipe.Transformer<ConvertibleNut>> initialTransformers,
+                                 final EngineRequest request,
+                                 final ConvertibleNut convertibleNut) {
+        // Let our transformer deal with aggregation stuffs
+        final ConvertibleNut nut = new NutWrapper(convertibleNut) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean ignoreCompositeStreamOnTransformation() {
+                return true;
+            }
+        };
+
+        final Set<Pipe.Transformer<ConvertibleNut>> finalTransformers = nut.getTransformers();
+
+        // No initial transformer, just execute the final transformer on the aggregated content
+        if (initialTransformers == null) {
+            if (finalTransformers != null) {
+                final List<Pipe.Transformer<ConvertibleNut>> transformers =
+                        new ArrayList<Pipe.Transformer<ConvertibleNut>>(finalTransformers);
+                finalTransformers.removeAll(finalTransformers);
+                nut.addTransformer(new ConverterTransformer(request, transformers));
+            } else {
+                nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
+            }
+        } else if (finalTransformers == null) {
+            nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
+        } else {
+            // Move post conversion transformers execution to our own transformer
+            final List<Pipe.Transformer<ConvertibleNut>> postConversionTransformers =
+                    new ArrayList<Pipe.Transformer<ConvertibleNut>>(finalTransformers);
+            finalTransformers.clear();
+            nut.addTransformer(new ConverterTransformer(request, postConversionTransformers));
+        }
+
+        return nut;
     }
 
     /**
@@ -210,4 +357,16 @@ public abstract class AbstractConverterEngine
      * @return the target type
      */
     protected abstract NutType targetNutType();
+
+    /**
+     * <p>
+     * Transforms a stream as specified by {@link com.github.wuic.engine.core.EngineRequestTransformer.RequireEngineRequestTransformer}.
+     * </p>
+     *
+     * @param is the input stream
+     * @param nut the nut corresponding to the stream
+     * @param request the request that initiated transformation
+     * @throws IOException if transformation fails
+     */
+    protected abstract InputStream transform(InputStream is, ConvertibleNut nut, EngineRequest request) throws IOException;
 }

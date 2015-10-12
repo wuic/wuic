@@ -39,14 +39,19 @@
 package com.github.wuic.test.nut;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 
 import java.io.IOException;
 import java.util.Arrays;
 
+import com.github.wuic.nut.Source;
+import com.github.wuic.nut.SourceImpl;
+import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 
+import com.github.wuic.util.NutUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,5 +106,18 @@ public class NutUtilTest {
         Assert.assertNotNull(proxy.create("nut", null, ProcessContext.DEFAULT));
         Assert.assertEquals(1, proxy.create("nut", null, ProcessContext.DEFAULT).size());
         Assert.assertEquals("nut", proxy.create("nut", null, ProcessContext.DEFAULT).get(0).getInitialName());
+    }
+
+    /**
+     * Tests source lookup.
+     */
+    @Test
+    public void searchSourceTest() {
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
+        final SourceMapNutImpl src = Mockito.mock(SourceMapNutImpl.class);
+        Mockito.when(nut.getSource()).thenReturn(src);
+        Mockito.when(src.getName()).thenReturn("source");
+        Mockito.when(nut.getName()).thenReturn("nut");
+        Assert.assertNotNull(NutUtils.findByName(nut, "source"));
     }
 }

@@ -42,11 +42,11 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.NutType;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.engine.Region;
+import com.github.wuic.nut.Source;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProvider;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * <p>
@@ -80,7 +80,7 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
     public ConvertibleNut getSprite(final String workflowId,
                                     final UrlProvider urlProvider,
                                     final String nutNameSuffix,
-                                    final List<ConvertibleNut> originals)
+                                    final Source originals)
             throws IOException {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder jsBuilder = new StringBuilder();

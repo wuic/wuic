@@ -39,14 +39,14 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.ProcessContext;
-import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -59,10 +59,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -110,6 +107,7 @@ public class CompositeNut extends PipedConvertibleNut {
                         final ProcessContext processContext,
                         final ConvertibleNut ... composition) {
         super(composition[0]);
+
         asynchronousVersionNumber = avn;
 
         if (separator != null) {
@@ -117,14 +115,11 @@ public class CompositeNut extends PipedConvertibleNut {
             System.arraycopy(separator, 0, streamSeparator, 0, streamSeparator.length);
         }
 
+        // Populate composition
         compositionList = new ArrayList<ConvertibleNut>();
 
         for (final ConvertibleNut nut : composition) {
-            if (CompositeNut.class.isAssignableFrom(nut.getClass())) {
-                compositionList.addAll(CompositeNut.class.cast(nut).compositionList);
-            } else {
-                compositionList.add(nut);
-            }
+            addToComposition(nut);
         }
 
         // Make a composite version number
@@ -159,19 +154,51 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * Indicates if at least one nut of the composition has a transformer.
+     * Adds the given nut to the composition and checks if it's not already a composition.
      * </p>
      *
-     * @return {@code true} is a transformer exists inside the composition, {@code false} otherwise
+     * @param nut the nut to add to the composition
      */
-    public boolean hasTransformers() {
-        for (final ConvertibleNut nut : compositionList) {
-            if (nut.getTransformers() != null) {
-                return true;
+    private void addToComposition(final ConvertibleNut nut) {
+        // Merge the nested composition
+        if (CompositeNut.class.isAssignableFrom(nut.getClass())) {
+            compositionList.addAll(CompositeNut.class.cast(nut).compositionList);
+        } else {
+            InputStream is = null;
+
+            try {
+                // Try to detect a composition through the InputStream
+                is = nut.openStream();
+
+                if (CompositeInputStream.class.isAssignableFrom(is.getClass())) {
+                    compositionList.addAll(CompositeInputStream.class.cast(is).getCompositeNut().getCompositionList());
+                } else {
+                    // Does not seems to be a composition
+                    compositionList.add(nut);
+
+                    // Avoid transformers from composition[0]
+                    if (getTransformers() != null) {
+                        getTransformers().clear();
+                    }
+                }
+
+            } catch (IOException ioe) {
+                WuicException.throwBadStateException(new IllegalStateException("Unable to open a stream", ioe));
+            } finally {
+                IOUtils.close(is);
             }
         }
+    }
 
-        return false;
+    /**
+     * <p>
+     * Returns the composition list.
+     * </p>
+     *
+     * @return the composition list
+     */
+    public List<ConvertibleNut> getCompositionList() {
+        return compositionList;
     }
 
     /**
@@ -197,100 +224,6 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
-        if (isTransformed()) {
-            throw new IllegalStateException("Could not call transform(java.io.OutputStream) method twice.");
-        }
-
-        try {
-            final List<Pipe.OnReady> merge = CollectionUtils.newList(onReady);
-
-            if (getReadyCallbacks() != null) {
-                merge.addAll(getReadyCallbacks());
-            }
-
-            final Pipe<ConvertibleNut> finalPipe;
-            final boolean hasTransformers = hasTransformers();
-
-            // Collect transformer executed for each nut and group transformers for aggregated content
-            if (hasTransformers) {
-                // Get transformers
-                final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>();
-                final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts = new LinkedHashMap<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut>();
-                populateTransformers(aggregatedStream, nuts);
-
-                // First: transform each nut
-                final List<InputStream> is = transformBeforeAggregate(nuts);
-
-                // Aggregate the results
-                finalPipe = new Pipe<ConvertibleNut>(this, new SequenceInputStream(Collections.enumeration(is)));
-
-                // Transform the aggregated results
-                for (final Pipe.Transformer<ConvertibleNut> transformer : aggregatedStream) {
-                    finalPipe.register(transformer);
-                }
-            } else {
-                finalPipe = new Pipe<ConvertibleNut>(this, openStream());
-            }
-
-            finalPipe.execute(merge.toArray(new Pipe.OnReady[merge.size()]));
-        } finally {
-            setTransformed(true);
-        }
-    }
-
-    /**
-     * <p>
-     * Transforms each nut with transformers producing content which could be aggregated
-     * </p>
-     *
-     * @param nuts the nuts to transform with their transformers
-     * @return the input stream where transformed content is accessible
-     * @throws IOException if transformation fails
-     */
-    private List<InputStream> transformBeforeAggregate(final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts)
-            throws IOException {
-        final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * (streamSeparator == null ? 1 : NumberUtils.TWO));
-
-        for (final Map.Entry<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> entry : nuts.entrySet()) {
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-            if (!entry.getKey().isEmpty()) {
-
-                // We pass this composition in order to receive any referenced nut or whatever state change
-                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(this) {
-
-                    /**
-                     * {@inheritDoc}
-                     */
-                    @Override
-                    public String getName() {
-                        return entry.getValue().getName();
-                    }
-                }, entry.getValue().openStream());
-
-                for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getKey()) {
-                    pipe.register(transformer);
-                }
-
-                Pipe.executeAndWriteTo(pipe, entry.getValue().getReadyCallbacks(), bos);
-                is.add(new ByteArrayInputStream(bos.toByteArray()));
-            } else {
-                is.add(entry.getValue().openStream());
-            }
-
-            if (streamSeparator != null) {
-                is.add(new ByteArrayInputStream(streamSeparator));
-            }
-        }
-
-        return is;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
         compositionList.get(0).addTransformer(transformer);
     }
@@ -299,38 +232,37 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
+    public void setSource(final Source src) {
+        compositionList.get(0).setSource(src);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Source getSource() {
+        return compositionList.get(0).getSource();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public InputStream openStream() throws IOException {
-        return new CompositeInputStream();
+        return openStream(null);
     }
 
     /**
      * <p>
-     * Populates the given {@code Set} and {@code Map} with the transformers inside the composition.
-     * If the {@link com.github.wuic.util.Pipe.Transformer#canAggregateTransformedStream()} returns {@code true}, then
-     * it's added to a list associated to the nut with the given map. Otherwise the transformer will be added in the
-     * set specified in parameter.
+     * Returns a {@link CompositeInputStream} that uses the given streams for each nut inside the composition.
      * </p>
      *
-     * @param aggregatedStream transformer that operate on aggregated streams
-     * @param nuts all nuts with their transformer that produce a stream that can be aggregated later
+     * @param inputStreams the streams, {@code null} if the streams should be created from the nuts inside the composition
+     * @return the new {@link CompositeInputStream}
+     * @throws IOException if any I/O error occurs
      */
-    private void populateTransformers(final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream,
-                                      final Map<List<Pipe.Transformer<ConvertibleNut>>, ConvertibleNut> nuts) {
-        for (final ConvertibleNut nut : compositionList) {
-            final List<Pipe.Transformer<ConvertibleNut>> separateStream = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
-
-            if (nut.getTransformers() != null) {
-                for (final Pipe.Transformer<ConvertibleNut> transformer : nut.getTransformers()) {
-                    if (transformer.canAggregateTransformedStream()) {
-                        separateStream.add(transformer);
-                    } else {
-                        aggregatedStream.add(transformer);
-                    }
-                }
-            }
-
-            nuts.put(separateStream, nut);
-        }
+    public CompositeInputStream openStream(final List<InputStream> inputStreams) throws IOException {
+        return new CompositeInputStream(inputStreams);
     }
 
     /**
@@ -345,6 +277,114 @@ public class CompositeNut extends PipedConvertibleNut {
      * @since 0.5.0
      */
     public final class CompositeInputStream extends InputStream {
+
+        /**
+         * <p>
+         * This class gives information about the starting position of a particular nut inside the {@link CompositeInputStream}.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @since 0.5.3
+         */
+        public final class Position {
+
+            /**
+             * The line position.
+             */
+            private int line;
+
+            /**
+             * The column position.
+             */
+            private int column;
+
+            /**
+             * The absolute index.
+             */
+            private long index;
+
+            /**
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param line the line
+             * @param column the column
+             * @param index the index
+             */
+            public Position(final int line, final int column, final long index) {
+                this.line = line;
+                this.column = column;
+                this.index = index;
+            }
+
+            /**
+             * <p>
+             * Returns the start position of the content which has a end position corresponding to this instance.
+             * </p>
+             *
+             * @return the start position
+             */
+            public Position startPosition() {
+                for (int i = 0; i < positions.length; i++) {
+                    if (positions[i] == this) {
+                        if (i == 0) {
+                            return new Position(0, 0, 0);
+                        } else {
+                            return positions[i - 1];
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            /**
+             * <p>
+             * Gets the line.
+             * </p>
+             *
+             * @return the line
+             */
+            public int getLine() {
+                return line;
+            }
+
+            /**
+             * <p>
+             * Gets the index.
+             * </p>
+             *
+             * @return the index
+             */
+            public long getIndex() {
+                return index;
+            }
+
+            /**
+             * <p>
+             * Gets the column.
+             * </p>
+             *
+             * @return the column
+             */
+            public int getColumn() {
+                return column;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String toString() {
+                return String.format("{index: %s, line: %s, column: %s}", index, line, column);
+            }
+        }
+
+        /**
+         * The positions of all nut in the stream.
+         */
+        private final Position[] positions;
 
         /**
          * The sequence containing each steam of this composition and their separator.
@@ -367,14 +407,19 @@ public class CompositeNut extends PipedConvertibleNut {
         private int charOffset;
 
         /**
-         * The position of each separator between streams.
-         */
-        private long[] separatorPositions;
-
-        /**
          * The total length.
          */
         private long length;
+
+        /**
+         * Number of detected lines.
+         */
+        private int lines;
+
+        /**
+         * Number of columns on the last line.
+         */
+        private int columns;
 
         /**
          * The nut's index currently read.
@@ -383,38 +428,36 @@ public class CompositeNut extends PipedConvertibleNut {
 
         /**
          * <p>
-         * Builds a new instance.
+         * Builds a new instance. If the given parameter is {@code null}, the {@link com.github.wuic.nut.Nut#openStream()}
+         * method is called for each nut of the composition. Otherwise the given list is used. In that case, the composition
+         * list and the given parameter must have the same size.
          * </p>
          *
+         * @param streams the stream for each {@link Nut} of the composition, {@code null} if nut's input stream should be used
          * @throws IOException if a stream could not be opened
          */
-        private CompositeInputStream() throws IOException {
+        private CompositeInputStream(final List<InputStream> streams) throws IOException {
             final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * NumberUtils.TWO);
-            separatorPositions = new long[compositionList.size()];
 
-            for (final Nut n : compositionList) {
-                is.add(n.openStream());
+            // Use nut streams
+            if (streams == null) {
+                for (final Nut n : compositionList) {
+                    addStream(is, n.openStream());
+                }
+            } else {
+                // Check assertion
+                if (streams.size() != compositionList.size()) {
+                    WuicException.throwBadArgumentException(new IllegalArgumentException(
+                            "A specific list of streams can be specified it has the same size as the composition list."));
+                }
 
-                if (streamSeparator != null) {
-                    // Keep the separation position when stream is closed
-                    is.add(new ByteArrayInputStream(streamSeparator) {
-                        @Override
-                        public void close() throws IOException {
-                            separatorPositions[currentIndex++] = length;
-                        }
-                    });
-                } else {
-                    // No separator stream, just add a marker
-                    is.add(new InputStream() {
-                        @Override
-                        public int read() throws IOException {
-                            separatorPositions[currentIndex++] = length;
-                            return -1;
-                        }
-                    });
+                // Use specific streams
+                for (final InputStream inputStream : streams) {
+                    addStream(is, inputStream);
                 }
             }
 
+            positions = new Position[compositionList.size()];
             sequence = new SequenceInputStream(Collections.enumeration(is));
 
             if (CompositeNut.this.getNutType().isText()) {
@@ -424,13 +467,63 @@ public class CompositeNut extends PipedConvertibleNut {
 
         /**
          * <p>
-         * Gets the outer composition list.
+         * Adds the given {@link InputStream} to the list specified in parameter. A second {@link InputStream} is used
+         * to mark the separation between all the objects added to the list.
          * </p>
          *
-         * @return the composition list
+         * @param targetList the list to populated
+         * @param is the stream
          */
-        public List<ConvertibleNut> getComposition() {
-            return CompositeNut.this.compositionList;
+        private void addStream(final List<InputStream> targetList, final InputStream is) {
+            targetList.add(is);
+
+            if (streamSeparator != null) {
+                // Keep the separation position when stream is closed
+                targetList.add(new ByteArrayInputStream(streamSeparator) {
+                    @Override
+                    public void close() throws IOException {
+                        positions[currentIndex++] = new Position(lines, columns, length);
+                    }
+                });
+            } else {
+                // No separator stream, just add a marker
+                targetList.add(new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        positions[currentIndex++] = new Position(lines, columns, length);
+                        return -1;
+                    }
+                });
+            }
+        }
+
+        /**
+         * <p>
+         * Gets the enclosing class.
+         * </p>
+         *
+         * @return the composition
+         */
+        public CompositeNut getCompositeNut() {
+            return CompositeNut.this;
+        }
+
+        /**
+         * <p>
+         * Gets the position of the given {@link ConvertibleNut} inside the composite stream.
+         * </p>
+         *
+         * @param convertibleNut the nut
+         * @return the {@link Position} object, {@code null} if the nut is not part of the composition
+         */
+        public Position position(final ConvertibleNut convertibleNut) {
+            final int nutPos = compositionList.indexOf(convertibleNut);
+
+            if (nutPos != -1) {
+                return positions[nutPos];
+            }
+
+            return null;
         }
 
         /**
@@ -442,8 +535,8 @@ public class CompositeNut extends PipedConvertibleNut {
          * @return the nut, {@code null} if the given position is not in the interval [0, length - 1]
          */
         public ConvertibleNut nutAt(final int position) {
-            for (int i = 0; i < separatorPositions.length; i++) {
-                if (position < separatorPositions[i]) {
+            for (int i = 0; i < positions.length; i++) {
+                if (position < positions[i].getIndex()) {
                     return compositionList.get(i);
                 }
             }
@@ -456,7 +549,7 @@ public class CompositeNut extends PipedConvertibleNut {
          */
         @Override
         public String toString() {
-            return String.format("separatorPositions: %s\nisText: %b", Arrays.toString(separatorPositions), sequenceReader != null);
+            return String.format("separatorPositions: %s\nisText: %b", Arrays.toString(positions), sequenceReader != null);
         }
 
         /**
@@ -484,11 +577,19 @@ public class CompositeNut extends PipedConvertibleNut {
             // Count stream
             if (retval != -1) {
                 length++;
+                columns++;
 
                 if (sequenceReader != null) {
+                    final char[] chars = Character.toChars(retval);
+
+                    // Count new lines only for character streams.
+                    if (chars[0] == '\n') {
+                        lines++;
+                        columns = 0;
+                    }
 
                     // Just read a character, convert it to a byte array
-                    final CharBuffer cbuf = CharBuffer.wrap(Character.toChars(retval));
+                    final CharBuffer cbuf = CharBuffer.wrap(chars);
 
                     // TODO: avoid default Charset
                     final ByteBuffer bbuf = Charset.forName("UTF-8").encode(cbuf);
