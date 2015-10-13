@@ -294,7 +294,8 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      *
      * @param ctxBuilder the context builder
      * @param heap the enclosing heap
-     * @return the extracted heaps
+     * @param paths the paths that compose the heap
+     * @param heaps the collected heaps
      * @throws IOException if an I/O error occurs
      */
     private static void collectElements(final ContextBuilder ctxBuilder,
