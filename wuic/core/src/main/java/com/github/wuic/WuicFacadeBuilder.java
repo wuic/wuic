@@ -203,6 +203,12 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             additionalObjectBuilderInspectors(properties);
         } catch (MalformedURLException mue) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
+        } catch (ClassNotFoundException cnfe) {
+            WuicException.throwBadStateException(cnfe);
+        } catch (InstantiationException ie) {
+            WuicException.throwBadStateException(ie);
+        } catch (IllegalAccessException iae) {
+            WuicException.throwBadStateException(iae);
         }
     }
 
@@ -227,8 +233,12 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      *
      * @param properties the properties
      * @return this
+     * @throws ClassNotFoundException if class does not exists
+     * @throws IllegalAccessException if class can be instantiated
+     * @throws InstantiationException if an error occurs during instantiation
      */
-    public final WuicFacadeBuilder additionalContextBuilderConfigurators(final BiFunction<String, String, String> properties) {
+    public final WuicFacadeBuilder additionalContextBuilderConfigurators(final BiFunction<String, String, String> properties)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "");
 
         if (!value.isEmpty()) {
@@ -236,17 +246,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             final ContextBuilderConfigurator[] configurators = new ContextBuilderConfigurator[classes.length];
 
             for (int i = 0; i < classes.length; i++) {
-                final String clazz = classes[i];
-
-                try {
-                    configurators[i] = ContextBuilderConfigurator.class.cast(Class.forName(clazz).newInstance());
-                } catch (ClassNotFoundException cnfe) {
-                    WuicException.throwBadStateException(cnfe);
-                } catch (InstantiationException ie) {
-                    WuicException.throwBadStateException(ie);
-                } catch (IllegalAccessException iae) {
-                    WuicException.throwBadStateException(iae);
-                }
+                configurators[i] = ContextBuilderConfigurator.class.cast(Class.forName(classes[i]).newInstance());
             }
 
             contextBuilderConfigurators(configurators);
@@ -263,8 +263,12 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      *
      * @param properties the properties
      * @return this
+     * @throws ClassNotFoundException if class does not exists
+     * @throws IllegalAccessException if class can be instantiated
+     * @throws InstantiationException if an error occurs during instantiation
      */
-    public final WuicFacadeBuilder additionalObjectBuilderInspectors(final BiFunction<String, String, String> properties) {
+    public final WuicFacadeBuilder additionalObjectBuilderInspectors(final BiFunction<String, String, String> properties)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR, "");
 
         if (!value.isEmpty()) {
@@ -272,17 +276,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             final ObjectBuilderInspector[] inspectors = new ObjectBuilderInspector[classes.length];
 
             for (int i = 0; i < classes.length; i++) {
-                final String clazz = classes[i];
-
-                try {
-                    inspectors[i] = ObjectBuilderInspector.class.cast(Class.forName(clazz).newInstance());
-                } catch (ClassNotFoundException cnfe) {
-                    WuicException.throwBadStateException(cnfe);
-                } catch (InstantiationException ie) {
-                    WuicException.throwBadStateException(ie);
-                } catch (IllegalAccessException iae) {
-                    WuicException.throwBadStateException(iae);
-                }
+                inspectors[i] = ObjectBuilderInspector.class.cast(Class.forName(classes[i]).newInstance());
             }
 
             objectBuilderInspector(inspectors);
@@ -566,8 +560,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
         public WuicFacadeBuilder toFacade() {
             return WuicFacadeBuilder.this;
         }
-
-
 
         /**
          * {@inheritDoc}
