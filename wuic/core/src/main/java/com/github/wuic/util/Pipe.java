@@ -51,11 +51,9 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -159,6 +157,62 @@ public final class Pipe<T extends ConvertibleNut> {
          * @throws IOException if callback throws an I/O error
          */
         void ready(Execution e) throws IOException;
+    }
+
+    /**
+     * <p>
+     * This class holds a set of transformers associated to a convertible nut.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.0
+     */
+    private static class PerNutTransformation {
+
+        /**
+         * The transformers.
+         */
+        private Set<Transformer<ConvertibleNut>> transformers;
+
+        /**
+         * The nut.
+         */
+        private ConvertibleNut convertibleNut;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param transformers the transformers
+         * @param convertibleNut the nut
+         */
+        public PerNutTransformation(final Set<Transformer<ConvertibleNut>> transformers, final ConvertibleNut convertibleNut) {
+            this.transformers = transformers;
+            this.convertibleNut = convertibleNut;
+        }
+
+        /**
+         * <p>
+         * Gets the transformers.
+         * </p>
+         *
+         * @return the transformers
+         */
+        public Set<Transformer<ConvertibleNut>> getTransformers() {
+            return transformers;
+        }
+
+        /**
+         * <p>
+         * Gets the nut to transform.
+         * </p>
+         *
+         * @return the nut
+         */
+        public ConvertibleNut getConvertibleNut() {
+            return convertibleNut;
+        }
     }
 
     /**
@@ -483,7 +537,7 @@ public final class Pipe<T extends ConvertibleNut> {
         if (hasTransformers) {
             // Get transformers
             final Set<Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Transformer<ConvertibleNut>>();
-            final Map<ConvertibleNut, Set<Transformer<ConvertibleNut>>> nuts = new LinkedHashMap<ConvertibleNut, Set<Transformer<ConvertibleNut>>>();
+            final List<PerNutTransformation> nuts = new ArrayList<PerNutTransformation>();
             final CompositeNut composite = cis.getCompositeNut();
             populateTransformers(convertible.getTransformers(), aggregatedStream, nuts, composite.getCompositionList());
 
@@ -536,16 +590,16 @@ public final class Pipe<T extends ConvertibleNut> {
      * @return the input streams of corresponding to the composition where transformed content is accessible
      * @throws IOException if transformation fails
      */
-    private List<InputStream> transformBeforeAggregate(final Map<ConvertibleNut, Set<Transformer<ConvertibleNut>>> nuts,
+    private List<InputStream> transformBeforeAggregate(final List<PerNutTransformation> nuts,
                                                        final List<ConvertibleNut> compositionList,
                                                        final ConvertibleNut convertibleNut)
             throws IOException {
         final List<InputStream> is = new ArrayList<InputStream>(compositionList.size());
 
-        for (final Map.Entry<ConvertibleNut, Set<Transformer<ConvertibleNut>>> entry : nuts.entrySet()) {
+        for (final PerNutTransformation perNutTransformation : nuts) {
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-            if (!entry.getValue().isEmpty()) {
+            if (!perNutTransformation.getTransformers().isEmpty()) {
 
                 // We pass this composition in order to receive any referenced nut or whatever state change
                 final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(new NutWrapper(convertibleNut) {
@@ -555,18 +609,18 @@ public final class Pipe<T extends ConvertibleNut> {
                      */
                     @Override
                     public String getName() {
-                        return entry.getKey().getName();
+                        return perNutTransformation.getConvertibleNut().getName();
                     }
-                }, entry.getKey().openStream());
+                }, perNutTransformation.getConvertibleNut().openStream());
 
-                for (final Pipe.Transformer<ConvertibleNut> transformer : entry.getValue()) {
+                for (final Pipe.Transformer<ConvertibleNut> transformer : perNutTransformation.getTransformers()) {
                     pipe.register(transformer);
                 }
 
-                Pipe.executeAndWriteTo(pipe, entry.getKey().getReadyCallbacks(), bos);
+                Pipe.executeAndWriteTo(pipe, perNutTransformation.getConvertibleNut().getReadyCallbacks(), bos);
                 is.add(new ByteArrayInputStream(bos.toByteArray()));
             } else {
-                is.add(entry.getKey().openStream());
+                is.add(perNutTransformation.getConvertibleNut().openStream());
             }
         }
 
@@ -592,26 +646,26 @@ public final class Pipe<T extends ConvertibleNut> {
      */
     private void populateTransformers(final Set<Transformer<ConvertibleNut>> commonTransformers,
                                       final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream,
-                                      final Map<ConvertibleNut, Set<Transformer<ConvertibleNut>>> nuts,
+                                      final List<PerNutTransformation> nuts,
                                       final Collection<ConvertibleNut> compositionList) {
         for (final ConvertibleNut nut : compositionList) {
             final Set<Pipe.Transformer<ConvertibleNut>> separateStream = new LinkedHashSet<Transformer<ConvertibleNut>>();
             populateTransformers(separateStream, aggregatedStream, nut.getTransformers());
             populateTransformers(separateStream, aggregatedStream, commonTransformers);
-            nuts.put(nut, separateStream);
+            nuts.add(new PerNutTransformation(separateStream, nut));
         }
     }
 
     /**
      * <p>
      * Populate the given maps with the specified transformers as explained in
-     * {@link #populateTransformers(java.util.Set, java.util.Set, java.util.Map, java.util.Collection)}.
+     * {@link #populateTransformers(java.util.Set, java.util.Set, java.util.List, java.util.Collection)}.
      * </p>
      *
      * @param separateStream the transformers to apply for each nut
      * @param aggregatedStream the transformers to apply to the aggregated stream
      * @param transformers the transformers to populate the map
-     * @see #populateTransformers(java.util.Set, java.util.Set, java.util.Map, java.util.Collection)
+     * @see #populateTransformers(java.util.Set, java.util.Set, java.util.List, java.util.Collection)
      */
     private void populateTransformers(final Set<Pipe.Transformer<ConvertibleNut>> separateStream,
                                       final Set<Pipe.Transformer<ConvertibleNut>> aggregatedStream,
