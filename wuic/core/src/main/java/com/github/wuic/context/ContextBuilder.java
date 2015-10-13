@@ -78,6 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -203,6 +204,9 @@ public class ContextBuilder extends Observable {
             this.nutDaoBuilderFactory.inspector(i);
             this.nutFilterBuilderFactory.inspector(inspector);
         }
+
+        // Rely on ServiceLoader
+        installObjectBuilderInspector();
     }
 
     /**
@@ -1679,6 +1683,21 @@ public class ContextBuilder extends Observable {
         notifyObservers(id);
 
         return this;
+    }
+
+    /**
+     * <p>
+     * Installs all the {@link ObjectBuilderInspector} detected with the {@link java.util.ServiceLoader}.
+     * </p>
+     */
+    private void installObjectBuilderInspector() {
+        final ServiceLoader<ObjectBuilderInspector> serviceLoader = ServiceLoader.load(ObjectBuilderInspector.class);
+
+        for (final ObjectBuilderInspector obi : serviceLoader) {
+            nutFilterBuilderFactory.inspector(obi);
+            engineBuilderFactory.inspector(obi);
+            nutFilterBuilderFactory.inspector(obi);
+        }
     }
 
     /**

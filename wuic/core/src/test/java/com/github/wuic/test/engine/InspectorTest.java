@@ -91,6 +91,20 @@ import java.util.regex.Matcher;
 public class InspectorTest {
 
     /**
+     * Called only if ServiceLoader detects the configurator.
+     */
+    public static boolean called = false;
+
+    /**
+     * Makes sure the object builder inspector are installed thanks to the {@link java.util.ServiceLoader}.
+     */
+    @Test
+    public void serviceTest() {
+        new ContextBuilder();
+        Assert.assertTrue(called);
+    }
+
+    /**
      * <p>
      * Asserts that the result of the inspections of a stream built on top of given collections contains the specified
      * count.
