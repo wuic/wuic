@@ -206,6 +206,7 @@ public class ContextBuilder extends Observable {
         }
 
         // Rely on ServiceLoader
+        installContextBuilderConfigurator();
         installObjectBuilderInspector();
     }
 
@@ -1683,6 +1684,19 @@ public class ContextBuilder extends Observable {
         notifyObservers(id);
 
         return this;
+    }
+
+    /**
+     * <p>
+     * Installs all the {@link ContextBuilderConfigurator} detected with the {@link java.util.ServiceLoader}.
+     * </p>
+     */
+    private void installContextBuilderConfigurator() {
+        final ServiceLoader<ContextBuilderConfigurator> serviceLoader = ServiceLoader.load(ContextBuilderConfigurator.class);
+
+        for (final ContextBuilderConfigurator cbc : serviceLoader) {
+            cbc.internalConfigure(this);
+        }
     }
 
     /**

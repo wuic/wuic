@@ -66,6 +66,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ContextBuilderConfiguratorTest {
 
     /**
+     * Called only if ServiceLoader detects the configurator.
+     */
+    public static boolean called = false;
+
+    /**
+     * Makes sure the context builder configurators are installed thanks to the {@link java.util.ServiceLoader}.
+     */
+    @Test
+    public void serviceTest() {
+        new ContextBuilder();
+        Assert.assertTrue(called);
+    }
+
+    /**
      * Tests configurations when multiple and non-multiple executions are set.
      *
      * @throws IOException if test fails
