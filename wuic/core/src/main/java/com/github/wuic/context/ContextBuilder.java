@@ -196,10 +196,12 @@ public class ContextBuilder extends Observable {
         final ObjectBuilderInspector inspector = new NutFilterHolderInspector();
         this.engineBuilderFactory.inspector(inspector);
         this.nutDaoBuilderFactory.inspector(inspector);
+        this.nutFilterBuilderFactory.inspector(inspector);
 
         for (final ObjectBuilderInspector i : inspectors) {
             this.engineBuilderFactory.inspector(i);
             this.nutDaoBuilderFactory.inspector(i);
+            this.nutFilterBuilderFactory.inspector(inspector);
         }
     }
 
