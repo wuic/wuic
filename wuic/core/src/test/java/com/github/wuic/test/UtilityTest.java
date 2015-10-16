@@ -806,4 +806,41 @@ public class UtilityTest extends WuicTest {
         Assert.assertTrue(NumberUtils.isNumber("01"));
         Assert.assertTrue(NumberUtils.isNumber("100"));
     }
+
+    /**
+     * Common beginning string extraction test.
+     */
+    @Test
+    public void extractCommonBeginningTest() {
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/foo", "/path/bar", "/path/baz")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/baz/foo", "/path/bar")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/baz/foo", "/path/bar/foo")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/foo", "/path/bar/foo")));
+
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/foo/", "/path/bar/", "/path/baz/")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/baz/foo/", "/path/bar/")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/baz/foo/", "/path/bar/foo/")));
+        Assert.assertEquals("/path", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/foo/", "/path/bar/foo/")));
+
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/foo", "path/bar", "path/baz")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/baz/foo", "path/bar")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/baz/foo", "path/bar/foo")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/foo", "path/bar/foo")));
+
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/foo/", "path/bar/", "path/baz/")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/baz/foo/", "path/bar/")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/baz/foo/", "path/bar/foo/")));
+        Assert.assertEquals("path", StringUtils.computeCommonPathBeginning(Arrays.asList("path/foo/", "path/bar/foo/")));
+
+        Assert.assertEquals("/path/deep", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/deep/foo", "/path/deep/bar")));
+        Assert.assertEquals("/path/deep", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/deep/foo", "/path/deep/bar/baz")));
+
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path/bar", "/path/foo")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path/bar")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("path", "path")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/", "path")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("foo")));
+        Assert.assertEquals("", StringUtils.computeCommonPathBeginning(new ArrayList<String>()));
+    }
 }

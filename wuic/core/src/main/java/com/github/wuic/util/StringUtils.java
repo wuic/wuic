@@ -38,6 +38,8 @@
 
 package com.github.wuic.util;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Utility class providing helper constants and static methods around strings.
@@ -244,5 +246,62 @@ public final class StringUtils {
 
             return retval.toString();
         }
+    }
+
+    /**
+     * <p>
+     * Computes from the given collection of {@code String} the common path they start with.
+     * </p>
+     *
+     * @param elements the collection
+     * @return the beginning
+     */
+    public static String computeCommonPathBeginning(final Collection<String> elements) {
+
+        // Nothing to compare
+        if (elements.size() <= 1) {
+            return "";
+        }
+
+        final StringBuilder basePathBuilder = new StringBuilder();
+
+        for (final String path : elements) {
+            int lastIndex = path.lastIndexOf('/');
+
+            // Single path case
+            if (lastIndex == -1) {
+                lastIndex = path.length();
+            }
+
+            // First path?
+            if (basePathBuilder.length() == 0) {
+                basePathBuilder.append(path.substring(0, lastIndex));
+            } else {
+                // Keep character until one is different
+                for (int i = 0; i < basePathBuilder.length() && i < path.length(); i++) {
+                    if (basePathBuilder.charAt(i) != path.charAt(i)) {
+                        basePathBuilder.delete(i, basePathBuilder.length());
+
+                        lastIndex = basePathBuilder.lastIndexOf("/");
+
+                        // Remove partial path after '/'
+                        if (lastIndex != -1 && i > lastIndex) {
+                            basePathBuilder.delete(lastIndex, basePathBuilder.length());
+                        }
+                    }
+                }
+            }
+        }
+
+        final String retval = basePathBuilder.toString();
+
+        // Check that no path is finally not the build path itself
+        for (final String path : elements) {
+            if (path.equals(retval)) {
+                return "";
+            }
+        }
+
+        return basePathBuilder.toString();
     }
 }
