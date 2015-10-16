@@ -140,7 +140,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void nominalTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
@@ -320,7 +320,7 @@ public class ContextBuilderTest {
         final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
 
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
@@ -382,7 +382,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void withoutDefaultEnginesTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
@@ -405,7 +405,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void withFilterTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
@@ -431,7 +431,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void overrideDefaultEnginesTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).configureDefault();
         builder.tag("test")
                .contextNutDaoBuilder("dao", "MockDaoBuilder")
@@ -454,7 +454,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void regexTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
@@ -463,6 +463,7 @@ public class ContextBuilderTest {
                 .toContext()
                 .heap("heap-one", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
                 .heap("heap-two", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
+                .heap(false, "composite", "dao", new String[] { "heap-.*" }, new String[]{})
                 .contextEngineBuilder("engine", "MockEngineBuilder")
                 .toContext()
                 .template("tpl", new String[]{"engine"})
@@ -470,10 +471,10 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
-        Assert.assertTrue(context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
+        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
+        Assert.assertEquals(2, context.getWorkflow("composite").getHeap().getComposition().length);
     }
-
 
     /**
      * Test when a template is not found.
@@ -502,7 +503,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void implicitWorkflowTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
@@ -528,7 +529,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void emptyChainTest() throws Exception {
-        // Typical use : no exception should be thrown
+        // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
