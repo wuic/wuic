@@ -343,6 +343,32 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Command line to be executed.
+     * </p>
+     */
+    String COMMAND = ENGINE_PREFIX + "command";
+
+    /**
+     * <p>
+     * Input nut type.
+     * </p>
+     */
+    String INPUT_NUT_TYPE = ENGINE_PREFIX + "inputNutType";
+
+    /**
+     * <p>
+     * Output nut type.
+     * </p>
+     */
+    String OUTPUT_NUT_TYPE = ENGINE_PREFIX + "outputNutType";
+
+    /**
+     * The path separator.
+     */
+    String PATH_SEPARATOR = ENGINE_PREFIX + "pathSeparator";
+
+    /**
+     * <p>
      * Indicates all the regex expressions configured in a filter.
      * </p>
      */

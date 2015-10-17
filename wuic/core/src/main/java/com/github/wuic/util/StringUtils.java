@@ -266,31 +266,7 @@ public final class StringUtils {
         final StringBuilder basePathBuilder = new StringBuilder();
 
         for (final String path : elements) {
-            int lastIndex = path.lastIndexOf('/');
-
-            // Single path case
-            if (lastIndex == -1) {
-                lastIndex = path.length();
-            }
-
-            // First path?
-            if (basePathBuilder.length() == 0) {
-                basePathBuilder.append(path.substring(0, lastIndex));
-            } else {
-                // Keep character until one is different
-                for (int i = 0; i < basePathBuilder.length() && i < path.length(); i++) {
-                    if (basePathBuilder.charAt(i) != path.charAt(i)) {
-                        basePathBuilder.delete(i, basePathBuilder.length());
-
-                        lastIndex = basePathBuilder.lastIndexOf("/");
-
-                        // Remove partial path after '/'
-                        if (lastIndex != -1 && i > lastIndex) {
-                            basePathBuilder.delete(lastIndex, basePathBuilder.length());
-                        }
-                    }
-                }
-            }
+            checkStartWith(basePathBuilder, path);
         }
 
         final String retval = basePathBuilder.toString();
@@ -303,5 +279,41 @@ public final class StringUtils {
         }
 
         return basePathBuilder.toString();
+    }
+
+    /**
+     * <p>
+     * Checks that the path begin with the {@code String} of the given builder and adapt the builder if not.
+     * </p>
+     *
+     * @param basePathBuilder the builder
+     * @param path the path
+     */
+    public static void checkStartWith(final StringBuilder basePathBuilder, final String path) {
+        int lastIndex = path.lastIndexOf('/');
+
+        // Single path case
+        if (lastIndex == -1) {
+            lastIndex = path.length();
+        }
+
+        // First path?
+        if (basePathBuilder.length() == 0) {
+            basePathBuilder.append(path.substring(0, lastIndex));
+        } else {
+            // Keep character until one is different
+            for (int i = 0; i < basePathBuilder.length() && i < path.length(); i++) {
+                if (basePathBuilder.charAt(i) != path.charAt(i)) {
+                    basePathBuilder.delete(i, basePathBuilder.length());
+
+                    lastIndex = basePathBuilder.lastIndexOf("/");
+
+                    // Remove partial path after '/'
+                    if (lastIndex != -1 && i > lastIndex) {
+                        basePathBuilder.delete(lastIndex, basePathBuilder.length());
+                    }
+                }
+            }
+        }
     }
 }
