@@ -127,6 +127,12 @@ public enum NutType {
     TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", null, true),
 
     /**
+     * JSX files support.
+     */
+    JSX(new String[] { ".jsx" }, "text/jsx", null, true),
+
+
+    /**
      * LESS files support.
      */
     LESS(new String[] { ".less" }, "text/css", null, true),
