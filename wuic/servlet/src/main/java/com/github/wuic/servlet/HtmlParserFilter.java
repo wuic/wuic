@@ -268,7 +268,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
         if (bytes.length > 0) {
             try {
                 final HttpServletRequest httpRequest = HttpServletRequest.class.cast(request);
-                final String workflowId = StringUtils.toHexString(IOUtils.digest(extractWorkflowId(httpRequest)));
+                final String workflowId = "W" + StringUtils.toHexString(IOUtils.digest(extractWorkflowId(httpRequest)));
                 final String path = buildPath(httpRequest, httpServletResponse);
                 updateWorkflow(httpRequest, bytes, workflowId, path);
 
