@@ -316,4 +316,27 @@ public final class StringUtils {
             }
         }
     }
+
+    /**
+     * <p>
+     * Handy method that replaces all the occurrences of the given {@code String} by a replacement in the string builder
+     * specified in parameter.
+     * </p>
+     *
+     * @param str the characters to replace
+     * @param replacement the replacement
+     * @param builder the builder to modify
+     * @return the modified builder
+     */
+    public static StringBuilder replaceAll(final String str, final String replacement, final StringBuilder builder) {
+        // last index
+        int index = -1;
+
+        // Replace each occurrence
+        while ((index = builder.indexOf(str, index + 1)) != -1) {
+            builder.replace(index, index + str.length(), replacement);
+        }
+
+        return builder;
+    }
 }

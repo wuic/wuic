@@ -843,4 +843,17 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("foo")));
         Assert.assertEquals("", StringUtils.computeCommonPathBeginning(new ArrayList<String>()));
     }
+
+    /**
+     * <p>
+     * Tests {@link StringUtils#replaceAll(String, String, StringBuilder)}.
+     * </p>
+     */
+    @Test
+    public void replaceAllTest() {
+        Assert.assertEquals("foo bar baz", StringUtils.replaceAll("|", " ", new StringBuilder("foo|bar|baz")).toString());
+        Assert.assertEquals("foo,,,,bar,,,,baz", StringUtils.replaceAll("+=-", ",,,,", new StringBuilder("foo+=-bar+=-baz")).toString());
+        Assert.assertEquals("foo bar baz", StringUtils.replaceAll(".", " ", new StringBuilder("foo bar baz")).toString());
+
+    }
 }
