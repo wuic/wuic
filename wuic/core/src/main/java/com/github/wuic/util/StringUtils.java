@@ -259,8 +259,13 @@ public final class StringUtils {
     public static String computeCommonPathBeginning(final Collection<String> elements) {
 
         // Nothing to compare
-        if (elements.size() <= 1) {
+        if (elements.isEmpty()) {
             return "";
+        } else if (elements.size() == 1) {
+            // Only one element
+            final String el = elements.iterator().next();
+            final int lastIndex = el.lastIndexOf('/');
+            return lastIndex == -1 ? "" : lastIndex == 0 ? "/" : el.substring(0, lastIndex);
         }
 
         final StringBuilder basePathBuilder = new StringBuilder();

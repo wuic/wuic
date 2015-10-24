@@ -835,6 +835,10 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals("/path/deep", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/deep/foo", "/path/deep/bar")));
         Assert.assertEquals("/path/deep", StringUtils.computeCommonPathBeginning(Arrays.asList("/path/deep/foo", "/path/deep/bar/baz")));
 
+        Assert.assertEquals("/", StringUtils.computeCommonPathBeginning(Arrays.asList("/foo")));
+        Assert.assertEquals("/foo", StringUtils.computeCommonPathBeginning(Arrays.asList("/foo/bar")));
+        Assert.assertEquals("/foo/bar", StringUtils.computeCommonPathBeginning(Arrays.asList("/foo/bar/baz")));
+
         Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path/bar", "/path/foo")));
         Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path/bar")));
         Assert.assertEquals("", StringUtils.computeCommonPathBeginning(Arrays.asList("/path", "/path")));
