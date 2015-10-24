@@ -378,5 +378,20 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
         public InputStream openStream() throws IOException {
             return newInputStream(getInitialName(), processContext);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getParentFile() {
+            String location = servletContext.getRealPath(getInitialName());
+
+            if (location != null) {
+                location = IOUtils.normalizePathSeparator(location);
+                return location.substring(0, location.indexOf(getInitialName()));
+            }
+
+            return null;
+        }
     }
 }
