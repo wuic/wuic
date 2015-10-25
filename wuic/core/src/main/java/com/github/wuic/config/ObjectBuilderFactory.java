@@ -40,6 +40,7 @@ package com.github.wuic.config;
 
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.util.AnnotationDetectorScanner;
+import com.github.wuic.util.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -141,9 +144,10 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
     private List<KnownType> knownTypes;
 
     /**
-     * A list of inspector to execute on any built object.
+     * A list of inspector to execute for each instance of class specified as key.
+     * Inspectors associated to {@code null} will be applied on any object.
      */
-    private List<ObjectBuilderInspector> inspectors;
+    private Map<Class, List<ObjectBuilderInspector>> inspectors;
 
     /**
      * <p>
@@ -157,7 +161,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
                                 final String packageToScan) {
         this.annotationToScan = annotationToScan;
         this.knownTypes = new ArrayList<KnownType>();
-        this.inspectors = new ArrayList<ObjectBuilderInspector>();
+        this.inspectors = new HashMap<Class, List<ObjectBuilderInspector>>();
         new AnnotationDetectorScanner().scan(packageToScan, this);
     }
 
@@ -173,9 +177,9 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
                                 final Class<? extends T> ... classes) {
         this.annotationToScan = annotationToScan;
         this.knownTypes = new ArrayList<KnownType>();
-        this.inspectors = new ArrayList<ObjectBuilderInspector>();
+        this.inspectors = new HashMap<Class, List<ObjectBuilderInspector>>();
 
-        for (Class<? extends T> clazz : classes) {
+        for (final Class<? extends T> clazz : classes) {
             if (clazz.isAnnotationPresent(annotationToScan)) {
                 handle(clazz);
             } else {
@@ -187,14 +191,44 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
 
     /**
      * <p>
-     * Adds an inspector.
+     * Adds an inspector. If the inspector is annotated with {@link ObjectBuilderInspector.InspectedType}, then it will
+     * be applied to object instantiated from specified classes only. Otherwise the inspector will be called for any object.
      * </p>
      *
-     * @param i the inspector
+     * @param obi the inspector
      * @return this
      */
-    public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector i) {
-        inspectors.add(i);
+    public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector obi) {
+        final BiFunction<Class, ObjectBuilderInspector, String> populator = new BiFunction<Class, ObjectBuilderInspector, String>() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String apply(final Class clazz, final ObjectBuilderInspector i) {
+                List<ObjectBuilderInspector> inspectorList = inspectors.get(clazz);
+
+                // First inspector registered for this class
+                if (inspectorList == null) {
+                    inspectorList = new ArrayList<ObjectBuilderInspector>();
+                    inspectors.put(clazz, inspectorList);
+                }
+
+                inspectorList.add(i);
+
+                return null;
+            }
+        };
+
+        // Check if inspector should apply just a few objects
+        if (obi.getClass().isAnnotationPresent(ObjectBuilderInspector.InspectedType.class)) {
+            for (final Class<?> clazz : obi.getClass().getAnnotation(ObjectBuilderInspector.InspectedType.class).value()) {
+                populator.apply(clazz, obi);
+            }
+        } else {
+            populator.apply(null, obi);
+        }
+
         return this;
     }
 
@@ -269,8 +303,14 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             try {
                 T retval = constructor.newInstance(params);
 
-                for (final ObjectBuilderInspector i : inspectors) {
-                    retval = i.inspect(retval);
+                for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
+                    // Case 1: apply inspectors declared for any class
+                    // Case 2: apply inspectors explicitly declared for this class
+                    if (entry.getKey() == null || entry.getKey().isAssignableFrom(constructor.getDeclaringClass())) {
+                        for (final ObjectBuilderInspector i : entry.getValue()) {
+                            retval = i.inspect(retval);
+                        }
+                    }
                 }
 
                 return retval;

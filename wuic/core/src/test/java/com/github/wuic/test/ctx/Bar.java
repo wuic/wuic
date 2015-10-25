@@ -36,58 +36,24 @@
  */
 
 
-package com.github.wuic.config;
+package com.github.wuic.test.ctx;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.nut.filter.NutFilterService;
 
 /**
- * <p>
- * An inspector called each time a builder produced by {@link ObjectBuilderFactory} builds on a object to give
- * a chance to modify the object before it gets returned.
- * </p>
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.5
+ * @since 0.5.3
  */
-public interface ObjectBuilderInspector {
+@NutFilterService
+public class Bar implements C {
 
     /**
-     * <p>
-     * This annotation can be used on the {@link ObjectBuilderInspector} implementation to specify a particular type
-     * of object to be inspected. If the annotation is not used, then the inspector should be applied to any type.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @since 0.5.3
+     * Annotated constructor.
      */
-    @Target({ElementType.TYPE})
-    @Retention(RetentionPolicy.RUNTIME)
-    @Documented
-    public @interface InspectedType {
-
-        /**
-         * <p>
-         * Array of classes that will be inspected by the annotated inspector.
-         * </p>
-         *
-         * @return the classes
-         */
-        Class[] value();
+    @ConfigConstructor
+    public Bar() {
     }
-
-    /**
-     * <p>
-     * Inspects a built object.
-     * </p>
-     *
-     * @param object the object
-     * @param <T> the type of object
-     * @return the inspected object
-     */
-    <T> T inspect(T object);
 }

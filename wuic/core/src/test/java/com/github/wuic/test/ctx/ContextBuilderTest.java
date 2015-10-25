@@ -309,6 +309,32 @@ public class ContextBuilderTest {
 
     /**
      * <p>
+     * Tests that inspector is called only for specified classes.
+     * </p>
+     */
+    @Test
+    public void perClassObjectBuilderInspectorTest() {
+        final Class[] clazz = new Class[] {Foo.class, Bar.class, Baz.class, };
+        final ObjectBuilderFactory<? extends C> c = new ObjectBuilderFactory<Foo>(NutFilterService.class, clazz);
+        final InspectBarAndBaz barAndBaz = new InspectBarAndBaz();
+        final InspectBaz baz = new InspectBaz();
+        final InspectBarAndFoo barAndFoo = new InspectBarAndFoo();
+        final I i1 = new I();
+        final I i2 = new I();
+        c.inspector(barAndBaz).inspector(baz).inspector(barAndFoo).inspector(i1).inspector(i2);
+        c.create("FooBuilder").build();
+        c.create("BarBuilder").build();
+        c.create("BazBuilder").build();
+
+        Assert.assertEquals(2, barAndBaz.call);
+        Assert.assertEquals(2, barAndFoo.call);
+        Assert.assertEquals(1, baz.call);
+        Assert.assertEquals(3, i1.call);
+        Assert.assertEquals(3, i2.call);
+    }
+
+    /**
+     * <p>
      * Test {@link ContextInterceptor} usage.
      * </p>
      *
@@ -811,4 +837,54 @@ public class ContextBuilderTest {
                 .toContext()
                 .build();
     }
+}
+
+
+/**
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ */
+interface C {
+}
+
+/**
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ */
+class I implements ObjectBuilderInspector {
+
+    /**
+     * Number of calls.
+     */
+    int call;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T inspect(final T object) {
+        call++;
+        return object;
+    }
+}
+
+/**
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ */
+// tag::InspectBarAndFoo[]
+@ObjectBuilderInspector.InspectedType({IFoo.class, Bar.class})
+class InspectBarAndFoo extends I implements ObjectBuilderInspector {
+}
+// end::InspectBarAndFoo[]
+
+/**
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ */
+@ObjectBuilderInspector.InspectedType({Foo.class, Baz.class})
+class InspectBarAndBaz extends I {
+}
+
+/**
+ * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ */
+@ObjectBuilderInspector.InspectedType(Baz.class)
+class InspectBaz extends I {
 }

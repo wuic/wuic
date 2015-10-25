@@ -54,6 +54,7 @@ import java.util.List;
  * @version 1.0
  * @since 0.5
  */
+@ObjectBuilderInspector.InspectedType({ ServletContextHandler.class, WebappNutDao.class})
 public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
 
     /**

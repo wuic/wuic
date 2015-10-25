@@ -230,6 +230,7 @@ public class ContextBuilder extends Observable {
      * @version 1.0
      * @since 0.5.0
      */
+    @ObjectBuilderInspector.InspectedType(NutFilterHolder.class)
     final class NutFilterHolderInspector implements ObjectBuilderInspector {
 
         /**
@@ -237,9 +238,7 @@ public class ContextBuilder extends Observable {
          */
         @Override
         public <T> T inspect(final T object) {
-            if (NutFilterHolder.class.isAssignableFrom(object.getClass())) {
-                NutFilterHolder.class.cast(object).setNutFilter(getFilters());
-            }
+            NutFilterHolder.class.cast(object).setNutFilter(getFilters());
 
             return object;
         }

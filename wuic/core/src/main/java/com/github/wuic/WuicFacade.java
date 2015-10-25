@@ -73,6 +73,7 @@ import javax.xml.bind.JAXBException;
  * @version 1.9
  * @since 0.1.0
  */
+@ObjectBuilderInspector.InspectedType(ClassPathResourceResolverHandler.class)
 public final class WuicFacade implements ObjectBuilderInspector {
 
     /**
@@ -430,9 +431,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
      */
     @Override
     public <T> T inspect(final T object) {
-        if (object instanceof ClassPathResourceResolverHandler) {
-            ClassPathResourceResolverHandler.class.cast(object).setClasspathResourceResolver(config.getClasspathResourceResolver());
-        }
+        ClassPathResourceResolverHandler.class.cast(object).setClasspathResourceResolver(config.getClasspathResourceResolver());
 
         return object;
     }
