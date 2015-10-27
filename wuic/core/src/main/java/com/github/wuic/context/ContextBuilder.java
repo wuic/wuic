@@ -165,13 +165,13 @@ public class ContextBuilder extends Observable {
      * @param inspectors the inspectors to add to the factories
      */
     public ContextBuilder(final ContextBuilder b, final URL properties, final ObjectBuilderInspector ... inspectors) {
-        this(b.getEngineBuilderFactory(), b.getNutDaoBuilderFactory(), b.getNutFilterBuilderFactory(), inspectors);
+        this(b.getEngineBuilderFactory(), b.getNutDaoBuilderFactory(), b.getNutFilterBuilderFactory(), false, inspectors);
         propertySet = properties;
     }
 
     /**
      * <p>
-     * Creates a new instance with specific builder factories.
+     * Creates a new instance with specific builder factories. Installs META-INF/services in addition.
      * </p>
      *
      * @param engineBuilderFactory the engine builder factory, {@code null} if default should be created
@@ -182,6 +182,25 @@ public class ContextBuilder extends Observable {
     public ContextBuilder(final ObjectBuilderFactory<Engine> engineBuilderFactory,
                           final ObjectBuilderFactory<NutDao> nutDaoBuilderFactory,
                           final ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory,
+                          final ObjectBuilderInspector ... inspectors) {
+        this(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory, true, inspectors);
+    }
+
+    /**
+     * <p>
+     * Creates a new instance with specific builder factories.
+     * </p>
+     *
+     * @param engineBuilderFactory the engine builder factory, {@code null} if default should be created
+     * @param nutDaoBuilderFactory the DAO builder factory, {@code null} if default should be created
+     * @param nutFilterBuilderFactory the filter builder factory, {@code null} if default should be created
+     * @param installServices install services inside META-INF/services or not
+     * @param inspectors the inspectors to add to the factories
+     */
+    public ContextBuilder(final ObjectBuilderFactory<Engine> engineBuilderFactory,
+                          final ObjectBuilderFactory<NutDao> nutDaoBuilderFactory,
+                          final ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory,
+                          final boolean installServices,
                           final ObjectBuilderInspector ... inspectors) {
         this.taggedSettings = new TaggedSettings();
         this.lock = new ReentrantLock();
@@ -205,9 +224,11 @@ public class ContextBuilder extends Observable {
             this.nutFilterBuilderFactory.inspector(inspector);
         }
 
-        // Rely on ServiceLoader
-        installContextBuilderConfigurator();
-        installObjectBuilderInspector();
+        if (installServices) {
+            // Rely on ServiceLoader
+            installContextBuilderConfigurator();
+            installObjectBuilderInspector();
+        }
     }
 
     /**
@@ -218,7 +239,7 @@ public class ContextBuilder extends Observable {
      * @param inspectors the inspectors
      */
     public ContextBuilder(final ObjectBuilderInspector ... inspectors) {
-        this(null, null, null, inspectors);
+        this(null, null, null, true, inspectors);
     }
 
     /**
