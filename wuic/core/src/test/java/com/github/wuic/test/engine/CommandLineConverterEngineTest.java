@@ -46,6 +46,7 @@ import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.CommandLineConverterEngine;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -85,6 +86,28 @@ public class CommandLineConverterEngineTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
+     * Source map sample.
+     */
+    public static final String SOURCEMAP = "{"
+            + "  \"version\": 3,"
+            + "  \"file\": \"testcode.js\","
+            + "  \"sections\": ["
+            + "    {"
+            + "      \"map\": {"
+            + "         \"version\": 3,"
+            + "         \"mappings\": \"AAAAA,QAASA,UAAS,EAAG;\","
+            + "         \"sources\": [\"testcode.js\"],"
+            + "         \"names\": [\"foo\"]"
+            + "      },"
+            + "      \"offset\": {"
+            + "        \"line\": 1,"
+            + "        \"column\": 1"
+            + "      }"
+            + "    }"
+            + "  ]"
+            + "}";
+
+    /**
      * Typescript compilation test.
      *
      * @throws Exception if test fails
@@ -94,24 +117,7 @@ public class CommandLineConverterEngineTest {
         final String command = String.format("echo %s > %s | echo %s > %s",
                 CommandLineConverterEngine.PATH_TOKEN,
                 CommandLineConverterEngine.OUT_PATH_TOKEN,
-                "{"
-                        + "  \"version\": 3,"
-                        + "  \"file\": \"testcode.js\","
-                        + "  \"sections\": ["
-                        + "    {"
-                        + "      \"map\": {"
-                        + "         \"version\": 3,"
-                        + "         \"mappings\": \"AAAAA,QAASA,UAAS,EAAG;\","
-                        + "         \"sources\": [\"testcode.js\"],"
-                        + "         \"names\": [\"foo\"]"
-                        + "      },"
-                        + "      \"offset\": {"
-                        + "        \"line\": 1,"
-                        + "        \"column\": 1"
-                        + "      }"
-                        + "    }"
-                        + "  ]"
-                        + "}",
+                SOURCEMAP,
                 CommandLineConverterEngine.SOURCE_MAP_TOKEN);
         final File parent = temporaryFolder.newFolder("parent");
         NutsHeap heap = mockHeap(parent);
@@ -128,6 +134,28 @@ public class CommandLineConverterEngineTest {
         final String content = IOUtils.readString(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray())));
         Assert.assertTrue(content, content.contains("foo.less"));
         Assert.assertTrue(content, content.contains("bar.less"));
+    }
+
+    /**
+     * Test libraries detection.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void libTest() throws Exception {
+        final File parent = temporaryFolder.newFolder("parent");
+        NutsHeap heap = mockHeap(parent);
+        final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
+        final ObjectBuilder<Engine> builder = factory.create("CommandLineConverterEngineBuilder");
+        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .property(ApplicationConfig.COMMAND, String.format("dir . > %s & echo %s > %s", CommandLineConverterEngine.OUT_PATH_TOKEN, SOURCEMAP, CommandLineConverterEngine.SOURCE_MAP_TOKEN))
+                .property(ApplicationConfig.LIBRARIES, "/paths;/outPath;/sourceMap;/foo")
+                .build();
+
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null).processContext(ProcessContext.DEFAULT).contextPath("cp").build());
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        res.get(0).transform(new Pipe.DefaultOnReady(bos));
     }
 
     /**
@@ -162,22 +190,49 @@ public class CommandLineConverterEngineTest {
     @Test
     public void badConfTokenTest() {
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
-        final ObjectBuilder<Engine> builder = factory.create("CommandLineConverterEngineBuilder");
 
-        Assert.assertNull(builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+        // No token
+        Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
                 .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
                 .property(ApplicationConfig.COMMAND, "unknown")
                 .build());
 
-        Assert.assertNull(builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+        // Only path token
+        Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
                 .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
                 .property(ApplicationConfig.COMMAND, String.format("unknown %s", CommandLineConverterEngine.PATH_TOKEN))
                 .build());
 
-        Assert.assertNull(builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+        // Only path and out path token
+        Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
                 .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
                 .property(ApplicationConfig.COMMAND, String.format("unknown %s %s", CommandLineConverterEngine.PATH_TOKEN, CommandLineConverterEngine.OUT_PATH_TOKEN))
                 .build());
+
+        // Missing input type
+        Assert.assertTrue(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.LESS.name())
+                .build()).getNutTypes().isEmpty());
+
+        // Missing output type
+        Assert.assertTrue(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+                .build()).getNutTypes().isEmpty());
+
+        // Bad nut type
+        Assert.assertNull(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, "bar")
+                .build()));
+
+        Assert.assertNull(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
+                .property(ApplicationConfig.INPUT_NUT_TYPE, "foo")
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .build()));
+
     }
 
     /**

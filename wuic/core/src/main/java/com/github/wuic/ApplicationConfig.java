@@ -368,6 +368,12 @@ public interface ApplicationConfig {
     String PATH_SEPARATOR = ENGINE_PREFIX + "pathSeparator";
 
     /**
+     * A comma separated list of resources paths available in the classpath.
+     * Those libraries will be copied to the working directory where the command line is executed.
+     */
+    String LIBRARIES = ENGINE_PREFIX + "libraries";
+
+    /**
      * <p>
      * Indicates all the regex expressions configured in a filter.
      * </p>

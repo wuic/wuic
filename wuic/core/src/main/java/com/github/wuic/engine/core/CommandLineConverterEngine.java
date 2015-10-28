@@ -50,10 +50,10 @@ import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.SourceMapNutImpl;
+import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutDiskStore;
 import com.github.wuic.util.StringUtils;
-import com.github.wuic.util.TerFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +68,14 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -120,12 +125,12 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @EngineService(injectDefaultToWorkflow = true)
 public class CommandLineConverterEngine extends AbstractConverterEngine
-        implements TerFunction<List<String>, File, File, Boolean> {
+        implements BiFunction<List<String>, File, Boolean> {
 
     /**
      * The base path token in the command line pattern.
      */
-    public static final String BASE_PATH_TOKEN = "%basePaths%";
+    public static final String BASE_PATH_TOKEN = "%basePath%";
 
     /**
      * Path  token in the command line pattern
@@ -145,7 +150,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     /**
      * Error message if pattern does not contains a mandatory token.
      */
-    public static final String ERROR_MESSAGE = "Command '%s' must contains the token '%s'";
+    public static final String ERROR_MESSAGE = "Command '%s' and/or libraries %s must contains the token '%s'";
 
     /**
      * Logger.
@@ -173,6 +178,17 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     private String command;
 
     /**
+     * The additional libraries.
+     * The key is the path and the boolean indicates if the files need to be filtered because they contain tokens.
+     */
+    private Map<String, Boolean> libraries;
+
+    /**
+     * Working directory.
+     */
+    private File workingDirectory;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -183,17 +199,22 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * @param separator the path separator
      * @param convert if this engine is enabled or not
      * @param asynchronous computes version number asynchronously or not
-     * @throws com.github.wuic.exception.WuicException if the engine cannot be initialized
+     * @param libs additional libraries paths available in the classpath
+     * @throws WuicException if the engine cannot be initialized
+     * @throws IOException if any I/O error occurs
      */
     @ConfigConstructor
+    @SuppressWarnings("unchecked")
     public CommandLineConverterEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.CONVERT, defaultValue = true) final Boolean convert,
                                       @BooleanConfigParam(propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY, defaultValue = true) final Boolean asynchronous,
                                       @StringConfigParam(propertyKey = ApplicationConfig.COMMAND, defaultValue = "") final String command,
                                       @StringConfigParam(propertyKey = ApplicationConfig.INPUT_NUT_TYPE, defaultValue = "") final String inputNutType,
                                       @StringConfigParam(propertyKey = ApplicationConfig.OUTPUT_NUT_TYPE, defaultValue = "") final String outputNutType,
-                                      @StringConfigParam(propertyKey = ApplicationConfig.PATH_SEPARATOR, defaultValue = " ") final String separator)
-            throws WuicException {
+                                      @StringConfigParam(propertyKey = ApplicationConfig.PATH_SEPARATOR, defaultValue = " ") final String separator,
+                                      @StringConfigParam(propertyKey = ApplicationConfig.LIBRARIES, defaultValue = "") final String libs)
+            throws WuicException, IOException {
         super(convert, asynchronous);
+        workingDirectory = NutDiskStore.INSTANCE.getWorkingDirectory();
 
         // Engine won't be associated to any chain
         if (inputNutType.isEmpty() || outputNutType.isEmpty()) {
@@ -211,7 +232,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                         String.format("Supported NutType are: %s", Arrays.toString(NutType.values()))));
             }
 
-            setCommand(command);
+            setCommandAndLibs(command, libs);
             pathSeparator = separator;
         }
     }
@@ -232,7 +253,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     public static InputStream execute(final InputStream is,
                                       final ConvertibleNut nut,
                                       final EngineRequest request,
-                                      final TerFunction<List<String>, File, File, Boolean> executor)
+                                      final BiFunction<List<String>, File, Boolean> executor)
             throws IOException {
         // Do not generate source map if we are in best effort
         final boolean be = request.isBestEffort();
@@ -264,7 +285,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                         IOUtils.copyStream(isNut, osNut);
                     }
 
-                    pathsToCompile.add(file.getAbsolutePath());
+                    pathsToCompile.add(IOUtils.normalizePathSeparator((file.getAbsolutePath())));
                 } catch (InterruptedException ie) {
                     throw new IOException(ie);
                 } catch (ExecutionException ee) {
@@ -273,7 +294,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                     IOUtils.close(isNut, osNut);
                 }
             } else {
-                pathsToCompile.add(IOUtils.mergePath(n.getParentFile(), n.getName()));
+                pathsToCompile.add(IOUtils.normalizePathSeparator(IOUtils.mergePath(n.getParentFile(), n.getInitialName())));
             }
 
             if (!be) {
@@ -294,11 +315,13 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         try {
             log.debug("absolute path: {}", workingDir.getAbsolutePath());
 
-            if (!executor.apply(pathsToCompile, workingDir, compilationResult)) {
+            if (!executor.apply(pathsToCompile, compilationResult)) {
                 log.error("executor {} returns false", executor);
                 WuicException.throwStreamException(new IOException("Executor failed."));
-            } else if (!compilationResult.exists()) {
-                log.error("{} does not exists, which means that some errors break compilation. Check log above to see them.");
+            } else if (!compilationResult.exists() || (!be && !sourceMapFile.exists())) {
+                log.error("{} and/or {} do not exist, which means that some errors break compilation. Check log above to see them.",
+                        compilationResult.getAbsolutePath(), sourceMapFile.getAbsolutePath());
+
                 WuicException.throwStreamException(new IOException("Command execution fails, check logs for details."));
             }
 
@@ -338,7 +361,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
         // Creates the command line to execute tool
         log.debug("CommandLine arguments: {}", Arrays.asList(commandLine));
-        final Process process = new ProcessBuilder(commandLine.toString().split(" "))
+        final Process process = new ProcessBuilder(commandLine.split(" "))
                 .directory(workingDir)
                 .redirectErrorStream(true)
                 .start();
@@ -355,8 +378,12 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                 log.warn("errorMessage: {}", errorMessage);
             } else {
                 log.error("exitStatus: {}", exitStatus);
+                log.error("errorMessage: {}", errorMessage);
                 return Boolean.FALSE;
             }
+        } else if (!errorMessage.isEmpty() && log.isInfoEnabled()) {
+            log.info("No error detected, but a message has been generated by command line.");
+            log.info(errorMessage);
         }
 
         return Boolean.TRUE;
@@ -364,32 +391,216 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
     /**
      * <p>
-     * Sets the command pattern and asserts that mandatory tokens have been defined.
+     * Sets the command pattern and additional libraries.
+     * The method asserts that mandatory tokens have been defined somewhere.
      * If any token if missing, an {@link IllegalArgumentException} is thrown.
      * </p>
      *
      * @param cmd the command pattern
+     * @param libs semi colon separated list of libraries to copy to working dir
+     * @throws IOException if any I/O error occurs
      */
-    private void setCommand(final String cmd) {
+    private void setCommandAndLibs(final String cmd, final String libs) throws IOException, WuicException{
+        AtomicBoolean pathFound = new AtomicBoolean(cmd.contains(PATH_TOKEN));
+        AtomicBoolean outPathFound = new AtomicBoolean(cmd.contains(OUT_PATH_TOKEN));
+        AtomicBoolean sourceMapFound = new AtomicBoolean(cmd.contains(SOURCE_MAP_TOKEN));
+        libraries = new HashMap<String, Boolean>();
+        final String[] libArray = libs.split(";");
 
-        // Check path token
-        if (!cmd.contains(PATH_TOKEN)) {
-            WuicException.throwBadArgumentException(new Exception(String.format(ERROR_MESSAGE, cmd, PATH_TOKEN)));
+        // Libraries
+        for (final String lib : libArray) {
+            if (lib.isEmpty()) {
+                continue;
+            }
+
+            InputStream is = null;
+
+            try {
+                is = getClass().getResourceAsStream(lib);
+
+                // Check if token has to be replaced in the lib
+                if (is == null) {
+                    libraries.put(lib, Boolean.FALSE);
+                } else {
+                    addLib(lib, is, pathFound, outPathFound, sourceMapFound);
+                }
+
+            } finally {
+                IOUtils.close(is);
+            }
         }
 
-        // Check source map token
-        if (!cmd.contains(SOURCE_MAP_TOKEN)) {
-            WuicException.throwBadArgumentException(new Exception(String.format(ERROR_MESSAGE, cmd, SOURCE_MAP_TOKEN)));
+        // Check path token
+        if (!pathFound.get()) {
+            WuicException.throwBadArgumentException(
+                    new IllegalArgumentException(String.format(ERROR_MESSAGE, cmd,  Arrays.toString(libArray), PATH_TOKEN)));
         }
 
         // Check out path token
-        if (!cmd.contains(OUT_PATH_TOKEN)) {
-            WuicException.throwBadArgumentException(new Exception(String.format(ERROR_MESSAGE, cmd, OUT_PATH_TOKEN)));
+        if (!outPathFound.get()) {
+            WuicException.throwBadArgumentException(
+                    new IllegalArgumentException(String.format(ERROR_MESSAGE, cmd,  Arrays.toString(libArray), OUT_PATH_TOKEN)));
+        }
+
+        // Check source map token
+        if (!sourceMapFound.get()) {
+            WuicException.throwBadArgumentException(
+                    new IllegalArgumentException(String.format(ERROR_MESSAGE, cmd, Arrays.toString(libArray), SOURCE_MAP_TOKEN)));
         }
 
         // Manage windows platform
         final String osName = System.getProperty("os.name");
         command = (osName != null && osName.contains("Windows") ? "cmd /c " : "") + cmd;
+    }
+
+    /**
+     * <p>
+     * Adds the given library to the map.
+     * </p>
+     *
+     * @param lib the library path
+     * @param is the input stream pointing to library content
+     * @param pathFound will be set to {@code true} if path token has been found in lib content
+     * @param outPathFound will be set to {@code true} if out path token has been found in lib content
+     * @param sourceMapFound will be set to {@code true} if source map token has been found in lib content
+     */
+    private void addLib(final String lib,
+                        final InputStream is,
+                        final AtomicBoolean pathFound,
+                        final AtomicBoolean outPathFound,
+                        final AtomicBoolean sourceMapFound) {
+        boolean pathFoundInLib = false;
+        boolean outPathFoundInLib = false;
+        boolean sourceMapFoundInLib = false;
+        boolean basePathFoundInLib = false;
+
+        // Go through the scanner
+        for (final Scanner sc = new Scanner(is); sc.hasNext(); log.trace(sc.next())) {
+
+            // Check if any token exists
+            if (hasNext(PATH_TOKEN, sc)) {
+                pathFound.set(true);
+                pathFoundInLib = true;
+            } else if (hasNext(OUT_PATH_TOKEN, sc)) {
+                outPathFound.set(true);
+                outPathFoundInLib = true;
+            } else if (hasNext(SOURCE_MAP_TOKEN, sc)) {
+                sourceMapFound.set(true);
+                sourceMapFoundInLib = true;
+            } else if (hasNext(BASE_PATH_TOKEN, sc)) {
+                basePathFoundInLib = true;
+            }
+
+            // All possible tokens found in this file
+            if (pathFoundInLib && outPathFoundInLib && sourceMapFoundInLib && basePathFoundInLib) {
+                break;
+            }
+        }
+
+        libraries.put(lib, pathFoundInLib || outPathFoundInLib || sourceMapFoundInLib || basePathFoundInLib);
+    }
+
+    /**
+     * <p>
+     * Method that checks if the next element in a scanner contains to the given token.
+     * </p>
+     *
+     * @param str the token
+     * @param scanner the scanner
+     * @return {@code true} if next element in the scanner contains the token, {@code false} otherwise
+     */
+    private boolean hasNext(final String str, final Scanner scanner) {
+        return scanner.hasNext(String.format(".*%s.*", Pattern.quote(str)));
+    }
+
+    /**
+     * <p>
+     * Builds the given list of paths in a single {@code String}.
+     * </p>
+     *
+     * @param basePath the common base path, if not {@code null} paths will be relative to it
+     * @param pathsToCompile the paths
+     * @return the concatenated paths
+     */
+    private String buildPaths(final List<String> pathsToCompile, final String basePath) {
+        final StringBuilder pathsBuilder = new StringBuilder();
+
+        for (final String path : pathsToCompile) {
+            if (basePath != null) {
+                final String p = path.substring(basePath.length());
+                pathsBuilder.append((p.startsWith("/") ? "." : "./") + p).append(pathSeparator);
+            } else {
+                pathsBuilder.append(path).append(pathSeparator);
+            }
+        }
+
+        return pathsBuilder.toString();
+    }
+
+    /**
+     * <p>
+     * Installs the declared libraries to the given working directory.
+     * </p>
+     *
+     * @param basePath the base path
+     * @param pathsToCompile paths in a list
+     * @param paths the paths in a single {@code String}
+     * @param outputPath the out put path
+     * @param sourceMapPath the source map path
+     * @throws IOException if copy fails
+     */
+    private void installLibraries(final List<String> pathsToCompile,
+                                  final String basePath,
+                                  final String paths,
+                                  final String outputPath,
+                                  final String sourceMapPath)
+            throws IOException {
+
+        // Install libraries
+        for (final Map.Entry<String, Boolean> lib : libraries.entrySet()) {
+            InputStream is = null;
+            OutputStream os = null;
+
+            try {
+                is = getClass().getResourceAsStream(lib.getKey());
+
+                if (is == null) {
+                    log.warn("Additional library path {} is not available in the classpath, ignoring...", lib);
+                } else {
+                    os = new FileOutputStream(new File(workingDirectory, lib.getKey()));
+
+                    // No token to substitute
+                    if (!lib.getValue()) {
+                        IOUtils.copyStream(is, os);
+                    } else {
+                        // Replace tokens
+                        final StringBuilder content = new StringBuilder(IOUtils.readString(new InputStreamReader(is)));
+                        StringUtils.replaceAll(OUT_PATH_TOKEN, outputPath, content);
+                        StringUtils.replaceAll(SOURCE_MAP_TOKEN, sourceMapPath, content);
+
+                        // Handle base path and relative paths
+                        if (content.indexOf(BASE_PATH_TOKEN) != -1) {
+                            if (basePath != null) {
+                                StringUtils.replaceAll(BASE_PATH_TOKEN, basePath, content);
+                                StringUtils.replaceAll(PATH_TOKEN, paths, content);
+                            } else  {
+                                final String common = StringUtils.computeCommonPathBeginning(pathsToCompile);
+                                StringUtils.replaceAll(BASE_PATH_TOKEN, common, content);
+                                StringUtils.replaceAll(PATH_TOKEN, buildPaths(pathsToCompile, common), content);
+                            }
+                        } else {
+                            StringUtils.replaceAll(PATH_TOKEN, paths, content);
+                        }
+
+                        // Write replaced content
+                        os.write(content.toString().getBytes());
+                        os.flush();
+                    }
+                }
+            } finally {
+                IOUtils.close(is, os);
+            }
+        }
     }
 
     /**
@@ -421,57 +632,37 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * {@inheritDoc}
      */
     @Override
-    public Boolean apply(final List<String> pathsToCompile, final File workingDir, final File compilationResult) {
+    public Boolean apply(final List<String> pathsToCompile, final File compilationResult) {
         try {
             final StringBuilder commandLine = new StringBuilder(command);
 
             // Handle base path
-            final int basePathIndex = command.indexOf(BASE_PATH_TOKEN);
-
             final String basePath;
 
-            if (basePathIndex == -1) {
-                basePath = "";
+            if (!command.contains(BASE_PATH_TOKEN)) {
+                basePath = null;
             } else {
                 basePath = StringUtils.computeCommonPathBeginning(pathsToCompile);
-                commandLine.replace(basePathIndex, BASE_PATH_TOKEN.length(), basePath);
+                StringUtils.replaceAll(BASE_PATH_TOKEN, basePath, commandLine);
             }
 
             // Path
-            int pathIndex = -1;
-
-            // Replace each occurrence
-            while ((pathIndex = command.indexOf(PATH_TOKEN, pathIndex + 1)) != -1) {
-                commandLine.replace(pathIndex, pathIndex + PATH_TOKEN.length(), "");
-
-                for (int i = pathsToCompile.size() - 1; i >= 0; i--) {
-                    // Remove base path
-                    commandLine.insert(pathIndex, pathsToCompile.get(i).substring(basePath.length()));
-
-                    if (i != 0) {
-                        commandLine.insert(pathIndex, pathSeparator);
-                    }
-                }
-            }
+            final String paths = buildPaths(pathsToCompile, basePath);
+            StringUtils.replaceAll(PATH_TOKEN, paths, commandLine);
 
             // Source map
             final File sourceMapFile = new File(compilationResult.getAbsolutePath() + ".map");
-            int sourceMapIndex = -1;
+            final String sourceMapPath = IOUtils.normalizePathSeparator(sourceMapFile.getAbsolutePath());
+            StringUtils.replaceAll(SOURCE_MAP_TOKEN, sourceMapPath, commandLine);
 
-            // Replace each occurrence
-            while ((sourceMapIndex = commandLine.indexOf(SOURCE_MAP_TOKEN, sourceMapIndex + 1)) != -1) {
-                commandLine.replace(sourceMapIndex, sourceMapIndex + SOURCE_MAP_TOKEN.length(), sourceMapFile.getAbsolutePath());
-            }
+            // Output
+            final String outPath = IOUtils.normalizePathSeparator(compilationResult.getAbsolutePath());
+            StringUtils.replaceAll(OUT_PATH_TOKEN, outPath, commandLine);
 
-            // output
-            int outIndex = -1;
+            // Install libraries
+            installLibraries(pathsToCompile, basePath, paths, outPath, sourceMapPath);
 
-            // Replace each occurrence
-            while ((outIndex = commandLine.indexOf(OUT_PATH_TOKEN, outIndex + 1)) != -1) {
-                commandLine.replace(outIndex, outIndex + OUT_PATH_TOKEN.length(), compilationResult.getAbsolutePath());
-            }
-
-            return process(commandLine.toString(), workingDir, compilationResult);
+            return process(commandLine.toString(), workingDirectory, compilationResult);
         } catch (IOException ioe) {
             WuicException.throwBadStateException(ioe);
         } catch (InterruptedException ie) {
@@ -479,5 +670,27 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         }
 
         return Boolean.TRUE;
+    }
+
+    /**
+     * <p>
+     * Retrieves the working directory where the command line will be executed.
+     * </p>
+     *
+     * @return the working directory
+     */
+    public File getWorkingDirectory() {
+        return workingDirectory;
+    }
+
+    /**
+     * <p>
+     * Modifies the working directory where the command line will be executed.
+     * </p>
+     *
+     * @param workingDirectory the new working directory
+     */
+    public void setWorkingDirectory(final File workingDirectory) {
+        this.workingDirectory = workingDirectory;
     }
 }
