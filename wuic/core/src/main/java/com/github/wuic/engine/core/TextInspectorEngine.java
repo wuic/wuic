@@ -58,7 +58,6 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 
 /**
  * <p>
@@ -168,8 +167,11 @@ public abstract class TextInspectorEngine
                                final CompositeNut.CompositeInputStream cis,
                                final ConvertibleNut original)
             throws WuicException {
-        // Looking for import statements
-        final Matcher matcher = inspector.getPattern().matcher(line);
+        // Clean previous inspections
+        inspector.newInspection();
+
+        // Looking for matching statements
+        final LineInspector.LineMatcher matcher = inspector.lineMatcher(line);
 
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts

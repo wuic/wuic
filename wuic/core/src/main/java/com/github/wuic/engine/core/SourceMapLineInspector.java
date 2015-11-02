@@ -40,8 +40,8 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.RegexLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -54,7 +54,6 @@ import com.github.wuic.util.NutUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -71,7 +70,7 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @since 0.4.5
  */
-public class SourceMapLineInspector extends LineInspector {
+public class SourceMapLineInspector extends RegexLineInspector {
 
     /**
      * The pattern of 'sourceMappingURL'.
@@ -108,7 +107,7 @@ public class SourceMapLineInspector extends LineInspector {
      * {@inheritDoc}
      */
     @Override
-    public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
+    public List<? extends ConvertibleNut> appendTransformation(final LineMatcher matcher,
                                                                final StringBuilder replacement,
                                                                final EngineRequest request,
                                                                final CompositeNut.CompositeInputStream cis,

@@ -52,13 +52,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.MatchResult;
 
 /**
  * <p>
- * Represents an object providing replacement functionality inside a line for a group of character matching a particular
- * pattern.
+ * Represents an object providing replacement functionality inside a line for a group of matched characters.
+ * A matching operation can be applied line by line but sometimes the result can be affected by what has been discovered
+ * on the previous line matching. This is why each file inspection should start after calling {@link #newInspection()}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -76,23 +76,6 @@ public abstract class LineInspector {
      * Logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(LineInspector.class);
-
-    /**
-     * The pattern.
-     */
-    private Pattern pattern;
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param p the pattern.
-     */
-    public LineInspector(final Pattern p) {
-        pattern = p;
-        LOGGER.info("LineInspector {} will be inspected with pattern '{}'", getClass().getName(), p.toString());
-    }
 
     /**
      * <p>
@@ -198,7 +181,7 @@ public abstract class LineInspector {
     public static NutsHeap getHeap(final EngineRequest request,
                                    final ConvertibleNut originalNut,
                                    final CompositeNut.CompositeInputStream cis,
-                                   final Matcher matcher,
+                                   final LineMatcher matcher,
                                    final int groupIndex) {
         final NutsHeap heap = new NutsHeap(request.getHeap());
         final String name;
@@ -214,17 +197,6 @@ public abstract class LineInspector {
         final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
         heap.setNutDao(request.getHeap().withRootPath(nutLocation, originalNut), originalNut);
         return heap;
-    }
-
-    /**
-     * <p>
-     * Gets the pattern to find text to be replaced inside the lines.
-     * </p>
-     *
-     * @return the pattern to use
-     */
-    public final Pattern getPattern() {
-        return pattern;
     }
 
     /**
@@ -261,11 +233,31 @@ public abstract class LineInspector {
      * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
      * @throws WuicException if an exception occurs
      */
-    public abstract List<? extends ConvertibleNut> appendTransformation(Matcher matcher,
+    public abstract List<? extends ConvertibleNut> appendTransformation(LineMatcher matcher,
                                                                         StringBuilder replacement,
                                                                         EngineRequest request,
                                                                         CompositeNut.CompositeInputStream cis,
                                                                         ConvertibleNut originalNut) throws WuicException;
+
+    /**
+     * <p>
+     * Tells this inspector a new inspection of a set of lines is going to start.
+     * This allows this object to clean any retained information regarding lines previously inspected and that could be
+     * taken into consideration in the matching operation that are going to be processed.
+     * This method should be called each time a file content is going to be inspected line by line.
+     * </p>
+     */
+    public abstract void newInspection();
+
+    /**
+     * <p>
+     * Creates a new line matcher.
+     * </p>
+     *
+     * @param line the characters to match
+     * @return the new object
+     */
+    public abstract LineMatcher lineMatcher(String line);
 
     /**
      * <p>
@@ -278,6 +270,56 @@ public abstract class LineInspector {
      * @throws IOException if the transformation fails
      */
     protected abstract String toString(final ConvertibleNut convertibleNut) throws IOException;
+
+    /**
+     * <p>
+     * Represents a matcher for a given line and provides all the matching characters through the character streams.
+     * The next {@link MatchResult} state can be reached by calling the {@link #find()} method.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @version 1.0
+     * @since 0.5.3
+     */
+    public static abstract class LineMatcher implements MatchResult {
+
+        /**
+         * The character stream.
+         */
+        private final String line;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param line the line
+         */
+        public LineMatcher(final String line) {
+            this.line = line;
+        }
+
+        /**
+         * <p>
+         * Gets the character stream.
+         * </p>
+         *
+         * @return the line
+         */
+        public String getLine() {
+            return line;
+        }
+
+        /**
+         * <p>
+         * Returns {@code true} until the current state represents an existing match result.
+         * Each time the method is called, the state of this object moves to the next matching characters in the stream.
+         * </p>
+         *
+         * @return {@code true} is there is still a matching result, {@code false} otherwise
+         */
+        public abstract boolean find();
+    }
 
     /**
      * <p>

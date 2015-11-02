@@ -47,6 +47,7 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
@@ -76,7 +77,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
 
 /**
  * <p>
@@ -429,7 +429,7 @@ public class InspectorTest {
         Mockito.when(next.getEngineType()).thenReturn(EngineType.AGGREGATOR);
         Mockito.when(engine.getNext()).thenReturn(next);
         final SourceMapLineInspector inspector = new SourceMapLineInspector(engine);
-        final Matcher matcher = SourceMapLineInspector.SOURCE_MAPPING_PATTERN.matcher("//# sourceMappingURL=foo.map");
+        final LineInspector.LineMatcher matcher = inspector.lineMatcher("//# sourceMappingURL=foo.map");
         matcher.find();
 
         final NutDao dao = Mockito.mock(NutDao.class);

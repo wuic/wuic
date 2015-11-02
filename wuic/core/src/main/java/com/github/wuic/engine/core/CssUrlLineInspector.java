@@ -41,6 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.RegexLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -73,7 +74,7 @@ import java.util.regex.Pattern;
  * @version 1.5
  * @since 0.3.3
  */
-public class CssUrlLineInspector extends LineInspector implements NutFilterHolder {
+public class CssUrlLineInspector extends RegexLineInspector implements NutFilterHolder {
 
     /**
      * Engines types that will be skipped when processing referenced nuts.
@@ -163,7 +164,7 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
      * {@inheritDoc}
      */
     @Override
-    public List<? extends ConvertibleNut> appendTransformation(final Matcher matcher,
+    public List<? extends ConvertibleNut> appendTransformation(final LineMatcher matcher,
                                                                final StringBuilder replacement,
                                                                final EngineRequest request,
                                                                final CompositeNut.CompositeInputStream cis,
@@ -214,7 +215,9 @@ public class CssUrlLineInspector extends LineInspector implements NutFilterHolde
                 heap = getHeap(request, originalNut, cis, matcher, groupIndex);
             }
 
-            return processData(new MatcherData(rawPath, matcher, groupIndex, group), replacement, request, heap, originalNut);
+            // The MatcherAdapter is provided by the inherited class
+            final Matcher regex = MatcherAdapter.class.cast(matcher).getMatcher();
+            return processData(new MatcherData(rawPath, regex, groupIndex, group), replacement, request, heap, originalNut);
         }
     }
 
