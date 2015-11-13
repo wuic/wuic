@@ -97,8 +97,6 @@ import java.util.regex.Pattern;
 @RunWith(JUnit4.class)
 public class UtilityTest extends WuicTest {
 
-
-
     /**
      * <p>
      * Test the nut research feature.
@@ -858,6 +856,72 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals("foo bar baz", StringUtils.replaceAll("|", " ", new StringBuilder("foo|bar|baz")).toString());
         Assert.assertEquals("foo,,,,bar,,,,baz", StringUtils.replaceAll("+=-", ",,,,", new StringBuilder("foo+=-bar+=-baz")).toString());
         Assert.assertEquals("foo bar baz", StringUtils.replaceAll(".", " ", new StringBuilder("foo bar baz")).toString());
+    }
 
+    /**
+     * <p>
+     * Tests {@link StringUtils#substringMatrix(String[], int, int, int, int)}.
+     * </p>
+     */
+    @Test
+    public void substringMatrixTest() {
+        String[] lines = {
+            "abcdefg", "hijk", "lmno", "pqrstu", "vwxyz"
+        };
+
+        Assert.assertEquals("h", StringUtils.substringMatrix(lines, 2, 1, 2, 2));
+        Assert.assertEquals(lines[1], StringUtils.substringMatrix(lines, 2, 1, 2, 5));
+        Assert.assertEquals("fg\nhi", StringUtils.substringMatrix(lines, 1, 6, 2, 3));
+        Assert.assertEquals("abcdefg\nhijk\nlmno\npqrstu\nvwxyz", StringUtils.substringMatrix(lines, 1, 1, 5, 6));
+        Assert.assertEquals("k\nlmno\np", StringUtils.substringMatrix(lines, 2, 4, 4, 2));
+    }
+
+    /**
+     * <p>
+     * Tests {@link StringUtils#reachEndLineAndColumn(String[], int, int, int, java.util.concurrent.atomic.AtomicInteger, java.util.concurrent.atomic.AtomicInteger)}.
+     * </p>
+     */
+    @Test
+    public void reachEndLineAndColumnTest() {
+        String[] lines = {
+                "abcdefg", "hijk", "lmno", "pqrstu", "vwxyz"
+        };
+
+        final AtomicInteger l = new AtomicInteger();
+        final AtomicInteger c = new AtomicInteger();
+
+        StringUtils.reachEndLineAndColumn(lines, 1, 1, 3, l, c);
+        Assert.assertEquals(1, l.get());
+        Assert.assertEquals(3, c.get());
+
+        l.set(0);
+        c.set(0);
+        StringUtils.reachEndLineAndColumn(lines, 2, 2, 3, l, c);
+        Assert.assertEquals(2, l.get());
+        Assert.assertEquals(4, c.get());
+
+        l.set(0);
+        c.set(0);
+        StringUtils.reachEndLineAndColumn(lines, 2, 2, 4, l, c);
+        Assert.assertEquals(3, l.get());
+        Assert.assertEquals(1, c.get());
+
+        l.set(0);
+        c.set(0);
+        StringUtils.reachEndLineAndColumn(lines, 2, 2, 10, l, c);
+        Assert.assertEquals(4, l.get());
+        Assert.assertEquals(3, c.get());
+
+        l.set(0);
+        c.set(0);
+        StringUtils.reachEndLineAndColumn(lines, 1, 1, 26, l, c);
+        Assert.assertEquals(5, l.get());
+        Assert.assertEquals(5, c.get());
+
+        l.set(0);
+        c.set(0);
+        StringUtils.reachEndLineAndColumn(lines, 1, 2, 24, l, c);
+        Assert.assertEquals(5, l.get());
+        Assert.assertEquals(4, c.get());
     }
 }

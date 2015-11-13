@@ -39,6 +39,7 @@
 package com.github.wuic.util;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -343,5 +344,90 @@ public final class StringUtils {
         }
 
         return builder;
+    }
+
+    /**
+     * <p>
+     * Returns a {@code String} corresponding to the sequences of characters contained in the given array between two
+     * positions (expressed with two couples of integers line/column).
+     * </p>
+     *
+     * @param lines the matrix
+     * @param startLine the starting line in the matrix (min value is 1)
+     * @param startCol the starting column in the matrix (min value is 1)
+     * @param endLine the ending line in the matrix (min value is 1)
+     * @param endCol the ending column in the matrix (min value is 1)
+     * @return the resulting string
+     */
+    public static String substringMatrix(final String[] lines,
+                                         final int startLine,
+                                         final int startCol,
+                                         final int endLine,
+                                         final int endCol) {
+        final StringBuilder retval = new StringBuilder();
+
+        if (startLine == endLine) {
+            // Only one line
+            retval.append(lines[startLine - 1].substring(startCol - 1, endCol - 1));
+        } else {
+            // Copy from the beginning to the end of line
+            retval.append(lines[startLine - 1].substring(startCol - 1));
+            retval.append('\n');
+
+            // Copy all plain lines between starting and ending lines
+            for (int i = startLine + 1; i < endLine; i++) {
+                retval.append(lines[i - 1]).append('\n');
+            }
+
+            // Copy from the first character to the ending column
+            retval.append(lines[endLine - 1].substring(0, endCol - 1));
+        }
+
+        return retval.toString();
+    }
+
+    /**
+     * <p>
+     * Looks for the last position (line/column) of a sequence of character in the given matrix having a specified length
+     * and starting at a particular position (line/column). The last position is reported by setting the values in the
+     * two given {@code AtomicInteger}.
+     * </p>
+     *
+     * @param lines the matrix
+     * @param startLine the starting line
+     * @param startColumn the starting column
+     * @param length the length
+     * @param endLine the ending line
+     * @param endColumn the ending column
+     */
+    public static void reachEndLineAndColumn(final String[] lines,
+                                             final int startLine,
+                                             final int startColumn,
+                                             final int length,
+                                             final AtomicInteger endLine,
+                                             final AtomicInteger endColumn) {
+        int remain = length;
+
+        for (int i = startLine - 1; i < lines.length; i++) {
+            final String l = lines[i];
+
+            // Count the correct number of columns if it does not starts at the first character of the first line
+            final int len = (i == startLine - 1) ? l.length() - startColumn + 1 : l.length();
+
+            if (len == remain) {
+                // Last line reached (EOL)
+                endLine.set(i + 1);
+                endColumn.set(l.length());
+                return;
+            } else if (len > remain) {
+                // Last line reached (!EOL)
+                endLine.set(i + 1);
+                endColumn.set(remain);
+                return;
+            } else {
+                // Count the next line
+                remain -= len;
+            }
+        }
     }
 }
