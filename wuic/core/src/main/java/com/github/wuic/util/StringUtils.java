@@ -398,7 +398,7 @@ public final class StringUtils {
      * @param startColumn the starting column
      * @param length the length
      * @param endLine the ending line
-     * @param endColumn the ending column
+     * @param endColumn the ending column (exclusive)
      */
     public static void reachEndLineAndColumn(final String[] lines,
                                              final int startLine,
@@ -407,27 +407,30 @@ public final class StringUtils {
                                              final AtomicInteger endLine,
                                              final AtomicInteger endColumn) {
         int remain = length;
+        boolean first = true;
 
         for (int i = startLine - 1; i < lines.length; i++) {
             final String l = lines[i];
 
             // Count the correct number of columns if it does not starts at the first character of the first line
-            final int len = (i == startLine - 1) ? l.length() - startColumn + 1 : l.length();
+            final int len = first ? l.length() - startColumn + 1 : l.length();
 
             if (len == remain) {
                 // Last line reached (EOL)
                 endLine.set(i + 1);
-                endColumn.set(l.length());
+                endColumn.set(l.length() + 1);
                 return;
             } else if (len > remain) {
                 // Last line reached (!EOL)
                 endLine.set(i + 1);
-                endColumn.set(remain);
+                endColumn.set(remain + 1);
                 return;
             } else {
                 // Count the next line
                 remain -= len;
             }
+
+            first = false;
         }
     }
 }

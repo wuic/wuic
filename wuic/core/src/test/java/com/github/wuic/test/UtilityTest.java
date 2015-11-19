@@ -890,38 +890,38 @@ public class UtilityTest extends WuicTest {
         final AtomicInteger l = new AtomicInteger();
         final AtomicInteger c = new AtomicInteger();
 
-        StringUtils.reachEndLineAndColumn(lines, 1, 1, 3, l, c);
+        StringUtils.reachEndLineAndColumn(lines, 1, 3, 3, l, c);
         Assert.assertEquals(1, l.get());
-        Assert.assertEquals(3, c.get());
+        Assert.assertEquals(6, c.get());
 
         l.set(0);
         c.set(0);
         StringUtils.reachEndLineAndColumn(lines, 2, 2, 3, l, c);
         Assert.assertEquals(2, l.get());
-        Assert.assertEquals(4, c.get());
+        Assert.assertEquals(5, c.get());
 
         l.set(0);
         c.set(0);
         StringUtils.reachEndLineAndColumn(lines, 2, 2, 4, l, c);
         Assert.assertEquals(3, l.get());
-        Assert.assertEquals(1, c.get());
+        Assert.assertEquals(2, c.get());
 
         l.set(0);
         c.set(0);
         StringUtils.reachEndLineAndColumn(lines, 2, 2, 10, l, c);
         Assert.assertEquals(4, l.get());
-        Assert.assertEquals(3, c.get());
+        Assert.assertEquals(4, c.get());
 
         l.set(0);
         c.set(0);
         StringUtils.reachEndLineAndColumn(lines, 1, 1, 26, l, c);
         Assert.assertEquals(5, l.get());
-        Assert.assertEquals(5, c.get());
+        Assert.assertEquals(6, c.get());
 
         l.set(0);
         c.set(0);
         StringUtils.reachEndLineAndColumn(lines, 1, 2, 24, l, c);
         Assert.assertEquals(5, l.get());
-        Assert.assertEquals(4, c.get());
+        Assert.assertEquals(5, c.get());
     }
 }
