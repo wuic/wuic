@@ -423,7 +423,7 @@ public final class StringUtils {
             } else if (len > remain) {
                 // Last line reached (!EOL)
                 endLine.set(i + 1);
-                endColumn.set(remain + 1);
+                endColumn.set(first ? remain + startColumn : startLine == endLine.get() ? remain : remain + 1);
                 return;
             } else {
                 // Count the next line

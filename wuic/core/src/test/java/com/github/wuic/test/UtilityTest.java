@@ -890,6 +890,10 @@ public class UtilityTest extends WuicTest {
         final AtomicInteger l = new AtomicInteger();
         final AtomicInteger c = new AtomicInteger();
 
+        StringUtils.reachEndLineAndColumn(lines, 1, 1, 3, l, c);
+        Assert.assertEquals(1, l.get());
+        Assert.assertEquals(4, c.get());
+
         StringUtils.reachEndLineAndColumn(lines, 1, 3, 3, l, c);
         Assert.assertEquals(1, l.get());
         Assert.assertEquals(6, c.get());
