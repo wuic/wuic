@@ -281,7 +281,7 @@ public abstract class LineInspector {
      * @version 1.0
      * @since 0.5.3
      */
-    public static abstract class LineMatcher implements MatchResult {
+    public abstract static class LineMatcher implements MatchResult {
 
         /**
          * The character stream.
