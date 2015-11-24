@@ -41,6 +41,8 @@ package com.github.wuic.util;
 import com.github.wuic.nut.ConvertibleNut;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -67,17 +69,46 @@ public final class HtmlUtil {
      *
      * @param workflowContextPath the workflow context path
      * @param nut the nut to import
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath)
+            throws IOException {
+        return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath), new HashMap<String, String>());
+    }
+
+    /**
+     * <p>
+     * Writes the import statement in HTML into the output stream for the given nut, using a default {@link UrlProviderFactory}.
+     * An {@link Map} of additional attributes is specified and <b>must not be read only since this method puts entries to it</b>.
+     * </p>
+     *
+     * @param workflowContextPath the workflow context path
+     * @param nut the nut to import
      * @param attributes some attributes to insert in the written script
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath, final String ... attributes)
+    public static String writeScriptImport(final ConvertibleNut nut, final String workflowContextPath, final Map<String, String> attributes)
             throws IOException {
         return writeScriptImport(nut, UrlUtils.urlProviderFactory().create(workflowContextPath), attributes);
     }
 
     /**
      * <p>
-     * Writes the import statement in HTML into the output stream for the given nut.
+     * Writes the import statement in HTML into the output stream for the given nut and without additional attributes.
+     * </p>
+     *
+     * @param urlProvider the {@link UrlProvider}
+     * @param nut the nut to import
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider) throws IOException {
+        return writeScriptImport(nut, urlProvider, new HashMap<String, String>());
+    }
+
+    /**
+     * <p>
+     * Writes the import statement in HTML into the output stream for the given nut and with the given additional attributes.
+     * <b>The map containing attributes must not be read only since this method adds entries to it</b>.
      * </p>
      *
      * @param urlProvider the {@link UrlProvider}
@@ -85,35 +116,40 @@ public final class HtmlUtil {
      * @param attributes some attributes to insert in the written script
      * @throws java.io.IOException if an I/O error occurs
      */
-    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider, final String ... attributes)
+    public static String writeScriptImport(final ConvertibleNut nut, final UrlProvider urlProvider, final Map<String, String> attributes)
             throws IOException {
         final StringBuilder sb = new StringBuilder();
         final int insertIndex;
 
         switch (nut.getNutType()) {
             case CSS :
-                insertIndex = cssImport(nut, urlProvider, sb);
+                insertIndex = cssImport(nut, urlProvider, sb, attributes);
                 break;
             case JAVASCRIPT :
-                insertIndex = javascriptImport(nut, urlProvider, sb);
+                insertIndex = javascriptImport(nut, urlProvider, sb, attributes);
                 break;
+            case JPG:
             case PNG :
                 insertIndex = imgImport(nut, urlProvider, sb);
                 break;
             case ICO :
-                insertIndex = iconImport(nut, urlProvider, sb);
+                insertIndex = iconImport(nut, urlProvider, sb, attributes);
                 break;
             default :
                 return "";
         }
 
-        for (final String attr : attributes) {
-            sb.insert(insertIndex, attr).insert(insertIndex, " ");
+        for (final Map.Entry<String, String> attr : attributes.entrySet()) {
+            sb.insert(insertIndex, '"')
+                    .insert(insertIndex, attr.getValue())
+                    .insert(insertIndex, '"')
+                    .insert(insertIndex, '=')
+                    .insert(insertIndex, attr.getKey())
+                    .insert(insertIndex, " ");
         }
 
         return sb.toString();
     }
-
 
     /**
      * <p>
@@ -123,12 +159,15 @@ public final class HtmlUtil {
      * @param urlProvider the {@link UrlProvider}
      * @param nut the .ICO nut
      * @param sb the builder where statement is appended
+     * @param attributes the attributes to be populated
      * @return the index where attributes could be inserted
      */
-    public static int iconImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
-        sb.append("<link rel=\"shortcut icon\" href=\"");
-        sb.append(urlProvider.getUrl(nut));
-        sb.append("\" />");
+    public static int iconImport(final ConvertibleNut nut,
+                                 final UrlProvider urlProvider,
+                                 final StringBuilder sb,
+                                 final Map<String, String> attributes) {
+        attributes.put("rel", "shortcut");
+        link(nut, urlProvider, sb);
 
         return "<link".length();
     }
@@ -141,14 +180,33 @@ public final class HtmlUtil {
      * @param urlProvider the {@link UrlProvider}
      * @param nut the CSS nut
      * @param sb the builder where statement is appended
+     * @param attributes the attributes to be populated
      * @return the index where attributes could be inserted
      */
-    public static int cssImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
-        sb.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"");
-        sb.append(urlProvider.getUrl(nut));
-        sb.append("\" />");
+    public static int cssImport(final ConvertibleNut nut,
+                                final UrlProvider urlProvider,
+                                final StringBuilder sb,
+                                final Map<String, String> attributes) {
+        attributes.put("rel", "stylesheet");
+        attributes.put("type", "text/css");
+        link(nut, urlProvider, sb);
 
         return "<link".length();
+    }
+
+    /**
+     * <p>
+     * Creates a link with a href attribute.
+     * </p>
+     *
+     * @param urlProvider the {@link UrlProvider}
+     * @param nut the CSS nut
+     * @param sb the builder where statement is appended
+     */
+    private static void link(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
+        sb.append("<link href=\"");
+        sb.append(urlProvider.getUrl(nut));
+        sb.append("\" />");
     }
 
     /**
@@ -159,11 +217,16 @@ public final class HtmlUtil {
      * @param nut the Javascript nut
      * @param urlProvider the {@link UrlProvider}
      * @param sb the builder where statement is appended
+     * @param attributes the attributes to be populated
      * @return the index where attributes could be inserted
      */
-    public static int javascriptImport(final ConvertibleNut nut, final UrlProvider urlProvider, final StringBuilder sb) {
-        sb.append("<script type=\"text/javascript");
-        sb.append("\" src=\"");
+    public static int javascriptImport(final ConvertibleNut nut,
+                                       final UrlProvider urlProvider,
+                                       final StringBuilder sb,
+                                       final Map<String, String> attributes) {
+        attributes.put("type", "text/javascript");
+        sb.append("<script");
+        sb.append(" src=\"");
         sb.append(urlProvider.getUrl(nut));
         sb.append("\"></script>");
 

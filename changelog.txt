@@ -162,3 +162,6 @@ Breaking changes:
 ##### v0.5.3 #####
 
 Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.3&page=1&state=closed
+
+Breaking changes:
+- HtmlInspectorEngine is not shipped with a parser inside wuic-core module anymore, need to add the atto extension to the classpath now

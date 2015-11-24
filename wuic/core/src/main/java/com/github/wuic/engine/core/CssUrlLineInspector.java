@@ -40,7 +40,6 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.RegexLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;

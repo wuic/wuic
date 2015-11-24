@@ -36,51 +36,29 @@
  */
 
 
-package com.github.wuic.servlet.test;
+package com.github.wuic.engine.core;
 
-import com.github.wuic.servlet.WuicServletContextListener;
-import com.github.wuic.test.Server;
-import com.github.wuic.test.WuicRunnerConfiguration;
-import com.github.wuic.util.IOUtils;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.Reader;
 
 /**
  * <p>
- * Tests for {@link com.github.wuic.servlet.HtmlParserFilter}.
+ * This interface represent a basic parser that uses a {@link Reader} to read content and notifies a particular
+ * {@link AssetsMarkupHandler}.
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @since 0.5.0
+ * @since 0.5.3
  */
-@RunWith(JUnit4.class)
-@WuicRunnerConfiguration(installFilter = SkipIssue123.class, webApplicationPath = "/servletTest", installListener = WuicServletContextListener.class)
-public class HtmlParserFilterTest {
-
-    /**
-     * The server running during tests.
-     */
-    @ClassRule
-    public static com.github.wuic.test.Server server = new Server();
+public interface AssetsMarkupParser {
 
     /**
      * <p>
-     * Executes a basic HTTP request and reads the response.
+     * Reads the content provided through the given {@link Reader} and notifies the {@link AssetsMarkupHandler handler}
+     * indicated in parameter when any asset is detected.
      * </p>
      *
-     * @throws java.io.IOException if any I/O error occurs
+     * @param reader the reader
+     * @param handler the handler
      */
-    @Test
-    public void filterTest() throws IOException {
-        final String content = IOUtils.readString(new InputStreamReader(server.get("/index.html").getEntity().getContent()));
-        Assert.assertTrue(content, content.contains("aggregate-me.css"));
-        Assert.assertTrue(content, content.contains("reject-block.png"));
-    }
+    void parse(Reader reader, AssetsMarkupHandler handler);
 }

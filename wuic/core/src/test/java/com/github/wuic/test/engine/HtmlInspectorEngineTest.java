@@ -42,6 +42,7 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.Workflow;
+import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.context.Context;
 import com.github.wuic.engine.Engine;
@@ -51,23 +52,25 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.AbstractCacheEngine;
-import com.github.wuic.engine.core.TextAggregatorEngine;
+import com.github.wuic.engine.core.AssetsMarkupHandler;
+import com.github.wuic.engine.core.AssetsMarkupParser;
 import com.github.wuic.engine.core.HtmlInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
+import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.core.DiskNutDao;
-import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.StringUtils;
 import com.github.wuic.util.UrlProvider;
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,8 +85,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -92,7 +97,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * Tests the {@link HtmlInspectorEngine} class.
+ * Tests the {@link com.github.wuic.engine.core.HtmlInspectorEngine} class.
  * </p>
  *
  * @author Guillaume DROUET
@@ -105,24 +110,24 @@ public class HtmlInspectorEngineTest {
     /**
      * The regex that should match HTML when transformed during tests.
      */
-    private static final String REGEX = ".*?<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
+    private static final String REGEX = ".*?<link type=\"text/css\" rel=\"stylesheet\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
-            "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
+            "<link type=\"text/css\" rel=\"stylesheet\" href=\"/.*?aggregate.css\" />.*?" +
             "<img width=\"50%\" height=\"60%\" src=\".*?\\d.*?png\" />.*?" +
-            "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
+            "<link type=\"text/css\" rel=\"stylesheet\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?" +
-            "<link rel=\"stylesheet\" type=\"text/css\" href=\"/.*?aggregate.css\" />.*?" +
+            "<link type=\"text/css\" rel=\"stylesheet\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?";
 
 
     /**
      * <p>
-     * Creates a {@link Context} for test purpose.
+     * Creates a {@link com.github.wuic.context.Context} for test purpose.
      * </p>
      *
      * @return the context
-     * @throws WorkflowNotFoundException won't occurs
-     * @throws IOException won't occurs
+     * @throws com.github.wuic.exception.WorkflowNotFoundException won't occurs
+     * @throws java.io.IOException won't occurs
      */
     private Context newContext() throws WorkflowNotFoundException, IOException {
         final Context ctx = Mockito.mock(Context.class);
@@ -180,8 +185,8 @@ public class HtmlInspectorEngineTest {
      *
      * @param proxy the proxy
      * @param html the HTML content
-     * @throws WuicException if test fails
-     * @throws IOException if test fails
+     * @throws com.github.wuic.exception.WuicException if test fails
+     * @throws java.io.IOException if test fails
      */
     private void assertHintAppCache(final ProxyNutDao proxy, final String html) throws WuicException, IOException {
         final Nut bytes = new ByteArrayNut(html.getBytes(), "index.html", NutType.HTML, 1L, false);
@@ -246,45 +251,6 @@ public class HtmlInspectorEngineTest {
         Assert.assertTrue(script, script.contains("i+=4"));
     }
 
-    //@Test
-    public void checkInlineScript() throws Exception {
-        final String script = "var j; for (j = 0; < 100; j++) { console.log(j);}";
-        final byte[] bytes = ("<script>" + script + "</script>").getBytes();
-        final HtmlInspectorEngine engine = new HtmlInspectorEngine(true, "UTF-8", true);
-        ConvertibleNut nut = new ByteArrayNut(bytes, "index.html", NutType.HTML, 1L, true);
-        final ConvertibleNut finalNut = nut;
-        final NutDao dao = Mockito.mock(NutDao.class);
-        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                final String name = invocationOnMock.getArguments()[0].toString();
-
-                if (finalNut.getInitialName().equals(name)) {
-                    return Arrays.asList(finalNut);
-                }
-
-                final Nut n = Mockito.mock(Nut.class);
-                Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
-                Mockito.when(n.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-                Mockito.when(n.getInitialName()).thenReturn(name);
-                Mockito.when(n.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-                return Arrays.asList(n);
-            }
-        });
-
-        final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
-        heap.checkFiles(ProcessContext.DEFAULT);
-
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("", heap, null).build());
-        Assert.assertEquals(1, res.size());
-        final ConvertibleNut n = res.get(0);
-        n.transform(new Pipe.DefaultOnReady(Mockito.mock(ByteArrayOutputStream.class)));
-        Assert.assertNotNull(n.getReferencedNuts());
-        Assert.assertEquals(1, n.getReferencedNuts().size());
-        String content = NutUtils.readTransform(n.getReferencedNuts().get(0));
-        Assert.assertTrue(content, script.equals(content));
-    }
-
     /**
      * <p>
      * Tests cached transformation by added transformer.
@@ -294,10 +260,21 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void transformationCacheTest() throws Exception {
-        final byte[] bytes = "<script src='foo.js'></script>"
-                .concat("<script src='bar.js'></script>")
-                .concat("<script src='baz.js'></script>").getBytes();
+        final String[] script = new String[] {"<script src='foo.js'></script>",
+                "<script src='bar.js'></script>",
+                "<script src='baz.js'></script>" };
+        final byte[] bytes = StringUtils.merge(script, "\n").getBytes();
+
         final HtmlInspectorEngine engine = new HtmlInspectorEngine(true, "UTF-8", true);
+        engine.setParser(new AssetsMarkupParser() {
+            @Override
+            public void parse(final Reader reader, final AssetsMarkupHandler handler) {
+                handler.handleScriptLink("foo.js", new HashMap<String, String>(), 1, 1, 1, script[0].length() + 1);
+                handler.handleScriptLink("bar.js", new HashMap<String, String>(), 2, 1, 2, script[1].length() + 1);
+                handler.handleScriptLink("baz.js", new HashMap<String, String>(), 3, 1, 3, script[2].length() + 1);
+            }
+        });
+
         ConvertibleNut nut = new ByteArrayNut(bytes, "index.html", NutType.HTML, 1L, true);
         final ConvertibleNut finalNut = nut;
         final NutDao dao = Mockito.mock(NutDao.class);
@@ -352,9 +329,12 @@ public class HtmlInspectorEngineTest {
      */
     @Test
     public void bestEffortTest() throws Exception {
+        final String r1 = "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>";
+        final String r2 = "<script type=\"text/javascript\" src=\"/1/best-effort/workflowbest-effort/aggregate.js\"></script>";
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")))
-                .replace("<script src=\"script/foo.ts\"></script>", "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>\n")
-                .replace("<wuic:html-import workflowId=\"heap\"/>", "<script type=\"text/javascript\" src=\"/1/best-effort/workflowbest-effort/aggregate.js\"></script>");
+                .replace("<script src=\"script/foo.ts\"></script>", r1)
+                .replace("<wuic:html-import workflowId=\"heap\"/>", r2);
+
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -396,7 +376,57 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8", true));
+
+        final HtmlInspectorEngine e = new HtmlInspectorEngine(true, "UTF-8", true);
+        e.setParser(new AssetsMarkupParser() {
+            @Override
+            public void parse(final Reader reader, final AssetsMarkupHandler handler) {
+                handler.handleLink("http://bar.com/script.css", new HashMap<String, String>(), 3, 9, 3, 49);
+
+                Map<String, String> attr = new LinkedHashMap<String, String>();
+                attr.put("type", "text/javascript");
+                handler.handleScriptLink("http://foo.com/script.js", attr, 4, 9, 4, 72);
+
+                handler.handleLink("favicon.ico", new HashMap<String, String>(), 5, 9, 5, 36);
+                handler.handleLink("script/script1.css", new HashMap<String, String>(), 6, 9, 6, 44);
+                handler.handleComment("<!-- some comments -->".toCharArray(), 7, 9, 24);
+
+                attr = new LinkedHashMap<String, String>();
+                attr.put("rel", "text/css");
+                handler.handleLink("script/script2.css", new HashMap<String, String>(), 8, 9, 8, 59);
+
+                attr = new LinkedHashMap<String, String>();
+                attr.put("type", "text/javascript");
+                handler.handleScriptLink("script/script1.js", attr, 10, 9, 10, 68);
+
+                handler.handleScriptLink("/0/000000002B702562foo.ts.js", new HashMap<String, String>(), 12, 9, 12, 84);
+                handler.handleScriptLink("/1/best-effort/workflowbest-effort/aggregate.js", new HashMap<String, String>(), 13, 9, 13, 103);
+                handler.handleCssContent("\n            .inner {\n            }\n        ".toCharArray(),
+                        new HashMap<String, String>(), 14, 9, 16, 17);
+
+                handler.handleImgLink("earth.jpg", new HashMap<String, String>(), 21, 9, 21, 31);
+
+                attr = new LinkedHashMap<String, String>();
+                attr.put("height", "60%");
+                attr.put("width", "50%");
+                handler.handleImgLink("template-img.png", attr, 22, 9, 22, 70);
+
+                attr = new LinkedHashMap<String, String>();
+                attr.put("rel", "stylesheet");
+                handler.handleLink("script/script3.css?foo", new HashMap<String, String>(), 24, 5, 24, 59);
+
+                handler.handleScriptLink("script/script2.js#bar", new HashMap<String, String>(), 25, 5, 25, 43);
+                handler.handleLink("script/script4.css", new HashMap<String, String>(), 26, 5, 26, 35);
+                handler.handleJavascriptContent("console.log(i);".toCharArray(), new HashMap<String, String>(), 27, 5, 27, 37);
+
+                attr = new LinkedHashMap<String, String>();
+                attr.put("type", "text/javascript");
+                handler.handleScriptLink("script/script3.js", attr, 28, 5, 28, 69);
+
+                handler.handleScriptLink("script/script4.js", new HashMap<String, String>(), 29, 5, 29, 37);
+            }
+        });
+        chains.put(NutType.HTML, e);
         chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
         chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
         chains.put(NutType.TYPESCRIPT, new NodeEngine() {
@@ -424,7 +454,7 @@ public class HtmlInspectorEngineTest {
 
         List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, newContext()).processContext(ProcessContext.DEFAULT).chains(chains).build());
         String res = NutUtils.readTransform(nuts.get(0));
-        Assert.assertEquals(content.replace("<html ", "<html manifest=\"/1/index.html.appcache\" "), res);
+        Assert.assertEquals(content.replace("<html ", "<html manifest=\"/1/index.html.appcache\" ").replace("\r\n", "\n"), res);
 
         countDownLatch.await(5, TimeUnit.SECONDS);
 

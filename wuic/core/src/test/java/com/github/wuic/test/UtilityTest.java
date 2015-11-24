@@ -76,6 +76,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.List;
@@ -487,9 +488,12 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
         HtmlUtil.writeScriptImport(nut, "myPath");
 
-        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        final Map<String, String> a = new HashMap<String, String>();
+        a.put("param", "param");
+
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", a);
         Assert.assertTrue(res.contains("\"myPath/1/foo.js\""));
-        Assert.assertTrue(res.startsWith("<script param=param "));
+        Assert.assertTrue(res.startsWith("<script type=\"text/javascript\" param=\"param\" "));
     }
 
     /**
@@ -504,9 +508,11 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        final Map<String, String> a = new HashMap<String, String>();
+        a.put("param", "param");
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", a);
         Assert.assertTrue(res.contains("\"myPath/1/foo.css\""));
-        Assert.assertTrue(res.startsWith("<link param=param "));
+        Assert.assertTrue(res.startsWith("<link type=\"text/css\" rel=\"stylesheet\" param=\"param\" "));
     }
 
     /**
@@ -521,9 +527,12 @@ public class UtilityTest extends WuicTest {
         Mockito.when(nut.getNutType()).thenReturn(NutType.PNG);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        final String res = HtmlUtil.writeScriptImport(nut, "myPath", "param=param");
+        final Map<String, String> a = new HashMap<String, String>();
+        a.put("param", "param");
+
+        final String res = HtmlUtil.writeScriptImport(nut, "myPath", a);
         Assert.assertTrue(res.contains("\"myPath/1/foo.png\""));
-        Assert.assertTrue(res.startsWith("<img param=param "));
+        Assert.assertTrue(res.startsWith("<img param=\"param\" "));
     }
 
     /**

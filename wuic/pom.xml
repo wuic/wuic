@@ -52,6 +52,11 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.attoparser</groupId>
+            <artifactId>attoparser</artifactId>
+        </dependency>
+
         <!-- Testing library -->
         <dependency>
             <groupId>com.github.wuic</groupId>
