@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.MatchResult;
 
 /**
  * <p>
@@ -174,15 +173,13 @@ public abstract class LineInspector {
      * @param request the request
      * @param originalNut the original nut
      * @param cis the composite stream if any
-     * @param matcher the matcher that inspects the stream
-     * @param groupIndex the group index of currently matched value
+     * @param position the position of the matched data in the inspected stream
      * @return the heap
      */
     public static NutsHeap getHeap(final EngineRequest request,
                                    final ConvertibleNut originalNut,
                                    final CompositeNut.CompositeInputStream cis,
-                                   final LineMatcher matcher,
-                                   final int groupIndex) {
+                                   final int position) {
         final NutsHeap heap = new NutsHeap(request.getHeap());
         final String name;
 
@@ -190,7 +187,7 @@ public abstract class LineInspector {
         if (cis == null) {
             name = originalNut.getName();
         } else {
-            name = cis.nutAt(matcher.start(groupIndex)).getName();
+            name = cis.nutAt(position).getName();
         }
 
         final int lastIndexOfSlash = name.lastIndexOf('/') + 1;
@@ -221,26 +218,6 @@ public abstract class LineInspector {
 
     /**
      * <p>
-     * Computes the replacement to be made inside the text for the given {@code Matcher} which its {@code find()}
-     * method as just been called.
-     * </p>
-     *
-     * @param matcher the matcher which provides found text thanks to its {@code group()} method.
-     * @param replacement the text which will replace the matching text
-     * @param request the request that orders this transformation
-     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
-     * @param originalNut the original nut
-     * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
-     * @throws WuicException if an exception occurs
-     */
-    public abstract List<? extends ConvertibleNut> appendTransformation(LineMatcher matcher,
-                                                                        StringBuilder replacement,
-                                                                        EngineRequest request,
-                                                                        CompositeNut.CompositeInputStream cis,
-                                                                        ConvertibleNut originalNut) throws WuicException;
-
-    /**
-     * <p>
      * Tells this inspector a new inspection of a set of lines is going to start.
      * This allows this object to clean any retained information regarding lines previously inspected and that could be
      * taken into consideration in the matching operation that are going to be processed.
@@ -251,13 +228,21 @@ public abstract class LineInspector {
 
     /**
      * <p>
-     * Creates a new line matcher.
+     * Inspects the given char array and notifies the given {@link LineInspectorListener listener} when some data are matched.
      * </p>
      *
-     * @param line the characters to match
-     * @return the new object
+     * @param listener the listener the notify
+     * @param data the char array to inspect
+     * @param request the request that orders this transformation
+     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
+     * @param originalNut the original nut
+     * @throws WuicException if inspection fails
      */
-    public abstract LineMatcher lineMatcher(String line);
+    public abstract void inspect(LineInspectorListener listener,
+                                 char[] data,
+                                 EngineRequest request,
+                                 CompositeNut.CompositeInputStream cis,
+                                 ConvertibleNut originalNut) throws WuicException;
 
     /**
      * <p>
@@ -269,57 +254,7 @@ public abstract class LineInspector {
      * @return the {@code String} representation, {@code null} if no inclusion is possible
      * @throws IOException if the transformation fails
      */
-    protected abstract String toString(final ConvertibleNut convertibleNut) throws IOException;
-
-    /**
-     * <p>
-     * Represents a matcher for a given line and provides all the matching characters through the character streams.
-     * The next {@link MatchResult} state can be reached by calling the {@link #find()} method.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.3
-     */
-    public abstract static class LineMatcher implements MatchResult {
-
-        /**
-         * The character stream.
-         */
-        private final String line;
-
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         *
-         * @param line the line
-         */
-        public LineMatcher(final String line) {
-            this.line = line;
-        }
-
-        /**
-         * <p>
-         * Gets the character stream.
-         * </p>
-         *
-         * @return the line
-         */
-        public String getLine() {
-            return line;
-        }
-
-        /**
-         * <p>
-         * Returns {@code true} until the current state represents an existing match result.
-         * Each time the method is called, the state of this object moves to the next matching characters in the stream.
-         * </p>
-         *
-         * @return {@code true} is there is still a matching result, {@code false} otherwise
-         */
-        public abstract boolean find();
-    }
+    protected abstract String toString(ConvertibleNut convertibleNut) throws IOException;
 
     /**
      * <p>

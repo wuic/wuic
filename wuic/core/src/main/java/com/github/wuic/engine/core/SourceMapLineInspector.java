@@ -121,7 +121,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
         }
 
         // Extract the nut
-        final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
+        final NutsHeap heap = getHeap(request, originalNut, cis, matcher.start(1));
         final List<Nut> nuts;
 
         try {

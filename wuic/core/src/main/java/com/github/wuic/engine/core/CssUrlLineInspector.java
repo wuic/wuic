@@ -193,7 +193,7 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
             final Matcher matcherUrl = patternUrl.matcher(matcher.group());
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
             final StringBuffer sb = new StringBuffer();
-            heap = getHeap(request, originalNut, cis, matcher, 0);
+            heap = getHeap(request, originalNut, cis, matcher.start(0));
 
             // Process each font URL inside the font rule
             while (matcherUrl.find()) {
@@ -209,9 +209,9 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
         } else {
             if (group.isEmpty()) {
                 group = matcher.group(NumberUtils.TWO);
-                heap = getHeap(request, originalNut, cis, matcher, NumberUtils.TWO);
+                heap = getHeap(request, originalNut, cis, matcher.start(NumberUtils.TWO));
             } else {
-                heap = getHeap(request, originalNut, cis, matcher, groupIndex);
+                heap = getHeap(request, originalNut, cis, matcher.start(groupIndex));
             }
 
             // The MatcherAdapter is provided by the inherited class

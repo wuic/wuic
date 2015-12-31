@@ -42,6 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
@@ -171,29 +172,25 @@ public abstract class TextInspectorEngine
         inspector.newInspection();
 
         // Looking for matching statements
-        final LineInspector.LineMatcher matcher = inspector.lineMatcher(line);
+        inspector.inspect(new LineInspectorListener() {
+            @Override
+            public void onMatch(String find, final int start, final int end, String replacement, List<? extends ConvertibleNut> extracted)
+                    throws WuicException {
+                // Create replacement to perform later
+                if (!replacement.equals(find)) {
+                    replacementInfoList.add(inspector.replacementInfo(start, end, original, extracted, replacement));
+                }
 
-        while (matcher.find()) {
-            // Compute replacement, extract nut name and referenced nuts
-            final StringBuilder replacement = new StringBuilder();
-            final List<? extends ConvertibleNut> res = inspector.appendTransformation(matcher, replacement, request, cis, original);
-
-            // Create replacement to perform later
-            final String r = replacement.toString();
-
-            if (!r.equals(matcher.group())) {
-                replacementInfoList.add(inspector.replacementInfo(matcher.start(), matcher.end(), original, res, r));
-            }
-
-            // Add the nut and inspect it recursively if it's a CSS path
-            if (res != null) {
-                for (final ConvertibleNut c : res) {
-                    if (c.getInitialNutType().equals(NutType.CSS)) {
-                        inspect(c, new EngineRequestBuilder(request).nuts(res).build());
+                // Add the nut and inspect it recursively if it's a CSS path
+                if (extracted != null) {
+                    for (final ConvertibleNut c : extracted) {
+                        if (c.getInitialNutType().equals(NutType.CSS)) {
+                            inspect(c, new EngineRequestBuilder(request).nuts(extracted).build());
+                        }
                     }
                 }
             }
-        }
+        }, line.toCharArray(), request, cis, original);
     }
 
     /**

@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
  * @author Guillaume DROUET
  * @since 0.5.3
  */
-public abstract class RegexLineInspector extends LineInspector {
+public abstract class RegexLineInspector extends LineMatcherInspector {
 
     /**
      * Logger.

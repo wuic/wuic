@@ -118,7 +118,7 @@ public class AngularTemplateInspector extends RegexLineInspector {
         referencedPath = referencedPath.substring(1, referencedPath.length() - 1);
 
         // Extract the nut
-        final NutsHeap heap = getHeap(request, originalNut, cis, matcher, 1);
+        final NutsHeap heap = getHeap(request, originalNut, cis, matcher.start(1));
         final List<Nut> nuts;
 
         try {
