@@ -156,7 +156,7 @@ public abstract class TextInspectorEngine
      * @param line the line to be inspected
      * @param request the initial request
      * @param inspector the inspector to use
-     * @param replacementInfoList the collection where any referenced nut identified by the method will be added
+     * @param replacementInfoSet the collection where any referenced nut identified by the method will be added
      * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
      * @param original the inspected nut
      * @throws WuicException if an I/O error occurs while reading
@@ -164,7 +164,7 @@ public abstract class TextInspectorEngine
     protected void inspectLine(final String line,
                                final EngineRequest request,
                                final LineInspector inspector,
-                               final Set<LineInspector.ReplacementInfo> replacementInfoList,
+                               final Set<LineInspector.ReplacementInfo> replacementInfoSet,
                                final CompositeNut.CompositeInputStream cis,
                                final ConvertibleNut original)
             throws WuicException {
@@ -172,25 +172,7 @@ public abstract class TextInspectorEngine
         inspector.newInspection();
 
         // Looking for matching statements
-        inspector.inspect(new LineInspectorListener() {
-            @Override
-            public void onMatch(String find, final int start, final int end, String replacement, List<? extends ConvertibleNut> extracted)
-                    throws WuicException {
-                // Create replacement to perform later
-                if (!replacement.equals(find)) {
-                    replacementInfoList.add(inspector.replacementInfo(start, end, original, extracted, replacement));
-                }
-
-                // Add the nut and inspect it recursively if it's a CSS path
-                if (extracted != null) {
-                    for (final ConvertibleNut c : extracted) {
-                        if (c.getInitialNutType().equals(NutType.CSS)) {
-                            inspect(c, new EngineRequestBuilder(request).nuts(extracted).build());
-                        }
-                    }
-                }
-            }
-        }, line.toCharArray(), request, cis, original);
+        inspector.inspect(new Listener(replacementInfoSet, inspector, original, request), line.toCharArray(), request, cis, original);
     }
 
     /**
@@ -344,5 +326,81 @@ public abstract class TextInspectorEngine
         }
 
         os.write((line + '\n').getBytes());
+    }
+
+    /**
+     * <p>
+     * Internal implementation of {@link LineInspector}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class Listener implements LineInspectorListener {
+
+        /**
+         * The replacements populated when the listener is notified.
+         */
+        private final Set<LineInspector.ReplacementInfo> replacementInfoSet;
+
+        /**
+         * The inspector that notifies this listener.
+         */
+        private LineInspector inspector;
+
+        /**
+         * The nut original providing the inspected stream.
+         */
+        private ConvertibleNut originalNut;
+
+        /**
+         * The request that initiated the inspection.
+         */
+        private final EngineRequest request;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param replacementInfoSet see {@link #replacementInfoSet}
+         * @param inspector see {@link #inspector}
+         * @param originalNut see {@link #originalNut}
+         * @param request see {@link #request}
+         */
+        public Listener(final Set<LineInspector.ReplacementInfo> replacementInfoSet,
+                        final LineInspector inspector,
+                        final ConvertibleNut originalNut,
+                        final EngineRequest request) {
+            this.replacementInfoSet = replacementInfoSet;
+            this.inspector = inspector;
+            this.originalNut = originalNut;
+            this.request = request;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onMatch(final String find,
+                            final int start,
+                            final int end,
+                            final String replacement,
+                            final List<? extends ConvertibleNut> extracted)
+                throws WuicException {
+            // Create replacement to perform later
+            if (!replacement.equals(find)) {
+                replacementInfoSet.add(inspector.replacementInfo(start, end, originalNut, extracted, replacement));
+            }
+
+            // Add the nut and inspect it recursively if it's a CSS path
+            if (extracted != null) {
+                for (final ConvertibleNut c : extracted) {
+                    if (c.getInitialNutType().equals(NutType.CSS)) {
+                        inspect(c, new EngineRequestBuilder(request).nuts(extracted).build());
+                    }
+                }
+            }
+        }
     }
 }
