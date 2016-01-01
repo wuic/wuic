@@ -1,5 +1,5 @@
 /*
- * "Copyright (c) 2015   Capgemini Technology Services (hereinafter "Capgemini")
+ * "Copyright (c) 2016   Capgemini Technology Services (hereinafter "Capgemini")
  *
  * License/Terms of Use
  * Permission is hereby granted, free of charge and for the term of intellectual

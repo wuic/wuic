@@ -1,5 +1,5 @@
 /*
- * "Copyright (c) 2015   Capgemini Technology Services (hereinafter "Capgemini")
+ * "Copyright (c) 2016   Capgemini Technology Services (hereinafter "Capgemini")
  *
  * License/Terms of Use
  * Permission is hereby granted, free of charge and for the term of intellectual
@@ -47,13 +47,17 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.LineInspectorListener;
+import com.github.wuic.engine.LineMatcherInspector;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.engine.core.SourceMapLineInspector;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
@@ -429,7 +433,7 @@ public class InspectorTest {
         Mockito.when(next.getEngineType()).thenReturn(EngineType.AGGREGATOR);
         Mockito.when(engine.getNext()).thenReturn(next);
         final SourceMapLineInspector inspector = new SourceMapLineInspector(engine);
-        final LineInspector.LineMatcher matcher = inspector.lineMatcher("//# sourceMappingURL=foo.map");
+        final LineMatcherInspector.LineMatcher matcher = inspector.lineMatcher("//# sourceMappingURL=foo.map");
         matcher.find();
 
         final NutDao dao = Mockito.mock(NutDao.class);
