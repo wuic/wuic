@@ -53,8 +53,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -215,8 +215,22 @@ public final class IOUtils {
      * @return the content
      * @throws IOException if an I/O error occurs
      */
-    public static String readString(final InputStreamReader reader) throws IOException {
+    public static String readString(final Reader reader) throws IOException {
         final StringBuilder builder = new StringBuilder();
+        read(reader, builder);
+        return builder.toString();
+    }
+
+    /**
+     * <p>
+     * Reads the given reader and append all chars to the specified {@link StringBuilder}.
+     * </p>
+     *
+     * @param reader the reader
+     * @param builder the string builder
+     * @throws IOException if an I/O error occurs
+     */
+    public static void read(final Reader reader, final StringBuilder builder) throws IOException {
         final char[] buff = new char[IOUtils.WUIC_BUFFER_LEN];
         int offset;
 
@@ -224,8 +238,6 @@ public final class IOUtils {
         while ((offset = reader.read(buff)) != -1) {
             builder.append(buff, 0, offset);
         }
-
-        return builder.toString();
     }
 
     /**
