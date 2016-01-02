@@ -56,6 +56,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -146,52 +149,18 @@ public abstract class TextInspectorEngine
 
     /**
      * <p>
-     * Inspects the given line and eventually adds some extracted nuts to the nut referencing it.
+     * Includes content in place of all nuts references in the specified {@code StringBuilder}.
      * </p>
      *
-     * <p>
-     * This method is recursive.
-     * </p>
-     *
-     * @param line the line to be inspected
-     * @param request the initial request
-     * @param inspector the inspector to use
-     * @param replacementInfoSet the collection where any referenced nut identified by the method will be added
-     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
-     * @param original the inspected nut
-     * @throws WuicException if an I/O error occurs while reading
-     */
-    protected void inspectLine(final String line,
-                               final EngineRequest request,
-                               final LineInspector inspector,
-                               final Set<LineInspector.ReplacementInfo> replacementInfoSet,
-                               final CompositeNut.CompositeInputStream cis,
-                               final ConvertibleNut original)
-            throws WuicException {
-        // Clean previous inspections
-        inspector.newInspection();
-
-        // Looking for matching statements
-        inspector.inspect(new Listener(replacementInfoSet, inspector, original, request), line.toCharArray(), request, cis, original);
-    }
-
-    /**
-     * <p>
-     * Includes content in place of all nuts references in the specified {@code String}.
-     * </p>
-     *
-     * @param line the line with references
+     * @param stringBuilder the line with references
      * @param replacementInfoList where replacement with references has been made
      * @param referencer the referencer
-     * @return the replaced line
      * @throws IOException if an I/O error occurs
      */
-    private String include(final String line,
-                           final Set<LineInspector.ReplacementInfo> replacementInfoList,
-                           final ConvertibleNut referencer)
+    private void include(final StringBuilder stringBuilder,
+                         final Set<LineInspector.ReplacementInfo> replacementInfoList,
+                         final ConvertibleNut referencer)
             throws IOException {
-        final StringBuilder stringBuilder = new StringBuilder(line);
-
         // Including from the end to the beginning of the line
         for (final LineInspector.ReplacementInfo replacementInfo : replacementInfoList) {
 
@@ -219,8 +188,6 @@ public abstract class TextInspectorEngine
                 addReferenceNutNotTransformed(referencer, ref);
             }
         }
-
-        return stringBuilder.toString();
     }
 
     /**
@@ -293,39 +260,72 @@ public abstract class TextInspectorEngine
         final Set<LineInspector.ReplacementInfo> replacements = new TreeSet<LineInspector.ReplacementInfo>();
 
         // Read the content and compute the position in case of aggregation
-        String line = IOUtils.readString(new InputStreamReader(is, charset));
         final CompositeNut.CompositeInputStream cis = (is instanceof CompositeNut.CompositeInputStream) ?
                 CompositeNut.CompositeInputStream.class.cast(is) : null;
 
+        // Read the character stream
+        final StringBuilder stringBuilder = new StringBuilder();
+        IOUtils.read(new InputStreamReader(is, charset), stringBuilder);
+        final char[] chars = new char[stringBuilder.length()];
+        stringBuilder.getChars(0, stringBuilder.length(), chars, 0);
+
         for (final LineInspector inspector : lineInspectors) {
             try {
-                inspectLine(line, request, inspector, replacements, cis, convertibleNut);
+                // Clean previous inspections
+                inspector.newInspection();
+                final Listener l = new Listener(replacements, inspector, convertibleNut, request);
+                inspector.inspect(l, chars, request, cis, convertibleNut);
             } catch (WuicException we) {
                 throw new IOException(we);
             }
         }
 
+        // Write the result
+        writeResult(replacements, stringBuilder, request, convertibleNut, os);
+    }
+
+    /**
+     * <p>
+     * Write the result to given {@code OutputStream} by transforming an input passed in the given {@code StringBuilder}.
+     * </p>
+     *
+     * @param replacements the replacements
+     * @param request the request that initiated the transformation
+     * @param convertibleNut the original nut providing the stream to transform
+     * @param os the stream where result should be written
+     * @throws IOException if any I/O error occurs
+     */
+    private void writeResult(final Set<LineInspector.ReplacementInfo> replacements,
+                             final StringBuilder lineBuilder,
+                             final EngineRequest request,
+                             final ConvertibleNut convertibleNut,
+                             final OutputStream os) throws IOException{
+        // Perform replacements
         if (!replacements.isEmpty()) {
 
             // Keep all rewritten URL in best effort, try to include otherwise
             if (!request.isBestEffort()) {
-                line = include(line, replacements, convertibleNut);
+                include(lineBuilder, replacements, convertibleNut);
             } else {
                 // Performs replacements first
-                final StringBuilder lineBuilder = new StringBuilder(line);
-
                 for (final LineInspector.ReplacementInfo replacementInfo : replacements) {
                     replacementInfo.replace(lineBuilder);
                 }
-
-                line = lineBuilder.toString();
 
                 // Populate
                 populateReferencedNuts(convertibleNut, replacements);
             }
         }
 
-        os.write((line + '\n').getBytes());
+        // Convert to a char array
+        final char[] chars = new char[lineBuilder.length()];
+        lineBuilder.getChars(0, lineBuilder.length(), chars, 0);
+
+        // Write the char array as a byte array
+        final CharBuffer cbuf = CharBuffer.wrap(chars);
+        final ByteBuffer bbuf = Charset.forName(charset).encode(cbuf);
+        os.write(bbuf.array());
+        os.write('\n');
     }
 
     /**
