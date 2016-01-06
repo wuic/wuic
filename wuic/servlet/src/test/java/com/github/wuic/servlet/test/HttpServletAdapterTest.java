@@ -74,7 +74,7 @@ public class HttpServletAdapterTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void requestTest() throws Exception {
         testAdapter(HttpServletRequestAdapter.class, HttpServletRequest.class);
     }
@@ -84,7 +84,7 @@ public class HttpServletAdapterTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void responseTest() throws Exception {
         testAdapter(HttpServletResponseAdapter.class, HttpServletResponse.class);
     }

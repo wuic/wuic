@@ -77,7 +77,7 @@ public class HtmlParserFilterTest {
      *
      * @throws java.io.IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void filterTest() throws IOException {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/index.html").getEntity().getContent()));
         Assert.assertTrue(content, content.contains("aggregate-me.css"));

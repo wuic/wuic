@@ -65,7 +65,7 @@ public class ScheduledCacheTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void scheduledClearCacheTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(2);
         final ScheduledCacheEngine cache = new ScheduledCacheEngine(1, true, false) {

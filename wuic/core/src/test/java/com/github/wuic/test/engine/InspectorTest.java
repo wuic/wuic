@@ -47,17 +47,13 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.LineMatcherInspector;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.engine.core.SourceMapLineInspector;
-import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
@@ -102,7 +98,7 @@ public class InspectorTest {
     /**
      * Makes sure the object builder inspector are installed thanks to the {@link java.util.ServiceLoader}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void serviceTest() {
         new ContextBuilder();
         Assert.assertTrue(called);
@@ -232,7 +228,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "jquery.ui.core.css"},
@@ -266,7 +262,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void fontUrlTest() throws Exception {
         final StringBuilder sb = new StringBuilder();
         sb.append("a {\n" +
@@ -300,7 +296,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void sourceMappingUrlTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"//sourceMappingURL=%s ", "sourcemap.js.map"},
@@ -320,7 +316,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void angularNoWrapTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{
@@ -355,7 +351,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void angularWrapTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
@@ -380,7 +376,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void angularFallbackTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
@@ -426,7 +422,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void sourceMapInspection() throws Exception {
         final NodeEngine engine = Mockito.mock(NodeEngine.class);
         final NodeEngine next = Mockito.mock(NodeEngine.class);
@@ -472,7 +468,7 @@ public class InspectorTest {
      *
      * @throws Exception if test succeed
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void badAngularWrapTest() throws Exception {
         new JavascriptInspectorEngine(true, "UTF-8", "fn('foo')");
     }
@@ -484,7 +480,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void dataUrlTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw=="},
@@ -499,7 +495,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void parentRefTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         builder.tag("parentRefTest")
@@ -529,7 +525,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void compositionByWorkflowTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);

@@ -77,7 +77,7 @@ public class JspTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void basicJspTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/index.jsp").getEntity().getContent()));
         Assert.assertTrue(content.contains("aggregate.css"));

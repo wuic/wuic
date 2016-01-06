@@ -77,7 +77,7 @@ public class GzipEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void enableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine(true);
 
@@ -105,7 +105,7 @@ public class GzipEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void disableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine(false);
 

@@ -149,7 +149,7 @@ public class EngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void skipTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final NodeEngine a = new E(NutType.GIF, EngineType.CACHE, count);
@@ -182,7 +182,7 @@ public class EngineTest {
     /**
      * Nominal test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
@@ -194,7 +194,7 @@ public class EngineTest {
     /**
      * Test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)} with null.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainTestWithNull() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
@@ -206,7 +206,7 @@ public class EngineTest {
     /**
      * Union test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainUnionTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
@@ -217,7 +217,7 @@ public class EngineTest {
     /**
      * Chaining duplicate engines test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainDuplicateTest() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = engine1;
@@ -229,7 +229,7 @@ public class EngineTest {
     /**
      * Chaining engines with a replacement test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainReplaceWithLast() {
         final NodeEngine engine1 =new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
@@ -242,7 +242,7 @@ public class EngineTest {
     /**
      * Chaining with the first engine replaced test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void chainReplaceFirst() {
         final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
         final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());

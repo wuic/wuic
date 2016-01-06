@@ -77,7 +77,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for unknown builder.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() {
         nutDaoObjectBuilderFactory.create("FooNutDaoBuilder");
     }
@@ -85,7 +85,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for classpath.
      */
-    @Test
+    @Test(timeout = 60000)
     public void testCreateClasspathBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("ClasspathNutDaoBuilder"));
     }
@@ -93,7 +93,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for HTTP.
      */
-    @Test
+    @Test(timeout = 60000)
     public void testCreateHttpBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("HttpNutDaoBuilder"));
     }
@@ -101,7 +101,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for disk.
      */
-    @Test
+    @Test(timeout = 60000)
     public void testCreateDiskBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("DiskNutDaoBuilder"));
     }

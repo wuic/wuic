@@ -74,7 +74,7 @@ public class AbstractAggregatorEngineTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void dynamicNutTest() throws WuicException {
         final Engine e = new A();
         final List<Nut> nuts = new ArrayList<Nut>();

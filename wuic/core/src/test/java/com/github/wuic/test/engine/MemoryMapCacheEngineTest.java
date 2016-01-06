@@ -103,7 +103,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception exception
      */
-    @Test
+    @Test(timeout = 60000)
     public void dynamicTest() throws Exception {
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
         final AtomicInteger counter1 = new AtomicInteger();
@@ -186,7 +186,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void invalidationTest() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false) {
@@ -234,7 +234,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void addThenClearTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
@@ -251,7 +251,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void addThenRemoveTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);

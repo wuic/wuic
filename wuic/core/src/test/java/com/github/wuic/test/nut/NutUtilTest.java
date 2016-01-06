@@ -76,7 +76,7 @@ public class NutUtilTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void proxyTest() throws IOException {
         final NutDao delegate = Mockito.mock(NutDao.class);
         final Nut delegateNut = Mockito.mock(Nut.class);
@@ -111,7 +111,7 @@ public class NutUtilTest {
     /**
      * Tests source lookup.
      */
-    @Test
+    @Test(timeout = 60000)
     public void searchSourceTest() {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         final SourceMapNutImpl src = Mockito.mock(SourceMapNutImpl.class);

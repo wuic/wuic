@@ -117,7 +117,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void noneWarmupStrategyTest() throws WuicException {
         final AtomicInteger count = new AtomicInteger();
         createFacade(WuicFacade.WarmupStrategy.NONE, new Runnable() {
@@ -135,7 +135,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void syncWarmupStrategyTest() throws WuicException {
         final AtomicInteger count = new AtomicInteger();
         createFacade(WuicFacade.WarmupStrategy.SYNC, new Runnable() {
@@ -153,7 +153,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void asyncWarmupStrategyTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(1);
         createFacade(WuicFacade.WarmupStrategy.ASYNC, new Runnable() {

@@ -69,7 +69,7 @@ public class TransformedNutTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void transformTest() throws IOException {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -80,7 +80,7 @@ public class TransformedNutTest {
     /**
      * Transformed nut must be serializable.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void notSerializableTest() {
         final ConvertibleNut mock = Mockito.mock(ConvertibleNut.class);
         Mockito.when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
@@ -91,7 +91,7 @@ public class TransformedNutTest {
     /**
      * Nut name can't be changed.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(timeout = 60000, expected = IllegalStateException.class)
     public void setNutNameTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.setNutName("");
@@ -100,7 +100,7 @@ public class TransformedNutTest {
     /**
      * New transformer can't be added.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(timeout = 60000, expected = IllegalStateException.class)
     public void addTransformerTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addTransformer(Mockito.mock(Pipe.Transformer.class));
@@ -109,7 +109,7 @@ public class TransformedNutTest {
     /**
      * New referenced nut can't be added.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(timeout = 60000, expected = IllegalStateException.class)
     public void addReferencedNutTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addReferencedNut(Mockito.mock(ConvertibleNut.class));

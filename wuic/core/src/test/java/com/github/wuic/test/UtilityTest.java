@@ -103,7 +103,7 @@ public class UtilityTest extends WuicTest {
      * Test the nut research feature.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void searchNutTest() {
         final ConvertibleNut nut1 = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut1.getName()).thenReturn("./nut1");
@@ -129,7 +129,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void mergeNutTest() throws IOException {
         final ConvertibleNut first = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut second = Mockito.mock(ConvertibleNut.class);
@@ -240,7 +240,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test path simplification method.
      */
-    @Test
+    @Test(timeout = 60000)
     public void simplifyPathTest() {
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("foo/bar/../../baz.css"), "baz.css");
         Assert.assertEquals(StringUtils.simplifyPathWithDoubleDot("./foo"), "foo");
@@ -268,7 +268,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test string merge.
      */
-    @Test
+    @Test(timeout = 60000)
     public void mergeTest() {
         Assert.assertEquals(StringUtils.merge(new String[] {"foo", "oof", }, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[]{"foo:", "oof",}, ":"), "foo:oof");
@@ -286,7 +286,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Be sure that the {@code Map} used internally keep the order of the keys.
      */
-    @Test
+    @Test(timeout = 60000)
     public void orderingKeyMapTest() {
         final Map<String, String> map = CollectionUtils.orderedKeyMap();
 
@@ -318,7 +318,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void fileSearchTest() throws IOException {
 
         // Part 1
@@ -355,7 +355,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void fileSearchInJarTest() throws IOException {
         final String resolve = "/META-INF/resources/webjars";
         String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
@@ -372,7 +372,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void zipEntryTest() throws IOException {
         String str = IOUtils.normalizePathSeparator(getClass().getResource("/zip").toString());
 
@@ -410,7 +410,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void fileSearchSkipStartWith() throws IOException {
         final String str = getClass().getResource("/skipped").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
@@ -422,7 +422,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test difference between sets.
      */
-    @Test
+    @Test(timeout = 60000)
     public void differenceTest() {
         final Set<String> res = diff(new HashSet<String>(), new HashSet<String>());
         Assert.assertTrue("must be instance of HashSet", res instanceof HashSet);
@@ -431,7 +431,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test difference with ordered sets.
      */
-    @Test
+    @Test(timeout = 60000)
     public void orderedDiffTest() {
         final Set<String> first = new LinkedHashSet<String>();
         final Set<String> second = new LinkedHashSet<String>();
@@ -442,7 +442,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test that EngineType exclusion.
      */
-    @Test
+    @Test(timeout = 60000)
     public void withoutEngineTest() {
         Assert.assertEquals(EngineType.values().length - 2, EngineType.without(EngineType.INSPECTOR, EngineType.AGGREGATOR).length);
     }
@@ -480,7 +480,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void htmlJavascriptImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
@@ -501,7 +501,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void htmlCssImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
@@ -520,7 +520,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void htmlImgImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.png");
@@ -538,7 +538,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Test URL generation.
      */
-    @Test
+    @Test(timeout = 60000)
     public void getUrltTest() {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
@@ -561,7 +561,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Tests nut type identification.
      */
-    @Test
+    @Test(timeout = 60000)
     public void getByMimeTypeTest() {
         NutType nutType = NutType.getNutTypeForMimeType("text/html;charset=UTF-8");
         Assert.assertEquals(nutType, NutType.HTML);
@@ -576,7 +576,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Default annotation scanner test.
      */
-    @Test
+    @Test(timeout = 60000)
     public void defaultAnnotationScannerTest() {
         final AnnotationScanner s = new AnnotationDetectorScanner();
         final AtomicInteger count = new AtomicInteger();
@@ -609,7 +609,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithNoWorkflowTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/4000/nut.js");
         Assert.assertFalse(urlMatcher.matches());
@@ -622,7 +622,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithNoNutNameTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("workflow/4000/");
         Assert.assertFalse(urlMatcher.matches());
@@ -635,7 +635,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/nut.js");
         Assert.assertTrue(urlMatcher.matches());
@@ -651,7 +651,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithDeepNameTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/deep/nut.js");
         Assert.assertTrue(urlMatcher.matches());
@@ -667,7 +667,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithNumericNameTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/4000/nut.js");
         Assert.assertFalse(urlMatcher.matches());
@@ -680,7 +680,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithGoodNumericNameTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/4000/deep/4000/nut.js");
         Assert.assertTrue(urlMatcher.matches());
@@ -696,7 +696,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithDeepNameAndWithoutVersionTest() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/deep/nut.js");
         Assert.assertTrue(urlMatcher.matches());
@@ -712,7 +712,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws UnsupportedEncodingException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void urlMatcherWithNoVersion() throws UnsupportedEncodingException {
         final UrlMatcher urlMatcher = UrlUtils.urlMatcher("/workflow/nut.js");
         Assert.assertTrue(urlMatcher.matches());
@@ -728,7 +728,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void pipeTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(10);
         final Pipe p = new Pipe(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
@@ -758,7 +758,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void deleteTest() throws IOException {
         final String now = String.valueOf(System.currentTimeMillis());
         final File parent = new File(IOUtils.mergePath(System.getProperty("java.io.tmpdir"), "wuicDeleteTest", now));
@@ -781,7 +781,7 @@ public class UtilityTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void nutDiskStoreTest() throws Exception {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("/foo/bar.js");
@@ -804,7 +804,7 @@ public class UtilityTest extends WuicTest {
      * Tests number detection support.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void isNumberTest() {
         Assert.assertFalse(NumberUtils.isNumber(""));
         Assert.assertFalse(NumberUtils.isNumber("aa"));
@@ -817,7 +817,7 @@ public class UtilityTest extends WuicTest {
     /**
      * Common beginning string extraction test.
      */
-    @Test
+    @Test(timeout = 60000)
     public void extractCommonBeginningTest() {
         Assert.assertEquals("/paths", StringUtils.computeCommonPathBeginning(Arrays.asList("/paths/foo", "/paths/bar", "/paths/baz")));
         Assert.assertEquals("/paths", StringUtils.computeCommonPathBeginning(Arrays.asList("/paths/baz/foo", "/paths/bar")));
@@ -860,7 +860,7 @@ public class UtilityTest extends WuicTest {
      * Tests {@link StringUtils#replaceAll(String, String, StringBuilder)}.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void replaceAllTest() {
         Assert.assertEquals("foo bar baz", StringUtils.replaceAll("|", " ", new StringBuilder("foo|bar|baz")).toString());
         Assert.assertEquals("foo,,,,bar,,,,baz", StringUtils.replaceAll("+=-", ",,,,", new StringBuilder("foo+=-bar+=-baz")).toString());
@@ -872,7 +872,7 @@ public class UtilityTest extends WuicTest {
      * Tests {@link StringUtils#substringMatrix(String[], int, int, int, int)}.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void substringMatrixTest() {
         String[] lines = {
             "abcdefg", "hijk", "lmno", "pqrstu", "vwxyz"
@@ -890,7 +890,7 @@ public class UtilityTest extends WuicTest {
      * Tests {@link StringUtils#reachEndLineAndColumn(String[], int, int, int, java.util.concurrent.atomic.AtomicInteger, java.util.concurrent.atomic.AtomicInteger)}.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void reachEndLineAndColumnTest() {
         String[] lines = {
                 "abcdefg", "hijk", "lmno", "pqrstu", "vwxyz"

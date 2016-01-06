@@ -110,7 +110,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void configuratorWithCustomDaoAndEngineTest() throws Exception {
         // Add custom DAO and engine
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
@@ -130,7 +130,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void beanTest() throws Exception {
         
         // Load with JAXB
@@ -235,7 +235,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void xmlReadExceptionTest() throws Exception {
         new FileXmlContextBuilderConfigurator(null);
     }
@@ -247,7 +247,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withDefaultDaoTest() throws Exception {
         // File required default configuration
         final ContextBuilder builder = new ContextBuilder().configureDefault();
@@ -262,7 +262,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withPollingTest() throws Exception {
         // Add custom DAO and engine required
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
@@ -303,7 +303,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void bindTest() throws Exception {
         // Add custom DAO and engine required
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
@@ -327,7 +327,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void readerTest() throws Exception {
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-basic.xml").getFile()));
         final ContextBuilderConfigurator cfg = new ReaderXmlContextBuilderConfigurator(reader, "tag", true, ProcessContext.DEFAULT);
@@ -342,7 +342,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void filterTest() throws Exception {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
@@ -360,7 +360,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void filterDeepTest() throws Exception {
         // Add custom DAO and engine required
         final Reader reader = new FileReader(new File(getClass().getResource("/wuic-filter.xml").getFile()));
@@ -387,7 +387,7 @@ public class WuicXmlTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void heapCompositionTest() throws Exception {
         // Add custom DAO and engine required
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
@@ -417,7 +417,7 @@ public class WuicXmlTest {
      * @throws java.io.IOException if test fails
      * @throws com.github.wuic.exception.WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void conventionTest() throws JAXBException, IOException, WuicException {
         // Add custom DAO and engine required
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);

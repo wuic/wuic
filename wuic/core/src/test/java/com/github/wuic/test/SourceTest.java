@@ -80,7 +80,7 @@ public class SourceTest {
     /**
      * Tests {@link SourceImpl}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void defaultSource() {
         final Source src = new SourceImpl();
         Assert.assertNotNull(src.getOriginalNuts());
@@ -93,7 +93,7 @@ public class SourceTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void customSourceMapNutTest() throws Exception {
         final String aggregated =
                 "aaaaaaffffff\n" +
@@ -184,7 +184,7 @@ public class SourceTest {
      * @throws WuicException if test fails
      * @throws IOException   if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void sourceMapNutTest() throws WuicException, IOException {
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);

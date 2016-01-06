@@ -78,7 +78,7 @@ public class StaticEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void staticExistingWorkflowTest() throws WuicException, IOException {
         final StaticEngine engine = new StaticEngine();
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
@@ -117,7 +117,7 @@ public class StaticEngineTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void staticWorkflowNotFoundTest() throws WuicException {
         final StaticEngine engine = new StaticEngine();
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {

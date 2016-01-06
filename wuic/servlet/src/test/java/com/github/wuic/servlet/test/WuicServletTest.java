@@ -113,7 +113,7 @@ public class WuicServletTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void servletTest() throws Exception {
         final InputStreamReader isr = new InputStreamReader(getClass().getResourceAsStream("/servletTest/wuic.xml"));
         configuration.setWuicXmlReader(new StringReader(IOUtils.readString(isr)));
@@ -128,7 +128,7 @@ public class WuicServletTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void badUriTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/wuic/").getEntity().getContent()));
         Assert.assertTrue(content.contains(UrlMatcher.MATCHER_MESSAGE));
@@ -141,7 +141,7 @@ public class WuicServletTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void badNutTest() throws Exception {
         final InputStreamReader isr = new InputStreamReader(getClass().getResourceAsStream("/servletTest/wuic.xml"));
         configuration.setWuicXmlReader(new StringReader(IOUtils.readString(isr)));
@@ -156,7 +156,7 @@ public class WuicServletTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void badWorkflowTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/wuic/bad/workflow").getEntity().getContent()));
         Assert.assertTrue(content, content.contains("The workflow identified with 'bad' could not be found"));

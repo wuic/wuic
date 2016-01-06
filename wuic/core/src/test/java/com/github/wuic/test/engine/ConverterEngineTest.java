@@ -147,7 +147,7 @@ public class ConverterEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(timeout = 60000, expected = IllegalStateException.class)
     public void nutTypeNotChangedTest() throws WuicException, IOException {
         final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -175,7 +175,7 @@ public class ConverterEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void enableConversionTest() throws WuicException, IOException {
         final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -202,7 +202,7 @@ public class ConverterEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void disableConversionTest() throws WuicException, IOException {
         final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);

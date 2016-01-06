@@ -138,7 +138,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void nominalTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -164,7 +164,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void processContextTest() throws Exception {
         final ProcessContext processContext = new ProcessContext();
 
@@ -189,7 +189,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception
      */
-    @Test
+    @Test(timeout = 60000)
     public void mergeTest() throws Exception {
         final ContextBuilder a = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("a")
@@ -240,7 +240,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void objectInterceptorTest() throws Exception {
         @EngineService(injectDefaultToWorkflow = false)
         class E extends NodeEngine {
@@ -312,7 +312,7 @@ public class ContextBuilderTest {
      * Tests that inspector is called only for specified classes.
      * </p>
      */
-    @Test
+    @Test(timeout = 60000)
     public void perClassObjectBuilderInspectorTest() {
         final Class[] clazz = new Class[] {Foo.class, Bar.class, Baz.class, };
         final ObjectBuilderFactory<? extends C> c = new ObjectBuilderFactory<Foo>(NutFilterService.class, clazz);
@@ -340,7 +340,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void contextInterceptorTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(4);
         final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
@@ -406,7 +406,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withoutDefaultEnginesTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -429,7 +429,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withFilterTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -455,7 +455,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void overrideDefaultEnginesTest() throws Exception {
         // Typical use: no exception should be thrown
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).configureDefault();
@@ -478,7 +478,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void regexTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -507,7 +507,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(expected = WorkflowTemplateNotFoundException.class)
+    @Test(timeout = 60000, expected = WorkflowTemplateNotFoundException.class)
     public void workflowTemplateNotFoundTest() throws Exception {
         new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
@@ -527,7 +527,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void implicitWorkflowTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -553,7 +553,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void emptyChainTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -574,7 +574,7 @@ public class ContextBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void upToDateTest() throws WuicException {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory);
         final Context context = builder.build();
@@ -590,7 +590,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withStoreTest() throws Exception {
         try {
             new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -627,7 +627,7 @@ public class ContextBuilderTest {
      * Test settings erasure.
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void testClearTag() throws Exception {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
@@ -668,7 +668,7 @@ public class ContextBuilderTest {
     /**
      * Test when a builder is used without any tag.
      */
-    @Test
+    @Test(timeout = 60000)
     public void unTaggedUsageTest() {
         try {
             new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).contextNutDaoBuilder("dao", "MockDaoBuilder").toContext();
@@ -682,7 +682,7 @@ public class ContextBuilderTest {
      *
      * @throws InterruptedException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void concurrentTest() throws InterruptedException {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory);
         final int threadNumber = 2000;
@@ -774,7 +774,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void proxyTest() throws Exception {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getInitialName()).thenReturn("nut.js");
@@ -819,7 +819,7 @@ public class ContextBuilderTest {
      * @throws IOException if test fails
      * @throws WuicException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void conventionTest() throws IOException, WuicException {
         final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);

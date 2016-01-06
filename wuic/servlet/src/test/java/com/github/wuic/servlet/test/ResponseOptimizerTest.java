@@ -75,7 +75,7 @@ public class ResponseOptimizerTest {
      *
      * @throws java.io.IOException if any I/O error occurs
      */
-    @Test
+    @Test(timeout = 60000)
     public void expiresTest() throws IOException {
         Assert.assertNotNull(server.get("/index.html").getFirstHeader("Expires"));
     }

@@ -73,7 +73,7 @@ public class ContextBuilderConfiguratorTest {
     /**
      * Makes sure the context builder configurators are installed thanks to the {@link java.util.ServiceLoader}.
      */
-    @Test
+    @Test(timeout = 60000)
     public void serviceTest() {
         new ContextBuilder();
         Assert.assertTrue(called);
@@ -84,7 +84,7 @@ public class ContextBuilderConfiguratorTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void configureMultipleTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final StringBuilder tagBuilder = new StringBuilder("test");
@@ -155,7 +155,7 @@ public class ContextBuilderConfiguratorTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void configureWithPollingTest() throws Exception {
         final CountDownLatch latch = new CountDownLatch(NumberUtils.TWO);
 

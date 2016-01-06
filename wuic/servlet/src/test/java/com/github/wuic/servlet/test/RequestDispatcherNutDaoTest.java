@@ -131,7 +131,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void existsTest() throws Exception {
         Assert.assertTrue(dao.exists("foo.js", ProcessContext.DEFAULT));
         Assert.assertTrue(dao.exists("bar.js", ProcessContext.DEFAULT));
@@ -146,7 +146,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void resourceAsStreamTest() throws Exception {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         IOUtils.copyStream(dao.create("bar.js", ProcessContext.DEFAULT).get(0).openStream(), bos);
@@ -160,7 +160,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void processContextTest() throws Exception {
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         dao.create("foo.js", new ServletProcessContext(req)).get(0).openStream();

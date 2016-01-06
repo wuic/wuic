@@ -91,7 +91,7 @@ public class ImageAggregatorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withoutAggregation() throws Exception {
         final List<ConvertibleNut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(3, nuts.size());
@@ -105,7 +105,7 @@ public class ImageAggregatorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void withAggregation() throws Exception {
         final List<ConvertibleNut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(1, nuts.size());

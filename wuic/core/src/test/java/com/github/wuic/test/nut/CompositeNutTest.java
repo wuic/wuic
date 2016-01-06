@@ -79,7 +79,7 @@ public class CompositeNutTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void compositeTest() throws IOException {
         final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
         final ConvertibleNut n2 = newNut("n2", NutType.CSS, "some css rules");
@@ -93,7 +93,7 @@ public class CompositeNutTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void readCharOrByteTest() throws IOException {
         final int len = 4;
 
@@ -153,7 +153,7 @@ public class CompositeNutTest {
      *
      * @throws java.io.IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void aggregationTransformTest() throws IOException {
         final Pipe.Transformer<ConvertibleNut> t1 = new Pipe.Transformer<ConvertibleNut>() {
             @Override

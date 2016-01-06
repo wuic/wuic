@@ -97,7 +97,7 @@ public class HttpTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void httpExistsTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
@@ -113,7 +113,7 @@ public class HttpTest extends WuicTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void httpReadTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
@@ -128,7 +128,7 @@ public class HttpTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void httpNutTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder().configureDefault();

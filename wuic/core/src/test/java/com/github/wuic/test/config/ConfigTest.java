@@ -72,7 +72,7 @@ public class ConfigTest {
     /**
      * Tests a default build.
      */
-    @Test
+    @Test(timeout = 60000)
     public void builderDefaultValueTest() {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         final I i = b.build();
@@ -86,7 +86,7 @@ public class ConfigTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void builderSpecificValueTest() throws Exception {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("int", 2);
@@ -101,7 +101,7 @@ public class ConfigTest {
      *
      * @throws Exception if test succeed
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void builderBadPropertyTest() throws Exception {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("bar", 2);
@@ -110,7 +110,7 @@ public class ConfigTest {
     /**
      * Tests bad usage detection.
      */
-    @Test
+    @Test(timeout = 60000)
     public void badServiceTest() {
         Assert.assertNull(factory.create("MyBadServiceBuilder"));
     }
@@ -118,7 +118,7 @@ public class ConfigTest {
     /**
      * Tests bad usage detection.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void badInnerServiceTest() {
         factory.create("MyInnerBadServiceBuilder");
     }

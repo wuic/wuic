@@ -151,7 +151,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fauls
      */
-    @Test
+    @Test(timeout = 60000)
     public void hintTest() throws Exception {
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
@@ -168,7 +168,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fauls
      */
-    @Test
+    @Test(timeout = 60000)
     public void hintNoHeadTest() throws Exception {
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
@@ -221,7 +221,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void parseTest() throws Exception {
         final Context ctx = newContext();
         final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
@@ -258,7 +258,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void transformationCacheTest() throws Exception {
         final String[] script = new String[] {"<script src='foo.js'></script>",
                 "<script src='bar.js'></script>",
@@ -327,7 +327,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void bestEffortTest() throws Exception {
         final String r1 = "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>";
         final String r2 = "<script type=\"text/javascript\" src=\"/1/best-effort/workflowbest-effort/aggregate.js\"></script>";
@@ -470,7 +470,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void memoryMapSupportTest() throws Exception {
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, MemoryMapCacheEngine.class);
         final ObjectBuilder<Engine> builder = factory.create("MemoryMapCacheEngineBuilder");
@@ -525,7 +525,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void heapListenerHolderTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");

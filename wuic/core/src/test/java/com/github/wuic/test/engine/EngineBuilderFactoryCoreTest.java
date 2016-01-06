@@ -75,7 +75,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for unknown builder.
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() {
         Assert.assertNull(engineObjectBuilderFactory.create("FooEngineBuilder"));
     }
@@ -83,7 +83,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for image compression.
      */
-    @Test
+    @Test(timeout = 60000)
     public void testCreateImageCompressorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("ImageCompressorEngineBuilder"));
     }
@@ -91,7 +91,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for CSS inspector.
      */
-    @Test
+    @Test(timeout = 60000)
     public void testCreateCssInspectorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("CssInspectorEngineBuilder"));
     }

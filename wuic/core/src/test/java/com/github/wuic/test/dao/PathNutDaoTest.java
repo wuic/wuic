@@ -91,7 +91,7 @@ public class PathNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void wildcardAndRegexTest() throws Exception {
         new ClasspathNutDao("/", false, null, -1, true, true, false, true, null);
     }
@@ -101,7 +101,7 @@ public class PathNutDaoTest {
      * Make sure an exception is raised when we configure a DAO for both wildcard and regex.
      * </p>
      */
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void regexAndWildcardTest() {
         new PathNutDao("", false, null, -1, true, true, new AbstractNutDao.VersionNumberStrategy(true, false, null)) {
 
@@ -122,7 +122,7 @@ public class PathNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void wildcardClasspathScanningTest() throws Exception {
         folder.newFolder("1", "classpathScanningTest", "1");
         folder.newFolder("2", "classpathScanningTest", "2");
@@ -145,7 +145,7 @@ public class PathNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void regexClasspathScanningTest() throws Exception {
         folder.newFolder("1", "classpathScanningTest");
         folder.newFolder("2", "classpathScanningTest");
@@ -168,7 +168,7 @@ public class PathNutDaoTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void classpathExistsTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
@@ -184,7 +184,7 @@ public class PathNutDaoTest {
      *
      * @throws IOException if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void classpathReadTest() throws IOException {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
@@ -202,7 +202,7 @@ public class PathNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void diskReadTest() throws Exception {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, DiskNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");

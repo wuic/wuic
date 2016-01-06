@@ -113,7 +113,7 @@ public class JeeTest {
      *
      * @throws java.io.IOException if nut creation fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void webappNutTest() throws IOException {
         final ObjectBuilder<NutDao> builder =
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");

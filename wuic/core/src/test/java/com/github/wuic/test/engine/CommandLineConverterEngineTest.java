@@ -112,7 +112,7 @@ public class CommandLineConverterEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void compileTest() throws Exception {
         final String command = String.format("echo %s > %s | echo %s > %s",
                 CommandLineConverterEngine.PATH_TOKEN,
@@ -141,7 +141,7 @@ public class CommandLineConverterEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test
+    @Test(timeout = 60000)
     public void libTest() throws Exception {
         final File parent = temporaryFolder.newFolder("parent");
         NutsHeap heap = mockHeap(parent);
@@ -164,7 +164,7 @@ public class CommandLineConverterEngineTest {
      * @throws java.io.IOException if test succeed
      * @throws com.github.wuic.exception.WuicException if test fails
      */
-    @Test(expected = IOException.class)
+    @Test(timeout = 60000, expected = IOException.class)
     public void convertErrorTest() throws Exception {
         final String command = String.format("unknown %s %s %s ",
                 CommandLineConverterEngine.PATH_TOKEN,
@@ -187,7 +187,7 @@ public class CommandLineConverterEngineTest {
     /**
      * Bad configuration test.
      */
-    @Test
+    @Test(timeout = 60000)
     public void badConfTokenTest() {
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
 
