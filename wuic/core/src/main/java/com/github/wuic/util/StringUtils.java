@@ -433,4 +433,48 @@ public final class StringUtils {
             first = false;
         }
     }
+
+    /**
+     * <p>
+     * Looks for the index of the char sequence "target" inside the char sequence "source". The methods performs the
+     * research inside the char sequence starting at the specified offset and for the given length.
+     * </p>
+     *
+     * @param source the char array to inspect
+     * @param offset the position where to start research
+     * @param length the length of char sequence to inspect
+     * @param target the char sequence to found
+     * @return the index where target starts, -1 if nothing has been found
+     */
+    public static int indexOf(final char[] source, final int offset, final int length, final char[] target) {
+        // Enough space to contain the target
+        if (target.length <= length || target.length == 0) {
+            final int end = offset + length;
+
+            for (int i = offset; i < end; i++) {
+
+                // Not enough characters
+                if ((end - i) < target.length) {
+                    break;
+                }
+
+                // First character match, check the rest
+                if (source[i] == target[0]) {
+                    int j = 0;
+
+                    do {
+                        // check after each incrementation the equality of characters
+                        j++;
+                    } while (j < target.length && target[j] == source[i + j]);
+
+                    // If the counter has been incremented until the end of target char sequence, it mains it match
+                    if (j == target.length) {
+                        return i;
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
 }

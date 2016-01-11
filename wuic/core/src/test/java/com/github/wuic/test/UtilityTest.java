@@ -937,4 +937,23 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(5, l.get());
         Assert.assertEquals(5, c.get());
     }
+
+    /**
+     * <p>
+     * Test {@link StringUtils#indexOf(char[], int, int, char[])}.
+     * </p>
+     */
+    @Test(timeout = 60000)
+    public void indexOfTest() {
+        Assert.assertEquals(0, StringUtils.indexOf("foo".toCharArray(), 0, 3, "foo".toCharArray()));
+        Assert.assertEquals(1, StringUtils.indexOf("foo".toCharArray(), 0, 3, "o".toCharArray()));
+        Assert.assertEquals(-1, StringUtils.indexOf("foo".toCharArray(), 0, 3, "fooo".toCharArray()));
+        Assert.assertEquals(0, StringUtils.indexOf("foobar".toCharArray(), 0, 6, "foo".toCharArray()));
+        Assert.assertEquals(3, StringUtils.indexOf("foobar".toCharArray(), 0, 6, "bar".toCharArray()));
+        Assert.assertEquals(-1, StringUtils.indexOf("foobar".toCharArray(), 0, 5, "bar".toCharArray()));
+        Assert.assertEquals(-1, StringUtils.indexOf("foo".toCharArray(), 1, 3, "foo".toCharArray()));
+        Assert.assertEquals(3, StringUtils.indexOf("foobarbaz".toCharArray(), 0, 9, "bar".toCharArray()));
+        Assert.assertEquals(3, StringUtils.indexOf("foobarbaz".toCharArray(), 3, 6, "bar".toCharArray()));
+        Assert.assertEquals(-1, StringUtils.indexOf("foobarbaz".toCharArray(), 4, 5, "bar".toCharArray()));
+    }
 }
