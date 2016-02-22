@@ -97,11 +97,6 @@ public final class IOUtils {
     public static final int ZIP_MAGIC_NUMBER = 0x504b0304;
 
     /**
-     * Logger.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(IOUtils.class);
-
-    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>
@@ -201,7 +196,7 @@ public final class IOUtils {
                     closeable.close();
                 }
             } catch (IOException ioe) {
-                LOGGER.info("Can't close the object", ioe);
+                LOG.info("Can't close the object", ioe);
             }
         }
     }
@@ -343,7 +338,7 @@ public final class IOUtils {
             in = new DataInputStream(inputStream);
             return in.readInt() == ZIP_MAGIC_NUMBER;
         } catch (EOFException oef) {
-            LOGGER.trace("File is not an archive, probably empty file", oef);
+            LOG.trace("File is not an archive, probably empty file", oef);
             return Boolean.FALSE;
         } finally {
             close(in);
