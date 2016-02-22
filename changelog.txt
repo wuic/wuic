@@ -165,3 +165,4 @@ Tracked issues: https://github.com/wuic/wuic/issues?labels=0.5.3&page=1&state=cl
 
 Breaking changes:
 - HtmlInspectorEngine is not shipped with a parser inside wuic-core module anymore, need to add the atto extension to the classpath now
+- Default value associated to c.g.wuic.engine.charset is not "UTF-8" anymore but the default value provided by the platform

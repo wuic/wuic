@@ -75,6 +75,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -966,12 +967,23 @@ public class UtilityTest extends WuicTest {
     public void replaceTest() {
         final char[] array = new char[] { 'a', 'b', 'c', 'd' };
         StringUtils.replace(array, 1, 3, ' ');
-        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', 'd' } );
+        Assert.assertArrayEquals(array, new char[]{'a', ' ', ' ', 'd'});
         StringUtils.replace(array, 1, 1, ' ');
-        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', 'd' } );
+        Assert.assertArrayEquals(array, new char[]{'a', ' ', ' ', 'd'});
         StringUtils.replace(array, 3, 4, ' ');
-        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', ' ' } );
+        Assert.assertArrayEquals(array, new char[]{'a', ' ', ' ', ' '});
         StringUtils.replace(array, 0, 1, ' ');
-        Assert.assertArrayEquals(array, new char[] { ' ', ' ', ' ', ' ' } );
+        Assert.assertArrayEquals(array, new char[]{' ', ' ', ' ', ' '});
+    }
+
+    /**
+     * <p>
+     * Test {@link IOUtils#checkCharset(String)}.
+     * </p>
+     */
+    @Test(timeout = 6000)
+    public void checkCharsetTest() {
+        Assert.assertEquals("UTF-8", IOUtils.checkCharset("UTF-8"));
+        Assert.assertEquals(Charset.defaultCharset().name(), IOUtils.checkCharset(""));
     }
 }

@@ -38,6 +38,7 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.DirectoryPathFactory;
 import com.github.wuic.path.Path;
@@ -57,6 +58,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,6 +105,24 @@ public final class IOUtils {
      */
     private IOUtils() {
 
+    }
+
+    /**
+     * <p>
+     * Checks that the charset is correct. If the given {@code String} is empty, then the default platform charset is used.
+     * </p>
+     *
+     * @param charset the charset to test
+     * @return the given charset if not empty, default platform charset otherwise
+     */
+    public static String checkCharset(final String charset) {
+        if (charset.isEmpty()) {
+            final String retval = Charset.defaultCharset().name();
+            LOG.warn("Charset is not define in the engine, did you configured {} property? Applying platform charset {}", ApplicationConfig.CHARSET, retval);
+            return retval;
+        } else {
+            return charset;
+        }
     }
 
     /**
