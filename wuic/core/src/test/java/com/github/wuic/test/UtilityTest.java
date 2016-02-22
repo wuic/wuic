@@ -956,4 +956,22 @@ public class UtilityTest extends WuicTest {
         Assert.assertEquals(3, StringUtils.indexOf("foobarbaz".toCharArray(), 3, 6, "bar".toCharArray()));
         Assert.assertEquals(-1, StringUtils.indexOf("foobarbaz".toCharArray(), 4, 5, "bar".toCharArray()));
     }
+
+    /**
+     * <p>
+     * Test {@link StringUtils#replace(char[], int, int, char)}.
+     * </p>
+     */
+    @Test(timeout = 6000)
+    public void replaceTest() {
+        final char[] array = new char[] { 'a', 'b', 'c', 'd' };
+        StringUtils.replace(array, 1, 3, ' ');
+        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', 'd' } );
+        StringUtils.replace(array, 1, 1, ' ');
+        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', 'd' } );
+        StringUtils.replace(array, 3, 4, ' ');
+        Assert.assertArrayEquals(array, new char[] { 'a', ' ', ' ', ' ' } );
+        StringUtils.replace(array, 0, 1, ' ');
+        Assert.assertArrayEquals(array, new char[] { ' ', ' ', ' ', ' ' } );
+    }
 }

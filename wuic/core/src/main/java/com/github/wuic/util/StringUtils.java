@@ -477,4 +477,21 @@ public final class StringUtils {
 
         return -1;
     }
+
+    /**
+     * <p>
+     * Replaces all the character with a particular value from the given index (inclusive) to the specified index (exclusive).
+     * </p>
+     *
+     * @param array the array to modify
+     * @param fromIndex the start index (inclusive)
+     * @param toIndex the end index (exclusive)
+     * @param replacement the character replacement
+     */
+    public static void replace(final char[] array, final int fromIndex, final int toIndex, final char replacement) {
+        // Erase comment
+        for (int i = fromIndex; i < toIndex; i++) {
+            array[i] = ' ';
+        }
+    }
 }
