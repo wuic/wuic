@@ -237,7 +237,8 @@ public class SpriteInspectorEngine extends NodeEngine {
                 if (getNext() == null) {
                     excludeSprite.add(nut);
                 } else {
-                    excludeSprite.addAll(getNext().parse(new EngineRequestBuilder(request).skip(EngineType.AGGREGATOR).build()));
+                    final EngineRequest r = new EngineRequestBuilder(request).nuts(Arrays.asList(nut)).skip(EngineType.AGGREGATOR).build();
+                    excludeSprite.addAll(getNext().parse(r));
                 }
             } else {
                 computeSprite.add(nut);
