@@ -39,7 +39,9 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.RegexLineInspector;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -51,6 +53,7 @@ import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -93,15 +96,28 @@ public class AngularTemplateInspector extends RegexLineInspector {
     }
 
     /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param wrapPattern a regex describing a pattern wrapping the URL, could be {@code null}
+     * @return the new instance
+     */
+    public static LineInspector newInstance(final String wrapPattern) {
+        return ScriptLineInspector.wrap(new AngularTemplateInspector(wrapPattern), ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public List<? extends ConvertibleNut> appendTransformation(final LineMatcher matcher,
-                                                               final StringBuilder replacement,
-                                                               final EngineRequest request,
-                                                               final CompositeNut.CompositeInputStream cis,
-                                                               final ConvertibleNut originalNut)
+    public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
+                                                             final EngineRequest request,
+                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final ConvertibleNut originalNut)
             throws WuicException {
+        final StringBuilder replacement = new StringBuilder();
+
         // group 4 when wrap pattern exists, group 3 otherwise
         final int groupIndex = matcher.groupCount() > NumberUtils.THREE ? NumberUtils.FOUR : NumberUtils.THREE;
         final String pathGroup = matcher.group(groupIndex);
@@ -150,7 +166,7 @@ public class AngularTemplateInspector extends RegexLineInspector {
         replacement.append('"');
         replacement.append(group.substring(pathGroupIndex + pathGroup.length()));
 
-        return res;
+        return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), res, replacement.toString()));
     }
 
     /**

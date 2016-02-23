@@ -75,13 +75,13 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
     @ConfigConstructor
     public JavascriptInspectorEngine(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String charset,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String charset,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.WRAP_PATTERN) final String wrapPattern) {
         super(inspect, charset);
-        addInspector(new SourceMapLineInspector(this));
+        addInspector(SourceMapLineInspector.newInstance(this));
 
         if ("".equals(wrapPattern)) {
-            addInspector(new AngularTemplateInspector(null));
+            addInspector(AngularTemplateInspector.newInstance(null));
         } else {
             final int paramIndex = wrapPattern.indexOf('%');
 
@@ -91,7 +91,7 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
                                 "Wrap pattern must contains a String.format() parameter:" + wrapPattern));
             }
 
-            addInspector(new AngularTemplateInspector(Pattern.quote(wrapPattern.substring(0, paramIndex))
+            addInspector(AngularTemplateInspector.newInstance(Pattern.quote(wrapPattern.substring(0, paramIndex))
                     + '%'
                     + wrapPattern.charAt(paramIndex + 1)
                     + Pattern.quote(wrapPattern.substring(paramIndex + NumberUtils.TWO))));

@@ -218,16 +218,6 @@ public abstract class LineInspector {
 
     /**
      * <p>
-     * Tells this inspector a new inspection of a set of lines is going to start.
-     * This allows this object to clean any retained information regarding lines previously inspected and that could be
-     * taken into consideration in the matching operation that are going to be processed.
-     * This method should be called each time a file content is going to be inspected line by line.
-     * </p>
-     */
-    public abstract void newInspection();
-
-    /**
-     * <p>
      * Inspects the given char array and notifies the given {@link LineInspectorListener listener} when some data are matched.
      * </p>
      *
@@ -238,8 +228,43 @@ public abstract class LineInspector {
      * @param originalNut the original nut
      * @throws WuicException if inspection fails
      */
+    public void inspect(final LineInspectorListener listener,
+                        final char[] data,
+                        final EngineRequest request,
+                        final CompositeNut.CompositeInputStream cis,
+                        final ConvertibleNut originalNut) throws WuicException {
+        inspect(listener, data, 0, data.length, request, cis, originalNut);
+    }
+
+    /**
+     * <p>
+     * Tells this inspector a new inspection of a set of lines is going to start.
+     * This allows this object to clean any retained information regarding lines previously inspected and that could be
+     * taken into consideration in the matching operation that are going to be processed.
+     * This method should be called each time a file content is going to be inspected line by line.
+     * </p>
+     */
+    public abstract void newInspection();
+
+    /**
+     * <p>
+     * Inspects a portion of the given char array and notifies the given {@link LineInspectorListener listener} when
+     * some data are matched.
+     * </p>
+     *
+     * @param listener the listener the notify
+     * @param data the char array to inspect
+     * @param offset the start position of content to inspect in the array
+     * @param length the length of content to inspect
+     * @param request the request that orders this transformation
+     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
+     * @param originalNut the original nut
+     * @throws WuicException if inspection fails
+     */
     public abstract void inspect(LineInspectorListener listener,
                                  char[] data,
+                                 int offset,
+                                 int length,
                                  EngineRequest request,
                                  CompositeNut.CompositeInputStream cis,
                                  ConvertibleNut originalNut) throws WuicException;
@@ -398,6 +423,98 @@ public abstract class LineInspector {
             }
 
             return stringBuilder.toString();
+        }
+    }
+
+    /**
+     * <p>
+     * This class represents the metadata describing an appended transformation.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class AppendedTransformation {
+
+        /**
+         * Start index of appended transformation.
+         */
+        private final int start;
+
+        /**
+         * End index of appended transformation.
+         */
+        private final int end;
+
+        /**
+         * the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change.
+         */
+        private final List<? extends ConvertibleNut> result;
+
+        /**
+         * The replacement for the given range of characters.
+         */
+        private final String replacement;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param start start index
+         * @param end end index
+         * @param result extracted nuts
+         * @param replacement the replacement for the given range of characters.
+         */
+        public AppendedTransformation(final int start, final int end, final List<? extends ConvertibleNut> result, final String replacement) {
+            this.start = start;
+            this.end = end;
+            this.result = result;
+            this.replacement = replacement;
+        }
+
+        /**
+         * <p>
+         * Gets the start index.
+         * </p>
+         *
+         * @return the start index.
+         */
+        public int getStart() {
+            return start;
+        }
+
+        /**
+         * <p>
+         * Gets the end index.
+         * </p>
+         *
+         * @return the end index
+         */
+        public int getEnd() {
+            return end;
+        }
+
+        /**
+         * <p>
+         * Gets the extracted nuts.
+         * </p>
+         *
+         * @return the nuts
+         */
+        public List<? extends ConvertibleNut> getResult() {
+            return result;
+        }
+
+        /**
+         * <p>
+         * Gets the string replacement.
+         * </p>
+         *
+         * @return the replacement
+         */
+        public String getReplacement() {
+            return replacement;
         }
     }
 }

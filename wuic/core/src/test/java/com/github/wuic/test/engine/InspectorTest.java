@@ -47,13 +47,18 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.LineMatcherInspector;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.engine.core.SourceMapLineInspector;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.PipedConvertibleNut;
@@ -61,6 +66,7 @@ import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
@@ -73,7 +79,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,7 +133,7 @@ public class InspectorTest {
                                    final Engine engine,
                                    final boolean autoCreate)
             throws Exception {
-        final AtomicInteger createCount = new AtomicInteger(0);
+        final List<String> createdPaths = new ArrayList<String>();
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(NutDao.PathFormat.class), Mockito.any(ProcessContext.class))).thenAnswer(new Answer<Object>() {
@@ -141,11 +149,12 @@ public class InspectorTest {
 
                 final List<Nut> retval = new ArrayList<Nut>();
                 final Nut nut = Mockito.mock(Nut.class);
-                createCount.incrementAndGet();
 
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(invocationOnMock.getArguments()[0]));
                 Mockito.when(nut.getInitialNutType()).thenReturn(NutType.getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+                createdPaths.add(nut.getInitialName());
 
                 if (nut.getInitialNutType().equals(NutType.MAP)) {
                     Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("{"
@@ -192,7 +201,7 @@ public class InspectorTest {
         final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.JAVASCRIPT, 1L, false)) {
             @Override
             public String getName() {
-                final String retval = createCount.get() + ".css";
+                final String retval = createdPaths.size() + ".css";
                 h.addCreate(retval, retval);
                 return retval;
             }
@@ -216,7 +225,7 @@ public class InspectorTest {
             sb.append(NutUtils.readTransform(convertibleNut));
         }
 
-        Assert.assertEquals(message, count, createCount.get());
+        Assert.assertEquals(message + "\n" + Arrays.toString(createdPaths.toArray()), count, createdPaths.size());
 
         return sb.toString();
     }
@@ -228,7 +237,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test//(timeout = 60000)
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "jquery.ui.core.css"},
@@ -303,10 +312,67 @@ public class InspectorTest {
                 new String[]{"//# sourceMappingURL=%s ", "sourcemap1.js.map"},
                 new String[]{"//@ sourceMappingURL=%s ", "sourcemap2.js.map"},
                 new String[]{"// #sourceMappingURL=%s ", "sourcemap3.js.map"},
-                new String[]{"// @sourceMappingURL=%s ", "sourcemap4.js.map"}
+                new String[]{"// @sourceMappingURL=%s ", "sourcemap4.js.map"},
         };
 
         assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, new CssInspectorEngine(true, "UTF-8"), true);
+    }
+
+    /**
+     * <p>
+     * Tests that sourcemaps are not captured inside string literals.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     * @throws IOException if test fails
+     */
+    @Test(timeout = 60000)
+    public void sourceMappingInLiteralTest() throws WuicException, IOException {
+        final String content = "function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {\n" +
+                "  ////# sourceMappingURL=url.js.map\n" +
+                "  // This can be used with a sourcemap that has already has toJSON called on it.\n" +
+                "  // Check first.\n" +
+                "  var json = sourceMap;\n" +
+                "  if (typeof sourceMap.toJSON === 'function') {\n" +
+                "    json = sourceMap.toJSON();\n" +
+                "  }\n" +
+                "  json.sources = [sourceFilename];\n" +
+                "  json.sourcesContent = [sourceCode];\n" +
+                "  var base64 = Buffer(JSON.stringify(json)).toString('base64');\n" +
+                "  return '//# sourceMappingURL=data:application/json;base64,' + base64;\n" +
+                "}";
+
+        final AtomicInteger count = new AtomicInteger();
+
+        final ConvertibleNut n = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(n.getName()).thenReturn("foo.js");
+        Mockito.when(n.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(n.getInitialName()).thenReturn("foo.js");
+        Mockito.when(n.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(n.getSource()).thenReturn(new SourceImpl());
+        Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+        final NutDao dao = Mockito.mock(NutDao.class);
+        Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList((Nut) n));
+
+        final NutsHeap h = new NutsHeap(this, Arrays.asList("foo"), dao, "heap");
+        h.checkFiles(ProcessContext.DEFAULT);
+        final EngineRequest r = new EngineRequestBuilder("", h, Mockito.mock(Context.class)).build();
+
+        SourceMapLineInspector.newInstance(Mockito.mock(NodeEngine.class)).inspect(new LineInspectorListener() {
+
+            @Override
+            public void onMatch(final char[] data,
+                                final int offset,
+                                final int length,
+                                final String replacement,
+                                final List<? extends ConvertibleNut> extracted)
+                    throws WuicException {
+                count.incrementAndGet();
+            }
+        }, content.toCharArray(), r, null, n);
+
+        Assert.assertEquals(1, count.get());
     }
 
     /**
@@ -415,6 +481,16 @@ public class InspectorTest {
         Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
         Assert.assertTrue(value.contains("template3.html?foo&versionNumber=1"));
         Assert.assertTrue(value.contains("template4.html?foo&versionNumber=1"));
+
+        int index = 0;
+        int count = 0;
+
+        while ((index = value.indexOf("templateUrl", index)) != -1) {
+            count++;
+            index++;
+        }
+
+        Assert.assertEquals(NumberUtils.FOUR, count);
     }
 
     /**
@@ -442,7 +518,6 @@ public class InspectorTest {
         final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
         h.checkFiles(ProcessContext.DEFAULT);
 
-        final StringBuilder sb = new StringBuilder();
         final EngineRequest req = new EngineRequestBuilder("", h, null).build();
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getSource()).thenReturn(new SourceImpl());
@@ -451,14 +526,15 @@ public class InspectorTest {
         Mockito.when(next.works()).thenReturn(true);
 
         // rewrite statement
-        inspector.appendTransformation(matcher, sb, req, null, nut);
-        Assert.assertEquals(0, sb.length());
+        inspector.appendTransformation(matcher, req, null, nut);
 
         // do not rewrite statement
         Mockito.when(next.getEngineType()).thenReturn(EngineType.MINIFICATION);
         Mockito.when(next.works()).thenReturn(false);
-        inspector.appendTransformation(matcher, sb, req, null, nut);
-        Assert.assertNotEquals(0, sb.length());
+        final List<LineInspector.AppendedTransformation> a2 = inspector.appendTransformation(matcher, req, null, nut);
+        Assert.assertNotNull(a2);
+        Assert.assertEquals(1, a2.size());
+        Assert.assertNotEquals(0, a2.get(0).getReplacement().length());
     }
 
     /**
@@ -531,5 +607,152 @@ public class InspectorTest {
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
         ctx.process("", "composite", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+    }
+
+    /**
+     * Tests that single comments are properly handled by script inspector.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(timeout = 60000)
+    public void handleSingleCommentTest() throws WuicException {
+        check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
+                Arrays.asList("// comment1\n", "// comment2\n", "// bar\n", "// comment3\n", "//comment4"),
+                ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
+        check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
+                Arrays.asList("// comment1\n", "// /*bar*/\n", "// comment3\n", "//comment4"),
+                ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
+        check("var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
+                Arrays.asList("// /*bar*/\n", "// comment3\n", "//comment4"),
+                ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
+        check("/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4",
+                Collections.EMPTY_LIST,
+                ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
+    }
+
+    /**
+     * Tests that multiple line comments are properly handled by script inspector.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(timeout = 60000)
+    public void handleMultiCommentTest() throws WuicException {
+        check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
+                Collections.EMPTY_LIST,
+                ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
+        check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
+                Arrays.asList("/*foo*/", "/*// comment2\n*/"),
+                ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
+        check("var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
+                Arrays.asList("/*foo*/", "/*// comment2\n*/"),
+                ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
+        final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
+        check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
+    }
+
+    /**
+     * Tests that no comments are properly handled by script inspector.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(timeout = 60000)
+    public void handleNoCommentTest() throws WuicException {
+        check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
+                Arrays.asList("foo                                            baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+        check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
+                Arrays.asList("                                                           baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+        check("var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
+                Arrays.asList("var y = '\\\\\\'';        var j = \"// comment1\";\nvar i = 'hello';                var z = '\"';                       var k = '\\'';baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+        final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
+        check(c, Collections.EMPTY_LIST, ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+    }
+
+    /**
+     * Tests that all tokens are properly handled by script inspector.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(timeout = 60000)
+    public void handleAllTest() throws WuicException {
+        String c = "foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4";
+        check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.ALL);
+        c = "/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4";
+        check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.ALL);
+        c = "var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4";
+        check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.ALL);
+        c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
+        check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.ALL);
+    }
+
+    /**
+     * <p>
+     * Checks that the inspection of the given content and the option specified in parameter generates notification
+     * for all expected string.
+     * </p>
+     *
+     * @param content content to inspect
+     * @param expected string to be notified
+     * @param opt the option
+     * @throws WuicException if any error occurs
+     */
+    private void check(final String content,
+                       final List<String> expected,
+                       final ScriptLineInspector.ScriptMatchCondition opt) throws WuicException {
+        final List<String> captured = new ArrayList<String>();
+        final ScriptLineInspector i = new ScriptLineInspector(opt) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Range doFind(final char[] buffer,
+                                final int offset,
+                                final int length,
+                                final EngineRequest request,
+                                final CompositeNut.CompositeInputStream cis,
+                                final ConvertibleNut originalNut) {
+                return new Range(Range.Delimiter.EOF, offset, offset + length);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+                return null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected List<AppendedTransformation> appendTransformation(final char[] data,
+                                                                        final int offset,
+                                                                        final int length,
+                                                                        final EngineRequest request,
+                                                                        final CompositeNut.CompositeInputStream cis,
+                                                                        final ConvertibleNut originalNut)
+                    throws WuicException {
+                return Arrays.asList(new AppendedTransformation(offset, offset + length, null, ""));
+            }
+        };
+
+        i.newInspection();
+        i.inspect(new LineInspectorListener() {
+            @Override
+            public void onMatch(final char[] data,
+                                final int offset,
+                                final int length,
+                                final String replacement,
+                                final List<? extends ConvertibleNut> extracted)
+                    throws WuicException {
+                captured.add(new String(data, offset, length));
+            }
+        }, content.toCharArray(), null, null, null);
+
+        Assert.assertEquals(expected, captured);
     }
 }

@@ -152,10 +152,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     @ConfigConstructor
     public HtmlInspectorEngine(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String cs,
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String cs,
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.SERVER_HINT) final Boolean sh) {
         doInspection = inspect;
-        charset = cs;
+        charset = IOUtils.checkCharset(cs);
         serverHint = sh;
 
         if (doInspection) {

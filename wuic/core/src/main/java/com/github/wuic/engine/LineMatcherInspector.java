@@ -62,16 +62,22 @@ public abstract class LineMatcherInspector extends LineInspector {
     @Override
     public void inspect(final LineInspectorListener listener,
                         final char[] data,
+                        final int offset,
+                        final int length,
                         final EngineRequest request,
                         final CompositeNut.CompositeInputStream cis,
                         final ConvertibleNut originalNut) throws WuicException {
-        final LineMatcher matcher = lineMatcher(new String(data));
+        final LineMatcher matcher = lineMatcher(new String(data, offset, length));
 
         while (matcher.find()) {
             // Compute replacement, extract nut name and referenced nuts
-            final StringBuilder replacement = new StringBuilder();
-            final List<? extends ConvertibleNut> res = appendTransformation(matcher, replacement, request, cis, originalNut);
-            listener.onMatch(matcher.group(), matcher.start(), matcher.end(), replacement.toString(), res);
+            final List<AppendedTransformation> transformations = appendTransformation(matcher, request, cis, originalNut);
+
+            if (transformations != null) {
+                for (final AppendedTransformation at : transformations) {
+                    listener.onMatch(data, at.getStart(),  at.getEnd() - at.getStart(), at.getReplacement(), at.getResult());
+                }
+            }
         }
     }
 
@@ -82,18 +88,17 @@ public abstract class LineMatcherInspector extends LineInspector {
      * </p>
      *
      * @param matcher the matcher which provides found text thanks to its {@code group()} method.
-     * @param replacement the text which will replace the matching text
      * @param request the request that orders this transformation
      * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
      * @param originalNut the original nut
-     * @return the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change
+     * @return all the appended transformations
      * @throws com.github.wuic.exception.WuicException if an exception occurs
      */
-    protected abstract List<? extends ConvertibleNut> appendTransformation(LineMatcher matcher,
-                                                                           StringBuilder replacement,
-                                                                           EngineRequest request,
-                                                                           CompositeNut.CompositeInputStream cis,
-                                                                           ConvertibleNut originalNut) throws WuicException;
+    protected abstract List<AppendedTransformation> appendTransformation(LineMatcher matcher,
+                                                                         EngineRequest request,
+                                                                         CompositeNut.CompositeInputStream cis,
+                                                                         ConvertibleNut originalNut) throws WuicException;
+
     /**
      * <p>
      * Creates a new line matcher.

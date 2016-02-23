@@ -40,7 +40,9 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.RegexLineInspector;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -58,6 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -160,14 +163,24 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
     }
 
     /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @return the new instance
+     */
+    public static LineInspector newInstance() {
+        return ScriptLineInspector.wrap(new CssUrlLineInspector(), ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public List<? extends ConvertibleNut> appendTransformation(final LineMatcher matcher,
-                                                               final StringBuilder replacement,
-                                                               final EngineRequest request,
-                                                               final CompositeNut.CompositeInputStream cis,
-                                                               final ConvertibleNut originalNut) throws WuicException {
+    public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
+                                                             final EngineRequest request,
+                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final ConvertibleNut originalNut) throws WuicException {
         // Search the right group
         int i = 0;
         int groupIndex;
@@ -176,7 +189,6 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
 
         // in comment, ignoring
         if (matcher.group(1) != null)  {
-            replacement.append(group);
             return null;
         }
 
@@ -203,9 +215,8 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
             }
 
             matcherUrl.appendTail(sb);
-            replacement.append(sb.toString());
 
-            return retval;
+            return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), retval, sb.toString()));
         } else {
             if (group.isEmpty()) {
                 group = matcher.group(NumberUtils.TWO);
@@ -216,7 +227,11 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
 
             // The MatcherAdapter is provided by the inherited class
             final Matcher regex = MatcherAdapter.class.cast(matcher).getMatcher();
-            return processData(new MatcherData(rawPath, regex, groupIndex, group), replacement, request, heap, originalNut);
+            final StringBuilder replacement = new StringBuilder();
+            final List<? extends ConvertibleNut> res =
+                    processData(new MatcherData(rawPath, regex, groupIndex, group), replacement, request, heap, originalNut);
+
+            return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), res, replacement.toString()));
         }
     }
 

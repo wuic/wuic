@@ -57,14 +57,16 @@ public interface LineInspectorListener {
     /**
      * <p>
      * Notification method called by the {@link LineInspector}.
+     * A string representation of the matched data can be created with {@code new String(data, offset, length)}.
      * </p>
      *
-     * @param find the matched data
-     * @param start where matched data start
-     * @param end where matched data end
+     * @param data the data buffer
+     * @param offset the start position of matched data
+     * @param length the number of matched characters
      * @param replacement the replacement for this data
      * @param extracted the nuts extracted from the matched data (could be {@code null})
      * @throws WuicException if event processing fails
      */
-    void onMatch(String find, int start, int end, String replacement, List<? extends ConvertibleNut> extracted) throws WuicException;
+    void onMatch(char[] data, int offset, int length, String replacement, List<? extends ConvertibleNut> extracted)
+            throws WuicException;
 }

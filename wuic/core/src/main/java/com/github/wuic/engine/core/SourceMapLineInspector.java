@@ -40,8 +40,10 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.RegexLineInspector;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -53,6 +55,7 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NutUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -95,6 +98,18 @@ public class SourceMapLineInspector extends RegexLineInspector {
     }
 
     /**
+     * <p>
+     * Creates a new instance.
+     * </p>
+     *
+     * @param nodeEngine the enclosing engine
+     * @return the new instance
+     */
+    public static LineInspector newInstance(final NodeEngine nodeEngine) {
+        return ScriptLineInspector.wrap(new SourceMapLineInspector(nodeEngine), ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -107,16 +122,15 @@ public class SourceMapLineInspector extends RegexLineInspector {
      * {@inheritDoc}
      */
     @Override
-    public List<? extends ConvertibleNut> appendTransformation(final LineMatcher matcher,
-                                                               final StringBuilder replacement,
-                                                               final EngineRequest request,
-                                                               final CompositeNut.CompositeInputStream cis,
-                                                               final ConvertibleNut originalNut) throws WuicException {
+    public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
+                                                             final EngineRequest request,
+                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final ConvertibleNut originalNut) throws WuicException {
+        final StringBuilder replacement = new StringBuilder();
         final String referencedPath = matcher.group(1);
 
         // If a nut is already added, then skip
         if (NutUtils.findByName(originalNut, referencedPath) != null) {
-            replacement.append(matcher.group());
             return null;
         }
 
@@ -155,7 +169,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
         }
 
         // We don't need to do anything more with the source map
-        return null;
+        return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), null, replacement.toString()));
     }
 
     /**

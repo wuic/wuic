@@ -105,7 +105,7 @@ public abstract class TextInspectorEngine
     public TextInspectorEngine(final Boolean inspect, final String cs, final LineInspector... inspectors) {
         lineInspectors = CollectionUtils.newList(inspectors);
         doInspection = inspect;
-        charset = cs;
+        charset = IOUtils.checkCharset(cs);
     }
 
     /**
@@ -382,15 +382,15 @@ public abstract class TextInspectorEngine
          * {@inheritDoc}
          */
         @Override
-        public void onMatch(final String find,
-                            final int start,
-                            final int end,
+        public void onMatch(final char[] data,
+                            final int offset,
+                            final int length,
                             final String replacement,
                             final List<? extends ConvertibleNut> extracted)
                 throws WuicException {
             // Create replacement to perform later
-            if (!replacement.equals(find)) {
-                replacementInfoSet.add(inspector.replacementInfo(start, end, originalNut, extracted, replacement));
+            if (!replacement.equals(new String(data, offset, length))) {
+                replacementInfoSet.add(inspector.replacementInfo(offset, offset + length, originalNut, extracted, replacement));
             }
 
             // Add the nut and inspect it recursively if it's a CSS path

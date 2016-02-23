@@ -72,9 +72,9 @@ public class CssInspectorEngine extends TextInspectorEngine {
     @ConfigConstructor
     public CssInspectorEngine(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "UTF-8", propertyKey = ApplicationConfig.CHARSET) final String charset) {
-        super(inspect, charset, new CssUrlLineInspector());
-        addInspector(new SourceMapLineInspector(this));
+            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String charset) {
+        super(inspect, charset, CssUrlLineInspector.newInstance());
+        addInspector(SourceMapLineInspector.newInstance(this));
     }
 
     /**
