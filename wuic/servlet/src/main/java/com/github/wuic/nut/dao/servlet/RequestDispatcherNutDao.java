@@ -215,6 +215,10 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
                 is = servletContext.getResourceAsStream(slashPath(path));
 
                 if (is == null) {
+                    logger.info("{} does not correspond to any resource. " +
+                            "If the content of this path is served by a servlet/JSP, it should match the pattern associated to '{}' property.",
+                            path, ApplicationConfig.USE_INCLUDE_FOR_PATH_PATTERN);
+
                     if (exceptionWhenNullStream) {
                         throw new IOException("Unable to retrieve the stream for the resource associated to the path " + path);
                     } else {
