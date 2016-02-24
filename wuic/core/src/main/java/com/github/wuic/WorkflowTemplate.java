@@ -54,6 +54,9 @@ import java.util.Map;
  */
 public class WorkflowTemplate {
 
+    /**
+     * The head of this template's chains.
+     */
     private HeadEngine head;
 
     /**
