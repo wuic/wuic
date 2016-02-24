@@ -66,7 +66,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 @RunWith(JUnit4.class)

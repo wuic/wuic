@@ -59,7 +59,6 @@ import org.junit.runners.JUnit4;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.3
  */
 @RunWith(JUnit4.class)

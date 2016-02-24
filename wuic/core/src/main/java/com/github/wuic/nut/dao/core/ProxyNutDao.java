@@ -58,7 +58,6 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public class ProxyNutDao implements NutDao {

@@ -58,7 +58,6 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.2.0
  */
 public interface SpriteProvider {

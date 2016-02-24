@@ -59,7 +59,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public abstract class HeadEngine extends Engine {

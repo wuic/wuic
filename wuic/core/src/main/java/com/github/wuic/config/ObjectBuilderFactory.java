@@ -60,7 +60,6 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  * @param <T> the type of objects produced by the builder
  */
@@ -70,7 +69,6 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * Data object that provides a detected service and the type name that identifies its builder.
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5
      */
     public final class KnownType {
@@ -272,7 +270,6 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5
      */
     final class Builder extends AbstractObjectBuilder<T> {

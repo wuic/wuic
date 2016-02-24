@@ -63,7 +63,6 @@ import java.io.IOException;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.8
  * @since 0.2.0
  */
 public class JavascriptSpriteProvider extends AbstractSpriteProvider {

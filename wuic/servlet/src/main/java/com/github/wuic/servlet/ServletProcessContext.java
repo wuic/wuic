@@ -57,7 +57,6 @@ import java.util.concurrent.FutureTask;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.2
  */
 public class ServletProcessContext extends ProcessContext {

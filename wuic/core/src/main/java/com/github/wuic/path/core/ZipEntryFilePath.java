@@ -52,7 +52,6 @@ import java.util.zip.ZipFile;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.3.4
  */
 public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
@@ -111,7 +110,6 @@ public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.3.4
      */
     public final class ZipFileInputStream extends InputStream {

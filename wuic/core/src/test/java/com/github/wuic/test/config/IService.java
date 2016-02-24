@@ -42,7 +42,6 @@ package com.github.wuic.test.config;
  * Service annotation.
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  */
 @interface IService {

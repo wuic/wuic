@@ -70,7 +70,6 @@ import javax.xml.bind.JAXBException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.9
  * @since 0.1.0
  */
 @ObjectBuilderInspector.InspectedType(ClassPathResourceResolverHandler.class)
@@ -83,7 +82,6 @@ public final class WuicFacade implements ObjectBuilderInspector {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     public enum WarmupStrategy {
@@ -110,7 +108,6 @@ public final class WuicFacade implements ObjectBuilderInspector {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private final class ExecuteWorkflowJob implements Callable<List<ConvertibleNut>> {

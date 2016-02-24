@@ -50,7 +50,6 @@ import java.util.Map;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.3
  */
 public class WorkflowTemplate {

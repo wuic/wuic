@@ -64,7 +64,6 @@ import java.util.Set;
  *
  * @param <T> the type of convertible object
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public final class Pipe<T extends ConvertibleNut> {
@@ -108,8 +107,7 @@ public final class Pipe<T extends ConvertibleNut> {
      *
      * @param <T> the type of convertible object
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public interface Transformer<T> {
 
@@ -143,8 +141,7 @@ public final class Pipe<T extends ConvertibleNut> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public interface OnReady {
 
@@ -221,8 +218,7 @@ public final class Pipe<T extends ConvertibleNut> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public static class DefaultOnReady implements OnReady {
 
@@ -281,8 +277,7 @@ public final class Pipe<T extends ConvertibleNut> {
      *
      * @param <T> the type of convertible object
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public static class DefaultTransformer<T> implements Transformer<T> {
 
@@ -309,8 +304,7 @@ public final class Pipe<T extends ConvertibleNut> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public static final class Execution {
 

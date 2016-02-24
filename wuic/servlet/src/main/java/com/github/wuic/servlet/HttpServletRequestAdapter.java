@@ -71,8 +71,7 @@ import java.util.Map;
  *
  * @author Guillaume DROUET
  * @since 0.5.0
- * @version 1.0
- */
+  */
 public class HttpServletRequestAdapter implements HttpServletRequest {
 
     /**

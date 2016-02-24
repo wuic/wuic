@@ -69,8 +69,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @author Guillaume DROUET
  * @since 0.5.2
- * @version 1.0
- */
+  */
 @RunWith(JUnit4.class)
 public class RequestDispatcherNutDaoTest {
 

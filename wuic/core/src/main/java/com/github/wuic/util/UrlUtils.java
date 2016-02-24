@@ -46,7 +46,6 @@ import com.github.wuic.nut.ConvertibleNut;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public final class UrlUtils {
@@ -57,8 +56,7 @@ public final class UrlUtils {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public static final class DefaultUrlProviderFactory implements UrlProviderFactory {
 
@@ -77,8 +75,7 @@ public final class UrlUtils {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     private static final class DefaultUrlProvider implements UrlProvider {
 

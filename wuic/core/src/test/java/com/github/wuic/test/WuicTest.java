@@ -50,7 +50,6 @@ import java.io.FileOutputStream;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
  * @since 0.3.1
  */
 public class WuicTest {

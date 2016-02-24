@@ -72,7 +72,6 @@ import java.net.HttpURLConnection;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 2.0
  * @since 0.1.1
  */
 public class WuicServlet extends HttpServlet {
@@ -232,7 +231,6 @@ public class WuicServlet extends HttpServlet {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private final class WuicServletContextBuilderConfigurator extends ContextBuilderConfigurator {
@@ -293,7 +291,6 @@ public class WuicServlet extends HttpServlet {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private final class WuicServletContextInterceptor extends ContextInterceptorAdapter {

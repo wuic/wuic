@@ -80,7 +80,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.3.1
  */
 public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {
@@ -376,7 +375,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.1
      */
     public static final class VersionNumberStrategy {
@@ -464,7 +462,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.1
      */
     public final class WithRootPathNutDao implements NutDao {
@@ -683,7 +680,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private final class VersionNumberCallable implements Callable<Long> {
@@ -746,7 +742,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     private enum Disposer {

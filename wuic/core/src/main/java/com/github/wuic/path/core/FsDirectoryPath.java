@@ -56,7 +56,6 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.3.4
  */
 public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryPath, FsItem {

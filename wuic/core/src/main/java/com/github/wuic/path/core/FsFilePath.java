@@ -53,7 +53,6 @@ import java.io.InputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.3.4
  */
 public class FsFilePath extends SimplePath implements FilePath, FsItem {

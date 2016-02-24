@@ -73,7 +73,6 @@ import java.util.zip.CRC32;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.3.1
  */
 public final class IOUtils {
@@ -560,8 +559,7 @@ public final class IOUtils {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     public static final class CrcMessageDigest extends MessageDigest {
 

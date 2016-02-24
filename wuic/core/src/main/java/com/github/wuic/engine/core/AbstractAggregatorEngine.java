@@ -59,7 +59,6 @@ import com.github.wuic.util.Pipe;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.1
  */
 public abstract class AbstractAggregatorEngine extends NodeEngine {

@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.3.4
  */
 public final class StringUtils {

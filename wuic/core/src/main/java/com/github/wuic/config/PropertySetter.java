@@ -57,7 +57,6 @@ import com.github.wuic.util.NumberUtils;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.0
  * @param <T> the type of property value
  */
@@ -156,7 +155,6 @@ public abstract class PropertySetter<T> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.4.0
      */
     public static class PropertySetterOfString extends PropertySetter<String> {
@@ -184,7 +182,6 @@ public abstract class PropertySetter<T> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.4.0
      */
     public static class PropertySetterOfInteger extends PropertySetter<Integer> {
@@ -216,7 +213,6 @@ public abstract class PropertySetter<T> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.4.0
      */
     public static class PropertySetterOfBoolean extends PropertySetter<Boolean> {
@@ -245,7 +241,6 @@ public abstract class PropertySetter<T> {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.4.0
      */
     public static class PropertySetterOfObject extends PropertySetter<Object> {

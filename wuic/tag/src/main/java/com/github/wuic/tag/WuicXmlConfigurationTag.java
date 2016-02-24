@@ -59,7 +59,6 @@ import javax.xml.bind.JAXBException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.2
  */
 public class WuicXmlConfigurationTag extends BodyTagSupport {

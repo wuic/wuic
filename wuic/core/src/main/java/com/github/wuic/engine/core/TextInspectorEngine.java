@@ -71,7 +71,6 @@ import java.util.TreeSet;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
  * @since 0.3.3
  */
 public abstract class TextInspectorEngine

@@ -54,7 +54,6 @@ import java.io.OutputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.1
  */
 public class EngineRequestTransformer extends Pipe.DefaultTransformer<ConvertibleNut> {
@@ -66,7 +65,6 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     public interface RequireEngineRequestTransformer {

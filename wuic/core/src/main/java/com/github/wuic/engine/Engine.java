@@ -55,7 +55,6 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.5
  * @since 0.1.0
  */
 public abstract class Engine implements Comparable<Engine> {

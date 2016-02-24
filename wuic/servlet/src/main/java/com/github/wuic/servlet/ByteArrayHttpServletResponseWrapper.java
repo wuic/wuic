@@ -89,7 +89,6 @@ import java.io.PrintWriter;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
@@ -100,7 +99,6 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     private final class ByteArrayServletStream extends ServletOutputStream {

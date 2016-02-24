@@ -53,8 +53,7 @@ import java.util.Collection;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
- * @version 0.5.2
+ * @since 0.5.2
  */
 public interface PushService {
 

@@ -53,7 +53,6 @@ import java.util.Set;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public class NutWrapper extends AbstractNut implements ConvertibleNut {

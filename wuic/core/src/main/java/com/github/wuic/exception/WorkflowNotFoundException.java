@@ -44,7 +44,6 @@ package com.github.wuic.exception;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.1.0
  */
 public class WorkflowNotFoundException extends WuicException {

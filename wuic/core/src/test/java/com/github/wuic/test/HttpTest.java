@@ -72,7 +72,6 @@ import java.util.Collection;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.3.1
  */
 @RunWith(JUnit4.class)

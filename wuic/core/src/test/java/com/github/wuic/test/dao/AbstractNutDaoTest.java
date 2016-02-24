@@ -76,7 +76,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.0
  */
 @RunWith(JUnit4.class)
@@ -107,8 +106,7 @@ public class AbstractNutDaoTest {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.0
+          * @since 0.4.0
      */
     private class MockNutDaoTest extends AbstractNutDao {
 

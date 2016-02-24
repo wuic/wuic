@@ -72,7 +72,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.2
  */
 public class ApiTutorial {

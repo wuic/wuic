@@ -51,7 +51,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.3.1
  */
 public interface NutDao {
@@ -62,7 +61,6 @@ public interface NutDao {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.2
      */
     enum PathFormat {

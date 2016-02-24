@@ -48,7 +48,6 @@ import com.github.wuic.util.IOUtils;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.3.4
  */
 public abstract class SimplePath implements Path {

@@ -50,7 +50,6 @@ import org.junit.runners.JUnit4;
  * Configuration API tests.
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  */
 @RunWith(JUnit4.class)

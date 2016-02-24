@@ -93,7 +93,6 @@ import java.util.regex.Pattern;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.3
  * @since 0.3.4
  */
 @RunWith(JUnit4.class)

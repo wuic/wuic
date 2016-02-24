@@ -48,7 +48,6 @@ import com.github.wuic.config.StringConfigParam;
  * Annotated service.
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  */
 @IService

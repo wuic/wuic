@@ -100,7 +100,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {
@@ -248,7 +247,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     @ObjectBuilderInspector.InspectedType(NutFilterHolder.class)
@@ -272,7 +270,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.2
      */
     abstract class DefaultContextBuilderConfigurator extends ContextBuilderConfigurator {
@@ -349,7 +346,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     final class HeapRegistration {
@@ -506,7 +502,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     final class WorkflowTemplateRegistration {
@@ -649,7 +644,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     final class WorkflowRegistration {
@@ -768,7 +762,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     final class NutDaoRegistration implements ObjectBuilder<NutDao> {
@@ -1189,7 +1182,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public abstract class ContextGenericBuilder {
@@ -1269,7 +1261,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public class ContextEngineBuilder extends ContextGenericBuilder {
@@ -1317,7 +1308,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public class ContextNutDaoBuilder extends ContextGenericBuilder {
@@ -1419,7 +1409,6 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.5
      */
     public class ContextNutFilterBuilder extends ContextGenericBuilder {

@@ -47,7 +47,6 @@ import com.github.wuic.util.IOUtils;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public class PrefixedNut extends NutWrapper {

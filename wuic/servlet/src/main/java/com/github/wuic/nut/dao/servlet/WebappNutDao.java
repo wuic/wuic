@@ -71,7 +71,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.2
  */
 @NutDaoService

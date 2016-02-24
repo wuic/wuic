@@ -90,7 +90,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
  * @since 0.4.0
  */
 public abstract class AbstractCacheEngine extends HeadEngine {
@@ -488,7 +487,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.0
      */
     private final class InvalidateCache implements HeapListener {
@@ -540,7 +538,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     private final class ParseDefaultCall implements Callable<Map<String, ConvertibleNut>> {
@@ -604,7 +601,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public static class CacheResult implements Serializable {
@@ -615,7 +611,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * </p>
          *
          * @author Guillaume DROUET
-         * @version 1.0
          * @since 0.5.2
          */
         public static class Entry implements Serializable {

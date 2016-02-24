@@ -88,7 +88,6 @@ import java.util.Set;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.1
  */
 @WebListener
@@ -445,7 +444,6 @@ public class WuicServletContextListener implements ServletContextListener {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.2
      */
     public static final class ServletContextClasspathResourceResolver implements ClassPathResourceResolver {
@@ -507,7 +505,6 @@ public class WuicServletContextListener implements ServletContextListener {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.2
      */
     public final class PropertiesWrapper implements BiFunction<String, String, String> {
@@ -590,7 +587,6 @@ public class WuicServletContextListener implements ServletContextListener {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     public static final class InitParamProperties implements BiFunction<String, String, String> {

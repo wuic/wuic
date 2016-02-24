@@ -52,7 +52,6 @@ import com.github.wuic.exception.WuicException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.0
  */
 public class ProxyUrisPropertySetter extends PropertySetter<String[]> {

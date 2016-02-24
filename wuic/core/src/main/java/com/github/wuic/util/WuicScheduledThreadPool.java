@@ -60,7 +60,6 @@ import java.util.concurrent.ScheduledFuture;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.0
  */
 public final class WuicScheduledThreadPool extends Thread {
@@ -170,8 +169,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.0
+          * @since 0.4.0
      */
     private final class ExceptionLogger implements Runnable {
 
@@ -210,8 +208,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.4.4
+          * @since 0.4.4
      */
     public static final class CallExceptionLogger<T> implements Callable<T> {
 

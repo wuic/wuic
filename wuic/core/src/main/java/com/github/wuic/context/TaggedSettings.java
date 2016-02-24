@@ -73,7 +73,6 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.1
  */
 public class TaggedSettings {

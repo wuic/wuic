@@ -79,7 +79,6 @@ import java.util.Set;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
  * @since 0.1.0
  */
 public class NutsHeap implements NutDaoListener, HeapListener {
@@ -731,7 +730,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      *
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     public static enum ListenerHolder {

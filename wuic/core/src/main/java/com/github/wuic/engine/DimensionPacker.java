@@ -47,7 +47,6 @@ import java.util.Map;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.2.3
  * @param <T> a type of data associated to the dimensions
  */

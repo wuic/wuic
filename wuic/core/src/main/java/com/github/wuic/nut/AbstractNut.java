@@ -53,7 +53,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.3.0
  */
 public abstract class AbstractNut implements Nut {

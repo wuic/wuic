@@ -70,7 +70,6 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.5
  */
 public class SourceMapLineInspector extends RegexLineInspector {

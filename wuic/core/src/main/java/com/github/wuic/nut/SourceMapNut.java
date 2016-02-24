@@ -58,7 +58,6 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.5.3
  */
 public interface SourceMapNut extends Source, ConvertibleNut {

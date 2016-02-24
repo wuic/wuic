@@ -66,7 +66,6 @@ import java.util.Arrays;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.3.0
  */
 public final class EngineRequest {
@@ -323,7 +322,6 @@ public final class EngineRequest {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.3
      */
     private final class NutsIterator implements Iterator<List<? extends ConvertibleNut>> {
@@ -399,7 +397,6 @@ public final class EngineRequest {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.3
      */
     public static final class Key implements Serializable {

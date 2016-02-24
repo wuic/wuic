@@ -42,7 +42,6 @@ package com.github.wuic.test.config;
  * Service interface.
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  */
 interface I {

@@ -78,7 +78,6 @@ import javax.imageio.stream.ImageInputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
@@ -379,7 +378,6 @@ public class SpriteInspectorEngine extends NodeEngine {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private static final class AddReferencedNutOnTransform extends Pipe.DefaultTransformer<ConvertibleNut> {

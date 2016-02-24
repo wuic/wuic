@@ -57,7 +57,6 @@ import java.util.Arrays;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.5
  */
 @RunWith(JUnit4.class)

@@ -105,7 +105,6 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 @NutDaoService
@@ -347,7 +346,6 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private class RequestDispatcherNut extends AbstractNut {

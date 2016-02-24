@@ -89,7 +89,6 @@ import java.util.zip.GZIPOutputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.2
  */
 public class GzipHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
@@ -100,7 +99,6 @@ public class GzipHttpServletResponseWrapper extends OkHttpServletResponseWrapper
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.2
      */
     private final class GzipServletStream extends ServletOutputStream {

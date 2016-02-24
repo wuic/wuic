@@ -65,7 +65,6 @@ import org.mockito.Mockito;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.1
  */
 @RunWith(JUnit4.class)

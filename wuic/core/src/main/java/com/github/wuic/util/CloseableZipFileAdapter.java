@@ -48,7 +48,6 @@ import java.util.zip.ZipFile;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.3.4
  */
 public class CloseableZipFileAdapter implements Closeable {

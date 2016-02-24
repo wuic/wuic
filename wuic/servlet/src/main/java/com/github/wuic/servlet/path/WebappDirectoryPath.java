@@ -57,7 +57,6 @@ import java.util.Set;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.2
  */
 public class WebappDirectoryPath extends AbstractDirectoryPath {

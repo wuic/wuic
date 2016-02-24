@@ -51,7 +51,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.5.3
  */
 public interface Source {

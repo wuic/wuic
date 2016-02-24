@@ -47,7 +47,6 @@ import com.github.wuic.config.PropertySetter;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.0
  */
 public class PackerPropertySetter extends PropertySetter.PropertySetterOfObject {

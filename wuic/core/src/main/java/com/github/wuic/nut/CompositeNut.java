@@ -70,7 +70,6 @@ import java.util.concurrent.Callable;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.2
  */
 public class CompositeNut extends PipedConvertibleNut {
@@ -273,7 +272,6 @@ public class CompositeNut extends PipedConvertibleNut {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     public final class CompositeInputStream extends InputStream {
@@ -609,7 +607,6 @@ public class CompositeNut extends PipedConvertibleNut {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public static class Combiner {

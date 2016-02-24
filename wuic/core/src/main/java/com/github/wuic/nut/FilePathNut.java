@@ -53,7 +53,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.6
  * @since 0.1.1
  */
 public class FilePathNut extends AbstractNut {

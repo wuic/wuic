@@ -65,7 +65,6 @@ import java.util.List;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.7
  * @since 0.2.0
  */
 public final class ByteArrayNut extends PipedConvertibleNut implements Serializable {

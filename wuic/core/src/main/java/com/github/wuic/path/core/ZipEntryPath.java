@@ -52,7 +52,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.3.4
  */
 public class ZipEntryPath extends SimplePath implements Path {
@@ -123,8 +122,7 @@ public class ZipEntryPath extends SimplePath implements Path {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.3.4
+          * @since 0.3.4
      */
     protected final class ArchiveWithParentEntry {
 

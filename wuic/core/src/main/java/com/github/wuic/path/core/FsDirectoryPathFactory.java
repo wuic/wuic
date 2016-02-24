@@ -47,7 +47,6 @@ import com.github.wuic.path.DirectoryPathFactory;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.2
  */
 public class FsDirectoryPathFactory implements DirectoryPathFactory {

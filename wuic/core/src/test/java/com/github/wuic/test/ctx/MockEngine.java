@@ -54,7 +54,6 @@ import java.util.List;
  * Mock engine builder.
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.4
  */
 @EngineService(injectDefaultToWorkflow = false)

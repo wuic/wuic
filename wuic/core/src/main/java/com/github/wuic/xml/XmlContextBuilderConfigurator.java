@@ -63,7 +63,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.2
  * @since 0.4.0
  */
 public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfigurator {

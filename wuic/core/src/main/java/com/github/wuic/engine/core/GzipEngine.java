@@ -64,7 +64,6 @@ import java.util.zip.GZIPOutputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = false, isCoreEngine = true)

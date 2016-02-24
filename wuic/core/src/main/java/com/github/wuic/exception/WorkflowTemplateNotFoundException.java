@@ -44,7 +44,6 @@ package com.github.wuic.exception;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.3
  */
 public class WorkflowTemplateNotFoundException extends WuicException {

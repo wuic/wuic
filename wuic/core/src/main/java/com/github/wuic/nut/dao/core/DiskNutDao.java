@@ -63,7 +63,6 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.3.1
  */
 @NutDaoService

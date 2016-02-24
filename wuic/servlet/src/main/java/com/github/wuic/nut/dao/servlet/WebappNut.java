@@ -52,7 +52,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.2
  */
 public class WebappNut extends AbstractNut {

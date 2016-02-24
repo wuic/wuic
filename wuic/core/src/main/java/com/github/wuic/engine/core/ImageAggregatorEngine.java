@@ -81,7 +81,6 @@ import javax.imageio.ImageIO;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.8
  * @since 0.2.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
@@ -200,7 +199,6 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.2.0
      */
     private static class TransparentImageFilter extends RGBImageFilter {

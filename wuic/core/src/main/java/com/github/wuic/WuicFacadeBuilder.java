@@ -65,7 +65,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public class WuicFacadeBuilder implements ClassPathResourceResolver {
@@ -545,7 +544,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     public final class ContextBuilderFacade extends ContextBuilder {
@@ -731,7 +729,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
          * </p>
          *
          * @author Guillaume DROUET
-         * @version 1.0
          * @since 0.5.1
          */
         public final class ContextNutDaoBuilderFacade extends ContextNutDaoBuilder {
@@ -800,7 +797,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
          * </p>
          *
          * @author Guillaume DROUET
-         * @version 1.0
          * @since 0.5.1
          */
         public final class ContextEngineBuilderFacade extends ContextEngineBuilder {
@@ -842,7 +838,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
          * </p>
          *
          * @author Guillaume DROUET
-         * @version 1.0
          * @since 0.5.1
          */
         public final class ContextNutFilterBuilderFacade extends ContextNutFilterBuilder {

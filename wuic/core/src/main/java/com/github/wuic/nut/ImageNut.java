@@ -46,7 +46,6 @@ import com.github.wuic.engine.Region;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public class ImageNut extends NutWrapper {

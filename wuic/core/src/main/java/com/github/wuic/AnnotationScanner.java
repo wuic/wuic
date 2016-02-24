@@ -45,7 +45,6 @@ package com.github.wuic;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public interface AnnotationScanner {

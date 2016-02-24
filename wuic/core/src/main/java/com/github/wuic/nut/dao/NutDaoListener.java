@@ -52,7 +52,6 @@ import java.util.Set;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.0
  */
 public interface NutDaoListener {

@@ -61,7 +61,6 @@ import java.util.concurrent.ExecutionException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.3
  * @since 0.3.3
  */
 public abstract class LineInspector {
@@ -292,7 +291,6 @@ public abstract class LineInspector {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.1
      */
     public final class ReplacementInfo implements Comparable<ReplacementInfo> {

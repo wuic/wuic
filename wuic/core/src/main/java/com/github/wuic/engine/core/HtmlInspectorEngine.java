@@ -104,7 +104,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.4
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
@@ -511,7 +510,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.4
      */
     public static final class ParseInfo {

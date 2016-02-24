@@ -62,7 +62,6 @@ import java.util.zip.GZIPInputStream;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.4.4
  */
 public final class NutUtils {

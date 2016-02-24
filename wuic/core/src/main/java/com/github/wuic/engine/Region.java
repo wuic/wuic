@@ -45,7 +45,6 @@ import java.awt.Dimension;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.2.0
  */
 public class Region extends Dimension implements Comparable<Dimension> {

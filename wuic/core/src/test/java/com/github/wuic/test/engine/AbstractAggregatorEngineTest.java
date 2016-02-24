@@ -26,7 +26,6 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.2
  */
 @RunWith(JUnit4.class)
@@ -38,8 +37,7 @@ public class AbstractAggregatorEngineTest {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.2
+          * @since 0.5.2
      */
     final class A extends AbstractAggregatorEngine {
 

@@ -54,7 +54,6 @@ import java.io.IOException;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public enum HttpUtil {
@@ -221,7 +220,6 @@ public enum HttpUtil {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.0
      */
     private final class WriteResponseOnReady implements Pipe.OnReady {

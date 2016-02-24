@@ -59,7 +59,6 @@ import com.github.wuic.util.CollectionUtils;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.0
  */
 public enum EngineType {

@@ -116,7 +116,6 @@ public abstract class LineMatcherInspector extends LineInspector {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.5.3
      */
     public abstract static class LineMatcher implements MatchResult {

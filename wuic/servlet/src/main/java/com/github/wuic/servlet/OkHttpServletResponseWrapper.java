@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.2
  */
 public class OkHttpServletResponseWrapper extends HttpServletResponseAdapter {

@@ -51,7 +51,6 @@ import java.lang.annotation.Target;
  * Bad configured and annotated service.
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5
  */
 @IService

@@ -55,7 +55,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.1.1
  */
 public interface Nut {

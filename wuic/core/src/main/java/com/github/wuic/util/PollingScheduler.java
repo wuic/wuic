@@ -54,7 +54,6 @@ import java.util.concurrent.Future;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.0
  * @param <T> the type of listener
  */
@@ -175,7 +174,6 @@ public abstract class PollingScheduler<T> implements Runnable {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.4.0
      */
     public class Polling {

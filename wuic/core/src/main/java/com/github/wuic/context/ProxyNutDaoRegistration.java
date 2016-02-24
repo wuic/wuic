@@ -49,7 +49,6 @@ import com.github.wuic.nut.dao.core.ProxyNutDao;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.1
  */
 public final class ProxyNutDaoRegistration {

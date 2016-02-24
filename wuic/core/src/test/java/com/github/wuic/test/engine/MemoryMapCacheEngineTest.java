@@ -74,7 +74,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.1
  * @since 0.4.3
  */
 @RunWith(JUnit4.class)

@@ -53,7 +53,6 @@ import java.lang.annotation.Annotation;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.0
  * @since 0.5.0
  */
 public class AnnotationDetectorScanner implements AnnotationScanner {
@@ -85,8 +84,7 @@ public class AnnotationDetectorScanner implements AnnotationScanner {
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
-     * @since 0.5.0
+          * @since 0.5.0
      */
     private final class AnnotationProcessorReporter implements AnnotationDetector.TypeReporter {
 

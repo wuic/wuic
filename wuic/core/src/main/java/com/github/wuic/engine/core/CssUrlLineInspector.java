@@ -73,7 +73,6 @@ import java.util.regex.Pattern;
  * </p>
  *
  * @author Guillaume DROUET
- * @version 1.5
  * @since 0.3.3
  */
 public class CssUrlLineInspector extends RegexLineInspector implements NutFilterHolder {
@@ -379,7 +378,6 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
      * </p>
      *
      * @author Guillaume DROUET
-     * @version 1.0
      * @since 0.4.5
      */
     private static final class MatcherData {

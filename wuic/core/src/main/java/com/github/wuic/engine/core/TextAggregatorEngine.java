@@ -75,7 +75,6 @@ import com.github.wuic.util.Pipe;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 2.0
  * @since 0.1.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)

@@ -61,7 +61,6 @@ import java.util.PriorityQueue;
  * </p>
  * 
  * @author Guillaume DROUET
- * @version 1.4
  * @since 0.2.3
  */
 public final class BinPacker<T> implements Comparator<T>, DimensionPacker<T> {
@@ -302,7 +301,6 @@ public final class BinPacker<T> implements Comparator<T>, DimensionPacker<T> {
      * </p>
      * 
      * @author Guillaume DROUET
-     * @version 1.1
      * @since 0.2.3
      * @param <D> the type of node
      */
