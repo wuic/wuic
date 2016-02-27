@@ -38,11 +38,10 @@
 
 package com.github.wuic.servlet;
 
-import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
-import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
@@ -114,7 +113,7 @@ import java.util.ServiceLoader;
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public class HtmlParserFilter extends ContextBuilderConfigurator implements Filter {
+public class HtmlParserFilter extends SimpleContextBuilderConfigurator implements Filter {
 
     /**
      * Property that tells the filter to use or not HTTP2 server push. Server push is enabled by default.
@@ -175,6 +174,7 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
      * @param rootNuDaoBuilderId the root nut DAO builder ID
      */
     public HtmlParserFilter(final WuicFacade wuicFacade, final String rootNuDaoBuilderId) {
+        super(HtmlParserFilter.class.getName());
         this.filterDataMap = new HashMap<String, ByteArrayNut>();
         this.wuicFacade = wuicFacade;
         this.rootNuDaoBuilderId = rootNuDaoBuilderId;
@@ -556,29 +556,5 @@ public class HtmlParserFilter extends ContextBuilderConfigurator implements Filt
     public int internalConfigure(final ContextBuilder ctxBuilder) {
         contextBuilder = ctxBuilder;
         return -1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getTag() {
-        return getClass().getName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-        return -1L;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ProcessContext getProcessContext() {
-        return null;
     }
 }

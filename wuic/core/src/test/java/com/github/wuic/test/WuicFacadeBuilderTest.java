@@ -41,10 +41,10 @@ package com.github.wuic.test;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
-import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -152,26 +152,11 @@ public class WuicFacadeBuilderTest {
     public void configuratorTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         final AtomicInteger count = new AtomicInteger(0);
-        builder.noXmlConfiguration().contextBuilderConfigurators(new ContextBuilderConfigurator() {
+        builder.noXmlConfiguration().contextBuilderConfigurators(new SimpleContextBuilderConfigurator(getClass().getName()) {
             @Override
             public int internalConfigure(final ContextBuilder ctxBuilder) {
                 count.incrementAndGet();
                 return 0;
-            }
-
-            @Override
-            public String getTag() {
-                return getClass().getName();
-            }
-
-            @Override
-            protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-                return -1L;
-            }
-
-            @Override
-            public ProcessContext getProcessContext() {
-                return null;
             }
         }).contextPath("/foo").build();
 

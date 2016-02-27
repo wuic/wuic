@@ -41,6 +41,7 @@ package com.github.wuic.test;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.util.NumberUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -158,7 +159,7 @@ public class ContextBuilderConfiguratorTest {
     public void configureWithPollingTest() throws Exception {
         final CountDownLatch latch = new CountDownLatch(NumberUtils.TWO);
 
-        final ContextBuilderConfigurator cfg = new ContextBuilderConfigurator() {
+        final ContextBuilderConfigurator cfg = new SimpleContextBuilderConfigurator("test") {
 
             /**
              * {@inheritDoc}
@@ -172,14 +173,6 @@ public class ContextBuilderConfiguratorTest {
              * {@inheritDoc}
              */
             @Override
-            public String getTag() {
-                return "test";
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
             protected Long getLastUpdateTimestampFor(final String path) throws IOException {
                 synchronized (ContextBuilderConfiguratorTest.class) {
                     latch.countDown();
@@ -187,14 +180,6 @@ public class ContextBuilderConfiguratorTest {
                 }
 
                 return System.currentTimeMillis();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public ProcessContext getProcessContext() {
-                return null;
             }
         };
 

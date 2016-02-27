@@ -41,9 +41,9 @@ package com.github.wuic.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.ContextBuilder;
-import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.WuicFacade;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.NutNotFoundException;
@@ -233,7 +233,7 @@ public class WuicServlet extends HttpServlet {
      * @author Guillaume DROUET
      * @since 0.5.0
      */
-    private final class WuicServletContextBuilderConfigurator extends ContextBuilderConfigurator {
+    private final class WuicServletContextBuilderConfigurator extends SimpleContextBuilderConfigurator {
 
         /**
          * The servlet context.
@@ -248,6 +248,7 @@ public class WuicServlet extends HttpServlet {
          * @param sc the servlet context
          */
         private WuicServletContextBuilderConfigurator(final ServletContext sc) {
+            super(WuicServletContextBuilderConfigurator.class.getName());
             servletContext = sc;
         }
 
@@ -258,30 +259,6 @@ public class WuicServlet extends HttpServlet {
         public int internalConfigure(final ContextBuilder ctxBuilder) {
             ctxBuilder.interceptor(new WuicServletContextInterceptor(servletContext));
             return -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getTag() {
-            return getClass().getName();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-            return -1L;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public ProcessContext getProcessContext() {
-            return null;
         }
     }
 

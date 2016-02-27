@@ -36,27 +36,53 @@
  */
 
 
-package com.github.wuic.test;
+package com.github.wuic.context;
 
 import com.github.wuic.ProcessContext;
-import com.github.wuic.context.ContextBuilder;
-import com.github.wuic.context.ContextBuilderConfigurator;
-import com.github.wuic.context.SimpleContextBuilderConfigurator;
 
 import java.io.IOException;
 
 /**
- * Configurator installed in META-INF/services.
+ * <p>
+ * A simple {@link ContextBuilderConfigurator} that can't be polled and identified with a {@code String} tag.
+ * The {@link #getProcessContext()} method will return {@link ProcessContext#DEFAULT}.
+ * </p>
+ *
+ * @author Guillaume DROUET
+ * @since 0.5.3
  */
-public class C extends SimpleContextBuilderConfigurator {
+public class SimpleContextBuilderConfigurator extends ContextBuilderConfigurator {
+
+    /**
+     * The tag.
+     */
+    private final String tag;
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
+     *
+     * @param tag the tag
      */
-    public C() {
-        super(C.class.getName());
+    public SimpleContextBuilderConfigurator(final String tag) {
+        this.tag = tag;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Long getLastUpdateTimestampFor(final String path) throws IOException {
+        return -1L;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTag() {
+        return tag;
     }
 
     /**
@@ -64,7 +90,14 @@ public class C extends SimpleContextBuilderConfigurator {
      */
     @Override
     public int internalConfigure(final ContextBuilder ctxBuilder) {
-        ContextBuilderConfiguratorTest.called = true;
         return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ProcessContext getProcessContext() {
+        return ProcessContext.DEFAULT;
     }
 }
