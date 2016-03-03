@@ -73,6 +73,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -442,6 +443,28 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
+         * Returns an unmodifiable {@code List} of the heap IDs registered in this registration to form a composition.
+         * </p>
+         *
+         * @return the heap IDs of the composition
+         */
+        List<String> getHeapsIds() {
+            return heapIds == null ? Collections.EMPTY_LIST : Arrays.asList(heapIds);
+        }
+
+        /**
+         * <p>
+         * Gets the DAO id referenced by this registration.
+         * </p>
+         *
+         * @return the DAO id
+         */
+        String getNutDaoId() {
+            return ndbId;
+        }
+
+        /**
+         * <p>
          * Gets the {@link NutsHeap} created by this registration. The heap is created when the first call to this
          * method performed. Then, the instance will be created for future calls to take in consideration any change.
          * </p>
@@ -460,7 +483,10 @@ public class ContextBuilder extends Observable {
                          final Map<String, NutFilter> filterCollection,
                          final ContextSetting contextSetting)
                 throws IOException {
-            free();
+            if (heap != null) {
+                return heap;
+            }
+
             NutDao dao = null;
 
             // Find DAO
@@ -553,6 +579,17 @@ public class ContextBuilder extends Observable {
 
             this.ndbIds = new String[ndbIds.length];
             System.arraycopy(ndbIds, 0, this.ndbIds, 0, ndbIds.length);
+        }
+
+        /**
+         * <p>
+         * Returns an unmodifiable {@code List} of the DAO IDs registered in this registration to refer stores.
+         * </p>
+         *
+         * @return the DAO IDs of the composition
+         */
+        List<String> getStoreIds() {
+            return ndbIds == null ? Collections.EMPTY_LIST : Arrays.asList(ndbIds);
         }
 
         /**
@@ -684,6 +721,28 @@ public class ContextBuilder extends Observable {
             this.forEachHeap = forEachHeap;
             this.heapIdPattern = heapIdPattern;
             this.workflowTemplateId  = workflowTemplateId;
+        }
+
+        /**
+         * <p>
+         * Gets the workflow template ID
+         * </p>
+         *
+         * @return the workflow template ID
+         */
+        String getWorkflowTemplateId() {
+            return workflowTemplateId;
+        }
+
+        /**
+         * <p>
+         * Gets the heap ID pattern.
+         * </p>
+         *
+         * @return  heapIdPattern the heap ID pattern
+         */
+        String getHeapIdPattern() {
+            return heapIdPattern;
         }
 
         /**
@@ -877,7 +936,7 @@ public class ContextBuilder extends Observable {
          *
          * @return the DAO
          */
-        private Map<String, String> getProxyDao() {
+        public Map<String, String> getProxyDao() {
             return proxyDao;
         }
 
@@ -928,7 +987,10 @@ public class ContextBuilder extends Observable {
          * @return the DAO
          */
         NutDao getNutDao(final List<ProxyNutDaoRegistration> populateProxy) {
-            free();
+            if (dao != null) {
+                return dao;
+            }
+
             final NutDao delegate = nutDaoBuilder.build();
 
             // Must NutDao wrap in a proxy
@@ -1012,6 +1074,20 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Configures this builder with the given {@link ContextBuilderConfigurator configurators}.
+     * </p>
+     *
+     * @param configurators the configurators
+     * @throws IOException if any I/O error occurs
+     */
+    public void configure(final ContextBuilderConfigurator ... configurators) throws IOException {
+        for (final ContextBuilderConfigurator configurator : configurators) {
+            configurator.configure(this);
+        }
+    }
+
+    /**
+     * <p>
      * Configures for each type provided by the engine builder factory and nut dao builder factory a
      * default instance identified with an id starting by {@link #BUILDER_ID_PREFIX} and followed by the type
      * name itself.
@@ -1022,26 +1098,22 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder configureDefault() throws IOException {
         if (!configureDefault) {
-            new DefaultContextBuilderConfigurator(engineBuilderFactory){
+            configure(new DefaultContextBuilderConfigurator(engineBuilderFactory){
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
                     contextBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
-            }.configure(this);
-
-            new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
+            },new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
                     contextBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
-            }.configure(this);
-
-            new DefaultContextBuilderConfigurator(nutFilterBuilderFactory) {
+            }, new DefaultContextBuilderConfigurator(nutFilterBuilderFactory) {
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
                     contextBuilder.contextNutFilterBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
-            }.configure(this);
+            });
 
             configureDefault = true;
         }
@@ -1123,18 +1195,12 @@ public class ContextBuilder extends Observable {
                 lock.lock();
             }
 
-            final ContextSetting setting = taggedSettings.remove(tag);
+            final ContextSetting setting = taggedSettings.get(tag);
 
             // Shutdown all DAO (scheduled jobs, etc)
             if (setting != null) {
-                for (final NutDaoRegistration dao : setting.getNutDaoMap().values()) {
-                    dao.free();
-                }
-
-                // Notifies any listeners to clear any cache
-                for (final HeapRegistration heap : setting.getNutsHeaps().values()) {
-                    heap.free();
-                }
+                taggedSettings.refreshDependencies(setting);
+                taggedSettings.remove(tag);
             }
 
             setChanged();

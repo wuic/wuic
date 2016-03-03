@@ -231,9 +231,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
                 builder.configureDefault();
             }
 
-            for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
-                contextBuilderConfigurator.configure(builder);
-            }
+            builder.configure(configurators);
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
         }

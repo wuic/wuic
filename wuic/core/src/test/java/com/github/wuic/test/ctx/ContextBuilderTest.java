@@ -45,11 +45,13 @@ import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 
+import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptor;
 import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -63,10 +65,14 @@ import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
@@ -81,9 +87,11 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -583,7 +591,6 @@ public class ContextBuilderTest {
         Assert.assertFalse(context.isUpToDate());
     }
 
-
     /**
      * Checks when the context is configured with DAO stores.
      *
@@ -836,8 +843,345 @@ public class ContextBuilderTest {
                 .toContext()
                 .build();
     }
-}
 
+    /**
+     * <p>
+     * Tests that setting is refreshed according to heap-dao relationship.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testRefreshHeapDao() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        final ContextBuilder b = new ContextBuilder(engine, dao, filter)
+                .tag("test")
+                .processContext(ProcessContext.DEFAULT)
+                .contextNutDaoBuilder("dao", ClasspathNutDao.class)
+                .toContext()
+                .releaseTag()
+                .tag("test2")
+                .processContext(ProcessContext.DEFAULT)
+                .heap("heap", "dao", new String[]{"images/template-img.png"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
+                })
+                .releaseTag();
+
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.clearTag("test1");
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.clearTag("test2");
+        b.build();
+        Assert.assertEquals(1, count.get());
+    }
+
+    /**
+     * <p>
+     * Tests that setting is refreshed according to composition relationship.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testRefreshComposition() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                try {
+                    ctxBuilder.heap("heap", null, new String[]{"images/template-img.png"}, new HeapListener() {
+                        @Override
+                        public void nutUpdated(NutsHeap heap) {
+                            count.incrementAndGet();
+                        }
+                    });
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                try {
+                    ctxBuilder.heap(false, "heap2", null, new String[]{"heap"}, new String[]{"images/template-img.png"}, new HeapListener() {
+                        @Override
+                        public void nutUpdated(NutsHeap heap) {
+                            count.incrementAndGet();
+                        }
+                    });
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg3 = new SimpleContextBuilderConfigurator("test3") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder(null, ClasspathNutDao.class).toContext();
+
+                return -1;
+            }
+        };
+
+        final ContextBuilder b = new ContextBuilder(engine, dao, filter);
+
+        b.configure(cfg1, cfg2, cfg3);
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.clearTag("test1");
+        Assert.assertEquals(3, count.get());
+
+        b.configure(cfg1, cfg2, cfg3);
+        b.build();
+        count.set(0);
+        b.build();
+        Assert.assertEquals(0, count.get());
+        b.clearTag("test2");
+        Assert.assertEquals(1, count.get());
+    }
+
+    /**
+     * <p>
+     * Tests that setting is refreshed according to store relationship.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testRefreshStore() throws Exception {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                try {
+                    ctxBuilder.heap("heap",
+                            ContextBuilder.getDefaultBuilderId(MockDao.class),
+                            new String[]{"foo.js"}, new HeapListener() {
+                        @Override
+                        public void nutUpdated(NutsHeap heap) {
+                            count.incrementAndGet();
+                        }
+                    });
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder(null, MockStoreDao.class).toContext();
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg3 = new SimpleContextBuilderConfigurator("test3") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                try {
+                    ctxBuilder.template("tpl", new String[] {}, new String[] {}, false, ContextBuilder.getDefaultBuilderId(MockStoreDao.class));
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg4 = new SimpleContextBuilderConfigurator("test4") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                try {
+                    ctxBuilder.workflow("wf", true, ".*", "tpl");
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                } catch (WorkflowTemplateNotFoundException e) {
+                    Assert.fail(e.getMessage());
+                }
+
+                return -1;
+            }
+        };
+
+        final ContextBuilder b = new ContextBuilder(engine, dao, filter);
+        b.tag("dao").contextNutDaoBuilder(null, MockDao.class).toContext().releaseTag();
+
+        b.configure(cfg1, cfg2, cfg3, cfg4);
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.configure(cfg1, cfg2, cfg3, cfg4);
+        b.build();
+        count.set(0);
+        b.build();
+        Assert.assertEquals(0, count.get());
+        b.clearTag("test2");
+        b.tag("t").contextNutDaoBuilder(null, MockStoreDao.class).toContext().releaseTag();
+        Assert.assertEquals(1, count.get());
+
+        b.configure(cfg1, cfg2, cfg3, cfg4);
+        b.build();
+        count.set(0);
+        b.build();
+        Assert.assertEquals(0, count.get());
+        b.clearTag("test1");
+        Assert.assertEquals(1, count.get());
+
+        b.configure(cfg1, cfg2, cfg3, cfg4);
+        b.build();
+        count.set(0);
+        b.build();
+        Assert.assertEquals(0, count.get());
+        b.clearTag("test3");
+        Assert.assertEquals(1, count.get());
+
+        b.configure(cfg1, cfg2, cfg3, cfg4);
+        b.build();
+        count.set(0);
+        b.build();
+        Assert.assertEquals(0, count.get());
+        b.clearTag("test4");
+        Assert.assertEquals(1, count.get());
+    }
+
+    /**
+     * <p>
+     * Tests that setting is refreshed according to dao-dao relationship.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testRefreshProxy() throws Exception {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder("dao1", MockDao.class).toContext();
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder("dao2", MockDao.class).proxyPathForDao("/", "dao1").toContext();
+
+                try {
+                    ctxBuilder.heap("heap",
+                            "dao2",
+                            new String[]{"foo.js"}, new HeapListener() {
+                        @Override
+                        public void nutUpdated(NutsHeap heap) {
+                            count.incrementAndGet();
+                        }
+                    });
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+                return -1;
+            }
+        };
+
+        final ContextBuilder b = new ContextBuilder(engine, dao, filter);
+
+        b.configure(cfg1, cfg2);
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.clearTag("test1");
+        Assert.assertEquals(1, count.get());
+    }
+
+    /**
+     * <p>
+     * Tests that cycle are detected during refresh process.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testRefreshCycle() throws Exception {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder("dao1", MockDao.class).toContext();
+
+                try {
+                    ctxBuilder.heap("heap",
+                            "dao2",
+                            new String[]{"foo.js"}, new HeapListener() {
+                        @Override
+                        public void nutUpdated(NutsHeap heap) {
+                            count.incrementAndGet();
+                        }
+                    });
+                } catch (IOException ioe) {
+                    Assert.fail(ioe.getMessage());
+                }
+
+                return -1;
+            }
+        };
+
+        final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
+            @Override
+            public int internalConfigure(ContextBuilder ctxBuilder) {
+                ctxBuilder.contextNutDaoBuilder("dao2", MockDao.class).proxyPathForDao("/", "dao1").toContext();
+
+
+                return -1;
+            }
+        };
+
+        final ContextBuilder b = new ContextBuilder(engine, dao, filter);
+
+        b.configure(cfg1, cfg2);
+        b.build();
+        Assert.assertEquals(0, count.get());
+
+        b.clearTag("test1");
+        Assert.assertEquals(1, count.get());
+    }
+}
 
 /**
  * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.

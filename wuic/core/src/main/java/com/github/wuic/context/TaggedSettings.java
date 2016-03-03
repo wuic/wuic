@@ -376,10 +376,11 @@ public class TaggedSettings {
         for (final ContextSetting setting : taggedSettings.values()) {
             for (final Map.Entry<String, ContextBuilder.NutDaoRegistration> dao : setting.getNutDaoMap().entrySet()) {
                 List<String> keys = registrationMap.get(dao.getValue());
+                final ContextBuilder.NutDaoRegistration r = dao.getValue();
 
                 if (keys == null) {
                     keys = new ArrayList<String>();
-                    registrationMap.put(dao.getValue(), keys);
+                    registrationMap.put(r, keys);
                 }
 
                 keys.add(dao.getKey());
@@ -419,7 +420,8 @@ public class TaggedSettings {
         for (final ContextSetting setting : taggedSettings.values()) {
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (!heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
+                    final ContextBuilder.HeapRegistration r = heap.getValue();
+                    heapMap.put(heap.getKey(), r.getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
         }
@@ -428,7 +430,8 @@ public class TaggedSettings {
         for (final ContextSetting setting : taggedSettings.values()) {
             for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (heap.getValue().isComposition()) {
-                    heapMap.put(heap.getKey(), heap.getValue().getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
+                    final ContextBuilder.HeapRegistration r = heap.getValue();
+                    heapMap.put(heap.getKey(), r.getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
         }
@@ -603,6 +606,270 @@ public class TaggedSettings {
             final String property = key.toString();
             applyProperty(property, properties.getProperty(property));
         }
+    }
+
+    /**
+     * <p>
+     * This method refreshes the given {@link ContextSetting} and its dependent {@link ContextSetting settings}.
+     * A setting is dependent from any other if:
+     * <ul>
+     *     <li>
+     *         one of its {@link ContextBuilder.HeapRegistration} is a composition of another registration from the
+     *         other setting
+     *     </li>
+     *     <li>
+     *         one of its {@link ContextBuilder.HeapRegistration} refers a {@link ContextBuilder.NutDaoRegistration}
+     *         from the other setting
+     *     </li>
+     *     <li>
+     *         one of its {@link ContextBuilder.WorkflowRegistration} refers a {@link ContextBuilder.NutDaoRegistration store}
+     *         in its referenced template from the other setting
+     *     </li>
+     *     <li>
+     *         one of its {@link ContextBuilder.WorkflowRegistration} refers a {@link ContextBuilder.HeapRegistration heap}
+     *     </li>
+     *     <li>
+     *         one of its {@link ContextBuilder.WorkflowTemplateRegistration} refers a {@link ContextBuilder.NutDaoRegistration store}
+     *         from the other setting
+     *     </li>
+     *
+     *     <li>
+     *         one of its {@link ContextBuilder.NutDaoRegistration} proxy another DAO from the other setting
+     *     </li>
+     * </ul>
+     * </p>
+     */
+    void refreshDependencies(final ContextSetting setting) {
+        refresh(new ArrayList<ContextSetting>(), setting);
+    }
+
+    /**
+     * <p>
+     * This method detects the dependencies of the given setting and refresh them.
+     * All dependency type described by {@link #refreshDependencies(ContextSetting)} are checked here.
+     * </p>
+     *
+     * @param path all settings that have been refreshed
+     * @param setting the setting to evaluate
+     */
+    private void refreshDependencies(final List<ContextSetting> path, final ContextSetting setting) {
+        // Cycle detected
+        if (path.contains(setting)) {
+            return;
+        }
+
+        path.add(setting);
+
+        // Check dependencies in each setting
+        for (final ContextSetting contextSetting : taggedSettings.values()) {
+
+            // Ignore current setting
+            if (contextSetting != setting) {
+                forceRefreshComposition(path, setting, contextSetting);
+                forceRefreshHeapDao(path, setting, contextSetting);
+                forceRefreshStore(path, setting, contextSetting);
+                forceWorkflowHeap(path, setting, contextSetting);
+                forceRefreshTemplateStore(path, setting, contextSetting);
+                forceRefreshProxyDao(path, setting, contextSetting);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a heap referenced by the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceRefreshComposition(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+
+        // No heap registration to test
+        if (setting.getNutsHeaps().isEmpty()) {
+            return;
+        }
+
+        // Looking for a heap registration referenced by a composition of the current setting
+        for (final ContextBuilder.HeapRegistration registration : candidate.getNutsHeaps().values()) {
+
+            // Candidate has a heap registration that refers another one, we check if this other heap is refreshed
+            if (registration.getHeapsIds() != null) {
+                for (final String heapId : setting.getNutsHeaps().keySet()) {
+
+                    // Dependency found: change state of this dependency and recursively search its own dependencies
+                    if (registration.getHeapsIds().contains(heapId)) {
+                        refresh(path, candidate);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a DAP referenced by the heap of the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceRefreshHeapDao(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+
+        // No DAO registration to test
+        if (setting.getNutDaoMap().isEmpty()) {
+            return;
+        }
+
+        // Looking for a DAO registration referenced by a heap registration of the current setting
+        for (final ContextBuilder.HeapRegistration registration : candidate.getNutsHeaps().values()) {
+
+            // Dependency found: change state of this dependency and recursively search its own dependencies
+            if (setting.getNutDaoMap().keySet().contains(registration.getNutDaoId())) {
+                refresh(path, candidate);
+                break;
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a DAO referenced by a template of the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceRefreshStore(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+
+        // No template registration to test
+        if (setting.getTemplateMap().isEmpty()) {
+            return;
+        }
+
+        // Looking for a template referenced by a workflow registration of the current setting
+        for (final ContextBuilder.WorkflowRegistration registration : candidate.getWorkflowMap().values()) {
+
+            // Dependency found: change state of this dependency and recursively search its own dependencies
+            if (registration.getWorkflowTemplateId() != null
+                    && setting.getTemplateMap().keySet().contains(registration.getWorkflowTemplateId())) {
+                refresh(path, candidate);
+                break;
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a template referencing by a heap of the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceWorkflowHeap(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+
+        // No heap registration to test
+        if (candidate.getNutsHeaps().isEmpty()) {
+            return;
+        }
+
+        // Looking for a heap referenced by a workflow registration of the current setting
+        for (final ContextBuilder.WorkflowRegistration registration : setting.getWorkflowMap().values()) {
+            final Pattern heapPattern = Pattern.compile(registration.getHeapIdPattern());
+
+            // Each ID of registration is evaluated to check if it matches the pattern
+            for (final String heapId : candidate.getNutsHeaps().keySet()) {
+
+                // Dependency found: change state of this dependency and recursively search its own dependencies
+                if (heapPattern.matcher(heapId).matches()) {
+                    refresh(path, candidate);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a template referenced by a workflow of the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceRefreshTemplateStore(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+        if (candidate.getTemplateMap().isEmpty()) {
+            return;
+        }
+
+        // Looking for a DAO referenced by a workflow template registration of the current setting
+        for (final String storeId : setting.getNutDaoMap().keySet()) {
+            for (final ContextBuilder.WorkflowTemplateRegistration registration : candidate.getTemplateMap().values()) {
+
+                // Dependency found: change state of this dependency and recursively search its own dependencies
+                if (registration.getStoreIds().contains(storeId)) {
+                    refresh(path, candidate);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given candidate contains a DAO referenced by a proxy of the setting specified in parameter.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting that will refresh its dependencies
+     * @param candidate the potential dependency
+     */
+    private void forceRefreshProxyDao(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
+
+        // No DAO registration to compare
+        if (candidate.getNutDaoMap().isEmpty()) {
+            return;
+        }
+
+        // Looking for a DAO referenced by another DAO registration that proxy it in the current setting
+        for (final String nutDaoId : setting.getNutDaoMap().keySet()) {
+            for (final ContextBuilder.NutDaoRegistration registration : candidate.getNutDaoMap().values()) {
+
+                // Dependency found: change state of this dependency and recursively search its own dependencies
+                if (registration.getProxyDao().values().contains(nutDaoId)) {
+                    refresh(path, candidate);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Refresh the given setting and refresh its dependencies.
+     * </p>
+     *
+     * @param path the already refreshed settings
+     * @param setting the setting to refresh
+     */
+    private void refresh(final List<ContextSetting> path, final ContextSetting setting) {
+        for (final ContextBuilder.NutDaoRegistration dao : setting.getNutDaoMap().values()) {
+            dao.free();
+        }
+
+        // Notifies any listeners to clear any cache
+        for (final ContextBuilder.HeapRegistration heap : setting.getNutsHeaps().values()) {
+            heap.free();
+        }
+
+        refreshDependencies(path, setting);
     }
 
     /**
