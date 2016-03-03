@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import java.io.Reader;
+import java.io.Serializable;
 
 /**
  * <p>
@@ -49,7 +50,7 @@ import java.io.Reader;
  * @author Guillaume DROUET
  * @since 0.5.3
  */
-public interface AssetsMarkupParser {
+public interface AssetsMarkupParser extends Serializable {
 
     /**
      * <p>

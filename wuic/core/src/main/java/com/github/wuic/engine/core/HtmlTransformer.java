@@ -52,7 +52,6 @@ import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProvider;
 import com.github.wuic.util.UrlUtils;
-import org.attoparser.markup.AbstractDetailedMarkupAttoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,8 +75,7 @@ import java.util.Map;
  * @author Guillaume DROUET
  * @since 0.5.0
  */
-public final class HtmlTransformer extends AbstractDetailedMarkupAttoHandler
-        implements Serializable, Pipe.Transformer<ConvertibleNut> {
+public final class HtmlTransformer implements Serializable, Pipe.Transformer<ConvertibleNut> {
 
     /**
      * Logger.
