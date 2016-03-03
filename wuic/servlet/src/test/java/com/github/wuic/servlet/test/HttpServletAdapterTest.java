@@ -64,7 +64,7 @@ import java.util.Set;
  *
  * @author Guillaume DROUET
  * @since 0.5.0
-  */
+ */
 @RunWith(JUnit4.class)
 public class HttpServletAdapterTest {
 

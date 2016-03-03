@@ -87,7 +87,7 @@ public class NutsHeapTest {
      * </p>
      *
      * @author Guillaume DROUET
-          * @since 0.4.0
+     * @since 0.4.0
      */
     final class MockNutDao extends AbstractNutDao {
 

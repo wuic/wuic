@@ -54,7 +54,7 @@ import java.util.Locale;
  *
  * @author Guillaume DROUET
  * @since 0.5.0
-  */
+ */
 public class HttpServletResponseAdapter implements HttpServletResponse {
 
     /**

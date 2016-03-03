@@ -169,7 +169,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      *
      * @author Guillaume DROUET
-          * @since 0.4.0
+     * @since 0.4.0
      */
     private final class ExceptionLogger implements Runnable {
 
@@ -208,7 +208,7 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      *
      * @author Guillaume DROUET
-          * @since 0.4.4
+     * @since 0.4.4
      */
     public static final class CallExceptionLogger<T> implements Callable<T> {
 
