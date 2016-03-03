@@ -117,7 +117,9 @@ public final class IOUtils {
     public static String checkCharset(final String charset) {
         if (charset.isEmpty()) {
             final String retval = Charset.defaultCharset().name();
-            LOG.warn("Charset is not define in the engine, did you configured {} property? Applying platform charset {}", ApplicationConfig.CHARSET, retval);
+            LOG.warn("Charset is not defined in the engine, did you configured {} property? Applying platform charset '{}'.",
+                    ApplicationConfig.CHARSET,
+                    retval);
             return retval;
         } else {
             return charset;

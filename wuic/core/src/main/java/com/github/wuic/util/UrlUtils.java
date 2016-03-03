@@ -56,7 +56,7 @@ public final class UrlUtils {
      * </p>
      *
      * @author Guillaume DROUET
-          * @since 0.5.0
+     * @since 0.5.0
      */
     public static final class DefaultUrlProviderFactory implements UrlProviderFactory {
 
@@ -75,7 +75,7 @@ public final class UrlUtils {
      * </p>
      *
      * @author Guillaume DROUET
-          * @since 0.5.0
+     * @since 0.5.0
      */
     private static final class DefaultUrlProvider implements UrlProvider {
 
