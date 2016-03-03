@@ -280,7 +280,7 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
                 }
 
                 final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
-                final UrlProvider provider = getUrlProvider(httpRequest).create(workflowId);
+                final UrlProvider provider = getUrlProvider(httpRequest).create(IOUtils.mergePath(wuicFacade.getContextPath(), workflowId));
                 final Map<String, ConvertibleNut> collectedNut = collectReferenceNut(provider, htmlNut);
 
                 if (pushService != null) {
@@ -416,7 +416,8 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
             final Map<String, ConvertibleNut> retval = new HashMap<String, ConvertibleNut>();
 
             for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                retval.put('/' + urlProvider.getUrl(ref), ref);
+                final String url = urlProvider.getUrl(ref);
+                retval.put(url.startsWith("/") ? url : '/' + url, ref);
                 retval.putAll(collectReferenceNut(urlProvider, ref));
             }
 
