@@ -289,7 +289,7 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
                     hint(collectedNut, httpResponse);
                 }
 
-                HttpUtil.INSTANCE.write(htmlNut, httpResponse, false);
+                HttpUtil.INSTANCE.write(htmlNut, httpRequest, httpResponse, false);
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(new String(bytes));

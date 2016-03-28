@@ -167,7 +167,7 @@ public class WuicServlet extends HttpServlet {
             response.setStatus(HttpURLConnection.HTTP_BAD_REQUEST);
         } else {
             try {
-                writeNut(matcher.getWorkflowId(), matcher.getNutName(), new ServletProcessContext(request), response);
+                writeNut(matcher.getWorkflowId(), matcher.getNutName(), new ServletProcessContext(request), request, response);
             } catch (WorkflowNotFoundException wnfe) {
                 log.error("Workflow not found", wnfe);
                 response.setStatus(HttpURLConnection.HTTP_NOT_FOUND);
@@ -204,6 +204,7 @@ public class WuicServlet extends HttpServlet {
      * @param workflowId the workflow ID
      * @param nutName the nut name
      * @param processContext the process context
+     * @param request the request
      * @param response the response
      * @throws WuicException if the nut is not found
      * @throws IOException if an I/O error occurs
@@ -211,6 +212,7 @@ public class WuicServlet extends HttpServlet {
     private void writeNut(final String workflowId,
                           final String nutName,
                           final ProcessContext processContext,
+                          final HttpServletRequest request,
                           final HttpServletResponse response)
             throws WuicException, IOException {
 
@@ -219,7 +221,7 @@ public class WuicServlet extends HttpServlet {
 
         // Nut found
         if (nut != null) {
-            HttpUtil.INSTANCE.write(nut, response);
+            HttpUtil.INSTANCE.write(nut, request, response);
         } else {
             WuicException.throwNutNotFoundException(nutName, workflowId);
         }

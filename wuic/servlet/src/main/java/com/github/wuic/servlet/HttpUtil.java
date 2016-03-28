@@ -39,6 +39,7 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,17 +154,18 @@ public enum HttpUtil {
 
     /**
      * <p>
-     * Calls {@link #write(com.github.wuic.nut.ConvertibleNut, javax.servlet.http.HttpServletResponse, boolean)} and
+     * Calls {@link #write(com.github.wuic.nut.ConvertibleNut, HttpServletRequest, HttpServletResponse, boolean)} and
      * sets the expire header.
      * </p>
      *
      * @param nut the nut to write
+     * @param request the request
      * @param response the response
      * @throws IOException if stream could not be opened
      */
-    public void write(final ConvertibleNut nut, final HttpServletResponse response)
+    public void write(final ConvertibleNut nut, final HttpServletRequest request, final HttpServletResponse response)
             throws IOException {
-        write(nut, response, true);
+        write(nut, request, response, true);
     }
 
     /**
@@ -172,22 +174,37 @@ public enum HttpUtil {
      * </p>
      *
      * @param nut the nut to write
+     * @param request the request
      * @param response the response
      * @param expireHeader sets a far expire header
      * @throws IOException if stream could not be opened
      */
-    public void write(final ConvertibleNut nut, final HttpServletResponse response, final boolean expireHeader)
+    public void write(final ConvertibleNut nut,
+                      final HttpServletRequest request,
+                      final HttpServletResponse response,
+                      final boolean expireHeader)
             throws IOException {
-        logger.info("Writing to the response the content read from nut '{}'", nut.getName());
-        response.setCharacterEncoding(charset);
-        response.setContentType(nut.getNutType().getMimeType());
+        final String ifNoneMatch = request.getHeader("If-None-Match");
 
-        // We set a far expiration date because we assume that polling will change the timestamp in path
-        if (expireHeader) {
-            setExpireHeader(response);
+        // The resource has not been modified, tell the client to reuse the value in cache
+        if (ifNoneMatch != null && ifNoneMatch.equals(String.valueOf(NutUtils.getVersionNumber(nut)))) {
+            logger.info("Content of nut '{}' matches client cache. Sending {} status.", nut.getName(), HttpServletResponse.SC_NOT_MODIFIED);
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+        } else {
+            logger.info("Writing to the response the content read from nut '{}'", nut.getName());
+            response.setCharacterEncoding(charset);
+            response.setContentType(nut.getNutType().getMimeType());
+
+            // We set a far expiration date because we assume that polling will change the timestamp in path
+            if (expireHeader) {
+                setExpireHeader(response);
+            }
+
+            // Tag in order to reply 304
+            response.setHeader("ETag", String.valueOf(NutUtils.getVersionNumber(nut)));
+
+            nut.transform(new WriteResponseOnReady(response, nut));
         }
-
-        nut.transform(new WriteResponseOnReady(response, nut));
     }
 
     /**
