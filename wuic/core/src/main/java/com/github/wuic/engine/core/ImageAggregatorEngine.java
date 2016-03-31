@@ -38,10 +38,8 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.engine.DimensionPacker;
 import com.github.wuic.engine.EngineRequest;
@@ -75,6 +73,8 @@ import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
+import static com.github.wuic.ApplicationConfig.PACKER_CLASS_NAME;
+
 /**
  * <p>
  * This engine is in charge to merge images into one final image.
@@ -92,28 +92,24 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
     public static final String AGGREGATION_NAME = AbstractAggregatorEngine.aggregationName(NutType.PNG);
 
     /**
+     * The default packer.
+     */
+    private static final String DEFAULT_PACKER = "com.github.wuic.engine.core.BinPacker";
+
+    /**
      * Dimension packer.
      */
     private DimensionPacker<ConvertibleNut> dimensionPacker;
 
     /**
      * <p>
-     * Builds a new aggregator engine.
+     * Initializes a new aggregator engine.
      * </p>
      *
-     * @param aggregate if aggregation should be activated or not
+     * @param packer the packer
      */
-    @ConfigConstructor
-    public ImageAggregatorEngine(
-            @BooleanConfigParam(
-                    defaultValue = true,
-                    propertyKey = ApplicationConfig.AGGREGATE)
-            final Boolean aggregate,
-            @ObjectConfigParam(
-                    defaultValue = "com.github.wuic.engine.core.BinPacker",
-                    propertyKey = ApplicationConfig.PACKER_CLASS_NAME)
-            final DimensionPacker<ConvertibleNut> packer) {
-        super(aggregate);
+    @Config
+    public void init(@ObjectConfigParam(defaultValue = DEFAULT_PACKER, propertyKey = PACKER_CLASS_NAME) final DimensionPacker<ConvertibleNut> packer) {
         dimensionPacker = packer;
     }
     

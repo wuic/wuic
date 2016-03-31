@@ -39,7 +39,7 @@
 package com.github.wuic.test.ctx;
 
 import com.github.wuic.NutType;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
@@ -62,7 +62,7 @@ public class MockEngine extends NodeEngine {
     /**
      * Builds a new instance.
      */
-    @ConfigConstructor
+    @Config
     public MockEngine() {
     }
 

@@ -46,14 +46,14 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * This annotation marks a parameter in a constructor annotated with {@link ConfigConstructor} that sets a
+ * This annotation marks a parameter in a constructor annotated with {@link Config} that sets a
  * particular object value.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 0.5
  */
-@Target({ElementType.PARAMETER})
+@Target({ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ObjectConfigParam {

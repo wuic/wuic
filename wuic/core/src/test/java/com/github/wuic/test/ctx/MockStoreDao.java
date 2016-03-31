@@ -40,7 +40,7 @@
 package com.github.wuic.test.ctx;
 
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -65,7 +65,7 @@ public class MockStoreDao implements NutDao {
     /**
      * Builds a new instance.
      */
-    @ConfigConstructor
+    @Config
     public MockStoreDao() {
 
     }

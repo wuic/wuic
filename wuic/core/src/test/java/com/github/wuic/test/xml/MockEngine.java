@@ -1,7 +1,7 @@
 package com.github.wuic.test.xml;
 
 import com.github.wuic.NutType;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
@@ -32,7 +32,7 @@ public class MockEngine extends NodeEngine {
      *
      * @param foo custom property
      */
-    @ConfigConstructor
+    @Config
     public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
     }
 

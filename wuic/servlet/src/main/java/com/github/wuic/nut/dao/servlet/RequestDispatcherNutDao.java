@@ -41,11 +41,8 @@ package com.github.wuic.nut.dao.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.config.IntegerConfigParam;
-import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.config.StringConfigParam;
+import com.github.wuic.config.*;
+import com.github.wuic.config.Config;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.servlet.WuicServletContextListener;
@@ -76,6 +73,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
+
+import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
+import static com.github.wuic.ApplicationConfig.CONTENT_BASED_VERSION_NUMBER;
+import static com.github.wuic.ApplicationConfig.FIXED_VERSION_NUMBER;
 
 /**
  * <p>
@@ -127,7 +128,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@link Nut} will be created with {@link RequestDispatcher#include(javax.servlet.ServletRequest, javax.servlet.ServletResponse)}
      * for any path matching this pattern.
      */
-    private final String useIncludePattern;
+    private String useIncludePattern;
 
     /**
      * The servlet context providing the request dispatcher.
@@ -136,31 +137,41 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
-     *
      *
      * @param base the directory where we have to look up
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
-     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
-     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      * @param pathPattern use {@code include} in {@code RequestDispatcher} when creating a {@link Nut} with any path matching this pattern
      */
-    @ConfigConstructor
-    public RequestDispatcherNutDao(
+    @Config
+    public void init(
             @StringConfigParam(defaultValue = "/", propertyKey = ApplicationConfig.BASE_PATH) final String base,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
-            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.USE_INCLUDE_FOR_PATH_PATTERN) final String pathPattern) {
         // path can correspond dynamic resources (JSP, servlet) so this DAO can support only content-based version number
-        super(base, basePathAsSysProp, proxies, pollingSeconds,
-                new VersionNumberStrategy(true, computeVersionAsynchronously, fixedVersionNumber));
+        init(base, basePathAsSysProp, proxies, pollingSeconds);
         useIncludePattern = pathPattern == null || pathPattern.isEmpty() ? null : pathPattern;
+    }
+
+    /**
+     * <p>
+     * Initializes the version number.
+     * </p>
+     *
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
+     */
+    @Config
+    public void init(@BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
+                     @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+                     @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+        super.init(true, computeVersionAsynchronously, fixedVersionNumber);
     }
 
     /**

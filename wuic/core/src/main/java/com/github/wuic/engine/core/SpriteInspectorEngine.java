@@ -41,7 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -95,14 +95,14 @@ public class SpriteInspectorEngine extends NodeEngine {
 
     /**
      * <p>
-     * Builds a new aggregator engine.
+     * Initializes a new aggregator engine.
      * </p>
      *
      * @param inspect if inspect or not
      * @param sp the provider which generates sprites
      */
-    @ConfigConstructor
-    public SpriteInspectorEngine(
+    @Config
+    public void init(
             @BooleanConfigParam(
                     defaultValue = true,
                     propertyKey = ApplicationConfig.INSPECT)

@@ -46,7 +46,7 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * This annotation marks a parameter in a constructor annotated with {@link ConfigConstructor}
+ * This annotation marks a parameter in a constructor annotated with {@link Config}
  * that sets a integer value.
  * </p>
  *

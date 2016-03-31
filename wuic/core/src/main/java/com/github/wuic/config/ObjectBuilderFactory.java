@@ -47,11 +47,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * <p>
@@ -193,10 +190,10 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      * be applied to object instantiated from specified classes only. Otherwise the inspector will be called for any object.
      * </p>
      *
+     * @param inspectors the map to populate
      * @param obi the inspector
-     * @return this
      */
-    public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector obi) {
+    public static void inspector(final Map<Class, List<ObjectBuilderInspector>> inspectors, final ObjectBuilderInspector obi) {
         final BiFunction<Class, ObjectBuilderInspector, String> populator = new BiFunction<Class, ObjectBuilderInspector, String>() {
 
             /**
@@ -218,15 +215,40 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             }
         };
 
+        boolean perClass = false;
+
         // Check if inspector should apply just a few objects
         if (obi.getClass().isAnnotationPresent(ObjectBuilderInspector.InspectedType.class)) {
             for (final Class<?> clazz : obi.getClass().getAnnotation(ObjectBuilderInspector.InspectedType.class).value()) {
                 populator.apply(clazz, obi);
             }
-        } else {
-            populator.apply(null, obi);
+
+            perClass = true;
         }
 
+        if (obi instanceof PerClassObjectBuilderInspector) {
+            for (final Class<?> clazz : PerClassObjectBuilderInspector.class.cast(obi).inspectedTypes()) {
+                populator.apply(clazz, obi);
+            }
+
+            perClass = true;
+        }
+
+        if (!perClass) {
+            populator.apply(null, obi);
+        }
+    }
+
+    /**
+     * <p>
+     * Adds an inspector as specified in {@link #inspector(java.util.Map, ObjectBuilderInspector)}.
+     * </p>
+     *
+     * @param obi the inspector
+     * @return this
+     */
+    public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector obi) {
+        inspector(inspectors, obi);
         return this;
     }
 
@@ -280,6 +302,11 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         private Constructor<T> constructor;
 
         /**
+         * The inspectors to apply for this builder.
+         */
+        private final Map<Class, List<ObjectBuilderInspector>> internalInspectors;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -288,6 +315,43 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          */
         private Builder(final Constructor<T> constructor) {
             this.constructor = constructor;
+            this.internalInspectors = new LinkedHashMap<Class, List<ObjectBuilderInspector>>();
+        }
+
+        /**
+         * <p>
+         * Adds an inspector that will call the given method when an object is created.
+         * </p>
+         *
+         * @param method the method
+         */
+        private void inspector(final Method method) {
+            ObjectBuilderFactory.inspector(internalInspectors, new MethodInvokerObjectBuilderInspector(method));
+        }
+
+        /**
+         * <p>
+         * Inspects the object specified in parameter with given list of inspectors.
+         * </p>
+         *
+         * @param inspectors the inspectors to apply
+         * @param object the object to inspect
+         * @return the inspected object
+         */
+        private T inspect(final Map<Class, List<ObjectBuilderInspector>> inspectors, final T object) {
+            T retval = object;
+
+            for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
+                // Case 1: apply inspectors declared for any class
+                // Case 2: apply inspectors explicitly declared for this class
+                if (entry.getKey() == null || entry.getKey().isAssignableFrom(constructor.getDeclaringClass())) {
+                    for (final ObjectBuilderInspector i : entry.getValue()) {
+                        retval = i.inspect(retval);
+                    }
+                }
+            }
+
+            return retval;
         }
 
         /**
@@ -295,22 +359,12 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          */
         @Override
         protected T internalBuild() {
-            final Object[] params = getAllProperties();
+            final Object[] params = constructor.getParameterTypes().length == 0 ?
+                    new Object[0] : getAllProperties(constructor.toString());
 
             try {
-                T retval = constructor.newInstance(params);
-
-                for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
-                    // Case 1: apply inspectors declared for any class
-                    // Case 2: apply inspectors explicitly declared for this class
-                    if (entry.getKey() == null || entry.getKey().isAssignableFrom(constructor.getDeclaringClass())) {
-                        for (final ObjectBuilderInspector i : entry.getValue()) {
-                            retval = i.inspect(retval);
-                        }
-                    }
-                }
-
-                return retval;
+                // Apply internal inspectors first, global inspectors then
+                return inspect(inspectors, inspect(internalInspectors, constructor.newInstance(params)));
             } catch (IllegalAccessException iae) {
                  logger.error("", iae);
             } catch (InstantiationException ie) {
@@ -322,6 +376,69 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             }
 
             return null;
+        }
+
+        /**
+         * <p>
+         * This {@link ObjectBuilderInspector} invokes a configured method with a set of parameters when the object if inspected.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @since 0.5.3
+         */
+        private final class MethodInvokerObjectBuilderInspector implements PerClassObjectBuilderInspector {
+
+            /**
+             * The method to invoke.
+             */
+            private final Method method;
+
+            /**
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param method the method
+             */
+            private MethodInvokerObjectBuilderInspector(final Method method) {
+                this.method = method;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public <T> T inspect(final T object) {
+                if (object != null) {
+                    try {
+                        final Object[] params = method.getParameterTypes().length == 0 ?
+                                new Object[0] : getAllProperties(method.toString());
+                        object.getClass().getMethod(method.getName(), method.getParameterTypes()).invoke(object, params);
+                    } catch (IllegalAccessException iae) {
+                        logger.error("", iae);
+                    } catch (InvocationTargetException ite) {
+                        logger.error("", ite);
+
+                        // If an init method throws an exception during it invocation we return null in order to reproduce
+                        // the same behavior than an instantiation failure due to an uncaught exception in the constructor
+                        return null;
+                    } catch (NoSuchMethodException nsme) {
+                        logger.error("", nsme);
+                    }
+                }
+
+                return object;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Class[] inspectedTypes() {
+                return new Class[] {
+                        method.getDeclaringClass()
+                };
+            }
         }
     }
 
@@ -357,43 +474,99 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         // Detect constructors
         final Constructor[] constructors = clazz.getDeclaredConstructors();
 
-        constructor:
+        // Try to find a valid constructor annotated with config annotation
         for (final Constructor constructor : constructors) {
-            if (!constructor.isAnnotationPresent(ConfigConstructor.class)) {
-                logger.debug("{} is not annotated with {}: ignoring...", constructor.toString(), ConfigConstructor.class.getName());
-                continue;
-            }
+            if (constructor.isAnnotationPresent(Config.class)) {
+                final Builder retval = new Builder(constructor);
 
-            logger.debug("Evaluating constructor '{}'", constructor.toString());
-            final Builder retval = new Builder(constructor);
-            final Annotation[][] annotations = constructor.getParameterAnnotations();
-
-            for (final Annotation[] paramAnnotation : annotations) {
-                try {
-                    if (1 != paramAnnotation.length) {
-                        logger.warn(String.format(IAE_MSG, constructor.toString()), new IllegalArgumentException());
-                        continue constructor;
-                    }
-
-                    final PropertySetter propertySetter = PropertySetterFactory.INSTANCE.create(retval, paramAnnotation[0]);
-
-                    if (propertySetter == null) {
-                        logger.warn(String.format(IAE_MSG, constructor.toString()), new IllegalArgumentException());
-                        continue constructor;
-                    } else {
-                        retval.addPropertySetter(propertySetter);
-                    }
-                } catch (Exception e) {
-                    logger.error(String.format("Unable to create a builder with constructor %s", constructor.toString()), e);
-                    continue constructor;
+                if (inspectParamAnnotations(constructor.getParameterAnnotations(), constructor.toString(), retval)) {
+                    detectConfigMethods(retval, clazz);
+                    return retval;
                 }
+            } else {
+                logger.debug("{} is not annotated with {}: ignoring...", constructor.toString(), Config.class.getName());
             }
+        }
 
-            return retval;
+        logger.debug("No valid constructor annotated with {}, trying to gte default constructor.", Config.class.getName());
+
+        try {
+            // Raise an exception if no default constructor is available
+            final Constructor constructor = clazz.getConstructor();
+            final Builder retval = new Builder(constructor);
+
+            if (inspectParamAnnotations(constructor.getParameterAnnotations(), constructor.toString(), retval)) {
+                detectConfigMethods(retval, clazz);
+                return retval;
+            }
+        } catch (NoSuchMethodException nsme) {
+            logger.debug("Unable to find a default constructor. Returning null instance...", nsme);
         }
 
         logger.error(String.format("Unable to find any constructor to create a builder for %s", type), new IllegalStateException());
 
         return null;
+    }
+
+    /**
+     * <p>
+     * Detects the methods annotated with {@link Config} and make sure they are called to initialize an instance.
+     * </p>
+     *
+     * @param builder the builder
+     * @param clazz the class instantiated by the builder
+     */
+    private void detectConfigMethods(final Builder builder, final Class<?> clazz) {
+        for (final Method method : clazz.getDeclaredMethods()) {
+
+            // Annotation found
+            if (method.isAnnotationPresent(Config.class)) {
+                // Method has been validated, add the inspector that will invoke it
+                if (inspectParamAnnotations(method.getParameterAnnotations(), method.toString(), builder)) {
+                    builder.inspector(method);
+                }
+            }
+        }
+
+        if (clazz.getSuperclass() != null) {
+            detectConfigMethods(builder, clazz.getSuperclass());
+        }
+    }
+
+    /**
+     * <p>
+     * Adds the {@link PropertySetter} to the {@link Builder} specified in parameter extracted from the given annotated parameters.
+     * </p>
+     *
+     * @param annotations the annotation
+     * @param methodName the method/constructor name
+     * @param builder the builder
+     * @return {@code true} if all annotations have been validated, {@code false} otherwise
+     */
+    private boolean inspectParamAnnotations(final Annotation[][] annotations,
+                                            final String methodName,
+                                            final Builder builder) {
+        for (final Annotation[] paramAnnotation : annotations) {
+            try {
+                if (1 != paramAnnotation.length) {
+                    logger.warn(String.format(IAE_MSG, methodName), new IllegalArgumentException());
+                    return false;
+                }
+
+                final PropertySetter propertySetter = PropertySetterFactory.INSTANCE.create(builder, paramAnnotation[0]);
+
+                if (propertySetter == null) {
+                    logger.warn(String.format(IAE_MSG, methodName), new IllegalArgumentException());
+                    return false;
+                } else {
+                    builder.addPropertySetter(methodName, propertySetter);
+                }
+            } catch (Exception e) {
+                logger.error(String.format("Unable to create a builder with constructor %s", methodName), e);
+                return false;
+            }
+        }
+
+        return true;
     }
 }

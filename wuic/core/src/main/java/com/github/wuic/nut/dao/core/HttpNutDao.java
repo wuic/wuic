@@ -42,7 +42,7 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.nut.AbstractNutDao;
@@ -89,7 +89,7 @@ public class HttpNutDao extends AbstractNutDao {
 
     /**
      * <p>
-     * Builds a new instance thanks to the specified HTTP information.
+     * Initializes a new instance thanks to the specified HTTP information.
      * </p>
      *
      * @param https use HTTPS protocol instead of HTTP ?
@@ -98,21 +98,15 @@ public class HttpNutDao extends AbstractNutDao {
      * @param path the base path where nuts are provided
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
-     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
-     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
-     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
-    @ConfigConstructor
-    public HttpNutDao(@BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.SECRET_PROTOCOL)final Boolean https,
-                      @StringConfigParam(defaultValue = "localhost", propertyKey = ApplicationConfig.SERVER_DOMAIN) final String domain,
-                      @IntegerConfigParam(defaultValue = DEFAULT_PORT, propertyKey = ApplicationConfig.SERVER_PORT) final Integer port,
-                      @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.BASE_PATH) final String path,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
-                      @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean contentBasedVersionNumber,
-                      @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
-                      @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
-        super(path, basePathAsSysProp, null, pollingSeconds, new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
+    @Config
+    public void init(@BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.SECRET_PROTOCOL)final Boolean https,
+                     @StringConfigParam(defaultValue = "localhost", propertyKey = ApplicationConfig.SERVER_DOMAIN) final String domain,
+                     @IntegerConfigParam(defaultValue = DEFAULT_PORT, propertyKey = ApplicationConfig.SERVER_PORT) final Integer port,
+                     @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.BASE_PATH) final String path,
+                     @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
+                     @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds) {
+        init(path, basePathAsSysProp, null, pollingSeconds);
         final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
 
         if (port != null) {

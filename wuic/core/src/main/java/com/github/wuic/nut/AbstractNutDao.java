@@ -41,6 +41,9 @@ package com.github.wuic.nut;
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.Config;
+import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -68,6 +71,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
+import static com.github.wuic.ApplicationConfig.CONTENT_BASED_VERSION_NUMBER;
+import static com.github.wuic.ApplicationConfig.FIXED_VERSION_NUMBER;
 
 /**
  * <p>
@@ -102,29 +109,24 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     /**
      * Index of the next proxy URI to use.
      */
-    private final AtomicInteger nextProxyIndex;
+    private AtomicInteger nextProxyIndex;
 
     /**
      * The version number management strategy.
      */
-    private final VersionNumberStrategy versionNumberStrategy;
+    private VersionNumberStrategy versionNumberStrategy;
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param base              prefix for all paths (an {@link IllegalArgumentException} is thrown is {@code null}
      * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
-     * @param vns               fixed version number
      */
-    public AbstractNutDao(final String base,
-                          final Boolean basePathAsSysProp,
-                          final String[] proxies,
-                          final int pollingSeconds,
-                          final VersionNumberStrategy vns) {
+    public void init(final String base, final Boolean basePathAsSysProp, final String[] proxies, final int pollingSeconds) {
         final String b = basePathAsSysProp ? System.getProperty(base) : base;
 
         if (b == null) {
@@ -133,11 +135,26 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
         }
 
-        versionNumberStrategy = vns;
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
         nextProxyIndex = new AtomicInteger(0);
         setPollingInterval(pollingSeconds);
         Disposer.INSTANCE.register(this);
+    }
+
+    /**
+     * <p>
+     * Initializes the version number.
+     * </p>
+     *
+     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
+     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
+     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
+     */
+    @Config
+    public void init(@BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
+            @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
+            @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+        versionNumberStrategy = new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber);
     }
 
     /**

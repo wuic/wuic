@@ -38,7 +38,7 @@
 
 package com.github.wuic.test.ctx;
 
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.nut.filter.NutFilterService;
 
 /**
@@ -53,7 +53,7 @@ public class Foo implements C, IFoo {
     /**
      * Annotated constructor.
      */
-    @ConfigConstructor
+    @Config
     public Foo() {
     }
 }

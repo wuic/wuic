@@ -2,7 +2,7 @@ package com.github.wuic.test.xml;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -38,7 +38,7 @@ public class MockDao implements NutDao {
      * 
      * @param foo custom property
      */
-    @ConfigConstructor
+    @Config
     public MockDao(@StringConfigParam(propertyKey = "c.g.dao.foo", defaultValue = "") String foo) {
     }
 

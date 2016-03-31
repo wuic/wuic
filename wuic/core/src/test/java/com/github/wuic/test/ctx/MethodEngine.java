@@ -36,24 +36,103 @@
  */
 
 
-package com.github.wuic.config;
+package com.github.wuic.test.ctx;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.github.wuic.NutType;
+import com.github.wuic.config.Config;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * <p>
- * This annotations marks a constructor to use to build a new instance of an annotated service.
- * </p>
- *
- * @author Guillaume DROUET
- * @since 0.5
+ * Engine with methods annotated with {@link Config}.
  */
-@Target({ElementType.CONSTRUCTOR})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface ConfigConstructor {
+@EngineService(injectDefaultToWorkflow = false)
+public class MethodEngine extends NodeEngine {
+
+    /**
+     * A string that track constructor/method invocations.
+     */
+    private String calls;
+
+    /**
+     * Builds a new instance.
+     */
+    @Config
+    public MethodEngine() {
+        calls = "";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void c() {
+        calls += "a";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void b() {
+        calls += "b";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void a() {
+        calls += "c";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.JAVASCRIPT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.AGGREGATOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
+        return request.getNuts();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return null;
+    }
+
+    /**
+     * <p>
+     * Gets the calls.
+     * </p>
+     *
+     * @return calls
+     */
+    public String getCalls() {
+        return calls;
+    }
 }

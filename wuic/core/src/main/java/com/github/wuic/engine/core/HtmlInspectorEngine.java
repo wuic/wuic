@@ -41,7 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -141,15 +141,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
      * @param cs files charset
      * @param sh activate server hint or not
      */
-    @ConfigConstructor
-    public HtmlInspectorEngine(
+    @Config
+    public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String cs,
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.SERVER_HINT) final Boolean sh) {

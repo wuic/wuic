@@ -38,7 +38,7 @@
 
 package com.github.wuic.test.config;
 
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.IntegerConfigParam;
 
 import java.lang.annotation.Documented;
@@ -67,18 +67,11 @@ public class MyBadService implements I {
     }
 
     /**
-     * Not annotated constructor. Will be ignored.
-     */
-    public MyBadService() {
-
-    }
-
-    /**
      * Constructor without config annotation.
      *
      * @param i not annotated parameter
      */
-    @ConfigConstructor
+    @Config
     public MyBadService(final int i) {
 
     }
@@ -88,7 +81,7 @@ public class MyBadService implements I {
      *
      * @param s the parameter annotated with unsupported annotation
      */
-    @ConfigConstructor
+    @Config
     public MyBadService(@UnsupportedAnnotation final String s) {
 
     }
@@ -99,7 +92,7 @@ public class MyBadService implements I {
      * @param i not annotated
      * @param j annotated
      */
-    @ConfigConstructor
+    @Config
     public MyBadService(final int i,
                         @IntegerConfigParam(defaultValue = 1, propertyKey = "foo") final int j) {
 

@@ -41,7 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
@@ -65,18 +65,18 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
      * @param charset inspected files charset
      */
-    @ConfigConstructor
-    public JavascriptInspectorEngine(
+    @Config
+    public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String charset,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.WRAP_PATTERN) final String wrapPattern) {
-        super(inspect, charset);
+        init(inspect, charset);
         addInspector(SourceMapLineInspector.newInstance(this));
 
         if ("".equals(wrapPattern)) {

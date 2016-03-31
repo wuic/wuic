@@ -38,7 +38,10 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
@@ -66,21 +69,22 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     /**
      * Activate aggregation or not.
      */
-    private final Boolean doAggregation;
+    private Boolean doAggregation;
 
     /**
      * Transformers.
      */
-    private final List<Pipe.Transformer<ConvertibleNut>> transformers;
+    private List<Pipe.Transformer<ConvertibleNut>> transformers;
 
     /**
      * <p>
-     * Builds the engine.
+     * Initializes a new aggregator engine.
      * </p>
      *
-     * @param aggregate activate aggregation or not
+     * @param aggregate if aggregation should be activated or not
      */
-    public AbstractAggregatorEngine(final Boolean aggregate)  {
+    @Config
+    public void init(@BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate) {
         this.doAggregation = aggregate;
         this.transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
     }

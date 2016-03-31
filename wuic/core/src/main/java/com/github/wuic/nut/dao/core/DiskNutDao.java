@@ -39,11 +39,8 @@
 package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.config.IntegerConfigParam;
-import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.config.StringConfigParam;
+import com.github.wuic.config.*;
+import com.github.wuic.config.Config;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
@@ -70,7 +67,7 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Initializes a new instance with a base directory.
      * </p>
      *
      * @param base the directory where we have to look up
@@ -79,22 +76,15 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param wildcard if the path should be considered as a wildcard or not
-     * @param contentBasedVersionNumber  {@code true} if version number is computed from nut content, {@code false} if based on timestamp
-     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
-     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
-    @ConfigConstructor
-    public DiskNutDao(@StringConfigParam(defaultValue = ".", propertyKey = BASE_PATH) final String base,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
-                      @ObjectConfigParam(defaultValue = "", propertyKey = PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
-                      @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard,
-                      @BooleanConfigParam(defaultValue = false, propertyKey = CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
-                      @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
-                      @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
-        super(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard,
-                new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
+    @Config
+    public void init(@StringConfigParam(defaultValue = ".", propertyKey = BASE_PATH) final String base,
+                     @BooleanConfigParam(defaultValue = false, propertyKey = BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
+                     @ObjectConfigParam(defaultValue = "", propertyKey = PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
+                     @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
+                     @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
+                     @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard) {
+        super.init(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard);
     }
 
     /**

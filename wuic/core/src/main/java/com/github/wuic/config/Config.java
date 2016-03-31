@@ -36,9 +36,7 @@
  */
 
 
-package com.github.wuic.nut.dao;
-
-import com.github.wuic.config.ServiceLoaderClasses;
+package com.github.wuic.config;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -48,21 +46,14 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * This annotation marks a {@link NutDao} implementation that must be discovered
- * during classpath scanning.
+ * This annotations marks a constructor or a method to use to build a new instance of an annotated service.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 0.5
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@ServiceLoaderClasses(NutDao.class)
-public @interface NutDaoService {
-
-    /**
-     * Default package to scan for this service.
-     */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.nut.dao";
+public @interface Config {
 }

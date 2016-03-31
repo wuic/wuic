@@ -183,9 +183,13 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainTest() {
-        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine3 = new ImageCompressorEngine(false);
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+        final ImageAggregatorEngine engine2 = new ImageAggregatorEngine();
+        engine2.init(false);
+        engine2.init(new BinPacker<ConvertibleNut>());
+        final ImageCompressorEngine engine3 = new ImageCompressorEngine();
+        engine3.init(false);
         final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
     }
@@ -195,9 +199,15 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainTestWithNull() {
-        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine3 = new ImageCompressorEngine(false);
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+        final ImageAggregatorEngine engine2 = new ImageAggregatorEngine();
+        engine2.init(false);
+        engine2.init(new BinPacker<ConvertibleNut>());
+
+        final ImageCompressorEngine engine3 = new ImageCompressorEngine();
+        engine3.init(false);
+
         final NodeEngine chain = NodeEngine.chain(null, engine1, null, engine2, null, engine3);
         assertChainTest(chain, engine1, engine2, engine3);
     }
@@ -207,9 +217,16 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainUnionTest() {
-        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine3 = new ImageCompressorEngine(false);
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+
+        final ImageAggregatorEngine engine2 = new ImageAggregatorEngine();
+        engine2.init(false);
+        engine2.init(new BinPacker<ConvertibleNut>());
+
+        final ImageCompressorEngine engine3 = new ImageCompressorEngine();
+        engine3.init(false);
+
         assertChainTest(NodeEngine.chain(NodeEngine.chain(engine1, engine2), NodeEngine.chain(engine2, engine3)), engine1, engine2, engine3);
     }
 
@@ -218,10 +235,17 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainDuplicateTest() {
-        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+
         final NodeEngine engine2 = engine1;
-        final NodeEngine engine3 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine4 = new ImageCompressorEngine(false);
+        final ImageAggregatorEngine engine3 = new ImageAggregatorEngine();
+        engine3.init(false);
+        engine3.init(new BinPacker<ConvertibleNut>());
+
+        final ImageCompressorEngine engine4 = new ImageCompressorEngine();
+        engine4.init(false);
+
         assertChainTest(NodeEngine.chain(engine1, engine2, engine3, engine4), engine2, engine3, engine4);
     }
 
@@ -230,10 +254,20 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainReplaceWithLast() {
-        final NodeEngine engine1 =new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine3 = new ImageCompressorEngine(false);
-        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+
+        final ImageAggregatorEngine engine2 = new ImageAggregatorEngine();
+        engine2.init(false);
+        engine2.init(new BinPacker<ConvertibleNut>());
+
+        final ImageCompressorEngine engine3 = new ImageCompressorEngine();
+        engine3.init(false);
+
+        final ImageAggregatorEngine engine4 = new ImageAggregatorEngine();
+        engine4.init(false);
+        engine4.init(new BinPacker<ConvertibleNut>());
+
         final NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         assertChainTest(NodeEngine.chain(chain, engine4), engine1, engine4, engine3);
     }
@@ -243,10 +277,20 @@ public class EngineTest {
      */
     @Test(timeout = 60000)
     public void chainReplaceFirst() {
-        final NodeEngine engine1 = new SpriteInspectorEngine(false, new SpriteProvider[] {});
-        final NodeEngine engine2 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
-        final NodeEngine engine3 = new ImageCompressorEngine(false);
-        final NodeEngine engine4 = new ImageAggregatorEngine(false, new BinPacker<ConvertibleNut>());
+        final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
+        engine1.init(false, new SpriteProvider[] {});
+
+        final ImageAggregatorEngine engine2 = new ImageAggregatorEngine();
+        engine2.init(false);
+        engine2.init(new BinPacker<ConvertibleNut>());
+
+        final ImageCompressorEngine engine3 = new ImageCompressorEngine();
+        engine3.init(false);
+
+        final ImageAggregatorEngine engine4 = new ImageAggregatorEngine();
+        engine4.init(false);
+        engine4.init(new BinPacker<ConvertibleNut>());
+
         NodeEngine chain = NodeEngine.chain(engine1, engine2, engine3);
         chain = NodeEngine.chain(engine4, chain);
         assertChainTest(chain, engine1, engine2, engine3);

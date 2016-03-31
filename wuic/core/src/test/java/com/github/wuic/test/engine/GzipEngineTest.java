@@ -78,7 +78,8 @@ public class GzipEngineTest {
      */
     @Test(timeout = 60000)
     public void enableGzipTest() throws Exception {
-        final GzipEngine gzipEngine = new GzipEngine(true);
+        final GzipEngine gzipEngine = new GzipEngine();
+        gzipEngine.init(true);
 
         final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -106,7 +107,8 @@ public class GzipEngineTest {
      */
     @Test(timeout = 60000)
     public void disableGzipTest() throws Exception {
-        final GzipEngine gzipEngine = new GzipEngine(false);
+        final GzipEngine gzipEngine = new GzipEngine();
+        gzipEngine.init(false);
 
         final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);

@@ -131,7 +131,8 @@ public class AbstractNutDaoTest {
          * @param fixedVersion the fixed version
          */
         private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber, final String fixedVersion) {
-            super("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds, new VersionNumberStrategy(contentBasedVersionNumber, true, fixedVersion));
+            init("/", false, new String[] { "1", "2", "3", "4", }, pollingSeconds);
+            init(contentBasedVersionNumber, true, fixedVersion);
             age = BEGIN_AGE;
             updateAfterMs = updateAfter;
         }

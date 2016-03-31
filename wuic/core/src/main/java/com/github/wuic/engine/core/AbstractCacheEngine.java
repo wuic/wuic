@@ -112,17 +112,17 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     /**
      * The default parsing done asynchronously.
      */
-    private final Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
+    private Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
 
     /**
      * <p>
-     * Builds a new engine.
+     * Initializes a new engine.
      * </p>
      *
      * @param work if cache should be activated or not
      * @param be apply best effort
      */
-    public AbstractCacheEngine(final Boolean work, final Boolean be) {
+    public void init(final Boolean work, final Boolean be) {
         doCache = work;
         bestEffort = be;
         parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, ConvertibleNut>>>();

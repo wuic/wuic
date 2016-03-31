@@ -43,7 +43,7 @@ import com.github.wuic.ProcessContext;
 import com.github.wuic.WuicFacade;
 import com.github.wuic.WuicFacadeBuilder;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.engine.EngineRequest;
@@ -198,7 +198,7 @@ public class ApiTutorial {
     @EngineService(injectDefaultToWorkflow = true)
     public class MyCompressEngine extends NodeEngine {
 
-        @ConfigConstructor
+        @Config
         public MyCompressEngine(
                 @BooleanConfigParam(propertyKey = "c.g.wuic.engine.compress", defaultValue = true)
                 Boolean compress) {

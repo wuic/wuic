@@ -260,7 +260,9 @@ public class InspectorTest {
         // ignore comments
         builder.append("/*background: url('sprite5.png');*/");
         builder.append("/*background:\n url('sprite6.png');*/");
-        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, new CssInspectorEngine(true, "UTF-8"), true));
+        final CssInspectorEngine e = new CssInspectorEngine();
+        e.init(true, "UTF-8");
+        Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, e, true));
     }
 
     /**
@@ -293,8 +295,9 @@ public class InspectorTest {
                 new String[]{"src: url(\"%s\") format('svg');}", "../fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular"},
         };
 
-
-        assertInspection(collection, sb, "Must handle font URLs.", collection.length, new CssInspectorEngine(true, "UTF-8"), true);
+        final CssInspectorEngine e = new CssInspectorEngine();
+        e.init(true, "UTF-8");
+        assertInspection(collection, sb, "Must handle font URLs.", collection.length, e, true);
     }
 
     /**
@@ -314,7 +317,9 @@ public class InspectorTest {
                 new String[]{"// @sourceMappingURL=%s ", "sourcemap4.js.map"},
         };
 
-        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, new CssInspectorEngine(true, "UTF-8"), true);
+        final CssInspectorEngine e = new CssInspectorEngine();
+        e.init(true, "UTF-8");
+        assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, e, true);
     }
 
     /**
@@ -402,11 +407,15 @@ public class InspectorTest {
                 "});", "my-customer3.html"}
         };
 
+        final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
+        e.init(true, "UTF-8", "");
+
         assertInspection(collection,
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
                 collection.length - 2,
-                new JavascriptInspectorEngine(true, "UTF-8", ""), true);
+                e,
+                true);
     }
 
     /**
@@ -427,11 +436,9 @@ public class InspectorTest {
                         "});", "'my-customer.html'"},
         };
 
-        assertInspection(collection,
-                new StringBuilder(),
-                "Should create nuts for templateUrl urls.",
-                collection.length,
-                new JavascriptInspectorEngine(true, "UTF-8", "fn(%s)"), true);
+        final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
+        e.init(true, "UTF-8", "fn(%s)");
+        assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", collection.length, e, true);
     }
 
     /**
@@ -470,11 +477,9 @@ public class InspectorTest {
                         "});", "my-customer4.html"}
         };
 
-        final String value = assertInspection(collection,
-                new StringBuilder(),
-                "Should create nuts for templateUrl urls.",
-                0,
-                new JavascriptInspectorEngine(true, "UTF-8", ""), false);
+        final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
+        e.init(true, "UTF-8", "");
+        final String value = assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", 0, e, false);
 
         Assert.assertTrue(value.contains("template.html?versionNumber=1"));
         Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
@@ -545,7 +550,7 @@ public class InspectorTest {
      */
     @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void badAngularWrapTest() throws Exception {
-        new JavascriptInspectorEngine(true, "UTF-8", "fn('foo')");
+        new JavascriptInspectorEngine().init(true, "UTF-8", "fn('foo')");
     }
 
     /**
@@ -562,7 +567,9 @@ public class InspectorTest {
                 new String[]{"@import url(\"%s\");", "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'jstree-grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#jstree-grayscale"},
         };
 
-        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, new CssInspectorEngine(true, "UTF-8"), true);
+        final CssInspectorEngine e = new CssInspectorEngine();
+        e.init(true, "UTF-8");
+        assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, e, true);
     }
 
     /**

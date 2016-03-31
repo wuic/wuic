@@ -107,15 +107,7 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                 final Long fixedVersionNumber = webappNutDao.getVersionNumberStrategy().getFixedVersionNumber();
 
                 // We pre compute specifically base path so we pass false to indicate that base path is not a system property
-                return (T) new DiskNutDao(WAR_BASE_PATH.equals(basePath) ? EXPLODED_BASE_PATH : basePath,
-                        false,
-                        webappNutDao.getProxyUris(),
-                        webappNutDao.getPollingInterval(),
-                        webappNutDao.getRegularExpression(),
-                        webappNutDao.getWildcardExpression(),
-                        webappNutDao.getVersionNumberStrategy().getContentBasedVersionNumber(),
-                        webappNutDao.getVersionNumberStrategy().getComputeVersionAsynchronously(),
-                        fixedVersionNumber == null ? null : fixedVersionNumber.toString()) {
+                final DiskNutDao dao =  new DiskNutDao()  {
 
                     /**
                      * {@inheritDoc}
@@ -124,6 +116,17 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                         return webappNutDao.skipStartsWith();
                     }
                 };
+
+                dao.init(WAR_BASE_PATH.equals(basePath) ? EXPLODED_BASE_PATH : basePath,
+                        false,
+                        webappNutDao.getProxyUris(),
+                        webappNutDao.getPollingInterval(),
+                        webappNutDao.getRegularExpression(),
+                        webappNutDao.getWildcardExpression());
+                dao.init(webappNutDao.getVersionNumberStrategy().getContentBasedVersionNumber(),
+                        webappNutDao.getVersionNumberStrategy().getComputeVersionAsynchronously(),
+                        fixedVersionNumber == null ? null : fixedVersionNumber.toString());
+                return (T) dao;
             }
         }
 

@@ -38,11 +38,8 @@
 
 package com.github.wuic.test.config;
 
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.config.IntegerConfigParam;
-import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.config.StringConfigParam;
+import com.github.wuic.config.*;
+import com.github.wuic.config.Config;
 
 /**
  * Annotated service.
@@ -65,7 +62,7 @@ public class MyService implements I {
      *
      * @param i configured property
      */
-    @ConfigConstructor
+    @Config
     public MyService(@IntegerConfigParam(propertyKey = "int", defaultValue = 1) int i,
                      @StringConfigParam(propertyKey = "str", defaultValue = "string") String s,
                      @ObjectConfigParam(propertyKey = "obj", defaultValue = "java.lang.Object") Object o,

@@ -38,7 +38,7 @@
 /**
  * <p>
  * This package contains all the API elements to make objects configurable. A configurable object provides
- * a constructor annotated with {@link com.github.wuic.config.ConfigConstructor}. Each parameter of this
+ * a constructor annotated with {@link com.github.wuic.config.Config}. Each parameter of this
  * constructor is annotated with a configuration parameter annotation:
  * <ul>
  *     <li>{@link com.github.wuic.config.ObjectConfigParam}</li>

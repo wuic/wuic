@@ -67,7 +67,7 @@ public class ScheduledCacheTest {
     @Test(timeout = 60000)
     public void scheduledClearCacheTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(2);
-        final ScheduledCacheEngine cache = new ScheduledCacheEngine(1, true, false) {
+        final ScheduledCacheEngine cache = new ScheduledCacheEngine() {
 
             /**
              * {@inheritDoc}
@@ -91,6 +91,7 @@ public class ScheduledCacheTest {
              */
             @Override public CacheResult getFromCache(EngineRequest.Key request) { return null; }
         };
+        cache.init(1, true, false);
 
         count.await(1500, TimeUnit.MILLISECONDS);
         Assert.assertEquals(1, count.getCount());

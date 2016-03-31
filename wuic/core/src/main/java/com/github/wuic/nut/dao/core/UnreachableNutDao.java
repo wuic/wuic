@@ -40,7 +40,7 @@ package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.NotReachableNut;
 import com.github.wuic.nut.Nut;
@@ -65,12 +65,12 @@ public class UnreachableNutDao extends AbstractNutDao {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      */
-    @ConfigConstructor
-    public UnreachableNutDao() {
-        super("/", false, null, -1, new VersionNumberStrategy(Boolean.FALSE, Boolean.FALSE, null));
+    @Config
+    public void init() {
+        init("/", false, null, -1);
     }
 
     /**

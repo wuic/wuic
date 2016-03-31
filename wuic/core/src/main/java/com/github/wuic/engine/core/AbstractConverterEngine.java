@@ -39,6 +39,8 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
@@ -63,6 +65,9 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
+import static com.github.wuic.ApplicationConfig.CONVERT;
 
 /**
  * <p>
@@ -173,24 +178,28 @@ public abstract class AbstractConverterEngine extends NodeEngine {
     /**
      * Activate conversion or not.
      */
-    private final Boolean doConversion;
+    private Boolean doConversion;
 
     /**
      * Aggregator.
      */
-    private final TextAggregatorEngine aggregator;
+    private TextAggregatorEngine aggregator;
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param convert activate compression or not
      * @param asynchronous computes asynchronously the version number or not
      */
-    public AbstractConverterEngine(final Boolean convert, final Boolean asynchronous) {
+    @Config
+    public void init(@BooleanConfigParam(propertyKey = CONVERT, defaultValue = true) final Boolean convert,
+                     @BooleanConfigParam(propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY, defaultValue = true) final Boolean asynchronous) {
         doConversion = convert;
-        aggregator = new TextAggregatorEngine(Boolean.TRUE, asynchronous);
+        aggregator = new TextAggregatorEngine();
+        aggregator.init(Boolean.TRUE);
+        aggregator.async(asynchronous);
     }
 
     /**

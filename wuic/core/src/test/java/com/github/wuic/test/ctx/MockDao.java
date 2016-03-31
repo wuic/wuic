@@ -40,7 +40,7 @@ package com.github.wuic.test.ctx;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
@@ -89,7 +89,7 @@ public class MockDao implements NutDao {
      *
      * @throws java.io.IOException if mock fails
      */
-    @ConfigConstructor
+    @Config
     public MockDao() throws IOException {
         // Prepare Nut mock
         when(mockNutOne.getInitialName()).thenReturn("foo.js");

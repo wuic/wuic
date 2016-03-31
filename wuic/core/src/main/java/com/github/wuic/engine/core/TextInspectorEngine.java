@@ -94,14 +94,14 @@ public abstract class TextInspectorEngine
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
      * @param cs files charset
      * @param inspectors the line inspectors to use
      */
-    public TextInspectorEngine(final Boolean inspect, final String cs, final LineInspector... inspectors) {
+    protected void init(final Boolean inspect, final String cs, final LineInspector... inspectors) {
         lineInspectors = CollectionUtils.newList(inspectors);
         doInspection = inspect;
         charset = IOUtils.checkCharset(cs);

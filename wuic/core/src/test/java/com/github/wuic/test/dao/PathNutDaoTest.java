@@ -92,7 +92,9 @@ public class PathNutDaoTest {
      */
     @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void wildcardAndRegexTest() throws Exception {
-        new ClasspathNutDao("/", false, null, -1, true, true, false, true, null);
+        final ClasspathNutDao dao = new ClasspathNutDao();
+        dao.init("/", false, null, -1, true, true);
+        dao.init(false, true, null);
     }
 
     /**
@@ -102,7 +104,7 @@ public class PathNutDaoTest {
      */
     @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void regexAndWildcardTest() {
-        new PathNutDao("", false, null, -1, true, true, new AbstractNutDao.VersionNumberStrategy(true, false, null)) {
+        final PathNutDao dao = new PathNutDao() {
 
             /**
              * {@inheritDoc}
@@ -112,6 +114,9 @@ public class PathNutDaoTest {
                 return null;
             }
         };
+
+        dao.init("", false, null, -1, true, true);
+        dao.init(true, false, null);
     }
 
     /**
@@ -133,7 +138,9 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file1.getParentFile().getParentFile().getParentFile().toURI().toURL()});
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().getParentFile().toURI().toURL()});
 
-        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, false, true, false, true, null);
+        final ClasspathNutDao dao = new ClasspathNutDao();
+        dao.init("/classpathScanningTest", false, null, -1, false, true);
+        dao.init(false, true, null);
         Assert.assertEquals(2, dao.create("*.css", ProcessContext.DEFAULT).size());
         Assert.assertEquals(1, dao.create("1/*.css", ProcessContext.DEFAULT).size());
         Assert.assertEquals(1, dao.create("2/*.css", ProcessContext.DEFAULT).size());
@@ -156,7 +163,9 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file1.getParentFile().getParentFile().toURI().toURL()});
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().toURI().toURL()});
 
-        final ClasspathNutDao dao = new ClasspathNutDao("/classpathScanningTest", false, null, -1, true, false, false, true, null);
+        final ClasspathNutDao dao = new ClasspathNutDao();
+        dao.init("/classpathScanningTest", false, null, -1, true, false);
+        dao.init(false, true, null);
         Assert.assertEquals(2, dao.create(".*.css", ProcessContext.DEFAULT).size());
     }
 

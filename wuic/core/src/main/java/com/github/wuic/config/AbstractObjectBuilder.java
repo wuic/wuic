@@ -53,7 +53,7 @@ import java.util.Map;
  * @since 0.4.0
  * @param <T> the type of built objects
  */
-public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
+public abstract class AbstractObjectBuilder<T> extends PropertySetterRepository implements ObjectBuilder<T> {
 
     /**
      * Disallowed settings.
@@ -66,55 +66,13 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
     private Map<String, Object> properties;
 
     /**
-     * The property setters define which property is supported.
-     */
-    private PropertySetter[] propertySetters;
-
-    /**
      * <p>
      * Creates a new instance.
      * </p>
-     *
-     * @param setters the setters
      */
-    public AbstractObjectBuilder(final PropertySetter... setters) {
-        propertySetters = setters;
+    public AbstractObjectBuilder() {
         properties = new HashMap<String, Object>();
         disabled = new HashMap<String, Object>();
-    }
-
-    /**
-     * <p>
-     * Adds the given {@link PropertySetter setters}.
-     * </p>
-     *
-     * @param setters the setters
-     */
-    protected void addPropertySetter(final PropertySetter ... setters) {
-        // Merges the two arrays. Each array should not be null.
-        final PropertySetter[] target = new PropertySetter[setters.length + propertySetters.length];
-        System.arraycopy(propertySetters, 0, target, 0, propertySetters.length);
-        System.arraycopy(setters, 0, target, propertySetters.length, setters.length);
-        propertySetters = target;
-    }
-
-    /**
-     * <p>
-     * Returns an array with one property for each {@link PropertySetter}. If the property
-     * is not set, then the default value is returned.
-     * </p>
-     *
-     * @return the properties
-     */
-    protected Object[] getAllProperties() {
-        final Object[] retval = new Object[propertySetters.length];
-
-        for (int i = 0; i < retval.length; i++) {
-            final PropertySetter setter = propertySetters[i];
-            retval[i] = setter.get();
-        }
-
-        return retval;
     }
 
     /**
@@ -144,13 +102,20 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
             }
         }
 
-        for (PropertySetter setter : propertySetters) {
-            if (setter.setProperty(key, value)) {
-                return this;
+        boolean set = false;
+
+        // Setting the value to the right property setter
+        for (final PropertySetter[] setters : getPropertySetters()) {
+            for (final PropertySetter setter : setters) {
+                set |= setter.setProperty(key, value);
             }
         }
 
-        throwPropertyNotSupportedException(key);
+        // If no setter supports the property, throw an exception
+        if (!set) {
+            throwPropertyNotSupportedException(key);
+        }
+
         return this;
     }
 
@@ -168,10 +133,11 @@ public abstract class AbstractObjectBuilder<T> implements ObjectBuilder<T> {
      */
     @Override
     public Object property(final String key) {
-
-        for (PropertySetter setter : propertySetters) {
-            if (setter.getPropertyKey().equals(key)) {
-                return setter.get();
+        for (final PropertySetter[] setters : getPropertySetters()) {
+            for (final PropertySetter setter : setters) {
+                if (setter.getPropertyKey().equals(key)) {
+                    return setter.get();
+                }
             }
         }
 

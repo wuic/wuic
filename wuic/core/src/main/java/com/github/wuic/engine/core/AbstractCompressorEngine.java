@@ -38,6 +38,8 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.config.BooleanConfigParam;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -50,6 +52,8 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.github.wuic.ApplicationConfig.COMPRESS;
 
 /**
  * <p>
@@ -84,15 +88,14 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new {@link com.github.wuic.engine.Engine}.
      * </p>
      *
      * @param compress activate compression or not
-     * @param rnp the extension prefix used to compute new nut name after compression, {@code null} if no extension is managed
      */
-    public AbstractCompressorEngine(final Boolean compress, final String rnp) {
+    @Config
+    public void init(@BooleanConfigParam(propertyKey = COMPRESS, defaultValue = true) final Boolean compress) {
         doCompression = compress;
-        renameExtensionPrefix = rnp;
     }
 
     /**
@@ -168,5 +171,16 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
     @Override
     public Boolean works() {
         return doCompression;
+    }
+
+    /**
+     * <p>
+     * Sets the extension prefix.
+     * </p>
+     *
+     * @param renameExtensionPrefix the extension prefix used to compute new nut name after compression, {@code null} if no extension is managed
+     */
+    public void setRenameExtensionPrefix(final String renameExtensionPrefix) {
+        this.renameExtensionPrefix = renameExtensionPrefix;
     }
 }

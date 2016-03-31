@@ -40,7 +40,7 @@ package com.github.wuic.engine.servlet;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.core.GzipEngine;
 
@@ -57,12 +57,11 @@ public class ServletGzipEngine extends GzipEngine {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
-     *
      */
-    @ConfigConstructor
-    public ServletGzipEngine(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
-        super(compress);
+    @Config
+    public void init(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
+        super.init(compress);
     }
 }

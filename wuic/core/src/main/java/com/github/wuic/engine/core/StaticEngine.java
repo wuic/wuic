@@ -41,7 +41,6 @@ package com.github.wuic.engine.core;
 import com.github.wuic.ClassPathResourceResolver;
 import com.github.wuic.ClassPathResourceResolverHandler;
 import com.github.wuic.NutType;
-import com.github.wuic.config.ConfigConstructor;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
@@ -108,7 +107,6 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
      * Builds a new instance.
      * </p>
      */
-    @ConfigConstructor
     public StaticEngine() {
         retrievedWorkflow = new HashMap<String, List<ConvertibleNut>>();
     }

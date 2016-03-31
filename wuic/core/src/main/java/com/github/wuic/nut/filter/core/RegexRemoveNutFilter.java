@@ -40,7 +40,7 @@ package com.github.wuic.nut.filter.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
@@ -73,14 +73,14 @@ public class RegexRemoveNutFilter implements NutFilter {
 
     /**
      * <p>
-     * Builds a new instance. If a regex can't be compiled, a {@link java.util.regex.PatternSyntaxException} will be thrown.
+     * Initializes a new instance. If a regex can't be compiled, a {@link java.util.regex.PatternSyntaxException} will be thrown.
      * </p>
      *
      * @param enabled if the filter is activated
      * @param regex all the exclusion regex
      */
-    @ConfigConstructor
-    public RegexRemoveNutFilter(
+    @Config
+    public void init(
             @BooleanConfigParam(propertyKey = ApplicationConfig.ENABLE,
                     defaultValue = true)
             final Boolean enabled,

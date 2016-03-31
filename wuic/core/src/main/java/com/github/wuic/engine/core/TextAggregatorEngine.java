@@ -38,10 +38,9 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -60,6 +59,8 @@ import com.github.wuic.nut.SourceMapNut;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
+
+import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
 
 /**
  * <p>
@@ -83,21 +84,17 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
     /**
      * For version number computation.
      */
-    private final Boolean canReadNutAsynchronously;
+    private Boolean canReadNutAsynchronously;
 
     /**
      * <p>
-     * Builds the engine.
+     * Configures asynchronous support.
      * </p>
      *
      * @param asynchronous activates asynchronous version number computation
-     * @param aggregate activate aggregation or not
      */
-    @ConfigConstructor
-    public TextAggregatorEngine(
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean asynchronous) {
-        super(aggregate);
+    @Config
+    public void async(@BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean asynchronous) {
         canReadNutAsynchronously = asynchronous;
     }
 

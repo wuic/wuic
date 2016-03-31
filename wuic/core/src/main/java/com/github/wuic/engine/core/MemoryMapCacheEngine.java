@@ -40,7 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.IntegerConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
@@ -67,19 +67,19 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
 
     /**
      * <p>
-     * Builds a new engine.
+     * Initializes a new engine.
      * </p>
      *
      * @param work if cache should be activated or not
      * @param timeToLiveSeconds the time this cache could live
      * @param bestEffort enable best effort mode or not
      */
-    @ConfigConstructor
-    public MemoryMapCacheEngine(
+    @Config
+    public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.CACHE) final Boolean work,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.TIME_TO_LIVE) final int timeToLiveSeconds,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BEST_EFFORT) final Boolean bestEffort) {
-        super(timeToLiveSeconds, work, bestEffort);
+        super.init(timeToLiveSeconds, work, bestEffort);
         cache = new HashMap<EngineRequest.Key, CacheResult>();
     }
 

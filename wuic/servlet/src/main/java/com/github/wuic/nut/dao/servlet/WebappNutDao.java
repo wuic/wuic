@@ -39,11 +39,8 @@
 package com.github.wuic.nut.dao.servlet;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
-import com.github.wuic.config.IntegerConfigParam;
-import com.github.wuic.config.ObjectConfigParam;
-import com.github.wuic.config.StringConfigParam;
+import com.github.wuic.config.*;
+import com.github.wuic.config.Config;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.servlet.path.WebappDirectoryPathFactory;
@@ -83,7 +80,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
 
     /**
      * <p>
-     * Builds a new instance with a base directory.
+     * Initializes a new instance with a base directory.
      * </p>
      *
      * @param base the directory where we have to look up
@@ -91,23 +88,16 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param wildcard if the path should be considered as a wildcard or not
-     * @param contentBasedVersionNumber {@code true} if version number is computed from nut content, {@code false} if based on timestamp
-     * @param computeVersionAsynchronously (@code true} if version number can be computed asynchronously, {@code false} otherwise
-     * @param fixedVersionNumber fixed version number, {@code null} if version number is computed from content or is last modification date
      */
-    @ConfigConstructor
-    public WebappNutDao(
+    @Config
+    public void init(
             @StringConfigParam(defaultValue = "/WEB-INF", propertyKey = ApplicationConfig.BASE_PATH) final String base,
             @ObjectConfigParam(defaultValue = "", propertyKey = ApplicationConfig.PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
             @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds,
             @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.REGEX) final Boolean regex,
-            @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.WILDCARD) final Boolean wildcard,
-            @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.CONTENT_BASED_VERSION_NUMBER) final Boolean contentBasedVersionNumber,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
-            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
+            @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.WILDCARD) final Boolean wildcard) {
         // Assume that base path is pre computed so we don't have to check if base path is a system property : always pass false
-        super(base, false, proxies, pollingSeconds, regex, wildcard,
-                new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber));
+        init(base, false, proxies, pollingSeconds, regex, wildcard);
     }
 
     /**

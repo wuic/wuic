@@ -47,7 +47,7 @@ public class AbstractAggregatorEngineTest {
          * </p>
          */
         A() {
-            super(Boolean.TRUE);
+            init(Boolean.TRUE);
         }
 
         /**

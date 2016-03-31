@@ -36,33 +36,101 @@
  */
 
 
-package com.github.wuic.nut.dao;
+package com.github.wuic.test.ctx;
 
-import com.github.wuic.config.ServiceLoaderClasses;
+import com.github.wuic.NutType;
+import com.github.wuic.config.Config;
+import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
+import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.exception.WuicException;
+import com.github.wuic.nut.ConvertibleNut;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * <p>
- * This annotation marks a {@link NutDao} implementation that must be discovered
- * during classpath scanning.
- * </p>
- *
- * @author Guillaume DROUET
- * @since 0.5
+ * Abstract engine with methods annotated with {@link com.github.wuic.config.Config}.
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@ServiceLoaderClasses(NutDao.class)
-public @interface NutDaoService {
+public abstract class AbstractMethodEngine extends NodeEngine {
 
     /**
-     * Default package to scan for this service.
+     * A string that track constructor/method invocations.
      */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.nut.dao";
+    protected String calls = "";
+
+    /**
+     * Overridden method.
+     */
+    @Config
+    public void toOverride() {
+        calls += "parent";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void c() {
+        calls += "a";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void b() {
+        calls += "b";
+    }
+
+    /**
+     * Init method.
+     */
+    @Config
+    public void a() {
+        calls += "c";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.JAVASCRIPT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineType getEngineType() {
+        return EngineType.AGGREGATOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
+        return request.getNuts();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean works() {
+        return null;
+    }
+
+    /**
+     * <p>
+     * Gets the calls.
+     * </p>
+     *
+     * @return calls
+     */
+    public String getCalls() {
+        return calls;
+    }
 }

@@ -38,10 +38,8 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
-import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
@@ -64,18 +62,15 @@ import java.util.List;
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
 public class ImageCompressorEngine extends AbstractCompressorEngine {
-    
+
     /**
      * <p>
-     * Creates a new {@link com.github.wuic.engine.Engine}.
+     * Initializes a new {@link com.github.wuic.engine.Engine}.
      * </p>
-     *
-     * @param compress activate compression or not
      */
-    @ConfigConstructor
-    public ImageCompressorEngine(
-            @BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) final Boolean compress) {
-       super(compress, "");
+    @Config
+    public void init() {
+       setRenameExtensionPrefix("");
     }
 
     /**

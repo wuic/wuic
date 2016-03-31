@@ -152,7 +152,9 @@ public class HtmlInspectorEngineTest {
      */
     @Test(timeout = 60000)
     public void hintTest() throws Exception {
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         Assert.assertTrue(html.contains("<html "));
@@ -169,7 +171,9 @@ public class HtmlInspectorEngineTest {
      */
     @Test(timeout = 60000)
     public void hintNoHeadTest() throws Exception {
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         Assert.assertTrue(html.contains("<html "));
@@ -194,7 +198,9 @@ public class HtmlInspectorEngineTest {
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), proxy, "heap");
         heap.checkFiles(ProcessContext.DEFAULT);
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).build();
-        final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
+        e.init(true, "UTF-8", true);
+        final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -223,14 +229,27 @@ public class HtmlInspectorEngineTest {
     @Test(timeout = 60000)
     public void parseTest() throws Exception {
         final Context ctx = newContext();
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(ProcessContext.DEFAULT);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
-        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
+
+        final TextAggregatorEngine css = new TextAggregatorEngine();
+        css.init(true);
+        css.async(true);
+        chains.put(NutType.CSS, css);
+
+        final TextAggregatorEngine jse = new TextAggregatorEngine();
+        jse.init(true);
+        jse.async(true);
+        chains.put(NutType.JAVASCRIPT, jse);
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx).chains(chains).processContext(ProcessContext.DEFAULT).build();
-        final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
+
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
+        e.init(true, "UTF-8", true);
+        final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -264,7 +283,8 @@ public class HtmlInspectorEngineTest {
                 "<script src='baz.js'></script>" };
         final byte[] bytes = StringUtils.merge(script, "\n").getBytes();
 
-        final HtmlInspectorEngine engine = new HtmlInspectorEngine(true, "UTF-8", true);
+        final HtmlInspectorEngine engine = new HtmlInspectorEngine();
+        engine.init(true, "UTF-8", true);
         engine.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -334,10 +354,12 @@ public class HtmlInspectorEngineTest {
                 .replace("<script src=\"script/foo.ts\"></script>", r1)
                 .replace("<wuic:html-import workflowId=\"heap\"/>", r2);
 
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        final Engine engine = new AbstractCacheEngine(true, true) {
+        final AbstractCacheEngine engine = new AbstractCacheEngine() {
 
             private CacheResult cache;
 
@@ -369,6 +391,7 @@ public class HtmlInspectorEngineTest {
             }
         };
 
+        engine.init(true, true);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         final Nut nut = new ByteArrayNut(content.getBytes(), "index.html", NutType.HTML, 1L, false);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
@@ -376,7 +399,8 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
-        final HtmlInspectorEngine e = new HtmlInspectorEngine(true, "UTF-8", true);
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
+        e.init(true, "UTF-8", true);
         e.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -426,8 +450,17 @@ public class HtmlInspectorEngineTest {
             }
         });
         chains.put(NutType.HTML, e);
-        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
-        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
+
+        final TextAggregatorEngine css = new TextAggregatorEngine();
+        css.init(true);
+        css.async(true);
+        chains.put(NutType.CSS, css);
+
+        final TextAggregatorEngine jse = new TextAggregatorEngine();
+        jse.init(true);
+        jse.async(true);
+        chains.put(NutType.JAVASCRIPT, jse);
+
         chains.put(NutType.TYPESCRIPT, new NodeEngine() {
             @Override
             public List<NutType> getNutTypes() {
@@ -488,7 +521,9 @@ public class HtmlInspectorEngineTest {
     public void concurrencyTest(final Engine cache) throws Exception {
         final Context ctx = newContext();
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
-        final NutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -497,7 +532,10 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.HTML, new HtmlInspectorEngine(true, "UTF-8", true));
+
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
+        e.init(true, "UTF-8", true);
+        chains.put(NutType.HTML, e);
 
         for (long i = countDownLatch.getCount(); i > 0; i--) {
             new Thread(new Runnable() {
@@ -526,14 +564,27 @@ public class HtmlInspectorEngineTest {
      */
     @Test(timeout = 60000)
     public void heapListenerHolderTest() throws Exception {
-        final DiskNutDao dao = new DiskNutDao(getClass().getResource("/html").getFile(), false, null, -1, false, false, false, true, null);
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(ProcessContext.DEFAULT);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
-        chains.put(NutType.CSS, new TextAggregatorEngine(true, true));
-        chains.put(NutType.JAVASCRIPT, new TextAggregatorEngine(true, true));
+
+        final TextAggregatorEngine css = new TextAggregatorEngine();
+        css.init(true);
+        css.async(true);
+        chains.put(NutType.CSS, css);
+
+        final TextAggregatorEngine jse = new TextAggregatorEngine();
+        jse.init(true);
+        jse.async(true);
+        chains.put(NutType.JAVASCRIPT, jse);
+
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).chains(chains).build();
-        final List<ConvertibleNut> nuts = new HtmlInspectorEngine(true, "UTF-8", true).parse(request);
+        final HtmlInspectorEngine h = new HtmlInspectorEngine();
+        h.init(true, "UTF-8", true);
+        final List<ConvertibleNut> nuts = h.parse(request);
         Assert.assertEquals(1, nuts.size());
         final ConvertibleNut nut = nuts.get(0);
         nut.transform(new Pipe.DefaultOnReady(new OutputStream() {

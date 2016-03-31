@@ -36,33 +36,25 @@
  */
 
 
-package com.github.wuic.nut.dao;
-
-import com.github.wuic.config.ServiceLoaderClasses;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.github.wuic.config;
 
 /**
  * <p>
- * This annotation marks a {@link NutDao} implementation that must be discovered
- * during classpath scanning.
+ * A specialized inspector that will be applied only for the object that are instance of classes returned by
+ * {@link #inspectedTypes()}. This class is an alternative to {@link InspectedType} that statically declare the types to inspect.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.5
+ * @since 0.5.3
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@ServiceLoaderClasses(NutDao.class)
-public @interface NutDaoService {
+public interface PerClassObjectBuilderInspector extends ObjectBuilderInspector {
 
     /**
-     * Default package to scan for this service.
+     * <p>
+     * Returns the classes indicating the instances to inspect. Should not be empty.
+     * </p>
+     *
+     * @return the classes
      */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.nut.dao";
+    Class[] inspectedTypes();
 }

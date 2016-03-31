@@ -40,7 +40,7 @@ package com.github.wuic.test.ctx;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
@@ -69,10 +69,8 @@ import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
-import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
-import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
@@ -87,11 +85,9 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -255,7 +251,7 @@ public class ContextBuilderTest {
             /**
              * Builds a new instance.
              */
-            @ConfigConstructor
+            @Config
             public E() {
             }
 
@@ -1180,6 +1176,35 @@ public class ContextBuilderTest {
 
         b.clearTag("test1");
         Assert.assertEquals(1, count.get());
+    }
+
+    /**
+     * Tests objects configured with methods.
+     */
+    @Test
+    public void testConfigMethod() {
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, MethodEngine.class);
+        MethodEngine e = (MethodEngine) engine.create("MethodEngineBuilder").build();
+        Assert.assertTrue(e.getCalls().contains("a"));
+        Assert.assertTrue(e.getCalls().contains("b"));
+        Assert.assertTrue(e.getCalls().contains("c"));
+    }
+
+    /**
+     * Tests objects configured with methods in parent and child class.
+     */
+    @Test
+    public void testInheritConfigMethod() {
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, InheritMethodEngine.class);
+        InheritMethodEngine e = (InheritMethodEngine) engine.create("InheritMethodEngineBuilder").build();
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("a"));
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("b"));
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("c"));
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("e"));
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("f"));
+        Assert.assertTrue(e.getCalls(), e.getCalls().contains("g"));
+        //Assert.assertTrue(e.getCalls(), e.getCalls().contains("child"));
+        Assert.assertTrue(e.getCalls(), !e.getCalls().contains("parent"));
     }
 }
 

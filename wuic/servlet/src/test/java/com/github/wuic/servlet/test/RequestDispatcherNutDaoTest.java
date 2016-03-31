@@ -119,7 +119,9 @@ public class RequestDispatcherNutDaoTest {
         }).when(sc).getResourceAsStream("/bar.js");
 
         Mockito.when(sc.getRequestDispatcher(Mockito.anyString())).thenReturn(requestDispatcher);
-        dao = new RequestDispatcherNutDao("/", false, null, -1, false, null, "foo.*");
+        dao = new RequestDispatcherNutDao();
+        dao.init("/", false, null, -1, "foo.*");
+        dao.init(null, false, null);
         dao.setServletContext(sc);
     }
 

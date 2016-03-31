@@ -41,7 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
-import com.github.wuic.config.ConfigConstructor;
+import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
@@ -62,17 +62,17 @@ public class CssInspectorEngine extends TextInspectorEngine {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Initializes a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
      * @param charset inspected files charset
      */
-    @ConfigConstructor
-    public CssInspectorEngine(
+    @Config
+    public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String charset) {
-        super(inspect, charset, CssUrlLineInspector.newInstance());
+        init(inspect, charset, CssUrlLineInspector.newInstance());
         addInspector(SourceMapLineInspector.newInstance(this));
     }
 

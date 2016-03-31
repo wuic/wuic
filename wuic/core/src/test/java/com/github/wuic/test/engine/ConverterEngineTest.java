@@ -76,7 +76,7 @@ public class ConverterEngineTest {
     public static class I extends AbstractCompressorEngine {
 
         public I() {
-            super(true, null);
+            init(true);
         }
 
         @Override
@@ -108,7 +108,7 @@ public class ConverterEngineTest {
          * @param convert enabled conversion or not
          */
         public C(final Boolean convert) {
-            super(convert, false);
+            init(convert, false);
         }
 
         /**

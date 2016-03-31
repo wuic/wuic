@@ -104,7 +104,8 @@ public class MemoryMapCacheEngineTest {
      */
     @Test(timeout = 60000)
     public void dynamicTest() throws Exception {
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false);
         final AtomicInteger counter1 = new AtomicInteger();
         final Nut nut1 = newNut("foo");
         Mockito.when(nut1.isDynamic()).thenReturn(false);
@@ -188,7 +189,7 @@ public class MemoryMapCacheEngineTest {
     @Test(timeout = 60000)
     public void invalidationTest() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false) {
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine() {
 
             /**
              * {@inheritDoc}
@@ -206,6 +207,8 @@ public class MemoryMapCacheEngineTest {
                 // Do not add to cache to ignore for test purpose
             }
         };
+
+        engine.init(true, -1, false);
 
         final Nut nut = newNut("foo");
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
@@ -236,7 +239,8 @@ public class MemoryMapCacheEngineTest {
     @Test(timeout = 60000)
     public void addThenClearTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false);
         final Map<String, AbstractCacheEngine.CacheResult.Entry> nuts = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
         nuts.put("", new AbstractCacheEngine.CacheResult.Entry(Mockito.mock(ConvertibleNut.class)));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
@@ -253,7 +257,8 @@ public class MemoryMapCacheEngineTest {
     @Test(timeout = 60000)
     public void addThenRemoveTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
-        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine(true, -1, false);
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false);
         final Map<String, AbstractCacheEngine.CacheResult.Entry> nuts = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
         nuts.put("", new AbstractCacheEngine.CacheResult.Entry(Mockito.mock(ConvertibleNut.class)));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(nuts, null);
