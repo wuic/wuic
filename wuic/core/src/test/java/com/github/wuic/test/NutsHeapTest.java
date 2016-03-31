@@ -414,6 +414,11 @@ public class NutsHeapTest {
         // set hard reference to null: heap will be garbage collected
         heap = null;
         System.gc();
+
+        // Do some activity in order to trigger garbage collection
+        for (int i = 0; i < 10000000; i++) {
+        }
+
         Assert.assertTrue(ref.isEnqueued());
     }
 }
