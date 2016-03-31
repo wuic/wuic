@@ -36,95 +36,66 @@
  */
 
 
-package com.github.wuic.util;
+package com.github.wuic.config;
 
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
-import com.github.wuic.util.detect.AnnotationDetector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.ServiceLoader;
 
 /**
  * <p>
- * An annotation scanner based on ASL Annotation Detector library.
+ * An {@link AnnotationScanner} that relies on {@code ServiceLoader} to load annotated services. The class looks at
+ * the {@link com.github.wuic.AnnotationProcessor#requiredAnnotation() required} annotation and if it's annotated with
+ * {@link ServiceLoaderClasses}. If it's the case, the classes returned by {@link ServiceLoaderClasses#value()}  will
+ * be loaded with the {@code ServiceLoader}. {@link AnnotationProcessor} will be called only if the class name starts
+ * with the given base package.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.5.0
+ * @since 0.5.3
  */
-public class AnnotationDetectorScanner implements AnnotationScanner {
-
-    /**
-     * Logger.
-     */
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+public class ServiceLoaderAnnotationScanner implements AnnotationScanner {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void scan(final String basePackage, final AnnotationProcessor... processors) {
-        for (AnnotationProcessor processor : processors) {
-            final AnnotationDetector detector = new AnnotationDetector(new AnnotationProcessorReporter(processor));
+    public void scan(final String basePackage, final AnnotationProcessor ... processors) {
 
-            try  {
-                detector.detect(basePackage);
-            } catch (IOException ioe) {
-                logger.error("Unable to detect annotation during classpath scanning", ioe);
+        // Check the required annotation of each processor
+        for (final AnnotationProcessor processor : processors) {
+            final Class<? extends Annotation> ra = processor.requiredAnnotation();
+
+            // If the required annotation is annotated with the right annotation, process it
+            if (ra.isAnnotationPresent(ServiceLoaderClasses.class)) {
+                for (final Class<?> clazz : ra.getAnnotation(ServiceLoaderClasses.class).value()) {
+                    reportHandle(clazz, processor, basePackage);
+                }
             }
         }
     }
 
     /**
      * <p>
-     * Builds a new instance.
+     * If the given class starts with the package specified in parameter, the class is loaded by the {@code ServiceLoader}.
+     * The discovered implementation are notified to the given processor.
      * </p>
      *
-     * @author Guillaume DROUET
-          * @since 0.5.0
+     * @param clazz class to load
+     * @param processor the processor to notify
+     * @param filer required base package for the class
      */
-    private final class AnnotationProcessorReporter implements AnnotationDetector.TypeReporter {
+    private void reportHandle(final Class<?> clazz, final AnnotationProcessor processor, final String filer) {
 
-        /**
-         * The annotation processor.
-         */
-        private AnnotationProcessor annotationProcessor;
+        // Class is in the right package
+        if (clazz.getName().startsWith(filer)) {
+            final ServiceLoader<?> serviceLoader = ServiceLoader.load(clazz);
 
-        /**
-         * <p>
-         * Builds a new reporter.
-         * </p>
-         *
-         * @param annotationProcessor t the processor to notify
-         */
-        private AnnotationProcessorReporter(final AnnotationProcessor annotationProcessor) {
-            this.annotationProcessor = annotationProcessor;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void reportTypeAnnotation(final Class<? extends Annotation> aClass, final String s) {
-            try {
-                annotationProcessor.handle(Class.forName(s));
-            } catch (ClassNotFoundException cnfe) {
-                logger.error("Reported class during annotation scanning not found", cnfe);
+            for (final Object o : serviceLoader) {
+                processor.handle(o.getClass());
             }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        @SuppressWarnings("unchecked")
-        public Class<? extends Annotation>[] annotations() {
-            return new Class[] {
-                    annotationProcessor.requiredAnnotation()
-            };
         }
     }
 }

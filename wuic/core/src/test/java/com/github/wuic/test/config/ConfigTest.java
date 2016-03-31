@@ -111,7 +111,7 @@ public class ConfigTest {
      */
     @Test(timeout = 60000)
     public void badServiceTest() {
-        Assert.assertNull(factory.create("MyBadServiceBuilder"));
+        Assert.assertEquals(0, ((MyBadService) factory.create("MyBadServiceBuilder").build()).i);
     }
 
     /**

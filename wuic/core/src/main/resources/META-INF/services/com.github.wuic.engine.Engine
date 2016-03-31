@@ -1,0 +1,9 @@
+com.github.wuic.engine.core.CommandLineConverterEngine
+com.github.wuic.engine.core.CssInspectorEngine
+com.github.wuic.engine.core.ImageAggregatorEngine
+com.github.wuic.engine.core.ImageCompressorEngine
+com.github.wuic.engine.core.JavascriptInspectorEngine
+com.github.wuic.engine.core.MemoryMapCacheEngine
+com.github.wuic.engine.core.SpriteInspectorEngine
+com.github.wuic.engine.core.TextAggregatorEngine
+com.github.wuic.engine.core.HtmlInspectorEngine

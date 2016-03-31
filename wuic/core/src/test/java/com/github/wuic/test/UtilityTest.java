@@ -42,12 +42,13 @@ import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.ServiceLoaderAnnotationScanner;
+import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.core.ZipEntryFilePath;
-import com.github.wuic.util.AnnotationDetectorScanner;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
@@ -578,16 +579,16 @@ public class UtilityTest extends WuicTest {
      */
     @Test(timeout = 60000)
     public void defaultAnnotationScannerTest() {
-        final AnnotationScanner s = new AnnotationDetectorScanner();
+        final AnnotationScanner s = new ServiceLoaderAnnotationScanner();
         final AtomicInteger count = new AtomicInteger();
-        s.scan("com", new AnnotationProcessor() {
+        final AnnotationProcessor processor = new AnnotationProcessor() {
 
             /**
              * {@inheritDoc}
              */
             @Override
             public Class<? extends Annotation> requiredAnnotation() {
-                return RunWith.class;
+                return EngineService.class;
             }
 
             /**
@@ -595,11 +596,15 @@ public class UtilityTest extends WuicTest {
              */
             @Override
             public void handle(final Class<?> annotatedType) {
-               count.incrementAndGet();
+                count.incrementAndGet();
             }
-        });
+        };
 
+        s.scan("com", processor);
         Assert.assertNotEquals(0, count.intValue());
+        count.set(0);
+        s.scan("net", processor);
+        Assert.assertEquals(0, count.intValue());
     }
 
     /**

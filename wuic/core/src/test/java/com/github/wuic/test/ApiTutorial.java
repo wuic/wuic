@@ -199,7 +199,7 @@ public class ApiTutorial {
     public class MyCompressEngine extends NodeEngine {
 
         @Config
-        public MyCompressEngine(
+        public void initMyCompressEngine(
                 @BooleanConfigParam(propertyKey = "c.g.wuic.engine.compress", defaultValue = true)
                 Boolean compress) {
         }

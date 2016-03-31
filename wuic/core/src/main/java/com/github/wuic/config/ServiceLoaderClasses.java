@@ -36,33 +36,31 @@
  */
 
 
-package com.github.wuic.nut.dao;
+package com.github.wuic.config;
 
-import com.github.wuic.config.ServiceLoaderClasses;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * <p>
- * This annotation marks a {@link NutDao} implementation that must be discovered
- * during classpath scanning.
+ * This annotation allows to indicate on a service annotation (typically {@link com.github.wuic.engine.EngineService},
+ * {@link com.github.wuic.nut.dao.NutDaoService}, {@link com.github.wuic.nut.filter.NutFilterService}) what are the abstract
+ * classes and interfaces implementation that are annotated with it and can be loaded through the {@code ServiceLoader}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.5
+ * @since 0.5.3
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@ServiceLoaderClasses(NutDao.class)
-public @interface NutDaoService {
+public @interface ServiceLoaderClasses {
 
     /**
-     * Default package to scan for this service.
+     * <p>
+     * The abstract classes and interfaces associated to the implementation that should loaded through {@code ServiceLoader}.
+     * </p>
+     *
+     * @return the abstract classes and interfaces to be loaded
      */
-    String DEFAULT_SCAN_PACKAGE = "com.github.wuic.nut.dao";
+    Class[] value();
 }

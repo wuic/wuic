@@ -38,11 +38,14 @@
 
 package com.github.wuic.test.config;
 
+import com.github.wuic.config.ServiceLoaderClasses;
+
 /**
  * Service annotation.
  *
  * @author Guillaume DROUET
  * @since 0.5
  */
+@ServiceLoaderClasses(I.class)
 @interface IService {
 }

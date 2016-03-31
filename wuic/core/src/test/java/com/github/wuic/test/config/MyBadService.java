@@ -56,6 +56,8 @@ import java.lang.annotation.Target;
 @IService
 public class MyBadService implements I {
 
+    int i = 0;
+
     /**
      * Some unsupported config annotation.
      */
@@ -72,8 +74,8 @@ public class MyBadService implements I {
      * @param i not annotated parameter
      */
     @Config
-    public MyBadService(final int i) {
-
+    public void initMyBadService(final int i) {
+        this.i++;
     }
 
     /**
@@ -82,8 +84,8 @@ public class MyBadService implements I {
      * @param s the parameter annotated with unsupported annotation
      */
     @Config
-    public MyBadService(@UnsupportedAnnotation final String s) {
-
+    public void initMyBadService(@UnsupportedAnnotation final String s) {
+        i++;
     }
 
     /**
@@ -93,16 +95,8 @@ public class MyBadService implements I {
      * @param j annotated
      */
     @Config
-    public MyBadService(final int i,
+    public void initMyBadService(final int i,
                         @IntegerConfigParam(defaultValue = 1, propertyKey = "foo") final int j) {
-
-    }
-
-    /**
-     * An inner class annotated with service annotation will be rejected.
-     */
-    @IService
-    public static class MyInnerBadService implements I {
-
+        this.i++;
     }
 }

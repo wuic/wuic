@@ -39,7 +39,6 @@
 package com.github.wuic.config;
 
 import com.github.wuic.AnnotationProcessor;
-import com.github.wuic.util.AnnotationDetectorScanner;
 import com.github.wuic.util.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p>
@@ -157,7 +161,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         this.annotationToScan = annotationToScan;
         this.knownTypes = new ArrayList<KnownType>();
         this.inspectors = new HashMap<Class, List<ObjectBuilderInspector>>();
-        new AnnotationDetectorScanner().scan(packageToScan, this);
+        new ServiceLoaderAnnotationScanner().scan(packageToScan, this);
     }
 
     /**

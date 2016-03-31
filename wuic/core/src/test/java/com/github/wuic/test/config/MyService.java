@@ -53,7 +53,7 @@ public class MyService implements I {
     /**
      * Configured property.
      */
-    final int foo;
+    int foo;
 
     /**
      * <p>
@@ -63,10 +63,10 @@ public class MyService implements I {
      * @param i configured property
      */
     @Config
-    public MyService(@IntegerConfigParam(propertyKey = "int", defaultValue = 1) int i,
-                     @StringConfigParam(propertyKey = "str", defaultValue = "string") String s,
-                     @ObjectConfigParam(propertyKey = "obj", defaultValue = "java.lang.Object") Object o,
-                     @BooleanConfigParam(propertyKey = "bool", defaultValue = true) boolean b) {
+    public void initMyService(@IntegerConfigParam(propertyKey = "int", defaultValue = 1) int i,
+                              @StringConfigParam(propertyKey = "str", defaultValue = "string") String s,
+                              @ObjectConfigParam(propertyKey = "obj", defaultValue = "java.lang.Object") Object o,
+                              @BooleanConfigParam(propertyKey = "bool", defaultValue = true) boolean b) {
         this.foo = i;
     }
 }

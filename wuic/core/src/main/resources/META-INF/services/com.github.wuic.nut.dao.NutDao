@@ -1,0 +1,3 @@
+com.github.wuic.nut.dao.core.ClasspathNutDao
+com.github.wuic.nut.dao.core.DiskNutDao
+com.github.wuic.nut.dao.core.HttpNutDao
