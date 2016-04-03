@@ -46,8 +46,10 @@ import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
-import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.EnhancedPropertyResolver;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.MapPropertyResolver;
+import com.github.wuic.util.PropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * <p>
@@ -90,11 +93,6 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
     private Boolean multipleConfigInTagSupport;
 
     /**
-     * The URL where wuic.properties file is located.
-     */
-    private URL wuicPropertiesPath;
-
-    /**
      * The URL where wuic.xml file is located.
      */
     private URL wuicXmlPath;
@@ -125,6 +123,11 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
     private final ContextBuilderFacade contextBuilder;
 
     /**
+     * The {@link com.github.wuic.util.PropertyResolver} that will be used by the builder to get properties.
+     */
+    private final EnhancedPropertyResolver propertyResolver;
+
+    /**
      * <p>
      * Builds an instance with default settings.
      * </p>
@@ -134,12 +137,13 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
         warmUpStrategy = WuicFacade.WarmupStrategy.NONE;
         multipleConfigInTagSupport = Boolean.TRUE;
         wuicXmlPath = getClass().getResource("/wuic.xml");
-        wuicPropertiesPath = getClass().getResource("/wuic.properties");
+        propertyResolver = new EnhancedPropertyResolver();
         useDefaultContextBuilderConfigurator = Boolean.TRUE;
         inspectors = new ArrayList<ObjectBuilderInspector>();
         configurators = new ArrayList<ContextBuilderConfigurator>();
         contextBuilder = new ContextBuilderFacade();
         classpathResourceResolver = this;
+        createResolverFromPath(getClass().getResource("/wuic.properties"));
     }
 
     /**
@@ -150,31 +154,44 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      *
      * @param properties the properties
      */
-    public WuicFacadeBuilder(final BiFunction<String, String, String> properties) {
+    public WuicFacadeBuilder(final PropertyResolver properties) {
         this();
-        contextPath = properties.apply(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM, "");
-
-        // Context where nuts will be exposed
-        final String wuicCp = IOUtils.mergePath("/", contextPath);
-
-        log.info("WUIC's full context path is {}", wuicCp);
+        propertyResolver.addPropertyResolver(properties);
 
         try {
-            final String multipleConfStr = properties.apply(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
+            // Choose specific location for property file
+            final String propertyPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_PROPERTIES_PATH_PARAM, null);
+
+            if (propertyPath != null) {
+                if (Boolean.parseBoolean(propertyResolver.resolveProperty(ApplicationConfig.WUIC_PROPERTIES_SYS_PROP_PARAM, "false"))) {
+                    createResolverFromPath(new URL(System.getProperty(propertyPath)));
+                } else {
+                    createResolverFromPath(new URL(propertyPath));
+                }
+            }
+
+            contextPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM, "");
+
+            // Context where nuts will be exposed
+            final String wuicCp = IOUtils.mergePath("/", contextPath);
+
+            log.info("WUIC's full context path is {}", wuicCp);
+
+            final String multipleConfStr = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT, "true");
 
             if (!Boolean.parseBoolean(multipleConfStr)) {
                 disableMultipleConfigInTagSupport();
             }
 
-            final String warmupStrategyStr = properties.apply(ApplicationConfig.WUIC_WARMUP_STRATEGY, WuicFacade.WarmupStrategy.NONE.name());
+            final String warmupStrategyStr = propertyResolver.resolveProperty(ApplicationConfig.WUIC_WARMUP_STRATEGY, WuicFacade.WarmupStrategy.NONE.name());
             final WuicFacade.WarmupStrategy warmupStrategy = WuicFacade.WarmupStrategy.valueOf(warmupStrategyStr);
 
-            final String xmlPath = properties.apply(ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM, null);
-            final String propertyPath = properties.apply(ApplicationConfig.WUIC_PROPERTIES_PATH_PARAM, null);
+            final String xmlPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM, null);
+
             contextPath(wuicCp);
             warmUpStrategy(warmupStrategy);
 
-            final String useDefaultConfStr = properties.apply(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS, "true");
+            final String useDefaultConfStr = propertyResolver.resolveProperty(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS, "true");
 
             if (!Boolean.parseBoolean(useDefaultConfStr)) {
                 noDefaultContextBuilderConfigurator();
@@ -182,24 +199,15 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
             // Choose specific location for XML file
             if (xmlPath != null) {
-                if (Boolean.parseBoolean(properties.apply(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM, "false"))) {
+                if (Boolean.parseBoolean(propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM, "false"))) {
                     wuicXmlPath(new URL(System.getProperty(xmlPath)));
                 } else {
                     wuicXmlPath(new URL(xmlPath));
                 }
             }
 
-            // Choose specific location for property file
-            if (propertyPath != null) {
-                if (Boolean.parseBoolean(properties.apply(ApplicationConfig.WUIC_PROPERTIES_SYS_PROP_PARAM, "false"))) {
-                    wuicPropertiesPath(new URL(System.getProperty(propertyPath)));
-                } else {
-                    wuicPropertiesPath(new URL(propertyPath));
-                }
-            }
-
-            additionalContextBuilderConfigurators(properties);
-            additionalObjectBuilderInspectors(properties);
+            additionalContextBuilderConfigurators();
+            additionalObjectBuilderInspectors();
         } catch (MalformedURLException mue) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to initialize WuicFacade", mue));
         } catch (ClassNotFoundException cnfe) {
@@ -208,6 +216,30 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             WuicException.throwBadStateException(ie);
         } catch (IllegalAccessException iae) {
             WuicException.throwBadStateException(iae);
+        }
+    }
+
+    /**
+     * <p>
+     * Creates a new {@link PropertyResolver} based on the properties at the given URL.
+     * </p>
+     *
+     * @param properties the properties URL
+     */
+    private void createResolverFromPath(final URL properties) {
+        if (properties != null) {
+            InputStream is = null;
+
+            try {
+                is = properties.openStream();
+                final Properties props = new Properties();
+                props.load(is);
+                propertyResolver.addPropertyResolver(new MapPropertyResolver(props));
+            } catch (IOException ioe) {
+                log.error("Unable to load properties", ioe);
+            } finally {
+                IOUtils.close(is);
+            }
         }
     }
 
@@ -230,15 +262,14 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      * {@link ApplicationConfig#WUIC_ADDITIONAL_BUILDER_CONFIGURATORS} property.
      * </p>
      *
-     * @param properties the properties
      * @return this
      * @throws ClassNotFoundException if class does not exists
      * @throws IllegalAccessException if class can be instantiated
      * @throws InstantiationException if an error occurs during instantiation
      */
-    public final WuicFacadeBuilder additionalContextBuilderConfigurators(final BiFunction<String, String, String> properties)
+    public final WuicFacadeBuilder additionalContextBuilderConfigurators()
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "");
+        final String value = propertyResolver.resolveProperty(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS, "");
 
         if (!value.isEmpty()) {
             final String[] classes = value.split(",");
@@ -260,15 +291,14 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      * {@link ApplicationConfig#WUIC_ADDITIONAL_BUILDER_INSPECTOR} property.
      * </p>
      *
-     * @param properties the properties
      * @return this
      * @throws ClassNotFoundException if class does not exists
      * @throws IllegalAccessException if class can be instantiated
      * @throws InstantiationException if an error occurs during instantiation
      */
-    public final WuicFacadeBuilder additionalObjectBuilderInspectors(final BiFunction<String, String, String> properties)
+    public final WuicFacadeBuilder additionalObjectBuilderInspectors()
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        final String value = properties.apply(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR, "");
+        final String value = propertyResolver.resolveProperty(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR, "");
 
         if (!value.isEmpty()) {
             final String[] classes = value.split(",");
@@ -306,7 +336,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
      * @return this
      */
     public final WuicFacadeBuilder wuicPropertiesPath(final URL properties) {
-        this.wuicPropertiesPath = properties;
+        createResolverFromPath(properties);
         return this;
     }
 
@@ -495,13 +525,13 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
-     * Gets the wuic.properties location if any.
+     * Gets the property resolver.
      * </p>
      *
-     * @return the wuic.properties path
+     * @return the property resolver
      */
-    URL getWuicPropertiesPath() {
-        return wuicPropertiesPath;
+    PropertyResolver getPropertyResolver() {
+        return propertyResolver;
     }
 
     /**

@@ -62,14 +62,14 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.CollectionUtils;
-import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.EnhancedPropertyResolver;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.PropertyResolver;
+import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,7 +78,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -146,9 +145,9 @@ public class ContextBuilder extends Observable {
     private ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory;
 
     /**
-     * A property file URL containing properties to apply to all registered components.
+     * The property resolver.
      */
-    private URL propertySet;
+    private PropertyResolver propertyResolver;
 
     /**
      * Indicates that {@link #configureDefault()} has been called and default entries are injected.
@@ -164,9 +163,9 @@ public class ContextBuilder extends Observable {
      * @param properties the property set to apply to all components
      * @param inspectors the inspectors to add to the factories
      */
-    public ContextBuilder(final ContextBuilder b, final URL properties, final ObjectBuilderInspector ... inspectors) {
+    public ContextBuilder(final ContextBuilder b, final PropertyResolver properties, final ObjectBuilderInspector ... inspectors) {
         this(b.getEngineBuilderFactory(), b.getNutDaoBuilderFactory(), b.getNutFilterBuilderFactory(), false, inspectors);
-        propertySet = properties;
+        propertyResolver = properties;
     }
 
     /**
@@ -205,6 +204,7 @@ public class ContextBuilder extends Observable {
         this.taggedSettings = new TaggedSettings();
         this.lock = new ReentrantLock();
         this.configureDefault = false;
+        this.propertyResolver = new EnhancedPropertyResolver();
 
         this.engineBuilderFactory = engineBuilderFactory == null ?
                 new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE) : engineBuilderFactory;
@@ -1471,6 +1471,18 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Injects the placeholders in the given value thanks to the configured resolver.
+     * </p>
+     *
+     * @param value the value
+     * @return the injected value
+     */
+    public String injectPlaceholder(final String value) {
+        return StringUtils.injectPlaceholders(value, propertyResolver);
+    }
+
+    /**
+     * <p>
      * Inner class to configure a filter builder.
      * </p>
      *
@@ -2141,17 +2153,6 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Applies all properties in the given parameter that are supported by any component configured in this builder.
-     * </p>
-     *
-     * @param properties the properties object
-     */
-    public void applyProperties(final Properties properties) {
-        taggedSettings.applyProperties(properties);
-    }
-
-    /**
-     * <p>
      * Builds the context. Should throws an {@link IllegalStateException} if the context is not correctly configured.
      * For instance: associate a heap to an undeclared {@link com.github.wuic.nut.dao.NutDao} builder ID.
      * </p>
@@ -2170,17 +2171,8 @@ public class ContextBuilder extends Observable {
                 lock.lock();
             }
 
-            if (propertySet != null) {
-                InputStream is = null;
-
-                try {
-                    is = propertySet.openStream();
-                    final Properties properties = new Properties();
-                    properties.load(is);
-                    applyProperties(properties);
-                } finally {
-                    IOUtils.close(is);
-                }
+            if (propertyResolver != null) {
+                taggedSettings.applyProperties(propertyResolver);
             }
 
             final Map<String, NutFilter> filterMap = taggedSettings.getFilterMap();

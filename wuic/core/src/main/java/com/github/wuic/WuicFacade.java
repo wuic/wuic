@@ -181,7 +181,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
         // This inspector will configure any ClassPathResourceResolverHandler
         inspectors.add(this);
 
-        builder = new ContextBuilder(b.contextBuilder(), b.getWuicPropertiesPath(),
+        builder = new ContextBuilder(b.contextBuilder(), b.getPropertyResolver(),
                 inspectors.toArray(new ObjectBuilderInspector[inspectors.size()]));
 
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];

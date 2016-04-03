@@ -239,14 +239,14 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             // The filters
             if (xml.getFilterBuilders() != null) {
                 for (final XmlBuilderBean filter : xml.getFilterBuilders()) {
-                    extractProperties(filter, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
+                    extractProperties(filter, ctxBuilder, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
                 }
             }
 
             // The DAOs
             if (xml.getDaoBuilders() != null) {
                 for (final XmlBuilderBean dao : xml.getDaoBuilders()) {
-                    extractProperties(dao, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
+                    extractProperties(dao, ctxBuilder, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
                 }
             }
 
@@ -260,7 +260,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
             // The engines
             if (xml.getEngineBuilders() != null) {
                 for (final XmlBuilderBean engine : xml.getEngineBuilders()) {
-                    extractProperties(engine, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
+                    extractProperties(engine, ctxBuilder, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
                 }
             }
 
@@ -337,16 +337,21 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * </p>
      *
      * @param bean the bean
+     * @param contextBuilder the context builder
      * @param contextGenericBuilder the context generic builder
      * @return the {@link ContextBuilder.ContextGenericBuilder} associating each property ID to its value
      */
     private ContextBuilder.ContextGenericBuilder extractProperties(final XmlBuilderBean bean,
+                                                                   final ContextBuilder contextBuilder,
                                                                    final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
-        if (bean.getProperties() == null) {
-            return contextGenericBuilder;
-        } else {
+        if (bean.getProperties() != null) {
             for (final XmlPropertyBean propertyBean : bean.getProperties()) {
-                contextGenericBuilder.property(propertyBean.getKey(), propertyBean.getValue());
+                final String value = contextBuilder.injectPlaceholder(propertyBean.getValue());
+
+                // Apply component default value instead
+                if (value != null) {
+                    contextGenericBuilder.property(propertyBean.getKey(), value);
+                }
             }
         }
 

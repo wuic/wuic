@@ -32,6 +32,21 @@ import static org.mockito.Mockito.when;
 public class MockDao implements NutDao {
 
     /**
+     * Foo value.
+     */
+    private final String foo;
+
+    /**
+     * Bar value.
+     */
+    private final String bar;
+
+    /**
+     * Baz value.
+     */
+    private final String baz;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -39,7 +54,12 @@ public class MockDao implements NutDao {
      * @param foo custom property
      */
     @Config
-    public MockDao(@StringConfigParam(propertyKey = "c.g.dao.foo", defaultValue = "") String foo) {
+    public MockDao(@StringConfigParam(propertyKey = "c.g.dao.foo", defaultValue = "") String foo,
+                   @StringConfigParam(propertyKey = "c.g.dao.bar", defaultValue = "") String bar,
+                   @StringConfigParam(propertyKey = "c.g.dao.baz", defaultValue = "baz") String baz) {
+        this.foo = foo;
+        this.bar = bar;
+        this.baz = baz;
     }
 
     /**
@@ -126,5 +146,38 @@ public class MockDao implements NutDao {
     @Override
     public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
         return null;
+    }
+
+    /**
+     * <p>
+     * Gets foo.
+     * </p>
+     *
+     * @return foo
+     */
+    public String getFoo() {
+        return foo;
+    }
+
+    /**
+     * <p>
+     * Gets bar.
+     * </p>
+     *
+     * @return bar
+     */
+    public String getBar() {
+        return bar;
+    }
+
+    /**
+     * <p>
+     * Gets baz.
+     * </p>
+     *
+     * @return baz
+     */
+    public String getBaz() {
+        return baz;
     }
 }

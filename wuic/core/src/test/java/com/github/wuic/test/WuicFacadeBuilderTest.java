@@ -49,8 +49,8 @@ import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
-import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.PropertyResolver;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +58,8 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -124,10 +126,15 @@ public class WuicFacadeBuilderTest {
      */
     @Test(timeout = 60000, expected = IllegalStateException.class)
     public void testBadUrl() throws WuicException {
-        new WuicFacadeBuilder(new BiFunction<String, String, String>() {
+        new WuicFacadeBuilder(new PropertyResolver() {
             @Override
-            public String apply(final String first, final String second) {
-                return ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM.equals(first) ? "" : second;
+            public String resolveProperty(final String first) {
+                return ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM.equals(first) ? "" : null;
+            }
+
+            @Override
+            public Collection<Object> getKeys() {
+                return Arrays.asList((Object) ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM);
             }
         }).build();
     }
@@ -170,24 +177,24 @@ public class WuicFacadeBuilderTest {
      */
     @Test(timeout = 60000)
     public void propertiesTest() throws WuicException {
-        final BiFunction<String, String, String> propsTrue = Mockito.mock(BiFunction.class);
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT), Mockito.anyString())).thenReturn("true");
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM), Mockito.anyString())).thenReturn("/");
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY), Mockito.anyString())).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM), Mockito.anyString())).thenReturn("true");
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("true");
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("");
-        Mockito.when(propsTrue.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR), Mockito.anyString())).thenReturn("");
+        final PropertyResolver propsTrue = Mockito.mock(PropertyResolver.class);
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT))).thenReturn("true");
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM))).thenReturn("/");
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY))).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM))).thenReturn("true");
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS))).thenReturn("true");
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS))).thenReturn("");
+        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR))).thenReturn("");
         new WuicFacadeBuilder(propsTrue).build();
 
-        final BiFunction<String, String, String> propsFalse = Mockito.mock(BiFunction.class);
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT), Mockito.anyString())).thenReturn("false");
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM), Mockito.anyString())).thenReturn("/");
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY), Mockito.anyString())).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM), Mockito.anyString())).thenReturn("false");
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("false");
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS), Mockito.anyString())).thenReturn("");
-        Mockito.when(propsFalse.apply(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR), Mockito.anyString())).thenReturn("");
+        final PropertyResolver propsFalse = Mockito.mock(PropertyResolver.class);
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT))).thenReturn("false");
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM))).thenReturn("/");
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY))).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM))).thenReturn("false");
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS))).thenReturn("false");
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS))).thenReturn("");
+        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR))).thenReturn("");
         new WuicFacadeBuilder(propsFalse).build();
     }
 

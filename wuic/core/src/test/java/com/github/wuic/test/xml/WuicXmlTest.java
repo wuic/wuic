@@ -56,6 +56,7 @@ import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.PropertyResolver;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
@@ -71,6 +72,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -254,6 +256,32 @@ public class WuicXmlTest {
         final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-with-default-builder.xml"));
         cfg.configure(builder);
         builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+    }
+
+    /**
+     * <p>
+     * Tests when placeholders are used.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test(timeout = 60000)
+    public void withPlaceholdersTest() throws Exception {
+        final PropertyResolver resolver = Mockito.mock(PropertyResolver.class);
+        Mockito.when(resolver.resolveProperty("debug")).thenReturn("true");
+
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+
+        // File required default configuration
+        final ContextBuilder builder = new ContextBuilder(new ContextBuilder(ebf, nbf, fbf), resolver).configureDefault();
+        final ContextBuilderConfigurator cfg = new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-placeholder.xml"));
+        cfg.configure(builder);
+        final MockDao dao = (MockDao) builder.build().getWorkflow("simpleHeap").getHeap().getNutDao();
+        Assert.assertEquals(dao.getFoo(), "true");
+        Assert.assertEquals(dao.getBar(), "false");
+        Assert.assertEquals(dao.getBaz(), "baz");
     }
 
     /**

@@ -493,4 +493,75 @@ public final class StringUtils {
             array[i] = ' ';
         }
     }
+
+    /**
+     * <p>
+     * Extracts the placeholder of the value and resolve the key. The method resolves value by retrieving keys inside ${...}.
+     * A default value can be specified with ${key:defaultValue}.
+     * </p>
+     *
+     * @param value the value with potential placeholder
+     * @return value transformed with all placeholders value
+     */
+    public static String injectPlaceholders(final String value, final PropertyResolver propertyResolver) {
+        if (value == null) {
+            return null;
+        }
+
+        int offset = value.indexOf("${");
+
+        // No placeholder
+        if (offset == -1) {
+            return value;
+        } else {
+            final StringBuilder retval = new StringBuilder(value);
+
+            // Replace the placeholders
+            while (offset != -1) {
+                final int end = retval.indexOf("}", offset);
+
+                if (end != -1) {
+                    final String replace = processPlaceholder(retval.substring(offset + NumberUtils.TWO, end), propertyResolver);
+
+                    if (replace != null) {
+                        retval.replace(offset, end + 1, replace);
+                        offset += replace.length();
+                    } else {
+                        return null;
+                    }
+                }
+
+                offset = retval.indexOf("${", offset);
+            }
+
+            return retval.toString();
+        }
+    }
+
+    /**
+     * <p>
+     * Process the place holder and return the corresponding value.
+     * </p>
+     *
+     * @param placeholder the placeholder
+     * @param propertyResolver the resolver to use
+     * @return the value
+     */
+    private static String processPlaceholder(final String placeholder, final PropertyResolver propertyResolver) {
+        final int defaultDelimiter = placeholder.lastIndexOf(':');
+
+        // There is a default value
+        if (defaultDelimiter != -1) {
+            final String replacement = propertyResolver.resolveProperty( placeholder.substring(0, defaultDelimiter));
+
+            // Kye not resolved, apply default value
+            if (replacement == null) {
+                return defaultDelimiter == placeholder.length() - 1 ? "" : placeholder.substring(defaultDelimiter + 1);
+            } else {
+                return replacement;
+            }
+        } else {
+            return propertyResolver.resolveProperty(placeholder);
+        }
+    }
 }

@@ -54,6 +54,7 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.PropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 /**
@@ -598,13 +598,13 @@ public class TaggedSettings {
      * Applies the given property object to all registered components.
      * </p>
      *
-     * @param properties the property object
+     * @param properties the property resolver object
      * @see TaggedSettings#applyProperty(String, String)
      */
-    void applyProperties(final Properties properties) {
-        for (final Object key : properties.keySet()) {
+    void applyProperties(final PropertyResolver properties) {
+        for (final Object key : properties.getKeys()) {
             final String property = key.toString();
-            applyProperty(property, properties.getProperty(property));
+            applyProperty(property, properties.resolveProperty(property));
         }
     }
 

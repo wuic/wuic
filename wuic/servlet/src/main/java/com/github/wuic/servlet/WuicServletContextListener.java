@@ -51,6 +51,7 @@ import com.github.wuic.servlet.jetty.PathMap;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.Consumer;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.PropertyResolver;
 import com.github.wuic.util.UrlProvider;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
@@ -70,7 +71,10 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -202,15 +206,15 @@ public class WuicServletContextListener implements ServletContextListener {
      * @return the function
      */
     @SuppressWarnings("unchecked")
-    public static BiFunction<String, String, String> getParamProvider(final ServletContext servletContext) {
+    public static PropertyResolver getParamProvider(final ServletContext servletContext) {
         final Object fct = servletContext.getAttribute(ApplicationConfig.INIT_PARAM_FUNCTION);
 
         if (fct == null) {
-            final String message = String.format("BiFunction is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
+            final String message = String.format("PropertyResolver is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
             WuicException.throwBadStateException(new IllegalArgumentException(message));
         }
 
-        return (BiFunction<String, String, String>) fct;
+        return (PropertyResolver) fct;
     }
 
     /**
@@ -219,9 +223,10 @@ public class WuicServletContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
         final ServletContext sc = sce.getServletContext();
-        final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
-        BiFunction<String, String, String> paramProvider;
         detectFilter(sc);
+
+        final String paramClass = sc.getInitParameter(ApplicationConfig.INIT_PARAM_FUNCTION);
+        PropertyResolver paramProvider;
 
         // No specific provider, use default
         if (paramClass == null) {
@@ -396,7 +401,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @throws Exception if class can't be instantiated
      */
     @SuppressWarnings("unchecked")
-    private BiFunction<String, String, String> newParamClassInstance(final String paramClass, final ServletContext sc)
+    private PropertyResolver newParamClassInstance(final String paramClass, final ServletContext sc)
             throws Exception {
         final Class<?> clazz = Class.forName(paramClass);
 
@@ -414,9 +419,9 @@ public class WuicServletContextListener implements ServletContextListener {
 
         // Check if constructor exists
         if (scConstructor != null) {
-            return (BiFunction<String, String, String>) scConstructor.newInstance(sc);
+            return (PropertyResolver) scConstructor.newInstance(sc);
         } else if (defaultConstructor != null) {
-            return (BiFunction<String, String, String>) defaultConstructor.newInstance();
+            return (PropertyResolver) defaultConstructor.newInstance();
         } else {
             throw new IllegalStateException(
                     String.format("'%s' provide at least a default constructor or a constructor expecting one parameter of type '%s'",
@@ -432,7 +437,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @param sc the servlet context
      * @return the function to apply
      */
-    protected BiFunction<String, String, String> paramProvider(final ServletContext sc) {
+    protected PropertyResolver paramProvider(final ServletContext sc) {
         return new InitParamProperties(sc);
     }
 
@@ -507,12 +512,12 @@ public class WuicServletContextListener implements ServletContextListener {
      * @author Guillaume DROUET
      * @since 0.5.2
      */
-    public final class PropertiesWrapper implements BiFunction<String, String, String> {
+    public final class PropertiesWrapper implements PropertyResolver {
 
         /**
          * Wraps the function.
          */
-        private final BiFunction<String, String, String> wrap;
+        private final PropertyResolver wrap;
 
         /**
          * Servlet context.
@@ -527,7 +532,7 @@ public class WuicServletContextListener implements ServletContextListener {
          * @param sc the servlet context
          * @param w  the function
          */
-        private PropertiesWrapper(final ServletContext sc, final BiFunction<String, String, String> w) {
+        private PropertiesWrapper(final ServletContext sc, PropertyResolver w) {
             wrap = w;
             servletContext = sc;
         }
@@ -536,8 +541,8 @@ public class WuicServletContextListener implements ServletContextListener {
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String key, final String defaultVal) {
-            final String wrapResult = wrap.apply(key, defaultVal);
+        public String resolveProperty(final String key) {
+            final String wrapResult = wrap.resolveProperty(key);
 
             if (ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM.equals(key)) {
                 final ServletRegistration r = WuicServlet.findServletRegistration(servletContext);
@@ -551,7 +556,7 @@ public class WuicServletContextListener implements ServletContextListener {
                     // We expect a star in the mapping
                     if (star != -1) {
                         // The user has defined a context-param explicitly, it will be ignored and replace by servlet mapping
-                        if (wrapResult != null && !wrapResult.equals(defaultVal)) {
+                        if (wrapResult != null) {
                             WuicServletContextListener.this.log.warn(
                                     "WuicServlet is installed and its mapping will be used to resolve '{}' property. 'context-param' configured with value '{}' will be ignored.",
                                     ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM,
@@ -579,6 +584,14 @@ public class WuicServletContextListener implements ServletContextListener {
                 return wrapResult;
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Collection<Object> getKeys() {
+            return wrap.getKeys();
+        }
     }
 
     /**
@@ -589,7 +602,7 @@ public class WuicServletContextListener implements ServletContextListener {
      * @author Guillaume DROUET
      * @since 0.5.0
      */
-    public static final class InitParamProperties implements BiFunction<String, String, String> {
+    public static final class InitParamProperties implements PropertyResolver {
 
         /**
          * The servlet context.
@@ -611,9 +624,22 @@ public class WuicServletContextListener implements ServletContextListener {
          * {@inheritDoc}
          */
         @Override
-        public String apply(final String key, final String defaultValue) {
-            final String retval = servletContext.getInitParameter(key);
-            return retval == null ? defaultValue : retval;
+        public String resolveProperty(final String key) {
+            return servletContext.getInitParameter(key);
+        }
+
+        /**
+         * '{@inheritDoc}
+         */
+        @Override
+        public Collection<Object> getKeys() {
+            final List<Object> retval = new ArrayList<Object>();
+
+            for (final Enumeration<String> enumeration = servletContext.getInitParameterNames(); enumeration.hasMoreElements();) {
+                retval.add(enumeration.nextElement());
+            }
+
+            return retval;
         }
     }
 }
