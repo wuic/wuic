@@ -490,7 +490,7 @@ public final class StringUtils {
     public static void replace(final char[] array, final int fromIndex, final int toIndex, final char replacement) {
         // Erase comment
         for (int i = fromIndex; i < toIndex; i++) {
-            array[i] = ' ';
+            array[i] = replacement;
         }
     }
 
