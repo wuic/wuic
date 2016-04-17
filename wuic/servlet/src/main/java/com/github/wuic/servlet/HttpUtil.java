@@ -186,8 +186,12 @@ public enum HttpUtil {
             throws IOException {
         final String ifNoneMatch = request.getHeader("If-None-Match");
 
+        // Make sure the value is different in case of best effort
+        final String versionNumber = String.valueOf(NutUtils.getVersionNumber(nut));
+        final String tag =  nut.getInitialName().startsWith("best-effort") ? "0" + versionNumber : versionNumber;
+
         // The resource has not been modified, tell the client to reuse the value in cache
-        if (ifNoneMatch != null && ifNoneMatch.equals(String.valueOf(NutUtils.getVersionNumber(nut)))) {
+        if (ifNoneMatch != null && ifNoneMatch.equals(tag)) {
             logger.info("Content of nut '{}' matches client cache. Sending {} status.", nut.getName(), HttpServletResponse.SC_NOT_MODIFIED);
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
@@ -201,7 +205,7 @@ public enum HttpUtil {
             }
 
             // Tag in order to reply 304
-            response.setHeader("ETag", String.valueOf(NutUtils.getVersionNumber(nut)));
+            response.setHeader("ETag", tag);
 
             nut.transform(new WriteResponseOnReady(response, nut));
         }
