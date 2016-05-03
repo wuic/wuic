@@ -373,6 +373,13 @@ public interface ApplicationConfig {
     String LIBRARIES = ENGINE_PREFIX + "libraries";
 
     /**
+     * A boolean value that tells an engine to generate files in the same directory as the one containing source file.
+     * This allows to avoid copy of source files to a temporary directory (with the assumption that sources and generated
+     * files should be in the same directory).
+     */
+    String RESOLVED_FILE_DIRECTORY_AS_WORKING_DIR = ENGINE_PREFIX + "resolvedFileDirectoryAsWorkingDirectory";
+
+    /**
      * <p>
      * Indicates all the regex expressions configured in a filter.
      * </p>

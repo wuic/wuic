@@ -53,6 +53,7 @@ import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutDiskStore;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+
+import static com.github.wuic.ApplicationConfig.COMMAND;
+import static com.github.wuic.ApplicationConfig.INPUT_NUT_TYPE;
+import static com.github.wuic.ApplicationConfig.OUTPUT_NUT_TYPE;
+import static com.github.wuic.ApplicationConfig.PATH_SEPARATOR;
+import static com.github.wuic.ApplicationConfig.LIBRARIES;
+import static com.github.wuic.ApplicationConfig.RESOLVED_FILE_DIRECTORY_AS_WORKING_DIR;
 
 /**
  * <p>
@@ -125,7 +133,63 @@ import java.util.regex.Pattern;
  */
 @EngineService(injectDefaultToWorkflow = true)
 public class CommandLineConverterEngine extends AbstractConverterEngine
-        implements BiFunction<List<String>, File, Boolean> {
+        implements BiFunction<CommandLineConverterEngine.CommandLineInfo, EngineRequest, Boolean> {
+
+    /**
+     * <p>
+     * This class defines information for a command line execution.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class CommandLineInfo {
+
+        /**
+         * Paths to compile.
+         */
+        private List<String> pathsToCompile;
+
+        /**
+         * File where compilation result should be written.
+         */
+        private File compilationResult;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param pathsToCompile the paths to compile
+         * @param compilationResult the compilation result file
+         */
+        public CommandLineInfo(final List<String> pathsToCompile, final File compilationResult) {
+            this.pathsToCompile = pathsToCompile;
+            this.compilationResult = compilationResult;
+        }
+
+        /**
+         * <p>
+         * Gets the paths to compile.
+         * </p>
+         *
+         * @return the paths
+         */
+        public List<String> getPathsToCompile() {
+            return pathsToCompile;
+        }
+
+        /**
+         * <p>
+         * Gets the compilation result file.
+         * </p>
+         *
+         * @return the file
+         */
+        public File getCompilationResult() {
+            return compilationResult;
+        }
+    }
 
     /**
      * The base path token in the command line pattern.
@@ -189,6 +253,11 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     private File workingDirectory;
 
     /**
+     * Try to use the directory containing source files as parent directory for generated content.
+     */
+    private Boolean resolvedFileDirectoryAsWorkingDirectory;
+
+    /**
      * <p>
      * Initializes a new instance.
      * </p>
@@ -198,18 +267,21 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * @param outputNutType the output nut type
      * @param separator the path separator
      * @param libs additional libraries paths available in the classpath
+     * @param srdaws try to reuse source directory to generate files
      * @throws WuicException if the engine cannot be initialized
      * @throws IOException if any I/O error occurs
      */
     @Config
     @SuppressWarnings("unchecked")
-    public void init(@StringConfigParam(propertyKey = ApplicationConfig.COMMAND, defaultValue = "") final String command,
-                     @StringConfigParam(propertyKey = ApplicationConfig.INPUT_NUT_TYPE, defaultValue = "") final String inputNutType,
-                     @StringConfigParam(propertyKey = ApplicationConfig.OUTPUT_NUT_TYPE, defaultValue = "") final String outputNutType,
-                     @StringConfigParam(propertyKey = ApplicationConfig.PATH_SEPARATOR, defaultValue = " ") final String separator,
-                     @StringConfigParam(propertyKey = ApplicationConfig.LIBRARIES, defaultValue = "") final String libs)
+    public void init(@StringConfigParam(propertyKey = COMMAND, defaultValue = "") final String command,
+                     @StringConfigParam(propertyKey = INPUT_NUT_TYPE, defaultValue = "") final String inputNutType,
+                     @StringConfigParam(propertyKey = OUTPUT_NUT_TYPE, defaultValue = "") final String outputNutType,
+                     @StringConfigParam(propertyKey = PATH_SEPARATOR, defaultValue = " ") final String separator,
+                     @StringConfigParam(propertyKey = LIBRARIES, defaultValue = "") final String libs,
+                     @BooleanConfigParam(propertyKey = RESOLVED_FILE_DIRECTORY_AS_WORKING_DIR, defaultValue = true) final Boolean srdaws)
             throws WuicException, IOException {
         workingDirectory = NutDiskStore.INSTANCE.getWorkingDirectory();
+        resolvedFileDirectoryAsWorkingDirectory = srdaws;
 
         // Engine won't be associated to any chain
         if (inputNutType.isEmpty() || outputNutType.isEmpty()) {
@@ -243,12 +315,15 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * @param is the source input stream
      * @param nut the corresponding nut
      * @param request the request that initiated conversion
+     * @param executor the function that will execute the command line
+     * @param resolvedFileDirectoryAsWorkingDirectory if the content should be generated in the source file directory
      * @throws IOException if any I/O error occurs
      */
     public static InputStream execute(final InputStream is,
                                       final ConvertibleNut nut,
                                       final EngineRequest request,
-                                      final BiFunction<List<String>, File, Boolean> executor)
+                                      final BiFunction<CommandLineInfo, EngineRequest, Boolean> executor,
+                                      final Boolean resolvedFileDirectoryAsWorkingDirectory)
             throws IOException {
         // Do not generate source map if we are in best effort
         final boolean be = request.isBestEffort();
@@ -264,42 +339,29 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         }
 
         final List<String> pathsToCompile = new ArrayList<String>(compositionList.size());
+        File workingDir = NutDiskStore.INSTANCE.getWorkingDirectory();
+        boolean copyFiles = true;
 
-        // Read the stream and collect referenced nuts
-        for (final ConvertibleNut n : compositionList) {
-            if (n.getParentFile() == null) {
-                InputStream isNut = null;
-                OutputStream osNut = null;
+        // Try to use common parent directory of collected nuts
+        if (resolvedFileDirectoryAsWorkingDirectory) {
+            final String file = NutUtils.getParentFile(compositionList);
 
-                try {
-                    final File file = NutDiskStore.INSTANCE.store(n);
+            // There is a common parent directory...
+            if (file != null) {
+                final File f = new File(file);
 
-                    if (!file.exists()) {
-                        isNut = n.openStream();
-                        osNut = new FileOutputStream(file);
-                        IOUtils.copyStream(isNut, osNut);
-                    }
-
-                    pathsToCompile.add(IOUtils.normalizePathSeparator((file.getAbsolutePath())));
-                } catch (InterruptedException ie) {
-                    throw new IOException(ie);
-                } catch (ExecutionException ee) {
-                    throw new IOException(ee);
-                } finally {
-                    IOUtils.close(isNut, osNut);
+                // ... where we can write
+                if (f.canWrite()) {
+                    workingDir = f;
+                    copyFiles = false;
                 }
-            } else {
-                pathsToCompile.add(IOUtils.normalizePathSeparator(IOUtils.mergePath(n.getParentFile(), n.getInitialName())));
-            }
-
-            if (!be) {
-                nut.addReferencedNut(n);
             }
         }
 
+        collectPathToCompile(pathsToCompile, compositionList, nut, be, copyFiles);
+
         // Resources to clean
         InputStream sourceMapInputStream = null;
-        final File workingDir = NutDiskStore.INSTANCE.getWorkingDirectory();
         final File compilationResult = new File(workingDir, TextAggregatorEngine.aggregationName(NutType.JAVASCRIPT));
         final File sourceMapFile = new File(compilationResult.getAbsolutePath() + ".map");
 
@@ -310,7 +372,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         try {
             log.debug("absolute path: {}", workingDir.getAbsolutePath());
 
-            if (!executor.apply(pathsToCompile, compilationResult)) {
+            if (!executor.apply(new CommandLineInfo(pathsToCompile, compilationResult), request)) {
                 log.error("executor {} returns false", executor);
                 WuicException.throwStreamException(new IOException("Executor failed."));
             } else if (!compilationResult.exists() || (!be && !sourceMapFile.exists())) {
@@ -338,6 +400,57 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
             IOUtils.close(sourceMapInputStream, out.get(), argsOutputStream);
             IOUtils.delete(compilationResult);
             IOUtils.delete(sourceMapFile);
+        }
+    }
+
+    /**
+     * <p>
+     * Collects the path to be used by the converter in order to generate the content.
+     * </p>
+     *
+     * @param pathsToCompile the list where collected paths will be added
+     * @param nuts the nuts containing content to compile
+     * @param nut the enclosing nut
+     * @param bestEffort if we are in best effort mode
+     * @param copyFiles if files should be copied in a temporary directory or not
+     * @throws IOException in any I/O error occurs
+     */
+    private static void collectPathToCompile(final List<String> pathsToCompile,
+                                             final List<ConvertibleNut> nuts,
+                                             final ConvertibleNut nut,
+                                             final boolean bestEffort,
+                                             final boolean copyFiles) throws IOException {
+
+        // Read the stream and collect referenced nuts
+        for (final ConvertibleNut n : nuts) {
+            if (copyFiles) {
+                InputStream isNut = null;
+                OutputStream osNut = null;
+
+                try {
+                    final File file = NutDiskStore.INSTANCE.store(n);
+
+                    if (!file.exists()) {
+                        isNut = n.openStream();
+                        osNut = new FileOutputStream(file);
+                        IOUtils.copyStream(isNut, osNut);
+                    }
+
+                    pathsToCompile.add(IOUtils.normalizePathSeparator((file.getAbsolutePath())));
+                } catch (InterruptedException ie) {
+                    throw new IOException(ie);
+                } catch (ExecutionException ee) {
+                    throw new IOException(ee);
+                } finally {
+                    IOUtils.close(isNut, osNut);
+                }
+            } else {
+                pathsToCompile.add(IOUtils.normalizePathSeparator(IOUtils.mergePath(n.getParentFile(), n.getInitialName())));
+            }
+
+            if (!bestEffort) {
+                nut.addReferencedNut(n);
+            }
         }
     }
 
@@ -620,14 +733,14 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     @Override
     public InputStream transform(final InputStream is, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
-        return execute(is, nut, request, this);
+        return execute(is, nut, request, this, resolvedFileDirectoryAsWorkingDirectory);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean apply(final List<String> pathsToCompile, final File compilationResult) {
+    public Boolean apply(final CommandLineInfo commandLineInfo, final EngineRequest request) {
         try {
             final StringBuilder commandLine = new StringBuilder(command);
 
@@ -637,27 +750,27 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
             if (!command.contains(BASE_PATH_TOKEN)) {
                 basePath = null;
             } else {
-                basePath = StringUtils.computeCommonPathBeginning(pathsToCompile);
+                basePath = StringUtils.computeCommonPathBeginning(commandLineInfo.getPathsToCompile());
                 StringUtils.replaceAll(BASE_PATH_TOKEN, basePath, commandLine);
             }
 
             // Path
-            final String paths = buildPaths(pathsToCompile, basePath);
+            final String paths = buildPaths(commandLineInfo.getPathsToCompile(), basePath);
             StringUtils.replaceAll(PATH_TOKEN, paths, commandLine);
 
             // Source map
-            final File sourceMapFile = new File(compilationResult.getAbsolutePath() + ".map");
+            final File sourceMapFile = new File(commandLineInfo.getCompilationResult().getAbsolutePath() + ".map");
             final String sourceMapPath = IOUtils.normalizePathSeparator(sourceMapFile.getAbsolutePath());
             StringUtils.replaceAll(SOURCE_MAP_TOKEN, sourceMapPath, commandLine);
 
             // Output
-            final String outPath = IOUtils.normalizePathSeparator(compilationResult.getAbsolutePath());
+            final String outPath = IOUtils.normalizePathSeparator(commandLineInfo.getCompilationResult().getAbsolutePath());
             StringUtils.replaceAll(OUT_PATH_TOKEN, outPath, commandLine);
 
             // Install libraries
-            installLibraries(pathsToCompile, basePath, paths, outPath, sourceMapPath);
+            installLibraries(commandLineInfo.getPathsToCompile(), basePath, paths, outPath, sourceMapPath);
 
-            return process(commandLine.toString(), workingDirectory, compilationResult);
+            return process(commandLine.toString(), workingDirectory, commandLineInfo.getCompilationResult());
         } catch (IOException ioe) {
             WuicException.throwBadStateException(ioe);
         } catch (InterruptedException ie) {

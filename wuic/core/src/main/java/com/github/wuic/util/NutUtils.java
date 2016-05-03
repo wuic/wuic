@@ -227,4 +227,28 @@ public final class NutUtils {
         return n.isCompressed() ?
                 IOUtils.readString(new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(b)))) : new String(b);
     }
+
+    /**
+     * <p>
+     * Gets the common parent file of the given list of nuts.
+     * </p>
+     *
+     * @param nuts the nuts
+     * @return the common parent, {@code null} if a call to {@link com.github.wuic.nut.Nut#getParentFile()} returns {@code null}
+     */
+    public static String getParentFile(final List<? extends Nut> nuts) {
+        final List<String> paths = new ArrayList<String>(nuts.size());
+
+        for (final Nut nut : nuts) {
+
+            // the parent file is null, unable to find common parent with other files
+            if (nut.getParentFile() == null) {
+                return null;
+            } else {
+                paths.add(nut.getParentFile());
+            }
+        }
+
+        return StringUtils.computeCommonPathBeginning(paths);
+    }
 }
