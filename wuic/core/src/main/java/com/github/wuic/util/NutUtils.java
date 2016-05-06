@@ -41,6 +41,7 @@ package com.github.wuic.util;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.Source;
+import com.github.wuic.nut.SourceMapNut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +83,40 @@ public final class NutUtils {
 
     /**
      * <p>
+     * Finds a nut with a name matching the given path within a given source map.
+     * </p>
+     *
+     * @param nut the nut that owns the source map
+     * @param sourceMapNut the nut to test
+     * @param nutName the nutName
+     * @return the nut, {@code null} if not found
+     */
+    public static ConvertibleNut findInSourceMapByName(final ConvertibleNut nut, final SourceMapNut sourceMapNut, final String nutName) {
+        final ConvertibleNut sourceMap = findByName(sourceMapNut, nutName);
+
+        if (sourceMap != null) {
+            return sourceMap;
+        } else {
+
+            // Search in original nuts
+            for (final ConvertibleNut o : sourceMapNut.getOriginalNuts()) {
+
+                // Avoid cycles
+                if (!o.equals(nut)) {
+                    final ConvertibleNut res = findByName(o, nutName);
+
+                    if (res != null) {
+                        return res;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * <p>
      * Finds a nut with a name matching the given path.
      * </p>
      *
@@ -98,12 +133,12 @@ public final class NutUtils {
                 || parsedName.equals('/' + nutName)
                 || IOUtils.mergePath("best-effort", nutName).equals(parsedName)) {
             return nut;
-        } else if (!(nut instanceof Source) && (nut.getSource() instanceof ConvertibleNut)) {
+        } else if (!(nut instanceof Source) && (nut.getSource() instanceof SourceMapNut)) {
             // Source map
-            final ConvertibleNut sourceMap = findByName(ConvertibleNut.class.cast(nut.getSource()), nutName);
+            final ConvertibleNut retval = findInSourceMapByName(nut, SourceMapNut.class.cast(nut.getSource()), nutName);
 
-            if (sourceMap != null) {
-                return sourceMap;
+            if (retval != null) {
+                return retval;
             }
         }
 
