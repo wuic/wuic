@@ -358,7 +358,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
             }
         }
 
-        collectPathToCompile(pathsToCompile, compositionList, nut, be, copyFiles);
+        collectPathToCompile(pathsToCompile, compositionList, copyFiles);
 
         // Resources to clean
         InputStream sourceMapInputStream = null;
@@ -410,15 +410,11 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      *
      * @param pathsToCompile the list where collected paths will be added
      * @param nuts the nuts containing content to compile
-     * @param nut the enclosing nut
-     * @param bestEffort if we are in best effort mode
      * @param copyFiles if files should be copied in a temporary directory or not
      * @throws IOException in any I/O error occurs
      */
     private static void collectPathToCompile(final List<String> pathsToCompile,
                                              final List<ConvertibleNut> nuts,
-                                             final ConvertibleNut nut,
-                                             final boolean bestEffort,
                                              final boolean copyFiles) throws IOException {
 
         // Read the stream and collect referenced nuts
@@ -446,10 +442,6 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                 }
             } else {
                 pathsToCompile.add(IOUtils.normalizePathSeparator(IOUtils.mergePath(n.getParentFile(), n.getInitialName())));
-            }
-
-            if (!bestEffort) {
-                nut.addReferencedNut(n);
             }
         }
     }
