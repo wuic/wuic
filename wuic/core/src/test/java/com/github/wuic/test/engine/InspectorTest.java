@@ -52,6 +52,7 @@ import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.LineMatcherInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.ScriptLineInspector;
+import com.github.wuic.engine.core.AngularTemplateInspector;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
@@ -66,6 +67,7 @@ import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlUtils;
@@ -80,6 +82,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -416,6 +419,30 @@ public class InspectorTest {
                 collection.length - 2,
                 e,
                 true);
+    }
+
+    /**
+     * <p>
+     * Tests an inspection performed on very large file.
+     * </p>
+     *
+     * @throws Exception if any error occurs
+     */
+    @Test
+    public void largeInspection() throws Exception {
+        String c = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/largeInspection.js")));
+        final LineInspectorListener i = new LineInspectorListener() {
+            @Override
+            public void onMatch(final char[] data,
+                                final int offset,
+                                final int length,
+                                final String replacement,
+                                final List<? extends ConvertibleNut> extracted) throws WuicException {
+            }
+        };
+
+        SourceMapLineInspector.newInstance(new JavascriptInspectorEngine()).inspect(i, c.toCharArray(), null, null, null);
+        AngularTemplateInspector.newInstance(null).inspect(i, c.toCharArray(), null, null, null);
     }
 
     /**

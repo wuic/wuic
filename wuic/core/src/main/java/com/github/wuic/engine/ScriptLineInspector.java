@@ -168,6 +168,13 @@ public abstract class ScriptLineInspector extends LineInspector {
 
         // Iterate on all ranges to inspect in the given chunk of data
         while ((dataRange = findInspectRange(data, start, length - 1)) != null) {
+
+            // Just continue the loop with a new iteration
+            if (Range.Delimiter.CONTINUE == dataRange.getDelimiter()) {
+                start = dataRange.getStart();
+                continue;
+            }
+
             int offset = dataRange.getStart();
             Range range;
             int len;
@@ -376,7 +383,7 @@ public abstract class ScriptLineInspector extends LineInspector {
         if (quoteCharacter != null) {
             // Looking for the end of string literal: ignore the first character that is reserved for literal opening
             final int end = findEndOfStringLiteral(data, dataStart + 1, dataEnd);
-            range = end != -1 ? findInspectRange(data, end + 1, dataEnd) : null;
+            range = end != -1 ? new Range(Range.Delimiter.CONTINUE, end + 1, dataEnd) : null;
         // Currently inside a multiple line comment
         } else if (inMultiLineComment) {
             // Looking for the end of comment: ignore the two first characters that are reserved for comment opening
@@ -385,7 +392,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             // End of comment found, look for the next valid range
             if (end != -1) {
                 inMultiLineComment = false;
-                range = findInspectRange(data, end + 1, dataEnd);
+                range = new Range(Range.Delimiter.CONTINUE, end + 1, dataEnd);
             } else {
                 // Still inside the comment: ignore
                 range = null;
@@ -413,7 +420,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             if (decision == null) {
                 range = null;
             } else {
-                range = findInspectRange(data, decision.getStart(), dataEnd);
+                range = new Range(Range.Delimiter.CONTINUE, decision.getStart(), dataEnd);
             }
         }
 
@@ -437,7 +444,7 @@ public abstract class ScriptLineInspector extends LineInspector {
         if (quoteCharacter != null) {
             // Looking for the end of string literal: ignore the first character that is reserved for literal opening
             final int end = findEndOfStringLiteral(data, dataStart + 1, dataEnd);
-            range = end != -1 ? findInspectRange(data, end + 1, dataEnd) : null;
+            range = end != -1 ? new Range(Range.Delimiter.CONTINUE, end + 1, dataEnd) : null;
         // Currently inside a multiple line comment
         } else if (inMultiLineComment) {
             // Looking for the end of comment: ignore the two first characters that are reserved for comment opening
@@ -454,7 +461,7 @@ public abstract class ScriptLineInspector extends LineInspector {
 
             if (endOfSingleLineComment != -1) {
                 inSingleLineComment = false;
-                range = findInspectRange(data, endOfSingleLineComment + 1, dataEnd);
+                range = new Range(Range.Delimiter.CONTINUE, endOfSingleLineComment + 1, dataEnd);
             } else {
                 range = null;
             }
@@ -468,7 +475,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             if (decision == null) {
                 range = null;
             } else {
-                range = findInspectRange(data, decision.getStart(), dataEnd);
+                range = new Range(Range.Delimiter.CONTINUE, decision.getStart(), dataEnd);
             }
         }
 
@@ -779,6 +786,12 @@ public abstract class ScriptLineInspector extends LineInspector {
              * End of char array reached.
              */
             EOF,
+
+            /**
+             * This range just needs to be use to launch a new inspection, whatever it represents.
+             * This allows to reduce the number of recursive calls and avoid StackOverflow errors in very large files.
+             */
+            CONTINUE,
         }
 
         /**
