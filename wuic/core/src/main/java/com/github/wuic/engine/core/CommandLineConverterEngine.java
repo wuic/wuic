@@ -192,6 +192,16 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     }
 
     /**
+     * OS name.
+     */
+    public static final String OS_NAME = System.getProperty("os.name");
+
+    /**
+     * If OS is Windows platform or not.
+     */
+    public static final boolean IS_WINDOWS = OS_NAME != null && OS_NAME.contains("Windows");
+
+    /**
      * The base path token in the command line pattern.
      */
     public static final String BASE_PATH_TOKEN = "%basePath%";
@@ -248,9 +258,9 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     private Map<String, Boolean> libraries;
 
     /**
-     * Working directory.
+     * Executor.
      */
-    private File workingDirectory;
+    private BiFunction<CommandLineInfo, EngineRequest, Boolean> executor = this;
 
     /**
      * Try to use the directory containing source files as parent directory for generated content.
@@ -280,7 +290,6 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                      @StringConfigParam(propertyKey = LIBRARIES, defaultValue = "") final String libs,
                      @BooleanConfigParam(propertyKey = RESOLVED_FILE_DIRECTORY_AS_WORKING_DIR, defaultValue = true) final Boolean srdaws)
             throws WuicException, IOException {
-        workingDirectory = NutDiskStore.INSTANCE.getWorkingDirectory();
         resolvedFileDirectoryAsWorkingDirectory = srdaws;
 
         // Engine won't be associated to any chain
@@ -549,8 +558,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         }
 
         // Manage windows platform
-        final String osName = System.getProperty("os.name");
-        command = (osName != null && osName.contains("Windows") ? "cmd /c " : "") + cmd;
+        command = (IS_WINDOWS ? "cmd /c " : "") + cmd;
     }
 
     /**
@@ -647,13 +655,15 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * @param paths the paths in a single {@code String}
      * @param outputPath the out put path
      * @param sourceMapPath the source map path
+     * @param workingDirectory the working directory
      * @throws IOException if copy fails
      */
     private void installLibraries(final List<String> pathsToCompile,
                                   final String basePath,
                                   final String paths,
                                   final String outputPath,
-                                  final String sourceMapPath)
+                                  final String sourceMapPath,
+                                  final File workingDirectory)
             throws IOException {
 
         // Install libraries
@@ -725,7 +735,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     @Override
     public InputStream transform(final InputStream is, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
-        return execute(is, nut, request, this, resolvedFileDirectoryAsWorkingDirectory);
+        return execute(is, nut, request, executor, resolvedFileDirectoryAsWorkingDirectory);
     }
 
     /**
@@ -734,6 +744,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     @Override
     public Boolean apply(final CommandLineInfo commandLineInfo, final EngineRequest request) {
         try {
+            final File workingDirectory = commandLineInfo.getCompilationResult().getParentFile();
             final StringBuilder commandLine = new StringBuilder(command);
 
             // Handle base path
@@ -760,7 +771,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
             StringUtils.replaceAll(OUT_PATH_TOKEN, outPath, commandLine);
 
             // Install libraries
-            installLibraries(commandLineInfo.getPathsToCompile(), basePath, paths, outPath, sourceMapPath);
+            installLibraries(commandLineInfo.getPathsToCompile(), basePath, paths, outPath, sourceMapPath, workingDirectory);
 
             return process(commandLine.toString(), workingDirectory, commandLineInfo.getCompilationResult());
         } catch (IOException ioe) {
@@ -774,23 +785,23 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
     /**
      * <p>
-     * Retrieves the working directory where the command line will be executed.
+     * Gets the executor.
      * </p>
      *
-     * @return the working directory
+     * @return the executor
      */
-    public File getWorkingDirectory() {
-        return workingDirectory;
+    public BiFunction<CommandLineInfo, EngineRequest, Boolean> getExecutor() {
+        return executor;
     }
 
     /**
      * <p>
-     * Modifies the working directory where the command line will be executed.
+     * Sets the executor.
      * </p>
      *
-     * @param workingDirectory the new working directory
+     * @param executor the new executor
      */
-    public void setWorkingDirectory(final File workingDirectory) {
-        this.workingDirectory = workingDirectory;
+    public void setExecutor(final BiFunction<CommandLineInfo, EngineRequest, Boolean> executor) {
+        this.executor = executor;
     }
 }
