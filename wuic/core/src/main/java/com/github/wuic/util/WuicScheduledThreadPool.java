@@ -62,17 +62,12 @@ import java.util.concurrent.ScheduledFuture;
  * @author Guillaume DROUET
  * @since 0.4.0
  */
-public final class WuicScheduledThreadPool extends Thread {
+public enum WuicScheduledThreadPool {
 
     /**
-     * We just create 1 thread per processor.
+     * Singleton.
      */
-    public static final int POOL_SIZE = Runtime.getRuntime().availableProcessors();
-
-    /**
-     * The unique instance.
-     */
-    private static WuicScheduledThreadPool instance = null;
+    INSTANCE;
 
     /**
      * The logger.
@@ -90,23 +85,8 @@ public final class WuicScheduledThreadPool extends Thread {
      * </p>
      */
     private WuicScheduledThreadPool() {
-        pool = Executors.newScheduledThreadPool(POOL_SIZE);
-        Runtime.getRuntime().addShutdownHook(this);
-    }
-
-    /**
-     * <p>
-     * Gets the unique instance.
-     * </p>
-     *
-     * @return the unique instance
-     */
-    public static synchronized WuicScheduledThreadPool getInstance() {
-        if (instance == null) {
-            instance = new WuicScheduledThreadPool();
-        }
-
-        return instance;
+        pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        Runtime.getRuntime().addShutdownHook(new Shutdown());
     }
 
     /**
@@ -145,13 +125,6 @@ public final class WuicScheduledThreadPool extends Thread {
      */
     public synchronized Future<?> executeAsap(final Runnable job) {
         return pool.submit(job);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void run() {
-        shutdown();
     }
 
     /**
@@ -199,6 +172,25 @@ public final class WuicScheduledThreadPool extends Thread {
             } catch (Exception e) {
                 log.error("A thread execution has failed in WUIC", e);
             }
+        }
+    }
+
+    /**
+     * <p>
+     * This {@code Thread} calls {@link #shutdown()}
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class Shutdown extends Thread {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void run() {
+            shutdown();
         }
     }
 

@@ -291,7 +291,7 @@ public class WuicServletContextListener implements ServletContextListener {
      */
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
-        WuicScheduledThreadPool.getInstance().shutdown();
+        WuicScheduledThreadPool.INSTANCE.shutdown();
     }
 
     /**

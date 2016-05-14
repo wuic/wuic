@@ -457,7 +457,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
                 log.info("Building the context with asynchronous call for each workflow");
 
                 for (final String wId : workflowIds()) {
-                    WuicScheduledThreadPool.getInstance().executeAsap(new ExecuteWorkflowJob(wId));
+                    WuicScheduledThreadPool.INSTANCE.executeAsap(new ExecuteWorkflowJob(wId));
                 }
 
                 break;

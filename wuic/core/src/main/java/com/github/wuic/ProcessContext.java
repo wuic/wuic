@@ -74,6 +74,6 @@ public class ProcessContext {
      * @return the future result
      */
     public synchronized <T> Future<T> executeAsap(final Callable<T> job) {
-        return WuicScheduledThreadPool.getInstance().executeAsap(job);
+        return WuicScheduledThreadPool.INSTANCE.executeAsap(job);
     }
 }

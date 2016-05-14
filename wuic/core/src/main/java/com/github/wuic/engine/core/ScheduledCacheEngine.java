@@ -90,7 +90,7 @@ public abstract class ScheduledCacheEngine extends AbstractCacheEngine implement
 
         // Create new scheduling if necessary
         if (timeToLiveSeconds > 0) {
-            clearCacheResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, timeToLiveSeconds);
+            clearCacheResult = WuicScheduledThreadPool.INSTANCE.executeEveryTimeInSeconds(this, timeToLiveSeconds);
         }
     }
 

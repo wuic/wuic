@@ -150,7 +150,7 @@ public abstract class PollingScheduler<T> implements Runnable {
         // Create new scheduling if necessary
         if (pollingInterval > 0) {
             Logging.POLL.log("Start polling operation for {} repeated every {} seconds", getClass().getName(), pollingInterval);
-            pollingResult = WuicScheduledThreadPool.getInstance().executeEveryTimeInSeconds(this, pollingInterval);
+            pollingResult = WuicScheduledThreadPool.INSTANCE.executeEveryTimeInSeconds(this, pollingInterval);
         } else {
             Logging.POLL.log("Won't perform any polling operation for {}", getClass().getName());
         }
