@@ -39,6 +39,8 @@
 package com.github.wuic.servlet;
 
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Source;
+import com.github.wuic.nut.SourceMapNut;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
@@ -184,6 +186,12 @@ public enum HttpUtil {
                       final HttpServletResponse response,
                       final boolean expireHeader)
             throws IOException {
+
+        // Adds the source map header if any source map is available for that nut
+        if (!(nut instanceof Source) && (nut.getSource() instanceof SourceMapNut)) {
+            response.addHeader("X-SourceMap", SourceMapNut.class.cast(nut.getSource()).getName());
+        }
+
         final String ifNoneMatch = request.getHeader("If-None-Match");
 
         // Make sure the value is different in case of best effort

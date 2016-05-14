@@ -62,7 +62,8 @@ import java.util.regex.Pattern;
 /**
  * <p>
  * This inspector extracts the source map. It removes from scripts the "sourceMappingURL" statement when the path can't
- * be resolved and the chain is going to minify/aggregate it.
+ * be resolved and the chain is going to minify/aggregate it. "sourceMappingURL" is also no rewritten if the nuts are
+ * served by WUIC since it will refers the source map with "X-SourceMap" header.
  * </p>
  *
  * <p>
@@ -147,9 +148,15 @@ public class SourceMapLineInspector extends RegexLineInspector {
         // There is a result
         if (!nuts.isEmpty()) {
             final Nut n = nuts.iterator().next();
-            replacement.append("sourceMappingURL=");
+            final List<? extends ConvertibleNut> res;
 
-            final List<? extends ConvertibleNut> res = manageAppend(new PipedConvertibleNut(n), replacement, request, heap);
+            // Do not rewrite the sourceMappingURL comment since the X-SourceMap header will be added by WUIC
+            if (request.isStaticsServedByWuicServlet()) {
+                res = manageAppend(new PipedConvertibleNut(n), new StringBuilder(), request, heap);
+            } else {
+                replacement.append("sourceMappingURL=");
+                res = manageAppend(new PipedConvertibleNut(n), replacement, request, heap);
+            }
 
             // Should have only one nut
             for (final ConvertibleNut nut : res) {
