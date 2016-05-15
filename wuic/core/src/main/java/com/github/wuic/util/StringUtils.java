@@ -371,11 +371,11 @@ public final class StringUtils {
         } else {
             // Copy from the beginning to the end of line
             retval.append(lines[startLine - 1].substring(startCol - 1));
-            retval.append('\n');
+            retval.append(IOUtils.NEW_LINE);
 
             // Copy all plain lines between starting and ending lines
             for (int i = startLine + 1; i < endLine; i++) {
-                retval.append(lines[i - 1]).append('\n');
+                retval.append(lines[i - 1]).append(IOUtils.NEW_LINE);
             }
 
             // Copy from the first character to the ending column

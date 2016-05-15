@@ -324,7 +324,7 @@ public abstract class TextInspectorEngine
         final CharBuffer cbuf = CharBuffer.wrap(chars);
         final ByteBuffer bbuf = Charset.forName(charset).encode(cbuf);
         os.write(bbuf.array());
-        os.write('\n');
+        os.write(IOUtils.NEW_LINE.getBytes());
     }
 
     /**

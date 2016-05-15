@@ -49,6 +49,12 @@ package com.github.wuic;
 public interface ApplicationConfig {
 
     /**
+     * If this constant is set as a system property, WUIC will use "line.separator" property to write line delimiter.
+     * Otherwise \n will be used.
+     */
+    String USE_SYSTEM_LINE_SEPARATOR = "wuic.useSystemLineSeparator";
+
+    /**
      * Basic prefix for all properties.
      */
     String PREFIX = "c.g.wuic.";

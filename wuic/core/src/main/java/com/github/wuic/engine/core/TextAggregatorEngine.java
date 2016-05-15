@@ -110,7 +110,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
         final String name = aggregationName(request.getNuts().get(0).getInitialNutType());
         return new CompositeNut(canReadNutAsynchronously,
                 request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
-                "\r\n".getBytes(),
+                IOUtils.NEW_LINE.getBytes(),
                 request.getProcessContext(),
                 request.getNuts().toArray(new ConvertibleNut[request.getNuts().size()]));
     }
@@ -161,10 +161,11 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
                 convertible.setSource(sourceMapNut);
 
                 // Write the statement at the end of the stream
-                os.write("\n//# sourceMappingURL=".getBytes());
+                os.write(IOUtils.NEW_LINE.getBytes());
+                os.write("//# sourceMappingURL=".getBytes());
                 os.write((sourceMapNut instanceof ConvertibleNut ?
                         ConvertibleNut.class.cast(sourceMapNut).getName() : sourceMapNut.getInitialName()).getBytes());
-                os.write("\n".getBytes());
+                os.write(IOUtils.NEW_LINE.getBytes());
             } catch (WuicException ex) {
                 throw new IOException("Unable to build aggregated source map.", ex);
             }

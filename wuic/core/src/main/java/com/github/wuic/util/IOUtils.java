@@ -98,6 +98,12 @@ public final class IOUtils {
     public static final int ZIP_MAGIC_NUMBER = 0x504b0304;
 
     /**
+     * The line delimiter used by WUIC when generating files. \n is applied if {@link ApplicationConfig#USE_SYSTEM_LINE_SEPARATOR}
+     * is not set as system property. If the property exists, then the "line.separator" property will be used.
+     */
+    public static final String NEW_LINE = System.getProperty("wuic.useSystemLineSeparator") != null ? System.getProperty("line.separator") : "\n";
+
+    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>

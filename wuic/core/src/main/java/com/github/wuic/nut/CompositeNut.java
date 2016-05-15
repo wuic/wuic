@@ -547,7 +547,7 @@ public class CompositeNut extends PipedConvertibleNut {
          */
         @Override
         public String toString() {
-            return String.format("separatorPositions: %s\nisText: %b", Arrays.toString(positions), sequenceReader != null);
+            return String.format("separatorPositions: %s%sisText: %b", Arrays.toString(positions), IOUtils.NEW_LINE, sequenceReader != null);
         }
 
         /**

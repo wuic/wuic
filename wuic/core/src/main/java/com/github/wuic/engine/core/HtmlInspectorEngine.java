@@ -836,9 +836,9 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                         getAttributes(n instanceof CompositeNut ? CompositeNut.class.cast(n).getCompositionList() : Arrays.asList(n));
 
                 if (additionalAttributes != null) {
-                    html.append(HtmlUtil.writeScriptImport(n, urlProvider, additionalAttributes)).append("\r\n");
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider, additionalAttributes)).append(IOUtils.NEW_LINE);
                 } else {
-                    html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append("\r\n");
+                    html.append(HtmlUtil.writeScriptImport(n, urlProvider)).append(IOUtils.NEW_LINE);
                 }
             }
 

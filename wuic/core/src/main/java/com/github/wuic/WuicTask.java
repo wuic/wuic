@@ -303,7 +303,8 @@ public class WuicTask {
 
                 buildInfo = new PrintWriter(buildInfoFile);
                 buildInfo.write(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM + '=' + contextPath);
-                buildInfo.write("\nworkflowList=");
+                buildInfo.write(IOUtils.NEW_LINE);
+                buildInfo.write("workflowList=");
             }
 
             // Now write each workflow result to disk with its description file

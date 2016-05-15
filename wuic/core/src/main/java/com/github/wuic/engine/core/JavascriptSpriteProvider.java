@@ -43,6 +43,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.nut.Source;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProvider;
 
@@ -87,11 +88,14 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
         // Inject instantiation
         jsBuilder.append("if (typeof(");
         jsBuilder.append(JS_CONSTANT);
-        jsBuilder.append(") === 'undefined') {\n");
+        jsBuilder.append(") === 'undefined') {");
+        jsBuilder.append(IOUtils.NEW_LINE);
         jsBuilder.append("\tvar ");
         jsBuilder.append(JS_CONSTANT);
-        jsBuilder.append(" = {};\n");
-        jsBuilder.append("}\n");
+        jsBuilder.append(" = {};");
+        jsBuilder.append(IOUtils.NEW_LINE);
+        jsBuilder.append("}");
+        jsBuilder.append(IOUtils.NEW_LINE);
 
         // Define each region within the image
         for (final String name : getRegions().keySet()) {
@@ -103,25 +107,38 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
             jsBuilder.append(convertAllowedName(workflowId, name));
 
             // x position
-            jsBuilder.append("'] = {\n\tx : \"");
+            jsBuilder.append("'] = {");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("\tx : \"");
             jsBuilder.append(reg.getxPosition());
 
             // y position
-            jsBuilder.append("\",\n\ty : \"");
+            jsBuilder.append("\",");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("\ty : \"");
             jsBuilder.append(reg.getyPosition());
 
             // Width
-            jsBuilder.append("\",\n\tw : \"");
+            jsBuilder.append("\",");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("\tw : \"");
             jsBuilder.append(reg.getWidth());
 
             // Height
-            jsBuilder.append("\",\n\th : \"");
+            jsBuilder.append("\",");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("\th : \"");
             jsBuilder.append(reg.getHeight());
 
             // Add URL
-            jsBuilder.append("\",\n\turl : \"");
+            jsBuilder.append("\",");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("\turl : \"");
             jsBuilder.append(urlProvider.getUrl(getImage()));
-            jsBuilder.append("\"\n};\n");
+            jsBuilder.append("\"");
+            jsBuilder.append(IOUtils.NEW_LINE);
+            jsBuilder.append("};");
+            jsBuilder.append(IOUtils.NEW_LINE);
         }
 
         // Make a byte array and return nut wrapper

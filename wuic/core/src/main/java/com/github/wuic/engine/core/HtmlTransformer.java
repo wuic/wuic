@@ -233,8 +233,8 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             final List<ConvertibleNut> cached = CollectionUtils.newList(nut);
             collect(urlProvider, sb, cached);
             final Long versionNumber = NutUtils.getVersionNumber(cached);
-            sb.append("\nNETWORK:\n*");
-            sb.insert(0, String.format("CACHE MANIFEST\n# Version number: %d", versionNumber));
+            sb.append(IOUtils.NEW_LINE).append("NETWORK:").append(IOUtils.NEW_LINE).append("*");
+            sb.insert(0, String.format("CACHE MANIFEST%s# Version number: %d", IOUtils.NEW_LINE, versionNumber));
 
             // Create the nut
             final String name = nut.getName().concat(".appcache");
@@ -261,7 +261,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
      */
     private void collect(final UrlProvider urlProvider, final StringBuilder sb, final List<ConvertibleNut> nuts) {
         for (final ConvertibleNut nut : nuts) {
-            sb.append("\n").append(urlProvider.getUrl(nut));
+            sb.append(IOUtils.NEW_LINE).append(urlProvider.getUrl(nut));
 
             if (nut.getReferencedNuts() != null) {
                 collect(urlProvider, sb, nut.getReferencedNuts());
@@ -334,7 +334,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             final NutType nutType = ref.getNutType();
             final String as = nutType.getHintInfo() == null ? "" : " as=\"" + nutType.getHintInfo() + "\"";
             final String strategy = ref.isSubResource() ? "preload" : "prefetch";
-            builder.append(String.format("<link rel=\"%s\" href=\"%s\"%s />\n", strategy, urlProvider.getUrl(ref), as));
+            builder.append(String.format("<link rel=\"%s\" href=\"%s\"%s />%s", strategy, urlProvider.getUrl(ref), as, IOUtils.NEW_LINE));
 
             if (ref.getReferencedNuts() != null) {
                 appendHint(urlProvider, builder, ref.getReferencedNuts());

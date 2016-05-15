@@ -246,11 +246,14 @@ public class ProxyNutDao implements NutDao {
      */
     @Override
     public String toString() {
-        return "\nDelegate: "
+        return IOUtils.NEW_LINE
+                + "Delegate: "
                 + delegate
-                + "\nProxy DAO: "
+                + IOUtils.NEW_LINE
+                + "Proxy DAO: "
                 + Arrays.deepToString(proxyNutDao.keySet().toArray())
-                + "\nProxy Nuts: "
+                + IOUtils.NEW_LINE
+                + "Proxy Nuts: "
                 + Arrays.deepToString(proxyNut.keySet().toArray());
     }
 }
