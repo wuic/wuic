@@ -58,7 +58,6 @@ import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.SourceMapNut;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.Pipe;
 
 import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
 
@@ -79,7 +78,7 @@ import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
  * @since 0.1.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
-public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pipe.Transformer<ConvertibleNut> {
+public class TextAggregatorEngine extends AbstractAggregatorEngine implements EngineRequestTransformer.RequireEngineRequestTransformer {
 
     /**
      * For version number computation.
@@ -119,7 +118,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
 
         // Erase all sourceMappingURL occurrences
         final String content = IOUtils.readString(new InputStreamReader(is));
@@ -161,23 +160,17 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
                 convertible.setSource(sourceMapNut);
 
                 // Write the statement at the end of the stream
-                os.write(IOUtils.NEW_LINE.getBytes());
-                os.write("//# sourceMappingURL=".getBytes());
-                os.write((sourceMapNut instanceof ConvertibleNut ?
-                        ConvertibleNut.class.cast(sourceMapNut).getName() : sourceMapNut.getInitialName()).getBytes());
-                os.write(IOUtils.NEW_LINE.getBytes());
+                if (!request.isStaticsServedByWuicServlet()) {
+                    os.write(IOUtils.NEW_LINE.getBytes());
+                    os.write("//# sourceMappingURL=".getBytes());
+                    os.write((sourceMapNut instanceof ConvertibleNut ?
+                            ConvertibleNut.class.cast(sourceMapNut).getName() : sourceMapNut.getInitialName()).getBytes());
+                    os.write(IOUtils.NEW_LINE.getBytes());
+                }
             } catch (WuicException ex) {
                 throw new IOException("Unable to build aggregated source map.", ex);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canAggregateTransformedStream() {
-        return false;
     }
 
     /**
@@ -195,7 +188,16 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements Pi
         final CompositeNut compositeNut = newCompositeNut(request);
 
         // Proceed source map of each nut to aggregate all of them
-        compositeNut.addTransformer(this);
+        compositeNut.addTransformer(new EngineRequestTransformer(request, this) {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean canAggregateTransformedStream() {
+                return false;
+            }
+        });
 
         retval.add(compositeNut);
 
