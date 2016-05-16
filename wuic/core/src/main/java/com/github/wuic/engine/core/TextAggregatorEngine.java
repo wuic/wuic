@@ -163,8 +163,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 if (!request.isStaticsServedByWuicServlet()) {
                     os.write(IOUtils.NEW_LINE.getBytes());
                     os.write("//# sourceMappingURL=".getBytes());
-                    os.write((sourceMapNut instanceof ConvertibleNut ?
-                            ConvertibleNut.class.cast(sourceMapNut).getName() : sourceMapNut.getInitialName()).getBytes());
+                    os.write(sourceMapNut.getName().getBytes());
                     os.write(IOUtils.NEW_LINE.getBytes());
                 }
             } catch (WuicException ex) {
