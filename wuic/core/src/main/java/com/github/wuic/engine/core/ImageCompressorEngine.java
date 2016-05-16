@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
 import com.github.wuic.config.Config;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
@@ -77,7 +78,8 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut) throws IOException {
+    public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut, final EngineRequest request)
+            throws IOException {
         // Do not use char set here !
         IOUtils.copyStream(source, target);
     }

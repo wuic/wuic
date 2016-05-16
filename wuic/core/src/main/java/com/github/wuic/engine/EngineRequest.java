@@ -307,6 +307,17 @@ public final class EngineRequest {
     }
 
     /**
+     * <p>
+     * Returns the charset.
+     * </p>
+     *
+     * @return the charset
+     */
+    public String getCharset() {
+        return getBuilder().getCharset();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

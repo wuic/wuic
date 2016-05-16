@@ -69,14 +69,12 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
      * </p>
      *
      * @param inspect activate inspection or not
-     * @param charset inspected files charset
      */
     @Config
     public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String charset,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.WRAP_PATTERN) final String wrapPattern) {
-        init(inspect, charset);
+        init(inspect);
         addInspector(SourceMapLineInspector.newInstance(this));
 
         if ("".equals(wrapPattern)) {

@@ -258,7 +258,8 @@ public class AbstractNutDaoTest {
         final Long version = 19860606L;
         final NutDao dao = new MockNutDaoTest(true, version.toString());
 
-        Assert.assertEquals(version, new CompositeNut(false,
+        Assert.assertEquals(version, new CompositeNut("UTF-8",
+                false,
                 "composite.js",
                 null,
                 Mockito.mock(ProcessContext.class),

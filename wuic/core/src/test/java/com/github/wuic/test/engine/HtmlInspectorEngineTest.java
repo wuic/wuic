@@ -199,7 +199,7 @@ public class HtmlInspectorEngineTest {
         heap.checkFiles(ProcessContext.DEFAULT);
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).build();
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
-        e.init(true, "UTF-8", true);
+        e.init(true, true);
         final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -248,7 +248,7 @@ public class HtmlInspectorEngineTest {
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx).chains(chains).processContext(ProcessContext.DEFAULT).build();
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
-        e.init(true, "UTF-8", true);
+        e.init(true, true);
         final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -284,7 +284,7 @@ public class HtmlInspectorEngineTest {
         final byte[] bytes = StringUtils.merge(script, "\n").getBytes();
 
         final HtmlInspectorEngine engine = new HtmlInspectorEngine();
-        engine.init(true, "UTF-8", true);
+        engine.init(true, true);
         engine.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -400,7 +400,7 @@ public class HtmlInspectorEngineTest {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
-        e.init(true, "UTF-8", true);
+        e.init(true, true);
         e.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -534,7 +534,7 @@ public class HtmlInspectorEngineTest {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
-        e.init(true, "UTF-8", true);
+        e.init(true, true);
         chains.put(NutType.HTML, e);
 
         for (long i = countDownLatch.getCount(); i > 0; i--) {
@@ -583,7 +583,7 @@ public class HtmlInspectorEngineTest {
 
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext()).processContext(ProcessContext.DEFAULT).chains(chains).build();
         final HtmlInspectorEngine h = new HtmlInspectorEngine();
-        h.init(true, "UTF-8", true);
+        h.init(true, true);
         final List<ConvertibleNut> nuts = h.parse(request);
         Assert.assertEquals(1, nuts.size());
         final ConvertibleNut nut = nuts.get(0);

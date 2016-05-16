@@ -89,24 +89,29 @@ public class CompositeNut extends PipedConvertibleNut {
      */
     private Boolean asynchronousVersionNumber;
 
+    private final String charset;
+
     /**
      * <p>
      * Builds a new instance.
      * </p>
      *
+     * @param cs the charset
      * @param avn indicates if version computation is done asynchronously or not
      * @param composition the nuts of this composition
      * @param separator the bytes between each stream, {@code null} if nothing
      * @param specificName the name of the composition
      * @param processContext the process context
      */
-    public CompositeNut(final Boolean avn,
+    public CompositeNut(final String cs,
+                        final Boolean avn,
                         final String specificName,
                         final byte[] separator,
                         final ProcessContext processContext,
                         final ConvertibleNut ... composition) {
         super(composition[0]);
 
+        charset = cs;
         asynchronousVersionNumber = avn;
 
         if (separator != null) {
@@ -588,9 +593,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
                     // Just read a character, convert it to a byte array
                     final CharBuffer cbuf = CharBuffer.wrap(chars);
-
-                    // TODO: avoid default Charset
-                    final ByteBuffer bbuf = Charset.forName("UTF-8").encode(cbuf);
+                    final ByteBuffer bbuf = Charset.forName(charset).encode(cbuf);
                     charBuffer = bbuf.array();
                     return charBuffer[charOffset++];
                 }
@@ -602,7 +605,7 @@ public class CompositeNut extends PipedConvertibleNut {
 
     /**
      * <p>
-     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(ProcessContext, List)}
+     * This class combines different sets of nuts as specified by {@link CompositeNut#mergeNuts(ProcessContext, List, String)}
      * It ensures that every names will be unique in returned lists during the entire lifecycle of its instance.
      * </p>
      *
@@ -636,12 +639,13 @@ public class CompositeNut extends PipedConvertibleNut {
          * Merges the given nuts.
          * </p>
          *
+         * @param charset the charset
          * @param nuts the nuts to merge
          * @param processContext the process context
          * @return the merged nuts
-         * @see CompositeNut#mergeNuts(com.github.wuic.ProcessContext, java.util.List)
+         * @see CompositeNut#mergeNuts(com.github.wuic.ProcessContext, java.util.List, String)
          */
-        public List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts) {
+        public List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts, final String charset) {
             final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
             int start = 0;
             int end = 1;
@@ -672,7 +676,7 @@ public class CompositeNut extends PipedConvertibleNut {
                         compositionName = new StringBuilder(name).insert(name.lastIndexOf('/') + 1, prefixCount).toString();
                     }
 
-                    final CompositeNut compositeNut = new CompositeNut(asynchronous, compositionName, null, processContext, composition);
+                    final CompositeNut compositeNut = new CompositeNut(charset, asynchronous, compositionName, null, processContext, composition);
                     retval.add(compositeNut);
 
                     if (nut != null) {
@@ -704,11 +708,12 @@ public class CompositeNut extends PipedConvertibleNut {
      * where the first element is a composition and where "prefixCountStart" equals to 0.
      * </p>
      *
+     * @param charset the charset
      * @param processContext the process context
      * @param nuts the nuts to merge
      * @return a list containing all the nuts with some compositions
      */
-    public static List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts) {
-        return new Combiner().mergeNuts(processContext, nuts);
+    public static List<ConvertibleNut> mergeNuts(final ProcessContext processContext, final List<ConvertibleNut> nuts, final String charset) {
+        return new Combiner().mergeNuts(processContext, nuts, charset);
     }
 }

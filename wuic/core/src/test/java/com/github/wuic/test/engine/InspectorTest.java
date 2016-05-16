@@ -264,7 +264,7 @@ public class InspectorTest {
         builder.append("/*background: url('sprite5.png');*/");
         builder.append("/*background:\n url('sprite6.png');*/");
         final CssInspectorEngine e = new CssInspectorEngine();
-        e.init(true, "UTF-8");
+        e.init(true);
         Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, e, true));
     }
 
@@ -299,7 +299,7 @@ public class InspectorTest {
         };
 
         final CssInspectorEngine e = new CssInspectorEngine();
-        e.init(true, "UTF-8");
+        e.init(true);
         assertInspection(collection, sb, "Must handle font URLs.", collection.length, e, true);
     }
 
@@ -321,7 +321,7 @@ public class InspectorTest {
         };
 
         final CssInspectorEngine e = new CssInspectorEngine();
-        e.init(true, "UTF-8");
+        e.init(true);
         assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, e, true);
     }
 
@@ -411,7 +411,7 @@ public class InspectorTest {
         };
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
-        e.init(true, "UTF-8", "");
+        e.init(true, "");
 
         assertInspection(collection,
                 new StringBuilder(),
@@ -464,7 +464,7 @@ public class InspectorTest {
         };
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
-        e.init(true, "UTF-8", "fn(%s)");
+        e.init(true, "fn(%s)");
         assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", collection.length, e, true);
     }
 
@@ -505,7 +505,7 @@ public class InspectorTest {
         };
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
-        e.init(true, "UTF-8", "");
+        e.init(true, "");
         final String value = assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", 0, e, false);
 
         Assert.assertTrue(value.contains("template.html?versionNumber=1"));
@@ -577,7 +577,7 @@ public class InspectorTest {
      */
     @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void badAngularWrapTest() throws Exception {
-        new JavascriptInspectorEngine().init(true, "UTF-8", "fn('foo')");
+        new JavascriptInspectorEngine().init(true, "fn('foo')");
     }
 
     /**
@@ -595,7 +595,7 @@ public class InspectorTest {
         };
 
         final CssInspectorEngine e = new CssInspectorEngine();
-        e.init(true, "UTF-8");
+        e.init(true);
         assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, e, true);
     }
 

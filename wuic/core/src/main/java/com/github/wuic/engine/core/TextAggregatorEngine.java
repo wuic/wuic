@@ -107,7 +107,8 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      */
     public CompositeNut newCompositeNut(final EngineRequest request) {
         final String name = aggregationName(request.getNuts().get(0).getInitialNutType());
-        return new CompositeNut(canReadNutAsynchronously,
+        return new CompositeNut(request.getCharset(),
+                canReadNutAsynchronously,
                 request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
                 IOUtils.NEW_LINE.getBytes(),
                 request.getProcessContext(),

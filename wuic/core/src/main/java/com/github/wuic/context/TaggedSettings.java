@@ -46,6 +46,7 @@ import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
@@ -54,6 +55,7 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +77,7 @@ import java.util.regex.Pattern;
  * @author Guillaume DROUET
  * @since 0.5.1
  */
-public class TaggedSettings {
+public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * The logger.
@@ -88,12 +90,18 @@ public class TaggedSettings {
     private final Map<Object, ContextSetting> taggedSettings;
 
     /**
+     * Charset applied in requests.
+     */
+    private String charset;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     TaggedSettings() {
         taggedSettings = new HashMap<Object, ContextSetting>();
+        charset = "";
     }
 
     /**
@@ -311,6 +319,8 @@ public class TaggedSettings {
         for (final ContextSetting setting : taggedSettings.values()) {
             interceptors.addAll(setting.getInterceptorsList());
         }
+
+        interceptors.add(new CharsetContextInterceptor(IOUtils.checkCharset(charset)));
 
         return interceptors;
     }
@@ -602,6 +612,14 @@ public class TaggedSettings {
      * @see TaggedSettings#applyProperty(String, String)
      */
     void applyProperties(final PropertyResolver properties) {
+
+        // Captures the charset to use in requests
+        final String cs = properties.resolveProperty(ApplicationConfig.CHARSET);
+
+        if (cs != null) {
+            charset = cs;
+        }
+
         for (final Object key : properties.getKeys()) {
             final String property = key.toString();
             applyProperty(property, properties.resolveProperty(property));
@@ -940,6 +958,49 @@ public class TaggedSettings {
                     log.trace("The property has not been set", iae);
                 }
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Interceptor setting the charset in created requests.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private static class CharsetContextInterceptor extends ContextInterceptorAdapter {
+
+        /**
+         * Charset.
+         */
+        private final String charset;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param charset the charset
+         */
+        private CharsetContextInterceptor(final String charset) {
+            this.charset = charset;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
+            return request.charset(charset);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
+            return request.charset(charset);
         }
     }
 }

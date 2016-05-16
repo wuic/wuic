@@ -82,7 +82,7 @@ public class CompositeNutTest {
     public void compositeTest() throws IOException {
         final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
         final ConvertibleNut n2 = newNut("n2", NutType.CSS, "some css rules");
-        final Nut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+        final Nut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
         IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
     }
@@ -109,7 +109,7 @@ public class CompositeNutTest {
         ConvertibleNut n1 = newNut("n1", NutType.CSS, content);
         ConvertibleNut n2 = newNut("n2", NutType.CSS, content);
 
-        Nut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+        Nut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         CompositeNut.CompositeInputStream is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
@@ -128,7 +128,7 @@ public class CompositeNutTest {
         n1 = newNut("n1", NutType.PNG, content);
         n2 = newNut("n2", NutType.PNG, content);
 
-        composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+        composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
@@ -199,7 +199,7 @@ public class CompositeNutTest {
         final ConvertibleNut n2 = newNut("n2", NutType.CSS, "other css rules");
         Mockito.when(n2.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
 
-        final ConvertibleNut composite = new CompositeNut(true, "composite", null, Mockito.mock(ProcessContext.class),
+        final ConvertibleNut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         Assert.assertEquals("some css rules t1other css rules t2 this is the end", NutUtils.readTransform(composite));

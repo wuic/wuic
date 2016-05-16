@@ -87,12 +87,32 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
     /**
      * The engine request.
      */
-    private EngineRequest engineRequest;
+    private final EngineRequest engineRequest;
 
     /**
      * The transformer which will use the engine request.
      */
-    private RequireEngineRequestTransformer requireEngineRequestTransformer;
+    private final RequireEngineRequestTransformer requireEngineRequestTransformer;
+
+    /**
+     * Can aggregate transformed stream.
+     */
+    private final boolean canAggregateTransformedStream;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param request the request to wrap
+     * @param transformer the delegated transformer
+     * @param cats can aggregate transformed stream
+     */
+    public EngineRequestTransformer(final EngineRequest request, final RequireEngineRequestTransformer transformer, final boolean cats) {
+        this.engineRequest = request;
+        this.requireEngineRequestTransformer = transformer;
+        this.canAggregateTransformedStream = cats;
+    }
 
     /**
      * <p>
@@ -103,8 +123,7 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      * @param transformer the delegated transformer
      */
     public EngineRequestTransformer(final EngineRequest request, final RequireEngineRequestTransformer transformer) {
-        this.engineRequest = request;
-        this.requireEngineRequestTransformer = transformer;
+        this(request, transformer, true);
     }
 
     /**
@@ -113,5 +132,13 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
     @Override
     public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
         requireEngineRequestTransformer.transform(is, os, convertible, engineRequest);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canAggregateTransformedStream() {
+        return canAggregateTransformedStream;
     }
 }

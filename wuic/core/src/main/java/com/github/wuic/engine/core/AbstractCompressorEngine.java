@@ -49,7 +49,6 @@ import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +68,7 @@ import static com.github.wuic.ApplicationConfig.COMPRESS;
  * @author Guillaume DROUET
  * @since 0.1.0
  */
-public abstract class AbstractCompressorEngine extends NodeEngine implements Pipe.Transformer<ConvertibleNut> {
+public abstract class AbstractCompressorEngine extends NodeEngine implements EngineRequestTransformer.RequireEngineRequestTransformer {
  
     /**
      * Logger.
@@ -108,7 +107,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
         if (works()) {
             // Compress each path
             for (final ConvertibleNut nut : request.getNuts()) {
-                compress(nut);
+                compress(nut, request);
             }
         }
 
@@ -117,13 +116,25 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
 
     /**
      * <p>
+     * Indicates if the transformed stream can be aggregate.
+     * </p>
+     *
+     * @return {@code true} if transformed stream can be aggregated, {@code false} otherwise
+     */
+    protected boolean canAggregateTransformedStream() {
+        return true;
+    }
+
+    /**
+     * <p>
      * Compresses the given nut.
      * </p>
      *
      * @param nut the nut to be compressed
+     * @param request the request
      * @throws WuicException if an I/O error occurs
      */
-    private void compress(final ConvertibleNut nut) throws WuicException {
+    private void compress(final ConvertibleNut nut, final EngineRequest request) throws WuicException {
         if (renameExtensionPrefix != null && nut.getName().contains(renameExtensionPrefix)) {
             return;
         }
@@ -142,27 +153,19 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Pip
             }
 
             nut.setNutName(nameBuilder.toString());
-            nut.addTransformer(this);
+            nut.addTransformer(new EngineRequestTransformer(request, this, canAggregateTransformedStream()));
 
             // Also compress referenced nuts
             if (nut.getReferencedNuts() != null) {
                 for (final ConvertibleNut ref : nut.getReferencedNuts()) {
                     if (getNutTypes().contains(ref.getNutType())) {
-                        compress(ref);
+                        compress(ref, request);
                     }
                 }
             }
         } finally {
             IOUtils.close(is);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canAggregateTransformedStream() {
-        return true;
     }
 
     /**

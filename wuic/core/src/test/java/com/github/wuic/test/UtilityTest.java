@@ -169,7 +169,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        List<ConvertibleNut> output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
+        List<ConvertibleNut> output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -189,7 +189,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar2.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
 
         Assert.assertEquals(5, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -210,7 +210,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
 
         Assert.assertEquals(3, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -229,7 +229,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("foo.js");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input);
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());

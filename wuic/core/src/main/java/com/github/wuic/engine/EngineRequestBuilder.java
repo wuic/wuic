@@ -133,6 +133,11 @@ public final class EngineRequestBuilder {
     private boolean staticsServedByWuicServlet;
 
     /**
+     * Charset.
+     */
+    private String charset;
+
+    /**
      * The context that created this builder.
      */
     private final Context context;
@@ -153,6 +158,7 @@ public final class EngineRequestBuilder {
         bestEffort = false;
         context = ctx;
         staticsServedByWuicServlet = false;
+        charset = "UTF-8";
     }
 
     /**
@@ -177,6 +183,7 @@ public final class EngineRequestBuilder {
         context = other.context;
         excludeFromSprite = other.excludeFromSprite;
         staticsServedByWuicServlet = other.staticsServedByWuicServlet;
+        charset = other.charset;
     }
 
     /**
@@ -310,6 +317,19 @@ public final class EngineRequestBuilder {
      */
     public EngineRequestBuilder excludeFromSprite(final Set<String> efs) {
         excludeFromSprite = efs;
+        return this;
+    }
+
+    /**
+     * <p>
+     * The charset.
+     * </p>
+     *
+     * @param cs the charset
+     * @return this
+     */
+    public EngineRequestBuilder charset(final String cs) {
+        charset = cs;
         return this;
     }
 
@@ -560,5 +580,16 @@ public final class EngineRequestBuilder {
      */
     boolean isStaticsServedByWuicServlet() {
         return staticsServedByWuicServlet;
+    }
+
+    /**
+     * <p>
+     * Gets the charset.
+     * </p>
+     *
+     * @return the charset
+     */
+    public String getCharset() {
+        return charset;
     }
 }

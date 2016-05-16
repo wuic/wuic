@@ -88,23 +88,16 @@ public abstract class TextInspectorEngine
     private Boolean doInspection;
 
     /**
-     * The charset of inspected file.
-     */
-    private String charset;
-
-    /**
      * <p>
      * Initializes a new instance.
      * </p>
      *
      * @param inspect activate inspection or not
-     * @param cs files charset
      * @param inspectors the line inspectors to use
      */
-    protected void init(final Boolean inspect, final String cs, final LineInspector... inspectors) {
+    protected void init(final Boolean inspect, final LineInspector... inspectors) {
         lineInspectors = CollectionUtils.newList(inspectors);
         doInspection = inspect;
-        charset = IOUtils.checkCharset(cs);
     }
 
     /**
@@ -264,7 +257,7 @@ public abstract class TextInspectorEngine
 
         // Read the character stream
         final StringBuilder stringBuilder = new StringBuilder();
-        IOUtils.read(new InputStreamReader(is, charset), stringBuilder);
+        IOUtils.read(new InputStreamReader(is, request.getCharset()), stringBuilder);
         final char[] chars = new char[stringBuilder.length()];
         stringBuilder.getChars(0, stringBuilder.length(), chars, 0);
 
@@ -322,7 +315,7 @@ public abstract class TextInspectorEngine
 
         // Write the char array as a byte array
         final CharBuffer cbuf = CharBuffer.wrap(chars);
-        final ByteBuffer bbuf = Charset.forName(charset).encode(cbuf);
+        final ByteBuffer bbuf = Charset.forName(request.getCharset()).encode(cbuf);
         os.write(bbuf.array());
         os.write(IOUtils.NEW_LINE.getBytes());
     }

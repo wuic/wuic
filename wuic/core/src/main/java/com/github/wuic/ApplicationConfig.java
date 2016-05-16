@@ -330,7 +330,7 @@ public interface ApplicationConfig {
      * Indicates the charset for text processor.
      * </p>
      */
-    String CHARSET = ENGINE_PREFIX + "charset";
+    String CHARSET = PREFIX + "charset";
 
     /**
      * <p>

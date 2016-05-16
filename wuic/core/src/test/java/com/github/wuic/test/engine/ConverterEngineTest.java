@@ -90,7 +90,7 @@ public class ConverterEngineTest {
         }
 
         @Override
-        public void transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
+        public void transform(InputStream is, OutputStream os, ConvertibleNut convertible, EngineRequest request) throws IOException {
             os.write("function myReplacedFunctionSetsCssStyle() {}".getBytes());
         }
     }

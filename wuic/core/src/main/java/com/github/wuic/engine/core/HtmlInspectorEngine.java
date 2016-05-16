@@ -42,7 +42,6 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
@@ -125,11 +124,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
     private Boolean doInspection;
 
     /**
-     * The charset of inspected file.
-     */
-    private String charset;
-
-    /**
      * Use server hint.
      */
     private Boolean serverHint;
@@ -145,16 +139,13 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * </p>
      *
      * @param inspect activate inspection or not
-     * @param cs files charset
      * @param sh activate server hint or not
      */
     @Config
     public void init(
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.CHARSET) final String cs,
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.SERVER_HINT) final Boolean sh) {
         doInspection = inspect;
-        charset = IOUtils.checkCharset(cs);
         serverHint = sh;
 
         if (doInspection) {
@@ -188,7 +179,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             for (final ConvertibleNut nut : request.getNuts()) {
                 logger.info("New {} for request with workflow ID {}.", HtmlTransformer.class.getName(), request.getWorkflowId());
-                nut.addTransformer(new HtmlTransformer(request, charset, serverHint, nutFilters, parser));
+                nut.addTransformer(new HtmlTransformer(request, request.getCharset(), serverHint, nutFilters, parser));
                 retval.add(nut);
             }
 
