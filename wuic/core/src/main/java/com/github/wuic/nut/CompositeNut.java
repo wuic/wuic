@@ -89,6 +89,9 @@ public class CompositeNut extends PipedConvertibleNut {
      */
     private Boolean asynchronousVersionNumber;
 
+    /**
+     * The charset.
+     */
     private final String charset;
 
     /**
