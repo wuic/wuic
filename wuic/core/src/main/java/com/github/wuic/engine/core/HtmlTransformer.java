@@ -41,6 +41,7 @@ package com.github.wuic.engine.core;
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
+import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
@@ -208,6 +209,11 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
     @Override
     public boolean canAggregateTransformedStream() {
         return true;
+    }
+
+    @Override
+    public int order() {
+        return EngineType.INSPECTOR.ordinal();
     }
 
     /**

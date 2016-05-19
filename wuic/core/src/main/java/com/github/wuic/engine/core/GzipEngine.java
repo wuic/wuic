@@ -172,6 +172,14 @@ public class GzipEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
+        public int order() {
+            return EngineType.BINARY_COMPRESSION.ordinal();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
             final GZIPOutputStream gos = new GZIPOutputStream(os);
             IOUtils.copyStream(is, gos);

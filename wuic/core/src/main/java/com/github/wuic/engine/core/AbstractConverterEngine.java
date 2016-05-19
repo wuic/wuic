@@ -120,7 +120,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
         public ConverterTransformer(final EngineRequest request,
                                     final List<Pipe.Transformer<ConvertibleNut>> transformerList) {
             transformers = transformerList;
-            engineRequestTransformer = new EngineRequestTransformer(request, this);
+            engineRequestTransformer = new EngineRequestTransformer(request, this, getEngineType().ordinal());
         }
 
         /**
@@ -167,6 +167,14 @@ public abstract class AbstractConverterEngine extends NodeEngine {
         @Override
         public boolean canAggregateTransformedStream() {
             return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int order() {
+            return getEngineType().ordinal();
         }
     }
 

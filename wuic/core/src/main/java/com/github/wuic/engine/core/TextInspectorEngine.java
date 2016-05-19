@@ -136,7 +136,7 @@ public abstract class TextInspectorEngine
      */
     protected void inspect(final ConvertibleNut nut, final EngineRequest request)
             throws WuicException {
-        nut.addTransformer(new EngineRequestTransformer(request, this));
+        nut.addTransformer(new EngineRequestTransformer(request, this, getEngineType().ordinal()));
     }
 
     /**

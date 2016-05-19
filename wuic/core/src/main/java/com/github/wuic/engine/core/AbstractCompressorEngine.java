@@ -153,7 +153,7 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Eng
             }
 
             nut.setNutName(nameBuilder.toString());
-            nut.addTransformer(new EngineRequestTransformer(request, this, canAggregateTransformedStream()));
+            nut.addTransformer(new EngineRequestTransformer(request, this, canAggregateTransformedStream(), getEngineType().ordinal()));
 
             // Also compress referenced nuts
             if (nut.getReferencedNuts() != null) {

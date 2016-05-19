@@ -154,33 +154,23 @@ public class CompositeNutTest {
      */
     @Test(timeout = 60000)
     public void aggregationTransformTest() throws IOException {
-        final Pipe.Transformer<ConvertibleNut> t1 = new Pipe.Transformer<ConvertibleNut>() {
+        final Pipe.Transformer<ConvertibleNut> t1 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
             public void transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
                 IOUtils.copyStream(is, os);
                 os.write(" t1".getBytes());
             }
-
-            @Override
-            public boolean canAggregateTransformedStream() {
-                return true;
-            }
         };
 
-        final Pipe.Transformer<ConvertibleNut> t2 = new Pipe.Transformer<ConvertibleNut>() {
+        final Pipe.Transformer<ConvertibleNut> t2 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
             public void transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
                 IOUtils.copyStream(is, os);
                 os.write(" t2".getBytes());
             }
-
-            @Override
-            public boolean canAggregateTransformedStream() {
-                return true;
-            }
         };
 
-        final Pipe.Transformer<ConvertibleNut> t3 = new Pipe.Transformer<ConvertibleNut>() {
+        final Pipe.Transformer<ConvertibleNut> t3 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
             public void transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
                 IOUtils.copyStream(is, os);

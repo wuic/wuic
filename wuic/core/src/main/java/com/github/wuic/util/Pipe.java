@@ -50,11 +50,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * <p>
@@ -133,6 +134,15 @@ public final class Pipe<T extends ConvertibleNut> {
          * @return {@code true} if aggregation is possible, {@code false} otherwise
          */
         boolean canAggregateTransformedStream();
+
+        /**
+         * <p>
+         * Order of execution of that transformer comparing to the others.
+         * </p>
+         *
+         * @return the order of that transformer
+         */
+        int order();
     }
 
     /**
@@ -295,6 +305,33 @@ public final class Pipe<T extends ConvertibleNut> {
         @Override
         public boolean canAggregateTransformedStream() {
             return true;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int order() {
+            return 0;
+        }
+    }
+
+    /**
+     * <p>
+     * This comparator allows to sort  {@link Transformer transformers} by {@link com.github.wuic.util.Pipe.Transformer#order() order}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static final class TransformerComparator implements Comparator<Transformer> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compare(final Transformer o1, final Transformer o2) {
+            return o1.order() - o2.order();
         }
     }
 
@@ -530,7 +567,7 @@ public final class Pipe<T extends ConvertibleNut> {
         // Collect transformer executed for each nut and group transformers for aggregated content
         if (hasTransformers) {
             // Get transformers
-            final Set<Transformer<ConvertibleNut>> aggregatedStream = new LinkedHashSet<Transformer<ConvertibleNut>>();
+            final Set<Transformer<ConvertibleNut>> aggregatedStream = new TreeSet<Transformer<ConvertibleNut>>(new TransformerComparator());
             final List<PerNutTransformation> nuts = new ArrayList<PerNutTransformation>();
             final CompositeNut composite = cis.getCompositeNut();
             populateTransformers(convertible.getTransformers(), aggregatedStream, nuts, composite.getCompositionList());
@@ -643,7 +680,7 @@ public final class Pipe<T extends ConvertibleNut> {
                                       final List<PerNutTransformation> nuts,
                                       final Collection<ConvertibleNut> compositionList) {
         for (final ConvertibleNut nut : compositionList) {
-            final Set<Pipe.Transformer<ConvertibleNut>> separateStream = new LinkedHashSet<Transformer<ConvertibleNut>>();
+            final Set<Pipe.Transformer<ConvertibleNut>> separateStream = new TreeSet<Transformer<ConvertibleNut>>(new TransformerComparator());
             populateTransformers(separateStream, aggregatedStream, nut.getTransformers());
             populateTransformers(separateStream, aggregatedStream, commonTransformers);
             nuts.add(new PerNutTransformation(separateStream, nut));

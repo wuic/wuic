@@ -188,16 +188,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
         final CompositeNut compositeNut = newCompositeNut(request);
 
         // Proceed source map of each nut to aggregate all of them
-        compositeNut.addTransformer(new EngineRequestTransformer(request, this) {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public boolean canAggregateTransformedStream() {
-                return false;
-            }
-        });
+        compositeNut.addTransformer(new EngineRequestTransformer(request, this, false, getEngineType().ordinal()));
 
         retval.add(compositeNut);
 

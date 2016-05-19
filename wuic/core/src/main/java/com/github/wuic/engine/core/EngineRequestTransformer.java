@@ -100,6 +100,11 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
     private final boolean canAggregateTransformedStream;
 
     /**
+     * The order.
+     */
+    private final int order;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -107,11 +112,16 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      * @param request the request to wrap
      * @param transformer the delegated transformer
      * @param cats can aggregate transformed stream
+     * @param o the order
      */
-    public EngineRequestTransformer(final EngineRequest request, final RequireEngineRequestTransformer transformer, final boolean cats) {
+    public EngineRequestTransformer(final EngineRequest request,
+                                    final RequireEngineRequestTransformer transformer,
+                                    final boolean cats,
+                                    final int o) {
         this.engineRequest = request;
         this.requireEngineRequestTransformer = transformer;
         this.canAggregateTransformedStream = cats;
+        this.order = o;
     }
 
     /**
@@ -121,9 +131,10 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      *
      * @param request the request to wrap
      * @param transformer the delegated transformer
+     * @param o the order
      */
-    public EngineRequestTransformer(final EngineRequest request, final RequireEngineRequestTransformer transformer) {
-        this(request, transformer, true);
+    public EngineRequestTransformer(final EngineRequest request, final RequireEngineRequestTransformer transformer, final int o) {
+        this(request, transformer, true, o);
     }
 
     /**
@@ -140,5 +151,13 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
     @Override
     public boolean canAggregateTransformedStream() {
         return canAggregateTransformedStream;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int order() {
+        return order;
     }
 }
