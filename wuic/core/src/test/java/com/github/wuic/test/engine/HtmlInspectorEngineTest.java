@@ -153,7 +153,7 @@ public class HtmlInspectorEngineTest {
     @Test(timeout = 60000)
     public void hintTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
@@ -172,7 +172,7 @@ public class HtmlInspectorEngineTest {
     @Test(timeout = 60000)
     public void hintNoHeadTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final ProxyNutDao proxy = new ProxyNutDao("", dao);
         final String html = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
@@ -230,7 +230,7 @@ public class HtmlInspectorEngineTest {
     public void parseTest() throws Exception {
         final Context ctx = newContext();
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(ProcessContext.DEFAULT);
@@ -355,7 +355,7 @@ public class HtmlInspectorEngineTest {
                 .replace("<wuic:html-import workflowId=\"heap\"/>", r2);
 
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -522,7 +522,7 @@ public class HtmlInspectorEngineTest {
         final Context ctx = newContext();
         final String content = IOUtils.readString(new InputStreamReader(getClass().getResourceAsStream("/html/index.html")));
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final CountDownLatch countDownLatch = new CountDownLatch(400);
 
@@ -565,7 +565,7 @@ public class HtmlInspectorEngineTest {
     @Test(timeout = 60000)
     public void heapListenerHolderTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
-        dao.init(getClass().getResource("/html").getFile(), false, null, -1, false, false);
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
         dao.init(false, true, null);
         final NutsHeap heap = new NutsHeap(this, Arrays.asList("index.html"), dao, "heap");
         heap.checkFiles(ProcessContext.DEFAULT);

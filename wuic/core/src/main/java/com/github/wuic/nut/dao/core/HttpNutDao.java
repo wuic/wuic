@@ -96,7 +96,6 @@ public class HttpNutDao extends AbstractNutDao {
      * @param domain the HTTP server domain name
      * @param port the HTTP server port
      * @param path the base path where nuts are provided
-     * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      */
     @Config
@@ -104,9 +103,8 @@ public class HttpNutDao extends AbstractNutDao {
                      @StringConfigParam(defaultValue = "localhost", propertyKey = ApplicationConfig.SERVER_DOMAIN) final String domain,
                      @IntegerConfigParam(defaultValue = DEFAULT_PORT, propertyKey = ApplicationConfig.SERVER_PORT) final Integer port,
                      @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.BASE_PATH) final String path,
-                     @BooleanConfigParam(defaultValue = false, propertyKey = ApplicationConfig.BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
                      @IntegerConfigParam(defaultValue = -1, propertyKey = ApplicationConfig.POLLING_INTERVAL) final int pollingSeconds) {
-        init(path, basePathAsSysProp, null, pollingSeconds);
+        init(path, null, pollingSeconds);
         final StringBuilder builder = new StringBuilder().append(https ? "https://" : "http://").append(domain);
 
         if (port != null) {

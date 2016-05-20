@@ -70,7 +70,7 @@ public class UnreachableNutDao extends AbstractNutDao {
      */
     @Config
     public void init() {
-        init("/", false, null, -1);
+        init("/", null, -1);
     }
 
     /**

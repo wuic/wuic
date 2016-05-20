@@ -50,6 +50,7 @@ import com.github.wuic.util.EnhancedPropertyResolver;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.MapPropertyResolver;
 import com.github.wuic.util.PropertyResolver;
+import com.github.wuic.util.SystemPropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,6 +145,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
         contextBuilder = new ContextBuilderFacade();
         classpathResourceResolver = this;
         createResolverFromPath(getClass().getResource("/wuic.properties"));
+        propertyResolver.addPropertyResolver(new SystemPropertyResolver());
     }
 
     /**
@@ -163,11 +165,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             final String propertyPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_PROPERTIES_PATH_PARAM, null);
 
             if (propertyPath != null) {
-                if (Boolean.parseBoolean(propertyResolver.resolveProperty(ApplicationConfig.WUIC_PROPERTIES_SYS_PROP_PARAM, "false"))) {
-                    createResolverFromPath(new URL(System.getProperty(propertyPath)));
-                } else {
-                    createResolverFromPath(new URL(propertyPath));
-                }
+                createResolverFromPath(new URL(propertyPath));
             }
 
             contextPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM, "");
@@ -199,11 +197,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
             // Choose specific location for XML file
             if (xmlPath != null) {
-                if (Boolean.parseBoolean(propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM, "false"))) {
-                    wuicXmlPath(new URL(System.getProperty(xmlPath)));
-                } else {
-                    wuicXmlPath(new URL(xmlPath));
-                }
+                wuicXmlPath(new URL(xmlPath));
             }
 
             additionalContextBuilderConfigurators();

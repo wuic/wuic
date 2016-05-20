@@ -71,7 +71,6 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      * </p>
      *
      * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
@@ -79,12 +78,11 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      */
     @Config
     public void init(@StringConfigParam(defaultValue = ".", propertyKey = BASE_PATH) final String base,
-                     @BooleanConfigParam(defaultValue = false, propertyKey = BASE_PATH_AS_SYS_PROP) final Boolean basePathAsSysProp,
                      @ObjectConfigParam(defaultValue = "", propertyKey = PROXY_URIS, setter = ProxyUrisPropertySetter.class) final String[] proxies,
                      @IntegerConfigParam(defaultValue = -1, propertyKey = POLLING_INTERVAL) final int pollingSeconds,
                      @BooleanConfigParam(defaultValue = false, propertyKey = REGEX) final Boolean regex,
                      @BooleanConfigParam(defaultValue = false, propertyKey = WILDCARD) final Boolean wildcard) {
-        super.init(base, basePathAsSysProp, proxies, pollingSeconds, regex, wildcard);
+        super.init(base, proxies, pollingSeconds, regex, wildcard);
     }
 
     /**

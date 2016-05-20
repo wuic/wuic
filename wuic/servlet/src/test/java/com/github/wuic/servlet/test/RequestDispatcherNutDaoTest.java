@@ -120,7 +120,7 @@ public class RequestDispatcherNutDaoTest {
 
         Mockito.when(sc.getRequestDispatcher(Mockito.anyString())).thenReturn(requestDispatcher);
         dao = new RequestDispatcherNutDao();
-        dao.init("/", false, null, -1, "foo.*");
+        dao.init("/", null, -1, "foo.*");
         dao.init(null, false, null);
         dao.setServletContext(sc);
     }

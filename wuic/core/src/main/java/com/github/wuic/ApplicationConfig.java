@@ -111,11 +111,6 @@ public interface ApplicationConfig {
     String USE_INCLUDE_FOR_PATH_PATTERN = DAO_PREFIX + "useIncludeForPathPattern";
 
     /**
-     * Consider the base path as a system property associated to actual value.
-     */
-    String BASE_PATH_AS_SYS_PROP = DAO_PREFIX + "basePathAsSystemProperty";
-
-    /**
      * Polling interval for nuts refresher.
      */
     String POLLING_INTERVAL = DAO_PREFIX + "pollingInterval";
@@ -416,19 +411,9 @@ public interface ApplicationConfig {
     String WUIC_PROPERTIES_PATH_PARAM = FACADE_PREFIX + "propertiesPath";
 
     /**
-     * Init parameter which indicates that the WUIC property path is a system property.
-     */
-    String WUIC_PROPERTIES_SYS_PROP_PARAM = FACADE_PREFIX + "propertiesPathAsSystemProperty";
-
-    /**
      * Init parameter which indicates the WUIC xml file.
      */
     String WUIC_SERVLET_XML_PATH_PARAM = FACADE_PREFIX + "xmlPath";
-
-    /**
-     * Init parameter which indicates that the WUIC context path is a system property.
-     */
-    String WUIC_SERVLET_XML_SYS_PROP_PARAM = FACADE_PREFIX + "xmlPathAsSystemProperty";
 
     /**
      * A list of comma-separated class names implementing {@link com.github.wuic.config.ObjectBuilderInspector} with

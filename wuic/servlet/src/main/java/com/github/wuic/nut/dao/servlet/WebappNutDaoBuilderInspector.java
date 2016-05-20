@@ -118,7 +118,6 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                 };
 
                 dao.init(WAR_BASE_PATH.equals(basePath) ? EXPLODED_BASE_PATH : basePath,
-                        false,
                         webappNutDao.getProxyUris(),
                         webappNutDao.getPollingInterval(),
                         webappNutDao.getRegularExpression(),

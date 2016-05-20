@@ -91,19 +91,17 @@ public abstract class PathNutDao extends AbstractNutDao {
      * </p>
      *
      * @param base the directory where we have to look up
-     * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param pollingSeconds the interval for polling operations in seconds (-1 to deactivate)
      * @param proxies the proxies URIs in front of the nut
      * @param regex if the path should be considered as a regex or not
      * @param wildcard if the path should be considered as a wildcard or not
      */
     public void init(final String base,
-                     final Boolean basePathAsSysProp,
                      final String[] proxies,
                      final int pollingSeconds,
                      final Boolean regex,
                      final Boolean wildcard) {
-        init(base, basePathAsSysProp, proxies, pollingSeconds);
+        init(base, proxies, pollingSeconds);
 
         if (regex && wildcard) {
             WuicException.throwBadArgumentException(new IllegalArgumentException("You can't set to true both wildcard and regex settings."));

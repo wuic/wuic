@@ -167,3 +167,6 @@ Breaking changes:
 - HtmlInspectorEngine is not shipped with a parser inside wuic-core module anymore, need to add the atto extension to the classpath now
 - Default value associated to c.g.wuic.engine.charset is not "UTF-8" anymore but the default value provided by the platform
 - c.g.wuic.engine.charset is now replaced by c.g.wuic.charset property and is applied globally
+- c.g.wuic.facade.basePathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
+- c.g.wuic.facade.propertiesPathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
+- c.g.wuic.facade.xmlPathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.

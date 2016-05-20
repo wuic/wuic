@@ -42,7 +42,6 @@ import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
-import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
@@ -93,7 +92,7 @@ public class PathNutDaoTest {
     @Test(timeout = 60000, expected = IllegalArgumentException.class)
     public void wildcardAndRegexTest() throws Exception {
         final ClasspathNutDao dao = new ClasspathNutDao();
-        dao.init("/", false, null, -1, true, true);
+        dao.init("/", null, -1, true, true);
         dao.init(false, true, null);
     }
 
@@ -115,7 +114,7 @@ public class PathNutDaoTest {
             }
         };
 
-        dao.init("", false, null, -1, true, true);
+        dao.init("", null, -1, true, true);
         dao.init(true, false, null);
     }
 
@@ -139,7 +138,7 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().getParentFile().toURI().toURL()});
 
         final ClasspathNutDao dao = new ClasspathNutDao();
-        dao.init("/classpathScanningTest", false, null, -1, false, true);
+        dao.init("/classpathScanningTest", null, -1, false, true);
         dao.init(false, true, null);
         Assert.assertEquals(2, dao.create("*.css", ProcessContext.DEFAULT).size());
         Assert.assertEquals(1, dao.create("1/*.css", ProcessContext.DEFAULT).size());
@@ -164,7 +163,7 @@ public class PathNutDaoTest {
         method.invoke(getClass().getClassLoader(), new Object[]{file2.getParentFile().getParentFile().toURI().toURL()});
 
         final ClasspathNutDao dao = new ClasspathNutDao();
-        dao.init("/classpathScanningTest", false, null, -1, true, false);
+        dao.init("/classpathScanningTest", null, -1, true, false);
         dao.init(false, true, null);
         Assert.assertEquals(2, dao.create(".*.css", ProcessContext.DEFAULT).size());
     }

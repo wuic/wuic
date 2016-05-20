@@ -104,7 +104,7 @@ public class NutsHeapTest {
          * @param pollingSeconds polling interval
          */
         MockNutDao(final int pollingSeconds) {
-            init("/", false, null, pollingSeconds);
+            init("/", null, pollingSeconds);
             init(false, true, null);
         }
 
@@ -338,7 +338,7 @@ public class NutsHeapTest {
             }
         };
 
-        dao.init("/", false, null, 1);
+        dao.init("/", null, 1);
         dao.init(false, true, null);
 
         try {

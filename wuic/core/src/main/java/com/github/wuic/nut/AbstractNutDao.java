@@ -122,17 +122,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param base              prefix for all paths (an {@link IllegalArgumentException} is thrown is {@code null}
-     * @param basePathAsSysProp {@code true} if the base path is a system property
      * @param proxies           proxy URIs serving the nut
      * @param pollingSeconds    interval in seconds for polling feature (-1 to disable)
      */
-    public void init(final String base, final Boolean basePathAsSysProp, final String[] proxies, final int pollingSeconds) {
-        final String b = basePathAsSysProp ? System.getProperty(base) : base;
-
-        if (b == null) {
+    public void init(final String base, final String[] proxies, final int pollingSeconds) {
+        if (base == null) {
             WuicException.throwBadArgumentException(new IllegalArgumentException("Base path can't be null"));
         } else {
-            basePath = !b.isEmpty() && b.charAt(0) == '.' ? b : IOUtils.mergePath("/", b);
+            basePath = !base.isEmpty() && base.charAt(0) == '.' ? base : IOUtils.mergePath("/", base);
         }
 
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);

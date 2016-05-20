@@ -181,7 +181,6 @@ public class WuicFacadeBuilderTest {
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT))).thenReturn("true");
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM))).thenReturn("/");
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY))).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
-        Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM))).thenReturn("true");
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS))).thenReturn("true");
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS))).thenReturn("");
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR))).thenReturn("");
@@ -191,7 +190,6 @@ public class WuicFacadeBuilderTest {
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT))).thenReturn("false");
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM))).thenReturn("/");
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_WARMUP_STRATEGY))).thenReturn(WuicFacade.WarmupStrategy.NONE.name());
-        Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_XML_SYS_PROP_PARAM))).thenReturn("false");
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_USE_DEFAULT_CONTEXT_BUILDER_CONFIGURATORS))).thenReturn("false");
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_CONFIGURATORS))).thenReturn("");
         Mockito.when(propsFalse.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_ADDITIONAL_BUILDER_INSPECTOR))).thenReturn("");
