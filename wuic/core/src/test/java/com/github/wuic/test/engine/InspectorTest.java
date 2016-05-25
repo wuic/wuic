@@ -66,6 +66,7 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.test.LIF;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
@@ -83,6 +84,7 @@ import org.mockito.stubbing.Answer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -234,12 +236,31 @@ public class InspectorTest {
 
     /**
      * <p>
+     * Tests that a custom inspector is installed.
+     * </p>
+     *
+     * @throws Exception the inspector
+     */
+    @Test(timeout = 60000)
+    public void customInspectorTest() throws Exception{
+        final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
+        e.init(true, "");
+        e.transform(new ByteArrayInputStream("var i = {};".getBytes()),
+                Mockito.mock(OutputStream.class),
+                Mockito.mock(ConvertibleNut.class),
+                new EngineRequestBuilder("", Mockito.mock(NutsHeap.class), new ContextBuilder().build()).build());
+        Assert.assertTrue(LIF.factoryCalled);
+        Assert.assertTrue(LIF.inspectorCalled);
+    }
+
+    /**
+     * <p>
      * Test when multiple @import/background are declared on the same line.
      * </p>
      *
      * @throws Exception if test fails
      */
-    @Test//(timeout = 60000)
+    @Test(timeout = 60000)
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "jquery.ui.core.css"},

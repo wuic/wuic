@@ -42,6 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.LineInspectorFactory;
 import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.ScriptLineInspector;
@@ -61,7 +62,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -101,8 +104,28 @@ public abstract class TextInspectorEngine
         lineInspectors = new ArrayList<LineInspector>();
         doInspection = inspect;
 
-        for (final LineInspector inspector : inspectors) {
-            addInspector(inspector);
+        addInspector(Arrays.asList(inspectors));
+
+        for (final LineInspectorFactory factory : ServiceLoader.load(LineInspectorFactory.class)) {
+            for (final NutType nutType : getNutTypes()) {
+                addInspector(factory.create(nutType));
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * If the given list is not {@code null}, this method calls {@link #addInspector(com.github.wuic.engine.LineInspector)}
+     * for each item.
+     * </p>
+     *
+     * @param lineInspectors the list
+     */
+    private void addInspector(final List<LineInspector> lineInspectors) {
+        if (lineInspectors != null ) {
+            for (final LineInspector inspector : lineInspectors) {
+                addInspector(inspector);
+            }
         }
     }
 
