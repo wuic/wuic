@@ -75,10 +75,10 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
             @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
             @StringConfigParam(defaultValue = "", propertyKey = ApplicationConfig.WRAP_PATTERN) final String wrapPattern) {
         init(inspect);
-        addInspector(SourceMapLineInspector.newInstance(this));
+        addInspector(new SourceMapLineInspector(this));
 
         if ("".equals(wrapPattern)) {
-            addInspector(AngularTemplateInspector.newInstance(null));
+            addInspector(new AngularTemplateInspector(null));
         } else {
             final int paramIndex = wrapPattern.indexOf('%');
 
@@ -88,7 +88,7 @@ public class JavascriptInspectorEngine extends TextInspectorEngine {
                                 "Wrap pattern must contains a String.format() parameter:" + wrapPattern));
             }
 
-            addInspector(AngularTemplateInspector.newInstance(Pattern.quote(wrapPattern.substring(0, paramIndex))
+            addInspector(new AngularTemplateInspector(Pattern.quote(wrapPattern.substring(0, paramIndex))
                     + '%'
                     + wrapPattern.charAt(paramIndex + 1)
                     + Pattern.quote(wrapPattern.substring(paramIndex + NumberUtils.TWO))));

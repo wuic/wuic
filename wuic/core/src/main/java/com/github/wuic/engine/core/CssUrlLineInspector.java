@@ -43,6 +43,7 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.RegexLineInspector;
 import com.github.wuic.engine.ScriptLineInspector;
+import com.github.wuic.engine.WithScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -75,6 +76,7 @@ import java.util.regex.Pattern;
  * @author Guillaume DROUET
  * @since 0.3.3
  */
+@WithScriptLineInspector(condition = ScriptLineInspector.ScriptMatchCondition.NO_COMMENT)
 public class CssUrlLineInspector extends RegexLineInspector implements NutFilterHolder {
 
     /**

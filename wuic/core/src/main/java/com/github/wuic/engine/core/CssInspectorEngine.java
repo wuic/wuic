@@ -68,8 +68,8 @@ public class CssInspectorEngine extends TextInspectorEngine {
      */
     @Config
     public void init(@BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect) {
-        init(inspect, CssUrlLineInspector.newInstance());
-        addInspector(SourceMapLineInspector.newInstance(this));
+        init(inspect, new CssUrlLineInspector());
+        addInspector(new SourceMapLineInspector(this));
     }
 
     /**

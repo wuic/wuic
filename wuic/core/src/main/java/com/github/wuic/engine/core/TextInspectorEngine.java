@@ -44,12 +44,13 @@ import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.engine.ScriptLineInspector;
+import com.github.wuic.engine.WithScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
-import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
@@ -59,6 +60,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -95,20 +97,33 @@ public abstract class TextInspectorEngine
      * @param inspect activate inspection or not
      * @param inspectors the line inspectors to use
      */
-    protected void init(final Boolean inspect, final LineInspector... inspectors) {
-        lineInspectors = CollectionUtils.newList(inspectors);
+    protected void init(final Boolean inspect, final LineInspector ... inspectors) {
+        lineInspectors = new ArrayList<LineInspector>();
         doInspection = inspect;
+
+        for (final LineInspector inspector : inspectors) {
+            addInspector(inspector);
+        }
     }
 
     /**
      * <p>
-     * Adds a new inspector.
+     * Adds a new inspector. The method checks if the given instance's class is annotated with {@link WithScriptLineInspector}.
+     * If it's the case, the inspector is wrapped with a {@link ScriptLineInspector}. Otherwise it's directly added to
+     * the list.
      * </p>
      *
      * @param inspector the new inspector
      */
     public final void addInspector(final LineInspector inspector) {
-        lineInspectors.add(inspector);
+
+        // Annotation present, wrap the inspector with a ScriptLineInspector
+        if (inspector.getClass().isAnnotationPresent(WithScriptLineInspector.class)) {
+            final WithScriptLineInspector annotation = inspector.getClass().getAnnotation(WithScriptLineInspector.class);
+            lineInspectors.add(ScriptLineInspector.wrap(inspector, annotation.condition()));
+        } else {
+            lineInspectors.add(inspector);
+        }
     }
 
     /**

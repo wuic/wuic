@@ -44,6 +44,7 @@ import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.RegexLineInspector;
 import com.github.wuic.engine.ScriptLineInspector;
+import com.github.wuic.engine.WithScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
@@ -73,6 +74,7 @@ import java.util.regex.Pattern;
  * @author Guillaume DROUET
  * @since 0.4.5
  */
+@WithScriptLineInspector(condition = ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT)
 public class SourceMapLineInspector extends RegexLineInspector {
 
     /**
