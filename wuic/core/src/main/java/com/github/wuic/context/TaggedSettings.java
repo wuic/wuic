@@ -585,7 +585,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             for (final ObjectBuilderFactory.KnownType knownType : knownTypes) {
                 if ((NodeEngine.class.isAssignableFrom(knownType.getClassType()))
                         && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
-                        && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
+                        && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) == -1))) {
                     final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
                     NodeEngine engine = NodeEngine.class.cast(newEngine(id));
 
