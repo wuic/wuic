@@ -579,7 +579,7 @@ public class WuicServletContextListener implements ServletContextListener {
                     retval = wrapResult;
                 }
 
-                return IOUtils.mergePath(servletContext.getContextPath(), retval);
+                return retval == null ? servletContext.getContextPath() : IOUtils.mergePath(servletContext.getContextPath(), retval);
             } else {
                 return wrapResult;
             }
