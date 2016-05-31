@@ -1,0 +1,15 @@
+{
+    "heaps": [{
+        "id": "simpleHeap",
+        "daoBuilderId": "wuicDefaultClasspathNutDaoBuilder",
+        "nutPath": "css/jquery-ui.css"
+    }],
+    "workflowTemplates": [{
+        "id": "simpleWorkflowTemplate"
+    }],
+    "workflows": [{
+        "idPrefix": "simpleWorkflow",
+        "workflowTemplateId": "simpleWorkflowTemplate",
+        "heapIdPattern": "simpleHeap"
+    }]
+}

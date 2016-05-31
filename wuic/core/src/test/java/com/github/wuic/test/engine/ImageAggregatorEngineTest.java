@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.config.bean.json.FileJsonContextBuilderConfigurator;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.nut.ConvertibleNut;
@@ -46,12 +47,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.github.wuic.util.UrlUtils;
-import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.Rule;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /**
  * <p>
@@ -61,26 +64,32 @@ import org.junit.runners.JUnit4;
  * @author Guillaume DROUET
  * @since 0.4.3
  */
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class ImageAggregatorEngineTest {
 
     /**
-     * Tested context.
+     * Timeout.
      */
-    private Context ctx;
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>
-     * Creates the context.
+     * Data points for a set of sprite configurations.
      * </p>
      *
-     * @throws Exception if context can't be created
+     * @return the data points
+     * @throws Exception if initialization fails
      */
-    @Before
-    public void context() throws Exception {
-        final ContextBuilder builder = new ContextBuilder().configureDefault();
-        new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-sprite.xml")).configure(builder);
-        ctx = builder.build();
+    @DataPoints
+    public static Context[] sprites() throws Exception {
+        final ContextBuilder b1 = new ContextBuilder().configureDefault();
+        new FileXmlContextBuilderConfigurator(ImageAggregatorEngineTest.class.getResource("/wuic-sprite.xml")).configure(b1);
+
+        final ContextBuilder b2 = new ContextBuilder().configureDefault();
+        new FileJsonContextBuilderConfigurator(ImageAggregatorEngineTest.class.getResource("/wuic-sprite.json")).configure(b2);
+
+        return new Context[] { b1.build(), b2.build() };
     }
 
     /**
@@ -88,10 +97,11 @@ public class ImageAggregatorEngineTest {
      * Tests engine when aggregation is enabled.
      * </p>
      *
+     * @param ctx tested context
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
-    public void withoutAggregation() throws Exception {
+    @Theory
+    public void withoutAggregation(final Context ctx) throws Exception {
         final List<ConvertibleNut> nuts = ctx.process("", "jsSpriteNotAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(3, nuts.size());
         assertOneReference(nuts);
@@ -102,10 +112,11 @@ public class ImageAggregatorEngineTest {
      * Tests engine when aggregation is disabled.
      * </p>
      *
+     * @param ctx the tested context
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
-    public void withAggregation() throws Exception {
+    @Theory
+    public void withAggregation(final Context ctx) throws Exception {
         final List<ConvertibleNut> nuts = ctx.process("", "cssSpriteAggregate", UrlUtils.urlProviderFactory(), null);
         Assert.assertEquals(1, nuts.size());
         assertOneReference(nuts);

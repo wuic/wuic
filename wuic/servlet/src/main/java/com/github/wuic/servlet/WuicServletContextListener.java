@@ -248,18 +248,18 @@ public class WuicServletContextListener implements ServletContextListener {
                 .classpathResourceResolver(classpathResourceResolver);
 
         try {
-            detectInClassesLocation(classpathResourceResolver, "wuic.xml", new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
                  */
                 @Override
                 public void apply(final URL consumed) {
-                    builder.wuicXmlPath(consumed);
+                    builder.wuicConfigurationPath(consumed);
                 }
-            });
+            }, "wuic.xml", "wuic.json");
 
-            detectInClassesLocation(classpathResourceResolver, "wuic.properties", new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
@@ -268,9 +268,9 @@ public class WuicServletContextListener implements ServletContextListener {
                 public void apply(final URL consumed) {
                     builder.wuicPropertiesPath(consumed);
                 }
-            });
+            }, "wuic.properties");
 
-            detectInClassesLocation(classpathResourceResolver, WuicTask.BUILD_INFO_FILE, new Consumer<URL>() {
+            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
                 /**
                  * {@inheritDoc}
@@ -279,7 +279,7 @@ public class WuicServletContextListener implements ServletContextListener {
                 public void apply(final URL consumed) {
                     installBuildInfo(consumed, builder, classpathResourceResolver);
                 }
-            });
+            }, WuicTask.BUILD_INFO_FILE);
             sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
         } catch (WuicException we) {
             WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
@@ -366,25 +366,27 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
-     * Detects the given file in the "/WEB-INF/classes" directory and install them thanks to the given callback.
+     * Detects the given files in the "/WEB-INF/classes" directory and install them thanks to the given callback.
      * </p>
      *
      * @param classpathResourceResolver the resolver giving access to base directory
-     * @param file file to test
+     * @param files file to test
      * @param callback the callback that install the file
      */
     private void detectInClassesLocation(final ClassPathResourceResolver classpathResourceResolver,
-                                         final String file,
-                                         final Consumer<URL> callback) {
-        try {
-            final URL classesPath = classpathResourceResolver.getResource(file);
+                                         final Consumer<URL> callback,
+                                         final String ... files) {
+        for (final String file : files) {
+            try {
+                final URL classesPath = classpathResourceResolver.getResource(file);
 
-            if (classesPath != null) {
-                log.info("Installing '{}' located in {}", file, classesPath.toString());
-                callback.apply(classesPath);
+                if (classesPath != null) {
+                    log.info("Installing '{}' located in {}", file, classesPath.toString());
+                    callback.apply(classesPath);
+                }
+            } catch (MalformedURLException mue) {
+                log.error("Unexpected exception", mue);
             }
-        } catch (MalformedURLException mue) {
-            log.error("Unexpected exception", mue);
         }
     }
 

@@ -36,93 +36,66 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean.json;
 
-import javax.xml.bind.annotation.*;
+import com.github.wuic.config.bean.PropertyBean;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * <p>
- * Represents a builder (engine, DAO) in wuic.xml file.
+ * An adapter for reading {@link com.github.wuic.config.bean.BuilderBean#properties} from JSON.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class XmlBuilderBean {
+public class PropertyAdapter extends TypeAdapter {
 
     /**
-     * The builder's ID.
+     * Unmarshaller.
      */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The builder's type.
-     */
-    @XmlAttribute(name = "type")
-    private String type;
-
-    /**
-     * All the builder's properties.
-     */
-    @XmlElementWrapper(name = "properties")
-    @XmlElement(name = "property")
-    private List<XmlPropertyBean> properties;
+    private final Gson gson;
 
     /**
      * <p>
-     * Gets the ID.
+     * Builds a new instance.
      * </p>
      *
-     * @return the ID
+     * @param gson the unmarshaller
      */
-    public String getId() {
-        return id;
+    public PropertyAdapter(final Gson gson) {
+        this.gson = gson;
     }
 
     /**
-     * <p>
-     * Gets the builder's type.
-     * </p>
-     *
-     * @return the type
+     * {@inheritDoc}
      */
-    public String getType() {
-        return type;
+    @Override
+    public void write(final JsonWriter out, final Object value) throws IOException {
+        gson.toJson(value, value.getClass(), out);
     }
 
     /**
-     * <p>
-     * Gets the properties.
-     * </p>
-     *
-     * @return the properties
+     * {@inheritDoc}
      */
-    public List<XmlPropertyBean> getProperties() {
-        return properties;
-    }
+    @Override
+    public Object read(final JsonReader in) throws IOException {
+        final List<PropertyBean> retval = new ArrayList<PropertyBean>();
+        in.beginObject();
 
-    /**
-     * <p>
-     * Sets the ID.
-     * </p>
-     *
-     * @param id the ID
-     */
-    public void setId(final String id) {
-        this.id = id;
-    }
+        while (in.hasNext()) {
+            retval.add(new PropertyBean(in.nextName(), in.nextString()));
+        }
 
-    /**
-     * <p>
-     * Sets the type.
-     * </p>
-     *
-     * @param type the type
-     */
-    public void setType(final String type) {
-        this.type = type;
+        in.endObject();
+
+        return retval;
     }
 }

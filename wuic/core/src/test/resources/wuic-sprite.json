@@ -1,0 +1,77 @@
+{
+    "nutDaoBuilders": [
+        {
+            "id": "dao",
+            "type": "ClasspathNutDaoBuilder"
+        }
+    ],
+    "engineBuilders": [
+        {
+            "id": "jsSpriteNotAggregate",
+            "type": "ImageAggregatorEngineBuilder",
+            "properties": {
+                "c.g.wuic.engine.aggregate": "false"
+            }
+        },
+        {
+            "id": "cssAggregate",
+            "type": "ImageAggregatorEngineBuilder",
+            "properties": {
+                "c.g.wuic.engine.aggregate" : "true"
+            }
+        },
+        {
+            "id": "spriteInspector",
+            "type": "SpriteInspectorEngineBuilder",
+            "properties": {
+                "c.g.wuic.engine.spriteProviderClassName": "css"
+            }
+        },
+        {
+            "id": "JSspriteInspector",
+            "type": "SpriteInspectorEngineBuilder",
+            "properties": {
+                "c.g.wuic.engine.spriteProviderClassName" : "javascript"
+            }
+        }
+    ],
+    "heaps": [{
+        "id": "imageHeap",
+        "daoBuilderId": "dao",
+        "nutPath": [
+            "images/reject-block.png",
+            "images/reject-major.png",
+            "images/reject-warn.png"
+        ]
+    }],
+    "workflowTemplates": [
+        {
+            "useDefaultEngines": "false",
+            "id": "jsSpriteNotAggregate",
+            "engineChain": [
+                "jsSpriteNotAggregate",
+                "JSspriteInspector"
+            ]
+        },
+        {
+            "useDefaultEngines": "false",
+            "id": "cssSpriteAggregate",
+            "engineChain": [
+                "cssAggregate",
+                "spriteInspector"
+            ]
+        }
+    ],
+    "workflows": [
+        {
+            "id": "jsSpriteNotAggregate",
+            "workflowTemplateId": "jsSpriteNotAggregate",
+            "heapIdPattern": "imageHeap"
+        },
+        {
+            "id": "cssSpriteAggregate",
+            "workflowTemplateId": "cssSpriteAggregate",
+            "heapIdPattern": "imageHeap"
+        }
+    ]
+}

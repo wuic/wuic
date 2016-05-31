@@ -1,0 +1,43 @@
+{
+    "nutFilterBuilders": [{
+        "id": "regexRemoveNutFilter",
+        "type": "RegexRemoveNutFilterBuilder",
+        "properties": {
+            "c.g.wuic.filter.regexExpressions": ".*.js\nref.css"
+        }
+    }], "nutDaoBuilders": [{
+            "id": "defaultDao",
+            "type": "ClasspathNutDaoBuilder"
+        }
+    ],
+    "heaps": [
+        {
+            "id": "simpleHeap",
+            "daoBuilderId": "defaultDao",
+            "nutPath": [
+                "css/jquery.ui.dialog.css",
+                "cgsg/globals.js"
+            ]
+        },
+        {
+            "id": "refHeap",
+            "daoBuilderId": "defaultDao",
+            "nutPath": "html/index.html"
+        }
+    ],
+    "workflowTemplates": [{
+        "id": "simpleWorkflow"
+    }],
+    "workflows": [
+        {
+            "idPrefix": "wf-",
+            "workflowTemplateId": "simpleWorkflow",
+            "heapIdPattern": "simpleHeap"
+        },
+        {
+            "idPrefix": "wf-",
+            "workflowTemplateId": "simpleWorkflow",
+            "heapIdPattern": "refHeap"
+        }
+    ]
+}

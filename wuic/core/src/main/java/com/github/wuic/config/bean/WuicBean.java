@@ -36,7 +36,9 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean;
+
+import com.google.gson.annotations.SerializedName;
 
 import javax.xml.bind.annotation.*;
 
@@ -52,7 +54,7 @@ import java.util.List;
  */
 @XmlRootElement(name = "wuic")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class XmlWuicBean {
+public class WuicBean {
 
     /**
      * Polling interval in seconds.
@@ -65,46 +67,48 @@ public class XmlWuicBean {
      */
     @XmlElementWrapper(name = "nut-filter-builders")
     @XmlElement(name = "nut-filter-builder")
-    private List<XmlBuilderBean> filterBuilders;
+    @SerializedName("nutFilterBuilders")
+    private List<BuilderBean> filterBuilders;
 
     /**
      * Some DAO builders definitions.
      */
     @XmlElementWrapper(name = "nut-dao-builders")
     @XmlElement(name = "nut-dao-builder")
-    private List<XmlBuilderBean> daoBuilders;
+    @SerializedName("nutDaoBuilders")
+    private List<BuilderBean> daoBuilders;
 
     /**
      * Some engine builders definitions
      */
     @XmlElementWrapper(name = "engine-builders")
     @XmlElement(name = "engine-builder")
-    private List<XmlBuilderBean> engineBuilders;
+    private List<BuilderBean> engineBuilders;
 
     /**
      * Some heaps definitions.
      */
     @XmlElementWrapper(name = "heaps")
     @XmlElement(name = "heap")
-    private List<XmlHeapBean> heaps;
+    private List<HeapBean> heaps;
 
     /**
      * Some workflow template definitions.
      */
     @XmlElementWrapper(name = "workflow-templates")
     @XmlElement(name = "workflow-template")
-    private List<XmlWorkflowTemplateBean> workflowTemplates;
+    private List<WorkflowTemplateBean> workflowTemplates;
 
     /**
      * Some binding definitions.
      */
     @XmlElementWrapper(name = "workflows")
     @XmlElement(name = "workflow")
-    private List<XmlWorkflowBean> workflows;
+    private List<WorkflowBean> workflows;
 
     /**
      * <p>
-     * Gets the polling interval. If value is not filled in wuic.xml, returns -1.
+     * Gets the polling interval. If value is not filled in configuration bean, returns -1.
      * </p>
      *
      * @return the interval
@@ -120,7 +124,7 @@ public class XmlWuicBean {
      *
      * @return the builders
      */
-    public List<XmlBuilderBean> getFilterBuilders() {
+    public List<BuilderBean> getFilterBuilders() {
         return filterBuilders;
     }
 
@@ -131,7 +135,7 @@ public class XmlWuicBean {
      *
      * @return the builders
      */
-    public List<XmlBuilderBean> getDaoBuilders() {
+    public List<BuilderBean> getDaoBuilders() {
         return daoBuilders;
     }
 
@@ -142,7 +146,7 @@ public class XmlWuicBean {
      *
      * @return the builders
      */
-    public List<XmlBuilderBean> getEngineBuilders() {
+    public List<BuilderBean> getEngineBuilders() {
         return engineBuilders;
     }
 
@@ -153,7 +157,7 @@ public class XmlWuicBean {
      *
      * @return the heaps
      */
-    public List<XmlHeapBean> getHeaps() {
+    public List<HeapBean> getHeaps() {
         return heaps;
     }
 
@@ -164,7 +168,7 @@ public class XmlWuicBean {
      *
      * @return the workflows
      */
-    public List<XmlWorkflowTemplateBean> getWorkflowTemplates() {
+    public List<WorkflowTemplateBean> getWorkflowTemplates() {
         return workflowTemplates;
     }
 
@@ -175,7 +179,7 @@ public class XmlWuicBean {
      *
      * @return the binding
      */
-    public List<XmlWorkflowBean> getWorkflows() {
+    public List<WorkflowBean> getWorkflows() {
         return workflows;
     }
 
@@ -187,7 +191,7 @@ public class XmlWuicBean {
      *
      * @param workflowTemplatesList the new list
      */
-    public void setWorkflowTemplates(final List<XmlWorkflowTemplateBean> workflowTemplatesList) {
+    public void setWorkflowTemplates(final List<WorkflowTemplateBean> workflowTemplatesList) {
         workflowTemplates = workflowTemplatesList;
     }
 
@@ -198,7 +202,7 @@ public class XmlWuicBean {
      *
      * @param workflowList the new list
      */
-    public void setWorkflows(final List<XmlWorkflowBean> workflowList) {
+    public void setWorkflows(final List<WorkflowBean> workflowList) {
         workflows = workflowList;
     }
 
@@ -209,7 +213,7 @@ public class XmlWuicBean {
      *
      * @param daoBuilders the builders
      */
-    public void setDaoBuilders(final List<XmlBuilderBean> daoBuilders) {
+    public void setDaoBuilders(final List<BuilderBean> daoBuilders) {
         this.daoBuilders = daoBuilders;
     }
 
@@ -220,7 +224,7 @@ public class XmlWuicBean {
      *
      * @param engineBuilders the new builders
      */
-    public void setEngineBuilders(final List<XmlBuilderBean> engineBuilders) {
+    public void setEngineBuilders(final List<BuilderBean> engineBuilders) {
         this.engineBuilders = engineBuilders;
     }
 }

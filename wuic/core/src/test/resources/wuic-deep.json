@@ -1,0 +1,52 @@
+{
+    "nutDaoBuilders": [
+        {
+            "id": "innerConf",
+            "type": "ClasspathNutDaoBuilder",
+            "properties": {
+                "c.g.wuic.dao.basePath": "/parent"
+            }
+        },
+        {
+            "id": "outerConf",
+            "type": "ClasspathNutDaoBuilder",
+            "properties": {
+                "c.g.wuic.dao.basePath": "/parent/deep"
+            }
+        }
+    ],
+    "heaps": [
+        {
+            "id": "compo",
+            "daoBuilderId": "innerConf",
+            "nutPath": "css/file.css"
+        },
+        {
+            "id": "inner",
+            "daoBuilderId": "innerConf",
+            "nutPath": "deep/deep.css",
+            "heapId": "compo"
+        },
+        {
+            "id": "outer",
+            "daoBuilderId": "outerConf",
+            "nutPath": "deep.css"
+        }
+    ],
+    "workflowTemplates": [{
+        "id": "tpl",
+        "engineChain": ["wuicDefaultMemoryMapCacheEngineBuilder"]
+    }],
+    "workflows": [
+        {
+            "idPrefix": "css-",
+            "workflowTemplateId": "tpl",
+            "heapIdPattern": ".*"
+        },
+        {
+            "id": "composite",
+            "workflowTemplateId": "tpl",
+            "heapIdPattern": ".*"
+        }
+    ]
+}

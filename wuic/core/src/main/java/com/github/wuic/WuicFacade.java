@@ -47,6 +47,7 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -57,7 +58,6 @@ import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.UrlProviderFactory;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
-import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,17 +163,21 @@ public final class WuicFacade implements ObjectBuilderInspector {
      * </p>
      *
      * @param b the builder that contains settings in its state
-     * @throws WuicException if the 'wuic.xml' path is not well configured
+     * @throws WuicException if the configuration file path is not well configured
      */
     WuicFacade(final WuicFacadeBuilder b) throws WuicException {
         config = b;
 
         try {
-            if (b.getWuicXmlPath() != null) {
-                b.getConfigurators().add(new FileXmlContextBuilderConfigurator(config.getWuicXmlPath()));
+            if (b.wuicConfigurationPaths() != null) {
+                for (final URL path : b.wuicConfigurationPaths()) {
+                    b.addConfigurator(path);
+                }
             }
         } catch (JAXBException je) {
             WuicException.throwWuicXmlReadException(je) ;
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
         }
 
         final List<ObjectBuilderInspector> inspectors = b.getObjectBuilderInspectors();

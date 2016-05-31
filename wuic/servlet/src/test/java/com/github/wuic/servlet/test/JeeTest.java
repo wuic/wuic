@@ -48,7 +48,7 @@ import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicConfiguration;
 import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.config.ObjectBuilder;
-import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.ReaderXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -100,7 +100,7 @@ public class JeeTest {
         public void setWuicXmlReader(final Reader wuicXmlFile) throws JAXBException {
             try {
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).configure(
-                        new ReaderXmlContextBuilderConfigurator(wuicXmlFile, getClass().getName(), true, null));
+                        new ReaderXmlContextBuilderConfigurator.Simple(wuicXmlFile, getClass().getName(), true, null));
             } catch (WuicException e) {
                 throw new RuntimeException(e);
             }

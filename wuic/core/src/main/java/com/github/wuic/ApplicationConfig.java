@@ -416,6 +416,11 @@ public interface ApplicationConfig {
     String WUIC_SERVLET_XML_PATH_PARAM = FACADE_PREFIX + "xmlPath";
 
     /**
+     * Init parameter which indicates the WUIC json file.
+     */
+    String WUIC_SERVLET_JSON_PATH_PARAM = FACADE_PREFIX + "jsonPath";
+
+    /**
      * A list of comma-separated class names implementing {@link com.github.wuic.config.ObjectBuilderInspector} with
      * a default constructor that will be used in the facade.
      */

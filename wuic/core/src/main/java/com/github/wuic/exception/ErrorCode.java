@@ -85,6 +85,11 @@ public interface ErrorCode {
     long XML_CANNOT_READ = 19860606100L;
 
     /**
+     * Default code when the wuic.json path can't be read.
+     */
+    long JSON_CANNOT_READ = 19860606101L;
+
+    /**
      * No configuration ID has been defined for a configuration in the wuic.xml path.
      */
     long XML_NO_CONFIGURATION_ID = 19860606101L;

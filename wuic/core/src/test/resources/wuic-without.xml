@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<wuic>
+    <heaps>
+        <heap id="simpleHeap">
+            <nut-path>css/jquery-ui.css</nut-path>
+        </heap>
+    </heaps>
+
+    <workflow-templates>
+        <workflow-template id="simpleWorkflowTemplate" use-default-engines="true">
+            <without>
+                <engine-builder-id>TextAggregatorEngineBuilder</engine-builder-id>
+            </without>
+            <engine-chain></engine-chain>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="simpleWorkflow" workflow-template-id="simpleWorkflowTemplate"  heap-id-pattern="simpleHeap" />
+    </workflows>
+</wuic>

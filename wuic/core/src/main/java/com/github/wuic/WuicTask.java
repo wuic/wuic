@@ -38,6 +38,11 @@
 
 package com.github.wuic;
 
+import com.github.wuic.config.bean.BuilderBean;
+import com.github.wuic.config.bean.HeapBean;
+import com.github.wuic.config.bean.WorkflowBean;
+import com.github.wuic.config.bean.WorkflowTemplateBean;
+import com.github.wuic.config.bean.WuicBean;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
@@ -46,11 +51,6 @@ import com.github.wuic.nut.dao.core.UnreachableNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
-import com.github.wuic.xml.XmlBuilderBean;
-import com.github.wuic.xml.XmlHeapBean;
-import com.github.wuic.xml.XmlWorkflowBean;
-import com.github.wuic.xml.XmlWorkflowTemplateBean;
-import com.github.wuic.xml.XmlWuicBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,14 +177,14 @@ public class WuicTask {
     private String relocateTransformedXml(final File xmlFile) throws JAXBException, IOException {
 
         // Now load XML configuration to update it in order to use chains of responsibility with static engine
-        final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
+        final JAXBContext jc = JAXBContext.newInstance(WuicBean.class);
         final Unmarshaller unmarshaller = jc.createUnmarshaller();
-        final XmlWuicBean bean = (XmlWuicBean) unmarshaller.unmarshal(xmlFile);
+        final WuicBean bean = (WuicBean) unmarshaller.unmarshal(xmlFile);
 
         // Set mock DAO for heaps
         if (bean.getHeaps() != null) {
             final String id = ContextBuilder.getDefaultBuilderId(UnreachableNutDao.class);
-            final XmlBuilderBean dao = new XmlBuilderBean();
+            final BuilderBean dao = new BuilderBean();
             dao.setId(id);
             dao.setType(UnreachableNutDao.class.getSimpleName());
 
@@ -194,7 +194,7 @@ public class WuicTask {
                 bean.setDaoBuilders(Arrays.asList(dao));
             }
 
-            for (final XmlHeapBean heap : bean.getHeaps()) {
+            for (final HeapBean heap : bean.getHeaps()) {
                 heap.setBuilderId(id);
             }
         }
@@ -202,7 +202,7 @@ public class WuicTask {
         // Override workflow definition
         final String staticEngineName = "wuic" + StaticEngine.class.getSimpleName() + "Builder";
         final String workflowTemplateId = staticEngineName + "Template";
-        final XmlWorkflowTemplateBean template = new XmlWorkflowTemplateBean();
+        final WorkflowTemplateBean template = new WorkflowTemplateBean();
         template.setEngineBuilderIds(Arrays.asList(staticEngineName));
         template.setUseDefaultEngines(Boolean.FALSE);
         template.setId(workflowTemplateId);
@@ -213,7 +213,7 @@ public class WuicTask {
             bean.setWorkflowTemplates(Arrays.asList(template));
         }
 
-        final XmlWorkflowBean workflow = new XmlWorkflowBean();
+        final WorkflowBean workflow = new WorkflowBean();
         workflow.setHeapIdPattern(".*");
         workflow.setWorkflowTemplateId(workflowTemplateId);
         workflow.setIdPrefix("");
@@ -225,7 +225,7 @@ public class WuicTask {
         }
 
         // Declare the static engine
-        final XmlBuilderBean builder = new XmlBuilderBean();
+        final BuilderBean builder = new BuilderBean();
         builder.setId(staticEngineName);
         builder.setType(StaticEngine.class.getSimpleName() + "Builder");
 
@@ -280,7 +280,7 @@ public class WuicTask {
         final File xmlFile = new File(xml);
         final WuicFacadeBuilder facadeBuilder = new WuicFacadeBuilder()
                 .contextPath(contextPath)
-                .wuicXmlPath(xmlFile.toURI().toURL());
+                .wuicConfigurationPath(xmlFile.toURI().toURL());
 
         final WuicFacade facade;
 

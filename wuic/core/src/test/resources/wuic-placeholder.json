@@ -1,0 +1,16 @@
+{
+    "nutDaoBuilders": [{
+        "id": "defaultDao",
+        "type": "MockDaoBuilder",
+        "properties": {
+            "c.g.dao.foo": "${debug}",
+            "c.g.dao.bar": "${unknown:false}",
+            "c.g.dao.baz": "${unknown}"
+        }
+    }],
+    "heaps": [{
+        "id": "simpleHeap",
+        "daoBuilderId": "defaultDao",
+        "nutPath": "css/jquery-ui.css"
+    }]
+}

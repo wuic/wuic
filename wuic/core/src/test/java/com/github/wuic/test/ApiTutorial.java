@@ -56,7 +56,7 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
-import com.github.wuic.xml.ReaderXmlContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.ReaderXmlContextBuilderConfigurator;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,7 +184,7 @@ public class ApiTutorial {
             final Reader reader = Mockito.mock(Reader.class);
 
             // tag::Configure[]
-            facade.configure(new ReaderXmlContextBuilderConfigurator(reader,
+            facade.configure(new ReaderXmlContextBuilderConfigurator.Simple(reader,
                     toString(),
                     facade.allowsMultipleConfigInTagSupport(),
                     ProcessContext.DEFAULT));

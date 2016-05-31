@@ -200,7 +200,7 @@ public class WuicException extends Exception {
 
     /**
      * <p>
-     * Indicates that a wuic.xml file cannot be read
+     * Indicates that a wuic.xml file cannot be read.
      * </p>
      *
      * @param e the origin
@@ -208,6 +208,18 @@ public class WuicException extends Exception {
     public static void throwWuicXmlReadException(final Exception e) {
         throw new IllegalArgumentException(
                 String.format("[Err n. %d] Unable to load wuic.xml", ErrorCode.XML_CANNOT_READ), e);
+    }
+
+    /**
+     * <p>
+     * Indicates that a wuic.json file cannot be read.
+     * </p>
+     *
+     * @param e the origin
+     */
+    public static void throwWuicJsonReadException(final Exception e) {
+        throw new IllegalArgumentException(
+                String.format("[Err n. %d] Unable to load wuic.json", ErrorCode.JSON_CANNOT_READ), e);
     }
 
     /**

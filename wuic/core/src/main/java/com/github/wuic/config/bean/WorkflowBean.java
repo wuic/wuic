@@ -36,75 +36,121 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlValue;
 
 /**
  * <p>
- * Represents a property to be set in a {@link com.github.wuic.config.ObjectBuilder}.
+ * This class corresponds to the bean representation of a {@link com.github.wuic.Workflow}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.4.3
  */
-public class XmlPropertyBean {
+@XmlAccessorType(XmlAccessType.FIELD)
+public class WorkflowBean {
 
     /**
-     * The key.
+     * The workflow ID.
      */
-    @XmlAttribute(name = "key")
-    private String key;
+    @XmlAttribute(name = "id")
+    private String id;
 
     /**
-     * The value
+     * The workflow prefix for ID.
      */
-    @XmlValue
-    private String value;
+    @XmlAttribute(name = "id-prefix")
+    private String idPrefix;
+
+    /**
+     * The heap ID pattern.
+     */
+    @XmlAttribute(name = "heap-id-pattern")
+    private String heapIdPattern;
+
+    /**
+     * The workflow ID to copy.
+     */
+    @XmlAttribute(name = "workflow-template-id")
+    private String workflowTemplateId;
 
     /**
      * <p>
-     * Default constructor.
-     * </p>
-     */
-    public XmlPropertyBean() {
-
-    }
-
-
-    /**
-     * <p>
-     * Constructor based on a given key and a give, associated value.
-     * </p>
-     *
-     * @param key the key
-     * @param value the value
-     */
-    public XmlPropertyBean(final String key, final String value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    /**
-     * <p>
-     *  Gets the key.
+     * Gets the ID prefix (id attribute should be {@code null}).
      * </p>
      *
-     * @return the key
+     * @return the string prefixing the workflow ID
      */
-    public String getKey() {
-        return key;
+    public String getIdPrefix() {
+        return idPrefix;
     }
 
     /**
      * <p>
-     * Gets the value.
+     * Sets the prefix ID.
      * </p>
      *
-     * @return the value
+     * @param prefix the prefix ID
      */
-    public String getValue() {
-        return value;
+    public void setIdPrefix(final String prefix) {
+        idPrefix = prefix;
+    }
+
+    /**
+     * <p>
+     * Gets the ID (idPrefix attribute should be {@code null}).
+     * </p>
+     *
+     * @return the ID identifying the workflow
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * <p>
+     * Gets the heap ID.
+     * </p>
+     *
+     * @return the heap ID
+     */
+    public String getHeapIdPattern() {
+        return heapIdPattern;
+    }
+
+    /**
+     * <p>
+     * Sets the heap ID.
+     * </p>
+     *
+     * @param pattern the heap ID pattern
+     */
+    public void setHeapIdPattern(final String pattern) {
+        heapIdPattern = pattern;
+    }
+
+    /**
+     * <p>
+     * Sets the workflow template ID.
+     * </p>
+     *
+     * @param tplId the workflow template ID
+     */
+    public void setWorkflowTemplateId(final String tplId) {
+        workflowTemplateId = tplId;
+    }
+
+    /**
+     * <p>
+     * Gets the workflow ID.
+     * </p>
+     *
+     * @return the workflow ID
+     */
+    public String getWorkflowTemplateId() {
+        return workflowTemplateId;
     }
 }

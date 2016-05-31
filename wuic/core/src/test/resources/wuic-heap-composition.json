@@ -1,0 +1,68 @@
+{
+    "nutDaoBuilders": [{
+        "id": "defaultDao",
+        "type": "MockDaoBuilder",
+        "properties": {
+            "c.g.dao.foo": "dao"
+        }
+    }],
+    "heaps": [
+        {
+            "id": "simple",
+            "daoBuilderId": "defaultDao",
+            "nutPath": "css/simple.css"
+        },
+        {
+            "id": "nested",
+            "daoBuilderId": "defaultDao",
+            "heap": {
+                "id": "nested-nested",
+                "daoBuilderId": "defaultDao",
+                "nutPath": "css/nested.css"
+            }
+        },
+        {
+            "id": "referenced",
+            "daoBuilderId": "defaultDao",
+            "heapId": [
+                "simple",
+                "nested-nested"
+            ]
+        },
+        {
+            "id": "both",
+            "daoBuilderId": "defaultDao",
+            "heapId": "simple",
+            "heap": {
+                "id": "both-nested",
+                "daoBuilderId": "defaultDao",
+                "nutPath": "css/both-nested.css"
+            }
+        },
+        {
+            "id": "full",
+            "daoBuilderId": "defaultDao",
+            "nutPath": "css/full.css",
+            "heapId": "simple",
+            "heap": {
+                "id": "full-nested",
+                "daoBuilderId": "defaultDao",
+                "nutPath": "css/full-nested.css"
+            }
+        },
+        {
+            "id": "any-order",
+            "daoBuilderId": "defaultDao",
+            "heapId": "simple",
+            "nutPath": "css/full.css"
+        }
+    ],
+    "workflowTemplates": [{
+        "id": "tpl"
+    }],
+    "workflows": [{
+        "idPrefix": "",
+        "workflowTemplateId": "tpl",
+        "heapIdPattern": ".*"
+    }]
+}

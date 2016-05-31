@@ -36,9 +36,10 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean.xml;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.bean.WuicBean;
 import com.github.wuic.exception.WuicException;
 
 import javax.xml.bind.JAXBException;
@@ -55,51 +56,34 @@ import java.io.Reader;
  * @author Guillaume DROUET
  * @since 0.4.2
  */
-public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
-
-    /**
-     * The tag.
-     */
-    private String tag;
-
-    /**
-     * The {@link  Reader} pointing to the XML stream.
-     */
-    private Reader reader;
+public abstract class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
      *
-     * @param r the reader to XML
-     * @param t the tag
+     * @param tag the tag
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      * @param processContext the process context
      * @throws JAXBException if an context can't be initialized
      */
-    public ReaderXmlContextBuilderConfigurator(final Reader r,
-                                               final String t,
+    public ReaderXmlContextBuilderConfigurator(final String tag,
                                                final Boolean multiple,
                                                final ProcessContext processContext)
             throws JAXBException {
-        super(multiple, processContext);
-
-        if (r == null) {
-            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration reader for WUIC is null"));
-        }
-
-        reader = r;
-        tag = t;
+        super(multiple, tag, processContext);
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Gets the reader.
+     * </p>
+     *
+     * @return the reader
+     * @throws IOException if any I/O error occurs
      */
-    @Override
-    public String getTag() {
-        return tag;
-    }
+    protected abstract Reader getReader() throws IOException;
 
     /**
      * {@inheritDoc}
@@ -113,7 +97,57 @@ public class ReaderXmlContextBuilderConfigurator extends XmlContextBuilderConfig
      * {@inheritDoc}
      */
     @Override
-    protected XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
-        return (XmlWuicBean) unmarshaller.unmarshal(reader);
+    protected final WuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
+        try {
+            return (WuicBean) unmarshaller.unmarshal(getReader());
+        } catch (IOException ioe) {
+            throw new JAXBException(ioe);
+        }
     }
+
+    /**
+     * <p>
+     * A simple {@link ReaderXmlContextBuilderConfigurator} wrapping a {@code Reader}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class Simple extends ReaderXmlContextBuilderConfigurator {
+
+        /**
+         * The {@link  Reader} pointing to the XML stream.
+         */
+        private Reader reader;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param r the reader
+         * @param tag the tag
+         * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
+         * @param processContext the process context
+         * @throws JAXBException if an context can't be initialized
+         */
+        public Simple(final Reader r, final String tag, final Boolean multiple, final ProcessContext processContext) throws JAXBException {
+            super(tag, multiple, processContext);
+
+            if (r == null) {
+                WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration reader for WUIC is null"));
+            }
+
+            reader = r;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Reader getReader() {
+            return reader;
+        }
+    }
+
 }

@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,11 +35,29 @@
  * licenses."
  */
 
+
+package com.github.wuic.config.bean.json;
+
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+
 /**
  * <p>
- * This package provides the classes which read the 'wuic.xml' path.
+ * This factory creates {@link PropertyAdapter}.
  * </p>
- * 
+ *
  * @author Guillaume DROUET
+ * @since 0.5.3
  */
-package com.github.wuic.xml;
+public class PropertyAdapterFactory implements TypeAdapterFactory {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
+        return new PropertyAdapter(gson);
+    }
+}

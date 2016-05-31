@@ -82,7 +82,7 @@ public class WuicFacadeBuilderTest {
     @Test(timeout = 60000)
     public void noXmlTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
-        Assert.assertTrue(builder.noXmlConfiguration().build().workflowIds().isEmpty());
+        Assert.assertTrue(builder.noConfigurationPath().build().workflowIds().isEmpty());
     }
 
     /**
@@ -147,7 +147,7 @@ public class WuicFacadeBuilderTest {
     @Test(timeout = 60000)
     public void contextPathTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
-        Assert.assertEquals("/foo", builder.noXmlConfiguration().contextPath("/foo").build().getContextPath());
+        Assert.assertEquals("/foo", builder.noConfigurationPath().contextPath("/foo").build().getContextPath());
     }
 
     /**
@@ -159,7 +159,7 @@ public class WuicFacadeBuilderTest {
     public void configuratorTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         final AtomicInteger count = new AtomicInteger(0);
-        builder.noXmlConfiguration().contextBuilderConfigurators(new SimpleContextBuilderConfigurator(getClass().getName()) {
+        builder.noConfigurationPath().contextBuilderConfigurators(new SimpleContextBuilderConfigurator(getClass().getName()) {
             @Override
             public int internalConfigure(final ContextBuilder ctxBuilder) {
                 count.incrementAndGet();

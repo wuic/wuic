@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -35,37 +35,11 @@
  * licenses."
  */
 
-
-package com.github.wuic.xml;
-
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
-
 /**
  * <p>
- * Represents a heap reference.
+ * This package provides the classes which read the 'wuic.json' path.
  * </p>
- *
+ * 
  * @author Guillaume DROUET
- * @since 0.5.2
  */
-@XmlRootElement
-public class XmlHeapReference {
-
-    /**
-     * The ID value.
-     */
-    @XmlValue
-    private String value;
-
-    /**
-     * <p>
-     * Gets the value.
-     * </p>
-     *
-     * @return the referenced ID
-     */
-    public String getValue() {
-        return value;
-    }
-}
+package com.github.wuic.config.bean.json;

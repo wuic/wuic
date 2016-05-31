@@ -304,7 +304,7 @@
 
         <!-- dependencies libraries -->
         <protobuf-java.version>2.6.1</protobuf-java.version>
-        <gson.version>2.3.1</gson.version>
+        <gson.version>2.6.1</gson.version>
 		<jsp-api.version>2.2</jsp-api.version>
 		<servlet-api.version>3.1-b02</servlet-api.version>
         <mockito.version>1.9.5</mockito.version>

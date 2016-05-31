@@ -1,0 +1,16 @@
+{
+    "heaps": [{
+        "id": "simpleHeap",
+        "nutPath": "css/jquery-ui.css"
+    }],
+    "workflowTemplates": [{
+        "id": "simpleWorkflowTemplate",
+        "useDefaultEngines": "true",
+        "without": ["TextAggregatorEngineBuilder"]
+    }],
+    "workflows": [{
+        "idPrefix": "simpleWorkflow",
+        "workflowTemplateId": "simpleWorkflowTemplate",
+        "heapIdPattern": "simpleHeap"
+    }]
+}

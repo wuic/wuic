@@ -39,6 +39,8 @@
 package com.github.wuic;
 
 import com.github.wuic.config.ObjectBuilderInspector;
+import com.github.wuic.config.bean.json.FileJsonContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.ContextInterceptor;
@@ -54,6 +56,7 @@ import com.github.wuic.util.SystemPropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -94,9 +97,9 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
     private Boolean multipleConfigInTagSupport;
 
     /**
-     * The URL where wuic.xml file is located.
+     * The URL where configuration files are located.
      */
-    private URL wuicXmlPath;
+    private List<URL> wuicConfigurationPaths;
 
     /**
      * Use or not configurator that creates default DAOs and engines.
@@ -137,7 +140,9 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
         contextPath = "";
         warmUpStrategy = WuicFacade.WarmupStrategy.NONE;
         multipleConfigInTagSupport = Boolean.TRUE;
-        wuicXmlPath = getClass().getResource("/wuic.xml");
+        wuicConfigurationPaths = new ArrayList<URL>();
+        wuicConfigurationPath(getClass().getResource("/wuic.xml"));
+        wuicConfigurationPath(getClass().getResource("/wuic.json"));
         propertyResolver = new EnhancedPropertyResolver();
         useDefaultContextBuilderConfigurator = Boolean.TRUE;
         inspectors = new ArrayList<ObjectBuilderInspector>();
@@ -185,6 +190,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             final WuicFacade.WarmupStrategy warmupStrategy = WuicFacade.WarmupStrategy.valueOf(warmupStrategyStr);
 
             final String xmlPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM, null);
+            final String jsonPath = propertyResolver.resolveProperty(ApplicationConfig.WUIC_SERVLET_JSON_PATH_PARAM, null);
 
             contextPath(wuicCp);
             warmUpStrategy(warmupStrategy);
@@ -197,7 +203,12 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
             // Choose specific location for XML file
             if (xmlPath != null) {
-                wuicXmlPath(new URL(xmlPath));
+                wuicConfigurationPath(new URL(xmlPath));
+            }
+
+            // Choose specific location for JSON file
+            if (jsonPath != null) {
+                wuicConfigurationPath(new URL(jsonPath));
             }
 
             additionalContextBuilderConfigurators();
@@ -310,14 +321,17 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
-     * Sets a new location for wuic.xml file.
+     * Adds a new location for configuration file.
      * </p>
      *
-     * @param xml the new location
+     * @param path the new location
      * @return this
      */
-    public final WuicFacadeBuilder wuicXmlPath(final URL xml) {
-        this.wuicXmlPath = xml;
+    public final WuicFacadeBuilder wuicConfigurationPath(final URL path) {
+        if (path != null) {
+            this.wuicConfigurationPaths.add(path);
+        }
+
         return this;
     }
 
@@ -336,13 +350,13 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
-     * Do not use any wuic.xml file to configure the context.
+     * Do not use any configuration file to configure the context.
      * </p>
      *
      * @return this
      */
-    public final WuicFacadeBuilder noXmlConfiguration() {
-        this.wuicXmlPath = null;
+    public final WuicFacadeBuilder noConfigurationPath() {
+        this.wuicConfigurationPaths.clear();
         return this;
     }
 
@@ -435,6 +449,26 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
+     * Adds a new configurator based on a given configuration path.
+     * No configurator will be added if the path name does not ends with .json or .xml extension.
+     * </p>
+     *
+     * @param path the path to be added
+     * @throws IOException if any I/O error occurs
+     * @throws JAXBException if an XML error occurs
+     */
+    public final void addConfigurator(final URL path) throws IOException, JAXBException {
+        if (path.toString().endsWith(".xml")) {
+            getConfigurators().add(new FileXmlContextBuilderConfigurator(path));
+        } else if (path.toString().endsWith(".json")) {
+            getConfigurators().add(new FileJsonContextBuilderConfigurator(path));
+        } else {
+            log.warn("Configuration file path {} does not ends with .xml or .json, ignoring...", path.toString());
+        }
+    }
+
+    /**
+     * <p>
      * Builds a new facade.
      * </p>
      *
@@ -508,13 +542,13 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
-     * Gets the wuic.xml location if any.
+     * Gets the configuration files locations if any.
      * </p>
      *
      * @return the location
      */
-    URL getWuicXmlPath() {
-        return wuicXmlPath;
+    List<URL> wuicConfigurationPaths() {
+        return wuicConfigurationPaths;
     }
 
     /**

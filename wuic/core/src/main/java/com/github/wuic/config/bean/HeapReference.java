@@ -36,86 +36,55 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
 
 /**
  * <p>
- * This class describes the XML representation of a {@link com.github.wuic.nut.NutsHeap}.
+ * Represents a heap reference.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.2
  */
-public class XmlHeapBean {
+@XmlRootElement
+public class HeapReference {
 
     /**
-     * The ID.
+     * The ID value.
      */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The ID of the DAO builder.
-     */
-    @XmlAttribute(name = "dao-builder-id")
-    private String daoBuilderId;
-
-    /**
-     * All the elements of the heap. Each object could be a path, a nested heap or a referenced heap.
-     */
-    @XmlElements({
-            @XmlElement(name = "nut-path", type = String.class),
-            @XmlElement(name = "heap", type = XmlHeapBean.class),
-            @XmlElement(name = "heap-id", type = XmlHeapReference.class)
-    })
-    private List<Object> elements;
+    @XmlValue
+    private String value;
 
     /**
      * <p>
-     * Gets the elements.
+     * Build a new instance.
      * </p>
-     *
-     * @return the element corresponding to the {@link com.github.wuic.nut.Nut nuts} or nested {@link com.github.wuic.nut.NutsHeap heaps}
      */
-    public List<Object> getElements() {
-        return elements;
+    public HeapReference() {
     }
 
     /**
      * <p>
-     * Gets the DAO builder's ID.
+     * Builds a new instance.
      * </p>
      *
-     * @return an ID identifying a DAO builder
+     * @param value the value
      */
-    public String getDaoBuilderId() {
-        return daoBuilderId;
+    public HeapReference(final String value) {
+        this.value = value;
     }
 
     /**
      * <p>
-     * Sets the DAO builder's ID.
+     * Gets the value.
      * </p>
      *
-     * @param daoBuilderId  the new ID identifying the DAO builder
+     * @return the referenced ID
      */
-    public void setBuilderId(final String daoBuilderId) {
-        this.daoBuilderId = daoBuilderId;
-    }
-
-    /**
-     * <p>
-     * Gets the ID.
-     * </p>
-     *
-     * @return the ID identifying the heap
-     */
-    public String getId() {
-        return id;
+    public String getValue() {
+        return value;
     }
 }

@@ -36,15 +36,18 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean;
+
+import com.google.gson.annotations.SerializedName;
 
 import javax.xml.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * <p>
- * This class corresponds to the XML expression of a workflow template with a set of engines to compote the chains of
+ * This class corresponds to the bean expression of a workflow template with a set of engines to compote the chains of
  * responsibility and the store DAO.
  * </p>
  *
@@ -52,7 +55,7 @@ import java.util.List;
  * @since 0.4.0
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class XmlWorkflowTemplateBean {
+public class WorkflowTemplateBean {
 
     /**
      * The ID prefix.
@@ -71,6 +74,7 @@ public class XmlWorkflowTemplateBean {
      */
     @XmlElementWrapper(name = "engine-chain")
     @XmlElement(name = "engine-builder-id")
+    @SerializedName("engineChain")
     private List<String> engineBuilderIds;
 
     /**
@@ -78,6 +82,7 @@ public class XmlWorkflowTemplateBean {
      */
     @XmlElementWrapper(name = "without")
     @XmlElement(name = "engine-builder-id")
+    @SerializedName("without")
     private List<String> withoutEngineBuilderIds;
 
     /**
@@ -117,7 +122,7 @@ public class XmlWorkflowTemplateBean {
      * @return the IDs identifying the builder's engine to use to process nuts
      */
     public List<String> getEngineBuilderIds() {
-        return engineBuilderIds;
+        return engineBuilderIds == null ? Collections.<String>emptyList() : engineBuilderIds;
     }
 
     /**

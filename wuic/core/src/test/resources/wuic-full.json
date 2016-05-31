@@ -1,0 +1,76 @@
+{
+    "pollingIntervalSeconds": "1",
+    "nutDaoBuilders":  [
+        {
+            "id": "defaultDao",
+            "type": "MockDaoBuilder",
+            "properties": {
+                "c.g.dao.foo": "dao"
+            }
+        },
+        {
+            "id": "anotherDao",
+            "type": "MockDaoBuilder"
+        }
+    ],
+    "engineBuilders": [
+        {
+            "id": "defaultEngine",
+            "type": "MockEngineBuilder",
+            "properties": {
+               "c.g.engine.foo": "engine"
+            }
+        },
+        {
+            "id": "anotherEngine",
+            "type": "MockEngineBuilder"
+        }
+    ],
+    "heaps": [
+        {
+            "id": "defaultHeap",
+            "daoBuilderId": "defaultDao",
+            "nutPath": [
+                "*.css",
+                "foo/style.css"
+            ]
+        },
+        {
+            "id": "anotherHeap",
+            "daoBuilderId": "anotherDao",
+            "nutPath": [
+                "*.js",
+                "foo/style.js"
+            ]
+        }
+    ],
+    "workflowTemplates": [
+        {
+            "id": "defaultWorkflowTemplate",
+            "daoBuilderIds": ["defaultDao"],
+            "engineChain":  [
+                "defaultEngine",
+                "anotherEngine"
+            ]
+        },
+        {
+            "id": "anotherWorkflowTemplate",
+            "engineChain": [
+                "defaultEngine",
+                "anotherEngine"
+            ]
+        }
+    ],
+    "workflows": [
+        {
+            "idPrefix": "defaultWorkflow",
+            "workflowTemplateId": "defaultWorkflowTemplate",
+            "heapIdPattern": "defaultHeap"
+        },
+        {
+            "idPrefix": "defaultWorkflow",
+            "workflowTemplateId": "anotherWorkflowTemplate",
+            "heapIdPattern": "anotherHeap"
+        }
+    ]
+}

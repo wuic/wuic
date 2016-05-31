@@ -51,7 +51,7 @@ import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.HttpNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.UrlUtils;
-import com.github.wuic.xml.FileXmlContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;

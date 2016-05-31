@@ -36,119 +36,76 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean.json;
 
-import javax.xml.bind.annotation.*;
+import com.github.wuic.ProcessContext;
+import com.github.wuic.config.bean.WuicBean;
+import com.github.wuic.exception.WuicException;
+import com.google.gson.Gson;
+
+import java.io.IOException;
 
 /**
  * <p>
- * This class corresponds to the XML representation of a {@link com.github.wuic.Workflow}.
+ * This configurator extracts the bean from a JSON object.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.3
+ * @since 0.5.3
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class XmlWorkflowBean {
+public abstract class JsonContextBuilderConfigurator extends BeanContextBuilderConfigurator {
 
     /**
-     * The workflow ID.
+     * Unmarshaller.
      */
-    @XmlAttribute(name = "id")
-    private String id;
-
-    /**
-     * The workflow prefix for ID.
-     */
-    @XmlAttribute(name = "id-prefix")
-    private String idPrefix;
-
-    /**
-     * The heap ID pattern.
-     */
-    @XmlAttribute(name = "heap-id-pattern")
-    private String heapIdPattern;
-
-    /**
-     * The workflow ID to copy.
-     */
-    @XmlAttribute(name = "workflow-template-id")
-    private String workflowTemplateId;
+    private final Gson gson;
 
     /**
      * <p>
-     * Gets the ID prefix (id attribute should be {@code null}).
+     * Builds a new instance.
      * </p>
      *
-     * @return the string prefixing the workflow ID
+     * @param processContext the process context
      */
-    public String getIdPrefix() {
-        return idPrefix;
+    protected JsonContextBuilderConfigurator(final String tag, final ProcessContext processContext) {
+        this(Boolean.TRUE, tag, processContext);
     }
 
     /**
      * <p>
-     * Sets the prefix ID.
+     * Builds a new instance.
      * </p>
      *
-     * @param prefix the prefix ID
+     * @param tag the tag
+     * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
+     * @param pc the process context
      */
-    public void setIdPrefix(final String prefix) {
-        idPrefix = prefix;
+    protected JsonContextBuilderConfigurator(final Boolean multiple, final String tag, final ProcessContext pc) {
+        super(multiple, tag, pc);
+        this.gson = new Gson();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WuicBean getWuicBean() throws WuicException {
+        try {
+            return unmarshal(gson);
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+            return null;
+        }
     }
 
     /**
      * <p>
-     * Gets the ID (idPrefix attribute should be {@code null}).
+     * Unmashal the {@link com.github.wuic.config.bean.WuicBean} with the given {@code Gson} object.
      * </p>
      *
-     * @return the ID identifying the workflow
+     * @param gson the unmarshaller
+     * @return the unmarshalled bean
+     * @throws IOException if any I/O error occurs
      */
-    public String getId() {
-        return id;
-    }
-
-    /**
-     * <p>
-     * Gets the heap ID.
-     * </p>
-     *
-     * @return the heap ID
-     */
-    public String getHeapIdPattern() {
-        return heapIdPattern;
-    }
-
-    /**
-     * <p>
-     * Sets the heap ID.
-     * </p>
-     *
-     * @param pattern the heap ID pattern
-     */
-    public void setHeapIdPattern(final String pattern) {
-        heapIdPattern = pattern;
-    }
-
-    /**
-     * <p>
-     * Sets the workflow template ID.
-     * </p>
-     *
-     * @param tplId the workflow template ID
-     */
-    public void setWorkflowTemplateId(final String tplId) {
-        workflowTemplateId = tplId;
-    }
-
-    /**
-     * <p>
-     * Gets the workflow ID.
-     * </p>
-     *
-     * @return the workflow ID
-     */
-    public String getWorkflowTemplateId() {
-        return workflowTemplateId;
-    }
+    protected abstract WuicBean unmarshal(final Gson gson) throws IOException;
 }

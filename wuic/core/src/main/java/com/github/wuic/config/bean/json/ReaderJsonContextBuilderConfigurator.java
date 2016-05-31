@@ -36,80 +36,102 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean.json;
 
+import com.github.wuic.config.bean.WuicBean;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.util.IOUtils;
+import com.google.gson.Gson;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.Reader;
 
 /**
  * <p>
- * Represents a configurator based on XML read from an {@link URL}. Polling is supported thanks to the modification date
- * provided by the {@link URL} object.
+ * Represents a configurator based on JSON read from a {@link java.io.Reader}. Polling is not supported by this kind of
+ * configurator.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.2
+ * @since 0.5.3
  */
-public class FileXmlContextBuilderConfigurator extends XmlContextBuilderConfigurator {
-
-    /**
-     * The {@link java.net.URL} pointing to the wuic.xml file.
-     */
-    private URL xmlFile;
+public abstract class ReaderJsonContextBuilderConfigurator extends JsonContextBuilderConfigurator {
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
      *
-     * @param wuicXml the wuic.xml file URL
-     * @throws javax.xml.bind.JAXBException if an context can't be initialized
+     * @param tag the tag
      */
-    public FileXmlContextBuilderConfigurator(final URL wuicXml) throws JAXBException {
-        super(null);
-
-        if (wuicXml == null) {
-            WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration URL for WUIC is null"));
-        }
-
-        xmlFile = wuicXml;
+    public ReaderJsonContextBuilderConfigurator(final String tag) {
+        super(tag, null);
     }
 
     /**
-     * {@inheritDoc}
+     * <p>
+     * Gets the reader.
+     * </p>
+     *
+     * @return the reader
+     * @throws IOException if any I/O error occurs
      */
-    @Override
-    public String getTag() {
-        return xmlFile.toString();
-    }
+    protected abstract Reader getReader() throws IOException;
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected Long getLastUpdateTimestampFor(final String path) throws IOException {
-        InputStream is = null;
-        try {
-            final URLConnection c = xmlFile.openConnection();
-            is = c.getInputStream();
-            return c.getLastModified();
-        } finally {
-            IOUtils.close(is);
-        }
+        return -1L;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException {
-        return (XmlWuicBean) unmarshaller.unmarshal(xmlFile);
+    protected WuicBean unmarshal(final Gson unmarshaller) throws IOException  {
+        return unmarshaller.fromJson(getReader(), WuicBean.class);
+    }
+
+    /**
+     * <p>
+     * A simple {@link ReaderJsonContextBuilderConfigurator} wrapping a {@code Reader}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class Simple extends ReaderJsonContextBuilderConfigurator {
+
+        /**
+         * The {@link  Reader} pointing to the JSON stream.
+         */
+        private Reader reader;
+
+        /**
+         * <p>
+         * Creates a new instance.
+         * </p>
+         *
+         * @param r the reader to JSON
+         * @param tag the tag
+         */
+        public Simple(final Reader r, final String tag) {
+            super(tag);
+
+            if (r == null) {
+                WuicException.throwWuicXmlReadException(new IllegalArgumentException("XML configuration reader for WUIC is null"));
+            }
+
+            reader = r;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Reader getReader() throws IOException {
+            return reader;
+        }
     }
 }

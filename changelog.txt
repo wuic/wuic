@@ -170,3 +170,4 @@ Breaking changes:
 - c.g.wuic.facade.basePathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
 - c.g.wuic.facade.propertiesPathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
 - c.g.wuic.facade.xmlPathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
+- c.g.wuic.facade.xmlPath will be ignored if the value does not ends with .xml

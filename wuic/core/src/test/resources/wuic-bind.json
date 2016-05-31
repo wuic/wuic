@@ -1,0 +1,27 @@
+{
+    "nutDaoBuilders": [{
+        "id": "defaultDao",
+        "type": "MockDaoBuilder",
+        "properties": {
+            "c.g.dao.foo": "dao"
+        }
+    }],
+    "heaps": [{
+        "id": "first",
+        "daoBuilderId": "defaultDao",
+        "nutPath": "css/simple.css"
+    },
+    {
+        "id": "two",
+        "daoBuilderId": "defaultDao",
+        "nutPath": "css/nested.css"
+    }],
+    "workflowTemplates": [{
+        "id": "workflow-template"
+    }],
+    "workflows": [{
+        "id": "bind",
+        "workflowTemplateId": "workflow-template",
+        "heapIdPattern": ".*"
+    }]
+}

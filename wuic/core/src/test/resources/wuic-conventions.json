@@ -1,0 +1,31 @@
+{
+    "nutDaoBuilders": [
+        {
+            "type": "DiskNutDaoBuilder"
+        },
+        {
+            "type": "ClasspathNutDaoBuilder"
+        }
+    ],
+    "engineBuilders": [{
+        "type": "GzipEngineBuilder",
+        "properties": {
+            "c.g.wuic.engine.compress": "false"
+        }
+    }],
+    "heaps": [{
+        "id": "heap",
+        "nutPath": "skipped/bar.js"
+    }],
+    "workflowTemplates": [{
+        "id": "tpl",
+        "engineChain": [
+            "wuicDefaultGzipEngineBuilder"
+        ]
+    }],
+    "workflows": [{
+        "idPrefix": "wf-",
+        "workflowTemplateId": "tpl",
+        "heapIdPattern": "heap"
+    }]
+}

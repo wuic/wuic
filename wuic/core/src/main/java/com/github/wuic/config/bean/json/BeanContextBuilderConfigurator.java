@@ -36,51 +36,42 @@
  */
 
 
-package com.github.wuic.xml;
+package com.github.wuic.config.bean.json;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.bean.BuilderBean;
+import com.github.wuic.config.bean.HeapBean;
+import com.github.wuic.config.bean.HeapReference;
+import com.github.wuic.config.bean.PropertyBean;
+import com.github.wuic.config.bean.WorkflowBean;
+import com.github.wuic.config.bean.WorkflowTemplateBean;
+import com.github.wuic.config.bean.WuicBean;
+import com.github.wuic.context.AbstractContextBuilderConfigurator;
 import com.github.wuic.context.ContextBuilder;
-import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * <p>
- * This configurator implements XML supports for WUIC. It abstracts the way the XML is read and unmarshal with JAXB.
+ * This class relies on a {@link com.github.wuic.config.bean.WuicBean} to perform context configuration.
+ * The way the bean is retrieved is abstract and must be implemented by sub class.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfigurator {
+public abstract class BeanContextBuilderConfigurator extends AbstractContextBuilderConfigurator {
 
     /**
      * The logger.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(XmlContextBuilderConfigurator.class);
-
-    /**
-     * To read wuic.xml content.
-     */
-    private Unmarshaller unmarshaller;
-
-    /**
-     * The process context.
-     */
-    private final ProcessContext processContext;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanContextBuilderConfigurator.class);
 
     /**
      * <p>
@@ -88,10 +79,9 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * </p>
      *
      * @param processContext the process context
-     * @throws JAXBException if an context can't be initialized
      */
-    public XmlContextBuilderConfigurator(final ProcessContext processContext) throws JAXBException {
-        this(Boolean.TRUE, processContext);
+    public BeanContextBuilderConfigurator(final String tag, final ProcessContext processContext) {
+        this(Boolean.TRUE, tag, processContext);
     }
 
     /**
@@ -99,23 +89,64 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * Creates a new instance.
      * </p>
      *
+     * @param tag the tag
      * @param pc the process context
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
-     * @throws JAXBException if an context can't be initialized
      */
-    public XmlContextBuilderConfigurator(final Boolean multiple, final ProcessContext pc) throws JAXBException {
-        super(multiple);
-        final JAXBContext jc = JAXBContext.newInstance(XmlWuicBean.class);
-        unmarshaller = jc.createUnmarshaller();
-        processContext = pc == null ? ProcessContext.DEFAULT : pc;
+    public BeanContextBuilderConfigurator(final Boolean multiple, final String tag, final ProcessContext pc) {
+        super(multiple, tag, pc);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int internalConfigure(final ContextBuilder ctxBuilder) {
         try {
-            final URL xsd = getClass().getResource("/wuic.xsd");
-            unmarshaller.setSchema(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(xsd));
-        } catch (SAXException se) {
+            // Let's load the configuration file and configure the builder with it
+            final WuicBean bean = getWuicBean();
+
+            // The filters
+            if (bean.getFilterBuilders() != null) {
+                for (final BuilderBean filter : bean.getFilterBuilders()) {
+                    extractProperties(filter, ctxBuilder, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
+                }
+            }
+
+            // The DAOs
+            if (bean.getDaoBuilders() != null) {
+                for (final BuilderBean dao : bean.getDaoBuilders()) {
+                    extractProperties(dao, ctxBuilder, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
+                }
+            }
+
+            // The heaps
+            if (bean.getHeaps() != null) {
+                for (final HeapBean heap : bean.getHeaps()) {
+                    configureHeap(ctxBuilder, heap);
+                }
+            }
+
+            // The engines
+            if (bean.getEngineBuilders() != null) {
+                for (final BuilderBean engine : bean.getEngineBuilders()) {
+                    extractProperties(engine, ctxBuilder, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
+                }
+            }
+
+            configureTemplates(bean, ctxBuilder);
+            configureWorkflow(bean, ctxBuilder);
+
+            return bean.getPollingIntervalSeconds();
+        } catch (WuicException we) {
+            WuicException.throwBadArgumentException(we);
+        } catch (IOException se) {
             WuicException.throwBadArgumentException(se);
         }
+
+        return 0;
     }
+
 
     /**
      * <p>
@@ -126,7 +157,7 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @param heap the configuration bean
      * @throws IOException if any I/O error occurs
      */
-    public static void configureHeap(final ContextBuilder ctxBuilder, final XmlHeapBean heap) throws IOException {
+    public static void configureHeap(final ContextBuilder ctxBuilder, final HeapBean heap) throws IOException {
         final List<String> paths = new ArrayList<String>();
         final List<String> heaps = new ArrayList<String>();
         collectElements(ctxBuilder, heap, paths, heaps);
@@ -152,17 +183,17 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      *
      * @param xml the bean
      * @param ctxBuilder the builder
-     * @throws WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
+     * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
      */
-    public static void configureTemplates(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
+    public static void configureTemplates(final WuicBean xml, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
         if (xml.getWorkflowTemplates() == null) {
             return;
         }
 
         // Create each template
-        for (final XmlWorkflowTemplateBean template : xml.getWorkflowTemplates()) {
+        for (final WorkflowTemplateBean template : xml.getWorkflowTemplates()) {
 
             // DAO where we can store process result is optional
             if (template.getDaoBuilderIds() == null) {
@@ -196,14 +227,14 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
      */
-    public static void configureWorkflow(final XmlWuicBean xml, final ContextBuilder ctxBuilder)
+    public static void configureWorkflow(final WuicBean xml, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
         if (xml.getWorkflows() == null) {
             return;
         }
 
         // Some additional DAOs where process result is saved
-        for (final XmlWorkflowBean workflow : xml.getWorkflows()) {
+        for (final WorkflowBean workflow : xml.getWorkflows()) {
             if (!(workflow.getId() == null && workflow.getIdPrefix() != null
                     || workflow.getId() != null && workflow.getIdPrefix() == null)) {
                 WuicException.throwWuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());
@@ -217,66 +248,6 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
                     workflow.getHeapIdPattern(),
                     workflow.getWorkflowTemplateId());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ProcessContext getProcessContext() {
-        return processContext;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int internalConfigure(final ContextBuilder ctxBuilder) {
-        try {
-            // Let's load the wuic.xml file and configure the builder with it
-            final XmlWuicBean xml = unmarshal(unmarshaller);
-
-            // The filters
-            if (xml.getFilterBuilders() != null) {
-                for (final XmlBuilderBean filter : xml.getFilterBuilders()) {
-                    extractProperties(filter, ctxBuilder, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
-                }
-            }
-
-            // The DAOs
-            if (xml.getDaoBuilders() != null) {
-                for (final XmlBuilderBean dao : xml.getDaoBuilders()) {
-                    extractProperties(dao, ctxBuilder, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
-                }
-            }
-
-            // The heaps
-            if (xml.getHeaps() != null) {
-                for (final XmlHeapBean heap : xml.getHeaps()) {
-                    configureHeap(ctxBuilder, heap);
-                }
-            }
-
-            // The engines
-            if (xml.getEngineBuilders() != null) {
-                for (final XmlBuilderBean engine : xml.getEngineBuilders()) {
-                    extractProperties(engine, ctxBuilder, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
-                }
-            }
-
-            configureTemplates(xml, ctxBuilder);
-            configureWorkflow(xml, ctxBuilder);
-
-            return xml.getPollingIntervalSeconds();
-        } catch (JAXBException je) {
-            WuicException.throwBadArgumentException(je);
-        } catch (IOException se) {
-            WuicException.throwBadArgumentException(se);
-        } catch (WorkflowTemplateNotFoundException wxwtnfe) {
-            WuicException.throwBadArgumentException(wxwtnfe);
-        }
-
-        return 0;
     }
 
     /**
@@ -298,13 +269,13 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @throws IOException if an I/O error occurs
      */
     private static void collectElements(final ContextBuilder ctxBuilder,
-                                        final XmlHeapBean heap,
+                                        final HeapBean heap,
                                         final List<String> paths,
                                         final List<String> heaps) throws IOException {
         if (heap.getElements() != null) {
             for (final Object element : heap.getElements()) {
-                if (element instanceof XmlHeapBean)  {
-                    final XmlHeapBean nested = XmlHeapBean.class.cast(element);
+                if (element instanceof HeapBean)  {
+                    final HeapBean nested = HeapBean.class.cast(element);
 
                     if (nested.getElements() == null) {
                         continue;
@@ -322,8 +293,8 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
                     ctxBuilder.heap(nested.getId(), nested.getDaoBuilderId(), nestedPaths.toArray(new String[nestedPaths.size()]));
                     heaps.add(nested.getId());
-                } else if (element instanceof XmlHeapReference) {
-                    heaps.add(XmlHeapReference.class.cast(element).getValue());
+                } else if (element instanceof HeapReference) {
+                    heaps.add(HeapReference.class.cast(element).getValue());
                 } else {
                     paths.add(element.toString());
                 }
@@ -341,11 +312,11 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
      * @param contextGenericBuilder the context generic builder
      * @return the {@link ContextBuilder.ContextGenericBuilder} associating each property ID to its value
      */
-    private ContextBuilder.ContextGenericBuilder extractProperties(final XmlBuilderBean bean,
-                                                                   final ContextBuilder contextBuilder,
-                                                                   final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
+    public static ContextBuilder.ContextGenericBuilder extractProperties(final BuilderBean bean,
+                                                                         final ContextBuilder contextBuilder,
+                                                                         final ContextBuilder.ContextGenericBuilder contextGenericBuilder) {
         if (bean.getProperties() != null) {
-            for (final XmlPropertyBean propertyBean : bean.getProperties()) {
+            for (final PropertyBean propertyBean : bean.getProperties()) {
                 final String value = contextBuilder.injectPlaceholder(propertyBean.getValue());
 
                 // Apply component default value instead
@@ -360,12 +331,11 @@ public abstract class XmlContextBuilderConfigurator extends ContextBuilderConfig
 
     /**
      * <p>
-     * Unmashal the {@link XmlWuicBean} with the given unmarhalled.
+     * Gets the configuration bean used by this configurator.
      * </p>
      *
-     * @param unmarshaller the unmarshaller
-     * @return the unmarshalled bean
-     * @throws JAXBException if the XML can't be read
+     * @return the bean
+     * @throws WuicException if bean can't be retrieved
      */
-    protected abstract XmlWuicBean unmarshal(final Unmarshaller unmarshaller) throws JAXBException;
+    public abstract WuicBean getWuicBean() throws WuicException;
 }
