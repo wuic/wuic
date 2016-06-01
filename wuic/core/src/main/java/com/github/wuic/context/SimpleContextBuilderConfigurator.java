@@ -70,6 +70,15 @@ public class SimpleContextBuilderConfigurator extends ContextBuilderConfigurator
     }
 
     /**
+     * <p>
+     * Builds a new instance with the class name as tag.
+     * </p>
+     */
+    public SimpleContextBuilderConfigurator() {
+        this(SimpleContextBuilderConfigurator.class.getName());
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

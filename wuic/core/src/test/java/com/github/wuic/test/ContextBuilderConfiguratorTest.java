@@ -159,7 +159,7 @@ public class ContextBuilderConfiguratorTest {
     public void configureWithPollingTest() throws Exception {
         final CountDownLatch latch = new CountDownLatch(NumberUtils.TWO);
 
-        final ContextBuilderConfigurator cfg = new SimpleContextBuilderConfigurator("test") {
+        final ContextBuilderConfigurator cfg = new SimpleContextBuilderConfigurator() {
 
             /**
              * {@inheritDoc}
