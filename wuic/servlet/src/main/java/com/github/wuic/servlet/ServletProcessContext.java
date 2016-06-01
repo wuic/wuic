@@ -126,8 +126,9 @@ public class ServletProcessContext extends ProcessContext {
         // Asynchronous service not available
         if (!httpServletRequest.isAsyncSupported()) {
             final Exception ex = new IllegalStateException("isAsyncSupported() returns false in the current request.");
-            logger.warn("Trying to directly use the internal executor, which is possibly not allowed by the servlet container.", ex);
+            logger.warn("Trying to directly use the internal executor, which is possibly not allowed by the servlet container.");
             logger.warn("Make sure all your filter/servlet have their async-supported flag turned on. Otherwise disable asynchronous operations.");
+            logger.debug("Detailed cause.", ex);
             return super.executeAsap(job);
         } else {
             synchronized (httpServletRequest) {
