@@ -841,6 +841,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * Returns the additional attributes collected from all paths found in the given {@link List}.
          * </p>
          *
+         * @param forNuts the nuts where attributes will be collected
          * @return the attributes
          */
         public Map<String, String> getAttributes(final List<? extends Nut> forNuts) {
@@ -882,7 +883,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
         /**
          * <p>
-         * Add this info to the given list if and only if some statements have been captured
+         * Add this info to the given list if and only if some statements have been captured.
          * </p>
          *
          * @param list the list
