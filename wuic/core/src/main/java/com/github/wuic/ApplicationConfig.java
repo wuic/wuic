@@ -449,6 +449,11 @@ public interface ApplicationConfig {
     String WEB_WUIC_FACADE = PREFIX + "webWuicFacade";
 
     /**
+     * This is the property name of the {@link WuicFacadeBuilder} instance shared inside a web context.
+     */
+    String WEB_WUIC_FACADE_BUILDER = PREFIX + "webWuicFacadeBuilder";
+
+    /**
      * This class provides the {@link com.github.wuic.util.BiFunction} that provides parameters.
      */
     String INIT_PARAM_FUNCTION = PREFIX + "initParameterClass";

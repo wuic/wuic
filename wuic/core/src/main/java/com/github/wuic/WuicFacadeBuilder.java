@@ -155,6 +155,26 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
+     * Builds an instance by copy.
+     * </p>
+     *
+     * @param other the builder to copy
+     */
+    public WuicFacadeBuilder(final WuicFacadeBuilder other) {
+        contextPath = other.contextPath;
+        warmUpStrategy = other.warmUpStrategy;
+        multipleConfigInTagSupport = other.multipleConfigInTagSupport;
+        wuicConfigurationPaths = other.wuicConfigurationPaths;
+        propertyResolver = other.propertyResolver;
+        useDefaultContextBuilderConfigurator = other.useDefaultContextBuilderConfigurator;
+        inspectors = other.inspectors;
+        configurators = other.configurators;
+        contextBuilder = other.contextBuilder;
+        classpathResourceResolver = other.classpathResourceResolver;
+    }
+
+    /**
+     * <p>
      * Builds an instance with settings initialized with the given properties. The @link BiFunction} must returns the
      * value corresponding to the key (first parameter) or the second parameter if the return value is {@code null}.
      * </p>

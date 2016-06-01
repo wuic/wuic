@@ -219,9 +219,7 @@ public class ContextBuilder extends Observable {
         this.nutFilterBuilderFactory.inspector(inspector);
 
         for (final ObjectBuilderInspector i : inspectors) {
-            this.engineBuilderFactory.inspector(i);
-            this.nutDaoBuilderFactory.inspector(i);
-            this.nutFilterBuilderFactory.inspector(i);
+            inspector(i);
         }
 
         if (installServices) {
@@ -908,6 +906,14 @@ public class ContextBuilder extends Observable {
         @Override
         public Map<String, Object> getProperties() {
             return nutDaoBuilder.getProperties();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void configure(final PropertyResolver resolver) {
+            nutDaoBuilder.configure(resolver);
         }
 
         /**
@@ -1672,6 +1678,21 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Adds a new {@link ObjectBuilderInspector} to the builder factories.
+     * </p>
+     *
+     * @param obi the inspector to add
+     * @return this {@link ContextBuilder}
+     */
+    public final ContextBuilder inspector(final ObjectBuilderInspector obi) {
+        nutFilterBuilderFactory.inspector(obi);
+        engineBuilderFactory.inspector(obi);
+        nutFilterBuilderFactory.inspector(obi);
+        return this;
+    }
+
+    /**
+     * <p>
      * Add a new {@link NutDaoRegistration} identified by the specified ID.
      * </p>
      *
@@ -1795,9 +1816,7 @@ public class ContextBuilder extends Observable {
         final ServiceLoader<ObjectBuilderInspector> serviceLoader = ServiceLoader.load(ObjectBuilderInspector.class);
 
         for (final ObjectBuilderInspector obi : serviceLoader) {
-            nutFilterBuilderFactory.inspector(obi);
-            engineBuilderFactory.inspector(obi);
-            nutFilterBuilderFactory.inspector(obi);
+            inspector(obi);
         }
     }
 

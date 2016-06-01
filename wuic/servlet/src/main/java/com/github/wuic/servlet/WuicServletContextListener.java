@@ -109,6 +109,25 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
+     * Gets the {@link WuicFacadeBuilder} injected into the given context.
+     * </p>
+     *
+     * @param servletContext the context that must contains the facade
+     * @return the facade
+     */
+    public static WuicFacadeBuilder getWuicFacadeBuilder(final ServletContext servletContext) {
+        final Object builder = servletContext.getAttribute(ApplicationConfig.WEB_WUIC_FACADE_BUILDER);
+
+        if (builder == null) {
+            final String message = String.format("WuicFacadeBuilder is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
+            WuicException.throwBadStateException(new IllegalArgumentException(message));
+        }
+
+        return WuicFacadeBuilder.class.cast(builder);
+    }
+
+    /**
+     * <p>
      * Gets the {@link WuicFacade} injected into the given context.
      * </p>
      *
@@ -117,9 +136,15 @@ public class WuicServletContextListener implements ServletContextListener {
      */
     public static WuicFacade getWuicFacade(final ServletContext servletContext) {
         final Object facade = servletContext.getAttribute(ApplicationConfig.WEB_WUIC_FACADE);
+
         if (facade == null) {
-            final String message = String.format("WuicFacade is null, seems the %s was not initialized successfully.", WuicServletContextListener.class.getName());
-            WuicException.throwBadStateException(new IllegalArgumentException(message));
+            try {
+                final WuicFacade wuicFacade = getWuicFacadeBuilder(servletContext).build();
+                servletContext.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, wuicFacade);
+                return wuicFacade;
+            } catch (WuicException we) {
+                WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServletContextListener", we));
+            }
         }
 
         return WuicFacade.class.cast(facade);
@@ -247,43 +272,39 @@ public class WuicServletContextListener implements ServletContextListener {
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc))
                 .classpathResourceResolver(classpathResourceResolver);
 
-        try {
-            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
+        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void apply(final URL consumed) {
-                    builder.wuicConfigurationPath(consumed);
-                }
-            }, "wuic.xml", "wuic.json");
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final URL consumed) {
+                builder.wuicConfigurationPath(consumed);
+            }
+        }, "wuic.xml", "wuic.json");
 
-            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
+        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void apply(final URL consumed) {
-                    builder.wuicPropertiesPath(consumed);
-                }
-            }, "wuic.properties");
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final URL consumed) {
+                builder.wuicPropertiesPath(consumed);
+            }
+        }, "wuic.properties");
 
-            detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
+        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void apply(final URL consumed) {
-                    installBuildInfo(consumed, builder, classpathResourceResolver);
-                }
-            }, WuicTask.BUILD_INFO_FILE);
-            sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE, builder.build());
-        } catch (WuicException we) {
-            WuicException.throwBadStateException(new IllegalArgumentException("Unable to initialize WuicServlet", we));
-        }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void apply(final URL consumed) {
+                installBuildInfo(consumed, builder, classpathResourceResolver);
+            }
+        }, WuicTask.BUILD_INFO_FILE);
+        sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE_BUILDER, builder);
     }
 
     /**

@@ -159,7 +159,7 @@ public class WuicFacadeBuilderTest {
     public void configuratorTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         final AtomicInteger count = new AtomicInteger(0);
-        builder.noConfigurationPath().contextBuilderConfigurators(new SimpleContextBuilderConfigurator(getClass().getName()) {
+        builder.noConfigurationPath().contextBuilderConfigurators(new SimpleContextBuilderConfigurator() {
             @Override
             public int internalConfigure(final ContextBuilder ctxBuilder) {
                 count.incrementAndGet();
