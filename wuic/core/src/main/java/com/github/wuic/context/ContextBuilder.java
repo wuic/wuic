@@ -221,7 +221,7 @@ public class ContextBuilder extends Observable {
         for (final ObjectBuilderInspector i : inspectors) {
             this.engineBuilderFactory.inspector(i);
             this.nutDaoBuilderFactory.inspector(i);
-            this.nutFilterBuilderFactory.inspector(inspector);
+            this.nutFilterBuilderFactory.inspector(i);
         }
 
         if (installServices) {
