@@ -9,7 +9,7 @@
     <workflow-templates>
         <workflow-template id="simpleWorkflowTemplate" use-default-engines="true">
             <without>
-                <engine-builder-id>TextAggregatorEngineBuilder</engine-builder-id>
+                <engine-builder-type>TextAggregatorEngineBuilder</engine-builder-type>
             </without>
             <engine-chain></engine-chain>
         </workflow-template>

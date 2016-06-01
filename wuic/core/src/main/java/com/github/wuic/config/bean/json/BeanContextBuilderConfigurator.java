@@ -75,17 +75,6 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
 
     /**
      * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param processContext the process context
-     */
-    public BeanContextBuilderConfigurator(final String tag, final ProcessContext processContext) {
-        this(Boolean.TRUE, tag, processContext);
-    }
-
-    /**
-     * <p>
      * Creates a new instance.
      * </p>
      *
@@ -181,32 +170,32 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
      * An {@link IllegalArgumentException} is thrown if the workflow is badly defined.
      * </p>
      *
-     * @param xml the bean
+     * @param bean the bean
      * @param ctxBuilder the builder
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
      */
-    public static void configureTemplates(final WuicBean xml, final ContextBuilder ctxBuilder)
+    public static void configureTemplates(final WuicBean bean, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
-        if (xml.getWorkflowTemplates() == null) {
+        if (bean.getWorkflowTemplates() == null) {
             return;
         }
 
         // Create each template
-        for (final WorkflowTemplateBean template : xml.getWorkflowTemplates()) {
+        for (final WorkflowTemplateBean template : bean.getWorkflowTemplates()) {
 
             // DAO where we can store process result is optional
             if (template.getDaoBuilderIds() == null) {
                 ctxBuilder.template(template.getId(),
                         template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
-                        template.getWithoutEngineBuilderIds() == null ?
-                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
+                        template.getWithoutEngineBuilderType() == null ?
+                                null : template.getWithoutEngineBuilderType().toArray(new String[template.getWithoutEngineBuilderType().size()]),
                         template.getUseDefaultEngines());
             } else {
                 ctxBuilder.template(template.getId(),
                         template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
-                        template.getWithoutEngineBuilderIds() == null ?
-                                null : template.getWithoutEngineBuilderIds().toArray(new String[template.getWithoutEngineBuilderIds().size()]),
+                        template.getWithoutEngineBuilderType() == null ?
+                                null : template.getWithoutEngineBuilderType().toArray(new String[template.getWithoutEngineBuilderType().size()]),
                         template.getUseDefaultEngines(),
                         template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
             }
@@ -222,19 +211,19 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
      * An {@link IllegalArgumentException} is thrown if the workflow is badly defined.
      * </p>
      *
-     * @param xml the bean
+     * @param bean the bean
      * @param ctxBuilder the builder
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
      */
-    public static void configureWorkflow(final WuicBean xml, final ContextBuilder ctxBuilder)
+    public static void configureWorkflow(final WuicBean bean, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
-        if (xml.getWorkflows() == null) {
+        if (bean.getWorkflows() == null) {
             return;
         }
 
         // Some additional DAOs where process result is saved
-        for (final WorkflowBean workflow : xml.getWorkflows()) {
+        for (final WorkflowBean workflow : bean.getWorkflows()) {
             if (!(workflow.getId() == null && workflow.getIdPrefix() != null
                     || workflow.getId() != null && workflow.getIdPrefix() == null)) {
                 WuicException.throwWuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());

@@ -505,13 +505,13 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param knownTypes a list of known types to instantiate
      * @param includeDefaultEngines if include default engines or not
-     * @param ebIdsExclusions the engines to exclude
+     * @param ebTypesExclusion the engines types to exclude
      * @return the {@link com.github.wuic.engine.HeadEngine}
      */
     @SuppressWarnings("unchecked")
     HeadEngine createHead(final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
                           final Boolean includeDefaultEngines,
-                          final String[] ebIdsExclusions) {
+                          final String[] ebTypesExclusion) {
         if (includeDefaultEngines) {
             HeadEngine core = null;
 
@@ -519,7 +519,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                 final EngineService annotation = EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class));
                 if (HeadEngine.class.isAssignableFrom(knownType.getClassType())
                         && annotation.injectDefaultToWorkflow()
-                        && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) != -1))) {
+                        && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) != -1))) {
                     final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
                     HeadEngine engine = HeadEngine.class.cast(newEngine(id));
 
@@ -565,14 +565,14 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * @param configureDefault configure default engines or not
      * @param knownTypes known types to create engines
      * @param includeDefaultEngines include default or not
-     * @param ebIdsExclusions the default engines to exclude
+     * @param ebTypesExclusion the default engines to exclude
      * @return the different chains
      */
     @SuppressWarnings("unchecked")
     Map<NutType, NodeEngine> createChains(final boolean configureDefault,
                                           final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
                                           final Boolean includeDefaultEngines,
-                                          final String[] ebIdsExclusions) {
+                                          final String[] ebTypesExclusion) {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         // Include default engines
@@ -585,7 +585,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             for (final ObjectBuilderFactory.KnownType knownType : knownTypes) {
                 if ((NodeEngine.class.isAssignableFrom(knownType.getClassType()))
                         && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
-                        && ((ebIdsExclusions == null || CollectionUtils.indexOf(knownType.getTypeName(), ebIdsExclusions) == -1))) {
+                        && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) == -1))) {
                     final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
                     NodeEngine engine = NodeEngine.class.cast(newEngine(id));
 

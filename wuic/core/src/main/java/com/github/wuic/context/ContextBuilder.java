@@ -540,7 +540,7 @@ public class ContextBuilder extends Observable {
         /**
          * The excluded IDs.
          */
-        private final String[] ebIdsExclusion;
+        private final String[] ebTypesExclusion;
 
         /**
          * Include default engines or not.
@@ -558,23 +558,23 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param ebIds the specific engines
-         * @param ebIdsExclusion engines to exclude
+         * @param ebTypesExclusion engines to exclude
          * @param includeDefaultEngines include default engines or not
          * @param ndbIds some DAO builder IDs to store nut
          */
         private WorkflowTemplateRegistration(final String[] ebIds,
-                                             final String[] ebIdsExclusion,
+                                             final String[] ebTypesExclusion,
                                              final Boolean includeDefaultEngines,
                                              final String[] ndbIds) {
             this.includeDefaultEngines = includeDefaultEngines;
             this.ebIds = new String[ebIds.length];
             System.arraycopy(ebIds, 0, this.ebIds, 0, ebIds.length);
 
-            if (ebIdsExclusion != null) {
-                this.ebIdsExclusion = new String[ebIdsExclusion.length];
-                System.arraycopy(ebIdsExclusion, 0, this.ebIdsExclusion, 0, ebIdsExclusion.length);
+            if (ebTypesExclusion != null) {
+                this.ebTypesExclusion = new String[ebTypesExclusion.length];
+                System.arraycopy(ebTypesExclusion, 0, this.ebTypesExclusion, 0, ebTypesExclusion.length);
             } else {
-                this.ebIdsExclusion = null;
+                this.ebTypesExclusion = null;
             }
 
             this.ndbIds = new String[ndbIds.length];
@@ -611,7 +611,7 @@ public class ContextBuilder extends Observable {
 
             // Retrieve each engine associated to all provided IDs and heap them by nut type
             final Map<NutType, NodeEngine> chains =
-                    taggedSettings.createChains(configureDefault, engineBuilderFactory.knownTypes(), includeDefaultEngines, ebIdsExclusion);
+                    taggedSettings.createChains(configureDefault, engineBuilderFactory.knownTypes(), includeDefaultEngines, ebTypesExclusion);
             HeadEngine head = null;
 
             for (final String ebId : ebIds) {
@@ -2052,7 +2052,7 @@ public class ContextBuilder extends Observable {
      *
      * @param id the template's id
      * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
-     * @param ebIdsExclusion some default builder to be excluded in the chain
+     * @param ebTypesExclusion some default builder types to be excluded in the chain
      * @param ndbIds the set of {@link com.github.wuic.nut.dao.NutDao} builder where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
@@ -2060,11 +2060,11 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder template(final String id,
                                    final String[] ebIds,
-                                   final String[] ebIdsExclusion,
+                                   final String[] ebTypesExclusion,
                                    final Boolean includeDefaultEngines,
                                    final String ... ndbIds) throws IOException {
         final ContextSetting setting = getSetting();
-        setting.getTemplateMap().put(id, new WorkflowTemplateRegistration(ebIds, ebIdsExclusion, includeDefaultEngines, ndbIds));
+        setting.getTemplateMap().put(id, new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines, ndbIds));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
