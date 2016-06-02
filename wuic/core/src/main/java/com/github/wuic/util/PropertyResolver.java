@@ -38,8 +38,6 @@
 
 package com.github.wuic.util;
 
-import java.util.Collection;
-
 /**
  * <p>
  * A generic resolver for properties. This basic interface is used by WUIC to inject properties to the managed objects.
@@ -59,13 +57,4 @@ public interface PropertyResolver {
      * @return the value, {@code null} if the key has not been found
      */
     String resolveProperty(String key);
-
-    /**
-     * <p>
-     * Gets all the keys that can be resolved by this resolver.
-     * </p>
-     *
-     * @return supported keys
-     */
-    Collection<Object> getKeys();
 }

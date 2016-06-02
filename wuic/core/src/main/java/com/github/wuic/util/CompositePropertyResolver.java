@@ -39,10 +39,7 @@
 package com.github.wuic.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>
@@ -82,20 +79,6 @@ public class CompositePropertyResolver implements PropertyResolver {
         }
 
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Object> getKeys() {
-        final Set<Object> retval = new HashSet<Object>();
-
-        for (final PropertyResolver propertyResolver : composition) {
-            retval.addAll(propertyResolver.getKeys());
-        }
-
-        return retval;
     }
 
     /**

@@ -38,8 +38,10 @@
 
 package com.github.wuic.config;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,12 +61,27 @@ public class PropertySetterRepository {
     private Map<String, PropertySetter[]> propertySetters;
 
     /**
+     * Property keys.
+     */
+    private List<String> propertyKeys;
+
+    /**
      * <p>
      * Creates a new instance.
      * </p>
      */
     public PropertySetterRepository() {
         propertySetters = new HashMap<String, PropertySetter[]>();
+        propertyKeys = new ArrayList<String>();
+    }
+
+    /**
+     * <p>
+     * Returns all the property keys registered in this repository.
+     * </p>
+     */
+    public Collection<String> getPropertyKeys() {
+        return propertyKeys;
     }
 
     /**
@@ -76,6 +93,12 @@ public class PropertySetterRepository {
      * @param setters the setters
      */
     protected void addPropertySetter(final String methodName, final PropertySetter ... setters) {
+
+        // Adds the property keys
+        for (final PropertySetter<?> propertySetter : setters) {
+            propertyKeys.add(propertySetter.getPropertyKey());
+        }
+
         PropertySetter[] props = this.propertySetters.get(methodName);
 
         if (props == null) {

@@ -39,6 +39,7 @@
 package com.github.wuic.config;
 
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.PropertyResolver;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,6 +86,20 @@ public abstract class AbstractObjectBuilder<T> extends PropertySetterRepository 
     @Override
     public Map<String, Object> getProperties() {
         return properties;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void configure(final PropertyResolver resolver) {
+        for (final String key : getPropertyKeys()) {
+            final String value = resolver.resolveProperty(key);
+
+            if (value != null) {
+                property(key, value);
+            }
+        }
     }
 
     /**

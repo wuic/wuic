@@ -71,10 +71,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -607,14 +604,6 @@ public class WuicServletContextListener implements ServletContextListener {
                 return wrapResult;
             }
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Collection<Object> getKeys() {
-            return wrap.getKeys();
-        }
     }
 
     /**
@@ -649,20 +638,6 @@ public class WuicServletContextListener implements ServletContextListener {
         @Override
         public String resolveProperty(final String key) {
             return servletContext.getInitParameter(key);
-        }
-
-        /**
-         * '{@inheritDoc}
-         */
-        @Override
-        public Collection<Object> getKeys() {
-            final List<Object> retval = new ArrayList<Object>();
-
-            for (final Enumeration<String> enumeration = servletContext.getInitParameterNames(); enumeration.hasMoreElements();) {
-                retval.add(enumeration.nextElement());
-            }
-
-            return retval;
         }
     }
 }

@@ -38,8 +38,6 @@
 
 package com.github.wuic.util;
 
-import java.util.Collection;
-
 /**
  * <p>
  * A {@link PropertyResolver} resolving properties from JVM arguments.
@@ -56,13 +54,5 @@ public class SystemPropertyResolver implements PropertyResolver {
     @Override
     public String resolveProperty(final String key) {
         return System.getProperty(key);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Object> getKeys() {
-        return System.getProperties().keySet();
     }
 }

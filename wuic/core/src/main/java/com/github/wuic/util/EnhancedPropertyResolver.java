@@ -38,8 +38,6 @@
 
 package com.github.wuic.util;
 
-import java.util.Collection;
-
 /**
  * <p>
  * An enhanced {@link PropertyResolver}. Three main features are provided:
@@ -73,14 +71,6 @@ public class EnhancedPropertyResolver implements PropertyResolver {
     @Override
     public String resolveProperty(final String key) {
         return StringUtils.injectPlaceholders(composite.resolveProperty(key), composite);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Object> getKeys() {
-        return composite.getKeys();
     }
 
     /**

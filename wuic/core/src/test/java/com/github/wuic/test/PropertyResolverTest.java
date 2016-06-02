@@ -48,7 +48,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,9 +72,6 @@ public class PropertyResolverTest {
         final PropertyResolver resolver = new MapPropertyResolver(map);
         Assert.assertNull(resolver.resolveProperty("2"));
         Assert.assertEquals("2", resolver.resolveProperty("1"));
-        Assert.assertNotNull(resolver.getKeys());
-        Assert.assertEquals(1, resolver.getKeys().size());
-        Assert.assertEquals("1", resolver.getKeys().iterator().next());
     }
 
     /**
@@ -86,12 +82,10 @@ public class PropertyResolverTest {
         final PropertyResolver r1 = Mockito.mock(PropertyResolver.class);
         Mockito.when(r1.resolveProperty("A")).thenReturn("1");
         Mockito.when(r1.resolveProperty("C")).thenReturn("r1");
-        Mockito.when(r1.getKeys()).thenReturn(Arrays.asList((Object) "A", "C"));
 
         final PropertyResolver r2 = Mockito.mock(PropertyResolver.class);
         Mockito.when(r2.resolveProperty("B")).thenReturn("2");
         Mockito.when(r2.resolveProperty("C")).thenReturn("r2");
-        Mockito.when(r2.getKeys()).thenReturn(Arrays.asList((Object) "B", "C"));
 
         final CompositePropertyResolver propertyResolver = new CompositePropertyResolver();
         propertyResolver.addPropertyResolver(r1);
@@ -100,8 +94,6 @@ public class PropertyResolverTest {
         Assert.assertEquals("1", propertyResolver.resolveProperty("A"));
         Assert.assertEquals("2", propertyResolver.resolveProperty("B"));
         Assert.assertEquals("r2", propertyResolver.resolveProperty("C"));
-
-        Assert.assertEquals(3, propertyResolver.getKeys().size());
     }
 
     /**

@@ -38,6 +38,8 @@
 
 package com.github.wuic.config;
 
+import com.github.wuic.util.PropertyResolver;
+
 import java.util.Map;
 
 /**
@@ -102,6 +104,16 @@ public interface ObjectBuilder<T> {
      * @return the properties
      */
     Map<String, Object> getProperties();
+
+    /**
+     * <p>
+     * Configures this builder by setting each supported property when available in the given {@link PropertyResolver}.
+     * A property will always be applied if the {@link PropertyResolver#resolveProperty(String)} does not return {@code null}.
+     * </p>
+     *
+     * @param resolver the resolver
+     */
+    void configure(PropertyResolver resolver);
 
     /**
      * <p>

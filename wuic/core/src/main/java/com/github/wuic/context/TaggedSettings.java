@@ -614,7 +614,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * </p>
      *
      * @param properties the property resolver object
-     * @see TaggedSettings#applyProperty(String, String)
+     * @see TaggedSettings#internalApplyProperties(com.github.wuic.util.PropertyResolver)
      */
     void applyProperties(final PropertyResolver properties) {
 
@@ -626,10 +626,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             charset = cs;
         }
 
-        for (final Object key : properties.getKeys()) {
-            final String property = key.toString();
-            applyProperty(property, properties.resolveProperty(property));
-        }
+        internalApplyProperties(properties);
     }
 
     /**
@@ -916,53 +913,33 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
-     * Applies the given property to the registered {@link NutFilter}, {@link Engine} and {@link NutDao}.
+     * Applies the given {@link PropertyResolver} to the registered {@link NutFilter}, {@link Engine} and {@link NutDao}.
      * </p>
      *
-     * @param property the property
-     * @param value the property value
-     * @see TaggedSettings#applyProperty(java.util.Map, String, String)
+     * @param propertyResolver the property resolver
+     * @see TaggedSettings#applyProperties(java.util.Map, com.github.wuic.util.PropertyResolver)
      */
-    private void applyProperty(final String property, final String value) {
-        if (property.startsWith(ApplicationConfig.ENGINE_PREFIX)) {
-            for (final ContextSetting ctx : taggedSettings.values()) {
-                applyProperty(ctx.getEngineMap(), property, value);
-            }
-        } else if (property.startsWith(ApplicationConfig.DAO_PREFIX)) {
-            for (final ContextSetting ctx : taggedSettings.values()) {
-                applyProperty(ctx.getNutDaoMap(), property, value);
-            }
-        } else if (property.startsWith(ApplicationConfig.FILTER_PREFIX)) {
-            for (final ContextSetting ctx : taggedSettings.values()) {
-                applyProperty(ctx.getNutFilterMap(), property, value);
-            }
-        } else {
-            for (final ContextSetting ctx : taggedSettings.values()) {
-                applyProperty(ctx.getEngineMap(), property, value);
-                applyProperty(ctx.getNutDaoMap(), property, value);
-                applyProperty(ctx.getNutFilterMap(), property, value);
-            }
+    private void internalApplyProperties(final PropertyResolver propertyResolver) {
+        for (final ContextSetting ctx : taggedSettings.values()) {
+            applyProperties(ctx.getEngineMap(),propertyResolver);
+            applyProperties(ctx.getNutDaoMap(), propertyResolver);
+            applyProperties(ctx.getNutFilterMap(), propertyResolver);
         }
     }
 
     /**
      * <p>
-     * Applies the given key/value property to all components read from the builder map specified in parameter. If the
-     * map is null, nothing is done. If the property is not supported by one component, then it is just ignored.
+     * Retrieve all supported properties by the given map of builders from the {@link PropertyResolver} specified in parameter
+     * and apply the value if not {@code null}.
      * </p>
      *
      * @param builders the components
-     * @param property the property to set
-     * @param value the value associated to the property
+     * @param propertyResolver the property resolver
      */
-    private void applyProperty(final Map builders, final String property, final String value) {
+    private void applyProperties(final Map<String, ? extends ObjectBuilder> builders, final PropertyResolver propertyResolver) {
         if (builders != null) {
-            for (final Object component : builders.values()) {
-                try {
-                    ObjectBuilder.class.cast(component).property(property, value);
-                } catch (IllegalArgumentException iae) {
-                    log.trace("The property has not been set", iae);
-                }
+            for (final ObjectBuilder component : builders.values()) {
+                component.configure(propertyResolver);
             }
         }
     }

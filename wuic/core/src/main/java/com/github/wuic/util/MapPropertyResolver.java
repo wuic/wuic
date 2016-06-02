@@ -38,11 +38,7 @@
 
 package com.github.wuic.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>
@@ -68,21 +64,6 @@ public class MapPropertyResolver implements PropertyResolver {
      */
     public MapPropertyResolver(final Map<Object, Object> properties) {
         this.properties = properties;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Object> getKeys() {
-        final Set<Object> keys = properties.keySet();
-        final List<Object> retval = new ArrayList<Object>(keys.size());
-
-        for (final Object key : keys) {
-            retval.add(String.valueOf(key));
-        }
-
-        return retval;
     }
 
     /**

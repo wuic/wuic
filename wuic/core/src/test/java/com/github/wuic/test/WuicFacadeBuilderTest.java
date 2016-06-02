@@ -58,8 +58,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -130,11 +128,6 @@ public class WuicFacadeBuilderTest {
             @Override
             public String resolveProperty(final String first) {
                 return ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM.equals(first) ? "" : null;
-            }
-
-            @Override
-            public Collection<Object> getKeys() {
-                return Arrays.asList((Object) ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM);
             }
         }).build();
     }
