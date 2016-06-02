@@ -259,13 +259,26 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
                 is = properties.openStream();
                 final Properties props = new Properties();
                 props.load(is);
-                propertyResolver.addPropertyResolver(new MapPropertyResolver(props));
+                addPropertyResolver(new MapPropertyResolver(props));
             } catch (IOException ioe) {
                 log.error("Unable to load properties", ioe);
             } finally {
                 IOUtils.close(is);
             }
         }
+    }
+
+    /**
+     * <p>
+     * Adds the given resolver to this builder.
+     * </p>
+     *
+     * @param resolver the resolver
+     * @return this builder
+     */
+    public final WuicFacadeBuilder addPropertyResolver(final PropertyResolver resolver) {
+        propertyResolver.addPropertyResolver(resolver);
+        return this;
     }
 
     /**
