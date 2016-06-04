@@ -144,6 +144,19 @@ public class WuicFacadeBuilderTest {
     }
 
     /**
+     * Asserts that {@link WuicFacadeBuilder#multipleConfigInTagSupport} is correct.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void disableMultipleConfigInTagSupportTest() throws WuicException {
+        final WuicFacadeBuilder builder = new WuicFacadeBuilder();
+        Assert.assertTrue(builder.build().allowsMultipleConfigInTagSupport());
+        builder.disableMultipleConfigInTagSupport();
+        Assert.assertFalse(builder.build().allowsMultipleConfigInTagSupport());
+    }
+
+    /**
      * Asserts that additional configurator is called.
      *
      * @throws WuicException if test fails
