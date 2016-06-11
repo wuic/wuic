@@ -38,7 +38,7 @@
 
 package com.github.wuic.config.bean;
 
-import com.github.wuic.config.bean.json.ElementAdapterFactory;
+import com.github.wuic.config.bean.json.HeapBeanAdapterFactory;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
@@ -55,6 +55,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.4.0
  */
+@JsonAdapter(HeapBeanAdapterFactory.class)
 public class HeapBean {
 
     /**
@@ -78,7 +79,6 @@ public class HeapBean {
             @XmlElement(name = "heap-id", type = HeapReference.class)
     })
     @SerializedName( value = "nutPath", alternate = { "heap", "heapId" })
-    @JsonAdapter(ElementAdapterFactory.class)
     private List<Object> elements;
 
     /**

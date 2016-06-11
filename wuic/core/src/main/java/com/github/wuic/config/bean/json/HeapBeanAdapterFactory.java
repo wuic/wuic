@@ -45,19 +45,20 @@ import com.google.gson.reflect.TypeToken;
 
 /**
  * <p>
- * This type adapter factory produces {@link ElementAdapter}.
+ * This type adapter factory produces {@link HeapBeanAdapter}.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 0.5.3
  */
-public class ElementAdapterFactory implements TypeAdapterFactory {
+public class HeapBeanAdapterFactory implements TypeAdapterFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
-        return new ElementAdapter(gson);
+        return (TypeAdapter<T>) new HeapBeanAdapter(gson);
     }
 }
