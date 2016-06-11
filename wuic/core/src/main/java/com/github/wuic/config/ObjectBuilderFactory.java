@@ -362,7 +362,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          * {@inheritDoc}
          */
         @Override
-        protected T internalBuild() {
+        public T build() {
             final Object[] params = constructor.getParameterTypes().length == 0 ?
                     new Object[0] : getAllProperties(constructor.toString());
 

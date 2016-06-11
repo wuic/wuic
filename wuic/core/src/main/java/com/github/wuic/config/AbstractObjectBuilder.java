@@ -161,24 +161,6 @@ public abstract class AbstractObjectBuilder<T> extends PropertySetterRepository 
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public T build() {
-        return internalBuild();
-    }
-
-    /**
-     * <p>
-     * Builds internally an object as specified by {@link ObjectBuilder#build()} without
-     * catching any exception.
-     * </p>
-     *
-     * @return the object
-     */
-    protected abstract T internalBuild();
-
-    /**
      * <p>
      * Throws a particular {@link IllegalArgumentException} because a not supported property has been tried
      * to be set.
