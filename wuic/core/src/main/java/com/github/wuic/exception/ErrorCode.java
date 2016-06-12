@@ -70,11 +70,6 @@ public interface ErrorCode {
     long SAVE_NOT_SUPPORTED_EXCEPTION = 19860606004L;
 
     /**
-     * {@link com.github.wuic.nut.dao.NutDao} polling feature is not supported.
-     */
-    long POLLING_NOT_SUPPORTED_EXCEPTION = 19860606005L;
-
-    /**
      * A state is not of an expected state or is null while it should.
      */
     long BAD_STATE_EXCEPTION = 19860606006L;
@@ -88,42 +83,6 @@ public interface ErrorCode {
      * Default code when the wuic.json path can't be read.
      */
     long JSON_CANNOT_READ = 19860606101L;
-
-    /**
-     * No configuration ID has been defined for a configuration in the wuic.xml path.
-     */
-    long XML_NO_CONFIGURATION_ID = 19860606101L;
-
-    /**
-     * No id has been defined for a nut DAO builder in the wuic.xml path.
-     */
-    long XML_NO_NUT_DAO_BUILDER_ID = 19860606101L;
-
-    /**
-     * Not all required elements have been defined for a configuration in the wuic.xml path.
-     */
-    long XML_MISSING_CONFIGURATION_ELEMENT = 19860606103L;
-
-    /**
-     * No class has been defined for a nut dao builder in the wuic.xml path.
-     */
-    long XML_NO_NUT_DAO_BUILDER_CLASS = 19860606104L;
-
-    /**
-     * An expected class could not be instantiated with an actual value.
-     * This could be related to a {@code ClassNotFoundException} or any exception related to instantiation.
-     */
-    long XML_UNABLE_TO_INSTANTIATE = 19860606105L;
-
-    /**
-     * A value defined in the wuic.xml is not convertible into a mandatory type.
-     */
-    long XML_BAD_TYPE_OF_VALUE = 19860606106L;
-
-    /**
-     * A reference is made to a non existing dao builder.
-     */
-    long XML_BAD_REF_TO_DAO_BUILDER = 19860606107L;
 
     /**
      * Indicates that a nut has not been found.
@@ -155,15 +114,6 @@ public interface ErrorCode {
      * Indicates that a workflow doesn't define one and only one of its 'id' and 'idPrefix' attributes.
      */
     long WORKFLOW_IDENTIFIER = 19860606206L;
-
-    /**
-     * <p>
-     * Gets the error code.
-     * </p>
-     *
-     * @return the error code
-     */
-    long getErrorCode();
 
     /**
      * <p>
