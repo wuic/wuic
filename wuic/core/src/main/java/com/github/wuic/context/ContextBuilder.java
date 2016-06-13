@@ -1685,7 +1685,7 @@ public class ContextBuilder extends Observable {
      * @return this {@link ContextBuilder}
      */
     public final ContextBuilder inspector(final ObjectBuilderInspector obi) {
-        nutFilterBuilderFactory.inspector(obi);
+        nutDaoBuilderFactory.inspector(obi);
         engineBuilderFactory.inspector(obi);
         nutFilterBuilderFactory.inspector(obi);
         return this;
