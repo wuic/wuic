@@ -722,6 +722,14 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    /**
      * <p>
      * The {@link NutsHeap} is a {@link NutDaoListener} registered in the {@link NutDao}. Because the listeners are
      * registered in weak references, we must make sure a strong reference prevents the objects from garbage collection.
