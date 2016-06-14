@@ -38,6 +38,8 @@
 
 package com.github.wuic.config.bean;
 
+import com.github.wuic.config.bean.json.StringArrayAdapterFactory;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import javax.xml.bind.annotation.*;
@@ -64,6 +66,13 @@ public class WorkflowTemplateBean {
     private String id;
 
     /**
+     * Comma-separated list of profiles required to apply this bean.
+     */
+    @XmlAttribute(name = "profiles")
+    @JsonAdapter(StringArrayAdapterFactory.class)
+    private String profiles;
+
+    /**
      * Include default engine.
      */
     @XmlAttribute(name = "use-default-engines")
@@ -81,9 +90,9 @@ public class WorkflowTemplateBean {
      * The list of default engine builders ID to exclude.
      */
     @XmlElementWrapper(name = "without")
-    @XmlElement(name = "engine-builder-id")
+    @XmlElement(name = "engine-builder-type")
     @SerializedName("without")
-    private List<String> withoutEngineBuilderIds;
+    private List<String> withoutEngineBuilderType;
 
     /**
      * Some DAO where to store process result.
@@ -101,6 +110,17 @@ public class WorkflowTemplateBean {
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * <p>
+     * Gets the profiles.
+     * </p>
+     *
+     * @return the profiles
+     */
+    public String[] getProfiles() {
+        return profiles != null ? profiles.split(",") : null;
     }
 
     /**
@@ -132,8 +152,8 @@ public class WorkflowTemplateBean {
      *
      * @return the IDs identifying the builder's engine to exclude
      */
-    public List<String> getWithoutEngineBuilderIds() {
-        return withoutEngineBuilderIds;
+    public List<String> getWithoutEngineBuilderType() {
+        return withoutEngineBuilderType;
     }
 
     /**

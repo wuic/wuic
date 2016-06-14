@@ -40,13 +40,17 @@ package com.github.wuic.config.bean;
 
 import com.google.gson.annotations.SerializedName;
 
-import javax.xml.bind.annotation.*;
-
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
  * <p>
- * Represents the root element in wuic.xml file.
+ * Represents the root element in a configuration file.
  * </p>
  *
  * @author Guillaume DROUET

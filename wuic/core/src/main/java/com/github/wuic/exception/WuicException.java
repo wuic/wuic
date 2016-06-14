@@ -41,6 +41,8 @@ package com.github.wuic.exception;
 import com.github.wuic.engine.core.StaticEngine;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * <p>
@@ -262,5 +264,21 @@ public class WuicException extends Exception {
         throw new StaticWorkflowNotFoundException(
                 String.format("[Err n. %d] The engine '%s' did not found workflow '%s' in classpath",
                         ErrorCode.STATIC_WORKFLOW_NOT_FOUND, StaticEngine.class.getName(), fileName));
+    }
+
+    /**
+     * <p>
+     * Throws an exception indicating that duplicated registrations have been found.
+     * </p>
+     *
+     * @param idList the collection of registrations IDs
+     * @param activeProfiles the active profiles in the current context
+     * @throws DuplicatedRegistrationException the exception
+     */
+    public static void throwDuplicateRegistrationException(final Collection<Object> idList, final Collection<String> activeProfiles)
+            throws DuplicatedRegistrationException {
+        throw new DuplicatedRegistrationException(
+                String.format("[Err n. %d] Multiple registrations found. Active profiles: %s, registrations: %s",
+                        ErrorCode.DUPLICATE_REGISTRATION, Arrays.toString(activeProfiles.toArray()), Arrays.toString(idList.toArray())));
     }
 }

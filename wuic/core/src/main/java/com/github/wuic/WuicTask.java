@@ -128,6 +128,11 @@ public class WuicTask {
     private String charset;
 
     /**
+     * The profiles to enable.
+     */
+    private String profiles;
+
+    /**
      * <p>
      * Builds a new instance. {@link #relocateTransformedXml} is {@code null} and default {@link #contextPath} is '/'.
      * </p>
@@ -149,19 +154,22 @@ public class WuicTask {
      * @param contextPath the context path
      * @param props the properties path
      * @param charset the charset
+     * @param profiles the profile to enable
      */
     public WuicTask(final String xml,
                     final String relocateTransformedXml,
                     final String output,
                     final String contextPath,
                     final String props,
-                    final String charset) {
+                    final String charset,
+                    final String profiles) {
         this.xml = xml;
         this.relocateTransformedXmlTo = relocateTransformedXml;
         this.output = output;
         this.contextPath = contextPath;
         this.properties = props;
         this.charset = charset;
+        this.profiles = profiles;
     }
 
     /**
@@ -281,6 +289,10 @@ public class WuicTask {
         final WuicFacadeBuilder facadeBuilder = new WuicFacadeBuilder()
                 .contextPath(contextPath)
                 .wuicConfigurationPath(xmlFile.toURI().toURL());
+
+        if (profiles != null) {
+            facadeBuilder.contextBuilder().enableProfile(profiles.split(",")).toFacade();
+        }
 
         final WuicFacade facade;
 

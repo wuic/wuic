@@ -98,33 +98,52 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
             // The filters
             if (bean.getFilterBuilders() != null) {
                 for (final BuilderBean filter : bean.getFilterBuilders()) {
+                    ctxBuilder.addChildrenTag(getTag(), tagProfiles(filter, filter.getProfiles(), ctxBuilder));
                     extractProperties(filter, ctxBuilder, ctxBuilder.contextNutFilterBuilder(filter.getId(), filter.getType())).toContext();
+
+                    // Back to configurator tag
+                    tag(ctxBuilder);
                 }
             }
 
             // The DAOs
             if (bean.getDaoBuilders() != null) {
                 for (final BuilderBean dao : bean.getDaoBuilders()) {
+                    ctxBuilder.addChildrenTag(getTag(), tagProfiles(dao, dao.getProfiles(), ctxBuilder));
                     extractProperties(dao, ctxBuilder, ctxBuilder.contextNutDaoBuilder(dao.getId(), dao.getType())).toContext();
+
+                    // Back to configurator tag
+                    tag(ctxBuilder);
                 }
             }
 
             // The heaps
             if (bean.getHeaps() != null) {
                 for (final HeapBean heap : bean.getHeaps()) {
+                    ctxBuilder.addChildrenTag(getTag(), tagProfiles(heap, heap.getProfiles(), ctxBuilder));
                     configureHeap(ctxBuilder, heap);
+
+                    // Back to configurator tag
+                    tag(ctxBuilder);
                 }
             }
 
             // The engines
             if (bean.getEngineBuilders() != null) {
                 for (final BuilderBean engine : bean.getEngineBuilders()) {
+                    ctxBuilder.addChildrenTag(getTag(), tagProfiles(engine, engine.getProfiles(), ctxBuilder));
                     extractProperties(engine, ctxBuilder, ctxBuilder.contextEngineBuilder(engine.getId(), engine.getType())).toContext();
+
+                    // Back to configurator tag
+                    tag(ctxBuilder);
                 }
             }
 
-            configureTemplates(bean, ctxBuilder);
-            configureWorkflow(bean, ctxBuilder);
+            // configure templates and workflow
+            final List<Object> templateTags = configureTemplates(bean, ctxBuilder);
+            tag(ctxBuilder);
+            ctxBuilder.addChildrenTag(getTag(), templateTags);
+            ctxBuilder.addChildrenTag(getTag(), configureWorkflow(bean, ctxBuilder));
 
             return bean.getPollingIntervalSeconds();
         } catch (WuicException we) {
@@ -174,15 +193,23 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
      * @param ctxBuilder the builder
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
+     * @return tags created by this method related to settings restricted by specific profiles
      */
-    public static void configureTemplates(final WuicBean bean, final ContextBuilder ctxBuilder)
+    public static List<Object> configureTemplates(final WuicBean bean, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
+        final List<Object> childrenTags = new ArrayList<Object>();
+
         if (bean.getWorkflowTemplates() == null) {
-            return;
+            return childrenTags;
         }
 
         // Create each template
         for (final WorkflowTemplateBean template : bean.getWorkflowTemplates()) {
+            final Object childTag = tagProfiles(template, template.getProfiles(), ctxBuilder);
+
+            if (childTag != null) {
+                childrenTags.add(childTag);
+            }
 
             // DAO where we can store process result is optional
             if (template.getDaoBuilderIds() == null) {
@@ -200,6 +227,8 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
                         template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
             }
         }
+
+        return childrenTags;
     }
 
     /**
@@ -213,13 +242,16 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
      *
      * @param bean the bean
      * @param ctxBuilder the builder
+     * @return tags created by this method related to settings restricted by specific profiles
      * @throws com.github.wuic.exception.WorkflowTemplateNotFoundException if a workflow-template-id reference a non existing template
      * @throws IOException if any I/O error occurs
      */
-    public static void configureWorkflow(final WuicBean bean, final ContextBuilder ctxBuilder)
+    public static List<Object> configureWorkflow(final WuicBean bean, final ContextBuilder ctxBuilder)
             throws WorkflowTemplateNotFoundException, IOException {
+        final List<Object> childrenTags = new ArrayList<Object>();
+
         if (bean.getWorkflows() == null) {
-            return;
+            return childrenTags;
         }
 
         // Some additional DAOs where process result is saved
@@ -227,6 +259,12 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
             if (!(workflow.getId() == null && workflow.getIdPrefix() != null
                     || workflow.getId() != null && workflow.getIdPrefix() == null)) {
                 WuicException.throwWuicXmlWorkflowIdentifierException(workflow.getIdPrefix(), workflow.getId());
+            }
+
+            final Object childTag = tagProfiles(workflow, workflow.getProfiles(), ctxBuilder);
+
+            if (childTag != null) {
+                childrenTags.add(childTag);
             }
 
             final Boolean forEachHeap = workflow.getId() == null;
@@ -237,6 +275,8 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
                     workflow.getHeapIdPattern(),
                     workflow.getWorkflowTemplateId());
         }
+
+        return childrenTags;
     }
 
     /**
@@ -288,6 +328,27 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
                     paths.add(element.toString());
                 }
             }
+        }
+    }
+
+    /**
+     * <p>
+     * Checks if the given bean contains any profile to declare and in that case apply a new tag.
+     * </p>
+     *
+     * @param bean the bean
+     * @param beanProfiles the bean's profiles
+     * @param contextBuilder the builder to configure
+     * @return the tag associated to the profiles, {@code null} if no tag has been applied
+     */
+    public static Object tagProfiles(final Object bean,
+                                     final String[] beanProfiles,
+                                     final ContextBuilder contextBuilder) {
+        if (beanProfiles != null) {
+            contextBuilder.tag(bean.toString(), beanProfiles);
+            return bean.toString();
+        } else {
+            return null;
         }
     }
 

@@ -1,0 +1,61 @@
+{
+    "nutDaoBuilders": [{
+        "id": "defaultDao",
+        "type": "MockDaoBuilder",
+        "profiles": "bar"
+    },
+    {
+        "id": "defaultDao",
+        "type": "MockDao2Builder",
+        "profiles": "foo"
+    }], "engineBuilders": [{
+        "id": "defaultEngine",
+        "type": "MockEngineBuilder",
+        "profiles": "bar"
+    },
+    {
+        "id": "defaultEngine",
+        "type": "MockEngine2Builder",
+        "profiles": "foo"
+    }],
+    "heaps": [{
+        "id": "heap",
+        "daoBuilderId": "defaultDao",
+        "nutPath": "baz.css"
+    },
+    {
+        "id": "defaultHeap",
+        "daoBuilderId": "defaultDao",
+        "profiles": "bar",
+        "nutPath": "foo.css"
+    },
+    {
+        "id": "defaultHeap",
+        "daoBuilderId": "defaultDao",
+        "profiles": "foo",
+        "nutPath": "foo.css",
+        "heapId": "heap"
+    }],
+    "workflowTemplates": [{
+        "id": "defaultWorkflowTemplate",
+        "profiles": "bar",
+        "engineChain": ["defaultEngine"]
+    },
+    {
+        "id": "defaultWorkflowTemplate",
+        "profiles": "foo",
+        "engineChain": ["defaultEngine", "wuicDefaultGzipEngineBuilder"]
+    }],
+    "workflows": [{
+        "idPrefix": "workflow",
+        "workflowTemplateId": "defaultWorkflowTemplate",
+        "heapIdPattern": "defaultHeap",
+        "profiles": "foo"
+    },
+    {
+        "idPrefix": "defaultWorkflow",
+        "workflowTemplateId": "defaultWorkflowTemplate",
+        "heapIdPattern": "defaultHeap",
+        "profiles": "bar"
+    }]
+}

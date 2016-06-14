@@ -38,6 +38,9 @@
 
 package com.github.wuic.config.bean;
 
+import com.github.wuic.config.bean.json.StringArrayAdapterFactory;
+import com.google.gson.annotations.JsonAdapter;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -60,6 +63,13 @@ public class WorkflowBean {
     private String id;
 
     /**
+     * Comma-separated list of profiles required to apply this bean.
+     */
+    @XmlAttribute(name = "profiles")
+    @JsonAdapter(StringArrayAdapterFactory.class)
+    private String profiles;
+
+    /**
      * The workflow prefix for ID.
      */
     @XmlAttribute(name = "id-prefix")
@@ -76,6 +86,17 @@ public class WorkflowBean {
      */
     @XmlAttribute(name = "workflow-template-id")
     private String workflowTemplateId;
+
+    /**
+     * <p>
+     * Gets the profiles.
+     * </p>
+     *
+     * @return the profiles
+     */
+    public String[] getProfiles() {
+        return profiles != null ? profiles.split(",") : null;
+    }
 
     /**
      * <p>

@@ -36,73 +36,34 @@
  */
 
 
-package com.github.wuic.test.xml;
+package com.github.wuic;
 
-import com.github.wuic.NutType;
-import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ConvertibleNut;
-import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * <p>
- * Mocked engine builder.
+ * This annotation can be used on different components managed by WUIC to drive their execution according to the profiles
+ * enabled with {@link com.github.wuic.context.ContextBuilder#enableProfile(String...)}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-@EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Profile {
 
     /**
      * <p>
-     * Builds a new instance.
+     * The profile names.
      * </p>
      *
-     * @param foo custom property
+     * @return the profiles array
      */
-    @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean works() {
-        return true;
-    }
+    String[] value();
 }

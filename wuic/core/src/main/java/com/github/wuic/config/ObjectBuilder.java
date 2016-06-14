@@ -57,6 +57,15 @@ public interface ObjectBuilder<T> {
 
     /**
      * <p>
+     * Returns the type of produced built object.
+     * </p>
+     *
+     * @return the class
+     */
+    Class<T> getType();
+
+    /**
+     * <p>
      * Decorates this builder with a property.
      * </p>
      *

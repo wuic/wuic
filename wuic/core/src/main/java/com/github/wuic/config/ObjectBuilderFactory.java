@@ -39,6 +39,7 @@
 package com.github.wuic.config;
 
 import com.github.wuic.AnnotationProcessor;
+import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.util.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -222,16 +223,18 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         boolean perClass = false;
 
         // Check if inspector should apply just a few objects
-        if (obi.getClass().isAnnotationPresent(ObjectBuilderInspector.InspectedType.class)) {
-            for (final Class<?> clazz : obi.getClass().getAnnotation(ObjectBuilderInspector.InspectedType.class).value()) {
+        final ObjectBuilderInspector o = getWrappedObjectBuilderInspector(obi);
+
+        if (o.getClass().isAnnotationPresent(ObjectBuilderInspector.InspectedType.class)) {
+            for (final Class<?> clazz : o.getClass().getAnnotation(ObjectBuilderInspector.InspectedType.class).value()) {
                 populator.apply(clazz, obi);
             }
 
             perClass = true;
         }
 
-        if (obi instanceof PerClassObjectBuilderInspector) {
-            for (final Class<?> clazz : PerClassObjectBuilderInspector.class.cast(obi).inspectedTypes()) {
+        if (o instanceof PerClassObjectBuilderInspector) {
+            for (final Class<?> clazz : PerClassObjectBuilderInspector.class.cast(o).inspectedTypes()) {
                 populator.apply(clazz, obi);
             }
 
@@ -241,6 +244,25 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         if (!perClass) {
             populator.apply(null, obi);
         }
+    }
+
+    /**
+     * <p>
+     * Gets the wrapped {@link ObjectBuilderInspector} by detecting the instance of {@link ContextBuilder.ProfileObjectBuilderInspector}
+     * specified in parameters.
+     * </p>
+     *
+     * @param objectBuilderInspector the potential wrapper
+     * @return the wrapped object
+     */
+    private static ObjectBuilderInspector getWrappedObjectBuilderInspector(final ObjectBuilderInspector objectBuilderInspector) {
+        ObjectBuilderInspector o = objectBuilderInspector;
+
+        while (o instanceof ContextBuilder.ProfileObjectBuilderInspector) {
+            o = ContextBuilder.ProfileObjectBuilderInspector.class.cast(o).getWrap();
+        }
+
+        return o;
     }
 
     /**
@@ -348,7 +370,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
                 // Case 1: apply inspectors declared for any class
                 // Case 2: apply inspectors explicitly declared for this class
-                if (entry.getKey() == null || entry.getKey().isAssignableFrom(constructor.getDeclaringClass())) {
+                if (entry.getKey() == null || entry.getKey().isAssignableFrom(getType())) {
                     for (final ObjectBuilderInspector i : entry.getValue()) {
                         retval = i.inspect(retval);
                     }
@@ -356,6 +378,13 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             }
 
             return retval;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Class<T> getType() {
+            return constructor.getDeclaringClass();
         }
 
         /**

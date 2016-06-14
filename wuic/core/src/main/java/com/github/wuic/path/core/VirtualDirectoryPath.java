@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -166,5 +167,13 @@ public class VirtualDirectoryPath implements DirectoryPath {
         }
 
         return retval;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("(name=%s) - (composition=%s)", name, Arrays.toString(composition.toArray()));
     }
 }

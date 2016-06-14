@@ -444,6 +444,16 @@ public interface ApplicationConfig {
     String WUIC_WARMUP_STRATEGY = FACADE_PREFIX + "warmupStrategy";
 
     /**
+     * A comma-separated list of profiles to be enabled by WUIC.
+     */
+    String PROFILES = FACADE_PREFIX + "profiles";
+
+    /**
+     * A comma-separated list of additional properties to read profiles to be enabled by WUIC.
+     */
+    String ADDITIONAL_PROFILES_PROPERTIES = FACADE_PREFIX + "additionalProfilesProperties";
+
+    /**
      * This is the property name of the {@link WuicFacade} instance shared inside a web context.
      */
     String WEB_WUIC_FACADE = PREFIX + "webWuicFacade";

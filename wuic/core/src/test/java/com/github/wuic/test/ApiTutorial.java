@@ -105,8 +105,12 @@ public class ApiTutorial {
         try {
             final WuicFacade facade = builder.noDefaultContextBuilderConfigurator()
                     .contextBuilder()
+                    // the context can activate settings that are associated to particular profiles
+                    .enableProfile("profile-a", "profile-b")
                     // tag the configuration, always release the tag in a finally block to not face deadlock issue
-                    .tag("custom")
+                    // an optional array of profiles can be specified in second parameter to execute the associated
+                    // settings if and only if all the specified profiles are enabled in the context
+                    .tag("custom", "profile-a", "profile-b")
                     // create a ContextNutDaoBuilder which produces DAO of type DiskNutDao
                     .contextNutDaoBuilder(DiskNutDao.class)
                     // override default property by telling that any path specified is relative to /static

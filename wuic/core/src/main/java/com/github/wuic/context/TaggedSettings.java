@@ -41,6 +41,7 @@ package com.github.wuic.context;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.Profile;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
@@ -50,11 +51,14 @@ import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.exception.DuplicatedRegistrationException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.Consumer;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.slf4j.Logger;
@@ -62,10 +66,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -151,18 +158,28 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * </p>
      *
      * @param id the ID
+     * @param profiles the profiles to be accepted
+     * @param accept {@code true} if profiles must just be accepted by the setting, {@code false} if thet must exactly match
      * @return the registration, {@code null} if no registration has been found
      */
-    ContextBuilder.NutDaoRegistration getNutDaoRegistration(final String id) {
-        for (final ContextSetting setting : taggedSettings.values()) {
-            final ContextBuilder.NutDaoRegistration registration = setting.getNutDaoMap().get(id);
+    ContextBuilder.NutDaoRegistration getNutDaoRegistration(final String id, final Collection<String> profiles, boolean accept)
+            throws DuplicatedRegistrationException {
+        final List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>> list =
+                new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>>();
 
-            if (registration != null) {
-                return registration;
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting consumed) {
+                for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration> entry : consumed.getNutDaoMap().entrySet()) {
+                    if (entry.getKey().getId().equals(id) && acceptProfiles(entry.getValue().getNutDaoBuilder(), profiles)) {
+                        list.add(entry);
+                    }
+                }
             }
-        }
+        }, profiles, accept);
 
-        return null;
+        final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration> res = getOne(list, profiles);
+        return res == null ? null : res.getValue();
     }
 
     /**
@@ -173,7 +190,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      */
-    void removeNutDaoRegistration(final String id) {
+    void removeNutDaoRegistration(final ContextBuilder.RegistrationId id) {
         for (final ContextSetting s : taggedSettings.values()) {
             final ContextBuilder.NutDaoRegistration n = s.getNutDaoMap().remove(id);
 
@@ -190,7 +207,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      */
-    void removeWorkflowRegistration(final String id) {
+    void removeWorkflowRegistration(final ContextBuilder.RegistrationId id) {
         for (final ContextSetting s : taggedSettings.values()) {
             s.getWorkflowMap().remove(id);
         }
@@ -204,7 +221,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      */
-    void removeHeapRegistration(final String id) {
+    void removeHeapRegistration(final ContextBuilder.RegistrationId id) {
         for (final ContextSetting s : taggedSettings.values()) {
             final ContextBuilder.HeapRegistration h = s.getNutsHeaps().remove(id);
 
@@ -221,7 +238,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      */
-    void removeNutFilter(final String id) {
+    void removeNutFilter(final ContextBuilder.RegistrationId id) {
         for (final ContextSetting s : taggedSettings.values()) {
             s.getNutFilterMap().remove(id);
         }
@@ -234,7 +251,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      */
-    void removeEngine(final String id) {
+    void removeEngine(final ContextBuilder.RegistrationId id) {
         for (final ContextSetting s : taggedSettings.values()) {
             s.getEngineMap().remove(id);
         }
@@ -251,35 +268,36 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      */
     void mergeSettings(final ContextBuilder contextBuilder, final TaggedSettings other, final Object currentTag) {
         for (final ContextSetting s : other.taggedSettings.values()) {
+            contextBuilder.getSetting().getRequiredProfiles().addAll(s.getRequiredProfiles());
             contextBuilder.processContext(s.getProcessContext());
 
-            for (final Map.Entry<String, ContextBuilder.NutDaoRegistration> entry : s.getNutDaoMap().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration> entry : s.getNutDaoMap().entrySet()) {
                 contextBuilder.nutDao(entry.getKey(), entry.getValue());
             }
 
-            for (final Map.Entry<String, ObjectBuilder<Engine>> entry : s.getEngineMap().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<Engine>> entry : s.getEngineMap().entrySet()) {
                 contextBuilder.engineBuilder(entry.getKey(), entry.getValue());
             }
 
-            for (final Map.Entry<String, ObjectBuilder<NutFilter>> entry : s.getNutFilterMap().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>> entry : s.getNutFilterMap().entrySet()) {
                 contextBuilder.nutFilter(entry.getKey(), entry.getValue());
             }
 
-            for (final Map.Entry<String, ContextBuilder.HeapRegistration> entry : s.getNutsHeaps().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.HeapRegistration> entry : s.getNutsHeaps().entrySet()) {
                 s.getNutsHeaps().remove(entry.getKey());
                 final ContextSetting setting = contextBuilder.getSetting();
                 setting.getNutsHeaps().put(entry.getKey(), entry.getValue());
                 taggedSettings.put(currentTag, setting);
             }
 
-            for (final Map.Entry<String, ContextBuilder.WorkflowTemplateRegistration> entry : s.getTemplateMap().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration> entry : s.getTemplateMap().entrySet()) {
                 s.getTemplateMap().remove(entry.getKey());
                 final ContextSetting setting = contextBuilder.getSetting();
                 setting.getTemplateMap().put(entry.getKey(), entry.getValue());
                 taggedSettings.put(currentTag, setting);
             }
 
-            for (final Map.Entry<String, ContextBuilder.WorkflowRegistration> entry : s.getWorkflowMap().entrySet()) {
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowRegistration> entry : s.getWorkflowMap().entrySet()) {
                 s.getWorkflowMap().remove(entry.getKey());
                 final ContextSetting setting = contextBuilder.getSetting();
                 setting.getWorkflowMap().put(entry.getKey(), entry.getValue());
@@ -294,18 +312,91 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
+     * Notifies the given consumer with any {@link ContextSetting} accepting the given profiles.
+     * </p>
+     *
+     * @param consumer the consumer
+     * @param activeProfiles the profiles
+     */
+    void consumeSettings(final Consumer<ContextSetting> consumer, final Collection<String> activeProfiles) {
+        consumeSettings(consumer, activeProfiles, true);
+    }
+
+    /**
+     * <p>
+     * Notifies the given consumer with any {@link ContextSetting} accepting or exactly matching the given profiles
+     * according to the flag specified in parameter.
+     * </p>
+     *
+     * @param consumer the consumer
+     * @param accept {@code true} if profiles must just be accepted by the setting, {@code false} if they must exactly match
+     * @param activeProfiles the profiles
+     */
+    void consumeSettings(final Consumer<ContextSetting> consumer, final Collection<String> activeProfiles, final boolean accept) {
+        for (final ContextSetting setting : taggedSettings.values()) {
+            if ((accept && setting.acceptProfiles(activeProfiles))
+                    || (!accept && setting.getRequiredProfiles().equals(new HashSet<String>(activeProfiles)))) {
+                consumer.apply(setting);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Indicates if the profiles contained in any {@link Profile} annotation of object type produced by the given builder
+     * are accepted againts the profiles collection specified in parameter.
+     * </p>
+     *
+     * @param objectBuilder the object builder
+     * @return {@code true} if profiles in annotation are accepted or if there is no annotation, {@code false} otherwise
+     */
+    boolean acceptProfiles(final ObjectBuilder<?> objectBuilder, final Collection<String> profiles) {
+        final Class<?> clazz = objectBuilder.getType();
+        return !clazz.isAnnotationPresent(Profile.class)
+                || ContextSetting.acceptProfiles(Arrays.asList(clazz.getAnnotation(Profile.class).value()), profiles);
+    }
+
+    /**
+     * <p>
      * Gets the {@link NutFilter filters} associated to their ID currently configured in all settings.
      * </p>
      *
+     * @param profiles the active profiles
      * @return the filters
      */
-    Map<String, NutFilter> getFilterMap() {
+    Map<String, NutFilter> getFilterMap(final Collection<String> profiles) {
         final Map<String, NutFilter> retval = new HashMap<String, NutFilter>();
+        final Map<String, List<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>>>> registrationMap =
+                new HashMap<String, List<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>>>>();
 
-        for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ObjectBuilder<NutFilter>> objectBuilder : setting.getNutFilterMap().entrySet()) {
-                retval.put(objectBuilder.getKey(), objectBuilder.getValue().build());
+        // Organize all registrations grouped by associated keys in order to detect duplicates
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting consumed) {
+
+                // Filter the object builder's profile
+                for (final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>> filter : consumed.getNutFilterMap().entrySet()) {
+                    if (!acceptProfiles(filter.getValue(), profiles)) {
+                        continue;
+                    }
+
+                    List<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>>> keys =
+                            registrationMap.get(filter.getKey().getId());
+
+                    if (keys == null) {
+                        keys = new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>>>();
+                        registrationMap.put(filter.getKey().getId(), keys);
+                    }
+
+                    keys.add(filter);
+                }
             }
+        }, profiles);
+
+        // Build each filter, checking for duplicated registration
+        for (final Map.Entry<String, List<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>>>> registration : registrationMap.entrySet()) {
+            final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<NutFilter>> filter = checkDuplicates(registration.getValue(), profiles);
+            retval.put(filter.getKey().getId(), filter.getValue().build());
         }
 
         return retval;
@@ -338,23 +429,27 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * </p>
      *
      * @param regex the regex ID
+     * @param profiles the active profiles
      * @return the matching {@link com.github.wuic.context.ContextBuilder.HeapRegistration registration}
      */
-    Map<String, ContextBuilder.HeapRegistration> getNutsHeap(final String regex) {
+    Map<String, ContextBuilder.HeapRegistration> getNutsHeap(final String regex, final Collection<String> profiles) {
         final Map<String, ContextBuilder.HeapRegistration> retval = new HashMap<String, ContextBuilder.HeapRegistration>();
         final Pattern pattern = Pattern.compile(regex);
 
-        for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ContextBuilder.HeapRegistration> entry : setting.getNutsHeaps().entrySet()) {
-                if (pattern.matcher(entry.getKey()).matches()) {
-                    retval.put(entry.getKey(), entry.getValue());
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting setting) {
+                for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.HeapRegistration> entry : setting.getNutsHeaps().entrySet()) {
+                    if (pattern.matcher(entry.getKey().getId()).matches()) {
+                        retval.put(entry.getKey().getId(), entry.getValue());
+                    }
                 }
             }
-        }
+        }, profiles);
 
         return retval;
     }
-    
+
     /**
      * <p>
      * Gets the {@link WorkflowTemplate} associated to the given ID.
@@ -362,17 +457,87 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      *
      * @param id the ID
      * @param daoCollection the collection of declared {@link NutDao}
+     * @param profiles the profiles to accept
      * @return the matching {@link WorkflowTemplate template}
+     * @throws WorkflowTemplateNotFoundException if no template has been found
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    WorkflowTemplate getWorkflowTemplate(final String id, final Map<String, NutDao> daoCollection) {
-        final Iterator<ContextSetting> it = taggedSettings.values().iterator();
-        ContextBuilder.WorkflowTemplateRegistration retval = null;
+    WorkflowTemplate getWorkflowTemplate(final String id, final Map<String, NutDao> daoCollection, final Collection<String> profiles)
+            throws WorkflowTemplateNotFoundException, DuplicatedRegistrationException {
+        final List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration>> collected =
+                new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration>>();
 
-        while (it.hasNext() && retval == null) {
-            retval = it.next().getTemplateMap().get(id);
+        // Check if an active setting contains the requested profile
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting setting) {
+                for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration> entry : setting.getTemplateMap().entrySet()) {
+                    if (entry.getKey().getId().equals(id)) {
+                        collected.add(entry);
+                    }
+                }
+            }
+        }, profiles);
+
+        final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration> res = getOne(collected, profiles);
+
+        if (res == null) {
+            WuicException.throwWorkflowTemplateNotFoundException(id);
+            return null;
+        } else {
+            return res.getValue().getTemplate(daoCollection, profiles);
+        }
+    }
+
+    /**
+     * <p>
+     * Gets one result from the given list of entries. If the list is empty, {@code null} is returned.
+     * If more than one element is contained, an {@link com.github.wuic.exception.DuplicatedRegistrationException} is thrown.
+     * </p>
+     *
+     * @param list the list
+     * @param <V> the entry value
+     * @return the single list value, {@code null} if the list is empty
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if the list contains more than one item
+     */
+    private <V> Map.Entry<ContextBuilder.RegistrationId, V> getOne(final List<Map.Entry<ContextBuilder.RegistrationId, V>> list,
+                                                                   final Collection<String> activeProfiles)
+            throws DuplicatedRegistrationException {
+
+        // No result found
+        if (list.isEmpty()) {
+            return null;
+        } else {
+            // Get the single result
+            return checkDuplicates(list, activeProfiles);
+        }
+    }
+
+    /**
+     * <p>
+     * Checks that the given list does not contain more that one element and returns the single element from it.
+     * A {@link DuplicatedRegistrationException} will be thrown if more than one element is present.
+     * </p>
+     *
+     * @param list the list
+     * @param activeProfiles the profiles currently active
+     * @param <V> the type of registration
+     * @return the single element of the list
+     */
+    private <V> Map.Entry<ContextBuilder.RegistrationId, V> checkDuplicates(final List<Map.Entry<ContextBuilder.RegistrationId, V>> list,
+                                                                            final Collection<String> activeProfiles) {
+        if (list.size() > 1) {
+            // Multiple registration found, throw proper exception message
+            final List<Object> ids = new ArrayList<Object>(list.size());
+
+            for (final Map.Entry<ContextBuilder.RegistrationId, V> o : list) {
+                ids.add(o.getKey());
+            }
+
+            WuicException.throwDuplicateRegistrationException(ids, activeProfiles);
         }
 
-        return retval != null ? retval.getTemplate(daoCollection) : null;
+        return list.get(0);
     }
 
     /**
@@ -380,36 +545,43 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * Gets all the {@link NutDao} created with the existing registrations.
      * </p>
      *
+     * @param profiles the active profiles
      * @return the {@link NutDao} associated to their registration ID
      */
-    Map<String, NutDao> getNutDaoMap() {
+    Map<String, NutDao> getNutDaoMap(final Collection<String> profiles) {
         final Map<String, NutDao> daoMap = new HashMap<String, NutDao>();
-        final Map<ContextBuilder.NutDaoRegistration, List<String>> registrationMap =
-                new HashMap<ContextBuilder.NutDaoRegistration, List<String>>();
+        final Map<String, List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>>> registrationMap =
+                new HashMap<String, List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>>>();
 
-        // Organize all registrations grouped by associated keys in order instantiate each registration only once
-        for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ContextBuilder.NutDaoRegistration> dao : setting.getNutDaoMap().entrySet()) {
-                List<String> keys = registrationMap.get(dao.getValue());
-                final ContextBuilder.NutDaoRegistration r = dao.getValue();
+        // Organize all registrations grouped by associated keys in order to detect duplicates
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting consumed) {
 
-                if (keys == null) {
-                    keys = new ArrayList<String>();
-                    registrationMap.put(r, keys);
+                // Filter the object builder's profile
+                for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration> dao : consumed.getNutDaoMap().entrySet()) {
+                    if (!acceptProfiles(dao.getValue().getNutDaoBuilder(), profiles)) {
+                        continue;
+                    }
+
+                    List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>> keys =
+                            registrationMap.get(dao.getKey().getId());
+
+                    if (keys == null) {
+                        keys = new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>>();
+                        registrationMap.put(dao.getKey().getId(), keys);
+                    }
+
+                    keys.add(dao);
                 }
-
-                keys.add(dao.getKey());
             }
-        }
+        }, profiles);
 
         // Populate the DAO map with the same instance associated to all keys sharing the same registration
         final List<ProxyNutDaoRegistration> proxyRegistrations = new ArrayList<ProxyNutDaoRegistration>();
-        for (final Map.Entry<ContextBuilder.NutDaoRegistration, List<String>> registration : registrationMap.entrySet()) {
-            final NutDao dao = registration.getKey().getNutDao(proxyRegistrations);
-
-            for (final String key : registration.getValue()) {
-                daoMap.put(key, dao);
-            }
+        for (final Map.Entry<String, List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration>>> registration : registrationMap.entrySet()) {
+            final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.NutDaoRegistration> dao = checkDuplicates(registration.getValue(), profiles);
+            daoMap.put(dao.getKey().getId(), dao.getValue().getNutDao(proxyRegistrations));
         }
 
         // Some DAO are proxy with rules related to other DAO, set those DAO
@@ -425,28 +597,43 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * Gets all the {@link NutsHeap} created with the existing registrations.
      * </p>
      *
+     * @param daoMap the map of existing DAOs
+     * @param nutFilterMap the map of existing filters
+     * @param profiles the active profiles
      * @return the {@link NutsHeap} associated to their registration ID
      */
-    Map<String, NutsHeap> getNutsHeapMap(final Map<String, NutDao> daoMap, final Map<String, NutFilter> nutFilterMap)
+    Map<String, NutsHeap> getNutsHeapMap(final Map<String, NutDao> daoMap,
+                                         final Map<String, NutFilter> nutFilterMap,
+                                         final Collection<String> profiles)
             throws IOException {
         final Map<String, NutsHeap> heapMap = new HashMap<String, NutsHeap>();
 
         // The composite heap must be read after the standard heap
         for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
+            // Required profile not enabled
+            if (!setting.acceptProfiles(profiles)) {
+                continue;
+            }
+
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (!heap.getValue().isComposition()) {
                     final ContextBuilder.HeapRegistration r = heap.getValue();
-                    heapMap.put(heap.getKey(), r.getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
+                    heapMap.put(heap.getKey().getId(), r.getHeap(heap.getKey().getId(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
         }
 
         // Now read all compositions
         for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
+            // Required profile not enabled
+            if (!setting.acceptProfiles(profiles)) {
+                continue;
+            }
+
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.HeapRegistration> heap : setting.getNutsHeaps().entrySet()) {
                 if (heap.getValue().isComposition()) {
                     final ContextBuilder.HeapRegistration r = heap.getValue();
-                    heapMap.put(heap.getKey(), r.getHeap(heap.getKey(), daoMap, heapMap, nutFilterMap, setting));
+                    heapMap.put(heap.getKey().getId(), r.getHeap(heap.getKey().getId(), daoMap, heapMap, nutFilterMap, setting));
                 }
             }
         }
@@ -459,19 +646,37 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * Gets all the {@link Workflow} created with the existing registrations.
      * </p>
      *
+     * @param configureDefault {@code true} if default configuration for engine should be injected to workflow, {@code false} otherwise
+     * @param daoMap the map of known DAO
+     * @param heapMap the map of known heaps
+     * @param knownTypes the known engine builder type
+     * @param profiles the active profiles
      * @return the {@link Workflow} associated to their registration ID
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
     Map<String, Workflow> getWorkflowMap(final boolean configureDefault,
                                          final Map<String, NutDao> daoMap,
                                          final Map<String, NutsHeap> heapMap,
-                                         final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes)
-            throws IOException, WorkflowTemplateNotFoundException {
+                                         final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
+                                         final Collection<String> profiles)
+            throws IOException, WorkflowTemplateNotFoundException, DuplicatedRegistrationException {
         final Map<String, Workflow> workflowMap = new HashMap<String, Workflow>();
 
         // Add all specified workflow
         for (final ContextSetting setting : taggedSettings.values()) {
-            for (final Map.Entry<String, ContextBuilder.WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
-                workflowMap.putAll(entry.getValue().getWorkflowMap(entry.getKey(), daoMap, heapMap, setting));
+            // Required profile not enabled
+            if (!setting.acceptProfiles(profiles)) {
+                continue;
+            }
+
+            // Generate the set of workflow for each registration and check for duplicates
+            for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
+                final Map<String, Workflow> res = entry.getValue().getWorkflowMap(entry.getKey().getId(), daoMap, heapMap, setting, profiles);
+                final Set<String> a = res.keySet();
+                final Set<String> b = workflowMap.keySet();
+                checkDuplicate(a, b, profiles);
+                checkDuplicate(b, a, profiles);
+                workflowMap.putAll(res);
             }
         }
 
@@ -484,12 +689,37 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                 }
             }
 
+            // Check that a workflow does not already exists for the heap ID
+            if (workflowMap.containsKey(heap.getId())) {
+                log.error("Duplicated registration: a workflow has the same ID as a heap ID not explicitly referenced by a workflow.");
+                WuicException.throwDuplicateRegistrationException(Arrays.asList((Object) heap.getId()), profiles);
+            }
+
             // No workflow has been found: create a default with the heap ID as ID
-            workflowMap.put(heap.getId(),
-                    new Workflow(createHead(knownTypes, Boolean.TRUE, null), createChains(configureDefault, knownTypes, Boolean.TRUE, null), heap));
+            final HeadEngine head = createHead(knownTypes, configureDefault, null, profiles);
+            final Map<NutType, NodeEngine> chains = createChains(configureDefault, knownTypes, Boolean.TRUE, null, profiles);
+            workflowMap.put(heap.getId(), new Workflow(head, chains, heap));
         }
 
         return workflowMap;
+    }
+
+    /**
+     * <p>
+     * Checks for duplicated IDs by checking if an element of {@code a} exists in {@code b} and in that case throws
+     * a {@link DuplicatedRegistrationException}.
+     * </p>
+     *
+     * @param a set a
+     * @param b set b
+     * @param profiles current active profiles
+     */
+    private void checkDuplicate(final Set<String> a, final Set<String> b, final Collection<String> profiles) {
+        for (final String idA : a) {
+            if (b.contains(idA)) {
+                WuicException.throwDuplicateRegistrationException(Arrays.asList((Object) idA), profiles);
+            }
+        }
     }
 
     /**
@@ -506,12 +736,15 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * @param knownTypes a list of known types to instantiate
      * @param includeDefaultEngines if include default engines or not
      * @param ebTypesExclusion the engines types to exclude
+     * @param profiles the profiles
      * @return the {@link com.github.wuic.engine.HeadEngine}
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
     @SuppressWarnings("unchecked")
     HeadEngine createHead(final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
                           final Boolean includeDefaultEngines,
-                          final String[] ebTypesExclusion) {
+                          final String[] ebTypesExclusion,
+                          final Collection<String> profiles) throws DuplicatedRegistrationException {
         if (includeDefaultEngines) {
             HeadEngine core = null;
 
@@ -521,7 +754,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                         && annotation.injectDefaultToWorkflow()
                         && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) != -1))) {
                     final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
-                    HeadEngine engine = HeadEngine.class.cast(newEngine(id));
+                    HeadEngine engine = HeadEngine.class.cast(newEngine(id, profiles));
 
                     if (annotation.isCoreEngine()) {
                         core = engine;
@@ -542,19 +775,35 @@ public class TaggedSettings extends ContextInterceptorAdapter {
     /**
      * <p>
      * Gets the {@link Engine} produced by the builder associated to the given ID.
+     * An {@code IllegalStateException} is thrown if no engine is found.
      * </p>
      *
      * @param engineBuilderId the builder ID
-     * @return the {@link Engine}, {@code null} if nothing is associated to the ID
+     * @return the {@link Engine}
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    Engine newEngine(final String engineBuilderId) {
-        for (final ContextSetting setting : taggedSettings.values()) {
-            if (setting.getEngineMap().containsKey(engineBuilderId)) {
-                return setting.getEngineMap().get(engineBuilderId).build();
-            }
-        }
+    Engine newEngine(final String engineBuilderId, final Collection<String> profiles) throws DuplicatedRegistrationException {
+        final List<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<Engine>>> list =
+                new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<Engine>>>();
 
-        return null;
+        consumeSettings(new Consumer<ContextSetting>() {
+            @Override
+            public void apply(final ContextSetting consumed) {
+                for (final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<Engine>> entry : consumed.getEngineMap().entrySet()) {
+                    if (entry.getKey().getId().equals(engineBuilderId) && acceptProfiles(entry.getValue(), profiles)) {
+                        list.add(entry);
+                    }
+                }
+            }
+        }, profiles);
+
+        final Map.Entry<ContextBuilder.RegistrationId, ObjectBuilder<Engine>> res = getOne(list, profiles);
+
+        if (res == null) {
+            throw new IllegalStateException(String.format("'%s' not associated to any %s", engineBuilderId, EngineService.class.getName()));
+        } else {
+            return res.getValue().build();
+        }
     }
 
     /**
@@ -566,13 +815,16 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * @param knownTypes known types to create engines
      * @param includeDefaultEngines include default or not
      * @param ebTypesExclusion the default engines to exclude
+     * @param profiles the profiles to be accepted
      * @return the different chains
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
     @SuppressWarnings("unchecked")
     Map<NutType, NodeEngine> createChains(final boolean configureDefault,
                                           final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
                                           final Boolean includeDefaultEngines,
-                                          final String[] ebTypesExclusion) {
+                                          final String[] ebTypesExclusion,
+                                          final Collection<String> profiles) throws DuplicatedRegistrationException {
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
         // Include default engines
@@ -587,7 +839,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                         && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
                         && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) == -1))) {
                     final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
-                    NodeEngine engine = NodeEngine.class.cast(newEngine(id));
+                    NodeEngine engine = NodeEngine.class.cast(newEngine(id, profiles));
 
                     // TODO: would be easier if nut types are provided by service annotation
                     for (final NutType nutType : engine.getNutTypes()) {
@@ -599,7 +851,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                             chains.put(nutType, NodeEngine.chain(chain, engine));
                         }
 
-                        engine = NodeEngine.class.cast(newEngine(id));
+                        engine = NodeEngine.class.cast(newEngine(id, profiles));
                     }
                 }
             }
@@ -666,6 +918,25 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
+     * Refresh the dependencies of settings containing one the given profile.
+     * </p>
+     *
+     * @param profiles the profiles contained in the settings to be refreshed
+     * @see #refreshDependencies(ContextSetting)
+     */
+    void refreshDependencies(final String ... profiles) {
+        for (final ContextSetting setting : taggedSettings.values()) {
+            for (final String profile : profiles) {
+                if (setting.getRequiredProfiles().contains(profile)) {
+                    refreshDependencies(setting);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * <p>
      * This method detects the dependencies of the given setting and refresh them.
      * All dependency type described by {@link #refreshDependencies(ContextSetting)} are checked here.
      * </p>
@@ -717,10 +988,10 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
             // Candidate has a heap registration that refers another one, we check if this other heap is refreshed
             if (registration.getHeapsIds() != null) {
-                for (final String heapId : setting.getNutsHeaps().keySet()) {
+                for (final ContextBuilder.RegistrationId heapId : setting.getNutsHeaps().keySet()) {
 
                     // Dependency found: change state of this dependency and recursively search its own dependencies
-                    if (registration.getHeapsIds().contains(heapId)) {
+                    if (registration.getHeapsIds().contains(heapId.getId())) {
                         refresh(path, candidate);
                         return;
                     }
@@ -746,12 +1017,15 @@ public class TaggedSettings extends ContextInterceptorAdapter {
         }
 
         // Looking for a DAO registration referenced by a heap registration of the current setting
+        loop:
         for (final ContextBuilder.HeapRegistration registration : candidate.getNutsHeaps().values()) {
 
             // Dependency found: change state of this dependency and recursively search its own dependencies
-            if (setting.getNutDaoMap().keySet().contains(registration.getNutDaoId())) {
-                refresh(path, candidate);
-                break;
+            for (final ContextBuilder.RegistrationId registrationId : setting.getNutDaoMap().keySet()) {
+                if (registrationId.getId().equals(registration.getNutDaoId())) {
+                    refresh(path, candidate);
+                    break loop;
+                }
             }
         }
     }
@@ -773,13 +1047,17 @@ public class TaggedSettings extends ContextInterceptorAdapter {
         }
 
         // Looking for a template referenced by a workflow registration of the current setting
+        loop:
         for (final ContextBuilder.WorkflowRegistration registration : candidate.getWorkflowMap().values()) {
 
             // Dependency found: change state of this dependency and recursively search its own dependencies
-            if (registration.getWorkflowTemplateId() != null
-                    && setting.getTemplateMap().keySet().contains(registration.getWorkflowTemplateId())) {
-                refresh(path, candidate);
-                break;
+            if (registration.getWorkflowTemplateId() != null) {
+                for (final ContextBuilder.RegistrationId registrationId : setting.getTemplateMap().keySet()) {
+                    if (registrationId.getId().equals(registration.getWorkflowTemplateId())) {
+                        refresh(path, candidate);
+                        break loop;
+                    }
+                }
             }
         }
     }
@@ -805,10 +1083,10 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             final Pattern heapPattern = Pattern.compile(registration.getHeapIdPattern());
 
             // Each ID of registration is evaluated to check if it matches the pattern
-            for (final String heapId : candidate.getNutsHeaps().keySet()) {
+            for (final ContextBuilder.RegistrationId heapId : candidate.getNutsHeaps().keySet()) {
 
                 // Dependency found: change state of this dependency and recursively search its own dependencies
-                if (heapPattern.matcher(heapId).matches()) {
+                if (heapPattern.matcher(heapId.getId()).matches()) {
                     refresh(path, candidate);
                     return;
                 }
@@ -831,11 +1109,11 @@ public class TaggedSettings extends ContextInterceptorAdapter {
         }
 
         // Looking for a DAO referenced by a workflow template registration of the current setting
-        for (final String storeId : setting.getNutDaoMap().keySet()) {
+        for (final ContextBuilder.RegistrationId storeId : setting.getNutDaoMap().keySet()) {
             for (final ContextBuilder.WorkflowTemplateRegistration registration : candidate.getTemplateMap().values()) {
 
                 // Dependency found: change state of this dependency and recursively search its own dependencies
-                if (registration.getStoreIds().contains(storeId)) {
+                if (registration.getStoreIds().contains(storeId.getId())) {
                     refresh(path, candidate);
                     return;
                 }
@@ -860,11 +1138,11 @@ public class TaggedSettings extends ContextInterceptorAdapter {
         }
 
         // Looking for a DAO referenced by another DAO registration that proxy it in the current setting
-        for (final String nutDaoId : setting.getNutDaoMap().keySet()) {
+        for (final ContextBuilder.RegistrationId nutDaoId : setting.getNutDaoMap().keySet()) {
             for (final ContextBuilder.NutDaoRegistration registration : candidate.getNutDaoMap().values()) {
 
                 // Dependency found: change state of this dependency and recursively search its own dependencies
-                if (registration.getProxyDao().values().contains(nutDaoId)) {
+                if (registration.getProxyDao().values().contains(nutDaoId.getId())) {
                     refresh(path, candidate);
                     return;
                 }
@@ -936,7 +1214,8 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * @param builders the components
      * @param propertyResolver the property resolver
      */
-    private void applyProperties(final Map<String, ? extends ObjectBuilder> builders, final PropertyResolver propertyResolver) {
+    private void applyProperties(final Map<ContextBuilder.RegistrationId, ? extends ObjectBuilder> builders,
+                                 final PropertyResolver propertyResolver) {
         if (builders != null) {
             for (final ObjectBuilder component : builders.values()) {
                 component.configure(propertyResolver);

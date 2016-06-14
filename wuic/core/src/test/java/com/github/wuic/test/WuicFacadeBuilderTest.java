@@ -49,6 +49,7 @@ import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.util.MapPropertyResolver;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.junit.Assert;
@@ -58,7 +59,9 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -253,5 +256,43 @@ public class WuicFacadeBuilderTest {
 
         Assert.assertEquals(1, wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).size());
         Assert.assertNotEquals(wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).get(0).getName(), "aggregate.js");
+    }
+
+    /**
+     * <p>
+     * Checks that profiles impact property files selection.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(timeout = 60000)
+    public void propertyProfilesTest() throws WuicException {
+        Map<Object, Object> map = new HashMap<Object, Object>();
+        WuicFacadeBuilder b = new WuicFacadeBuilder(new MapPropertyResolver(map)).noConfigurationPath();
+        b.build();
+        Assert.assertEquals("baz", b.getPropertyResolver().resolveProperty("foo"));
+        Assert.assertEquals("test", b.getPropertyResolver().resolveProperty("test"));
+
+        map = new HashMap<Object, Object>();
+        b = new WuicFacadeBuilder(new MapPropertyResolver(map)).noConfigurationPath();
+        map.put(ApplicationConfig.PROFILES, "foo");
+        b.build();
+        Assert.assertEquals("bar", b.getPropertyResolver().resolveProperty("foo"));
+        Assert.assertEquals("test", b.getPropertyResolver().resolveProperty("test"));
+    }
+
+    /**
+     * <p>
+     * Checks that profiles impact confguration files selection.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     * @throws IOException if any I/O error occurs
+     */
+    @Test
+    public void configurationProfileTest() throws WuicException, IOException {
+        WuicFacadeBuilder b = new WuicFacadeBuilder();
+        b.contextBuilder().enableProfile("configurationProfileTest").toFacade();
+        Assert.assertEquals(9, b.build().workflowIds().size());
     }
 }

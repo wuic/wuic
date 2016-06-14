@@ -7,11 +7,11 @@
             </properties>
         </nut-dao-builder>
 
-        <nut-dao-builder id="anotherDao" type="MockDaoBuilder" profiles="foo" />
+        <nut-dao-builder id="anotherDao" type="MockDaoBuilder" />
     </nut-dao-builders>
 
     <engine-builders>
-        <engine-builder id="defaultEngine" type="MockEngineBuilder" profiles="foo">
+        <engine-builder id="defaultEngine" type="MockEngineBuilder">
             <properties>
                 <property key="c.g.engine.foo">engine</property>
             </properties>
@@ -20,7 +20,7 @@
     </engine-builders>
 
     <heaps>
-        <heap id="defaultHeap" dao-builder-id="defaultDao" profiles="foo">
+        <heap id="defaultHeap" dao-builder-id="defaultDao">
             <nut-path>*.css</nut-path>
             <nut-path>foo/style.css</nut-path>
         </heap>
@@ -42,7 +42,7 @@
             </engine-chain>
         </workflow-template>
 
-        <workflow-template id="anotherWorkflowTemplate" profiles="foo,bar">
+        <workflow-template id="anotherWorkflowTemplate">
             <engine-chain>
                 <engine-builder-id>defaultEngine</engine-builder-id>
                 <engine-builder-id>anotherEngine</engine-builder-id>
@@ -55,7 +55,6 @@
         <workflow id-prefix="defaultWorkflow"
                   workflow-template-id="anotherWorkflowTemplate"
                   heap-id-pattern="anotherHeap"
-                  profiles="foo,bar"
         />
     </workflows>
 </wuic>

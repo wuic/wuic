@@ -36,73 +36,77 @@
  */
 
 
-package com.github.wuic.test.xml;
+package com.github.wuic.config.bean.json;
 
-import com.github.wuic.NutType;
-import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ConvertibleNut;
-import org.mockito.Mockito;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
 /**
  * <p>
- * Mocked engine builder.
+ * An adapter that checks if the annotate field refers to a single string or an array of string.
+ * In the former case, the string is simply read and in the later case the value value is read as an array joined with a
+ * comma. The value is written as an array when the string contains comma, which means several profiles are declared.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-@EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
+public class StringArrayAdapter extends TypeAdapter<String> {
+
+    /**
+     * Gson.
+     */
+    private final Gson gson;
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param foo custom property
+     * @param gson the marshaller
      */
-    @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
+    public StringArrayAdapter(final Gson gson) {
+        this.gson = gson;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
+    public void write(final JsonWriter out, final String value) throws IOException {
+        if (value.contains(",")) {
+            gson.toJson(value.split(","), String[].class, out);
+        } else {
+            gson.toJson(value, String.class, out);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
-    }
+    public String read(final JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.STRING) {
+            return gson.fromJson(in, String.class);
+        } else {
+            try {
+                in.beginArray();
+                final StringBuilder sb = new StringBuilder();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
-    }
+                // Read each value of the array
+                while (in.hasNext()) {
+                    sb.append(",").append(gson.fromJson(in, String.class));
+                }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean works() {
-        return true;
+                return sb.length() == 0 ? "" : sb.substring(1);
+            } finally {
+                in.endArray();
+            }
+        }
     }
 }

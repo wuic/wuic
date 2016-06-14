@@ -66,7 +66,9 @@ import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.test.xml.MockDao;
+import com.github.wuic.test.xml.MockDao2;
 import com.github.wuic.test.xml.MockEngine;
+import com.github.wuic.test.xml.MockEngine2;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.util.PropertyResolver;
@@ -266,6 +268,75 @@ public class ConfigBeanTest {
 
     /**
      * <p>
+     * Data points for a set of conventional configurations.
+     * </p>
+     *
+     * @return the data points
+     * @throws Exception if initialization fails
+     */
+    @DataPoints("conventions")
+    public static BeanContextBuilderConfigurator[] conventions() throws Exception {
+        return new BeanContextBuilderConfigurator[] {
+                new FileXmlContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-conventions.xml")),
+                new FileJsonContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-conventions.json"))
+        };
+    }
+
+    /**
+     * <p>
+     * Data points for a set of configurations restricted by profiles.
+     * </p>
+     *
+     * @return the data points
+     * @throws Exception if initialization fails
+     */
+    @DataPoints("profiles")
+    public static BeanContextBuilderConfigurator[] profiles() throws Exception {
+        return new BeanContextBuilderConfigurator[] {
+                new FileXmlContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-profiles.xml")),
+                new FileJsonContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-profiles.json"))
+        };
+    }
+
+    /**
+     * <p>
+     * Tests when profiles are enabled.
+     * </p>
+     *
+     * @param contextBuilderConfigurator teh configuration
+     * @throws Exception if test fails
+     */
+    @Theory
+    public void profilesTest(@FromDataPoints("profiles") final BeanContextBuilderConfigurator contextBuilderConfigurator)
+            throws Exception {
+        final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class, MockEngine2.class, GzipEngine.class);
+        final ObjectBuilderFactory<NutDao> nbf = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class, MockDao2.class);
+        final ObjectBuilderFactory<NutFilter> fbf = new ObjectBuilderFactory<NutFilter>(NutFilterService.class);
+        final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf).configureDefault().enableProfile("bar");
+        contextBuilderConfigurator.configure(builder);
+
+        Context ctx = builder.build();
+        Assert.assertEquals(NumberUtils.TWO, ctx.workflowIds().size());
+        List<ConvertibleNut> res = ctx.process("", "defaultWorkflowdefaultHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        Assert.assertNotNull(res);
+        Assert.assertEquals(1, res.size());
+        Assert.assertEquals("foo.css", res.get(0).getName());
+        Assert.assertFalse(res.get(0).isCompressed());
+
+        builder.disableProfile("bar").enableProfile("foo");
+        ctx = builder.build();
+        Assert.assertEquals(1, ctx.workflowIds().size());
+        res = ctx.process("", "workflowdefaultHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        Assert.assertNotNull(res);
+        Assert.assertEquals(NumberUtils.THREE, res.size());
+        Assert.assertEquals("/foo/foo.css", res.get(0).getName());
+        Assert.assertTrue(res.get(0).isCompressed());
+        Assert.assertEquals("baz.css", res.get(1).getName());
+        Assert.assertEquals("bar.css", res.get(2).getName());
+    }
+
+    /**
+     * <p>
      * Tests a workflow built on top of a composition.
      * </p>
      *
@@ -280,22 +351,6 @@ public class ConfigBeanTest {
         contextBuilderConfigurator.configure(builder);
         final Context ctx = builder.build();
         ctx.process("", "composite", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
-    }
-
-    /**
-     * <p>
-     * Data points for a set of conventional configurations.
-     * </p>
-     *
-     * @return the data points
-     * @throws Exception if initialization fails
-     */
-    @DataPoints("conventions")
-    public static BeanContextBuilderConfigurator[] conventions() throws Exception {
-        return new BeanContextBuilderConfigurator[] {
-                new FileXmlContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-conventions.xml")),
-                new FileJsonContextBuilderConfigurator(ConfigBeanTest.class.getResource("/wuic-conventions.json"))
-        };
     }
 
     /**
@@ -323,19 +378,32 @@ public class ConfigBeanTest {
         Assert.assertEquals(NumberUtils.TWO, bean.getDaoBuilders().size());
         Assert.assertEquals(NumberUtils.TWO, bean.getWorkflowTemplates().size());
 
+        int heapProfilesCount = 0;
+
         // Heap field
         for (HeapBean heap : bean.getHeaps()) {
             Assert.assertNotNull(heap.getId());
             Assert.assertNotNull(heap.getDaoBuilderId());
             Assert.assertNotNull(heap.getElements());
             Assert.assertEquals(NumberUtils.TWO, heap.getElements().size());
+
+            if (heap.getProfiles() != null && 1 == heap.getProfiles().length) {
+                heapProfilesCount++;
+            }
         }
+
+        Assert.assertEquals(1, heapProfilesCount);
+        int daoProfilesCount = 0;
 
         // DAO field
         for (int i = 0; i < bean.getDaoBuilders().size(); i++) {
             BuilderBean dao = bean.getDaoBuilders().get(i);
             Assert.assertNotNull(dao.getId());
             Assert.assertNotNull(dao.getType());
+
+            if (dao.getProfiles() != null && 1 == dao.getProfiles().length) {
+                daoProfilesCount++;
+            }
 
             if (i == 1) {
                 Assert.assertNull(dao.getProperties());
@@ -352,11 +420,18 @@ public class ConfigBeanTest {
             }
         }
 
+        Assert.assertEquals(1, daoProfilesCount);
+        int ebProfilesCount = 0;
+
         // Engine field
         for (int i = 0; i < bean.getEngineBuilders().size(); i++) {
             BuilderBean engine = bean.getEngineBuilders().get(i);
             Assert.assertNotNull(engine.getId());
             Assert.assertNotNull(engine.getType());
+
+            if (engine.getProfiles() != null && 1 == engine.getProfiles().length) {
+                ebProfilesCount++;
+            }
 
             if (i == 1) {
                 Assert.assertNull(engine.getProperties());
@@ -373,12 +448,19 @@ public class ConfigBeanTest {
             }
         }
 
+        Assert.assertEquals(1, ebProfilesCount);
+        int templateProfilesCount = 0;
+
         // Workflow template field
         for (int i = 0; i < bean.getWorkflowTemplates().size(); i++) {
             final WorkflowTemplateBean workflow = bean.getWorkflowTemplates().get(i);
 
             Assert.assertNotNull(workflow.getId());
             Assert.assertNotNull(workflow.getEngineBuilderIds());
+
+            if (workflow.getProfiles() != null && NumberUtils.TWO == workflow.getProfiles().length) {
+                templateProfilesCount++;
+            }
 
             if (i == 1) {
                 Assert.assertNull(workflow.getDaoBuilderIds());
@@ -390,13 +472,22 @@ public class ConfigBeanTest {
             Assert.assertEquals(1, workflow.getDaoBuilderIds().size());
         }
 
+        Assert.assertEquals(1, templateProfilesCount);
+        int workflowTemplateCount = 0;
+
         for (int i = 0; i < bean.getWorkflows().size(); i++) {
             final WorkflowBean workflow = bean.getWorkflows().get(i);
 
             Assert.assertNotNull(workflow.getWorkflowTemplateId());
             Assert.assertNotNull(workflow.getIdPrefix());
             Assert.assertNotNull(workflow.getHeapIdPattern());
+
+            if (workflow.getProfiles() != null && NumberUtils.TWO == workflow.getProfiles().length) {
+                workflowTemplateCount++;
+            }
         }
+
+        Assert.assertEquals(1, workflowTemplateCount);
     }
 
     /**

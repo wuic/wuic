@@ -70,6 +70,7 @@
             </xs:element>
         </xs:sequence>
         <xs:attribute name="id" type="xs:string" use="optional" />
+        <xs:attribute name="profiles" type="xs:string" use="optional" />
         <xs:attribute name="type" type="xs:string" use="required" />
     </xs:complexType>
 
@@ -86,6 +87,7 @@
             <xs:element name="heap" type="xmlHeapBean" minOccurs="0" maxOccurs="unbounded"/>
         </xs:choice>
         <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="profiles" type="xs:string" use="optional" />
         <xs:attribute name="dao-builder-id" type="xs:string" use="optional"/>
     </xs:complexType>
 
@@ -104,6 +106,7 @@
             </xs:element>
         </xs:sequence>
         <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="profiles" type="xs:string" use="optional" />
         <xs:attribute name="use-default-engines" type="xs:boolean"/>
     </xs:complexType>
 
@@ -133,6 +136,7 @@
 
     <xs:complexType name="workflowBean">
         <xs:attribute name="id" type="xs:string" use="optional"/>
+        <xs:attribute name="profiles" type="xs:string" use="optional" />
         <xs:attribute name="id-prefix" type="xs:string" use="optional"/>
         <xs:attribute name="heap-id-pattern" type="xs:string" use="required"/>
         <xs:attribute name="workflow-template-id" type="xs:string" use="required"/>

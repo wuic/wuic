@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<wuic>
+    <nut-dao-builders>
+        <nut-dao-builder id="defaultDao" type="MockDaoBuilder" profiles="bar" />
+        <nut-dao-builder id="defaultDao" type="MockDao2Builder" profiles="foo" />
+    </nut-dao-builders>
+
+    <engine-builders>
+        <engine-builder id="defaultEngine" type="MockEngineBuilder" profiles="bar" />
+        <engine-builder id="defaultEngine" type="MockEngine2Builder" profiles="foo" />
+    </engine-builders>
+
+    <heaps>
+        <heap id="heap" dao-builder-id="defaultDao">
+            <nut-path>baz.css</nut-path>
+        </heap>
+
+        <heap id="defaultHeap" dao-builder-id="defaultDao" profiles="bar">
+            <nut-path>foo.css</nut-path>
+        </heap>
+
+        <heap id="defaultHeap" dao-builder-id="defaultDao" profiles="foo">
+            <nut-path>foo.css</nut-path>
+            <heap-id>heap</heap-id>
+        </heap>
+    </heaps>
+
+    <workflow-templates>
+        <workflow-template id="defaultWorkflowTemplate" profiles="bar">
+            <engine-chain>
+                <engine-builder-id>defaultEngine</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+
+        <workflow-template id="defaultWorkflowTemplate" profiles="foo">
+            <engine-chain>
+                <engine-builder-id>defaultEngine</engine-builder-id>
+                <engine-builder-id>wuicDefaultGzipEngineBuilder</engine-builder-id>
+            </engine-chain>
+        </workflow-template>
+    </workflow-templates>
+
+    <workflows>
+        <workflow id-prefix="workflow"
+                  workflow-template-id="defaultWorkflowTemplate"
+                  heap-id-pattern="defaultHeap"
+                  profiles="foo"
+        />
+        <workflow id-prefix="defaultWorkflow"
+                  workflow-template-id="defaultWorkflowTemplate"
+                  heap-id-pattern="defaultHeap"
+                  profiles="bar"
+                />
+    </workflows>
+</wuic>

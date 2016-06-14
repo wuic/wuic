@@ -94,7 +94,7 @@ public class WuicXmlTest {
         final ContextBuilder builder = new ContextBuilder(ebf, nbf, fbf);
 
         // By default we use this file
-        final URL full = getClass().getResource("/wuic-full.xml");
+        final URL full = getClass().getResource("/wuic-polling.xml");
         final File tmp = temporaryFolder.newFile("wuic.xml");
         IOUtils.copyStream(full.openStream(), new FileOutputStream(tmp));
 

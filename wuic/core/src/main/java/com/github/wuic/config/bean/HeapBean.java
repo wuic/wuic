@@ -39,6 +39,7 @@
 package com.github.wuic.config.bean;
 
 import com.github.wuic.config.bean.json.HeapBeanAdapterFactory;
+import com.github.wuic.config.bean.json.StringArrayAdapterFactory;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
@@ -65,6 +66,13 @@ public class HeapBean {
     private String id;
 
     /**
+     * Comma-separated list of profiles required to apply this bean.
+     */
+    @XmlAttribute(name = "profiles")
+    @JsonAdapter(StringArrayAdapterFactory.class)
+    private String profiles;
+
+    /**
      * The ID of the DAO builder.
      */
     @XmlAttribute(name = "dao-builder-id")
@@ -80,6 +88,17 @@ public class HeapBean {
     })
     @SerializedName( value = "nutPath", alternate = { "heap", "heapId" })
     private List<Object> elements;
+
+    /**
+     * <p>
+     * Gets the profiles.
+     * </p>
+     *
+     * @return the profiles
+     */
+    public String[] getProfiles() {
+        return profiles != null ? profiles.split(",") : null;
+    }
 
     /**
      * <p>

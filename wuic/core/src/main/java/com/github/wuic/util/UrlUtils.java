@@ -38,7 +38,13 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.ClassPathResourceResolver;
 import com.github.wuic.nut.ConvertibleNut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * <p>
@@ -49,6 +55,11 @@ import com.github.wuic.nut.ConvertibleNut;
  * @since 0.5.0
  */
 public final class UrlUtils {
+
+    /**
+     * The logger.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(UrlUtils.class);
 
     /**
      * <p>
@@ -131,6 +142,33 @@ public final class UrlUtils {
      */
     public static UrlMatcher urlMatcher(final String requestUrl) {
         return new UrlMatcher(requestUrl);
+    }
+
+    /**
+     * <p>
+     * Detects the given files in the {@link com.github.wuic.ClassPathResourceResolver} specified in parameter and
+     * install them thanks to the given callback.
+     * </p>
+     *
+     * @param classpathResourceResolver the resolver
+     * @param files file to test
+     * @param callback the callback that install the file
+     */
+    public static void detectInClassesLocation(final ClassPathResourceResolver classpathResourceResolver,
+                                               final Consumer<URL> callback,
+                                               final String ... files) {
+        for (final String file : files) {
+            try {
+                final URL classesPath = classpathResourceResolver.getResource(file);
+
+                if (classesPath != null) {
+                    LOG.info("Installing '{}' located in {}", file, classesPath.toString());
+                    callback.apply(classesPath);
+                }
+            } catch (MalformedURLException mue) {
+                LOG.error("Unexpected exception", mue);
+            }
+        }
     }
 
     /**

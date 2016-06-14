@@ -40,17 +40,20 @@ package com.github.wuic.test.xml;
 
 import com.github.wuic.NutType;
 import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
-import org.mockito.Mockito;
+import com.github.wuic.util.FutureLong;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * <p>
@@ -58,36 +61,19 @@ import java.util.List;
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
 @EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
+public class MockEngine2 extends MockEngine {
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
-     *
-     * @param foo custom property
      */
     @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
+    public MockEngine2() {
+        super("");
     }
 
     /**
@@ -95,14 +81,31 @@ public class MockEngine extends NodeEngine {
      */
     @Override
     protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
+        final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
+        retval.addAll(request.getNuts());
+        final ConvertibleNut nut = mock(ConvertibleNut.class);
+        when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+        when(nut.getNutType()).thenReturn(NutType.CSS);
+        when(nut.getName()).thenReturn("bar.css");
+        when(nut.getInitialName()).thenReturn("bar.css");
+        when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+
+        try {
+            when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        } catch (IOException ioe) {
+            WuicException.throwWuicException(ioe);
+        }
+
+        retval.add(nut);
+
+        return retval;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return true;
+    public List<NutType> getNutTypes() {
+        return Arrays.asList(NutType.values());
     }
 }

@@ -44,9 +44,14 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.nut.filter.NutFilter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import static com.github.wuic.context.ContextBuilder.RegistrationId;
 
 /**
  * <p>
@@ -66,38 +71,55 @@ public class ContextSetting {
     /**
      * All DAO registration with their {@link com.github.wuic.config.ObjectBuilder} associated to their builder ID.
      */
-    private Map<String, ContextBuilder.NutDaoRegistration> nutDaoMap = new HashMap<String, ContextBuilder.NutDaoRegistration>();
+    private Map<RegistrationId, ContextBuilder.NutDaoRegistration> nutDaoMap = new HashMap<RegistrationId, ContextBuilder.NutDaoRegistration>();
 
     /**
      * All {@link com.github.wuic.config.ObjectBuilder} building {@link NutFilter} associated to their builder ID.
      */
-    private Map<String, ObjectBuilder<NutFilter>> nutFilterMap = new HashMap<String, ObjectBuilder<NutFilter>>();
+    private Map<RegistrationId, ObjectBuilder<NutFilter>> nutFilterMap = new HashMap<RegistrationId, ObjectBuilder<NutFilter>>();
 
     /**
      * All {@link com.github.wuic.config.ObjectBuilder} building {@link com.github.wuic.engine.Engine} associated to their builder ID.
      */
-    private Map<String, ObjectBuilder<Engine>> engineMap = new HashMap<String, ObjectBuilder<Engine>>();
+    private Map<RegistrationId, ObjectBuilder<Engine>> engineMap = new HashMap<RegistrationId, ObjectBuilder<Engine>>();
 
     /**
      * All {@link com.github.wuic.context.ContextBuilder.HeapRegistration heaps} associated to their ID.
      */
-    private Map<String, ContextBuilder.HeapRegistration> nutsHeaps = new HashMap<String, ContextBuilder.HeapRegistration>();
+    private Map<RegistrationId, ContextBuilder.HeapRegistration> nutsHeaps = new HashMap<RegistrationId, ContextBuilder.HeapRegistration>();
 
     /**
      * All {@link com.github.wuic.WorkflowTemplate templates} {@link ContextBuilder.WorkflowTemplateRegistration registration}
      * associated to their ID.
      */
-    private Map<String, ContextBuilder.WorkflowTemplateRegistration> templates = new HashMap<String, ContextBuilder.WorkflowTemplateRegistration>();
+    private Map<RegistrationId, ContextBuilder.WorkflowTemplateRegistration> templates = new HashMap<RegistrationId, ContextBuilder.WorkflowTemplateRegistration>();
 
     /**
      * All {@link com.github.wuic.Workflow workflows} associated to their ID.
      */
-    private Map<String, ContextBuilder.WorkflowRegistration> workflowMap = new HashMap<String, ContextBuilder.WorkflowRegistration>();
+    private Map<RegistrationId, ContextBuilder.WorkflowRegistration> workflowMap = new HashMap<RegistrationId, ContextBuilder.WorkflowRegistration>();
 
     /**
      * All {@link ContextInterceptor interceptors}.
      */
     private List<ContextInterceptor> interceptorsList = new ArrayList<ContextInterceptor>();
+
+    /**
+     * Contains the required enabled profiles for this setting to be applied. Empty list means the setting is always applied.
+     */
+    private Set<String> requiredProfiles = new HashSet<String>();
+
+    /**
+     * <p>
+     * Indicates if all profiles specified as first parameter are contained in the given profiles collection.
+     * </p>
+     *
+     * @param profiles the profiles
+     * @return {@code true} if the requiredProfiles list is empty or if it's contained by the given profiles list
+     */
+    public static boolean acceptProfiles(final Collection<String> requiredProfiles, final Collection<String> profiles) {
+        return requiredProfiles.isEmpty() || profiles.containsAll(requiredProfiles);
+    }
 
     /**
      * <p>
@@ -128,7 +150,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ContextBuilder.NutDaoRegistration> getNutDaoMap() {
+    Map<RegistrationId, ContextBuilder.NutDaoRegistration> getNutDaoMap() {
         return nutDaoMap;
     }
 
@@ -139,7 +161,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ObjectBuilder<NutFilter>> getNutFilterMap() {
+    Map<RegistrationId, ObjectBuilder<NutFilter>> getNutFilterMap() {
         return nutFilterMap;
     }
 
@@ -150,7 +172,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ObjectBuilder<Engine>> getEngineMap() {
+    Map<RegistrationId, ObjectBuilder<Engine>> getEngineMap() {
         return engineMap;
     }
 
@@ -161,7 +183,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ContextBuilder.HeapRegistration> getNutsHeaps() {
+    Map<RegistrationId, ContextBuilder.HeapRegistration> getNutsHeaps() {
         return nutsHeaps;
     }
 
@@ -172,7 +194,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ContextBuilder.WorkflowRegistration> getWorkflowMap() {
+    Map<RegistrationId, ContextBuilder.WorkflowRegistration> getWorkflowMap() {
         return workflowMap;
     }
 
@@ -183,7 +205,7 @@ public class ContextSetting {
      *
      * @return the map
      */
-    Map<String, ContextBuilder.WorkflowTemplateRegistration> getTemplateMap() {
+    Map<RegistrationId, ContextBuilder.WorkflowTemplateRegistration> getTemplateMap() {
         return templates;
     }
 
@@ -196,6 +218,29 @@ public class ContextSetting {
      */
     List<ContextInterceptor> getInterceptorsList() {
         return interceptorsList;
+    }
+
+    /**
+     * <p>
+     * Returns the list of required profiles
+     * </p>
+     *
+     * @return the required profiles
+     */
+    public Set<String> getRequiredProfiles() {
+        return requiredProfiles;
+    }
+
+    /**
+     * <p>
+     * Indicates if all profiles of this setting are contained in the given profiles collection.
+     * </p>
+     *
+     * @param profiles the profiles
+     * @return {@code true} if the {@link #requiredProfiles} list is empty or if it's contained by the given profiles list
+     */
+    boolean acceptProfiles(final Collection<String> profiles) {
+        return acceptProfiles(requiredProfiles, profiles);
     }
 }
 

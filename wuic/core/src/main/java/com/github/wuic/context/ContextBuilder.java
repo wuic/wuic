@@ -40,6 +40,7 @@ package com.github.wuic.context;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.Profile;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
@@ -49,6 +50,7 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
+import com.github.wuic.exception.DuplicatedRegistrationException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
@@ -75,10 +77,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -94,9 +98,15 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>
  * If any operation is performed without any tag, then an exception will be thrown. Moreover, when the
- * {@link ContextBuilder#tag(Object)} method is called, the current threads holds a lock on the object.
+ * {@link ContextBuilder#tag(Object, String...)} method is called, the current threads holds a lock on the object.
  * It will be released when the {@link ContextBuilder#releaseTag()} will be called.
  * Consequently, it is really important to always call this last method in a finally block.
+ * </p>
+ *
+ * <p>
+ * It's possible to declare an arbitrary array of profiles when calling {@link #tag(Object, String...)}
+ * in order to ignore the configured settings for this tag when they are not declared through
+ * {@link #enableProfile(String...)} method.
  * </p>
  *
  * @author Guillaume DROUET
@@ -155,6 +165,16 @@ public class ContextBuilder extends Observable {
     private boolean configureDefault;
 
     /**
+     * Children tags created during a configuration for each setting restricted by some profiles.
+     */
+    private Map<Object, List<Object>> childrenTags;
+
+    /**
+     * The enable profiles.
+     */
+    private List<String> profiles;
+
+    /**
      * <p>
      * Creates a new instance with the builder factories of a context and additional inspectors.
      * </p>
@@ -166,6 +186,8 @@ public class ContextBuilder extends Observable {
     public ContextBuilder(final ContextBuilder b, final PropertyResolver properties, final ObjectBuilderInspector ... inspectors) {
         this(b.getEngineBuilderFactory(), b.getNutDaoBuilderFactory(), b.getNutFilterBuilderFactory(), false, inspectors);
         propertyResolver = properties;
+        childrenTags = new HashMap<Object, List<Object>>();
+        profiles = new ArrayList<String>(b.profiles);
     }
 
     /**
@@ -205,6 +227,8 @@ public class ContextBuilder extends Observable {
         this.lock = new ReentrantLock();
         this.configureDefault = false;
         this.propertyResolver = new EnhancedPropertyResolver();
+        this.profiles = new ArrayList<String>();
+        this.childrenTags = new HashMap<Object, List<Object>>();
 
         this.engineBuilderFactory = engineBuilderFactory == null ?
                 new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE) : engineBuilderFactory;
@@ -214,9 +238,7 @@ public class ContextBuilder extends Observable {
                 new ObjectBuilderFactory<NutFilter>(NutFilterService.class, NutFilterService.DEFAULT_SCAN_PACKAGE) : nutFilterBuilderFactory;
 
         final ObjectBuilderInspector inspector = new NutFilterHolderInspector();
-        this.engineBuilderFactory.inspector(inspector);
-        this.nutDaoBuilderFactory.inspector(inspector);
-        this.nutFilterBuilderFactory.inspector(inspector);
+        inspector(inspector);
 
         for (final ObjectBuilderInspector i : inspectors) {
             inspector(i);
@@ -238,6 +260,66 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder(final ObjectBuilderInspector ... inspectors) {
         this(null, null, null, true, inspectors);
+    }
+
+    /**
+     * <p>
+     * This class wraps an inspector only if the profiles configured in the enclosing builder match any required profiles
+     * declared with {@link com.github.wuic.Profile} annotation.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public final class ProfileObjectBuilderInspector implements ObjectBuilderInspector {
+
+        /**
+         * Wrapped inspector.
+         */
+        private final ObjectBuilderInspector wrap;
+
+        /**
+         * The profiles.
+         */
+        private Collection<String> profiles;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param wrap the wrapped inspector
+         */
+        ProfileObjectBuilderInspector(final ObjectBuilderInspector wrap) {
+            this.wrap = wrap;
+
+            if (wrap.getClass().isAnnotationPresent(Profile.class)) {
+                profiles = Arrays.asList(wrap.getClass().getAnnotation(Profile.class).value());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public <T> T inspect(final T object) {
+            if (profiles == null || ContextSetting.acceptProfiles(profiles, ContextBuilder.this.profiles)) {
+                return wrap.inspect(object);
+            } else {
+                return object;
+            }
+        }
+
+        /**
+         * <p>
+         * Gets the wrapped object.
+         * </p>
+         *
+         * @return the wrapped element
+         */
+        public ObjectBuilderInspector getWrap() {
+            return wrap;
+        }
     }
 
     /**
@@ -336,6 +418,94 @@ public class ContextBuilder extends Observable {
         @Override
         public ProcessContext getProcessContext() {
             return ProcessContext.DEFAULT;
+        }
+    }
+
+    /**
+     * <p>
+     * This class represents an ID for a registration using a functional ID (specified by the user) and the restricted
+     * profiles.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    final static class RegistrationId {
+
+        /**
+         * The ID.
+         */
+        private final String id;
+
+        /**
+         * The profiles.
+         */
+        private final Set<String> profiles;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param id the ID
+         * @param profiles the profiles
+         */
+        RegistrationId(final String id, final Set<String> profiles) {
+            this.id = id;
+            this.profiles = new HashSet<String>(profiles);
+        }
+
+        /**
+         * <p>
+         * Gets the ID.
+         * </p>
+         *
+         * @return the id
+         */
+        String getId() {
+            return id;
+        }
+
+        /**
+         * <p>
+         * Gets the profiles.
+         * </p>
+         *
+         * @return the profiles
+         */
+        Set<String> getProfiles() {
+            return profiles;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("(id = %s, profiles = %s)", getId(), Arrays.asList(getProfiles().toArray()));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof RegistrationId) {
+                final RegistrationId other = RegistrationId.class.cast(o);
+                return id.equals(other.id) && other.profiles.equals(profiles);
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Arrays.deepHashCode(new Object[] { id, profiles });
         }
     }
 
@@ -485,6 +655,10 @@ public class ContextBuilder extends Observable {
                 return heap;
             }
 
+            if (heapCollection.containsKey(id)) {
+                WuicException.throwDuplicateRegistrationException(Arrays.asList((Object) id), profiles);
+            }
+
             NutDao dao = null;
 
             // Find DAO
@@ -500,7 +674,7 @@ public class ContextBuilder extends Observable {
                 final List<NutsHeap> composition = new ArrayList<NutsHeap>();
 
                 for (final String regex : heapIds) {
-                    for (final Map.Entry<String, HeapRegistration> registration : taggedSettings.getNutsHeap(regex).entrySet()) {
+                    for (final Map.Entry<String, HeapRegistration> registration : taggedSettings.getNutsHeap(regex, profiles).entrySet()) {
                         composition.add(heapCollection.get(registration.getKey()));
                     }
                 }
@@ -602,38 +776,36 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param daoCollection the collection of DAO for ID resolution
+         * @param profiles the active profiles
          * @return the template
+         * @throws DuplicatedRegistrationException if duplicated registrations have been found
          */
-        WorkflowTemplate getTemplate(final Map<String, NutDao> daoCollection) {
+        WorkflowTemplate getTemplate(final Map<String, NutDao> daoCollection, final Collection<String> profiles)
+                throws DuplicatedRegistrationException {
             final NutDao[] nutDaos = collect(daoCollection);
 
             // Retrieve each engine associated to all provided IDs and heap them by nut type
             final Map<NutType, NodeEngine> chains =
-                    taggedSettings.createChains(configureDefault, engineBuilderFactory.knownTypes(), includeDefaultEngines, ebTypesExclusion);
+                    taggedSettings.createChains(configureDefault, engineBuilderFactory.knownTypes(), includeDefaultEngines, ebTypesExclusion, profiles);
             HeadEngine head = null;
 
             for (final String ebId : ebIds) {
                 // Create a different instance per chain
-                final Engine engine = taggedSettings.newEngine(ebId);
+                final Engine engine = taggedSettings.newEngine(ebId, profiles);
 
-                if (engine == null) {
-                    throw new IllegalStateException(String.format("'%s' not associated to any %s", ebId, EngineService.class.getName()));
+                if (engine instanceof HeadEngine) {
+                    head = HeadEngine.class.cast(engine);
                 } else {
+                    final NodeEngine node = NodeEngine.class.cast(engine);
+                    final List<NutType> nutTypes = node.getNutTypes();
 
-                    if (engine instanceof HeadEngine) {
-                        head = HeadEngine.class.cast(engine);
-                    } else {
-                        final NodeEngine node = NodeEngine.class.cast(engine);
-                        final List<NutType> nutTypes = node.getNutTypes();
-
-                        for (final NutType nt : nutTypes) {
-                            // Already exists
-                            if (chains.containsKey(nt)) {
-                                chains.put(nt, NodeEngine.chain(chains.get(nt), NodeEngine.class.cast(taggedSettings.newEngine(ebId))));
-                            } else {
-                                // Create first entry
-                                chains.put(nt, node);
-                            }
+                    for (final NutType nt : nutTypes) {
+                        // Already exists
+                        if (chains.containsKey(nt)) {
+                            chains.put(nt, NodeEngine.chain(chains.get(nt), NodeEngine.class.cast(taggedSettings.newEngine(ebId, profiles))));
+                        } else {
+                            // Create first entry
+                            chains.put(nt, node);
                         }
                     }
                 }
@@ -752,28 +924,26 @@ public class ContextBuilder extends Observable {
          * @param daoCollection a collection of DAO for template creation
          * @param heapCollection a collection of heap for workflow creation
          * @param contextSetting the setting this registration belongs to
+         * @param profiles the profiles to accept
          * @return the new workflow
          * @throws WorkflowTemplateNotFoundException if the workflow template does not exists
+         * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
          * @throws IOException if heap creation fails
          */
         Map<String, Workflow> getWorkflowMap(final String identifier,
                                              final Map<String, NutDao> daoCollection,
                                              final Map<String, NutsHeap> heapCollection,
-                                             final ContextSetting contextSetting)
-                throws WorkflowTemplateNotFoundException, IOException {
-            final WorkflowTemplate template = taggedSettings.getWorkflowTemplate(workflowTemplateId, daoCollection);
+                                             final ContextSetting contextSetting,
+                                             final Collection<String> profiles)
+                throws WorkflowTemplateNotFoundException, DuplicatedRegistrationException, IOException {
+            final WorkflowTemplate template = taggedSettings.getWorkflowTemplate(workflowTemplateId, daoCollection, profiles);
             final Map<String, Workflow> retval = new HashMap<String, Workflow>();
-
-            if (template == null) {
-                WuicException.throwWorkflowTemplateNotFoundException(workflowTemplateId);
-                return null;
-            }
 
             final Map<NutType, ? extends NodeEngine> chains = template.getChains();
             final NutDao[] nutDaos = template.getStores();
 
             // Retrieve HEAP
-            final Map<String, HeapRegistration> heaps = taggedSettings.getNutsHeap(heapIdPattern);
+            final Map<String, HeapRegistration> heaps = taggedSettings.getNutsHeap(heapIdPattern, profiles);
 
             if (heaps.isEmpty()) {
                 throw new IllegalStateException(String.format("'%s' is a regex which doesn't match any %s", heapIdPattern, NutsHeap.class.getName()));
@@ -880,6 +1050,14 @@ public class ContextBuilder extends Observable {
          * {@inheritDoc}
          */
         @Override
+        public Class<NutDao> getType() {
+            return nutDaoBuilder.getType();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public ObjectBuilder<NutDao> property(final String key, final Object value) {
             return nutDaoBuilder.property(key, value);
         }
@@ -948,6 +1126,17 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
+         * Gets the internal builder.
+         * </p>
+         *
+         * @return the builder
+         */
+        ObjectBuilder<NutDao> getNutDaoBuilder() {
+            return nutDaoBuilder;
+        }
+
+        /**
+         * <p>
          * Sets the proxy root path.
          * </p>
          *
@@ -984,7 +1173,7 @@ public class ContextBuilder extends Observable {
 
         /**
          * <p>
-         * Builds a new {@link NutDao} for this registration. The DAO is created when the first call to this method
+         * Builds a new {@link NutDao} for this registration. The DAO is created when the first call to this method is
          * performed. Then, a new instance will be created for future calls to take in consideration any change. For
          * instance, if the proxy settings have changed, the instance will be modified to provide an up to date state.
          * </p>
@@ -1080,16 +1269,56 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Configures this builder with the given {@link ContextBuilderConfigurator configurators}.
+     * Registers this builder with the given {@link ContextBuilderConfigurator configurators}.
      * </p>
      *
      * @param configurators the configurators
-     * @throws IOException if any I/O error occurs
+     * @throws IOException if I/O error occurs
      */
     public void configure(final ContextBuilderConfigurator ... configurators) throws IOException {
-        for (final ContextBuilderConfigurator configurator : configurators) {
-            configurator.configure(this);
+        for (final ContextBuilderConfigurator contextBuilderConfigurator : configurators) {
+            contextBuilderConfigurator.configure(this);
         }
+    }
+
+    /**
+     * <p>
+     * Gets the array of active profiles.
+     * </p>
+     *
+     * @return the active profiles
+     */
+    public String[] getActiveProfiles() {
+        return profiles.toArray(new String[profiles.size()]);
+    }
+
+    /**
+     * <p>
+     * Adds the given profiles as enable profiles.
+     * </p>
+     *
+     * @param profiles the enabled profiles
+     * @return this builder
+     */
+    public ContextBuilder enableProfile(final String ... profiles) {
+        this.profiles.addAll(Arrays.asList(profiles));
+        taggedSettings.refreshDependencies(profiles);
+        return this;
+    }
+
+    /**
+     * <p>
+     * Disables the given profiles.
+     * </p>
+     *
+     * @param profiles the profiles to be disabled
+     * @return this builder
+     * @throws IOException if reconfiguration fails
+     */
+    public ContextBuilder disableProfile(final String ... profiles) {
+        this.profiles.removeAll(Arrays.asList(profiles));
+        taggedSettings.refreshDependencies(profiles);
+        return this;
     }
 
     /**
@@ -1100,16 +1329,17 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * @return the current builder
-     * @throws IOException if configuration fails
+     * @throws IOException if any I/O error occurs
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    public ContextBuilder configureDefault() throws IOException {
+    public ContextBuilder configureDefault() throws DuplicatedRegistrationException, IOException {
         if (!configureDefault) {
             configure(new DefaultContextBuilderConfigurator(engineBuilderFactory){
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
                     contextBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
                 }
-            },new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
+            }, new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
                     contextBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
@@ -1151,12 +1381,18 @@ public class ContextBuilder extends Observable {
      * method is called. If tag is currently set, then it is released when this method is called with a new tag.
      * </p>
      *
+     * <p>
+     * It's possible to pass arbitrary profile names that must be enabled to apply this setting.
+     * By default if no profile is specified, the setting will be applied.
+     * </p>
+     *
+     * @param profiles some profiles to be activated to apply the tagged setting
      * @param tag an arbitrary object which represents the current tag
      * @return the current builder which will associates all configurations to the tag
      * @see ContextBuilder#clearTag(Object)
      * @see ContextBuilder#releaseTag()
      */
-    public ContextBuilder tag(final Object tag) {
+    public ContextBuilder tag(final Object tag, final String ... profiles) {
         lock.lock();
         log.debug("ContextBuilder locked by {}", Thread.currentThread().toString());
 
@@ -1165,9 +1401,42 @@ public class ContextBuilder extends Observable {
         }
 
         currentTag = tag;
+        getSetting().getRequiredProfiles().addAll(Arrays.asList(profiles));
         setChanged();
         notifyObservers(tag);
         return this;
+    }
+
+    /**
+     * <p>
+     * Associated the given child tag if not {@code null} to the parent tag specified in parameter.
+     * The method checks if child is a {@link List} and in that case consider the object as a list of children ot be
+     * added instead of a single child.
+     * </p>
+     *
+     * @param parentTag the parent tag
+     * @param childTag the child tag
+     */
+    public void addChildrenTag(final Object parentTag, final Object childTag) {
+        if (childTag != null) {
+            List<Object> children = childrenTags.get(parentTag);
+
+            // not children still associated to the tag
+            if (children == null) {
+                children = new ArrayList<Object>();
+                childrenTags.put(parentTag, children);
+            }
+
+            // Actually associated a list of children, not a single tag
+            if (childTag instanceof List) {
+                children.addAll(List.class.cast(childTag));
+            } else {
+                children.add(children);
+            }
+
+            setChanged();
+            notifyObservers(parentTag);
+        }
     }
 
     /**
@@ -1211,6 +1480,13 @@ public class ContextBuilder extends Observable {
 
             setChanged();
             notifyObservers(tag);
+
+            // Clear child tags
+            if (childrenTags.containsKey(tag)) {
+                for (final Object child : childrenTags.get(tag)) {
+                    clearTag(child);
+                }
+            }
 
             return this;
         } finally {
@@ -1542,10 +1818,11 @@ public class ContextBuilder extends Observable {
      * @param userId the final builder's ID, default ID if {@code null}
      * @param type the final builder's type
      * @return the specific context builder
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final String userId, final String type) {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String userId, final String type) throws DuplicatedRegistrationException {
         final String id = userId == null ? getDefaultBuilderId(type) : userId;
-        final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(id);
+        final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(id, getSetting().getRequiredProfiles(), false);
         return registration == null ? new ContextNutDaoBuilder(id, type) : new ContextNutDaoBuilder(id, registration);
     }
 
@@ -1556,8 +1833,9 @@ public class ContextBuilder extends Observable {
      *
      * @param type the component to build
      * @return the specific context builder
+     * @throws DuplicatedRegistrationException if duplicated registrations have been found
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final Class<?> type) throws DuplicatedRegistrationException {
         return contextNutDaoBuilder(getDefaultBuilderId(type), type);
     }
 
@@ -1569,8 +1847,9 @@ public class ContextBuilder extends Observable {
      * @param id the specific ID
      * @param type the component to build
      * @return the specific context builder
+     * @throws DuplicatedRegistrationException if duplicated registrations have been found
      */
-    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final Class<?> type) {
+    public ContextNutDaoBuilder contextNutDaoBuilder(final String id, final Class<?> type) throws DuplicatedRegistrationException {
         return contextNutDaoBuilder(id, builderName(type.getSimpleName()));
     }
 
@@ -1582,10 +1861,11 @@ public class ContextBuilder extends Observable {
      * @param id the specific ID
      * @param userId the ID of the existing builder to clone, if {@code null} then the default DAO is used
      * @return the specific context builder
+     * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    public ContextNutDaoBuilder cloneContextNutDaoBuilder(final String id, final String userId) {
+    public ContextNutDaoBuilder cloneContextNutDaoBuilder(final String id, final String userId) throws DuplicatedRegistrationException {
         final String cloneId = userId == null ? getDefaultBuilderId() : userId;
-        final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(cloneId);
+        final NutDaoRegistration registration = taggedSettings.getNutDaoRegistration(cloneId, profiles, true);
 
         if (registration == null) {
             WuicException.throwBadArgumentException(new IllegalArgumentException(
@@ -1678,16 +1958,17 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Adds a new {@link ObjectBuilderInspector} to the builder factories.
+     * Adds a new {@link ObjectBuilderInspector} to the builder factories. If the inspector is annotated with {@link Profile},
+     * its execution will be restricted according to enabled profile of this builder.
      * </p>
      *
      * @param obi the inspector to add
      * @return this {@link ContextBuilder}
      */
     public final ContextBuilder inspector(final ObjectBuilderInspector obi) {
-        nutDaoBuilderFactory.inspector(obi);
-        engineBuilderFactory.inspector(obi);
-        nutFilterBuilderFactory.inspector(obi);
+        nutDaoBuilderFactory.inspector(new ProfileObjectBuilderInspector(obi));
+        engineBuilderFactory.inspector(new ProfileObjectBuilderInspector(obi));
+        nutFilterBuilderFactory.inspector(new ProfileObjectBuilderInspector(obi));
         return this;
     }
 
@@ -1700,7 +1981,7 @@ public class ContextBuilder extends Observable {
      * @param registration the registration associated to its ID
      * @return this {@link ContextBuilder}
      */
-    ContextBuilder nutDao(final String id, final NutDaoRegistration registration) {
+    ContextBuilder nutDao(final RegistrationId id, final NutDaoRegistration registration) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1723,7 +2004,7 @@ public class ContextBuilder extends Observable {
      * @param filter the filter builder associated to its ID
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder nutFilter(final String id, final ObjectBuilder<NutFilter> filter) {
+    ContextBuilder nutFilter(final RegistrationId id, final ObjectBuilder<NutFilter> filter) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1746,7 +2027,7 @@ public class ContextBuilder extends Observable {
      * @param engine the engine builder associated to its ID
      * @return this {@link ContextBuilder}
      */
-    public ContextBuilder engineBuilder(final String id, final ObjectBuilder<Engine> engine) {
+    ContextBuilder engineBuilder(final RegistrationId id, final ObjectBuilder<Engine> engine) {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
@@ -1784,9 +2065,10 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        taggedSettings.removeNutDaoRegistration(id);
+        final RegistrationId regId = new RegistrationId(id, getSetting().getRequiredProfiles());
+        taggedSettings.removeNutDaoRegistration(regId);
 
-        setting.getNutDaoMap().put(id, daoRegistration.configure(properties));
+        setting.getNutDaoMap().put(regId, daoRegistration.configure(properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1803,7 +2085,11 @@ public class ContextBuilder extends Observable {
         final ServiceLoader<ContextBuilderConfigurator> serviceLoader = ServiceLoader.load(ContextBuilderConfigurator.class);
 
         for (final ContextBuilderConfigurator cbc : serviceLoader) {
-            cbc.internalConfigure(this);
+            try {
+                configure(cbc);
+            } catch (IOException ioe) {
+                log.error(String.format("Installation of configurator %s failed.", cbc.getClass().getName()), ioe);
+            }
         }
     }
 
@@ -1852,9 +2138,10 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        taggedSettings.removeNutFilter(id);
+        final RegistrationId regId = new RegistrationId(id, getSetting().getRequiredProfiles());
+        taggedSettings.removeNutFilter(regId);
 
-        setting.getNutFilterMap().put(id, configure(filterBuilder, properties));
+        setting.getNutFilterMap().put(regId, configure(filterBuilder, properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -1873,10 +2160,8 @@ public class ContextBuilder extends Observable {
      * @param path the path
      * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
-     * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder heap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
-            throws IOException {
+    public ContextBuilder heap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners) {
         return heap(false, id, ndbId, null, path, listeners);
     }
 
@@ -1891,10 +2176,8 @@ public class ContextBuilder extends Observable {
      * @param path the path
      * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
-     * @throws IOException if the HEAP could not be created
      */
-    public ContextBuilder disposableHeap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners)
-            throws IOException {
+    public ContextBuilder disposableHeap(final String id, final String ndbId, final String[] path, final HeapListener ... listeners) {
         return heap(true, id, ndbId, null, path, listeners);
     }
 
@@ -1922,26 +2205,25 @@ public class ContextBuilder extends Observable {
      * @param path the path
      * @param listeners some listeners for this heap
      * @return this {@link ContextBuilder}
-     * @throws IOException if the HEAP could not be created
      */
     public ContextBuilder heap(final boolean disposable,
                                final String id,
                                final String nutDaoId,
                                final String[] heapIds,
                                final String[] path,
-                               final HeapListener ... listeners)
-            throws IOException {
+                               final HeapListener ... listeners) {
         if (NumberUtils.isNumber(id)) {
             WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("Heap ID %s cannot be a numeric value", id)));
         }
 
         // Will override existing element
-        taggedSettings.removeHeapRegistration(id);
+        final RegistrationId regId = new RegistrationId(id, getSetting().getRequiredProfiles());
+        taggedSettings.removeHeapRegistration(regId);
 
         final ContextSetting setting = getSetting();
 
         final String ndbId = nutDaoId != null ? nutDaoId : getDefaultBuilderId();
-        setting.getNutsHeaps().put(id, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
+        setting.getNutsHeaps().put(regId, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
 
         taggedSettings.put(currentTag, setting);
         setChanged();
@@ -2007,9 +2289,10 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
 
         // Will override existing element
-        taggedSettings.removeEngine(id);
+        final RegistrationId regId = new RegistrationId(id, getSetting().getRequiredProfiles());
+        taggedSettings.removeEngine(regId);
 
-        setting.getEngineMap().put(id, configure(engineBuilder, properties));
+        setting.getEngineMap().put(regId, configure(engineBuilder, properties));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -2083,7 +2366,8 @@ public class ContextBuilder extends Observable {
                                    final Boolean includeDefaultEngines,
                                    final String ... ndbIds) throws IOException {
         final ContextSetting setting = getSetting();
-        setting.getTemplateMap().put(id, new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines, ndbIds));
+        setting.getTemplateMap().put(new RegistrationId(id, getSetting().getRequiredProfiles()),
+                new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines, ndbIds));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);
@@ -2131,9 +2415,10 @@ public class ContextBuilder extends Observable {
         final String id = identifier + heapIdPattern;
 
         // Will override existing element
-        taggedSettings.removeWorkflowRegistration(id);
+        final RegistrationId regId = new RegistrationId(id, getSetting().getRequiredProfiles());
+        taggedSettings.removeWorkflowRegistration(regId);
 
-        setting.getWorkflowMap().put(id, new WorkflowRegistration(forEachHeap, heapIdPattern, workflowTemplateId));
+        setting.getWorkflowMap().put(regId, new WorkflowRegistration(forEachHeap, heapIdPattern, workflowTemplateId));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(identifier);
@@ -2150,7 +2435,7 @@ public class ContextBuilder extends Observable {
      */
     public List<NutFilter> getFilters() {
         final List<NutFilter> retval = new ArrayList<NutFilter>();
-        retval.addAll(taggedSettings.getFilterMap().values());
+        retval.addAll(taggedSettings.getFilterMap(profiles).values());
         return retval;
     }
 
@@ -2194,11 +2479,11 @@ public class ContextBuilder extends Observable {
                 taggedSettings.applyProperties(propertyResolver);
             }
 
-            final Map<String, NutFilter> filterMap = taggedSettings.getFilterMap();
-            final Map<String, NutDao> daoMap = taggedSettings.getNutDaoMap();
-            final Map<String, NutsHeap> heapMap = taggedSettings.getNutsHeapMap(daoMap, filterMap);
+            final Map<String, NutFilter> filterMap = taggedSettings.getFilterMap(profiles);
+            final Map<String, NutDao> daoMap = taggedSettings.getNutDaoMap(profiles);
+            final Map<String, NutsHeap> heapMap = taggedSettings.getNutsHeapMap(daoMap, filterMap, profiles);
             final Map<String, Workflow> workflowMap =
-                    taggedSettings.getWorkflowMap(configureDefault, daoMap, heapMap, engineBuilderFactory.knownTypes());
+                    taggedSettings.getWorkflowMap(configureDefault, daoMap, heapMap, engineBuilderFactory.knownTypes(), profiles);
 
             return new Context(this, workflowMap, taggedSettings.getInspectors());
         } catch (IOException ioe) {

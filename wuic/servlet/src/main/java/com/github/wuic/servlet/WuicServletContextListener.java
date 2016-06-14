@@ -269,29 +269,7 @@ public class WuicServletContextListener implements ServletContextListener {
                 .objectBuilderInspector(new WebappNutDaoBuilderInspector(sc))
                 .classpathResourceResolver(classpathResourceResolver);
 
-        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void apply(final URL consumed) {
-                builder.wuicConfigurationPath(consumed);
-            }
-        }, "wuic.xml", "wuic.json");
-
-        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void apply(final URL consumed) {
-                builder.wuicPropertiesPath(consumed);
-            }
-        }, "wuic.properties");
-
-        detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
+        UrlUtils.detectInClassesLocation(classpathResourceResolver, new Consumer<URL>() {
 
             /**
              * {@inheritDoc}
@@ -301,6 +279,7 @@ public class WuicServletContextListener implements ServletContextListener {
                 installBuildInfo(consumed, builder, classpathResourceResolver);
             }
         }, WuicTask.BUILD_INFO_FILE);
+
         sc.setAttribute(ApplicationConfig.WEB_WUIC_FACADE_BUILDER, builder);
     }
 
@@ -378,32 +357,6 @@ public class WuicServletContextListener implements ServletContextListener {
                 log.warn("ServletRegistration {} should be an instance of Dynamic.", registration.getClassName());
                 log.warn("If {} has the async-supported flag turned on, make sure the targeted servlet is in the same state.",
                         filterRegistration.getClassName());
-            }
-        }
-    }
-
-    /**
-     * <p>
-     * Detects the given files in the "/WEB-INF/classes" directory and install them thanks to the given callback.
-     * </p>
-     *
-     * @param classpathResourceResolver the resolver giving access to base directory
-     * @param files file to test
-     * @param callback the callback that install the file
-     */
-    private void detectInClassesLocation(final ClassPathResourceResolver classpathResourceResolver,
-                                         final Consumer<URL> callback,
-                                         final String ... files) {
-        for (final String file : files) {
-            try {
-                final URL classesPath = classpathResourceResolver.getResource(file);
-
-                if (classesPath != null) {
-                    log.info("Installing '{}' located in {}", file, classesPath.toString());
-                    callback.apply(classesPath);
-                }
-            } catch (MalformedURLException mue) {
-                log.error("Unexpected exception", mue);
             }
         }
     }
@@ -505,7 +458,7 @@ public class WuicServletContextListener implements ServletContextListener {
          */
         @Override
         public URL getResource(final String resourcePath) throws MalformedURLException {
-            final URL retval = getClass().getResource(resourcePath);
+            final URL retval = getClass().getResource("/" + resourcePath);
 
             return retval == null ? servletContext.getResource("/WEB-INF/classes/" + resourcePath) : retval;
         }
@@ -515,7 +468,7 @@ public class WuicServletContextListener implements ServletContextListener {
          */
         @Override
         public InputStream getResourceAsStream(final String resourcePath) {
-            final InputStream retval = getClass().getResourceAsStream(resourcePath);
+            final InputStream retval = getClass().getResourceAsStream("/" + resourcePath);
 
             return retval == null ? servletContext.getResourceAsStream("/WEB-INF/classes/" + resourcePath) : retval;
         }

@@ -39,6 +39,7 @@
 package com.github.wuic.context;
 
 import com.github.wuic.ProcessContext;
+import com.github.wuic.Profile;
 import com.github.wuic.util.PollingScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,11 @@ import java.util.Set;
  *
  * <p>
  * This class is abstract and should be extended to configure in a specific way the {@link ContextBuilder}.
+ * </p>
+ *
+ * <p>
+ * If the subclass is annotated with {@link com.github.wuic.Profile}, the tags are automatically applied with the declared
+ * values.
  * </p>
  *
  * @author Guillaume DROUET
@@ -89,15 +95,9 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
     private Boolean multipleConfigurations;
 
     /**
-     * <p>
-     * Sets the flag allowing or not multiple configurations.
-     * </p>
-     *
-     * @param flag the new value
+     * The profiles declared in {@link com.github.wuic.Profile} annotation.
      */
-    public void setMultipleConfigurations(final Boolean flag) {
-        multipleConfigurations = flag;
-    }
+    private String[] profiles;
 
     /**
      * <p>
@@ -117,12 +117,28 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
      * @param multiple {@code true} if multiple configurations with the same tag could be executed, {@code false} otherwise
      */
     protected ContextBuilderConfigurator(final Boolean multiple) {
-       multipleConfigurations = multiple;
+        multipleConfigurations = multiple;
+
+        if (getClass().isAnnotationPresent(Profile.class)) {
+            profiles = getClass().getAnnotation(Profile.class).value();
+        }
+    }
+
+    /**
+     * <p>
+     * Sets the flag allowing or not multiple configurations.
+     * </p>
+     *
+     * @param flag the new value
+     */
+    public void setMultipleConfigurations(final Boolean flag) {
+        multipleConfigurations = flag;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run() {
         if (pollingContextBuilder != null) {
             try {
@@ -140,6 +156,23 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
             }
         } else {
             log.warn("Polling interval is set to {} seconds but no context builder is polled", getPollingInterval());
+        }
+    }
+
+    /**
+     * <p>
+     * Tags the given {@link ContextBuilder} with the value returned by {@link #getTag()} and any profiles declared
+     * in the {@link Profile} annotation of this class.
+     * </p>
+     *
+     * @param ctxBuilder the builder
+     */
+    public final void tag(final ContextBuilder ctxBuilder) {
+        if (profiles == null) {
+            ctxBuilder.tag(getTag());
+        } else {
+            // profiles restriction
+            ctxBuilder.tag(getTag(), profiles);
         }
     }
 
@@ -165,7 +198,9 @@ public abstract class ContextBuilderConfigurator extends PollingScheduler<Contex
 
         try {
             ctxBuilder.clearTag(getTag());
-            ctxBuilder.tag(getTag()).processContext(getProcessContext());
+            tag(ctxBuilder);
+
+            ctxBuilder.processContext(getProcessContext());
 
             // Update polling
             final int polling = internalConfigure(ctxBuilder);

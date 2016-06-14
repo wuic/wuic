@@ -40,6 +40,7 @@ package com.github.wuic.test.ctx;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.Profile;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
@@ -60,6 +61,7 @@ import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.GzipEngine;
 import com.github.wuic.engine.core.TextAggregatorEngine;
+import com.github.wuic.exception.DuplicatedRegistrationException;
 import com.github.wuic.exception.NutNotFoundException;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WorkflowTemplateNotFoundException;
@@ -78,7 +80,10 @@ import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -127,6 +132,18 @@ public class ContextBuilderTest {
     private static ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory;
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
+     * Exception rule.
+     */
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    /**
      * Create some mocked object.
      */
     @BeforeClass
@@ -141,7 +158,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void nominalTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -167,7 +184,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void processContextTest() throws Exception {
         final ProcessContext processContext = new ProcessContext();
 
@@ -192,7 +209,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 60000)
+    @Test
     public void mergeTest() throws Exception {
         final ContextBuilder a = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("a")
@@ -243,7 +260,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void objectInterceptorTest() throws Exception {
         @EngineService(injectDefaultToWorkflow = false)
         class E extends NodeEngine {
@@ -312,10 +329,49 @@ public class ContextBuilderTest {
 
     /**
      * <p>
+     * Tests that inspector is called only when a profile is enabled.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void profileObjectBuilderInspectorTest() throws IOException, WuicException {
+        final P p = new P();
+        final P2 p2 = new P2();
+        final ContextBuilder b = new ContextBuilder(p, p2).configureDefault();
+        b.build();
+        Assert.assertEquals(0, p.call);
+        Assert.assertEquals(0, p2.call);
+        b.enableProfile("profile").build();
+        Assert.assertNotEquals(0, p.call);
+        Assert.assertNotEquals(0, p2.call);
+    }
+
+    /**
+     * <p>
+     * Tests that configurator is called only when a profile is enabled.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void profileContextBuilderConfigurator() throws IOException, WuicException {
+        final Cfg cfg = new Cfg();
+        final ContextBuilder builder = new ContextBuilder();
+        builder.configure(cfg);
+        Assert.assertEquals(0, builder.build().workflowIds().size());
+        builder.enableProfile("profile");
+        Assert.assertNotEquals(0, builder.build().workflowIds().size());
+    }
+
+    /**
+     * <p>
      * Tests that inspector is called only for specified classes.
      * </p>
      */
-    @Test(timeout = 60000)
+    @Test
     public void perClassObjectBuilderInspectorTest() {
         final Class[] clazz = new Class[] {Foo.class, Bar.class, Baz.class, };
         final ObjectBuilderFactory<? extends C> c = new ObjectBuilderFactory<Foo>(NutFilterService.class, clazz);
@@ -343,7 +399,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void contextInterceptorTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(4);
         final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>();
@@ -409,7 +465,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void withoutDefaultEnginesTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -432,7 +488,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void withFilterTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -458,7 +514,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void overrideDefaultEnginesTest() throws Exception {
         // Typical use: no exception should be thrown
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).configureDefault();
@@ -481,7 +537,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void regexTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -530,7 +586,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void implicitWorkflowTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -556,7 +612,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void emptyChainTest() throws Exception {
         // Typical use: no exception should be thrown
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -577,7 +633,7 @@ public class ContextBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void upToDateTest() throws WuicException {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory);
         final Context context = builder.build();
@@ -592,7 +648,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void withStoreTest() throws Exception {
         try {
             new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
@@ -629,7 +685,7 @@ public class ContextBuilderTest {
      * Test settings erasure.
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void testClearTag() throws Exception {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .tag("test")
@@ -670,7 +726,7 @@ public class ContextBuilderTest {
     /**
      * Test when a builder is used without any tag.
      */
-    @Test(timeout = 60000)
+    @Test
     public void unTaggedUsageTest() {
         try {
             new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory).contextNutDaoBuilder("dao", "MockDaoBuilder").toContext();
@@ -684,7 +740,7 @@ public class ContextBuilderTest {
      *
      * @throws InterruptedException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void concurrentTest() throws InterruptedException {
         final ContextBuilder builder = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory);
         final int threadNumber = 2000;
@@ -776,7 +832,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void proxyTest() throws Exception {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getInitialName()).thenReturn("nut.js");
@@ -821,7 +877,7 @@ public class ContextBuilderTest {
      * @throws IOException if test fails
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void conventionTest() throws IOException, WuicException {
         final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
@@ -901,16 +957,12 @@ public class ContextBuilderTest {
         final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
             @Override
             public int internalConfigure(ContextBuilder ctxBuilder) {
-                try {
-                    ctxBuilder.heap("heap", null, new String[]{"images/template-img.png"}, new HeapListener() {
-                        @Override
-                        public void nutUpdated(NutsHeap heap) {
-                            count.incrementAndGet();
-                        }
-                    });
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
+                ctxBuilder.heap("heap", null, new String[]{"images/template-img.png"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
+                });
                 return -1;
             }
         };
@@ -918,16 +970,12 @@ public class ContextBuilderTest {
         final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
             @Override
             public int internalConfigure(ContextBuilder ctxBuilder) {
-                try {
-                    ctxBuilder.heap(false, "heap2", null, new String[]{"heap"}, new String[]{"images/template-img.png"}, new HeapListener() {
-                        @Override
-                        public void nutUpdated(NutsHeap heap) {
-                            count.incrementAndGet();
-                        }
-                    });
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
+                ctxBuilder.heap(false, "heap2", null, new String[]{"heap"}, new String[]{"images/template-img.png"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
+                });
                 return -1;
             }
         };
@@ -976,18 +1024,15 @@ public class ContextBuilderTest {
         final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
             @Override
             public int internalConfigure(ContextBuilder ctxBuilder) {
-                try {
-                    ctxBuilder.heap("heap",
-                            ContextBuilder.getDefaultBuilderId(MockDao.class),
-                            new String[]{"foo.js"}, new HeapListener() {
-                        @Override
-                        public void nutUpdated(NutsHeap heap) {
-                            count.incrementAndGet();
-                        }
+                ctxBuilder.heap("heap",
+                        ContextBuilder.getDefaultBuilderId(MockDao.class),
+                        new String[]{"foo.js"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
                     });
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
+
                 return -1;
             }
         };
@@ -1096,18 +1141,14 @@ public class ContextBuilderTest {
             public int internalConfigure(ContextBuilder ctxBuilder) {
                 ctxBuilder.contextNutDaoBuilder("dao2", MockDao.class).proxyPathForDao("/", "dao1").toContext();
 
-                try {
-                    ctxBuilder.heap("heap",
-                            "dao2",
-                            new String[]{"foo.js"}, new HeapListener() {
-                        @Override
-                        public void nutUpdated(NutsHeap heap) {
-                            count.incrementAndGet();
-                        }
+                ctxBuilder.heap("heap",
+                        "dao2",
+                        new String[]{"foo.js"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
                     });
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
                 return -1;
             }
         };
@@ -1141,18 +1182,14 @@ public class ContextBuilderTest {
             public int internalConfigure(ContextBuilder ctxBuilder) {
                 ctxBuilder.contextNutDaoBuilder("dao1", MockDao.class).toContext();
 
-                try {
-                    ctxBuilder.heap("heap",
-                            "dao2",
-                            new String[]{"foo.js"}, new HeapListener() {
-                        @Override
-                        public void nutUpdated(NutsHeap heap) {
-                            count.incrementAndGet();
-                        }
-                    });
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
+                ctxBuilder.heap("heap",
+                        "dao2",
+                        new String[]{"foo.js"}, new HeapListener() {
+                    @Override
+                    public void nutUpdated(NutsHeap heap) {
+                        count.incrementAndGet();
+                    }
+                });
 
                 return -1;
             }
@@ -1206,6 +1243,202 @@ public class ContextBuilderTest {
         //Assert.assertTrue(e.getCalls(), e.getCalls().contains("child"));
         Assert.assertTrue(e.getCalls(), !e.getCalls().contains("parent"));
     }
+
+    /**
+     * <p>
+     * Tests duplication detection for heap registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateHeapRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter).configureDefault();
+        builder.tag(getClass())
+                .contextEngineBuilder(TextAggregatorEngine.class).toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo").heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"}).releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests duplication detection for engine registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateEngineRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter).configureDefault();
+        builder.tag(getClass())
+                .contextEngineBuilder(TextAggregatorEngine.class).toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo").contextEngineBuilder(TextAggregatorEngine.class).toContext().releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests duplication detection for DAO registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateDaoRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter);
+        builder.tag(getClass())
+                .contextNutDaoBuilder(MockDao.class).toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo").contextNutDaoBuilder(MockDao.class).toContext().releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests duplication detection for filter registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateFilterRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter);
+        builder.tag(getClass())
+                .contextNutDaoBuilder(MockDao.class).toContext()
+                .contextNutFilterBuilder("filter", RegexRemoveNutFilter.class).toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo").contextNutFilterBuilder("filter", RegexRemoveNutFilter.class).toContext().releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests duplication detection for template registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateTemplateRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter).configureDefault();
+        builder.tag(getClass())
+                .contextNutDaoBuilder(MockDao.class).toContext()
+                .template("tpl", new String[]{ContextBuilder.getDefaultBuilderId(TextAggregatorEngine.class)})
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo")
+                .template("tpl", new String[] { ContextBuilder.getDefaultBuilderId(TextAggregatorEngine.class) })
+                .workflow("wf", true, "heap", "tpl")
+                .releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests duplication detection for workflow registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testDuplicateWorkflowRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter).configureDefault();
+        builder.tag(getClass())
+                .contextNutDaoBuilder(MockDao.class).toContext()
+                .workflow("wf", true, "heap", "tpl")
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo")
+                .template("tpl", new String[] { ContextBuilder.getDefaultBuilderId(TextAggregatorEngine.class) })
+                .workflow("wf", true, "heap", "tpl")
+                .releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
+
+    /**
+     * <p>
+     * Tests implicit duplication detection for workflow registration.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void testImplicitDuplicateWorkflowRegistration() throws IOException, WuicException {
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
+        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
+
+        final ContextBuilder builder = new ContextBuilder(engine, dao, filter).configureDefault();
+        builder.tag(getClass())
+                .contextNutDaoBuilder(MockDao.class).toContext()
+                .workflow("wf", true, "heap", "tpl")
+                .heap("heap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .heap("duplicatedheap", ContextBuilder.getDefaultBuilderId(MockDao.class), new String[]{"foo.js"})
+                .releaseTag();
+        builder.tag(getClass(), "foo")
+                .template("tpl", new String[] { ContextBuilder.getDefaultBuilderId(TextAggregatorEngine.class) })
+                .workflow("duplicated", true, "heap", "tpl")
+                .releaseTag();
+
+        builder.build();
+        exception.expect(DuplicatedRegistrationException.class);
+        builder.enableProfile("foo").build();
+    }
 }
 
 /**
@@ -1219,6 +1452,50 @@ interface C {
  */
 class I implements ObjectBuilderInspector {
 
+    /**
+     * Number of calls.
+     */
+    int call;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T inspect(final T object) {
+        call++;
+        return object;
+    }
+}
+
+/**
+ * Used in {@link ContextBuilderTest#profileObjectBuilderInspectorTest()}.
+ */
+@Profile("profile")
+@ObjectBuilderInspector.InspectedType(RegexRemoveNutFilter.class)
+class P2 implements ObjectBuilderInspector {
+
+    /**
+     * Number of calls.
+     */
+    int call;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T inspect(final T object) {
+        call++;
+        return object;
+    }
+}
+
+/**
+ * Used in {@link ContextBuilderTest#profileObjectBuilderInspectorTest()}.
+ */
+// tag::ObiProfile[]
+@Profile("profile")
+class P implements ObjectBuilderInspector {
+// end::ObiProfile[]
     /**
      * Number of calls.
      */
@@ -1251,8 +1528,23 @@ class InspectBarAndBaz extends I {
 }
 
 /**
- * Used in {@link ContextBuilderTest#perClassObjectBuilderInspectorTest()}.
+ * Used in {@link ContextBuilderTest#profileContextBuilderConfigurator()}.
  */
 @ObjectBuilderInspector.InspectedType(Baz.class)
 class InspectBaz extends I {
+}
+
+// tag::CbcProfile[]
+@Profile("profile")
+class Cfg extends SimpleContextBuilderConfigurator {
+// end::ObiProfile[]
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int internalConfigure(final ContextBuilder contextBuilder) {
+        contextBuilder.contextNutDaoBuilder(ClasspathNutDao.class).property(ApplicationConfig.WILDCARD, true).toContext()
+                .heap("heap", ContextBuilder.getDefaultBuilderId(ClasspathNutDao.class), new String[]{"cgsg/*.js"});
+        return -1;
+    }
 }

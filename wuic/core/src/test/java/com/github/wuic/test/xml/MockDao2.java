@@ -39,70 +39,113 @@
 package com.github.wuic.test.xml;
 
 import com.github.wuic.NutType;
+import com.github.wuic.ProcessContext;
 import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
-import org.mockito.Mockito;
+import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.FutureLong;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
  * <p>
- * Mocked engine builder.
+ * Mocked DAO builder.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-@EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
+@NutDaoService
+public class MockDao2 extends MockDao {
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
-     *
-     * @param foo custom property
      */
     @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
+    public MockDao2() {
+        super("", "", "baz");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
+    public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
+        final String p = path.equals("baz.css") ? path : "/foo/foo.css";
+        final ConvertibleNut nut = mock(ConvertibleNut.class);
+        when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+        when(nut.getNutType()).thenReturn(NutType.CSS);
+        when(nut.getName()).thenReturn(p);
+        when(nut.getInitialName()).thenReturn(p);
+        final List<Nut> nuts = new ArrayList<Nut>();
+        nuts.add(nut);
+        when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        return nuts;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
+    public String proxyUriFor(final Nut nut) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
+    public void save(final Nut nut) {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
+    public Boolean saveSupported() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void shutdown() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NutDao withRootPath(final String rootPath) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
+        return null;
     }
 }

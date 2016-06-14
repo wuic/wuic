@@ -36,73 +36,28 @@
  */
 
 
-package com.github.wuic.test.xml;
+package com.github.wuic.config.bean.json;
 
-import com.github.wuic.NutType;
-import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ConvertibleNut;
-import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * <p>
- * Mocked engine builder.
+ * This factory produces {@link StringArrayAdapter}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.3
  */
-@EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param foo custom property
-     */
-    @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
-    }
+public class StringArrayAdapterFactory implements TypeAdapterFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean works() {
-        return true;
+    public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
+        return (TypeAdapter<T>) new StringArrayAdapter(gson);
     }
 }

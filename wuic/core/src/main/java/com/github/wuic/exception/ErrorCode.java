@@ -116,6 +116,11 @@ public interface ErrorCode {
     long WORKFLOW_IDENTIFIER = 19860606206L;
 
     /**
+     * Indicates that different registrations have been found for the same ID/profiles pairs.
+     */
+    long DUPLICATE_REGISTRATION = 19860606207L;
+
+    /**
      * <p>
      * Gets the message related to the error code.
      * </p>
