@@ -125,8 +125,10 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
         for (final ConvertibleNut nut : retval) {
             nut.setProxyUri(request.getHeap().proxyUriFor(nut));
 
-            for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
-                nut.addTransformer(t);
+            if (works()) {
+                for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
+                    nut.addTransformer(t);
+                }
             }
         }
 
