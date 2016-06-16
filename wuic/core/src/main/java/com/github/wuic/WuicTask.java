@@ -66,6 +66,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -133,6 +134,11 @@ public class WuicTask {
     private String profiles;
 
     /**
+     * Pattern matching file names to moved to the top directory.
+     */
+    private Pattern moveToTopDirPattern;
+
+    /**
      * <p>
      * Builds a new instance. {@link #relocateTransformedXml} is {@code null} and default {@link #contextPath} is '/'.
      * </p>
@@ -141,35 +147,6 @@ public class WuicTask {
         this.relocateTransformedXmlTo = null;
         this.contextPath = "/";
         this.charset = "UTF-8";
-    }
-
-    /**
-     * <p>
-     * Builds a new instance.
-     * </p>
-     *
-     * @param xml  the XML file path
-     * @param relocateTransformedXml add to the output location the transformed XML
-     * @param output the output location
-     * @param contextPath the context path
-     * @param props the properties path
-     * @param charset the charset
-     * @param profiles the profile to enable
-     */
-    public WuicTask(final String xml,
-                    final String relocateTransformedXml,
-                    final String output,
-                    final String contextPath,
-                    final String props,
-                    final String charset,
-                    final String profiles) {
-        this.xml = xml;
-        this.relocateTransformedXmlTo = relocateTransformedXml;
-        this.output = output;
-        this.contextPath = contextPath;
-        this.properties = props;
-        this.charset = charset;
-        this.profiles = profiles;
     }
 
     /**
@@ -391,7 +368,14 @@ public class WuicTask {
             workflowWriter.println(String.format("%s %s", path, nut.getInitialNutType().getExtensions()[0]));
         }
 
-        final File file = new File(output, IOUtils.mergePath(wId, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()));
+        final File file;
+
+        // Keep the file in the top directory
+        if (moveToTopDirPattern != null && moveToTopDirPattern.matcher(nut.getInitialName()).matches()) {
+            file = new File(output, nut.getName());
+        } else {
+            file = new File(output, IOUtils.mergePath(wId, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()));
+        }
 
         // Create if not exist
         if (file.getParentFile() != null && file.getParentFile().mkdirs()) {
@@ -474,5 +458,29 @@ public class WuicTask {
      */
     public void setCharset(final String charset) {
         this.charset = charset;
+    }
+
+    /**
+     * <p>
+     * Sets the profiles.
+     * </p>
+     *
+     * @param profiles the profiles
+     */
+    public void setProfiles(final String profiles) {
+        this.profiles = profiles;
+    }
+
+    /**
+     * <p>
+     * Sets the pattern matching name of files to be moved to the top.
+     * </p>
+     *
+     * @param moveToTopDirPattern the pattern
+     */
+    public void setMoveToTopDirPattern(final String moveToTopDirPattern) {
+        if (moveToTopDirPattern != null) {
+            this.moveToTopDirPattern = Pattern.compile(moveToTopDirPattern);
+        }
     }
 }
