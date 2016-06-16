@@ -73,7 +73,7 @@ import java.util.regex.Pattern;
  * This class executes WUIC as a task for build time processing. It basically takes 'wuic.xml' path and run all
  * configured workflow. All results can be copied to a specific directory in order to bundle them in a package.
  * </p>
- * <p/>
+ *
  * <p>
  * This class can be integrated with ant as a custom task since it respects its name conventions.
  * </p>
@@ -228,6 +228,25 @@ public class WuicTask {
 
     /**
      * <p>
+     * Indicates if the name matches the file to be located on top of output directory.
+     * A special case is supported for files ending with {@code .appcache}: if the name without that prefix matches the
+     * {@link #moveToTopDirPattern}, then it's also moved.
+     * </p>
+     *
+     * @param name the name
+     * @return {@code true} if pattern matches, {@code false} otherwise
+     */
+    private boolean locateOnTop(final String name) {
+        if (moveToTopDirPattern == null) {
+            return false;
+        }
+
+        final int appCacheIndex = name.indexOf(".appcache");
+        return moveToTopDirPattern.matcher(appCacheIndex != -1 ? name.substring(0, appCacheIndex) : name).matches();
+    }
+
+    /**
+     * <p>
      * Executes the task. The method is named with ANT task naming conventions to be integrated with ANT.
      * </p>
      *
@@ -371,7 +390,7 @@ public class WuicTask {
         final File file;
 
         // Keep the file in the top directory
-        if (moveToTopDirPattern != null && moveToTopDirPattern.matcher(nut.getInitialName()).matches()) {
+        if (locateOnTop(nut.getInitialName())) {
             file = new File(output, nut.getName());
         } else {
             file = new File(output, IOUtils.mergePath(wId, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()));
