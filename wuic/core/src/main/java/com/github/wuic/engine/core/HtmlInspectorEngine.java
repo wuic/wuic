@@ -615,6 +615,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         /**
          * <p>
          * Simplifies the result of concatenation between the two given strings and make sure the result if valid.
+         * The right side will be simply returned if it starts with "/" because it means it's an absolute URL that is
+         * not relative to the root path.
          * </p>
          *
          * @param rootPath the left side
@@ -622,6 +624,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @return both sides concatenated and sanitized
          */
         private String sanitize(final String rootPath, final String path) {
+            if (path.startsWith("/")) {
+                return path;
+            }
+
             final String simplify = rootPath.isEmpty() ? path : IOUtils.mergePath(rootPath, path);
             final String simplified = StringUtils.simplifyPathWithDoubleDot(simplify);
 
