@@ -177,7 +177,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             // A workflow have been created for each heap
             for (final HtmlInspectorEngine.ParseInfo parseInfo : parseInfoList) {
                 // Perform replacement
-                final String replacement = parseInfo.replacement(request, urlProvider, referenced);
+                final String replacement = parseInfo.replacement(request, urlProvider, referenced, convertible);
                 end = replace(transform, replacement, parseInfo.getCapturedStatements(), end);
                 this.replacements.put(replacement, parseInfo.getCapturedStatements());
             }

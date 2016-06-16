@@ -38,11 +38,14 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.nut.dao.NutDaoWrapper;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
@@ -189,10 +192,45 @@ public abstract class LineInspector {
             name = cis.nutAt(position).getName();
         }
 
-        final int lastIndexOfSlash = name.lastIndexOf('/') + 1;
-        final String nutLocation = lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
-        heap.setNutDao(request.getHeap().withRootPath(nutLocation, originalNut), originalNut);
+        final String nutLocation = extractLocation(name);
+        final ConvertibleNut origin = request.getOrigin();
+
+        if (origin == null) {
+            heap.setNutDao(request.getHeap().withRootPath(nutLocation, originalNut), originalNut);
+        } else {
+            request.getHeap().addCreate(origin.getInitialName(), origin.getInitialName());
+            final NutDao originDao = request.getHeap().withRootPath(extractLocation(request.getOrigin().getInitialName()), origin);
+
+            // If the origin is not null, we try to create nuts with its base path if nothing has been detected with the original nut's path
+            heap.setNutDao(new NutDaoWrapper(request.getHeap().withRootPath(nutLocation, originalNut)) {
+                @Override
+                public List<Nut> create(final String path, final ProcessContext processContext) throws IOException {
+                    final List<Nut> res = super.create(path, processContext);
+                    return res.isEmpty() ? originDao.create(path, processContext) : res;
+                }
+
+                @Override
+                public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
+                    final List<Nut> res = super.create(path, format, processContext);
+                    return res.isEmpty() ? originDao.create(path, format, processContext) : res;
+                }
+            }, originalNut);
+        }
+
         return heap;
+    }
+
+    /**
+     * <p>
+     * Extracts the location path from the given name.
+     * </p>
+     *
+     * @param name the name
+     * @return the location path
+     */
+    private static String extractLocation(final String name) {
+        final int lastIndexOfSlash = name.lastIndexOf('/') + 1;
+        return lastIndexOfSlash == 0 ? "" : name.substring(0, lastIndexOfSlash);
     }
 
     /**

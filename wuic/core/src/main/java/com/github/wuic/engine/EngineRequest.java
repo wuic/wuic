@@ -319,6 +319,17 @@ public final class EngineRequest {
 
     /**
      * <p>
+     * Gets the nut who originally created this request.
+     * </p>
+     *
+     * @return the origin, {@code null} if the request has not been created by a nut
+     */
+    public ConvertibleNut getOrigin() {
+        return getBuilder().getOrigin();
+    }
+
+    /**
+     * <p>
      * Returns the line separator.
      * </p>
      *

@@ -42,6 +42,7 @@ import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
+import com.github.wuic.nut.dao.NutDaoWrapper;
 import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
@@ -60,12 +61,7 @@ import java.util.Map;
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public class ProxyNutDao implements NutDao {
-
-    /**
-     * The delegated DAO.
-     */
-    private NutDao delegate;
+public class ProxyNutDao extends NutDaoWrapper implements NutDao {
 
     /**
      * All mapped path to corresponding nut.
@@ -91,7 +87,7 @@ public class ProxyNutDao implements NutDao {
      * @param delegate the delegated DAO
      */
     public ProxyNutDao(final String rootPath, final NutDao delegate) {
-        this.delegate = delegate;
+        super(delegate);
         this.proxyNut = new HashMap<String, Nut>();
         this.proxyNutDao = new HashMap<String, NutDao>();
         this.rootPath = rootPath;
@@ -131,7 +127,7 @@ public class ProxyNutDao implements NutDao {
      */
     public NutDao getNutDao(final String path) {
         final NutDao dao = proxyNutDao.get(path);
-        return (dao == null) ? delegate : dao;
+        return (dao == null) ? getNutDao() : dao;
     }
 
     /**
@@ -182,52 +178,12 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public String proxyUriFor(final Nut nut) {
-        return delegate.proxyUriFor(nut);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void save(final Nut nut) {
-        delegate.save(nut);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        return delegate.saveSupported();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void shutdown() {
-        delegate.shutdown();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NutDao withRootPath(final String rootPath) {
-        return delegate.withRootPath(rootPath);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
         final Nut nut = proxyNut.get(path);
 
         // Path not mapped, call delegate
         if (nut == null) {
-            return delegate.newInputStream(path, processContext);
+            return super.newInputStream(path, processContext);
         } else {
             return nut.openStream();
         }
@@ -237,18 +193,10 @@ public class ProxyNutDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
-        return delegate.exists(path, processContext);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         return IOUtils.NEW_LINE
                 + "Delegate: "
-                + delegate
+                + getNutDao()
                 + IOUtils.NEW_LINE
                 + "Proxy DAO: "
                 + Arrays.deepToString(proxyNutDao.keySet().toArray())

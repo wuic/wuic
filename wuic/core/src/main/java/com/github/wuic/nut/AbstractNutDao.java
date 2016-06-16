@@ -47,6 +47,7 @@ import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
+import com.github.wuic.nut.dao.NutDaoWrapper;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
@@ -478,7 +479,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * @author Guillaume DROUET
      * @since 0.4.1
      */
-    public final class WithRootPathNutDao implements NutDao {
+    public final class WithRootPathNutDao extends NutDaoWrapper implements NutDao {
 
         /**
          * Root path.
@@ -493,6 +494,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * @param rp the root path.
          */
         private WithRootPathNutDao(final String rp) {
+            super(AbstractNutDao.this);
             rootPath = rp;
         }
 
@@ -505,14 +507,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          */
         public String getRootPath() {
             return rootPath;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void observe(final String realPath, final NutDaoListener... listeners) throws IOException {
-            AbstractNutDao.this.observe(realPath, listeners);
         }
 
         /**
@@ -535,56 +529,8 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
          * {@inheritDoc}
          */
         @Override
-        public String proxyUriFor(final Nut nut) {
-            return AbstractNutDao.this.proxyUriFor(nut);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void save(final Nut nut) {
-            AbstractNutDao.this.save(nut);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Boolean saveSupported() {
-            return AbstractNutDao.this.saveSupported();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void shutdown() {
-            AbstractNutDao.this.shutdown();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public NutDao withRootPath(final String rp) {
             return new WithRootPathNutDao(IOUtils.mergePath(rootPath, rp));
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
-            return AbstractNutDao.this.newInputStream(path, processContext);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
-            return AbstractNutDao.this.exists(path, processContext);
         }
     }
 

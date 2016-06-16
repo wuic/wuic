@@ -143,6 +143,11 @@ public final class EngineRequestBuilder {
     private String lineSeparator;
 
     /**
+     * The nut that has created this builder.
+     */
+    private ConvertibleNut origin;
+
+    /**
      * The context that created this builder.
      */
     private final Context context;
@@ -191,6 +196,7 @@ public final class EngineRequestBuilder {
         staticsServedByWuicServlet = other.staticsServedByWuicServlet;
         charset = other.charset;
         lineSeparator = other.lineSeparator;
+        origin = other.origin;
     }
 
     /**
@@ -415,6 +421,18 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
+     * Sets the nut which created this builder.
+     * </p>
+     *
+     * @param origin the origin
+     */
+    public EngineRequestBuilder origin(final ConvertibleNut origin) {
+        this.origin = origin;
+        return this;
+    }
+
+    /**
+     * <p>
      * Builds a bew instance. Default state is applied here if some attributes have not been initialized.
      * </p>
      *
@@ -556,6 +574,17 @@ public final class EngineRequestBuilder {
      */
     public ProcessContext getProcessContext() {
         return processContext;
+    }
+
+    /**
+     * <p>
+     * Gets the nut which created this builder.
+     * </p>
+     *
+     * @return the origin, {@code null} if the builder has not been created by a nut
+     */
+    public ConvertibleNut getOrigin() {
+        return origin;
     }
 
     /**

@@ -797,10 +797,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param request the request
          * @param urlProvider object that computes URL
          * @param referenced any nut created nut will be added to this list
+         * @param convertibleNut the convertible nut
          * @return the replacement {@code String}
          * @throws IOException if any I/O error occurs
          */
-        public String replacement(final EngineRequest request, final UrlProvider urlProvider, final List<ConvertibleNut> referenced)
+        public String replacement(final EngineRequest request,
+                                  final UrlProvider urlProvider,
+                                  final List<ConvertibleNut> referenced,
+                                  final ConvertibleNut convertibleNut)
                 throws IOException {
             // Render HTML for workflow result
             final StringBuilder html = new StringBuilder();
@@ -809,6 +813,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     .heap(heap)
                     .excludeFromSprite(skipSprites)
                     .skip(request.alsoSkip(EngineType.CACHE))
+                    .origin(convertibleNut)
                     .build();
             final List<ConvertibleNut> merged;
 
