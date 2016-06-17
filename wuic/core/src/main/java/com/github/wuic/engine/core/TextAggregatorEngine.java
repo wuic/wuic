@@ -42,16 +42,21 @@ import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.LineInspector;
+import com.github.wuic.engine.LineInspectorListener;
+import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.CompositeNut;
@@ -120,10 +125,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      */
     @Override
     public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
-
-        // Erase all sourceMappingURL occurrences
-        final String content = IOUtils.readString(new InputStreamReader(is));
-        os.write(content.replaceAll(SourceMapLineInspector.SOURCE_MAPPING_PATTERN.pattern(), "").getBytes());
+        os.write(removeSourceMap(is, request, convertible));
 
         // We are able to compute the source map
         if (is instanceof CompositeNut.CompositeInputStream) {
@@ -223,5 +225,96 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 lastPosition.getLine(),
                 lastPosition.getColumn(),
                 convertibleNut);
+    }
+
+    /**
+     * <p>
+     * Removes from the given source map all the sourcemap comments.
+     * </p>
+     *
+     * @param is the stream to read
+     * @param request the request initiating this process
+     * @param convertible the nut to transform
+     * @return a byte array containing the content without sourcemap comments
+     * @throws IOException if any I/O error occurs
+     */
+    private byte[] removeSourceMap(final InputStream is, final EngineRequest request, final ConvertibleNut convertible)
+            throws IOException {
+        // First read the stream and collect the single line comment ranges
+        final CharArrayWriter charArrayWriter = new CharArrayWriter();
+        IOUtils.copyStreamToWriterIoe(is, charArrayWriter);
+        final char[] chars = charArrayWriter.toCharArray();
+
+        final List<LineInspector.IndexRange> ranges = new ArrayList<LineInspector.IndexRange>();
+
+        // This inspector just adds a range for each comment
+        final ScriptLineInspector lineInspector = new ScriptLineInspector(ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT) {
+            @Override
+            public Range doFind(final char[] buffer,
+                                final int offset,
+                                final int length,
+                                final EngineRequest request,
+                                final CompositeNut.CompositeInputStream cis,
+                                final ConvertibleNut originalNut) {
+                ranges.add(new IndexRange(offset, offset + length));
+                return new Range(Range.Delimiter.END_SINGLE_LINE_OF_COMMENT, offset, offset + length);
+            }
+
+            @Override
+            protected List<AppendedTransformation> appendTransformation(final char[] buffer, final int offset, final int length, final EngineRequest request, final CompositeNut.CompositeInputStream cis, final ConvertibleNut originalNut) throws WuicException {
+                return Collections.emptyList();
+            }
+
+            @Override
+            protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+                return null;
+            }
+        };
+
+        try {
+            // Perform range collection
+            lineInspector.inspect(new LineInspectorListener() {
+                @Override
+                public void onMatch(final char[] data,
+                                    final int offset,
+                                    final int length,
+                                    final String replacement,
+                                    final List<? extends ConvertibleNut> extracted)
+                        throws WuicException {
+                }
+            }, chars, request, null, convertible);
+        } catch (WuicException we) {
+            throw new IOException(we);
+        }
+
+        final StringBuilder builder = new StringBuilder();
+        int offset = 0;
+
+        // Erase all sourceMappingURL occurrences
+        for (final LineInspector.IndexRange indexRange : ranges) {
+            // Adds the content before the comment
+            builder.append(chars, offset, indexRange.getStart() - offset);
+
+            // Read the comment and extracts the sourcemaps
+            final String comment = new String(chars, indexRange.getStart(), indexRange.getEnd() - indexRange.getStart());
+            final Matcher matcher = SourceMapLineInspector.SOURCE_MAPPING_PATTERN.matcher(comment);
+            final StringBuffer replacement = new StringBuffer();
+
+            // Rewrite the comment without sourcemaps
+            while (matcher.find()) {
+                matcher.appendReplacement(replacement, "");
+            }
+
+            matcher.appendTail(replacement);
+            builder.append(replacement);
+            offset = indexRange.getEnd();
+        }
+
+        // Append tail
+        if (offset < chars.length - 1) {
+            builder.append(chars, offset, chars.length - 1);
+        }
+
+        return builder.toString().getBytes();
     }
 }

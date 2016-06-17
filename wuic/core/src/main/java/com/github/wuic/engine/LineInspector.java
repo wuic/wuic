@@ -464,13 +464,13 @@ public abstract class LineInspector {
 
     /**
      * <p>
-     * This class represents the metadata describing an appended transformation.
+     * This class represents an index range.
      * </p>
      *
      * @author Guillaume DROUET
      * @since 0.5.3
      */
-    public static class AppendedTransformation {
+    public static class IndexRange {
 
         /**
          * Start index of appended transformation.
@@ -483,30 +483,16 @@ public abstract class LineInspector {
         private final int end;
 
         /**
-         * the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change.
-         */
-        private final List<? extends ConvertibleNut> result;
-
-        /**
-         * The replacement for the given range of characters.
-         */
-        private final String replacement;
-
-        /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param start start index
-         * @param end end index
-         * @param result extracted nuts
-         * @param replacement the replacement for the given range of characters.
+         * @param start the beginning of the range
+         * @param end the end of the range
          */
-        public AppendedTransformation(final int start, final int end, final List<? extends ConvertibleNut> result, final String replacement) {
+        public IndexRange(final int start, final int end) {
             this.start = start;
             this.end = end;
-            this.result = result;
-            this.replacement = replacement;
         }
 
         /**
@@ -529,6 +515,44 @@ public abstract class LineInspector {
          */
         public int getEnd() {
             return end;
+        }
+    }
+
+
+    /**
+     * <p>
+     * This class represents the metadata describing an appended transformation.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class AppendedTransformation extends IndexRange {
+
+        /**
+         * the nut that was referenced in the matching text, {@code null} if the inspector did not perform any change.
+         */
+        private final List<? extends ConvertibleNut> result;
+
+        /**
+         * The replacement for the given range of characters.
+         */
+        private final String replacement;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param start start index
+         * @param end end index
+         * @param result extracted nuts
+         * @param replacement the replacement for the given range of characters.
+         */
+        public AppendedTransformation(final int start, final int end, final List<? extends ConvertibleNut> result, final String replacement) {
+            super(start, end);
+            this.result = result;
+            this.replacement = replacement;
         }
 
         /**
