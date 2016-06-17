@@ -561,7 +561,7 @@ public final class Pipe<T extends ConvertibleNut> {
     private Pipe<ConvertibleNut> transform(final ConvertibleNut nut, final CompositeNut.CompositeInputStream cis)
             throws IOException {
         final Pipe<ConvertibleNut> finalPipe;
-        final boolean hasTransformers = (convertible.getTransformers() != null & !convertible.getTransformers().isEmpty())
+        final boolean hasTransformers = (convertible.getTransformers() != null && !convertible.getTransformers().isEmpty())
                 || hasTransformers(cis.getCompositeNut().getCompositionList());
 
         // Collect transformer executed for each nut and group transformers for aggregated content
