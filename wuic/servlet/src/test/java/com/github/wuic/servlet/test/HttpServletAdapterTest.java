@@ -42,7 +42,9 @@ import com.github.wuic.servlet.HttpServletRequestAdapter;
 import com.github.wuic.servlet.HttpServletResponseAdapter;
 import com.github.wuic.util.CollectionUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -69,11 +71,17 @@ import java.util.Set;
 public class HttpServletAdapterTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests request adapter.
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void requestTest() throws Exception {
         testAdapter(HttpServletRequestAdapter.class, HttpServletRequest.class);
     }
@@ -83,7 +91,7 @@ public class HttpServletAdapterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void responseTest() throws Exception {
         testAdapter(HttpServletResponseAdapter.class, HttpServletResponse.class);
     }

@@ -47,7 +47,9 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -154,13 +156,19 @@ public class NutsHeapTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Tests when the first path level in an absolute nut name is a number, which is reserved for version number.
      * </p>
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void illegalAbsoluteNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("/000/hey.js", 1L);
@@ -174,7 +182,7 @@ public class NutsHeapTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void illegalRelativeNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("000/hey.js", 1L);
@@ -188,7 +196,7 @@ public class NutsHeapTest {
      *
      * @throws Exception is test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void notificationTest() throws Exception {
         final MockNutDao dao = new MockNutDao(1);
         dao.mockPaths.put("hey.js", 1L);
@@ -229,7 +237,7 @@ public class NutsHeapTest {
      *
      * @throws Exception is test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void notificationByCompositionTest() throws Exception {
         final MockNutDao firstDao = new MockNutDao(1);
         firstDao.mockPaths.put("1.js", 1L);
@@ -284,7 +292,7 @@ public class NutsHeapTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void notificationWithManyPatternPath() throws Exception {
         final Map<String, List<String>> patterns = new HashMap<String, List<String>>();
         patterns.put("a", Arrays.asList("a.js", "b.js"));
@@ -376,7 +384,7 @@ public class NutsHeapTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void badExtensionTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("hey.js", 1L);
@@ -389,7 +397,7 @@ public class NutsHeapTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void noPathTest() throws IOException {
         new NutsHeap(this, Arrays.asList(""), new MockNutDao(-1), "").checkFiles(ProcessContext.DEFAULT);
         Assert.fail();
@@ -402,7 +410,7 @@ public class NutsHeapTest {
      *
      * @throws Exception is test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void removesListenerTest() throws Exception {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("1.js", 1L);

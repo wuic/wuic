@@ -49,7 +49,9 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -74,11 +76,17 @@ import java.util.LinkedHashSet;
 public class CompositeNutTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Nominal test.
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void compositeTest() throws IOException {
         final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
         final ConvertibleNut n2 = newNut("n2", NutType.CSS, "some css rules");
@@ -92,7 +100,7 @@ public class CompositeNutTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void readCharOrByteTest() throws IOException {
         final int len = 4;
 
@@ -152,7 +160,7 @@ public class CompositeNutTest {
      *
      * @throws java.io.IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void aggregationTransformTest() throws IOException {
         final Pipe.Transformer<ConvertibleNut> t1 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override

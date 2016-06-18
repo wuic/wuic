@@ -44,7 +44,9 @@ import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -82,6 +84,12 @@ public class RequestDispatcherNutDaoTest {
      * The request.
      */
     private final AtomicReference<HttpServletRequest> capturedRequest = new AtomicReference<HttpServletRequest>();
+
+    /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>
@@ -132,7 +140,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void existsTest() throws Exception {
         Assert.assertTrue(dao.exists("foo.js", ProcessContext.DEFAULT));
         Assert.assertTrue(dao.exists("bar.js", ProcessContext.DEFAULT));
@@ -147,7 +155,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void resourceAsStreamTest() throws Exception {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         IOUtils.copyStream(dao.create("bar.js", ProcessContext.DEFAULT).get(0).openStream(), bos);
@@ -161,7 +169,7 @@ public class RequestDispatcherNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void processContextTest() throws Exception {
         final HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         dao.create("foo.js", new ServletProcessContext(req)).get(0).openStream();

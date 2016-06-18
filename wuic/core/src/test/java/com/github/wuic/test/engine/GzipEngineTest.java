@@ -49,7 +49,9 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -72,11 +74,17 @@ import java.util.List;
 public class GzipEngineTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests when GZIP is enabled.
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void enableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(true);
@@ -105,7 +113,7 @@ public class GzipEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void disableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(false);

@@ -53,7 +53,9 @@ import com.github.wuic.nut.dao.core.ProxyNutDao;
 
 import com.github.wuic.util.NutUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -71,11 +73,17 @@ import org.mockito.Mockito;
 public class NutUtilTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+    
+    /**
      * Tests for redirection performed by {@link ProxyNutDao}.
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void proxyTest() throws IOException {
         final NutDao delegate = Mockito.mock(NutDao.class);
         final Nut delegateNut = Mockito.mock(Nut.class);
@@ -110,7 +118,7 @@ public class NutUtilTest {
     /**
      * Tests source lookup.
      */
-    @Test(timeout = 60000)
+    @Test
     public void searchSourceTest() {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         final SourceMapNutImpl src = Mockito.mock(SourceMapNutImpl.class);

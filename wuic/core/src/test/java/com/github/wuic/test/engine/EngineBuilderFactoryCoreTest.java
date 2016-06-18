@@ -43,7 +43,9 @@ import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineService;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -72,9 +74,15 @@ public class EngineBuilderFactoryCoreTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Test for unknown builder.
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() {
         Assert.assertNull(engineObjectBuilderFactory.create("FooEngineBuilder"));
     }
@@ -82,7 +90,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for image compression.
      */
-    @Test(timeout = 60000)
+    @Test
     public void testCreateImageCompressorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("ImageCompressorEngineBuilder"));
     }
@@ -90,7 +98,7 @@ public class EngineBuilderFactoryCoreTest {
     /**
      * Test for CSS inspector.
      */
-    @Test(timeout = 60000)
+    @Test
     public void testCreateCssInspectorBuilder() {
         Assert.assertNotNull(engineObjectBuilderFactory.create("CssInspectorEngineBuilder"));
     }

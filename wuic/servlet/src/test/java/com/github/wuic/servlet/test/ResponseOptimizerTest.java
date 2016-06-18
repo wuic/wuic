@@ -43,7 +43,9 @@ import com.github.wuic.test.Server;
 import com.github.wuic.test.WuicRunnerConfiguration;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -68,13 +70,19 @@ public class ResponseOptimizerTest {
     public static com.github.wuic.test.Server server = new Server();
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Executes a basic HTTP request and checks the header.
      * </p>
      *
      * @throws java.io.IOException if any I/O error occurs
      */
-    @Test(timeout = 60000)
+    @Test
     public void expiresTest() throws IOException {
         Assert.assertNotNull(server.get("/index.html").getFirstHeader("Expires"));
     }

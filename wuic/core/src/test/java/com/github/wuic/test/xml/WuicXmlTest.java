@@ -56,6 +56,7 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -81,11 +82,17 @@ public class WuicXmlTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests a wuic.xml file referencing default DAO.
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void withPollingTest() throws Exception {
         // Add custom DAO and engine required
         final ObjectBuilderFactory<Engine> ebf = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class);

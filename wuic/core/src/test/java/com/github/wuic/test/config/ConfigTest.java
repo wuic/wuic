@@ -42,7 +42,9 @@ import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -61,6 +63,12 @@ public class ConfigTest {
     private static ObjectBuilderFactory<I> factory;
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Initializes the factory.
      */
     @BeforeClass
@@ -71,7 +79,7 @@ public class ConfigTest {
     /**
      * Tests a default build.
      */
-    @Test(timeout = 60000)
+    @Test
     public void builderDefaultValueTest() {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         final I i = b.build();
@@ -85,7 +93,7 @@ public class ConfigTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void builderSpecificValueTest() throws Exception {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("int", 2);
@@ -100,7 +108,7 @@ public class ConfigTest {
      *
      * @throws Exception if test succeed
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void builderBadPropertyTest() throws Exception {
         final ObjectBuilder<I> b = factory.create("MyServiceBuilder");
         b.property("bar", 2);
@@ -109,7 +117,7 @@ public class ConfigTest {
     /**
      * Tests bad usage detection.
      */
-    @Test(timeout = 60000)
+    @Test
     public void badServiceTest() {
         Assert.assertEquals(0, ((MyBadService) factory.create("MyBadServiceBuilder").build()).i);
     }
@@ -117,7 +125,7 @@ public class ConfigTest {
     /**
      * Tests bad usage detection.
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void badInnerServiceTest() {
         factory.create("MyInnerBadServiceBuilder");
     }

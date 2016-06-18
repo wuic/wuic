@@ -44,7 +44,9 @@ import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -70,13 +72,19 @@ public class HtmlParserFilterTest {
     public static com.github.wuic.test.Server server = new Server();
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Executes a basic HTTP request and reads the response.
      * </p>
      *
      * @throws java.io.IOException if any I/O error occurs
      */
-    @Test(timeout = 60000)
+    @Test
     public void filterTest() throws IOException {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/index.html").getEntity().getContent()));
         Assert.assertTrue(content, content.contains("aggregate-me.css"));

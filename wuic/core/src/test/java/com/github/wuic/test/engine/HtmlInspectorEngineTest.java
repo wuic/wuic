@@ -73,7 +73,9 @@ import com.github.wuic.util.Pipe;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.util.UrlProvider;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -118,6 +120,11 @@ public class HtmlInspectorEngineTest {
             "<link type=\"text/css\" rel=\"stylesheet\" href=\"/.*?aggregate.css\" />.*?" +
             "<script type=\"text/javascript\" src=\"/.*?aggregate.js\"></script>.*?";
 
+    /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>
@@ -150,7 +157,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fauls
      */
-    @Test(timeout = 60000)
+    @Test
     public void hintTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
         dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
@@ -169,7 +176,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fauls
      */
-    @Test(timeout = 60000)
+    @Test
     public void hintNoHeadTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
         dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
@@ -226,7 +233,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void parseTest() throws Exception {
         final Context ctx = newContext();
         final DiskNutDao dao = new DiskNutDao();
@@ -276,7 +283,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void transformationCacheTest() throws Exception {
         final String[] script = new String[] {"<script src='foo.js'></script>",
                 "<script src='bar.js'></script>",
@@ -346,7 +353,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void bestEffortTest() throws Exception {
         final String r1 = "<script type=\"text/javascript\" src=\"/0/000000002B702562foo.ts.js\"></script>";
         final String r2 = "<script type=\"text/javascript\" src=\"/1/best-effort/workflowbest-effort/aggregate.js\"></script>";
@@ -502,7 +509,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void memoryMapSupportTest() throws Exception {
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, MemoryMapCacheEngine.class);
         final ObjectBuilder<Engine> builder = factory.create("MemoryMapCacheEngineBuilder");
@@ -562,7 +569,7 @@ public class HtmlInspectorEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void heapListenerHolderTest() throws Exception {
         final DiskNutDao dao = new DiskNutDao();
         dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);

@@ -44,7 +44,9 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.TransformedNut;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -64,11 +66,17 @@ import java.io.IOException;
 public class TransformedNutTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests transformation handling.
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void transformTest() throws IOException {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -79,7 +87,7 @@ public class TransformedNutTest {
     /**
      * Transformed nut must be serializable.
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void notSerializableTest() {
         final ConvertibleNut mock = Mockito.mock(ConvertibleNut.class);
         Mockito.when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
@@ -90,7 +98,7 @@ public class TransformedNutTest {
     /**
      * Nut name can't be changed.
      */
-    @Test(timeout = 60000, expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void setNutNameTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.setNutName("");
@@ -99,7 +107,7 @@ public class TransformedNutTest {
     /**
      * New transformer can't be added.
      */
-    @Test(timeout = 60000, expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void addTransformerTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addTransformer(Mockito.mock(Pipe.Transformer.class));
@@ -108,7 +116,7 @@ public class TransformedNutTest {
     /**
      * New referenced nut can't be added.
      */
-    @Test(timeout = 60000, expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void addReferencedNutTest() {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addReferencedNut(Mockito.mock(ConvertibleNut.class));

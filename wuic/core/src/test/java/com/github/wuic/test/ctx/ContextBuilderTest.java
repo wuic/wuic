@@ -566,7 +566,7 @@ public class ContextBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000, expected = WorkflowTemplateNotFoundException.class)
+    @Test(expected = WorkflowTemplateNotFoundException.class)
     public void workflowTemplateNotFoundTest() throws Exception {
         new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()

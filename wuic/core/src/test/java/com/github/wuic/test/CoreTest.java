@@ -64,6 +64,7 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -88,6 +89,12 @@ public class CoreTest extends WuicTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -97,7 +104,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void javascriptTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final WuicFacade facade = new WuicFacadeBuilder().noDefaultContextBuilderConfigurator().build();
@@ -139,7 +146,7 @@ public class CoreTest extends WuicTest {
      * 
      * @throws Exception in I/O error case
      */
-    @Test(timeout = 60000)
+    @Test
     public void cssTest() throws Exception {
         // TODO : WUIC currently supports only one configuration per NutType. To be fixed in the future !
         Long startTime = System.currentTimeMillis();
@@ -169,7 +176,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void jsSpriteTest() throws Exception {
         Long startTime = System.currentTimeMillis();
         final ContextBuilder builder = new ContextBuilder().configureDefault();
@@ -220,7 +227,7 @@ public class CoreTest extends WuicTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void taskTest() throws Exception {
         final String wuicXml = IOUtils.normalizePathSeparator(getClass().getResource("/wuic.xml").toString());
         final String currentDir = IOUtils.normalizePathSeparator(new File(".").toURI().toURL().toString());

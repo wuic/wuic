@@ -54,7 +54,9 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -144,11 +146,17 @@ public class EngineTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests when an engine is skipped.
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void skipTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final NodeEngine a = new E(NutType.GIF, EngineType.CACHE, count);
@@ -181,7 +189,7 @@ public class EngineTest {
     /**
      * Nominal test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainTest() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});
@@ -197,7 +205,7 @@ public class EngineTest {
     /**
      * Test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)} with null.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainTestWithNull() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});
@@ -215,7 +223,7 @@ public class EngineTest {
     /**
      * Union test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainUnionTest() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});
@@ -233,7 +241,7 @@ public class EngineTest {
     /**
      * Chaining duplicate engines test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainDuplicateTest() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});
@@ -252,7 +260,7 @@ public class EngineTest {
     /**
      * Chaining engines with a replacement test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainReplaceWithLast() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});
@@ -275,7 +283,7 @@ public class EngineTest {
     /**
      * Chaining with the first engine replaced test for {@link NodeEngine#chain(com.github.wuic.engine.NodeEngine...)}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void chainReplaceFirst() {
         final SpriteInspectorEngine engine1 = new SpriteInspectorEngine();
         engine1.init(false, new SpriteProvider[] {});

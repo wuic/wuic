@@ -44,7 +44,9 @@ import com.github.wuic.context.ContextBuilderConfigurator;
 import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.util.NumberUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -71,9 +73,15 @@ public class ContextBuilderConfiguratorTest {
     public static boolean called = false;
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Makes sure the context builder configurators are installed thanks to the {@link java.util.ServiceLoader}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void serviceTest() {
         new ContextBuilder();
         Assert.assertTrue(called);
@@ -84,7 +92,7 @@ public class ContextBuilderConfiguratorTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void configureMultipleTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final StringBuilder tagBuilder = new StringBuilder("test");
@@ -155,7 +163,7 @@ public class ContextBuilderConfiguratorTest {
      *
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void configureWithPollingTest() throws Exception {
         final CountDownLatch latch = new CountDownLatch(NumberUtils.TWO);
 

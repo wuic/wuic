@@ -41,7 +41,9 @@ package com.github.wuic.test.engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.core.ScheduledCacheEngine;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -60,11 +62,17 @@ import java.util.concurrent.TimeUnit;
 public class ScheduledCacheTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Checks that scheduled clear works.
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void scheduledClearCacheTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(2);
         final ScheduledCacheEngine cache = new ScheduledCacheEngine() {

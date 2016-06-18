@@ -11,7 +11,9 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -68,11 +70,17 @@ public class AbstractAggregatorEngineTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Checks that a dynamic nut is never aggregated.
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void dynamicNutTest() throws WuicException {
         final Engine e = new A();
         final List<Nut> nuts = new ArrayList<Nut>();

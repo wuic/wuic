@@ -53,7 +53,9 @@ import com.github.wuic.util.MapPropertyResolver;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -76,11 +78,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WuicFacadeBuilderTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Asserts that wuic.xml not loaded.
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void noXmlTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         Assert.assertTrue(builder.noConfigurationPath().build().workflowIds().isEmpty());
@@ -93,7 +101,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void propertiesFileTest() throws Exception {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder()
                 .wuicPropertiesPath(getClass().getResource("/wuic-test.properties"));
@@ -112,7 +120,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void xmlTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         Assert.assertFalse(builder.build().workflowIds().isEmpty());
@@ -125,7 +133,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000, expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void testBadUrl() throws WuicException {
         new WuicFacadeBuilder(new PropertyResolver() {
             @Override
@@ -140,7 +148,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void contextPathTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         Assert.assertEquals("/foo", builder.noConfigurationPath().contextPath("/foo").build().getContextPath());
@@ -164,7 +172,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void configuratorTest() throws WuicException {
         final WuicFacadeBuilder builder = new WuicFacadeBuilder();
         final AtomicInteger count = new AtomicInteger(0);
@@ -184,7 +192,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void propertiesTest() throws WuicException {
         final PropertyResolver propsTrue = Mockito.mock(PropertyResolver.class);
         Mockito.when(propsTrue.resolveProperty(Mockito.eq(ApplicationConfig.WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT))).thenReturn("true");
@@ -213,7 +221,7 @@ public class WuicFacadeBuilderTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void useInternalContextBuilderTest() throws WuicException, IOException {
         WuicFacade wuicFacade = new WuicFacadeBuilder()
                 .contextBuilder()
@@ -265,7 +273,7 @@ public class WuicFacadeBuilderTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void propertyProfilesTest() throws WuicException {
         Map<Object, Object> map = new HashMap<Object, Object>();
         WuicFacadeBuilder b = new WuicFacadeBuilder(new MapPropertyResolver(map)).noConfigurationPath();

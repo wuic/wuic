@@ -54,7 +54,9 @@ import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -80,6 +82,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MemoryMapCacheEngineTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Creates a new mocked nut.
      * </p>
@@ -102,7 +110,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception exception
      */
-    @Test(timeout = 60000)
+    @Test
     public void dynamicTest() throws Exception {
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
         engine.init(true, -1, false);
@@ -186,7 +194,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void invalidationTest() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine() {
@@ -236,7 +244,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void addThenClearTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
@@ -254,7 +262,7 @@ public class MemoryMapCacheEngineTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void addThenRemoveTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();

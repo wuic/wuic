@@ -46,7 +46,9 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -70,6 +72,12 @@ import java.util.List;
 public class StaticEngineTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Nominal test with a known workflow.
      * </p>
@@ -77,7 +85,7 @@ public class StaticEngineTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void staticExistingWorkflowTest() throws WuicException, IOException {
         final StaticEngine engine = new StaticEngine();
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
@@ -116,7 +124,7 @@ public class StaticEngineTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void staticWorkflowNotFoundTest() throws WuicException {
         final StaticEngine engine = new StaticEngine();
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {

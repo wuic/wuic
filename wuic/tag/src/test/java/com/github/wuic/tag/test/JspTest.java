@@ -45,7 +45,9 @@ import com.github.wuic.test.WuicRunnerConfiguration;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -70,13 +72,19 @@ public class JspTest {
     public static com.github.wuic.test.Server server = new Server();
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * <p>
      * Basic JSP test.
      * </p>
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void basicJspTest() throws Exception {
         final String content = IOUtils.readString(new InputStreamReader(server.get("/index.jsp").getEntity().getContent()));
         Assert.assertTrue(content.contains("aggregate.css"));

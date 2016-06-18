@@ -52,7 +52,9 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -77,9 +79,15 @@ import java.util.List;
 public class SourceTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests {@link SourceImpl}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void defaultSource() {
         final Source src = new SourceImpl();
         Assert.assertNotNull(src.getOriginalNuts());
@@ -92,7 +100,7 @@ public class SourceTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void customSourceMapNutTest() throws Exception {
         final String aggregated =
                 "aaaaaaffffff\n" +
@@ -183,7 +191,7 @@ public class SourceTest {
      * @throws WuicException if test fails
      * @throws IOException   if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void sourceMapNutTest() throws WuicException, IOException {
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.withRootPath(Mockito.anyString())).thenReturn(dao);

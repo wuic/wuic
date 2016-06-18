@@ -74,7 +74,9 @@ import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -108,9 +110,15 @@ public class InspectorTest {
     public static boolean called = false;
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Makes sure the object builder inspector are installed thanks to the {@link java.util.ServiceLoader}.
      */
-    @Test(timeout = 60000)
+    @Test
     public void serviceTest() {
         new ContextBuilder();
         Assert.assertTrue(called);
@@ -241,7 +249,7 @@ public class InspectorTest {
      *
      * @throws Exception the inspector
      */
-    @Test(timeout = 60000)
+    @Test
     public void customInspectorTest() throws Exception{
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
         e.init(true, "");
@@ -260,7 +268,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void multipleImportPerLineTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "jquery.ui.core.css"},
@@ -296,7 +304,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void fontUrlTest() throws Exception {
         final StringBuilder sb = new StringBuilder();
         sb.append("a {\n" +
@@ -331,7 +339,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void sourceMappingUrlTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"//sourceMappingURL=%s ", "sourcemap.js.map"},
@@ -354,7 +362,7 @@ public class InspectorTest {
      * @throws WuicException if test fails
      * @throws IOException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void sourceMappingInLiteralTest() throws WuicException, IOException {
         final String content = "function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {\n" +
                 "  ////# sourceMappingURL=url.js.map\n" +
@@ -410,7 +418,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void angularNoWrapTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{
@@ -473,7 +481,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void angularWrapTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
@@ -496,7 +504,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void angularFallbackTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"angular.module('docsTemplateUrlDirective', [])\n" +
@@ -550,7 +558,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void sourceMapInspection() throws Exception {
         final NodeEngine engine = Mockito.mock(NodeEngine.class);
         final NodeEngine next = Mockito.mock(NodeEngine.class);
@@ -596,7 +604,7 @@ public class InspectorTest {
      *
      * @throws Exception if test succeed
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void badAngularWrapTest() throws Exception {
         new JavascriptInspectorEngine().init(true, "fn('foo')");
     }
@@ -608,7 +616,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void dataUrlTest() throws Exception {
         String[][] collection = new String[][]{
                 new String[]{"@import url(\"%s\");", "data:image/gif;base64,R0lGODlhCwAHAIAAACgoKP///yH5BAEAAAEALAAAAAALAAcAAAIORI4JlrqN1oMSnmmZDQUAOw=="},
@@ -625,7 +633,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void parentRefTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         builder.tag("parentRefTest")
@@ -655,7 +663,7 @@ public class InspectorTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void compositionByWorkflowTest() throws Exception {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
@@ -668,7 +676,7 @@ public class InspectorTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void handleSingleCommentTest() throws WuicException {
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Arrays.asList("// comment1\n", "// comment2\n", "// bar\n", "// comment3\n", "//comment4"),
@@ -689,7 +697,7 @@ public class InspectorTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void handleMultiCommentTest() throws WuicException {
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Collections.EMPTY_LIST,
@@ -709,7 +717,7 @@ public class InspectorTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void handleNoCommentTest() throws WuicException {
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Arrays.asList("foo                                            baz"),
@@ -729,7 +737,7 @@ public class InspectorTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void handleAllTest() throws WuicException {
         String c = "foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4";
         check(c, Arrays.asList(c), ScriptLineInspector.ScriptMatchCondition.ALL);

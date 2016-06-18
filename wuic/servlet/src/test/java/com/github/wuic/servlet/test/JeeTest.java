@@ -53,6 +53,7 @@ import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -78,6 +79,12 @@ public class JeeTest {
      */
     @ClassRule
     public static com.github.wuic.test.Server server = new Server();
+
+    /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * XML configuration.
@@ -112,7 +119,7 @@ public class JeeTest {
      *
      * @throws java.io.IOException if nut creation fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void webappNutTest() throws IOException {
         final ObjectBuilder<NutDao> builder =
                 WuicServletContextListener.getWuicFacade(server.getServletContext()).newNutDaoBuilder("WebappNutDaoBuilder");

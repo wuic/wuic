@@ -47,7 +47,9 @@ import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -66,6 +68,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @RunWith(JUnit4.class)
 public class WarmupTest {
+
+    /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>
@@ -116,7 +124,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void noneWarmupStrategyTest() throws WuicException {
         final AtomicInteger count = new AtomicInteger();
         createFacade(WuicFacade.WarmupStrategy.NONE, new Runnable() {
@@ -134,7 +142,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void syncWarmupStrategyTest() throws WuicException {
         final AtomicInteger count = new AtomicInteger();
         createFacade(WuicFacade.WarmupStrategy.SYNC, new Runnable() {
@@ -152,7 +160,7 @@ public class WarmupTest {
      *
      * @throws WuicException if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void asyncWarmupStrategyTest() throws Exception {
         final CountDownLatch count = new CountDownLatch(1);
         createFacade(WuicFacade.WarmupStrategy.ASYNC, new Runnable() {

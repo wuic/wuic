@@ -48,7 +48,9 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.FutureLong;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -220,11 +222,17 @@ public class AbstractNutDaoTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Test version number computation.
      *
      * @throws Exception e
      */
-    @Test(timeout = 60000)
+    @Test
     public void versionNumberTest() throws Exception  {
         final NutDao first = new MockNutDaoTest(true, null);
         final NutDao second = new MockNutDaoTest(true, null);
@@ -241,7 +249,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception e
      */
-    @Test(timeout = 60000)
+    @Test
     public void fixedVersionNumberTest() throws Exception  {
         final Long version = 19860606L;
         Assert.assertEquals(version, new MockNutDaoTest(true, version.toString()).create("", null).get(0).getVersionNumber().get());
@@ -253,7 +261,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception e
      */
-    @Test(timeout = 60000)
+    @Test
     public void compositeFixedVersionNumberTest() throws Exception  {
         final Long version = 19860606L;
         final NutDao dao = new MockNutDaoTest(true, version.toString());
@@ -271,7 +279,7 @@ public class AbstractNutDaoTest {
     /**
      * Test when fixed version is not a number.
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void badFixedVersionNumberTest() {
         new MockNutDaoTest(false, "bad number");
     }
@@ -281,7 +289,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void pollSchedulingTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final NutDao dao = new MockNutDaoTest(1);
@@ -341,7 +349,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void stopPollingTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final MockNutDaoTest dao = new MockNutDaoTest(1);
@@ -391,7 +399,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 60000)
+    @Test
     public void excludePollingListenerTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final MockNutDaoTest dao = new MockNutDaoTest(1);
@@ -445,7 +453,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void disposeTest() throws Exception {
         final AbstractNutDao a = new MockNutDaoTest(-1);
         final AbstractNutDao b = new MockNutDaoTest(-1);
@@ -491,7 +499,7 @@ public class AbstractNutDaoTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void concurrentTest() throws Exception {
         final AbstractNutDao a = new MockNutDaoTest(2);
         final AbstractNutDao b = new MockNutDaoTest(2);

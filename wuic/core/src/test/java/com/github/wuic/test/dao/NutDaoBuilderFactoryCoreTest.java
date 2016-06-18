@@ -45,7 +45,9 @@ import com.github.wuic.nut.dao.NutDaoService;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -74,9 +76,15 @@ public class NutDaoBuilderFactoryCoreTest {
     }
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Test for unknown builder.
      */
-    @Test(timeout = 60000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testCreateUnknownBuilder() {
         nutDaoObjectBuilderFactory.create("FooNutDaoBuilder");
     }
@@ -84,7 +92,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for classpath.
      */
-    @Test(timeout = 60000)
+    @Test
     public void testCreateClasspathBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("ClasspathNutDaoBuilder"));
     }
@@ -92,7 +100,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for HTTP.
      */
-    @Test(timeout = 60000)
+    @Test
     public void testCreateHttpBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("HttpNutDaoBuilder"));
     }
@@ -100,7 +108,7 @@ public class NutDaoBuilderFactoryCoreTest {
     /**
      * Test for disk.
      */
-    @Test(timeout = 60000)
+    @Test
     public void testCreateDiskBuilder() {
         Assert.assertNotNull(nutDaoObjectBuilderFactory.create("DiskNutDaoBuilder"));
     }

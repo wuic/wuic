@@ -45,7 +45,9 @@ import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
 import com.github.wuic.config.ObjectBuilder;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -63,9 +65,15 @@ import java.util.Arrays;
 public class RegexRemoveFilterTest {
 
     /**
+     * Timeout.
+     */
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
+    /**
      * Tests the builder with default state.
      */
-    @Test(timeout = 60000)
+    @Test
     public void defaultBuilderTest() {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");
@@ -78,7 +86,7 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void oneRegexBuilderTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");
@@ -91,7 +99,7 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void disabledTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder")
@@ -106,7 +114,7 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 6000, expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void badPropertyTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         factory.create("RegexRemoveNutFilterBuilder").property("foo", "b");
@@ -117,7 +125,7 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void twoRegexBuilderTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\nc").build());
@@ -129,7 +137,7 @@ public class RegexRemoveFilterTest {
      *
      * @throws Exception if test fails
      */
-    @Test(timeout = 60000)
+    @Test
     public void lineFeedRegexBuilderTest() throws Exception {
         final ObjectBuilderFactory<NutFilter> factory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final ObjectBuilder<NutFilter> b = factory.create("RegexRemoveNutFilterBuilder");        final NutFilter f = NutFilter.class.cast(b.property(ApplicationConfig.REGEX_EXPRESSIONS, "b\\nc").build());
