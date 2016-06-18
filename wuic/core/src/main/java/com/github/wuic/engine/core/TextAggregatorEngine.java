@@ -312,7 +312,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
 
         // Append tail
         if (offset < chars.length - 1) {
-            builder.append(chars, offset, chars.length - 1);
+            builder.append(chars, offset, chars.length - offset);
         }
 
         return builder.toString().getBytes();
