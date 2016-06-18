@@ -43,10 +43,14 @@ import com.github.wuic.config.bean.HeapBean;
 import com.github.wuic.config.bean.WorkflowBean;
 import com.github.wuic.config.bean.WorkflowTemplateBean;
 import com.github.wuic.config.bean.WuicBean;
+import com.github.wuic.config.bean.json.BeanContextBuilderConfigurator;
+import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.dao.core.UnreachableNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
@@ -57,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -72,6 +75,12 @@ import java.util.regex.Pattern;
  * <p>
  * This class executes WUIC as a task for build time processing. It basically takes 'wuic.xml' path and run all
  * configured workflow. All results can be copied to a specific directory in order to bundle them in a package.
+ * </p>
+ *
+ * <p>
+ * A basic configuration can be applied if a base directory to scan is specified, allowing to ignore 'wuic.xml' definition.
+ * The directory will be scanned to detect a specified path, considered as a wildcard pattern.
+ * A flag can be defined to consider the specified path as a regex.
  * </p>
  *
  * <p>
@@ -139,6 +148,26 @@ public class WuicTask {
     private Pattern moveToTopDirPattern;
 
     /**
+     * Base directory to scan.
+     */
+    private String baseDir;
+
+    /**
+     * The path to detect.
+     */
+    private String path;
+
+    /**
+     * The task name used to configure heap ID resolving the configured paths and base directory.
+     */
+    private String taskName;
+
+    /**
+     * Consider the path as a regex instead of a regex.
+     */
+    private boolean useRegex;
+
+    /**
      * <p>
      * Builds a new instance. {@link #relocateTransformedXml} is {@code null} and default {@link #contextPath} is '/'.
      * </p>
@@ -147,24 +176,24 @@ public class WuicTask {
         this.relocateTransformedXmlTo = null;
         this.contextPath = "/";
         this.charset = "UTF-8";
+        this.useRegex = false;
+        this.taskName = "wuic-task";
     }
 
     /**
      * <p>
-     * Writes the given XML to transform into the disk.
+     * Writes the given bean to transform into the disk.
      * </p>
      *
-     * @param xmlFile the XML file
+     * @param bean the heap
      * @return the relocated XML file path
      * @throws javax.xml.bind.JAXBException if JAXB fails
      * @throws IOException if an I/O error occurs
      */
-    private String relocateTransformedXml(final File xmlFile) throws JAXBException, IOException {
+    private String relocateTransformedXml(final WuicBean bean) throws JAXBException, IOException {
 
-        // Now load XML configuration to update it in order to use chains of responsibility with static engine
+        // Update heap bean in order to use chains of responsibility with static engine
         final JAXBContext jc = JAXBContext.newInstance(WuicBean.class);
-        final Unmarshaller unmarshaller = jc.createUnmarshaller();
-        final WuicBean bean = (WuicBean) unmarshaller.unmarshal(xmlFile);
 
         // Set mock DAO for heaps
         if (bean.getHeaps() != null) {
@@ -247,6 +276,21 @@ public class WuicTask {
 
     /**
      * <p>
+     * Checks that parameters are in a legal state.
+     * </p>
+     */
+    private void checkParameters() {
+        if (xml == null && (baseDir == null || path == null)) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException("Both wuic.xml location and baseDir/path can't be null."));
+        }
+
+        if (output == null) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException("Output location can't be null."));
+        }
+    }
+
+    /**
+     * <p>
      * Executes the task. The method is named with ANT task naming conventions to be integrated with ANT.
      * </p>
      *
@@ -270,21 +314,25 @@ public class WuicTask {
      * @throws IOException   if any I/O error occurs
      */
     public List<String> executeTask() throws WuicException, JAXBException, IOException {
-        if (xml == null) {
-            WuicException.throwBadArgumentException(new IllegalArgumentException("wuic.xml location can't be null."));
-        }
-
-        if (output == null) {
-            WuicException.throwBadArgumentException(new IllegalArgumentException("Output location can't be null."));
-        }
-
+        checkParameters();
         final List<String> retval = new ArrayList<String>();
 
-        // Load wuic.xml file and create facade
-        final File xmlFile = new File(xml);
-        final WuicFacadeBuilder facadeBuilder = new WuicFacadeBuilder()
-                .contextPath(contextPath)
-                .wuicConfigurationPath(xmlFile.toURI().toURL());
+        // Create facade
+        final WuicFacadeBuilder facadeBuilder = new WuicFacadeBuilder().contextPath(contextPath);
+        final WuicBean wuicBean;
+
+        if (xml == null) {
+            wuicBean = new WuicBean();
+        } else {
+            // Load wuic.xml file
+            final BeanContextBuilderConfigurator configurator = new FileXmlContextBuilderConfigurator(new File(xml).toURI().toURL());
+            wuicBean = configurator.getWuicBean();
+            facadeBuilder.contextBuilderConfigurators(configurator);
+        }
+
+        if (baseDir != null && path != null) {
+            facadeBuilder.contextBuilderConfigurators(new TaskConfigurator());
+        }
 
         if (profiles != null) {
             facadeBuilder.contextBuilder().enableProfile(profiles.split(",")).toFacade();
@@ -357,7 +405,7 @@ public class WuicTask {
 
         // No need to continue if we don't want to generate wuic.xml file too
         if (relocateTransformedXmlTo != null) {
-            retval.add(relocateTransformedXml(xmlFile));
+            retval.add(relocateTransformedXml(wuicBean));
             retval.add(buildInfoFile.getName());
         }
 
@@ -500,6 +548,76 @@ public class WuicTask {
     public void setMoveToTopDirPattern(final String moveToTopDirPattern) {
         if (moveToTopDirPattern != null) {
             this.moveToTopDirPattern = Pattern.compile(moveToTopDirPattern);
+        }
+    }
+
+    /**
+     * <p>
+     * Uses regex instead of wildcard to resolve paths.
+     * </p>
+     *
+     * @param useRegex {@code true} if regex are used instead of wildcard, {@code false} otherwise
+     */
+    public void setUseRegex(final boolean useRegex) {
+        this.useRegex = useRegex;
+    }
+
+    /**
+     * <p>
+     * Sets the task name used to identify the heap providing the resolved paths.
+     * </p>
+     *
+     * @param taskName the new task name
+     */
+    public void setTaskName(final String taskName) {
+        this.taskName = taskName;
+    }
+
+    /**
+     * <p>
+     * Sets the path to resolve. It will be interpreted as a wildcard or a regex according to {@link #useRegex}.
+     * </p>
+     *
+     * @param path the new path
+     */
+    public void setPath(final String path) {
+        this.path = path;
+    }
+
+    /**
+     * <p>
+     * Sets the base directory where nuts iwll be resolved.
+     * </p>
+     *
+     * @param baseDir the new base directory
+     */
+    public void setBaseDir(final String baseDir) {
+        this.baseDir = baseDir;
+    }
+
+    /**
+     * <p>
+     * This configurator defines the DAO (disk) and heap based on {@link #baseDir} (DAO base path), {@link #path} (heap path),
+     * {@link #useRegex} (regex or wildcard resolution) and {@link #taskName} (heap ID) properties.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class TaskConfigurator extends SimpleContextBuilderConfigurator {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int internalConfigure(final ContextBuilder ctxBuilder) {
+            ctxBuilder.contextNutDaoBuilder(DiskNutDao.class)
+                    .property(ApplicationConfig.REGEX, useRegex)
+                    .property(ApplicationConfig.WILDCARD, !useRegex)
+                    .property(ApplicationConfig.BASE_PATH, baseDir)
+                    .toContext()
+                    .heap(taskName, ContextBuilder.getDefaultBuilderId(DiskNutDao.class), new String[] { path });
+            return -1;
         }
     }
 }

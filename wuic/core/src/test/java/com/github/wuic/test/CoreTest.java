@@ -222,7 +222,7 @@ public class CoreTest extends WuicTest {
 
     /**
      * <p>
-     * Task test.
+     * Task test with XML.
      * </p>
      *
      * @throws Exception if test fails
@@ -252,6 +252,30 @@ public class CoreTest extends WuicTest {
 
         for (int i = 0; i < files.length && !found; found = files[i++].list()[0].equals("aggregate.css"));
         Assert.assertTrue(found);
+
+        // Assert resources are closed
+        TestHelper.delete(out);
+    }
+
+    /**
+     * <p>
+     * Task test without configuration file.
+     * </p>
+     */
+    @Test
+    public void taskWithoutConfigurationFile() throws Exception {
+        final WuicTask wuicTask = new WuicTask();
+        wuicTask.setBaseDir(getClass().getResource("/skipped").getFile().toString());
+        wuicTask.setPath("deep/*.js");
+        final File out = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test");
+        wuicTask.setOutput(new File(out, "generated").toString());
+        wuicTask.setRelocateTransformedXmlTo(out.toString());
+
+        // Invoke
+        wuicTask.execute();
+
+        final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
+        Assert.assertTrue(new File(parent, "wuic-task").listFiles()[0].list()[0].equals("aggregate.js"));
 
         // Assert resources are closed
         TestHelper.delete(out);
