@@ -61,6 +61,8 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,18 +71,30 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.regex.Pattern;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 /**
  * <p>
- * This class executes WUIC as a task for build time processing. It basically takes 'wuic.xml' path and run all
- * configured workflow. All results can be copied to a specific directory in order to bundle them in a package.
+ * This class executes WUIC as a task for build time processing. It takes 'wuic.xml' path and/or basic configuration and
+ * run all configured workflow. All results can be copied to a specific directory in order to bundle them in a package.
  * </p>
  *
  * <p>
  * A basic configuration can be applied if a base directory to scan is specified, allowing to ignore 'wuic.xml' definition.
  * The directory will be scanned to detect a specified path, considered as a wildcard pattern.
  * A flag can be defined to consider the specified path as a regex.
+ * </p>
+ *
+ * <p>
+ * The task can be configured to package the result as a JAR file where output is written to the {@code META-INF/resources}
+ * entry, allowing to directly access the files when deployed in a servlet 3 container without any specific component.
+ * The JAR file is named {@code wuic-task} and can be added to the {@code WEB-INF/lib} directory of any WAR file to be
+ * exposed by the servlet 3 container. If {@link #relocateTransformedXmlTo} is not {@code null}, the file won't be written
+ * to the specified directory but added as a JAR entry instead.
  * </p>
  *
  * <p>
@@ -114,6 +128,8 @@ public class WuicTask {
 
     /**
      * Where the transformed XML file should be relocated as a source file named 'wuic.xml'.
+     * If {@link #packageAsJar} is {@code true}, the class just checks if the value is not {@code null} and it that case
+     * adds the XML file as an entry to the JAR file.
      */
     private String relocateTransformedXmlTo;
 
@@ -121,6 +137,11 @@ public class WuicTask {
      * Directory where process result should be written.
      */
     private String output;
+
+    /**
+     * Package the output as a JAR file. The JAR is written to{@link #output}.
+     */
+    private boolean packageAsJar;
 
     /**
      * Base path where every processed statics referenced by HTML will be served.
@@ -178,6 +199,7 @@ public class WuicTask {
         this.charset = "UTF-8";
         this.useRegex = false;
         this.taskName = "wuic-task";
+        this.packageAsJar = true;
     }
 
     /**
@@ -186,11 +208,11 @@ public class WuicTask {
      * </p>
      *
      * @param bean the heap
-     * @return the relocated XML file path
+     * @param outputStream the output stream
      * @throws javax.xml.bind.JAXBException if JAXB fails
      * @throws IOException if an I/O error occurs
      */
-    private String relocateTransformedXml(final WuicBean bean) throws JAXBException, IOException {
+    private void relocateTransformedXml(final WuicBean bean, final OutputStream outputStream) throws JAXBException, IOException {
 
         // Update heap bean in order to use chains of responsibility with static engine
         final JAXBContext jc = JAXBContext.newInstance(WuicBean.class);
@@ -245,14 +267,9 @@ public class WuicTask {
 
         bean.setEngineBuilders(Arrays.asList(builder));
 
-        // Write modifies configuration into the disk
-        final File outputXmlFile = new File(relocateTransformedXmlTo, XML_FILE);
-
         final Marshaller marshaller = jc.createMarshaller();
         marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE);
-        marshaller.marshal(bean, outputXmlFile);
-
-        return outputXmlFile.getName();
+        marshaller.marshal(bean, outputStream);
     }
 
     /**
@@ -272,21 +289,6 @@ public class WuicTask {
 
         final int appCacheIndex = name.indexOf(".appcache");
         return moveToTopDirPattern.matcher(appCacheIndex != -1 ? name.substring(0, appCacheIndex) : name).matches();
-    }
-
-    /**
-     * <p>
-     * Checks that parameters are in a legal state.
-     * </p>
-     */
-    private void checkParameters() {
-        if (xml == null && (baseDir == null || path == null)) {
-            WuicException.throwBadArgumentException(new IllegalArgumentException("Both wuic.xml location and baseDir/path can't be null."));
-        }
-
-        if (output == null) {
-            WuicException.throwBadArgumentException(new IllegalArgumentException("Output location can't be null."));
-        }
     }
 
     /**
@@ -314,7 +316,10 @@ public class WuicTask {
      * @throws IOException   if any I/O error occurs
      */
     public List<String> executeTask() throws WuicException, JAXBException, IOException {
-        checkParameters();
+        if (xml == null && (baseDir == null || path == null)) {
+            WuicException.throwBadArgumentException(new IllegalArgumentException("Both wuic.xml location and baseDir/path can't be null."));
+        }
+
         final List<String> retval = new ArrayList<String>();
 
         // Create facade
@@ -348,16 +353,31 @@ public class WuicTask {
         }
 
         PrintWriter buildInfo = null;
-        final File buildInfoFile = new File(relocateTransformedXmlTo, BUILD_INFO_FILE);
+
+        // Defined when packaging as a JAR file
+        JarOutputStream jarOutputStream = null;
+        OutputStream buildInfoFileOs = null;
+        FileOutputStream outputXmlFile = null;
 
         try {
-            // Going to embed the result in order to server it from the webapp, add information for runtime initialization
-            if (relocateTransformedXmlTo != null) {
-                if (!buildInfoFile.getParentFile().mkdirs()) {
-                    log.error("Unable to create '{}' directory", buildInfoFile.getParent());
+            if (packageAsJar) {
+                final File file = new File(output);
+
+                // Create if not exist
+                if (file.mkdirs()) {
+                    log.debug("{} created", file.getParent());
                 }
 
-                buildInfo = new PrintWriter(buildInfoFile);
+                final Manifest manifest = new Manifest();
+                manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+                jarOutputStream = new JarOutputStream(new FileOutputStream(new File(file, "wuic-task.jar")), manifest);
+            }
+
+            // Going to embed the result in order to server it from the webapp, add information for runtime initialization
+            final ByteArrayOutputStream buildInfoOs = new ByteArrayOutputStream();
+
+            if (relocateTransformedXmlTo != null) {
+                buildInfo = new PrintWriter(buildInfoOs);
                 buildInfo.write(ApplicationConfig.WUIC_SERVLET_CONTEXT_PARAM + '=' + contextPath);
                 buildInfo.write(IOUtils.NEW_LINE);
                 buildInfo.write("workflowList=");
@@ -371,18 +391,26 @@ public class WuicTask {
                 PrintWriter pw = null;
 
                 try {
-                    if  (relocateTransformedXmlTo != null) {
+                    if (relocateTransformedXmlTo != null) {
                         final String fileName = String.format(StaticEngine.STATIC_WORKFLOW_FILE, wId);
-                        final File file = new File(relocateTransformedXmlTo, fileName);
 
-                        if (!file.getParentFile().mkdirs()) {
-                            log.error("Unable to create '{}' directory", file.getParent());
+                        if (jarOutputStream != null) {
+                            jarOutputStream.putNextEntry(new JarEntry(fileName.substring(1)));
+                            pw = new PrintWriter(jarOutputStream);
+                        } else {
+                            // because generateMetadata is true and jarOutputStream is null (packageAsJar false)
+                            // relocateTransformedXmlTo is not null
+                            final File file = new File(relocateTransformedXmlTo, fileName);
+
+                            if (!file.getParentFile().mkdirs()) {
+                                log.error("Unable to create '{}' directory", file.getParent());
+                            }
+
+                            // Adds file name without '/' at the beginning
+                            retval.add(fileName.substring(1));
+                            pw = new PrintWriter(file);
                         }
 
-                        // Adds file name without '/' at the beginning
-                        retval.add(fileName.substring(1));
-
-                        pw = new PrintWriter(file);
                         buildInfo.write(wId);
 
                         if (cpt++ < len - 1) {
@@ -393,20 +421,52 @@ public class WuicTask {
                     final List<ConvertibleNut> nuts = facade.runWorkflow(wId, ProcessContext.DEFAULT);
 
                     for (final ConvertibleNut nut : nuts) {
-                        write(nut, wId, pw, 0);
+                        write(nut, wId, pw, jarOutputStream, 0);
                     }
                 } finally {
-                    IOUtils.close(pw);
+                    // Don't close the writer if it's pointing to a JarEntry
+                    if (jarOutputStream == null) {
+                        IOUtils.close(pw);
+                    }
+                }
+            }
+
+            // No need to continue if we don't want to generate wuic.xml file too or if file is packaged inside the JAR
+            if (relocateTransformedXmlTo != null) {
+                buildInfo.flush();
+
+                // Just create a new entry in the JAR file
+                if (packageAsJar) {
+                    // Metadata
+                    jarOutputStream.putNextEntry(new JarEntry(BUILD_INFO_FILE));
+                    jarOutputStream.write(buildInfoOs.toByteArray());
+                    jarOutputStream.closeEntry();
+
+                    // XML file
+                    jarOutputStream.putNextEntry(new JarEntry(XML_FILE));
+                    relocateTransformedXml(wuicBean, jarOutputStream);
+                    jarOutputStream.closeEntry();
+                } else {
+                    // Metadata
+                    final File buildInfoFile = new File(relocateTransformedXmlTo, BUILD_INFO_FILE);
+
+                    if (!buildInfoFile.getParentFile().mkdirs()) {
+                        log.error("Unable to create '{}' directory", buildInfoFile.getParent());
+                    }
+
+                    buildInfoFileOs = new FileOutputStream(buildInfoFile);
+                    IOUtils.copyStream(new ByteArrayInputStream(buildInfoOs.toByteArray()), buildInfoFileOs);
+                    retval.add(BUILD_INFO_FILE);
+
+                    // Write modified configuration into the disk
+                    final File xmlFile = new File(relocateTransformedXmlTo, XML_FILE);
+                    outputXmlFile = new FileOutputStream(xmlFile);
+                    relocateTransformedXml(wuicBean, outputXmlFile);
+                    retval.add(xmlFile.getName());
                 }
             }
         } finally {
-            IOUtils.close(buildInfo);
-        }
-
-        // No need to continue if we don't want to generate wuic.xml file too
-        if (relocateTransformedXmlTo != null) {
-            retval.add(relocateTransformedXml(wuicBean));
-            retval.add(buildInfoFile.getName());
+            IOUtils.close(buildInfo, jarOutputStream, buildInfoFileOs, outputXmlFile);
         }
 
         return retval;
@@ -417,13 +477,18 @@ public class WuicTask {
      * Writes the given net into the output directory.
      * </p>
      *
-     * @param nut   the nut to be written
-     * @param wId   the workflow ID
-     * @param depth the depth computed from referenced nuts chain
+     * @param nut    the nut to be written
+     * @param wId    the workflow ID
+     * @param depth  the depth computed from referenced nuts chain
+     * @param jarOutputStream if not {@code null}, the nut will be written as a jar entry
      * @throws WuicException if WUIC fails
      * @throws IOException   if output directory can't be reached or if transformation fails
      */
-    public void write(final ConvertibleNut nut, final String wId, final PrintWriter workflowWriter, final int depth)
+    public void write(final ConvertibleNut nut,
+                      final String wId,
+                      final PrintWriter workflowWriter,
+                      final JarOutputStream jarOutputStream,
+                      final int depth)
             throws WuicException, IOException {
         final String path = nut.getProxyUri() == null ? IOUtils.mergePath(String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()) : nut.getProxyUri();
 
@@ -433,23 +498,44 @@ public class WuicTask {
             }
 
             workflowWriter.println(String.format("%s %s", path, nut.getInitialNutType().getExtensions()[0]));
+            workflowWriter.flush();
         }
 
-        final File file;
+        final OutputStream os;
+        final String name;
 
         // Keep the file in the top directory
         if (locateOnTop(nut.getInitialName())) {
-            file = new File(output, nut.getName());
+            name = nut.getName();
         } else {
-            file = new File(output, IOUtils.mergePath(wId, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()));
+            name = IOUtils.mergePath(wId, String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName());
         }
 
-        // Create if not exist
-        if (file.getParentFile() != null && file.getParentFile().mkdirs()) {
-            log.debug("{} created", file.getParent());
-        }
+        // Write to file if content if not packaged in a JAR file
+        if (jarOutputStream == null) {
+            final File file = new File(output, name);
 
-        final OutputStream os = new FileOutputStream(file);
+            // Create if not exist
+            if (file.getParentFile() != null && file.getParentFile().mkdirs()) {
+                log.debug("{} created", file.getParent());
+            }
+
+            os = new FileOutputStream(file);
+        } else {
+            os = new OutputStream() {
+                @Override
+                public void write(final int b) throws IOException {
+                    jarOutputStream.write(b);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    // transform() closes the stream, avoid this with jarOutputStream as we need to close it only when all entries are written
+                }
+            };
+
+            jarOutputStream.putNextEntry(new JarEntry(IOUtils.mergePath("META-INF", "resources", name)));
+        }
 
         if (!nut.getNutType().isText()) {
             nut.transform(new Pipe.DefaultOnReady(os));
@@ -457,10 +543,15 @@ public class WuicTask {
             nut.transform(new Pipe.DefaultOnReady(os, charset));
         }
 
+        // Close the entry if needed
+        if (jarOutputStream != null) {
+            jarOutputStream.closeEntry();
+        }
+
         // Recursive call on referenced nuts
         if (nut.getReferencedNuts() != null) {
             for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                write(ref, wId, workflowWriter, depth + 1);
+                write(ref, wId, workflowWriter, jarOutputStream, depth + 1);
             }
         }
     }
@@ -593,6 +684,17 @@ public class WuicTask {
      */
     public void setBaseDir(final String baseDir) {
         this.baseDir = baseDir;
+    }
+
+    /**
+     * <p>
+     * Packages the output in a JAR file or not.
+     * </p>
+     *
+     * @param packageAsJar {@code true} if output is packaged as a JAR file, {@code false} otherwise
+     */
+    public void setPackageAsJar(final boolean packageAsJar) {
+        this.packageAsJar = packageAsJar;
     }
 
     /**

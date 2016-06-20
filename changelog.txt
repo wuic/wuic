@@ -172,3 +172,4 @@ Breaking changes:
 - c.g.wuic.facade.xmlPathAsSystemProperty is not supported anymore, use property placeholder instead. System properties are always read.
 - c.g.wuic.facade.xmlPath will be ignored if the value does not ends with .xml
 - Duplicated registrations (heap, DAO, filter, engine, workflow and template) with the same ID are no longer tolerated
+- static-helper-maven-plugin and ant task now package the result in JAR file by default (turn off by setting packageAsJar to false)

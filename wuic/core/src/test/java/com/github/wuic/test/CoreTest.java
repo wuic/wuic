@@ -55,6 +55,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.UrlUtils;
@@ -239,6 +241,7 @@ public class CoreTest extends WuicTest {
         task.setXml(relative);
         task.setOutput(new File(out, "generated").toString());
         task.setRelocateTransformedXmlTo(out.toString());
+        task.setPackageAsJar(false);
 
         // Invoke
         task.execute();
@@ -270,12 +273,59 @@ public class CoreTest extends WuicTest {
         final File out = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test");
         wuicTask.setOutput(new File(out, "generated").toString());
         wuicTask.setRelocateTransformedXmlTo(out.toString());
+        wuicTask.setPackageAsJar(false);
 
         // Invoke
         wuicTask.execute();
 
         final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
         Assert.assertTrue(new File(parent, "wuic-task").listFiles()[0].list()[0].equals("aggregate.js"));
+
+        // Assert resources are closed
+        TestHelper.delete(out);
+    }
+
+    /**
+     * <p>
+     * Task test with JAR file.
+     * </p>
+     */
+    @Test
+    public void taskWithJarFile() throws Exception {
+        final WuicTask wuicTask = new WuicTask();
+        wuicTask.setBaseDir(getClass().getResource("/skipped").getFile().toString());
+        wuicTask.setPath("deep/*.js");
+        final File out = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test");
+        wuicTask.setOutput(new File(out, "generated").toString());
+        wuicTask.setRelocateTransformedXmlTo(out.toString());
+
+        // Invoke
+        wuicTask.execute();
+
+        final File parent = new File(System.getProperty("java.io.tmpdir"), "wuic-static-test/generated/");
+        final File file = new File(parent, "wuic-task.jar");
+        Assert.assertTrue(file.exists());
+        final ZipInputStream is = new ZipInputStream(new FileInputStream(file));
+        int cssCount = 0;
+        int jsCount = 0;
+        int pngCount = 0;
+
+        for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+            if (entry.getName().endsWith("aggregate.js")) {
+               jsCount++;
+            } else if (entry.getName().endsWith("aggregate.png")) {
+               pngCount++;
+            } else if (entry.getName().endsWith("aggregate.css")) {
+               cssCount++;
+            }
+
+            is.closeEntry();
+        }
+
+        Assert.assertEquals(3, jsCount);
+        Assert.assertEquals(2, cssCount);
+        Assert.assertEquals(2, pngCount);
+        is.close();
 
         // Assert resources are closed
         TestHelper.delete(out);
