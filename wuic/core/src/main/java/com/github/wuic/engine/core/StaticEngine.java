@@ -123,7 +123,7 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
      */
     public static List<ConvertibleNut> getNuts(final ClassPathResourceResolver classpathResourceResolver, final String workflowId)
             throws WuicException {
-        final String fileName = String.format(STATIC_WORKFLOW_FILE, workflowId);
+        final String fileName = String.format(STATIC_WORKFLOW_FILE, workflowId).substring(1);
         final InputStream is = classpathResourceResolver.getResourceAsStream(fileName);
         InputStreamReader isr = null;
 

@@ -42,6 +42,7 @@ import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.nut.NotReachableNut;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -95,6 +96,14 @@ public abstract class HeadEngine extends Engine {
             final NutType nutType = nuts.get(0).getInitialNutType();
             final NodeEngine chain = request.getChainFor(nutType);
             retval.addAll(chain == null ? nuts : chain.parse(new EngineRequestBuilder(request).nuts(nuts).build()));
+        }
+
+        for (final ConvertibleNut nut : retval) {
+
+            // One nut can't be read, don't try to merge it
+            if (nut instanceof NotReachableNut) {
+                return retval;
+            }
         }
 
         // Merges all nuts with same type (for instance two 'aggregate.js' nuts will be wrapped by one composite nut

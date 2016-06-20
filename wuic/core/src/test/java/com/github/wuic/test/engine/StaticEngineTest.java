@@ -91,12 +91,12 @@ public class StaticEngineTest {
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
             @Override
             public URL getResource(String resourcePath) throws MalformedURLException {
-                return getClass().getResource(resourcePath);
+                return getClass().getResource("/" + resourcePath);
             }
 
             @Override
             public InputStream getResourceAsStream(String resourcePath) {
-                return getClass().getResourceAsStream(resourcePath);
+                return getClass().getResourceAsStream("/" + resourcePath);
             }
         });
 
