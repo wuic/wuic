@@ -199,7 +199,7 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
-     * Adds a mapping in the given filter for each nut
+     * Adds a mapping in the given filter for each nut.
      * </p>
      *
      * @param nuts the nuts
@@ -221,7 +221,7 @@ public class WuicServletContextListener implements ServletContextListener {
 
     /**
      * <p>
-     * Gets the {@link BiFunction} providing parameters..
+     * Gets the {@link BiFunction} providing parameters.
      * </p>
      *
      * @param servletContext the context that must contains the function
