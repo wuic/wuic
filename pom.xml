@@ -311,7 +311,7 @@
         <ecj.version>4.3.1</ecj.version>
         <el.version>3.0-b01</el.version>
         <jboss-vfs.version>3.2.7.Final</jboss-vfs.version>
-        <attoparser.version>1.4.0.RELEASE</attoparser.version>
+        <attoparser.version>2.0.0.RELEASE</attoparser.version>
 
 		<slf4j.version>1.7.5</slf4j.version>
 
