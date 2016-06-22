@@ -279,6 +279,11 @@ public interface ApplicationConfig {
     String SPRITE_PROVIDER_CLASS_NAME = ENGINE_PREFIX + "spriteProviderClassName";
 
     /**
+     * Removes the white spaces when minifying.
+     */
+    String WHITE_SPACE_ONLY = ENGINE_PREFIX + "whiteSpaceOnly";
+
+    /**
      * <p>
      * Position where \n is inserted in text compressor.
      * </p>
