@@ -41,6 +41,7 @@ package com.github.wuic.nut.dao.core;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.IntegerConfigParam;
@@ -70,6 +71,7 @@ import java.util.List;
  * @since 0.3.1
  */
 @NutDaoService
+@Alias("http")
 public class HttpNutDao extends AbstractNutDao {
 
     /**

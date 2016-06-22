@@ -15,7 +15,7 @@
  * and be construed as a breach of these Terms of Use causing significant harm to
  * Capgemini.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, PEACEFUL ENJOYMENT,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
  * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -36,77 +36,43 @@
  */
 
 
-package com.github.wuic.engine.core;
+package com.github.wuic.config;
 
-import com.github.wuic.NutType;
-import com.github.wuic.config.Alias;
-import com.github.wuic.config.Config;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.nut.ConvertibleNut;
-import com.github.wuic.util.IOUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * <p>
- * Engine that compress images. Currently do nothing but could be completed in
- * future enhancement.
+ * This annotation should be used to identify differently a component of a particular type via the configuration APIs.
  * </p>
- * 
+ *
+ * <p>
+ * If a component created with the {@link ObjectBuilder} is annotated with this annotation, the defined {@code String}
+ * value can be used to identify its class when calling {@link ObjectBuilderFactory#create(String)}.
+ * </p>
+ *
+ * <p>
+ * Moreover, inside the {@link com.github.wuic.context.ContextBuilder}, any default component created with
+ * {@link com.github.wuic.context.ContextBuilder#configureDefault()} can be identified with the alias.
+ * </p>
+ *
  * @author Guillaume DROUET
- * @since 0.2.0
+ * @since 0.5.3
  */
-@EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
-@Alias("imageCompressor")
-public class ImageCompressorEngine extends AbstractCompressorEngine {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Alias {
 
     /**
      * <p>
-     * Initializes a new {@link com.github.wuic.engine.Engine}.
+     * Returns the aliases for the annotated component class.
      * </p>
+     *
+     * @return the list of aliases
      */
-    @Config
-    public void init() {
-       setRenameExtensionPrefix("");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut, final EngineRequest request)
-            throws IOException {
-        // Do not use char set here !
-        IOUtils.copyStream(source, target);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canAggregateTransformedStream() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.PNG);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EngineType getEngineType() {
-        return EngineType.BINARY_COMPRESSION;
-    }
+    String value();
 }

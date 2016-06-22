@@ -27,7 +27,7 @@
     </nut-dao-builders>
 
     <engine-builders>
-        <engine-builder id="wuicDefaultSpriteInspectorEngineBuilder" type="SpriteInspectorEngineBuilder">
+        <engine-builder id="spriteInspector" type="SpriteInspectorEngineBuilder">
             <properties>
                 <!-- javascript|css can cause stack overflow error -->
                 <property key="c.g.wuic.engine.spriteProviderClassName">javascript</property>

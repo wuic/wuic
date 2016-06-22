@@ -19,7 +19,7 @@
     <workflow-templates>
         <workflow-template id="tpl">
             <engine-chain>
-                <engine-builder-id>wuicDefaultImageAggregatorEngineBuilder</engine-builder-id>
+                <engine-builder-id>imageAggregator</engine-builder-id>
             </engine-chain>
         </workflow-template>
     </workflow-templates>

@@ -71,6 +71,7 @@ import java.util.List;
  * @since 0.4.2
  */
 @NutDaoService
+@Alias("webapp")
 public class WebappNutDao extends PathNutDao implements ServletContextHandler {
 
     /**

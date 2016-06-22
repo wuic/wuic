@@ -18,7 +18,7 @@
     <workflow-templates>
         <workflow-template id="tpl">
             <engine-chain>
-                <engine-builder-id>wuicDefaultGzipEngineBuilder</engine-builder-id>
+                <engine-builder-id>gzip</engine-builder-id>
             </engine-chain>
         </workflow-template>
     </workflow-templates>

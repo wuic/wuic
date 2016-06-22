@@ -43,6 +43,7 @@ import com.github.wuic.ProcessContext;
 import com.github.wuic.Profile;
 import com.github.wuic.Workflow;
 import com.github.wuic.WorkflowTemplate;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.config.ObjectBuilderInspector;
@@ -113,11 +114,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {
-
-    /**
-     * Prefix for default IDs.
-     */
-    static final String BUILDER_ID_PREFIX = "wuicDefault";
 
     /**
      * The logger.
@@ -1241,7 +1237,8 @@ public class ContextBuilder extends Observable {
      * @return the default ID
      */
     public static String getDefaultBuilderId(final Class<?> component) {
-        return getDefaultBuilderId(builderName(component.getSimpleName()));
+        return component.isAnnotationPresent(Alias.class)
+                ? component.getAnnotation(Alias.class).value() : "wuicDefault" + builderName(component.getSimpleName());
     }
 
     /**
@@ -1252,7 +1249,15 @@ public class ContextBuilder extends Observable {
      * @param builderName the builder name
      * @return the default builder ID
      */
-    public static String getDefaultBuilderId(final String builderName) {
+    public String getDefaultBuilderId(final String builderName) {
+        for (final ObjectBuilderFactory<?> factory : Arrays.asList(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)) {
+            final String alias = factory.findAlias(builderName);
+
+            if (alias != null) {
+                return alias;
+            }
+        }
+
         return "wuicDefault" + builderName;
     }
 
@@ -1263,7 +1268,7 @@ public class ContextBuilder extends Observable {
      *
      * @return the default ID
      */
-    public static String getDefaultBuilderId() {
+    public String getDefaultBuilderId() {
         return getDefaultBuilderId(ClasspathNutDao.class);
     }
 
@@ -1323,9 +1328,8 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
-     * Configures for each type provided by the engine builder factory and nut dao builder factory a
-     * default instance identified with an id starting by {@link #BUILDER_ID_PREFIX} and followed by the type
-     * name itself.
+     * Configures for each type provided by the engine builder factory and nut dao builder factory a default instance
+     * identified with an id value returned by {@link #getDefaultBuilderId(Class)} and followed by the type name itself.
      * </p>
      *
      * @return the current builder
@@ -1337,17 +1341,17 @@ public class ContextBuilder extends Observable {
             configure(new DefaultContextBuilderConfigurator(engineBuilderFactory){
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
-                    contextBuilder.contextEngineBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                    contextBuilder.contextEngineBuilder(getDefaultBuilderId(type.getClassType()), type.getTypeName()).toContext();
                 }
             }, new DefaultContextBuilderConfigurator(nutDaoBuilderFactory) {
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
-                    contextBuilder.contextNutDaoBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                    contextBuilder.contextNutDaoBuilder(getDefaultBuilderId(type.getClassType()), type.getTypeName()).toContext();
                 }
             }, new DefaultContextBuilderConfigurator(nutFilterBuilderFactory) {
                 @Override
                 void internalConfigure(final ContextBuilder contextBuilder, final ObjectBuilderFactory.KnownType type) {
-                    contextBuilder.contextNutFilterBuilder(BUILDER_ID_PREFIX + type.getTypeName(), type.getTypeName()).toContext();
+                    contextBuilder.contextNutFilterBuilder(getDefaultBuilderId(type.getClassType()), type.getTypeName()).toContext();
                 }
             });
 

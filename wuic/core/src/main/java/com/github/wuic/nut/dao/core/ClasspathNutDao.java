@@ -63,6 +63,7 @@ import java.util.List;
  * @since 0.5.0
  */
 @NutDaoService
+@Alias("classpath")
 public class ClasspathNutDao extends DiskNutDao {
 
     /**

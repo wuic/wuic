@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
 import com.github.wuic.engine.DimensionPacker;
@@ -84,6 +85,7 @@ import static com.github.wuic.ApplicationConfig.PACKER_CLASS_NAME;
  * @since 0.2.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("imageAggregator")
 public class ImageAggregatorEngine extends AbstractAggregatorEngine {
 
     /**

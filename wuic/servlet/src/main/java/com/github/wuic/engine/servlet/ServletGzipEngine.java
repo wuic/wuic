@@ -39,6 +39,7 @@
 package com.github.wuic.engine.servlet;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
@@ -53,6 +54,7 @@ import com.github.wuic.engine.core.GzipEngine;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("servletGzip")
 public class ServletGzipEngine extends GzipEngine {
 
     /**

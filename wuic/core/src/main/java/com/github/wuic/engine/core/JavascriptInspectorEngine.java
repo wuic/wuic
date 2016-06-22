@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
@@ -61,6 +62,7 @@ import java.util.regex.Pattern;
  * @since 0.4.5
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("javascriptInspector")
 public class JavascriptInspectorEngine extends TextInspectorEngine {
 
     /**

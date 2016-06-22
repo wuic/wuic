@@ -44,7 +44,7 @@
     {
         "id": "defaultWorkflowTemplate",
         "profiles": "foo",
-        "engineChain": ["defaultEngine", "wuicDefaultGzipEngineBuilder"]
+        "engineChain": ["defaultEngine", "gzip"]
     }],
     "workflows": [{
         "idPrefix": "workflow",

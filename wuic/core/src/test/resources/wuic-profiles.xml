@@ -35,7 +35,7 @@
         <workflow-template id="defaultWorkflowTemplate" profiles="foo">
             <engine-chain>
                 <engine-builder-id>defaultEngine</engine-builder-id>
-                <engine-builder-id>wuicDefaultGzipEngineBuilder</engine-builder-id>
+                <engine-builder-id>gzip</engine-builder-id>
             </engine-chain>
         </workflow-template>
     </workflow-templates>

@@ -40,6 +40,7 @@ package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.Config;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.NotReachableNut;
@@ -61,6 +62,7 @@ import java.util.List;
  * @since 0.5.2
  */
 @NutDaoService
+@Alias("unreachable")
 public class UnreachableNutDao extends AbstractNutDao {
 
     /**

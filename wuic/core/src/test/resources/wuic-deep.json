@@ -35,7 +35,7 @@
     ],
     "workflowTemplates": [{
         "id": "tpl",
-        "engineChain": ["wuicDefaultMemoryMapCacheEngineBuilder"]
+        "engineChain": ["defaultCache"]
     }],
     "workflows": [
         {

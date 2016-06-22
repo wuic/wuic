@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.IntegerConfigParam;
@@ -58,6 +59,7 @@ import java.util.HashMap;
  * @since 0.4.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("defaultCache")
 public class MemoryMapCacheEngine extends ScheduledCacheEngine {
 
     /**

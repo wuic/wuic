@@ -86,6 +86,11 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         private String typeName;
 
         /**
+         * Alias.
+         */
+        private String alias;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -95,6 +100,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         public KnownType(final Class<T> classType) {
             this.classType = classType;
             this.typeName = classType.getSimpleName() + "Builder";
+            this.alias = classType.isAnnotationPresent(Alias.class) ? classType.getAnnotation(Alias.class).value() : null;
         }
 
         /**
@@ -104,6 +110,17 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
          */
         public Class<T> getClassType() {
             return classType;
+        }
+
+        /**
+         * <p>
+         * Gets the alias.
+         * </p>
+         *
+         * @return the alias, {@code null} if not alias is defined
+         */
+        public String getAlias() {
+            return alias;
         }
 
         /**
@@ -276,6 +293,24 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
     public ObjectBuilderFactory<T> inspector(final ObjectBuilderInspector obi) {
         inspector(inspectors, obi);
         return this;
+    }
+
+    /**
+     * <p>
+     * Returns the alias of the given builder name if exists.
+     * </p>
+     *
+     * @param builderName the builder name
+     * @return the alias is exist, {@code null} otherwise
+     */
+    public String findAlias(final String builderName) {
+        for (final ObjectBuilderFactory.KnownType knownType : knownTypes()) {
+            if (knownType.getTypeName().equals(builderName)) {
+                return knownType.getAlias();
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -478,12 +513,13 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
     /**
      * <p>
      * Creates a builder for the given type. The type is the simple name of the class produced by the builder.
-     * All supported type are detected during classpath scanning. If a type could not be registered, the
-     * cause is logged and when retrieved with this method, {@code null} will be returned.
+     * Alternatively the type can be the value defined in {@link Alias} used to annotate the associated class
+     * (equality is case insensitive). All supported type are detected during classpath scanning. If a type
+     * could not be registered, the cause is logged and when retrieved with this method, {@code null} will be returned.
      * </p>
      *
      * <p>
-     * Throws an {@code IllegalArgumentException} if the there is a bad usage of annotation or if the type is unknown
+     * Throws an {@code IllegalArgumentException} if the there is a bad usage of annotation or if the type is unknown.
      * </p>
      *
      * @param type the type created by the builder
@@ -494,7 +530,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         Class<T> clazz = null;
 
         for (final KnownType knownType : knownTypes) {
-            if (knownType.getTypeName().equals(type)) {
+            if (knownType.getTypeName().equals(type) || (knownType.getAlias() != null && knownType.getAlias().equalsIgnoreCase(type))) {
                 clazz = knownType.getClassType();
                 break;
             }

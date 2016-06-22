@@ -753,7 +753,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                 if (HeadEngine.class.isAssignableFrom(knownType.getClassType())
                         && annotation.injectDefaultToWorkflow()
                         && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) != -1))) {
-                    final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
+                    final String id = ContextBuilder.getDefaultBuilderId(knownType.getClassType());
                     HeadEngine engine = HeadEngine.class.cast(newEngine(id, profiles));
 
                     if (annotation.isCoreEngine()) {
@@ -838,7 +838,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                 if ((NodeEngine.class.isAssignableFrom(knownType.getClassType()))
                         && EngineService.class.cast(knownType.getClassType().getAnnotation(EngineService.class)).injectDefaultToWorkflow()
                         && ((ebTypesExclusion == null || CollectionUtils.indexOf(knownType.getTypeName(), ebTypesExclusion) == -1))) {
-                    final String id = ContextBuilder.BUILDER_ID_PREFIX + knownType.getTypeName();
+                    final String id = ContextBuilder.getDefaultBuilderId(knownType.getClassType());
                     NodeEngine engine = NodeEngine.class.cast(newEngine(id, profiles));
 
                     // TODO: would be easier if nut types are provided by service annotation

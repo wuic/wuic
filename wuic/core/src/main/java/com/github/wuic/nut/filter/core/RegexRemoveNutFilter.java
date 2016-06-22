@@ -39,6 +39,7 @@
 package com.github.wuic.nut.filter.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
@@ -59,6 +60,7 @@ import java.util.regex.Pattern;
  * @since 0.4.5
  */
 @NutFilterService
+@Alias("regex")
 public class RegexRemoveNutFilter implements NutFilter {
 
     /**

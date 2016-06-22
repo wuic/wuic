@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.StringConfigParam;
@@ -132,6 +133,7 @@ import static com.github.wuic.ApplicationConfig.RESOLVED_FILE_DIRECTORY_AS_WORKI
  * @since 0.5.3
  */
 @EngineService(injectDefaultToWorkflow = true)
+@Alias("cli")
 public class CommandLineConverterEngine extends AbstractConverterEngine
         implements BiFunction<CommandLineConverterEngine.CommandLineInfo, EngineRequest, Boolean> {
 

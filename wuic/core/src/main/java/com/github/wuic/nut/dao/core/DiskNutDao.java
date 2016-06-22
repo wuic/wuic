@@ -63,6 +63,7 @@ import java.io.IOException;
  * @since 0.3.1
  */
 @NutDaoService
+@Alias("disk")
 public class DiskNutDao extends PathNutDao implements ApplicationConfig {
 
     /**

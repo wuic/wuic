@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
@@ -67,6 +68,7 @@ import java.util.zip.GZIPOutputStream;
  * @since 0.5.0
  */
 @EngineService(injectDefaultToWorkflow = false, isCoreEngine = true)
+@Alias("gzip")
 public class GzipEngine extends NodeEngine {
 
     /**

@@ -20,7 +20,7 @@
     "workflowTemplates": [{
         "id": "tpl",
         "engineChain": [
-            "wuicDefaultGzipEngineBuilder"
+            "gzip"
         ]
     }],
     "workflows": [{

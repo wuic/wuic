@@ -30,7 +30,7 @@
     <workflow-templates>
         <workflow-template id="tpl">
             <engine-chain>
-                <engine-builder-id>wuicDefaultMemoryMapCacheEngineBuilder</engine-builder-id>
+                <engine-builder-id>defaultCache</engine-builder-id>
             </engine-chain>
         </workflow-template>
     </workflow-templates>

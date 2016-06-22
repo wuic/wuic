@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
@@ -106,6 +107,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 0.4.4
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("htmlInspector")
 public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
     /**

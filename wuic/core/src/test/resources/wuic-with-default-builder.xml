@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <wuic>
     <heaps>
-        <heap id="simpleHeap" dao-builder-id="wuicDefaultClasspathNutDaoBuilder">
+        <heap id="simpleHeap" dao-builder-id="classpath">
             <nut-path>css/jquery-ui.css</nut-path>
         </heap>
     </heaps>

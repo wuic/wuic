@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
@@ -83,6 +84,7 @@ import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
  * @since 0.1.0
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("textAggregator")
 public class TextAggregatorEngine extends AbstractAggregatorEngine implements EngineRequestTransformer.RequireEngineRequestTransformer {
 
     /**

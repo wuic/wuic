@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.config.ObjectConfigParam;
@@ -81,6 +82,7 @@ import javax.imageio.stream.ImageInputStream;
  * @since 0.4.4
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("spriteInspector")
 public class SpriteInspectorEngine extends NodeEngine {
 
     /**

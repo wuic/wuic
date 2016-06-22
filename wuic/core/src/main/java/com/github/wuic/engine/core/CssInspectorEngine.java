@@ -40,6 +40,7 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
@@ -57,6 +58,7 @@ import java.util.List;
  * @since 0.3.3
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
+@Alias("cssInspector")
 public class CssInspectorEngine extends TextInspectorEngine {
 
     /**
