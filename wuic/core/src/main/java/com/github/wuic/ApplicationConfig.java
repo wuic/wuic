@@ -426,6 +426,11 @@ public interface ApplicationConfig {
     String WUIC_SERVLET_JSON_PATH_PARAM = FACADE_PREFIX + "jsonPath";
 
     /**
+     * Default {@link com.github.wuic.nut.dao.NutDao} class to apply.
+     */
+    String WUIC_DEFAULT_NUT_DAO_CLASS = FACADE_PREFIX + "defaultNutDaoClass";
+
+    /**
      * A list of comma-separated class names implementing {@link com.github.wuic.config.ObjectBuilderInspector} with
      * a default constructor that will be used in the facade.
      */

@@ -171,6 +171,11 @@ public class ContextBuilder extends Observable {
     private List<String> profiles;
 
     /**
+     * The default {@link NutDao}.
+     */
+    private Class<? extends NutDao> defaultNutDaoClass;
+
+    /**
      * <p>
      * Creates a new instance with the builder factories of a context and additional inspectors.
      * </p>
@@ -184,6 +189,7 @@ public class ContextBuilder extends Observable {
         propertyResolver = properties;
         childrenTags = new HashMap<Object, List<Object>>();
         profiles = new ArrayList<String>(b.profiles);
+        defaultNutDaoClass = b.defaultNutDaoClass;
     }
 
     /**
@@ -224,6 +230,7 @@ public class ContextBuilder extends Observable {
         this.configureDefault = false;
         this.propertyResolver = new EnhancedPropertyResolver();
         this.profiles = new ArrayList<String>();
+        this.defaultNutDaoClass = ClasspathNutDao.class;
         this.childrenTags = new HashMap<Object, List<Object>>();
 
         this.engineBuilderFactory = engineBuilderFactory == null ?
@@ -1269,7 +1276,7 @@ public class ContextBuilder extends Observable {
      * @return the default ID
      */
     public String getDefaultBuilderId() {
-        return getDefaultBuilderId(ClasspathNutDao.class);
+        return getDefaultBuilderId(defaultNutDaoClass);
     }
 
     /**
@@ -1358,6 +1365,19 @@ public class ContextBuilder extends Observable {
             configureDefault = true;
         }
 
+        return this;
+    }
+
+    /**
+     * <p>
+     * Configures the default {@link NutDao} class.
+     * </p>
+     *
+     * @param clazz the class
+     * @return this
+     */
+    public ContextBuilder defaultNutDaoClass(final Class<? extends NutDao> clazz) {
+        defaultNutDaoClass = clazz;
         return this;
     }
 

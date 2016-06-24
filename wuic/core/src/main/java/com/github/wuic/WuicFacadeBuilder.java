@@ -48,6 +48,7 @@ import com.github.wuic.exception.WorkflowTemplateNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.Consumer;
 import com.github.wuic.util.EnhancedPropertyResolver;
 import com.github.wuic.util.IOUtils;
@@ -431,6 +432,34 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
 
     /**
      * <p>
+     * Configures the default {@link NutDao} class specified in {@link ApplicationConfig#WUIC_DEFAULT_NUT_DAO_CLASS} property.
+     * </p>
+     *
+     * @throws ClassNotFoundException if specified class does not exists
+     */
+    @SuppressWarnings("unchecked")
+    private void configureDefaultNutDaoClass() throws ClassNotFoundException {
+        final String defaultDaoClass = propertyResolver.resolveProperty(ApplicationConfig.WUIC_DEFAULT_NUT_DAO_CLASS);
+
+        // The default class property has been specified
+        if (defaultDaoClass != null) {
+            final Class<?> clazz = Class.forName(defaultDaoClass);
+
+            // Checks that class IS-A NutDao
+            if (!NutDao.class.isAssignableFrom(clazz)) {
+                WuicException.throwBadArgumentException(new IllegalArgumentException(String.format(
+                        "class %s specified in %s property must be %s.",
+                        defaultDaoClass,
+                        ApplicationConfig.WUIC_DEFAULT_NUT_DAO_CLASS,
+                        NutDao.class.getName())));
+            }
+
+            contextBuilder.defaultNutDaoClass((Class<? extends NutDao>) clazz);
+        }
+    }
+
+    /**
+     * <p>
      * Adds the given resolver to this builder.
      * </p>
      *
@@ -637,6 +666,7 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
             final String[] profiles = contextBuilder.getActiveProfiles();
             additionalPropertyPath(profiles);
             additionalComponents(profiles);
+            configureDefaultNutDaoClass();
 
             if (contextPath == null) {
                 // Context where nuts will be exposed

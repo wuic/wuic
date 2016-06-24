@@ -49,6 +49,7 @@ import com.github.wuic.engine.core.TextAggregatorEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ClasspathNutDao;
+import com.github.wuic.nut.dao.core.HttpNutDao;
 import com.github.wuic.util.MapPropertyResolver;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
@@ -141,6 +142,42 @@ public class WuicFacadeBuilderTest {
                 return ApplicationConfig.WUIC_SERVLET_XML_PATH_PARAM.equals(first) ? "" : null;
             }
         }).build();
+    }
+
+    /**
+     * <p>
+     * Test facade when a bad default {@link com.github.wuic.nut.dao.NutDao} class is specified.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testBadDefaultNutDaoClass() throws WuicException {
+        new WuicFacadeBuilder(new PropertyResolver() {
+            @Override
+            public String resolveProperty(final String first) {
+                return ApplicationConfig.WUIC_DEFAULT_NUT_DAO_CLASS.equals(first) ? String.class.getName() : null;
+            }
+        }).build();
+    }
+
+    /**
+     * <p>
+     * Test facade when a different default {@link com.github.wuic.nut.dao.NutDao} class is specified.
+     * Since the {@link HttpNutDao} is supposed to be used, an {@link IllegalStateException} is expected as no HTTP
+     * server is running.
+     * </p>
+     *
+     * @throws WuicException if test fails
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testDefaultNutDaoClass() throws WuicException {
+        new WuicFacadeBuilder(new PropertyResolver() {
+            @Override
+            public String resolveProperty(final String first) {
+                return ApplicationConfig.WUIC_DEFAULT_NUT_DAO_CLASS.equals(first) ? HttpNutDao.class.getName() : null;
+            }
+        }).wuicConfigurationPath(getClass().getResource("/wuic-conventions.json")).build().runWorkflow("wf-heap", ProcessContext.DEFAULT);
     }
 
     /**
