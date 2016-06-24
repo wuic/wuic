@@ -305,7 +305,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
      */
     public String findAlias(final String builderName) {
         for (final ObjectBuilderFactory.KnownType knownType : knownTypes()) {
-            if (knownType.getTypeName().equals(builderName)) {
+            if (knownType.getTypeName().equals(builderName) || builderName.equals(knownType.getAlias())) {
                 return knownType.getAlias();
             }
         }
