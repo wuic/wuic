@@ -82,7 +82,7 @@ import static com.github.wuic.ApplicationConfig.FIXED_VERSION_NUMBER;
  * An abstract implementation of a {@link NutDao}. As any implementation should provides it, this class defines a base
  * path when retrieved nuts, a set of proxies URIs and a polling feature.
  * </p>
- * <p/>
+ *
  * <p>
  * The class is designed to be thread safe.
  * </p>
@@ -130,7 +130,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         if (base == null) {
             WuicException.throwBadArgumentException(new IllegalArgumentException("Base path can't be null"));
         } else {
-            basePath = !base.isEmpty() && base.charAt(0) == '.' ? base : IOUtils.mergePath("/", base);
+            basePath = isRelative(base) ? base : IOUtils.mergePath("/", base);
         }
 
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
@@ -158,6 +158,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run() {
         // Log duration
         final Long start = System.currentTimeMillis();
@@ -256,7 +257,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * <p>
      * Gets the version number for the {@link Nut} the given path.
      * </p>
-     * <p/>
+     *
      * <p>
      * If the {@link VersionNumberStrategy#contentBasedVersionNumber} value related to
      * {@link com.github.wuic.ApplicationConfig#CONTENT_BASED_VERSION_NUMBER} is {@code true}, then the content is read
@@ -290,6 +291,21 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      */
     protected String absolutePathOf(final String relativePath) {
         return StringUtils.simplifyPathWithDoubleDot(IOUtils.mergePath(getBasePath(), relativePath));
+    }
+
+    /**
+     * <p>
+     * Determines if the given path is relative and must be taken as it is or if it should be prefixed by a '/' character.
+     * This class uses this methods to determine if the base path must be prefixed by a slash or not.
+     * Default behavior consists to check that the {@code String} is not empty and starts with '.' but this can be changed
+     * by subclass.
+     * </p>
+     *
+     * @param path the path to check
+     * @return {@code true} if the path is relative and should not be prefixed by '/', {@code false} otherwise
+     */
+    protected boolean isRelative(final String path) {
+        return !path.isEmpty() && path.charAt(0) == '.';
     }
 
     /**
