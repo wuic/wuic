@@ -329,17 +329,6 @@ public final class EngineRequest {
     }
 
     /**
-     * <p>
-     * Returns the line separator.
-     * </p>
-     *
-     * @return the line separator
-     */
-    public String getLineSeparator() {
-        return getBuilder().getLineSeparator();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override

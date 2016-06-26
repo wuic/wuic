@@ -138,11 +138,6 @@ public final class EngineRequestBuilder {
     private String charset;
 
     /**
-     * Line separator.
-     */
-    private String lineSeparator;
-
-    /**
      * The nut that has created this builder.
      */
     private ConvertibleNut origin;
@@ -169,7 +164,6 @@ public final class EngineRequestBuilder {
         context = ctx;
         staticsServedByWuicServlet = false;
         charset = "UTF-8";
-        lineSeparator = "\n";
     }
 
     /**
@@ -195,7 +189,6 @@ public final class EngineRequestBuilder {
         excludeFromSprite = other.excludeFromSprite;
         staticsServedByWuicServlet = other.staticsServedByWuicServlet;
         charset = other.charset;
-        lineSeparator = other.lineSeparator;
         origin = other.origin;
     }
 
@@ -343,19 +336,6 @@ public final class EngineRequestBuilder {
      */
     public EngineRequestBuilder charset(final String cs) {
         charset = cs;
-        return this;
-    }
-
-    /**
-     * <p>
-     * Sets the line separator.
-     * </p>
-     *
-     * @param separator the line separator
-     * @return this
-     */
-    public EngineRequestBuilder lineSeparator(final String separator) {
-        lineSeparator = separator;
         return this;
     }
 
@@ -640,16 +620,5 @@ public final class EngineRequestBuilder {
      */
     String getCharset() {
         return charset;
-    }
-
-    /**
-     * <p>
-     * Gets the line separator.
-     * </p>
-     *
-     * @return the line separator
-     */
-    String getLineSeparator() {
-        return lineSeparator;
     }
 }

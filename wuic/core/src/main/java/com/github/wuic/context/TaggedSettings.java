@@ -102,11 +102,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
     private String charset;
 
     /**
-     * Line separator applied in requests.
-     */
-    private String lineSeparator;
-
-    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -416,7 +411,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             interceptors.addAll(setting.getInterceptorsList());
         }
 
-        interceptors.add(new SettingsContextInterceptor(IOUtils.checkCharset(charset), lineSeparator));
+        interceptors.add(new SettingsContextInterceptor(IOUtils.checkCharset(charset)));
 
         return interceptors;
     }
@@ -870,8 +865,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      */
     void applyProperties(final PropertyResolver properties) {
 
-        // Captures the charset and line separator to use in requests
-        lineSeparator = properties.resolveProperty("line.separator");
+        // Captures the charset to use in requests
         final String cs = properties.resolveProperty(ApplicationConfig.CHARSET);
 
         if (cs != null) {
@@ -1225,7 +1219,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
-     * Interceptor setting the charset and line separators in created requests.
+     * Interceptor setting the charset in created requests.
      * </p>
      *
      * @author Guillaume DROUET
@@ -1239,21 +1233,14 @@ public class TaggedSettings extends ContextInterceptorAdapter {
         private final String charset;
 
         /**
-         * The line separator.
-         */
-        private final String lineSeparator;
-
-        /**
          * <p>
          * Builds a new instance.
          * </p>
          *
          * @param charset the charset
-         * @param separator the line separator
          */
-        private SettingsContextInterceptor(final String charset, final String separator) {
+        private SettingsContextInterceptor(final String charset) {
             this.charset = charset;
-            this.lineSeparator = separator;
         }
 
         /**
@@ -1261,10 +1248,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
          */
         @Override
         public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
-            if (lineSeparator != null) {
-                request.lineSeparator(lineSeparator);
-            }
-
             return request.charset(charset);
         }
 
@@ -1273,10 +1256,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
          */
         @Override
         public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
-            if (lineSeparator != null) {
-                request.lineSeparator(lineSeparator);
-            }
-
             return request.charset(charset);
         }
     }
