@@ -52,6 +52,7 @@ import com.github.wuic.util.IOUtils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -167,7 +168,41 @@ public abstract class PathNutDao extends AbstractNutDao {
             }
         }
 
-        return IOUtils.listFile(DirectoryPath.class.cast(baseDirectory), Pattern.compile(Pattern.quote(pattern)), skipStartsWith());
+        // Checks if single path is skipped
+        for (final String skipStartsWith : skipStartsWith()) {
+            if (pattern.startsWith(skipStartsWith)) {
+                return Collections.EMPTY_LIST;
+            }
+        }
+
+        // Checks if the single path exists
+        DirectoryPath parent = baseDirectory;
+        final String[] lookup = (pattern.startsWith("/") ? pattern.substring(1) : pattern).split("/");
+
+        // Try to walk through the path
+        for (int i = 0; i < lookup.length; i++) {
+            final String l = lookup[i];
+
+            // No child, stop searching
+            if (!Arrays.asList(parent.list()).contains(l)) {
+                break;
+            }
+
+            final Path p = parent.getChild(l);
+
+            // Child is a directory, will see in next iteration if path is still valid
+            if (p instanceof DirectoryPath) {
+                parent = DirectoryPath.class.cast(p);
+            } else if (i != lookup.length - 1) {
+                // Child is not a directory and is not the end of the path: no match
+                return Collections.EMPTY_LIST;
+            } else {
+                // Other cases like null child: no match
+                return Arrays.asList(pattern);
+            }
+        }
+
+        return Collections.EMPTY_LIST;
     }
 
     /**

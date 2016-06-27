@@ -175,6 +175,26 @@ public class PathNutDaoTest {
     }
 
     /**
+     * Tests one direct entry for {@link ClasspathNutDao}.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void noScanningTest() throws Exception {
+        folder.newFolder("no", "scanning", "test");
+        final File file = folder.newFile("no/scanning/test/foo.css");
+
+        final Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
+        method.setAccessible(true);
+        method.invoke(getClass().getClassLoader(), new Object[]{file.getParentFile().getParentFile().getParentFile().toURI().toURL()});
+
+        final ClasspathNutDao dao = new ClasspathNutDao();
+        dao.init("/scanning", null, -1, false, false);
+        dao.init(false, false, null);
+        Assert.assertEquals(1, dao.create("test/foo.css", ProcessContext.DEFAULT).size());
+    }
+
+    /**
      * <p>
      * Test exists implementation for {@link ClasspathNutDao}.
      * </p>
