@@ -126,7 +126,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
+    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
         os.write(removeSourceMap(is, request, convertible));
 
         // We are able to compute the source map
@@ -175,6 +175,8 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 throw new IOException("Unable to build aggregated source map.", ex);
             }
         }
+
+        return true;
     }
 
     /**

@@ -284,7 +284,7 @@ public abstract class TextInspectorEngine
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut, final EngineRequest request)
+    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut, final EngineRequest request)
             throws IOException {
         // Make sure that replacement are iterated in the right order
         final Set<LineInspector.ReplacementInfo> replacements = new TreeSet<LineInspector.ReplacementInfo>();
@@ -312,6 +312,7 @@ public abstract class TextInspectorEngine
 
         // Write the result
         writeResult(replacements, stringBuilder, request, convertibleNut, os);
+        return true;
     }
 
     /**

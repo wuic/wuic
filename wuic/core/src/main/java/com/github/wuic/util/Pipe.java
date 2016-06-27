@@ -120,9 +120,10 @@ public final class Pipe<T extends ConvertibleNut> {
          * @param is          the input
          * @param os          the output
          * @param convertible the object that provides the original input stream
+         * @return {@code true} if the input stream has been read and the output stream used, {@code false} otherwise
          * @throws IOException if an I/O error occurs
          */
-        void transform(InputStream is, OutputStream os, T convertible) throws IOException;
+        boolean transform(InputStream is, OutputStream os, T convertible) throws IOException;
 
         /**
          * <p>
@@ -295,8 +296,8 @@ public final class Pipe<T extends ConvertibleNut> {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final T convertible) throws IOException {
-            IOUtils.copyStream(is, os);
+        public boolean transform(final InputStream is, final OutputStream os, final T convertible) throws IOException {
+            return false;
         }
 
         /**
@@ -498,42 +499,52 @@ public final class Pipe<T extends ConvertibleNut> {
         if (!ignoreCompositeStream && (inputStream instanceof CompositeNut.CompositeInputStream)) {
             transform(convertible, CompositeNut.CompositeInputStream.class.cast(inputStream)).execute(true, onReady);
         } else {
+            boolean written = false;
+            InputStream is = inputStream;
 
-            // No transformer, simply copy streams
-            if (transformers.isEmpty()) {
-                try {
-                    IOUtils.copyStream(inputStream, os);
-                } finally {
-                    IOUtils.close(inputStream, os);
-                }
-            } else {
-                InputStream is = inputStream;
+            // Make transformation
+            for (final Transformer<T> t : transformers) {
 
-                // Make transformation
-                for (final Transformer<T> t : transformers) {
-                    // Pipe transformers with in memory byte arrays
-                    if (!t.equals(transformers.getLast())) {
-                        final OutputStream out;
+                // Pipe transformers with in memory byte arrays
+                if (!t.equals(transformers.getLast())) {
+                    final OutputStream out;
 
-                        // Keep the composition information
-                        out = new ByteArrayOutputStream();
+                    // Keep the composition information
+                    out = new ByteArrayOutputStream();
 
-                        try {
-                            t.transform(is, out, convertible);
-                        } finally {
+                    try {
+                        written = t.transform(is, out, convertible);
+                    } finally {
+                        if (written) {
                             IOUtils.close(is, out);
                         }
+                    }
 
-                        // Retrieve the new CompositeInputStream
+                    // Retrieve the new CompositeInputStream
+                    if (written) {
                         is = new ByteArrayInputStream(ByteArrayOutputStream.class.cast(out).toByteArray());
-                    } else {
-                        try {
-                            // Last transformation
-                            t.transform(is, os, convertible);
-                        } finally {
+                    }
+                } else {
+                    try {
+                        // Last transformation
+                        written = t.transform(is, os, convertible);
+                    } finally {
+                        if (written) {
                             IOUtils.close(is, os);
                         }
                     }
+                }
+            }
+
+            if (!written) {
+                if (is == null) {
+                    is = inputStream;
+                }
+
+                try {
+                    IOUtils.copyStream(is, os);
+                } finally {
+                    IOUtils.close(is, os);
                 }
             }
 

@@ -744,12 +744,13 @@ public class UtilityTest extends WuicTest {
     @Test
     public void pipeTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(10);
-        final Pipe p = new Pipe(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
-        class T extends Pipe.DefaultTransformer {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
+        class T extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public void transform(final InputStream is, final OutputStream os, final Object o) throws IOException {
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
                 int r = is.read();
                 os.write(r + count.decrementAndGet());
+                return true;
             }
         }
 
@@ -762,6 +763,178 @@ public class UtilityTest extends WuicTest {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Pipe.executeAndWriteTo(p, new ArrayList<Pipe.OnReady>(), bos);
         Assert.assertEquals(expect, bos.toByteArray()[0]);
+    }
+
+    /**
+     * <p>
+     * Tests the pipe with skipped transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void skipTransformerTest() throws Exception {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        class T extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                return false;
+            }
+        }
+        p.register(new T());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p.execute(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(out);
+            }
+        });
+
+        Assert.assertEquals("content", out.toString());
+    }
+
+    /**
+     * <p>
+     * Tests the pipe with no transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void noTransformerTest() throws Exception {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p.execute(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(out);
+            }
+        });
+
+        Assert.assertEquals("content", out.toString());
+    }
+
+    /**
+     * <p>
+     * Tests the pipe with first skipped transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void firstTransformerSkippedTest() throws Exception {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                return false;
+            }
+        }
+
+        class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                os.write("T2".getBytes());
+                return true;
+            }
+        }
+        p.register(new T1());
+        p.register(new T2());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p.execute(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(out);
+            }
+        });
+
+        Assert.assertEquals("T2", out.toString());
+    }
+
+    /**
+     * <p>
+     * Tests the pipe with last skipped transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void lastTransformerSkippedTest() throws Exception {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                return false;
+            }
+        }
+
+        class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                os.write("T1".getBytes());
+                return true;
+            }
+        }
+        p.register(new T1());
+        p.register(new T2());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p.execute(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(out);
+            }
+        });
+
+        Assert.assertEquals("T1", out.toString());
+    }
+
+    /**
+     * <p>
+     * Tests the pipe with middle skipped transformer.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void middleTransformerSkippedTest() throws Exception {
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                os.write("T1".getBytes());
+                return true;
+            }
+        }
+
+        class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                os.write("T2".getBytes());
+                return false;
+            }
+        }
+
+        class T3 extends Pipe.DefaultTransformer<ConvertibleNut> {
+            @Override
+            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+                IOUtils.copyStream(is, os);
+                os.write("T3".getBytes());
+                return true;
+            }
+        }
+
+        p.register(new T1());
+        p.register(new T2());
+        p.register(new T3());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p.execute(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                e.writeResultTo(out);
+            }
+        });
+
+        Assert.assertEquals("T1T3", out.toString());
     }
 
     /**

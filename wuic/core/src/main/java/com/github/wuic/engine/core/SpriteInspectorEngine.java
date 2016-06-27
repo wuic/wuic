@@ -404,9 +404,9 @@ public class SpriteInspectorEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
             convertible.addReferencedNut(ref);
-            super.transform(is, os, convertible);
+            return super.transform(is, os, convertible);
         }
 
         /**

@@ -127,7 +127,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut nut, final EngineRequest request)
+        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut nut, final EngineRequest request)
                 throws IOException {
             InputStream result = null;
 
@@ -151,14 +151,16 @@ public abstract class AbstractConverterEngine extends NodeEngine {
             } finally {
                 IOUtils.close(result);
             }
+
+            return true;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
-           engineRequestTransformer.transform(is, os, convertible);
+        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+           return engineRequestTransformer.transform(is, os, convertible);
         }
 
         /**

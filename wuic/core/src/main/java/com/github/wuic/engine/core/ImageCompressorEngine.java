@@ -45,7 +45,6 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
-import com.github.wuic.util.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,10 +79,9 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream source, final OutputStream target, final ConvertibleNut nut, final EngineRequest request)
+    public boolean transform(final InputStream source, final OutputStream target, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
-        // Do not use char set here !
-        IOUtils.copyStream(source, target);
+        return false;
     }
 
     /**

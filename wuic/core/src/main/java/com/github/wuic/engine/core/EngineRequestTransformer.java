@@ -79,9 +79,10 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
          * @param is the input
          * @param os the output
          * @param nut the object that provides the original input stream
+         * @return {@code true} if the input stream has been read and the output stream used, {@code false} otherwise
          * @throws IOException if an I/O error occurs
          */
-        void transform(InputStream is, OutputStream os, ConvertibleNut nut, EngineRequest request) throws IOException;
+        boolean transform(InputStream is, OutputStream os, ConvertibleNut nut, EngineRequest request) throws IOException;
     }
 
     /**
@@ -141,8 +142,8 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
-        requireEngineRequestTransformer.transform(is, os, convertible, engineRequest);
+    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+        return requireEngineRequestTransformer.transform(is, os, convertible, engineRequest);
     }
 
     /**

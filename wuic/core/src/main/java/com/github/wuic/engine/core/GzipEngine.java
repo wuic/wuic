@@ -182,13 +182,15 @@ public class GzipEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
+        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
             final GZIPOutputStream gos = new GZIPOutputStream(os);
             IOUtils.copyStream(is, gos);
             gos.close();
 
             // Make sure the nut state is changed in case of this transformer is reused.
             convertibleNut.setIsCompressed(Boolean.TRUE);
+
+            return true;
         }
     }
 }

@@ -141,7 +141,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
      * {@inheritDoc}
      */
     @Override
-    public void transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible)
+    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible)
             throws IOException {
         final long now = System.currentTimeMillis();
         final String content = IOUtils.readString(new InputStreamReader(is, charset));
@@ -201,6 +201,8 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
         IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
 
         Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
+
+        return true;
     }
 
     /**
@@ -211,6 +213,9 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int order() {
         return EngineType.INSPECTOR.ordinal();
