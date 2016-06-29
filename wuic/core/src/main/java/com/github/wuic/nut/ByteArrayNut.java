@@ -166,27 +166,19 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             } else {
                 final Source s = nut.getSource();
 
-                // Builds the sources
-                final List<ConvertibleNut> o = new ArrayList<ConvertibleNut>(s.getOriginalNuts().size());
-
+                // Converts the sources to their byte array version
                 for (final ConvertibleNut sourceNut : s.getOriginalNuts()) {
-                    // Source is already a byte array
-                    if (sourceNut instanceof ByteArrayNut) {
-                        o.add(sourceNut);
-                    } else {
+                    // Do nothing if source is already a byte array
+                    if (!(sourceNut instanceof ByteArrayNut)) {
                         // Convert the source to byte array
                         final ByteArrayOutputStream sourceOs = new ByteArrayOutputStream();
                         IOUtils.copyStream(sourceNut.openStream(), sourceOs);
                         final Long v = NutUtils.getVersionNumber(sourceNut);
-                        o.add(new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getName(), sourceNut.getNutType(), v, false));
+                        s.replaceOriginalNut(sourceNut, new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getInitialName(), sourceNut.getNutType(), v, false));
                     }
                 }
 
-                // Switch nuts to their byte array version
-                s.getOriginalNuts().clear();
-                s.getOriginalNuts().addAll(o);
-
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), s, NutUtils.getVersionNumber(o));
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), s, NutUtils.getVersionNumber(s.getOriginalNuts()));
             }
 
             bytes.setIsCompressed(nut.isCompressed());

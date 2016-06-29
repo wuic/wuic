@@ -155,6 +155,9 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                     // Ignore the first nut as it source map is the composite one
                     if (firstNut) {
                         firstNut = false;
+
+                        // Make sure the nut is added to the sources
+                        sourceMapNut.addOriginalNut(convertibleNut);
                         continue;
                     }
 

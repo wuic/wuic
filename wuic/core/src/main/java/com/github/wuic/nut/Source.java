@@ -60,7 +60,7 @@ public interface Source {
      * Gets all the {@link ConvertibleNut sources}. Can be immutable.
      * </p>
      *
-     * @return the sources
+     * @return the sources (must be a copy of the internal list)
      */
     List<ConvertibleNut> getOriginalNuts();
 
@@ -72,4 +72,15 @@ public interface Source {
      * @param convertibleNut the original nut
      */
     void addOriginalNut(ConvertibleNut convertibleNut);
+
+    /**
+     * <p>
+     * Replaces the given original nut by another nut.
+     * </p>
+     *
+     * @param original the original nut
+     * @param replacement the replacement nut
+     * @return {@code true} if the nut has been found in this source and replaced, {@code false} otherwise
+     */
+    boolean replaceOriginalNut(ConvertibleNut original, ConvertibleNut replacement);
 }

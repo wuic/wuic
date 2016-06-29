@@ -32,7 +32,7 @@ public class SourceImpl implements Source {
      */
     @Override
     public List<ConvertibleNut> getOriginalNuts() {
-        return sources;
+        return new ArrayList<ConvertibleNut>(sources);
     }
 
     /**
@@ -41,5 +41,18 @@ public class SourceImpl implements Source {
     @Override
     public void addOriginalNut(final ConvertibleNut convertibleNut) {
         sources.add(convertibleNut);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean replaceOriginalNut(final ConvertibleNut original, final ConvertibleNut replacement) {
+        if (sources.remove(original)) {
+            sources.add(replacement);
+            return true;
+        }
+
+        return false;
     }
 }

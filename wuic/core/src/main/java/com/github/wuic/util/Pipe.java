@@ -41,6 +41,7 @@ package com.github.wuic.util;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutWrapper;
+import com.github.wuic.nut.Source;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -652,6 +653,22 @@ public final class Pipe<T extends ConvertibleNut> {
                     @Override
                     public String getName() {
                         return perNutTransformation.getConvertibleNut().getName();
+                    }
+
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public String getInitialName() {
+                        return perNutTransformation.getConvertibleNut().getInitialName();
+                    }
+
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public void setSource(final Source source) {
+                        perNutTransformation.getConvertibleNut().setSource(source);
                     }
                 }, perNutTransformation.getConvertibleNut().openStream());
 

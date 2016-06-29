@@ -229,6 +229,20 @@ public interface ApplicationConfig {
 
     /**
      * <p>
+     * Compilation level for some javascript compression.
+     * </p>
+     */
+    String COMPILATION_LEVEL = ENGINE_PREFIX + "compilationLevel";
+
+    /**
+     * <p>
+     * Debug compilation for javascript compression.
+     * </p>
+     */
+    String DEBUG_COMPILATION = ENGINE_PREFIX + "debugCompilation";
+
+    /**
+     * <p>
      * Indicates if the engine should convert or not.
      * </p>
      */

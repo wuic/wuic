@@ -94,7 +94,7 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
     /**
      * The original nuts.
      */
-    private final Map<String, ConvertibleNut> sources;
+    private Map<String, ConvertibleNut> sources;
 
     /**
      * Generator.
@@ -136,6 +136,7 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
     /**
      * <p>
      * Creates a new instance with given source mapping data.
+     * Sources are discovered in the content and created from given {@link NutsHeap}.
      * </p>
      *
      * @param heap the heap that created the nuts
@@ -148,12 +149,32 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
                             final ConvertibleNut convertibleNut,
                             final ConvertibleNut nut,
                             final ProcessContext processContext) throws WuicException {
+        this(heap, convertibleNut, nut, processContext, true);
+    }
+
+    /**
+     * <p>
+     * Creates a new instance with given source mapping data and list of sources specified as parameter.
+     * </p>
+     *
+     * @param heap the heap that created the nuts
+     * @param convertibleNut the convertible nut
+     * @param nut the nut that represents this source map
+     * @param processContext the process context
+     * @param resolveSources if sources should be resolved from read content or not
+     * @throws WuicException if source map can't be read
+     */
+    public SourceMapNutImpl(final NutsHeap heap,
+                            final ConvertibleNut convertibleNut,
+                            final ConvertibleNut nut,
+                            final ProcessContext processContext,
+                            final boolean resolveSources) throws WuicException {
         super(nut);
 
-        owner = convertibleNut;
-        sources = new LinkedHashMap<String, ConvertibleNut>();
-        upToDate = false;
-        init(heap, processContext, nut);
+        this.owner = convertibleNut;
+        this.upToDate = false;
+        this.sources = new LinkedHashMap<String, ConvertibleNut>();
+        init(heap, processContext, nut, resolveSources);
     }
 
     /**
@@ -184,9 +205,13 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
      * @param nutsHeap the {@link NutsHeap} that produced the enclosing processed nut
      * @param processContext the current process context
      * @param sourceMapNut the new source map
+     * @param resolveSources resolve sources from read content or not
      * @throws WuicException if source map can't be read
      */
-    private void init(final NutsHeap nutsHeap, final ProcessContext processContext, final ConvertibleNut sourceMapNut)
+    private void init(final NutsHeap nutsHeap,
+                      final ProcessContext processContext,
+                      final ConvertibleNut sourceMapNut,
+                      final boolean resolveSources)
             throws WuicException {
         InputStream is = null;
         String sourceMap = null;
@@ -208,22 +233,8 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
             // Parse the existing source map
             consumer.parse(sourceMap);
 
-            // Extract names from the source map
-            final Collection<String> originalSourceNames = consumer.getOriginalSources();
-
-            // Try to create a nut for each original source name
-            for (final String path : originalSourceNames) {
-                final String name = consumer.getSourceRoot() == null ? path : IOUtils.mergePath(consumer.getSourceRoot(), path);
-                final List<Nut> res = nutsHeap.create(owner, name, NutDao.PathFormat.RELATIVE_FILE, processContext);
-
-                if (res.isEmpty()) {
-                    logger.warn("{} is referenced as a relative file but it was not found with in the DAO.", name);
-                } else {
-                    // Should contain one item
-                    final ConvertibleNut nut = new PipedConvertibleNut(res.get(0));
-                    nut.setNutName(name);
-                    sources.put(name, nut);
-                }
+            if (resolveSources) {
+                resolveSources(nutsHeap, processContext);
             }
 
             generator.mergeMapSection(0, 0, sourceMap);
@@ -235,6 +246,35 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
             WuicException.throwBadStateException(new IllegalStateException("Invalid source map.", smpe));
         } catch (IOException ioe) {
             WuicException.throwBadStateException(new IllegalStateException("Unable to read original source.", ioe));
+        }
+    }
+
+    /**
+     * <p>
+     * Resolves the original sources in the current consumer with the given {@link NutsHeap}.
+     * </p>
+     *
+     * @param nutsHeap the heap
+     * @param processContext the process context
+     * @throws IOException if any I/O error occurs
+     */
+    private void resolveSources(final NutsHeap nutsHeap, final ProcessContext processContext) throws IOException {
+        // Extract names from the source map
+        final Collection<String> originalSourceNames = consumer.getOriginalSources();
+
+        // Try to create a nut for each original source name
+        for (final String path : originalSourceNames) {
+            final String name = consumer.getSourceRoot() == null ? path : IOUtils.mergePath(consumer.getSourceRoot(), path);
+            final List<Nut> res = nutsHeap.create(owner, name, NutDao.PathFormat.RELATIVE_FILE, processContext);
+
+            if (res.isEmpty()) {
+                logger.warn("{} is referenced as a relative file but it was not found with in the DAO.", name);
+            } else {
+                // Should contain one item
+                final ConvertibleNut nut = new PipedConvertibleNut(res.get(0));
+                nut.setNutName(name);
+                sources.put(name, nut);
+            }
         }
     }
 
@@ -278,7 +318,7 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
      */
     @Override
     public void addOriginalNut(final ConvertibleNut convertibleNut) {
-        sources.put(convertibleNut.getName(), convertibleNut);
+        sources.put(convertibleNut.getInitialName(), convertibleNut);
     }
 
     /**
@@ -287,6 +327,20 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
     @Override
     public List<ConvertibleNut> getOriginalNuts() {
         return new ArrayList<ConvertibleNut>(sources.values());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean replaceOriginalNut(final ConvertibleNut original, final ConvertibleNut replacement) {
+        if (sources.containsKey(original.getInitialName())) {
+            sources.remove(original.getInitialName());
+            addOriginalNut(replacement);
+            return true;
+        }
+
+        return false;
     }
 
     /**
