@@ -81,9 +81,7 @@ public class AngularTemplateInspector extends RegexLineInspector {
     /**
      * Start of regex.
      */
-    private static final String START_REGEX =
-            String.format("(/\\*(?:.)*?%s(?:.)*?\\*/)|(//(?:.)*?%s(?:.)*?\\n)|%s'?\"?\\s*?\\:\\s*?",
-                    QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL, QUOTE_TEMPLATE_URL);
+    private static final String START_REGEX = String.format("%s'?\"?\\s*?\\:\\s*?", QUOTE_TEMPLATE_URL);
 
     /**
      * <p>
@@ -93,7 +91,7 @@ public class AngularTemplateInspector extends RegexLineInspector {
      * @param wrapPattern a regex describing a pattern wrapping the URL, could be {@code null}
      */
     public AngularTemplateInspector(final String wrapPattern) {
-        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_REGEX : '(' + String.format(wrapPattern, "(.*?)") + ')'), Pattern.MULTILINE));
+        super(Pattern.compile(START_REGEX + (wrapPattern == null ? STRING_LITERAL_WITH_TEMPLATE_REGEX : '(' + String.format(wrapPattern, "(.*?)") + ')'), Pattern.MULTILINE));
     }
 
     /**
@@ -119,8 +117,8 @@ public class AngularTemplateInspector extends RegexLineInspector {
             throws WuicException {
         final StringBuilder replacement = new StringBuilder();
 
-        // group 4 when wrap pattern exists, group 3 otherwise
-        final int groupIndex = matcher.groupCount() > NumberUtils.THREE ? NumberUtils.FOUR : NumberUtils.THREE;
+        // group 2 when wrap pattern exists, group 1 otherwise
+        final int groupIndex = matcher.groupCount() > 1 ? NumberUtils.TWO : 1;
         final String pathGroup = matcher.group(groupIndex);
 
         // Removes quotes

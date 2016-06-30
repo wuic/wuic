@@ -425,7 +425,7 @@ public class InspectorTest {
                         "angular.module('docsTemplateUrlDirective', [])\n" +
                                 ".directive('myCustomer', function() {\n" +
                                 "  return {\n" +
-                                "    templateUrl  : '%s'\n" +
+                                "    templateUrl  : `%s`\n" +
                                 "  };\n" +
                                 "})", "my-customer.html"}, {
                 ".directive('myCustomer2', function() {\n" +
@@ -725,8 +725,8 @@ public class InspectorTest {
         check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
                 Arrays.asList("                                                           baz"),
                 ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
-        check("var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
-                Arrays.asList("var y = '\\\\\\'';        var j = \"// comment1\";\nvar i = 'hello';                var z = '\"';                       var k = '\\'';baz"),
+        check("var zzz = `zzz`;var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
+                Arrays.asList("var zzz = `zzz`;var y = '\\\\\\'';        var j = \"// comment1\";\nvar i = 'hello';                var z = '\"';                       var k = '\\'';baz"),
                 ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
         final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
         check(c, Collections.EMPTY_LIST, ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);

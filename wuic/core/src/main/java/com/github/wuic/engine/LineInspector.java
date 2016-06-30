@@ -74,6 +74,11 @@ public abstract class LineInspector {
     protected static final String STRING_LITERAL_REGEX = "(\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*')";
 
     /**
+     * Possible value for path name.
+     */
+    protected static final String STRING_LITERAL_WITH_TEMPLATE_REGEX = "(\"(?:\\.|[^\\\"])*\"|'(?:\\.|[^\\'])*'|`(?:\\.|[^\\\"])*`)";
+
+    /**
      * Logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(LineInspector.class);

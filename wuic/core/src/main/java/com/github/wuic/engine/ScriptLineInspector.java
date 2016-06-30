@@ -584,8 +584,8 @@ public abstract class ScriptLineInspector extends LineInspector {
 
     /**
      * <p>
-     * Finds the beginning of a string literal (single quote or double quote character) that is not escaped with a
-     * backslash character.
+     * Finds the beginning of a string literal (single quote, double quote or back quote character) that is not escaped
+     * with a backslash character.
      * </p>
      *
      * @param buffer the buffer
@@ -594,11 +594,11 @@ public abstract class ScriptLineInspector extends LineInspector {
      * @return the index of first quote occurrence, -1 if nothing is found
      */
     private int findStartOfStringLiteral(final char[] buffer, final int start, final int end) {
-        // Looking for the single or double quote character
+        // Looking for the single, double quote or back quote character
         for (int i = start; i < end; i++) {
             final char quote = buffer[i];
 
-            if (quote == '\'' || quote == '"') {
+            if (quote == '\'' || quote == '"' || quote == '`') {
                 boolean escaped = false;
 
                 for (int j = i - 1; j >= start && buffer[j] == '\\'; j--) {
