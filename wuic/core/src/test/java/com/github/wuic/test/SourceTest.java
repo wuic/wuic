@@ -141,6 +141,7 @@ public class SourceTest {
         final int endColGl6 = 6;
 
         final ConvertibleNut convertibleNut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(convertibleNut.getVersionNumber()).thenReturn(new FutureLong(1L));
         final ConvertibleNut a = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut f = Mockito.mock(ConvertibleNut.class);
         final ConvertibleNut g = Mockito.mock(ConvertibleNut.class);
@@ -224,6 +225,7 @@ public class SourceTest {
         h.checkFiles(ProcessContext.DEFAULT);
 
         final ConvertibleNut convertibleNut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(convertibleNut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(convertibleNut.getNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(convertibleNut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
         Mockito.when(convertibleNut.getInitialName()).thenReturn("testcode.min.js");
@@ -231,6 +233,7 @@ public class SourceTest {
         Mockito.when(convertibleNut.getSource()).thenReturn(new SourceImpl());
 
         final ConvertibleNut sourceMap = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(sourceMap.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(sourceMap.getNutType()).thenReturn(NutType.MAP);
         Mockito.when(sourceMap.getInitialNutType()).thenReturn(NutType.MAP);
         Mockito.when(sourceMap.getInitialName()).thenReturn("testcode.js.map");

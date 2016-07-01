@@ -67,7 +67,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.2.0
  */
-public final class ByteArrayNut extends PipedConvertibleNut implements Serializable {
+public class ByteArrayNut extends PipedConvertibleNut implements Serializable {
 
     /**
      * Serial version UID.
@@ -166,6 +166,9 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
             } else {
                 final Source s = nut.getSource();
 
+                // Make sure to produce a serializable ource instance
+                final Source src = s instanceof SourceMapNut ? new StaticSourceMapNut(SourceMapNut.class.cast(s)) : new SourceImpl();
+
                 // Converts the sources to their byte array version
                 for (final ConvertibleNut sourceNut : s.getOriginalNuts()) {
                     // Do nothing if source is already a byte array
@@ -174,11 +177,14 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
                         final ByteArrayOutputStream sourceOs = new ByteArrayOutputStream();
                         IOUtils.copyStream(sourceNut.openStream(), sourceOs);
                         final Long v = NutUtils.getVersionNumber(sourceNut);
-                        s.replaceOriginalNut(sourceNut, new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getInitialName(), sourceNut.getNutType(), v, false));
+                        src.addOriginalNut(new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getInitialName(), sourceNut.getNutType(), v, false));
+                    } else {
+                        src.addOriginalNut(sourceNut);
                     }
                 }
 
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), s, NutUtils.getVersionNumber(s.getOriginalNuts()));
+                final Long version = NutUtils.getVersionNumber(src.getOriginalNuts());
+                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), src, version);
             }
 
             bytes.setIsCompressed(nut.isCompressed());
@@ -213,6 +219,17 @@ public final class ByteArrayNut extends PipedConvertibleNut implements Serializa
      */
     public void setByteArray(final byte[] bytes) {
         setByteArray(bytes, true);
+    }
+
+    /**
+     * <p>
+     * Gets a copy of the content.
+     * </p>
+     *
+     * @return the byte array content
+     */
+    public byte[] toByteArray() {
+        return Arrays.copyOf(byteArray, byteArray.length);
     }
 
     /**

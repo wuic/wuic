@@ -62,7 +62,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <p>
@@ -74,7 +73,7 @@ import java.util.Set;
  * @author Guillaume DROUET
  * @since 0.5.3
  */
-public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
+public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNut {
 
     /**
      * The extension used for source map.
@@ -333,20 +332,6 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
      * {@inheritDoc}
      */
     @Override
-    public boolean replaceOriginalNut(final ConvertibleNut original, final ConvertibleNut replacement) {
-        if (sources.containsKey(original.getInitialName())) {
-            sources.remove(original.getInitialName());
-            addOriginalNut(replacement);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public ConvertibleNut getNutAt(final int line, final int column) throws IOException {
 
         // No mapping is registered for this source map
@@ -386,32 +371,8 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
      * {@inheritDoc}
      */
     @Override
-    public Source getSource() {
-        throw new UnsupportedOperationException("Source has not source.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setSource(final Source source) {
-        throw new UnsupportedOperationException("Source has not source.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getName() {
         return customOwnerName == null ? getInitialName() : customOwnerName + EXTENSION;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NutType getNutType() {
-        return getInitialNutType();
     }
 
     /**
@@ -426,14 +387,6 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
         }
 
         customOwnerName = nutName.substring(0, index);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setNutType(final NutType nutType) {
-        throw new UnsupportedOperationException("Source type is not supposed to change.");
     }
 
     /**
@@ -455,102 +408,6 @@ public class SourceMapNutImpl extends AbstractNut implements SourceMapNut {
         for (final Pipe.OnReady callback : onReady) {
             callback.ready(new Pipe.Execution(bos.toByteArray()));
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onReady(final Pipe.OnReady onReady) {
-        throw new UnsupportedOperationException("Source is not supposed to be transformed.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Pipe.OnReady> getReadyCallbacks() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addTransformer(final Pipe.Transformer<ConvertibleNut> transformer) {
-        throw new UnsupportedOperationException("Source is not supposed to be transformed.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<Pipe.Transformer<ConvertibleNut>> getTransformers() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addReferencedNut(final ConvertibleNut referenced) {
-        throw new UnsupportedOperationException("Source is not supposed to reference nuts.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setIsSubResource(final boolean subResource) {
-        throw new UnsupportedOperationException("Source is not supposed to reference nuts.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ConvertibleNut> getReferencedNuts() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isTransformed() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setIsCompressed(final Boolean c) {
-        throw new UnsupportedOperationException("Source is not supposed to be compressed.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isCompressed() {
-        return Boolean.FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isSubResource() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean ignoreCompositeStreamOnTransformation() {
-        return false;
     }
 
     /**

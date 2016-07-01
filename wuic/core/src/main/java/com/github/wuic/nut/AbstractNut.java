@@ -44,6 +44,7 @@ import com.github.wuic.util.NutUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.concurrent.Future;
 
 /**
@@ -55,7 +56,7 @@ import java.util.concurrent.Future;
  * @author Guillaume DROUET
  * @since 0.3.0
  */
-public abstract class AbstractNut implements Nut {
+public abstract class AbstractNut implements Nut, Serializable {
 
     /**
      * The logger.
@@ -81,14 +82,6 @@ public abstract class AbstractNut implements Nut {
      * The nut's version number.
      */
     private Future<Long> versionNumber;
-
-    /**
-     * <p>
-     * Default constructor for serialization purpose.
-     * </p>
-     */
-    public AbstractNut() {
-    }
 
     /**
      * <p>

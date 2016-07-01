@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -185,8 +186,20 @@ public final class NutUtils {
      * @return the version number string representation, 0 if can't retrieve it
      */
     public static Long getVersionNumber(final Nut nut) {
+        return getVersionNumber(nut.getVersionNumber());
+    }
+
+    /**
+     * <p>
+     * Gets the number from the given future.
+     * </p>
+     *
+     * @param future the future
+     * @return the version number string representation, 0 if can't retrieve it
+     */
+    public static Long getVersionNumber(final Future<Long> future) {
         try {
-            return nut.getVersionNumber().get();
+            return future.get();
         } catch (ExecutionException ee) {
             LOGGER.error("Can't get the version number. Returning 0...", ee);
         } catch (InterruptedException ie) {
@@ -195,7 +208,6 @@ public final class NutUtils {
 
         return 0L;
     }
-
 
     /**
      * <p>

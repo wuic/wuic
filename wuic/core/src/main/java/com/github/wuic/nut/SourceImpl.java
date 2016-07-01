@@ -1,5 +1,6 @@
 package com.github.wuic.nut;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.5.3
  */
-public class SourceImpl implements Source {
+public class SourceImpl implements Source, Serializable {
 
     /**
      * The original nuts.
@@ -41,18 +42,5 @@ public class SourceImpl implements Source {
     @Override
     public void addOriginalNut(final ConvertibleNut convertibleNut) {
         sources.add(convertibleNut);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean replaceOriginalNut(final ConvertibleNut original, final ConvertibleNut replacement) {
-        if (sources.remove(original)) {
-            sources.add(replacement);
-            return true;
-        }
-
-        return false;
     }
 }
