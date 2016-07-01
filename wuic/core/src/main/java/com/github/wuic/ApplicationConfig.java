@@ -207,6 +207,12 @@ public interface ApplicationConfig {
     String TIME_TO_LIVE = ENGINE_PREFIX + "timeToLive";
 
     /**
+     * Maximum amount of memory used by the cache before starting to use the disk.
+     * Unit is bytes. Value can ends with "KB" or "MB" (regardless the case) to use a different unit.
+     */
+    String MAX_SIZE_IN_MEMORY = ENGINE_PREFIX + "maxSizeInMemory";
+
+    /**
      * <p>
      * Indicates a particular {@link com.github.wuic.engine.CacheProvider} implementation.
      * </p>

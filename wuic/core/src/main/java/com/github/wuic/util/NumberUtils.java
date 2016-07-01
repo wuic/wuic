@@ -109,6 +109,11 @@ public final class NumberUtils {
     public static final int ONE_THOUSAND = 1000;
 
     /**
+     * One thousand and twenty four. Number of bytes in a kilobyte.
+     */
+    public static final int ONE_KB = 1024;
+
+    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>

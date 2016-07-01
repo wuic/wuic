@@ -50,6 +50,7 @@ import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.SizableNut;
 import com.github.wuic.nut.Source;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
@@ -628,7 +629,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             /**
              * All referenced nuts in a collection if the entry represents a dynamic nut.
              */
-            private final List<ConvertibleNut> dynamicReferencedNuts;
+            private List<ConvertibleNut> dynamicReferencedNuts;
 
             /**
              * Nut to entirely cache when the entry represents a static nut.
@@ -683,6 +684,72 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 this.dynamicName = null;
                 this.dynamicTransformers = null;
                 this.staticNut = staticNut;
+            }
+
+            /**
+             * <p>
+             * Returns the sum of sizes collected from all contained nuts content.
+             * If nuts are not a {@link SizableNut}, their size will be ignored.
+             * </p>
+             *
+             * @return the global size of this entry
+             */
+            long size() {
+                long size = 0L;
+
+                if (staticNut != null) {
+                    size += computeSize(staticNut);
+                }
+
+                if (dynamicReferencedNuts != null) {
+                    size += computeSize(dynamicReferencedNuts);
+                }
+
+                return size;
+            }
+
+            /**
+             * <p>
+             * Returns the sum of sizes collected from nut contents contained in the given list.
+             * If nuts are not a {@link SizableNut}, their size will be ignored.
+             * </p>
+             *
+             * @param nuts the nuts
+             * @return the global size of the list
+             */
+            private long computeSize(final List<ConvertibleNut> nuts) {
+                long retval = 0;
+
+                for (final ConvertibleNut nut : nuts) {
+                    retval += computeSize(nut);
+                }
+
+                return retval;
+            }
+
+            /**
+             * <p>
+             * Returns the size of the given nut's content. Referenced and original nuts are also taken into consideration.
+             * If nuts are not a {@link SizableNut}, their size will be ignored.
+             * </p>
+             *
+             * @param nut the nut
+             * @return the content size
+             */
+            private long computeSize(final ConvertibleNut nut) {
+                if (nut instanceof SizableNut) {
+                    long retval = SizableNut.class.cast(nut).size() + computeSize(nut.getSource().getOriginalNuts());
+
+                    if (nut.getReferencedNuts() != null) {
+                        retval += computeSize(nut.getReferencedNuts());
+                    }
+
+                    return retval;
+                } else {
+                    log.warn("{} is supposed to be a {} since it's stored in the cache but it's not the case. Ignoring nut size...",
+                            nut.toString(), SizableNut.class.getName());
+                    return 0;
+                }
             }
 
             /**

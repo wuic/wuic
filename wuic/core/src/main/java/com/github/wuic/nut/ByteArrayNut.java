@@ -67,7 +67,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.2.0
  */
-public class ByteArrayNut extends PipedConvertibleNut implements Serializable {
+public class ByteArrayNut extends PipedConvertibleNut implements Serializable, SizableNut {
 
     /**
      * Serial version UID.
@@ -262,5 +262,13 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable {
     @Override
     public boolean isDynamic() {
         return dynamicContent;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int size() {
+        return byteArray.length;
     }
 }

@@ -64,22 +64,25 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
 
     /**
      * <p>
-     * Default constructor for serialization purpose.
-     * </p>
-     */
-    public NutWrapper() {
-    }
-
-    /**
-     * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param w teh wrapped nut
+     * @param w the wrapped nut
      */
     public NutWrapper(final ConvertibleNut w) {
         super(w);
         wrapped = w;
+    }
+
+    /**
+     * <p>
+     * Gets the wrapped nut.
+     * </p>
+     *
+     * @return the wrapped nut
+     */
+    protected final ConvertibleNut getWrapped() {
+        return wrapped;
     }
 
     /**

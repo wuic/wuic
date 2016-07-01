@@ -85,17 +85,6 @@ public class TransformedNutTest {
     }
 
     /**
-     * Transformed nut must be serializable.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void notSerializableTest() {
-        final ConvertibleNut mock = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(mock.getInitialName()).thenReturn("foo.js");
-        new TransformedNut(mock);
-    }
-
-    /**
      * Nut name can't be changed.
      */
     @Test(expected = IllegalStateException.class)
@@ -121,6 +110,4 @@ public class TransformedNutTest {
         final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
         nut.addReferencedNut(Mockito.mock(ConvertibleNut.class));
     }
-
-
 }

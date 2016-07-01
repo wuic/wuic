@@ -49,6 +49,8 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.nut.SizableNut;
+import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NutUtils;
@@ -113,7 +115,7 @@ public class MemoryMapCacheEngineTest {
     @Test
     public void dynamicTest() throws Exception {
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
-        engine.init(true, -1, false);
+        engine.init(true, -1, false, "10MB");
         final AtomicInteger counter1 = new AtomicInteger();
         final Nut nut1 = newNut("foo");
         Mockito.when(nut1.isDynamic()).thenReturn(false);
@@ -216,7 +218,7 @@ public class MemoryMapCacheEngineTest {
             }
         };
 
-        engine.init(true, -1, false);
+        engine.init(true, -1, false, "10MB");
 
         final Nut nut = newNut("foo");
         Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
@@ -248,7 +250,7 @@ public class MemoryMapCacheEngineTest {
     public void addThenClearTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
-        engine.init(true, -1, false);
+        engine.init(true, -1, false, "10KB");
         final Map<String, AbstractCacheEngine.CacheResult.Entry> nuts = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
         nuts.put("", new AbstractCacheEngine.CacheResult.Entry(Mockito.mock(ConvertibleNut.class)));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(null, nuts);
@@ -266,12 +268,102 @@ public class MemoryMapCacheEngineTest {
     public void addThenRemoveTest() throws Exception {
         final EngineRequest.Key req = new EngineRequest.Key("wid", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
-        engine.init(true, -1, false);
+        engine.init(true, -1, false, "1024");
         final Map<String, AbstractCacheEngine.CacheResult.Entry> nuts = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
         nuts.put("", new AbstractCacheEngine.CacheResult.Entry(Mockito.mock(ConvertibleNut.class)));
         AbstractCacheEngine.CacheResult result = new AbstractCacheEngine.CacheResult(nuts, null);
         engine.putToCache(req, result);
         engine.removeFromCache(req);
         Assert.assertNull(engine.getFromCache(req));
+    }
+
+    /**
+     * <p>
+     * Tests when size limit unit is not correct.
+     * </p>
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badUnitLimitTest() {
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false, "1GB");
+    }
+
+    /**
+     * <p>
+     * Tests when size limit is not a number.
+     * </p>
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badNumberLimitTest() {
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false, "foo");
+    }
+
+    /**
+     * <p>
+     * Tests when size limit is not a number when a unit is specified.
+     * </p>
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badNumberWithUnitLimitTest() {
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false, "fookb");
+    }
+
+    /**
+     * Tests that cache fallback to disk when memory size limit has been reached.
+     */
+    @Test
+    public void testDiskStore() {
+        final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
+        engine.init(true, -1, false, "16");
+
+        final SizableNut r = Mockito.mock(SizableNut.class, Mockito.withSettings().serializable());
+        Mockito.when(r.size()).thenReturn(4);
+        Mockito.when(r.getSource()).thenReturn(new SourceImpl());
+
+        final SizableNut o = Mockito.mock(SizableNut.class, Mockito.withSettings().serializable());
+        Mockito.when(o.size()).thenReturn(4);
+        Mockito.when(o.getSource()).thenReturn(new SourceImpl());
+
+        final SizableNut n = Mockito.mock(SizableNut.class, Mockito.withSettings().serializable());
+        Mockito.when(n.size()).thenReturn(4);
+        Mockito.when(n.getReferencedNuts()).thenReturn(Arrays.asList((ConvertibleNut) r));
+        Mockito.when(n.getSource()).thenReturn(new SourceImpl() { { addOriginalNut(o); } });
+
+        final Map<String, AbstractCacheEngine.CacheResult.Entry> n1 = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
+        n1.put("a", new AbstractCacheEngine.CacheResult.Entry(n));
+
+        final Map<String, AbstractCacheEngine.CacheResult.Entry> n2 = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
+        n2.put("b", new AbstractCacheEngine.CacheResult.Entry(o));
+
+        final Map<String, AbstractCacheEngine.CacheResult.Entry> n3 = new HashMap<String, AbstractCacheEngine.CacheResult.Entry>();
+        n3.put("c", new AbstractCacheEngine.CacheResult.Entry(r));
+
+        final EngineRequest.Key k1 = new EngineRequest.Key("a", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
+        engine.putToCache(k1, new AbstractCacheEngine.CacheResult(n1, null));
+        Assert.assertEquals(12, engine.getMemoryInUse());
+
+        final EngineRequest.Key k2 = new EngineRequest.Key("b", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
+        engine.putToCache(k2, new AbstractCacheEngine.CacheResult(n2, null));
+        Assert.assertEquals(16, engine.getMemoryInUse());
+
+        final EngineRequest.Key k3 = new EngineRequest.Key("c", Arrays.asList(Mockito.mock(ConvertibleNut.class)));
+        engine.putToCache(k3, new AbstractCacheEngine.CacheResult(n3, null));
+        Assert.assertEquals(16, engine.getMemoryInUse());
+
+        Assert.assertNotNull(engine.getFromCache(k1));
+        Assert.assertNotNull(engine.getFromCache(k2));
+        Assert.assertNotNull(engine.getFromCache(k3));
+
+        engine.removeFromCache(k1);
+        Assert.assertEquals(4, engine.getMemoryInUse());
+
+        engine.removeFromCache(k3);
+        Assert.assertEquals(4, engine.getMemoryInUse());
+
+        Assert.assertNull(engine.getFromCache(k1));
+        Assert.assertNotNull(engine.getFromCache(k2));
+        Assert.assertNull(engine.getFromCache(k3));
     }
 }

@@ -42,7 +42,6 @@ import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -61,7 +60,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.5.0
  */
-public class TransformedNut extends NutWrapper implements Serializable {
+public class TransformedNut extends NutWrapper implements SizableNut {
 
     /**
      * <p>
@@ -70,12 +69,8 @@ public class TransformedNut extends NutWrapper implements Serializable {
      *
      * @param w the wrapped nut
      */
-    public TransformedNut(final ConvertibleNut w) {
+    public TransformedNut(final ByteArrayNut w) {
         super(w);
-
-        if (!Serializable.class.isAssignableFrom(w.getClass())) {
-            throw new IllegalArgumentException("Transformed nut is serializable so its wrapped nut must be serializable.");
-        }
     }
 
     /**
@@ -100,10 +95,7 @@ public class TransformedNut extends NutWrapper implements Serializable {
                 merge.addAll(getReadyCallbacks());
             }
 
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            is = openStream();
-            IOUtils.copyStream(is, bos);
-            final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
+            final Pipe.Execution execution = new Pipe.Execution(ByteArrayNut.class.cast(getWrapped()).toByteArray());
 
             for (final Pipe.OnReady cb : merge) {
                 cb.ready(execution);
@@ -127,5 +119,13 @@ public class TransformedNut extends NutWrapper implements Serializable {
     @Override
     public void addReferencedNut(final ConvertibleNut referenced) {
         throw new IllegalStateException("Can't add a referenced nut to an already transformed nut.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int size() {
+        return ByteArrayNut.class.cast(getWrapped()).size();
     }
 }
