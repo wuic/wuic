@@ -595,7 +595,7 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findStartOfStringLiteral(final char[] buffer, final int start, final int end) {
         // Looking for the single, double quote or back quote character
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
             final char quote = buffer[i];
 
             if (quote == '\'' || quote == '"' || quote == '`') {
@@ -627,8 +627,8 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findStartOfSingleLineComment(final char[] buffer, final int start, final int end) {
         // Looking for the '/' character
-        for (int i = start; i < end; i++) {
-            if (i < buffer.length -1 && buffer[i] == '/' && buffer[i + 1] == '/') {
+        for (int i = start; i <= end; i++) {
+            if (i < end && buffer[i] == '/' && buffer[i + 1] == '/') {
                 return i;
             }
         }
@@ -648,8 +648,8 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findStartOfMultiLineComment(final char[] buffer, final int start, final int end) {
         // Looking for '/' and '*' characters
-        for (int i = start; i < end; i++) {
-            if (i < end - 1 && buffer[i] == '/' && buffer[i + 1] == '*') {
+        for (int i = start; i <= end; i++) {
+            if (i < end && buffer[i] == '/' && buffer[i + 1] == '*') {
                 return i;
             }
         }
@@ -670,7 +670,7 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findEndOfStringLiteral(final char[] buffer, final int start, final int end) {
         // Looking for the quoteCharacter
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
             final char quote = buffer[i];
 
             if (quoteCharacter.equals(quote)) {
@@ -702,7 +702,7 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findEndOfMultiLineComment(final char[] buffer, final int start, final int end) {
         // Looking for '*' and '/' characters
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
             if (i > start && buffer[i] == '/' && buffer[i - 1] == '*') {
                 return i;
             }
@@ -723,7 +723,7 @@ public abstract class ScriptLineInspector extends LineInspector {
      */
     private int findEndOfSingleLineComment(final char[] buffer, final int start, final int end) {
         // Looking for \n character
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
             if (buffer[i] == '\n') {
                 return i;
             }

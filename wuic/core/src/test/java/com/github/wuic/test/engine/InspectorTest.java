@@ -678,6 +678,9 @@ public class InspectorTest {
      */
     @Test
     public void handleSingleCommentTest() throws WuicException {
+        check("// comment1\n",
+                Arrays.asList("// comment1\n"),
+                ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Arrays.asList("// comment1\n", "// comment2\n", "// bar\n", "// comment3\n", "//comment4"),
                 ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
@@ -699,6 +702,9 @@ public class InspectorTest {
      */
     @Test
     public void handleMultiCommentTest() throws WuicException {
+        check("/* */",
+                Arrays.asList("/* */"),
+                ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Collections.EMPTY_LIST,
                 ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
@@ -719,6 +725,9 @@ public class InspectorTest {
      */
     @Test
     public void handleNoCommentTest() throws WuicException {
+        check("var j = 'a'",
+                Arrays.asList("var j = 'a'"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
                 Arrays.asList("foo                                            baz"),
                 ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
