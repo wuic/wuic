@@ -44,7 +44,6 @@ import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.LineInspector;
-import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.engine.ScriptLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -135,7 +134,6 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
             final List<ConvertibleNut> composition = cis.getCompositeNut().getCompositionList();
 
             try {
-                //
                 boolean firstNut = true;
                 final ConvertibleNut first = composition.get(0);
                 final SourceMapNut sourceMapNut;
@@ -167,13 +165,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 // Set the aggregated source map
                 convertible.setSource(sourceMapNut);
 
-                // Write the statement at the end of the stream
-                if (!request.isStaticsServedByWuicServlet()) {
-                    os.write(IOUtils.NEW_LINE.getBytes());
-                    os.write("//# sourceMappingURL=".getBytes());
-                    os.write(sourceMapNut.getName().getBytes());
-                    os.write(IOUtils.NEW_LINE.getBytes());
-                }
+                SourceMapLineInspector.writeSourceMapComment(request, os, sourceMapNut.getName());
             } catch (WuicException ex) {
                 throw new IOException("Unable to build aggregated source map.", ex);
             }
@@ -262,7 +254,8 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                                 final int length,
                                 final EngineRequest request,
                                 final CompositeNut.CompositeInputStream cis,
-                                final ConvertibleNut originalNut) {
+                                final ConvertibleNut originalNut,
+                                final Range.Delimiter delimiter) {
                 ranges.add(new IndexRange(offset, offset + length));
                 return new Range(Range.Delimiter.END_SINGLE_LINE_OF_COMMENT, offset, offset + length);
             }
@@ -280,16 +273,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
 
         try {
             // Perform range collection
-            lineInspector.inspect(new LineInspectorListener() {
-                @Override
-                public void onMatch(final char[] data,
-                                    final int offset,
-                                    final int length,
-                                    final String replacement,
-                                    final List<? extends ConvertibleNut> extracted)
-                        throws WuicException {
-                }
-            }, chars, request, null, convertible);
+            lineInspector.inspect(chars, request, null, convertible);
         } catch (WuicException we) {
             throw new IOException(we);
         }

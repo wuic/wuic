@@ -53,9 +53,11 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -78,9 +80,14 @@ import java.util.regex.Pattern;
 public class SourceMapLineInspector extends RegexLineInspector {
 
     /**
+     * The variable used in comments to indicate source map URL.
+     */
+    public static final String SOURCE_MAPPING_URL = "sourceMappingURL";
+
+    /**
      * The pattern of 'sourceMappingURL'.
      */
-    public static final Pattern SOURCE_MAPPING_PATTERN = Pattern.compile("sourceMappingURL=([^\\s]*)");
+    public static final Pattern SOURCE_MAPPING_PATTERN = Pattern.compile(SOURCE_MAPPING_URL + "=([^\\s]*)");
 
     /**
      * The engine that uses this inspector.
@@ -97,6 +104,26 @@ public class SourceMapLineInspector extends RegexLineInspector {
     public SourceMapLineInspector(final NodeEngine enclosingEngine) {
         super(SOURCE_MAPPING_PATTERN);
         engine = enclosingEngine;
+    }
+
+    /**
+     * <p>
+     * Writes to the given stream the source map comment specified in parameter.
+     * An attribute with {@link #SOURCE_MAPPING_URL} as key and the source map name as value is also added to the request.
+     * </p>
+     *
+     * @param request the request
+     * @param outputStream the stream
+     * @param name the source map name
+     * @throws IOException if any I/O error occurs
+     */
+    public static void writeSourceMapComment(final EngineRequest request, final OutputStream outputStream, final String name)
+            throws IOException {
+        // Add source map comment
+        if (!request.isStaticsServedByWuicServlet()) {
+            final String comment = String.format("%s//# sourceMappingURL=%s%s", IOUtils.NEW_LINE, name, IOUtils.NEW_LINE);
+            outputStream.write(comment.getBytes(request.getCharset()));
+        }
     }
 
     /**
@@ -156,7 +183,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
             if (request.isStaticsServedByWuicServlet()) {
                 res = manageAppend(new PipedConvertibleNut(n), new StringBuilder(), request, heap);
             } else {
-                replacement.append("sourceMappingURL=");
+                replacement.append(SOURCE_MAPPING_URL).append("=");
                 res = manageAppend(new PipedConvertibleNut(n), replacement, request, heap);
             }
 
@@ -172,12 +199,14 @@ public class SourceMapLineInspector extends RegexLineInspector {
             }
 
             // No result, at least add the version number in query string
-            replacement.append("sourceMappingURL=");
+            replacement.append(SOURCE_MAPPING_URL).append("=");
             fallbackToVersionNumberInQueryString(replacement, referencedPath, originalNut);
         }
 
+        final String sourceMap = replacement.toString();
+
         // We don't need to do anything more with the source map
-        return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), null, replacement.toString()));
+        return Arrays.asList(new AppendedTransformation(matcher.start(), matcher.end(), null, sourceMap));
     }
 
     /**

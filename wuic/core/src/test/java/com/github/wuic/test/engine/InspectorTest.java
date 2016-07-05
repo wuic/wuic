@@ -56,6 +56,7 @@ import com.github.wuic.engine.core.AngularTemplateInspector;
 import com.github.wuic.engine.core.CssInspectorEngine;
 import com.github.wuic.engine.core.JavascriptInspectorEngine;
 import com.github.wuic.engine.core.MemoryMapCacheEngine;
+import com.github.wuic.engine.core.ScriptCompressorEngine;
 import com.github.wuic.engine.core.SourceMapLineInspector;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ByteArrayNut;
@@ -112,7 +113,7 @@ public class InspectorTest {
     /**
      * Timeout.
      */
-    @Rule
+    //@Rule
     public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
@@ -429,10 +430,10 @@ public class InspectorTest {
                                 "  };\n" +
                                 "})", "my-customer.html"}, {
                 ".directive('myCustomer2', function() {\n" +
-                "  return {\n\" +\n" +
-                "    // comment templateUrl  : '%s'\n" +
-                "  };\n" +
-                "})", "my-customer2.html"}, {".directive('myCustomer3', function() {\n" +
+                        "  return {\n\" +\n" +
+                        "    // comment templateUrl  : '%s'\n" +
+                        "  };\n" +
+                        "})", "my-customer2.html"}, {".directive('myCustomer3', function() {\n" +
                 "  return {\n" +
                 "    /*templateUrl  : '%s'*/\n" +
                 "  };\n" +
@@ -551,6 +552,46 @@ public class InspectorTest {
         }
 
         Assert.assertEquals(NumberUtils.FOUR, count);
+    }
+
+    /**
+     * <p>
+     * Compression test with {@link com.github.wuic.engine.core.ScriptCompressorEngine}.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void compressionTest() throws Exception {
+        final NutDao dao = Mockito.mock(NutDao.class);
+
+        final NutsHeap heap = Mockito.mock(NutsHeap.class);
+        Mockito.when(heap.getId()).thenReturn("heap");
+        Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
+        Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
+        Mockito.when(heap.getNutDao()).thenReturn(dao);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
+        h.checkFiles(ProcessContext.DEFAULT);
+
+        final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
+        Mockito.when(nut.getSource()).thenReturn(new SourceImpl());
+        Mockito.when(nut.getName()).thenReturn("nut.js");
+        Mockito.when(nut.getInitialName()).thenReturn("nut.js");
+        Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
+        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(
+                "var i = 0;//foo\nvar j = 0;/**/var k = 'bar'\n\nvar l = `\n\n`;\n\n\r\nvar m = ''".getBytes()));
+
+        final EngineRequest req = new EngineRequestBuilder("", h, null).nuts(Arrays.asList(nut)).build();
+        final ScriptCompressorEngine engine = new ScriptCompressorEngine();
+        engine.init(true);
+
+        List<ConvertibleNut> res = engine.parse(req);
+        Assert.assertNotNull(res);
+        Assert.assertEquals(1, res.size());
+        final String str = NutUtils.readTransform(res.get(0));
+        Assert.assertEquals("var i = 0;\nvar j = 0;var k = 'bar'\nvar l = `\n\n`;\nvar m = ''", str);
     }
 
     /**
@@ -742,6 +783,29 @@ public class InspectorTest {
     }
 
     /**
+     * Tests that no comments with literals are properly handled by script inspector.
+     *
+     * @throws WuicException if test fails
+     */
+    @Test
+    public void handleNoCommentWithLiteralsTest() throws WuicException {
+        check("var j = 'a'",
+                Arrays.asList("var j = ", "'a'"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+        check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
+                Arrays.asList("foo ", "baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+        check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
+                Arrays.asList(" ", "baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+        check("var zzz = `zzz`;var y = '\\\\\\'';/*foo*/ var j = \"// comment1\";\nvar i = 'hello';/*// comment2\n*/var z = '\"';// /*bar*/\n// comment3\nvar k = '\\'';baz//comment4",
+                Arrays.asList("var zzz = ", "`zzz`", ";var y = ", "'\\\\\\''", ";", " var j = ", "\"// comment1\"", ";\nvar i = ", "'hello'", ";", "var z = ", "'\"'", ";", "var k = ", "'\\''", ";baz"),
+                ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+        final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
+        check(c, Collections.EMPTY_LIST, ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+    }
+
+    /**
      * Tests that all tokens are properly handled by script inspector.
      *
      * @throws WuicException if test fails
@@ -775,16 +839,14 @@ public class InspectorTest {
         final List<String> captured = new ArrayList<String>();
         final ScriptLineInspector i = new ScriptLineInspector(opt) {
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public Range doFind(final char[] buffer,
                                 final int offset,
                                 final int length,
                                 final EngineRequest request,
                                 final CompositeNut.CompositeInputStream cis,
-                                final ConvertibleNut originalNut) {
+                                final ConvertibleNut originalNut,
+                                final Range.Delimiter delimiter) {
                 return new Range(Range.Delimiter.EOF, offset, offset + length);
             }
 

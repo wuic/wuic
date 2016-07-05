@@ -260,6 +260,34 @@ public abstract class LineInspector {
 
     /**
      * <p>
+     * Inspects the given char array.
+     * </p>
+     *
+     * @param data the char array to inspect
+     * @param request the request that orders this transformation
+     * @param cis a composite stream which indicates what nut owns the transformed text, {@code null} if the nut is not a composition
+     * @param originalNut the original nut
+     * @throws WuicException if inspection fails
+     */
+    public void inspect(final char[] data,
+                        final EngineRequest request,
+                        final CompositeNut.CompositeInputStream cis,
+                        final ConvertibleNut originalNut) throws WuicException {
+        inspect(new LineInspectorListener() {
+            @Override
+            public void onMatch(final char[] data,
+                                final int offset,
+                                final int length,
+                                final String replacement,
+                                final List<? extends ConvertibleNut> extracted)
+                    throws WuicException {
+
+            }
+        }, data, request, cis, originalNut);
+    }
+
+    /**
+     * <p>
      * Inspects the given char array and notifies the given {@link LineInspectorListener listener} when some data are matched.
      * </p>
      *

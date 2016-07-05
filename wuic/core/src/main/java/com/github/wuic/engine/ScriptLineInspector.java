@@ -46,15 +46,16 @@ import com.github.wuic.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * <p>
  * Base class for script inspection. A script contains comments (starting with /* or //) that subclasses can ask to
  * ignore when inspecting the content. Regarding the {@link ScriptMatchCondition} used, the class will call the
- * {@link #doFind(char[], int, int, EngineRequest, CompositeNut.CompositeInputStream, ConvertibleNut)} with a char array
- * corresponding to the proper content to inspect. The class relies heavily on char arrays and never create {@code String}
- * object to guarantee a minimal memory footprint.
+ * {@link #doFind(char[], int, int, EngineRequest, CompositeNut.CompositeInputStream, ConvertibleNut, Range.Delimiter)}
+ * with a char array corresponding to the proper content to inspect. The class relies heavily on char arrays and never
+ * create {@code String} object to guarantee a minimal memory footprint.
  * </p>
  *
  * @author Guillaume DROUET
@@ -88,9 +89,14 @@ public abstract class ScriptLineInspector extends LineInspector {
         MULTI_LINE_COMMENT,
 
         /**
-         * Inspects the content except comments.
+         * Inspects the content except comments by catching all the content without the comments.
          */
         NO_COMMENT,
+
+        /**
+         * Inspects the content except comments with string literals caught in dedicated chunk of data.
+         */
+        NO_COMMENT_SPLIT_LITERALS,
     }
 
     /**
@@ -180,7 +186,8 @@ public abstract class ScriptLineInspector extends LineInspector {
             int len;
 
             // Iterate on all matched range of characters for the current range of data to inspect
-            while ((len = dataRange.getEnd() - offset + 1) > 0 && (range = doFind(data, offset, len, request, cis, originalNut)) != null) {
+            while ((len = dataRange.getEnd() - offset + 1) > 0
+                    && (range = doFind(data, offset, len, request, cis, originalNut, dataRange.getDelimiter())) != null) {
                 // The length of found data
                 final int findLen = range.getEnd() - range.getStart();
                 final List<AppendedTransformation> transformations =
@@ -229,6 +236,11 @@ public abstract class ScriptLineInspector extends LineInspector {
             // Match data outside comments
             case NO_COMMENT:
                 range = findNoCommentInspectRange(data, dataStart, dataEnd);
+                break;
+
+            // Match data outside comments with dedicated chunk of data for literals
+            case NO_COMMENT_SPLIT_LITERALS:
+                range = noCommentCase(data, dataStart, dataEnd);
                 break;
 
             // Match data inside multiple line comment only
@@ -310,8 +322,8 @@ public abstract class ScriptLineInspector extends LineInspector {
      * @return {@code true} if the nearest node is a multiple line comment
      */
     private boolean decideMultipleOfSingleLineComment(final int startOfSingleLineComment,
-                                                     final int startOfMultiLineComment,
-                                                     final int startOfStringLiteral) {
+                                                      final int startOfMultiLineComment,
+                                                      final int startOfStringLiteral) {
         return (startOfMultiLineComment < startOfSingleLineComment || startOfSingleLineComment == -1)
                 && (startOfMultiLineComment < startOfStringLiteral || startOfStringLiteral == -1);
     }
@@ -351,13 +363,13 @@ public abstract class ScriptLineInspector extends LineInspector {
             inMultiLineComment = true;
             quoteCharacter = null;
             return new Range(Range.Delimiter.START_MULTIPLE_LINE_OF_COMMENT, startOfMultiLineComment, startOfMultiLineComment);
-        // In single line comment
+            // In single line comment
         } else if (startOfSingleLineComment != -1 &&
                 decideStartOfSingleLineComment(startOfSingleLineComment, startOfMultiLineComment, startOfStringLiteral)) {
             inSingleLineComment = true;
             quoteCharacter = null;
             return new Range(Range.Delimiter.START_SINGLE_LINE_OF_COMMENT, startOfSingleLineComment, startOfSingleLineComment);
-        // In a string literal
+            // In a string literal
         } else if (startOfStringLiteral != -1
                 && decideStringLiteral(startOfSingleLineComment, startOfMultiLineComment, startOfStringLiteral)) {
             return new Range(Range.Delimiter.START_OF_LITERAL, startOfStringLiteral, startOfStringLiteral);
@@ -384,7 +396,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             // Looking for the end of string literal: ignore the first character that is reserved for literal opening
             final int end = findEndOfStringLiteral(data, dataStart + 1, dataEnd);
             range = end != -1 ? new Range(Range.Delimiter.CONTINUE, end + 1, dataEnd) : null;
-        // Currently inside a multiple line comment
+            // Currently inside a multiple line comment
         } else if (inMultiLineComment) {
             // Looking for the end of comment: ignore the two first characters that are reserved for comment opening
             final int end = findEndOfMultiLineComment(data, dataStart + NumberUtils.TWO, dataEnd);
@@ -397,7 +409,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                 // Still inside the comment: ignore
                 range = null;
             }
-        // Already in a single line comment
+            // Already in a single line comment
         } else if (inSingleLineComment) {
             // Looking for the end of comment, that will be the end of the range
             final int endOfSingleLineComment = findEndOfSingleLineComment(data, dataStart, dataEnd);
@@ -445,7 +457,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             // Looking for the end of string literal: ignore the first character that is reserved for literal opening
             final int end = findEndOfStringLiteral(data, dataStart + 1, dataEnd);
             range = end != -1 ? new Range(Range.Delimiter.CONTINUE, end + 1, dataEnd) : null;
-        // Currently inside a multiple line comment
+            // Currently inside a multiple line comment
         } else if (inMultiLineComment) {
             // Looking for the end of comment: ignore the two first characters that are reserved for comment opening
             final int end = findEndOfMultiLineComment(data, dataStart + NumberUtils.TWO, dataEnd);
@@ -501,7 +513,7 @@ public abstract class ScriptLineInspector extends LineInspector {
             // Looking for the end of string literal: ignore the first character that is reserved for literal opening
             final int end = findEndOfStringLiteral(data, dataStart + 1, dataEnd);
             return end == -1 ? null : new Range(Range.Delimiter.END_OF_LITERAL, dataStart, end);
-        // else if we are already inside a comment, try to find the end of it
+            // else if we are already inside a comment, try to find the end of it
         } else if (inMultiLineComment) {
             start = findEndOfMultiLineComment(data, dataStart + NumberUtils.TWO, dataEnd);
         } else if (inSingleLineComment) {
@@ -549,7 +561,8 @@ public abstract class ScriptLineInspector extends LineInspector {
      * @param length the number of characters to inspect
      * @param request the request that initiated the inspection
      * @param cis the composite stream that is currently inspected if any
-     * @param originalNut the nut that procduces the inspected stream
+     * @param originalNut the nut that produces the inspected stream
+     * @param delimiter the delimiter that has been detected to create the given chunk of data
      * @return the range of matched data in the buffer
      */
     public abstract Range doFind(char[] buffer,
@@ -557,7 +570,8 @@ public abstract class ScriptLineInspector extends LineInspector {
                                  int length,
                                  EngineRequest request,
                                  CompositeNut.CompositeInputStream cis,
-                                 ConvertibleNut originalNut);
+                                 ConvertibleNut originalNut,
+                                 Range.Delimiter delimiter);
 
     /**
      * <p>
@@ -740,7 +754,7 @@ public abstract class ScriptLineInspector extends LineInspector {
      * @author Guillaume DROUET
      * @since 0.5.3
      */
-    protected static class Range {
+    public static class Range {
 
         /**
          * <p>
@@ -882,6 +896,64 @@ public abstract class ScriptLineInspector extends LineInspector {
 
     /**
      * <p>
+     * This adapter provides a default implementation of {@link ScriptLineInspector}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    public static class Adapter extends ScriptLineInspector {
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param matchCondition the match condition
+         */
+        public Adapter(final ScriptMatchCondition matchCondition) {
+            super(matchCondition);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Range doFind(final char[] buffer,
+                            final int offset,
+                            final int length,
+                            final EngineRequest request,
+                            final CompositeNut.CompositeInputStream cis,
+                            final ConvertibleNut originalNut,
+                            final Range.Delimiter delimiter) {
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected List<AppendedTransformation> appendTransformation(final char[] buffer,
+                                                                    final int offset,
+                                                                    final int length,
+                                                                    final EngineRequest request,
+                                                                    final CompositeNut.CompositeInputStream cis,
+                                                                    final ConvertibleNut originalNut)
+                throws WuicException {
+            return Collections.emptyList();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+            return null;
+        }
+    }
+
+    /**
+     * <p>
      * Wraps a {@link LineInspector} and delegates inspections to each matched range according to a configured
      * {@link ScriptMatchCondition}.
      * </p>
@@ -918,7 +990,8 @@ public abstract class ScriptLineInspector extends LineInspector {
                             final int length,
                             final EngineRequest request,
                             final CompositeNut.CompositeInputStream cis,
-                            final ConvertibleNut originalNut) {
+                            final ConvertibleNut originalNut,
+                            final Range.Delimiter delimiter) {
             return new Range(Range.Delimiter.EOF, offset, offset + length);
         }
 

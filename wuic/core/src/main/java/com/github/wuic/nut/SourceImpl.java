@@ -21,11 +21,22 @@ public class SourceImpl implements Source, Serializable {
 
     /**
      * <p>
-     * Builds a new instane.
+     * Builds a new instance.
      * </p>
      */
     public SourceImpl() {
         sources = new ArrayList<ConvertibleNut>();
+    }
+
+    /**
+     * <p>
+     * Builds a new instance by copy.
+     * </p>
+     *
+     * @param source the source to copy
+     */
+    public SourceImpl(final Source source) {
+        sources = new ArrayList<ConvertibleNut>(source.getOriginalNuts());
     }
 
     /**

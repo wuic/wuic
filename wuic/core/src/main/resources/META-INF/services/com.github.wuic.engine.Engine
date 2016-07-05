@@ -9,3 +9,4 @@ com.github.wuic.engine.core.TextAggregatorEngine
 com.github.wuic.engine.core.HtmlInspectorEngine
 com.github.wuic.engine.core.StaticEngine
 com.github.wuic.engine.core.GzipEngine
+com.github.wuic.engine.core.ScriptCompressorEngine
