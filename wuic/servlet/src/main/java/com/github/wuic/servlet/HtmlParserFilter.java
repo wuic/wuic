@@ -49,6 +49,7 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.util.UrlProvider;
@@ -105,9 +106,10 @@ import java.util.ServiceLoader;
  * </p>
  *
  * <p>
- * Server-push is also supported. It relies on a {@link PushService} implementation discovered in the classpath.
- * It will be enabled by default if an implementation is found by the {@link ServiceLoader}. You can disable the
- * server-push with the {@link #DISABLE_SERVER_PUSH} init-param.
+ * Server-push is also supported. If servlet 4 is supported by the container, a {@link ServletPushService} will be used.
+ * Otherwise it relies on a {@link PushService} implementation discovered in the classpath that leverage a native implementation.
+ * It will be enabled by default if an implementation is found by the {@link ServiceLoader}.
+ * You can disable the server-push with the {@link #DISABLE_SERVER_PUSH} init-param.
  * </p>
  *
  * @author Guillaume DROUET
@@ -382,7 +384,12 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
             }
 
             if (pushService == null) {
-                logger.info("No HTTP/2 server push support found! No resource will be pushed.");
+                if (filterConfig.getServletContext().getMajorVersion() >= NumberUtils.FOUR) {
+                    logger.info("Using Servlet 4 push support.");
+                    pushService = new ServletPushService();
+                } else {
+                    logger.info("No HTTP/2 server push support found! No resource will be pushed.");
+                }
             }
         } else {
             logger.info("HTTP/2 server push is disabled, no resource will be pushed.");
