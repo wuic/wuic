@@ -131,7 +131,7 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
          * {@inheritDoc}
          */
         @Override
-        public boolean canWrite() {
+        public boolean isReady() {
             return false;
         }
 

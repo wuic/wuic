@@ -146,9 +146,9 @@ public class GzipHttpServletResponseWrapper extends OkHttpServletResponseWrapper
          * {@inheritDoc}
          */
         @Override
-        public boolean canWrite() {
+        public boolean isReady() {
             // delegate to wrapper output stream
-            return sos.canWrite();
+            return sos.isReady();
         }
 
         /**

@@ -50,8 +50,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
-import javax.servlet.http.ProtocolHandler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -423,11 +423,9 @@ public class HttpServletRequestAdapter implements HttpServletRequest {
      * {@inheritDoc}
      */
     @Override
-    public void upgrade(final ProtocolHandler handler) throws IOException {
+    public <T extends HttpUpgradeHandler> T upgrade(final Class<T> httpUpgradeHandlerClass) throws ServletException, IOException {
         // Delegate call
-        if (request != null) {
-            request.upgrade(handler);
-        }
+        return request != null ? request.upgrade(httpUpgradeHandlerClass) : null;
     }
 
     /**

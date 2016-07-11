@@ -51,8 +51,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
-import javax.servlet.http.ProtocolHandler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -439,10 +439,10 @@ public class SynchronizedHttpServletRequestWrapper extends HttpServletRequestWra
      * {@inheritDoc}
      */
     @Override
-    public void upgrade(final ProtocolHandler handler) throws IOException {
+    public <T extends HttpUpgradeHandler> T upgrade(final Class<T> httpUpgradeHandlerClass) throws ServletException, IOException {
         // Synchronized access
         synchronized (mutex) {
-            super.upgrade(handler);
+            return super.upgrade(httpUpgradeHandlerClass);
         }
     }
 
