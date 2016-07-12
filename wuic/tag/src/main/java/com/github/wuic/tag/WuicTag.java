@@ -46,6 +46,8 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,9 +74,19 @@ public class WuicTag extends TagSupport {
     private static final long serialVersionUID = 4305181623848741300L;
 
     /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
      * The page name.
      */
     private String workflowId;
+
+    /**
+     * Breaks the aggregation.
+     */
+    private String breakAggregation;
 
     /**
      * The WUIC facade.
@@ -105,6 +117,7 @@ public class WuicTag extends TagSupport {
     @Override
     public int doStartTag() throws JspException {
         try {
+            log.debug("Process JSP tag for workflow {}.", workflowId);
             pageContext.getRequest().setAttribute(HtmlParserFilter.FORCE_DYNAMIC_CONTENT, "");
 
             if (wuicFacade.allowsMultipleConfigInTagSupport()) {
@@ -119,10 +132,21 @@ public class WuicTag extends TagSupport {
                 for (final ConvertibleNut nut : nuts) {
                     out.println(HtmlUtil.writeScriptImport(nut, IOUtils.mergePath(wuicFacade.getContextPath(), workflowId)));
                 }
+
+                if (breakAggregation != null) {
+                    log.warn("breakAggregation attribute has bean specified for the import of workflow {} but will be ignored because the page is not filtered by",
+                            workflowId, HtmlParserFilter.class.getName());
+                }
             } else {
                 out.print("<wuic:html-import workflowId='");
                 out.print(workflowId);
-                out.println("'/>");
+                out.print("'");
+
+                if (breakAggregation != null) {
+                    out.print(" data-wuic-break");
+                }
+
+                out.println("/>");
             }
 
         } catch (IOException ioe) {
@@ -154,5 +178,27 @@ public class WuicTag extends TagSupport {
      */
     public void setWorkflowId(final String page) {
         this.workflowId = page;
+    }
+
+    /**
+     * <p>
+     * Gets the break flag.
+     * </p>
+     *
+     * @return the break flag
+     */
+    public String getBreakAggregation() {
+        return breakAggregation;
+    }
+
+    /**
+     * <p>
+     * Sets the break flag.
+     * </p>
+     *
+     * @param breakAggregation the break flag
+     */
+    public void setBreakAggregation(final String breakAggregation) {
+        this.breakAggregation = breakAggregation;
     }
 }

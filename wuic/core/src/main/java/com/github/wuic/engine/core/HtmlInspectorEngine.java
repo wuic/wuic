@@ -366,9 +366,10 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
         private void handle(final ResourceParser resourceParser) {
 
             /*
-             * We've already matched some scripts and there is something (excluding comment and whitespace) between
-             * the previous script and the script currently matched that implies that they should not be imported
-             * together. Consequently, we create here a separate heap.
+             * We've already matched some scripts and there is either something (excluding comment and whitespace)
+             * between the previous script and the script currently matched or either a "data-wuic-break" attribute
+             * in the current script that implies that they should not be imported together.
+             * Consequently, we create here a separate heap.
              */
             if (previousGroupLineEnd != -1 && previousGroupColumnEnd != -1) {
                 final int l;
@@ -383,7 +384,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     c = resourceParser.getStmt().getStartColumn();
                 }
 
-                if (!StringUtils.substringMatrix(contentMatrix, previousGroupLineEnd, previousGroupColumnEnd, l, c).trim().isEmpty()) {
+                if (resourceParser.attributes.containsKey("data-wuic-break")
+                        || !StringUtils.substringMatrix(contentMatrix, previousGroupLineEnd, previousGroupColumnEnd, l, c).trim().isEmpty()) {
                     newParseInfo();
                     paths.clear();
                 }

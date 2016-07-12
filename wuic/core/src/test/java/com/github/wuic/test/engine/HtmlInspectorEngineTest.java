@@ -278,6 +278,56 @@ public class HtmlInspectorEngineTest {
 
     /**
      * <p>
+     * Break test.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void breakTest() throws Exception {
+        final Context ctx = newContext();
+        final DiskNutDao dao = new DiskNutDao();
+        dao.init(getClass().getResource("/html").getFile(), null, -1, false, false);
+        dao.init(false, true, null);
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList("break.html"), dao, "heap");
+        heap.checkFiles(ProcessContext.DEFAULT);
+        final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
+
+        final TextAggregatorEngine jse = new TextAggregatorEngine();
+        jse.init(true);
+        jse.async(true);
+        chains.put(NutType.JAVASCRIPT, jse);
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx).chains(chains).processContext(ProcessContext.DEFAULT).build();
+
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
+        e.init(true, true);
+        final List<ConvertibleNut> nuts = e.parse(request);
+
+        Assert.assertEquals(1, nuts.size());
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final ConvertibleNut nut = nuts.get(0);
+        nut.transform(new Pipe.DefaultOnReady(os));
+        Assert.assertNotNull(nut.getReferencedNuts());
+        Assert.assertEquals(4, nut.getReferencedNuts().size());
+
+        final ConvertibleNut js1 = nut.getReferencedNuts().get(0);
+        final ConvertibleNut js2 = nut.getReferencedNuts().get(1);
+        final ConvertibleNut js3 = nut.getReferencedNuts().get(2);
+        Assert.assertEquals(js1.getInitialNutType(), NutType.JAVASCRIPT);
+        Assert.assertEquals(js2.getInitialNutType(), NutType.JAVASCRIPT);
+        Assert.assertEquals(js3.getInitialNutType(), NutType.JAVASCRIPT);
+        final String script1 = IOUtils.readString(new InputStreamReader(js1.openStream()));
+        final String script2 = IOUtils.readString(new InputStreamReader(js2.openStream()));
+        final String script3 = IOUtils.readString(new InputStreamReader(js3.openStream()));
+
+        Assert.assertTrue(script1, script1.contains("var i = 0;"));
+        Assert.assertTrue(script2, script2.contains("i+=2;"));
+        Assert.assertTrue(script2, script2.contains("i+=3"));
+        Assert.assertTrue(script3, script3.contains("i+=4"));
+    }
+
+    /**
+     * <p>
      * Tests cached transformation by added transformer.
      * </p>
      *

@@ -13,5 +13,9 @@
 		<attribute>
 			<name>workflowId</name>
 		</attribute>
+        <attribute>
+            <name>breakAggregation</name>
+            <required>false</required>
+        </attribute>
 	</tag>
 </taglib>
