@@ -47,7 +47,7 @@ import java.util.List;
 
 /**
  * <p>
- * This interface abstracts the way you can read and eventually save nuts through a particular protocol.
+ * This interface abstracts the way you can read nuts through a particular protocol.
  * </p>
  *
  * @author Guillaume DROUET
@@ -164,25 +164,6 @@ public interface NutDao {
      * @return the proxy URI, {@code null} if not proxy is set
      */
     String proxyUriFor(Nut nut);
-
-    /**
-     * <p>
-     * Saves the give nut. An {@link UnsupportedOperationException} will be thrown if the implementation supports
-     * only nut access.
-     * </p>
-     *
-     * @param nut the nut to save
-     */
-    void save(Nut nut);
-
-    /**
-     * <p>
-     * Indicates if this DAO is able to save a nut, which depends on the underlying protocol.
-     * </p>
-     *
-     * @return {@code true} if {@link NutDao#save(Nut)} is supported, {@code false} otherwise
-     */
-    Boolean saveSupported();
 
     /**
      * <p>

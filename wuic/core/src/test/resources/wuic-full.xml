@@ -33,9 +33,6 @@
 
     <workflow-templates>
         <workflow-template id="defaultWorkflowTemplate">
-            <store-to>
-                <dao-builder-id>defaultDao</dao-builder-id>
-            </store-to>
             <engine-chain>
                 <engine-builder-id>defaultEngine</engine-builder-id>
                 <engine-builder-id>anotherEngine</engine-builder-id>

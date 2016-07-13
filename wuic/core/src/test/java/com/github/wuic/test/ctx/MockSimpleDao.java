@@ -53,20 +53,20 @@ import java.util.List;
 
 /**
  * <p>
- * Mocked store DAO builder.
+ * Mocked DAO builder.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 0.4.4
  */
 @NutDaoService
-public class MockStoreDao implements NutDao {
+public class MockSimpleDao implements NutDao {
 
     /**
      * Builds a new instance.
      */
     @Config
-    public MockStoreDao() {
+    public MockSimpleDao() {
 
     }
 
@@ -99,21 +99,6 @@ public class MockStoreDao implements NutDao {
     @Override
     public String proxyUriFor(final Nut nut) {
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void save(final Nut nut) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        return true;
     }
 
     /**

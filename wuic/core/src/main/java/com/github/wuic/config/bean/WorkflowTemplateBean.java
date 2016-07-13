@@ -95,13 +95,6 @@ public class WorkflowTemplateBean {
     private List<String> withoutEngineBuilderType;
 
     /**
-     * Some DAO where to store process result.
-     */
-    @XmlElementWrapper(name = "store-to")
-    @XmlElement(name = "dao-builder-id")
-    private List<String> daoBuilderIds;
-
-    /**
      * <p>
      * Gets the ID.
      * </p>
@@ -121,17 +114,6 @@ public class WorkflowTemplateBean {
      */
     public String[] getProfiles() {
         return profiles != null ? profiles.split(",") : null;
-    }
-
-    /**
-     * <p>
-     * Gets the DAO builders ID.
-     * </p>
-     *
-     * @return the IDs identifying the builder's DAO to use when storing process result
-     */
-    public List<String> getDaoBuilderIds() {
-        return daoBuilderIds;
     }
 
     /**

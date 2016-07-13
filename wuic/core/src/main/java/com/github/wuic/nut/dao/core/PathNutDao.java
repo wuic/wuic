@@ -247,24 +247,6 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut nut) {
-        // TODO : update path API
-        WuicException.throwSaveUnsupportedMethodException(getClass());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        // TODO : return true once path API supports write operations
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         return String.format("%s with base directory %s", getClass().getName(), baseDirectory);
     }

@@ -463,13 +463,10 @@ public class ConfigBeanTest {
             }
 
             if (i == 1) {
-                Assert.assertNull(workflow.getDaoBuilderIds());
                 continue;
             }
 
-            Assert.assertNotNull(workflow.getDaoBuilderIds());
             Assert.assertEquals(NumberUtils.TWO, workflow.getEngineBuilderIds().size());
-            Assert.assertEquals(1, workflow.getDaoBuilderIds().size());
         }
 
         Assert.assertEquals(1, templateProfilesCount);

@@ -149,7 +149,7 @@ public class ContextBuilderTest {
     @BeforeClass
     public static void prepareMocks() throws Exception {
         engineBuilderFactory = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class, TextAggregatorEngine.class);
-        nutDaoBuilderFactory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class, MockStoreDao.class);
+        nutDaoBuilderFactory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class, MockSimpleDao.class);
         nutFilterBuilderFactory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, NutFilterService.DEFAULT_SCAN_PACKAGE);
     }
 
@@ -644,44 +644,6 @@ public class ContextBuilderTest {
     }
 
     /**
-     * Checks when the context is configured with DAO stores.
-     *
-     * @throws Exception if test fails
-     */
-    @Test
-    public void withStoreTest() throws Exception {
-        try {
-            new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
-                    .tag("test")
-                    .contextNutDaoBuilder("dao", "MockDaoBuilder")
-                    .toContext()
-                    .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
-                    .contextEngineBuilder("engine", "MockEngineBuilder")
-                    .toContext()
-                    .template("tpl", new String[]{"engine"}, "dao")
-                    .workflow("workflow", true, "heap", "tpl")
-                    .releaseTag()
-                    .build();
-        } catch (Exception e) {
-            // Normal behavior : mockDaoBuilder does not supports save()
-        }
-
-        new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
-                .tag("test")
-                .contextNutDaoBuilder("dao", "MockDaoBuilder")
-                .toContext()
-                .contextNutDaoBuilder("store", "MockStoreDaoBuilder")
-                .toContext()
-                .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
-                .contextEngineBuilder("engine", "MockEngineBuilder")
-                .toContext()
-                .template("tpl", new String[]{"engine"}, "store")
-                .workflow("workflow", true, "heap", "tpl")
-                .releaseTag()
-                .build();
-    }
-
-    /**
      * Test settings erasure.
      * @throws Exception if test fails
      */
@@ -845,7 +807,7 @@ public class ContextBuilderTest {
                 .tag("test")
                 .contextNutDaoBuilder("proxy", MockDao.class)
                 .proxyRootPath("proxy")
-                .proxyPathForDao("dao.js", ContextBuilder.getDefaultBuilderId(MockStoreDao.class))
+                .proxyPathForDao("dao.js", ContextBuilder.getDefaultBuilderId(MockSimpleDao.class))
                 .proxyPathForNut("nut.js", nut)
                 .toContext()
                 .contextEngineBuilder(TextAggregatorEngine.class)
@@ -1009,113 +971,6 @@ public class ContextBuilderTest {
 
     /**
      * <p>
-     * Tests that setting is refreshed according to store relationship.
-     * </p>
-     *
-     * @throws Exception if test fails
-     */
-    @Test
-    public void testRefreshStore() throws Exception {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
-        final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
-        final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
-        final AtomicInteger count = new AtomicInteger(0);
-
-        final ContextBuilderConfigurator cfg1 = new SimpleContextBuilderConfigurator("test1") {
-            @Override
-            public int internalConfigure(ContextBuilder ctxBuilder) {
-                ctxBuilder.heap("heap",
-                        ContextBuilder.getDefaultBuilderId(MockDao.class),
-                        new String[]{"foo.js"}, new HeapListener() {
-                    @Override
-                    public void nutUpdated(NutsHeap heap) {
-                        count.incrementAndGet();
-                    }
-                    });
-
-                return -1;
-            }
-        };
-
-        final ContextBuilderConfigurator cfg2 = new SimpleContextBuilderConfigurator("test2") {
-            @Override
-            public int internalConfigure(ContextBuilder ctxBuilder) {
-                ctxBuilder.contextNutDaoBuilder(null, MockStoreDao.class).toContext();
-                return -1;
-            }
-        };
-
-        final ContextBuilderConfigurator cfg3 = new SimpleContextBuilderConfigurator("test3") {
-            @Override
-            public int internalConfigure(ContextBuilder ctxBuilder) {
-                try {
-                    ctxBuilder.template("tpl", new String[] {}, new String[] {}, false, ContextBuilder.getDefaultBuilderId(MockStoreDao.class));
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                }
-
-                return -1;
-            }
-        };
-
-        final ContextBuilderConfigurator cfg4 = new SimpleContextBuilderConfigurator("test4") {
-            @Override
-            public int internalConfigure(ContextBuilder ctxBuilder) {
-                try {
-                    ctxBuilder.workflow("wf", true, ".*", "tpl");
-                } catch (IOException ioe) {
-                    Assert.fail(ioe.getMessage());
-                } catch (WorkflowTemplateNotFoundException e) {
-                    Assert.fail(e.getMessage());
-                }
-
-                return -1;
-            }
-        };
-
-        final ContextBuilder b = new ContextBuilder(engine, dao, filter);
-        b.tag("dao").contextNutDaoBuilder(null, MockDao.class).toContext().releaseTag();
-
-        b.configure(cfg1, cfg2, cfg3, cfg4);
-        b.build();
-        Assert.assertEquals(0, count.get());
-
-        b.configure(cfg1, cfg2, cfg3, cfg4);
-        b.build();
-        count.set(0);
-        b.build();
-        Assert.assertEquals(0, count.get());
-        b.clearTag("test2");
-        b.tag("t").contextNutDaoBuilder(null, MockStoreDao.class).toContext().releaseTag();
-        Assert.assertEquals(1, count.get());
-
-        b.configure(cfg1, cfg2, cfg3, cfg4);
-        b.build();
-        count.set(0);
-        b.build();
-        Assert.assertEquals(0, count.get());
-        b.clearTag("test1");
-        Assert.assertEquals(1, count.get());
-
-        b.configure(cfg1, cfg2, cfg3, cfg4);
-        b.build();
-        count.set(0);
-        b.build();
-        Assert.assertEquals(0, count.get());
-        b.clearTag("test3");
-        Assert.assertEquals(1, count.get());
-
-        b.configure(cfg1, cfg2, cfg3, cfg4);
-        b.build();
-        count.set(0);
-        b.build();
-        Assert.assertEquals(0, count.get());
-        b.clearTag("test4");
-        Assert.assertEquals(1, count.get());
-    }
-
-    /**
-     * <p>
      * Tests that setting is refreshed according to dao-dao relationship.
      * </p>
      *
@@ -1123,7 +978,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testRefreshProxy() throws Exception {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final AtomicInteger count = new AtomicInteger(0);
@@ -1172,7 +1027,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testRefreshCycle() throws Exception {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, GzipEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
         final AtomicInteger count = new AtomicInteger(0);
@@ -1254,7 +1109,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateHeapRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1280,7 +1135,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateEngineRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1306,7 +1161,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateDaoRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1332,7 +1187,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateFilterRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1359,7 +1214,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateTemplateRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1389,7 +1244,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testDuplicateWorkflowRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 
@@ -1419,7 +1274,7 @@ public class ContextBuilderTest {
      */
     @Test
     public void testImplicitDuplicateWorkflowRegistration() throws IOException, WuicException {
-        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockStoreDao.class, MockDao.class);
+        final ObjectBuilderFactory<NutDao> dao = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class);
         final ObjectBuilderFactory<Engine> engine = new ObjectBuilderFactory<Engine>(EngineService.class, TextAggregatorEngine.class);
         final ObjectBuilderFactory<NutFilter> filter = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, RegexRemoveNutFilter.class);
 

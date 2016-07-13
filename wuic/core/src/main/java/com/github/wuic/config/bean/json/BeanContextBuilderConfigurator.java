@@ -211,21 +211,11 @@ public abstract class BeanContextBuilderConfigurator extends AbstractContextBuil
                 childrenTags.add(childTag);
             }
 
-            // DAO where we can store process result is optional
-            if (template.getDaoBuilderIds() == null) {
-                ctxBuilder.template(template.getId(),
-                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
-                        template.getWithoutEngineBuilderType() == null ?
-                                null : template.getWithoutEngineBuilderType().toArray(new String[template.getWithoutEngineBuilderType().size()]),
-                        template.getUseDefaultEngines());
-            } else {
-                ctxBuilder.template(template.getId(),
-                        template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
-                        template.getWithoutEngineBuilderType() == null ?
-                                null : template.getWithoutEngineBuilderType().toArray(new String[template.getWithoutEngineBuilderType().size()]),
-                        template.getUseDefaultEngines(),
-                        template.getDaoBuilderIds().toArray(new String[template.getDaoBuilderIds().size()]));
-            }
+            ctxBuilder.template(template.getId(),
+                    template.getEngineBuilderIds().toArray(new String[template.getEngineBuilderIds().size()]),
+                    template.getWithoutEngineBuilderType() == null ?
+                            null : template.getWithoutEngineBuilderType().toArray(new String[template.getWithoutEngineBuilderType().size()]),
+                    template.getUseDefaultEngines());
         }
 
         return childrenTags;

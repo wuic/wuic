@@ -365,22 +365,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut nut) {
-        WuicException.throwSaveUnsupportedMethodException(getClass());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void shutdown() {
         log.info("Shutdown DAO {}", getClass().getName());
 

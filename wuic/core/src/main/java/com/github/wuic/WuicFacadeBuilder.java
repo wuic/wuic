@@ -969,8 +969,8 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
          * {@inheritDoc}
          */
         @Override
-        public ContextBuilderFacade template(final String id, final String[] ebIds, final String... daos) throws IOException {
-            super.template(id, ebIds, daos);
+        public ContextBuilderFacade template(final String id, final String[] ebIds) throws IOException {
+            super.template(id, ebIds);
             return ContextBuilderFacade.this;
         }
 
@@ -981,10 +981,9 @@ public class WuicFacadeBuilder implements ClassPathResourceResolver {
         public ContextBuilderFacade template(final String id,
                                              final String[] ebIds,
                                              final String[] ebTypesExclusion,
-                                             final Boolean includeDefaultEngines,
-                                             final String... ndbIds)
+                                             final Boolean includeDefaultEngines)
                 throws IOException {
-            super.template(id, ebIds, ebTypesExclusion, includeDefaultEngines, ndbIds);
+            super.template(id, ebIds, ebTypesExclusion, includeDefaultEngines);
             return ContextBuilderFacade.this;
         }
 

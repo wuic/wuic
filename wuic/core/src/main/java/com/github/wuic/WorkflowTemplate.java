@@ -65,21 +65,14 @@ public class WorkflowTemplate {
     private Map<NutType, ? extends NodeEngine> chains;
 
     /**
-     * DAO where processing result will be saved.
-     */
-    private NutDao[] stores;
-
-    /**
      * <p>
      * Creates a new instance.
      * </p>
      *
      * @param c the chains
-     * @param store the DAO stores
      */
-    public WorkflowTemplate(final HeadEngine h, final Map<NutType, ? extends NodeEngine> c, final NutDao... store) {
+    public WorkflowTemplate(final HeadEngine h, final Map<NutType, ? extends NodeEngine> c) {
         chains = c;
-        stores = store;
         head = h;
     }
 
@@ -103,16 +96,5 @@ public class WorkflowTemplate {
      */
     public Map<NutType, ? extends NodeEngine> getChains() {
         return chains;
-    }
-
-    /**
-     * <p>
-     * Gets the DAO stores.
-     * </p>
-     *
-     * @return the stores
-     */
-    public NutDao[] getStores() {
-        return stores;
     }
 }

@@ -723,11 +723,6 @@ public class ContextBuilder extends Observable {
         private final Boolean includeDefaultEngines;
 
         /**
-         * The DAO builder IDs to store nut.
-         */
-        private final String[] ndbIds;
-
-        /**
          * <p>
          * Builds a new registration.
          * </p>
@@ -735,12 +730,10 @@ public class ContextBuilder extends Observable {
          * @param ebIds the specific engines
          * @param ebTypesExclusion engines to exclude
          * @param includeDefaultEngines include default engines or not
-         * @param ndbIds some DAO builder IDs to store nut
          */
         private WorkflowTemplateRegistration(final String[] ebIds,
                                              final String[] ebTypesExclusion,
-                                             final Boolean includeDefaultEngines,
-                                             final String[] ndbIds) {
+                                             final Boolean includeDefaultEngines) {
             this.includeDefaultEngines = includeDefaultEngines;
             this.ebIds = new String[ebIds.length];
             System.arraycopy(ebIds, 0, this.ebIds, 0, ebIds.length);
@@ -751,20 +744,6 @@ public class ContextBuilder extends Observable {
             } else {
                 this.ebTypesExclusion = null;
             }
-
-            this.ndbIds = new String[ndbIds.length];
-            System.arraycopy(ndbIds, 0, this.ndbIds, 0, ndbIds.length);
-        }
-
-        /**
-         * <p>
-         * Returns an unmodifiable {@code List} of the DAO IDs registered in this registration to refer stores.
-         * </p>
-         *
-         * @return the DAO IDs of the composition
-         */
-        List<String> getStoreIds() {
-            return ndbIds == null ? Collections.EMPTY_LIST : Arrays.asList(ndbIds);
         }
 
         /**
@@ -772,21 +751,12 @@ public class ContextBuilder extends Observable {
          * Gets a new {@link com.github.wuic.WorkflowTemplate} for this registration.
          * </p>
          *
-         * <p>
-         * If the registered DAO does not exists don't support save operations
-         * ({@link com.github.wuic.nut.dao.NutDao#saveSupported()}), then an {@link IllegalStateException}
-         * is thrown.
-         * </p>
-         *
-         * @param daoCollection the collection of DAO for ID resolution
          * @param profiles the active profiles
          * @return the template
          * @throws DuplicatedRegistrationException if duplicated registrations have been found
          */
-        WorkflowTemplate getTemplate(final Map<String, NutDao> daoCollection, final Collection<String> profiles)
+        WorkflowTemplate getTemplate(final Collection<String> profiles)
                 throws DuplicatedRegistrationException {
-            final NutDao[] nutDaos = collect(daoCollection);
-
             // Retrieve each engine associated to all provided IDs and heap them by nut type
             final Map<NutType, NodeEngine> chains =
                     taggedSettings.createChains(configureDefault, engineBuilderFactory.knownTypes(), includeDefaultEngines, ebTypesExclusion, profiles);
@@ -814,37 +784,7 @@ public class ContextBuilder extends Observable {
                 }
             }
 
-            return new WorkflowTemplate(head, chains, nutDaos);
-        }
-
-        /**
-         * <p>
-         * Collects in the given map the referenced DAOs.
-         * </p>
-         *
-         * @param daoCollection all the instantiated DAOs
-         * @return the collected DAOs
-         */
-        private NutDao[] collect(final Map<String, NutDao> daoCollection) {
-            // Retrieve each DAO associated to all provided IDs
-            final NutDao[] nutDaos = new NutDao[ndbIds.length];
-
-            for (int i = 0; i < ndbIds.length; i++) {
-                final String ndbId = ndbIds[i];
-                final NutDao dao = daoCollection.get(ndbId);
-
-                if (dao == null) {
-                    throw new IllegalStateException(String.format("'%s' not associated to any %s", ndbId, NutDaoService.class.getName()));
-                }
-
-                if (!dao.saveSupported()) {
-                    throw new IllegalStateException(String.format("DAO built by '%s' does not supports save", ndbId));
-                }
-
-                nutDaos[i] = dao;
-            }
-
-            return nutDaos;
+            return new WorkflowTemplate(head, chains);
         }
     }
 
@@ -939,11 +879,10 @@ public class ContextBuilder extends Observable {
                                              final ContextSetting contextSetting,
                                              final Collection<String> profiles)
                 throws WorkflowTemplateNotFoundException, DuplicatedRegistrationException, IOException {
-            final WorkflowTemplate template = taggedSettings.getWorkflowTemplate(workflowTemplateId, daoCollection, profiles);
+            final WorkflowTemplate template = taggedSettings.getWorkflowTemplate(workflowTemplateId, profiles);
             final Map<String, Workflow> retval = new HashMap<String, Workflow>();
 
             final Map<NutType, ? extends NodeEngine> chains = template.getChains();
-            final NutDao[] nutDaos = template.getStores();
 
             // Retrieve HEAP
             final Map<String, HeapRegistration> heaps = taggedSettings.getNutsHeap(heapIdPattern, profiles);
@@ -962,7 +901,7 @@ public class ContextBuilder extends Observable {
                                 String.format("Workflow ID %s cannot be a numeric value", loopId)));
                     }
 
-                    retval.put(loopId, new Workflow(template.getHead(), chains, heapCollection.get(heap.getKey()), nutDaos));
+                    retval.put(loopId, new Workflow(template.getHead(), chains, heapCollection.get(heap.getKey())));
                 }
             } else {
                 if (NumberUtils.isNumber(id)) {
@@ -1325,7 +1264,6 @@ public class ContextBuilder extends Observable {
      *
      * @param profiles the profiles to be disabled
      * @return this builder
-     * @throws IOException if reconfiguration fails
      */
     public ContextBuilder disableProfile(final String ... profiles) {
         this.profiles.removeAll(Arrays.asList(profiles));
@@ -2331,15 +2269,13 @@ public class ContextBuilder extends Observable {
      *
      * @param id the template's id
      * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
-     * @param daos the DAO
      * @return this {@link ContextBuilder}
      * @throws IOException if an I/O error occurs
-     * @see ContextBuilder#template(String, String[], String[], Boolean, String...)
+     * @see ContextBuilder#template(String, String[], String[], Boolean)
      */
     public ContextBuilder template(final String id,
-                                   final String[] ebIds,
-                                   final String ... daos) throws IOException {
-        return template(id, ebIds, null, Boolean.TRUE, daos);
+                                   final String[] ebIds) throws IOException {
+        return template(id, ebIds, null, Boolean.TRUE);
     }
 
     /**
@@ -2358,28 +2294,19 @@ public class ContextBuilder extends Observable {
      * </p>
      *
      * <p>
-     * A set of {@link com.github.wuic.nut.dao.NutDao} builder could be specified to store processed nuts. When the client
-     * will retrieve the nuts, it will access it through a proxy URI configured in the protocol. This URI corresponds
-     * to a server in front of the location where nuts have been stored. For that reason the {@link NutDao} must
-     * support {@link NutDao#save(com.github.wuic.nut.Nut)} operation.
-     * </p>
-     *
-     * <p>
      * If the context builder should include engines by default, then a set of default engine to be excluded could be specified.
      * </p>
      *
      * <p>
-     * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are :
+     * An {@link IllegalStateException} will be thrown if the context is not correctly configured. Bad settings are:
      *  <ul>
      *      <li>Unknown {@link com.github.wuic.config.ObjectBuilder} ID</li>
-     *      <li>A {@link NutDao} does not supports {@link NutDao#save(com.github.wuic.nut.Nut)} method</li>
      *  </ul>
      * </p>
      *
      * @param id the template's id
      * @param ebIds the set of {@link com.github.wuic.engine.Engine} builder to use
      * @param ebTypesExclusion some default builder types to be excluded in the chain
-     * @param ndbIds the set of {@link com.github.wuic.nut.dao.NutDao} builder where to eventually upload processed nuts
      * @param includeDefaultEngines include or not default engines
      * @return this {@link ContextBuilder}
      * @throws IOException if an I/O error occurs
@@ -2387,11 +2314,10 @@ public class ContextBuilder extends Observable {
     public ContextBuilder template(final String id,
                                    final String[] ebIds,
                                    final String[] ebTypesExclusion,
-                                   final Boolean includeDefaultEngines,
-                                   final String ... ndbIds) throws IOException {
+                                   final Boolean includeDefaultEngines) throws IOException {
         final ContextSetting setting = getSetting();
         setting.getTemplateMap().put(new RegistrationId(id, getSetting().getRequiredProfiles()),
-                new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines, ndbIds));
+                new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines));
         taggedSettings.put(currentTag, setting);
         setChanged();
         notifyObservers(id);

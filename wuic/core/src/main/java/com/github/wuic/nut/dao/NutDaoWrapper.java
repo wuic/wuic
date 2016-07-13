@@ -118,22 +118,6 @@ public class NutDaoWrapper implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut nut) {
-        dao.save(nut);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        return dao.saveSupported();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void shutdown() {
         dao.shutdown();
     }

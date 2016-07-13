@@ -40,7 +40,6 @@ package com.github.wuic;
 
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 
 import java.util.Map;
@@ -56,12 +55,6 @@ import java.util.Map;
  * has one chain for each possible type to allow the {@link NodeEngine} to invoke another with if one {@link com.github.wuic.nut.Nut}
  * references a {@link com.github.wuic.nut.Nut} with another {@link NutType}. Optionally, a {@link HeadEngine} could be
  * set to delegate the chain invocation.
- * </p>
- *
- * <p>
- * Finally, the workflow could have zero to many {@link NutDao} where resulting nut should be saved. Consequently,
- * {@link NutDao} must supports {@link NutDao#save(com.github.wuic.nut.Nut)}. This is something which is checked by the
- * {@link com.github.wuic.context.ContextBuilder}.
  * </p>
  *
  * @author Guillaume DROUET
@@ -81,11 +74,10 @@ public class Workflow extends WorkflowTemplate {
      *
      * @param c the chains
      * @param h the heap
-     * @param store the DAO stores
      * @param head the head (could be {@code null})
      */
-    public Workflow(final HeadEngine head, final Map<NutType, ? extends NodeEngine> c, final NutsHeap h, final NutDao ... store) {
-        super(head, c, store);
+    public Workflow(final HeadEngine head, final Map<NutType, ? extends NodeEngine> c, final NutsHeap h) {
+        super(head, c);
         heap = h;
     }
 

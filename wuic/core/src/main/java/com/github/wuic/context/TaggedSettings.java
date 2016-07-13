@@ -451,13 +451,12 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * </p>
      *
      * @param id the ID
-     * @param daoCollection the collection of declared {@link NutDao}
      * @param profiles the profiles to accept
      * @return the matching {@link WorkflowTemplate template}
      * @throws WorkflowTemplateNotFoundException if no template has been found
      * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
-    WorkflowTemplate getWorkflowTemplate(final String id, final Map<String, NutDao> daoCollection, final Collection<String> profiles)
+    WorkflowTemplate getWorkflowTemplate(final String id, final Collection<String> profiles)
             throws WorkflowTemplateNotFoundException, DuplicatedRegistrationException {
         final List<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration>> collected =
                 new ArrayList<Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowTemplateRegistration>>();
@@ -480,7 +479,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             WuicException.throwWorkflowTemplateNotFoundException(id);
             return null;
         } else {
-            return res.getValue().getTemplate(daoCollection, profiles);
+            return res.getValue().getTemplate(profiles);
         }
     }
 
@@ -955,7 +954,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
                 forceRefreshHeapDao(path, setting, contextSetting);
                 forceRefreshStore(path, setting, contextSetting);
                 forceWorkflowHeap(path, setting, contextSetting);
-                forceRefreshTemplateStore(path, setting, contextSetting);
                 forceRefreshProxyDao(path, setting, contextSetting);
             }
         }
@@ -1081,33 +1079,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
                 // Dependency found: change state of this dependency and recursively search its own dependencies
                 if (heapPattern.matcher(heapId.getId()).matches()) {
-                    refresh(path, candidate);
-                    return;
-                }
-            }
-        }
-    }
-
-    /**
-     * <p>
-     * Checks if the given candidate contains a template referenced by a workflow of the setting specified in parameter.
-     * </p>
-     *
-     * @param path the already refreshed settings
-     * @param setting the setting that will refresh its dependencies
-     * @param candidate the potential dependency
-     */
-    private void forceRefreshTemplateStore(final List<ContextSetting> path, final ContextSetting setting, final ContextSetting candidate) {
-        if (candidate.getTemplateMap().isEmpty()) {
-            return;
-        }
-
-        // Looking for a DAO referenced by a workflow template registration of the current setting
-        for (final ContextBuilder.RegistrationId storeId : setting.getNutDaoMap().keySet()) {
-            for (final ContextBuilder.WorkflowTemplateRegistration registration : candidate.getTemplateMap().values()) {
-
-                // Dependency found: change state of this dependency and recursively search its own dependencies
-                if (registration.getStoreIds().contains(storeId.getId())) {
                     refresh(path, candidate);
                     return;
                 }

@@ -93,13 +93,6 @@
 
     <xs:complexType name="xmlWorkflowTemplateBean">
         <xs:sequence>
-            <xs:element name="store-to" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="dao-builder-id" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
             <xs:element name="without" type="withoutEngineList" minOccurs="0" maxOccurs="unbounded">
             </xs:element>
             <xs:element name="engine-chain" type="engineList" minOccurs="1" maxOccurs="unbounded">

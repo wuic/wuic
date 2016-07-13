@@ -146,21 +146,6 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public void save(final Nut nut) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean saveSupported() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void shutdown() {
     }
 
