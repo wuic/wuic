@@ -65,11 +65,6 @@ public interface ErrorCode {
     long BAD_ARGUMENT_EXCEPTION = 19860606003L;
 
     /**
-     * {@link com.github.wuic.nut.dao.NutDao#save(com.github.wuic.nut.Nut)} is not supported.
-     */
-    long SAVE_NOT_SUPPORTED_EXCEPTION = 19860606004L;
-
-    /**
      * A state is not of an expected state or is null while it should.
      */
     long BAD_STATE_EXCEPTION = 19860606006L;

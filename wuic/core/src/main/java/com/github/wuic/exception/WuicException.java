@@ -138,20 +138,6 @@ public class WuicException extends Exception {
 
     /**
      * <p>
-     * This method throws an {@link UnsupportedOperationException} to indicate that
-     * {@link com.github.wuic.nut.dao.NutDao#save(com.github.wuic.nut.Nut)} os not supported by a given class.
-     * </p>
-     *
-     * @param clazz the class
-     */
-    public static void throwSaveUnsupportedMethodException(final Class<?> clazz) {
-        throw new UnsupportedOperationException(
-                String.format("[Err n. %d] %s does not supports save(com.github.wuic.nut.Nut) method. It can only read nuts!",
-                        ErrorCode.SAVE_NOT_SUPPORTED_EXCEPTION, clazz.getName()));
-    }
-
-    /**
-     * <p>
      * This method throws an {@link IllegalArgumentException} when instantiation with reflection has failed.
      * </p>
      *
