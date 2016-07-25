@@ -57,7 +57,7 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -113,16 +113,15 @@ public class SourceMapLineInspector extends RegexLineInspector {
      * </p>
      *
      * @param request the request
-     * @param outputStream the stream
+     * @param writer the stream
      * @param name the source map name
      * @throws IOException if any I/O error occurs
      */
-    public static void writeSourceMapComment(final EngineRequest request, final OutputStream outputStream, final String name)
+    public static void writeSourceMapComment(final EngineRequest request, final Writer writer, final String name)
             throws IOException {
         // Add source map comment
         if (!request.isStaticsServedByWuicServlet()) {
-            final String comment = String.format("%s//# sourceMappingURL=%s%s", IOUtils.NEW_LINE, name, IOUtils.NEW_LINE);
-            outputStream.write(comment.getBytes(request.getCharset()));
+            writer.write(String.format("%s//# sourceMappingURL=%s%s", IOUtils.NEW_LINE, name, IOUtils.NEW_LINE));
         }
     }
 
@@ -153,7 +152,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
     @Override
     public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
                                                              final EngineRequest request,
-                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final CompositeNut.CompositeInput cis,
                                                              final ConvertibleNut originalNut) throws WuicException {
         final StringBuilder replacement = new StringBuilder();
         final String referencedPath = matcher.group(1);
@@ -190,7 +189,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
             // Should have only one nut
             for (final ConvertibleNut nut : res) {
                 nut.setIsSubResource(false);
-                originalNut.setSource(new SourceMapNutImpl(heap, originalNut, nut, request.getProcessContext()));
+                originalNut.setSource(new SourceMapNutImpl(heap, originalNut, nut, request.getProcessContext(), request.getCharset()));
             }
         } else {
             // .map will be broken in case of minification or aggregation

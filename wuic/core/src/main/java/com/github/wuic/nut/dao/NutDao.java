@@ -40,9 +40,9 @@ package com.github.wuic.nut.dao;
 
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -192,7 +192,7 @@ public interface NutDao {
      * @return the stream
      * @throws IOException if stream could not be opened
      */
-    InputStream newInputStream(String path, ProcessContext processContext) throws IOException;
+    Input newInputStream(String path, ProcessContext processContext) throws IOException;
 
     /**
      * <p>

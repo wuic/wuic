@@ -38,14 +38,16 @@
 
 package com.github.wuic.test.engine;
 
-import com.github.wuic.NutType;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.GzipEngine;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.InMemoryOutput;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
@@ -57,8 +59,8 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.PushbackInputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -89,23 +91,23 @@ public class GzipEngineTest {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(true);
 
-        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
+        final Nut nut = new InMemoryNut("var foo = 1;".getBytes(), "foo.js", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals(1, res.size());
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final InMemoryOutput bos = new InMemoryOutput(Charset.defaultCharset().displayName());
         res.get(0).transform(new Pipe.DefaultOnReady(bos));
-        final PushbackInputStream pb = new PushbackInputStream(new ByteArrayInputStream(bos.toByteArray()), 2 );
+        final PushbackInputStream pb = new PushbackInputStream(new ByteArrayInputStream(bos.execution().getByteResult()), 2 );
         final byte[] signature = new byte[2];
         pb.read(signature);
         pb.unread(signature);
 
         // Check magic number
         Assert.assertEquals(signature[0], (byte) 0x1f);
-        Assert.assertEquals(signature[1], (byte) 0x8b );
+        Assert.assertEquals(signature[1], (byte) 0x8b);
     }
 
     /**
@@ -118,11 +120,11 @@ public class GzipEngineTest {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(false);
 
-        final Nut nut = new ByteArrayNut("var foo = 1;".getBytes(), "foo.js", NutType.JAVASCRIPT, 1L, false);
+        final Nut nut = new InMemoryNut("var foo = 1;".getBytes(), "foo.js", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
 
-        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null).build();
+        final EngineRequest request = new EngineRequestBuilder("workflow", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build();
         final List<ConvertibleNut> res = gzipEngine.parse(request);
         Assert.assertEquals("var foo = 1;", NutUtils.readTransform(res.get(0)));
     }

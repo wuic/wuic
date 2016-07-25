@@ -40,7 +40,9 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.ClassPathResourceResolver;
 import com.github.wuic.ClassPathResourceResolverHandler;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
@@ -48,7 +50,6 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NotReachableNut;
-import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 
@@ -118,10 +119,13 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
      *
      * @param classpathResourceResolver the {@link com.github.wuic.ClassPathResourceResolver} to use
      * @param workflowId the workflow ID
+     * @param nutTypeFactory the nut type factory
      * @return the data file
      * @throws WuicException if the workflow has not been found or could not be processed
      */
-    public static List<ConvertibleNut> getNuts(final ClassPathResourceResolver classpathResourceResolver, final String workflowId)
+    public static List<ConvertibleNut> getNuts(final ClassPathResourceResolver classpathResourceResolver,
+                                               final String workflowId,
+                                               final NutTypeFactory nutTypeFactory)
             throws WuicException {
         final String fileName = String.format(STATIC_WORKFLOW_FILE, workflowId).substring(1);
         final InputStream is = classpathResourceResolver.getResourceAsStream(fileName);
@@ -141,7 +145,7 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
 
             // Read each file associated to its type
             while (matcher.find()) {
-                final NutType nutType = NutType.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
+                final NutType nutType = nutTypeFactory.getNutTypeForExtension(matcher.group(NumberUtils.TWO));
                 final String pathLine = matcher.group(1);
                 int depth = 0;
 
@@ -198,7 +202,7 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
         if (retval != null) {
             return retval;
         } else {
-            retval = getNuts(classpathResourceResolver, request.getWorkflowId());
+            retval = getNuts(classpathResourceResolver, request.getWorkflowId(), getNutTypeFactory());
             retrievedWorkflow.put(request.getWorkflowId(), retval);
         }
 
@@ -210,7 +214,7 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
      */
     @Override
     public List<NutType> getNutTypes() {
-        return CollectionUtils.newList(NutType.values());
+        return getNutTypeFactory().getNutType(EnumNutType.values());
     }
 
     /**

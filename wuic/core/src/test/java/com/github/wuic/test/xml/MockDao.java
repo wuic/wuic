@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.xml;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.Config;
@@ -47,11 +48,13 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.Input;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,13 +124,13 @@ public class MockDao implements NutDao {
     @Override
     public List<Nut> create(final String path, final PathFormat format, final ProcessContext processContext) throws IOException {
         final ConvertibleNut nut = mock(ConvertibleNut.class);
-        when(nut.getInitialNutType()).thenReturn(NutType.CSS);
-        when(nut.getNutType()).thenReturn(NutType.CSS);
+        when(nut.getInitialNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
+        when(nut.getNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
         when(nut.getName()).thenReturn("foo.css");
         when(nut.getInitialName()).thenReturn("foo.css");
         final List<Nut> nuts = new ArrayList<Nut>();
         nuts.add(nut);
-        when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        when(nut.openStream()).thenReturn(new DefaultInput(new ByteArrayInputStream(new byte[0]), Charset.defaultCharset().displayName()));
         when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         return nuts;
     }
@@ -159,7 +162,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 

@@ -63,12 +63,13 @@ public class ZipEntryDirectoryPath extends ZipDirectoryPath implements Directory
      * Builds a new instance.
      * </p>
      *
+     * @param charset the charset
      * @param entry the ZIP entry name
      * @param parent the parent
      */
-    public ZipEntryDirectoryPath(final String entry, final DirectoryPath parent) {
-        super(entry, parent);
-        entryPath = new ZipEntryPath(entry, parent);
+    public ZipEntryDirectoryPath(final String entry, final DirectoryPath parent, final String charset) {
+        super(entry, parent, charset);
+        entryPath = new ZipEntryPath(entry, parent, charset);
     }
 
     /**

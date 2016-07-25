@@ -39,7 +39,8 @@
 package com.github.wuic.test;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.ProcessContext;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.config.ObjectBuilder;
@@ -50,6 +51,7 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.dao.core.HttpNutDao;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
@@ -65,7 +67,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Collection;
 
 /**
@@ -84,6 +86,12 @@ public class HttpTest extends WuicTest {
      * Logger.
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * The server running during tests.
@@ -109,8 +117,8 @@ public class HttpTest extends WuicTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
-        Assert.assertTrue(dao.exists("images/reject-block.png", ProcessContext.DEFAULT));
-        Assert.assertFalse(dao.exists("images/unknw.png", ProcessContext.DEFAULT));
+        Assert.assertTrue(dao.exists("images/reject-block.png", processContext.getProcessContext()));
+        Assert.assertFalse(dao.exists("images/unknw.png", processContext.getProcessContext()));
     }
 
     /**
@@ -125,7 +133,8 @@ public class HttpTest extends WuicTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, HttpNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(HttpNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.SERVER_PORT, 9876).build();
-        final InputStream is = dao.create("images/reject-block.png", ProcessContext.DEFAULT).get(0).openStream();
+        NutTypeFactoryHolder.class.cast(dao).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        final InputStream is = dao.create("images/reject-block.png", processContext.getProcessContext()).get(0).openStream().inputStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
@@ -145,17 +154,16 @@ public class HttpTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        final Collection<ConvertibleNut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        final Collection<ConvertibleNut> group = facade.process("", "css-imagecss-image", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         Assert.assertFalse(group.isEmpty());
-        InputStream is;
+        Input is;
 
         for (Nut res : group) {
             is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
+            Assert.assertTrue(is.execution().toString().length() > 0);
         }
     }
 }

@@ -40,7 +40,9 @@ package com.github.wuic.test;
 
 import com.github.wuic.AnnotationProcessor;
 import com.github.wuic.AnnotationScanner;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ServiceLoaderAnnotationScanner;
 import com.github.wuic.engine.EngineService;
@@ -53,10 +55,15 @@ import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.HtmlUtil;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.InMemoryOutput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutDiskStore;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.SequenceReader;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.util.UrlMatcher;
@@ -69,14 +76,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -147,11 +154,11 @@ public class UtilityTest extends WuicTest {
         final ConvertibleNut fifth = Mockito.mock(ConvertibleNut.class);
         final List<ConvertibleNut> input = Arrays.asList(first, second, third, fourth, fifth);
 
-        Mockito.when(first.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        Mockito.when(second.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        Mockito.when(third.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        Mockito.when(fourth.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        Mockito.when(fifth.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(first.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
+        Mockito.when(second.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
+        Mockito.when(third.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
+        Mockito.when(fourth.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
+        Mockito.when(fifth.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
 
         Mockito.when(first.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(second.getVersionNumber()).thenReturn(new FutureLong(1L));
@@ -159,11 +166,11 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(fifth.getVersionNumber()).thenReturn(new FutureLong(1L));
 
-        Mockito.when(first.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(second.getInitialNutType()).thenReturn(NutType.CSS);
-        Mockito.when(third.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(fourth.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(fifth.getInitialNutType()).thenReturn(NutType.CSS);
+        Mockito.when(first.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(second.getInitialNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
+        Mockito.when(third.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(fourth.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(fifth.getInitialNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
 
         Mockito.when(first.getName()).thenReturn("foo.js");
         Mockito.when(second.getName()).thenReturn("foo.css");
@@ -177,7 +184,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        List<ConvertibleNut> output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
+        List<ConvertibleNut> output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, Charset.defaultCharset().displayName());
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -197,7 +204,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("bar2.js");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, Charset.defaultCharset().displayName());
 
         Assert.assertEquals(5, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -218,7 +225,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("baz.css");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, Charset.defaultCharset().displayName());
 
         Assert.assertEquals(3, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -237,7 +244,7 @@ public class UtilityTest extends WuicTest {
         Mockito.when(fourth.getInitialName()).thenReturn("baz.css");
         Mockito.when(fifth.getInitialName()).thenReturn("foo.js");
 
-        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, "UTF-8");
+        output = CompositeNut.mergeNuts(Mockito.mock(ProcessContext.class), input, Charset.defaultCharset().displayName());
 
         Assert.assertEquals(4, output.size());
         Assert.assertEquals("foo.js", output.get(0).getName());
@@ -339,7 +346,7 @@ public class UtilityTest extends WuicTest {
 
         final File file = File.createTempFile("file", ".js", basePath);
 
-        final DirectoryPath parent = DirectoryPath.class.cast(IOUtils.buildPath(IOUtils.mergePath(tmp, nanoTime)));
+        final DirectoryPath parent = DirectoryPath.class.cast(IOUtils.buildPath(IOUtils.mergePath(tmp, nanoTime), Charset.defaultCharset().displayName()));
         List<String> list = IOUtils.listFile(parent, Pattern.compile(".*js"));
 
         Assert.assertEquals(list.size(), 1);
@@ -348,7 +355,7 @@ public class UtilityTest extends WuicTest {
         // Part 2
         final String str = getClass().getResource("/images").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
         final List<String> listFiles = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
         Assert.assertEquals(40, listFiles.size());
 
@@ -370,7 +377,7 @@ public class UtilityTest extends WuicTest {
         String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
         IOUtils.listFile(directoryPath, Pattern.compile(".*.js"));
     }
 
@@ -386,12 +393,12 @@ public class UtilityTest extends WuicTest {
         String str = IOUtils.normalizePathSeparator(getClass().getResource("/zip").toString());
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
         final List<String> list = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
         ZipEntryFilePath.ZipFileInputStream is;
 
         for (final String s : list) {
-            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
+            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream().inputStream());
             IOUtils.copyStream(is, new ByteArrayOutputStream());
             is.close();
 
@@ -400,7 +407,7 @@ public class UtilityTest extends WuicTest {
             }
 
             // Retry when file is deleted
-            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream());
+            is = ZipEntryFilePath.ZipFileInputStream.class.cast(FilePath.class.cast(directoryPath.getChild(s)).openStream().inputStream());
             IOUtils.copyStream(is, new ByteArrayOutputStream());
             is.close();
 
@@ -423,7 +430,7 @@ public class UtilityTest extends WuicTest {
     public void fileSearchSkipStartWith() throws IOException {
         final String str = getClass().getResource("/skipped").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
         final List<String> res = IOUtils.listFile(directoryPath, Pattern.compile(".*.js"), Arrays.asList("ignore"));
         Assert.assertEquals(2, res.size());
     }
@@ -494,7 +501,7 @@ public class UtilityTest extends WuicTest {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         HtmlUtil.writeScriptImport(nut, "myPath");
 
         final Map<String, String> a = new HashMap<String, String>();
@@ -514,7 +521,7 @@ public class UtilityTest extends WuicTest {
     public void htmlCssImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.css");
-        Mockito.when(nut.getNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final Map<String, String> a = new HashMap<String, String>();
@@ -533,7 +540,7 @@ public class UtilityTest extends WuicTest {
     public void htmlImgImportTest() throws IOException {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getName()).thenReturn("foo.png");
-        Mockito.when(nut.getNutType()).thenReturn(NutType.PNG);
+        Mockito.when(nut.getNutType()).thenReturn(new NutType(EnumNutType.PNG, Charset.defaultCharset().displayName()));
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final Map<String, String> a = new HashMap<String, String>();
@@ -550,7 +557,7 @@ public class UtilityTest extends WuicTest {
     @Test
     public void getUrltTest() {
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.CSS);
+        Mockito.when(nut.getInitialNutType()).thenReturn(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         // Served nut
@@ -572,13 +579,14 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void getByMimeTypeTest() {
-        NutType nutType = NutType.getNutTypeForMimeType("text/html;charset=UTF-8");
-        Assert.assertEquals(nutType, NutType.HTML);
+        final NutTypeFactory f = new NutTypeFactory(Charset.defaultCharset().displayName());
+        NutType nutType = f.getNutTypeForMimeType("text/html;charset=UTF-8");
+        Assert.assertTrue(nutType.isBasedOn(EnumNutType.HTML));
 
-        nutType = NutType.getNutTypeForMimeType("text/html");
-        Assert.assertEquals(nutType, NutType.HTML);
+        nutType = f.getNutTypeForMimeType("text/html");
+        Assert.assertTrue(nutType.isBasedOn(EnumNutType.HTML));
 
-        nutType = NutType.getNutTypeForMimeType("bad-mime-type");
+        nutType = f.getNutTypeForMimeType("bad-mime-type");
         Assert.assertNull(nutType);
     }
 
@@ -744,12 +752,12 @@ public class UtilityTest extends WuicTest {
     @Test
     public void pipeTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(10);
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream(new byte[] { (byte) count.get() }));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput(new byte[] { (byte) count.get() }, Charset.defaultCharset().displayName()));
         class T extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                int r = is.read();
-                os.write(r + count.decrementAndGet());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                int r = is.inputStream().read();
+                os.outputStream().write(r + count.decrementAndGet());
                 return true;
             }
         }
@@ -760,9 +768,9 @@ public class UtilityTest extends WuicTest {
             p.register(new T());
         }
 
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final InMemoryOutput bos = new InMemoryOutput(Charset.defaultCharset().displayName());
         Pipe.executeAndWriteTo(p, new ArrayList<Pipe.OnReady>(), bos);
-        Assert.assertEquals(expect, bos.toByteArray()[0]);
+        Assert.assertEquals(expect, bos.execution().getByteResult()[0]);
     }
 
     /**
@@ -774,10 +782,10 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void skipTransformerTest() throws Exception {
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput("content", Charset.defaultCharset().displayName()));
         class T extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
                 return false;
             }
         }
@@ -802,7 +810,7 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void noTransformerTest() throws Exception {
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput("content", Charset.defaultCharset().displayName()));
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         p.execute(new Pipe.OnReady() {
             @Override
@@ -823,18 +831,18 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void firstTransformerSkippedTest() throws Exception {
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput("content", Charset.defaultCharset().displayName()));
         class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
                 return false;
             }
         }
 
         class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                os.write("T2".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                os.writer().write("T2");
                 return true;
             }
         }
@@ -860,18 +868,18 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void lastTransformerSkippedTest() throws Exception {
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput("content", Charset.defaultCharset().displayName()));
         class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
                 return false;
             }
         }
 
         class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                os.write("T1".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                os.writer().write("T1");
                 return true;
             }
         }
@@ -897,28 +905,27 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void middleTransformerSkippedTest() throws Exception {
-        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new ByteArrayInputStream("content".getBytes()));
+        final Pipe<ConvertibleNut> p = new Pipe<ConvertibleNut>(Mockito.mock(ConvertibleNut.class), new InMemoryInput("content", Charset.defaultCharset().displayName()));
         class T1 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                os.write("T1".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                os.writer().write("T1");
                 return true;
             }
         }
 
         class T2 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                os.write("T2".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                os.writer().write("T2");
                 return false;
             }
         }
 
         class T3 extends Pipe.DefaultTransformer<ConvertibleNut> {
             @Override
-            public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut o) throws IOException {
-                IOUtils.copyStream(is, os);
-                os.write("T3".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut o) throws IOException {
+                Writer.class.cast(IOUtils.copyStream(is, os)).write("T3");
                 return true;
             }
         }
@@ -1168,7 +1175,24 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void checkCharsetTest() {
-        Assert.assertEquals("UTF-8", IOUtils.checkCharset("UTF-8"));
+        Assert.assertEquals(Charset.defaultCharset().displayName(), IOUtils.checkCharset(Charset.defaultCharset().displayName()));
         Assert.assertEquals(Charset.defaultCharset().name(), IOUtils.checkCharset(""));
+    }
+
+    /**
+     * <p>
+     * Tests {@link SequenceReader}.
+     * </p>
+     *
+     * @throws IOException if test fails
+     */
+    @Test
+    public void sequenceReaderTest() throws IOException {
+        final Reader r1 = new StringReader("a");
+        final Reader r2 = new StringReader("b");
+        final Reader r3 = new StringReader("c");
+        final Reader seq = new SequenceReader(Arrays.asList(r1, r2, r3));
+        Assert.assertEquals("abc", IOUtils.readString(seq));
+        seq.close();
     }
 }

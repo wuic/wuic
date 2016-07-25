@@ -40,6 +40,8 @@ package com.github.wuic.nut;
 
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
@@ -48,8 +50,10 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoWrapper;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PollingScheduler;
 import com.github.wuic.util.StringUtils;
@@ -58,6 +62,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -90,7 +95,7 @@ import static com.github.wuic.ApplicationConfig.FIXED_VERSION_NUMBER;
  * @author Guillaume DROUET
  * @since 0.3.1
  */
-public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao {
+public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> implements NutDao, NutTypeFactoryHolder {
 
     /**
      * The logger.
@@ -110,12 +115,26 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
     /**
      * Index of the next proxy URI to use.
      */
-    private AtomicInteger nextProxyIndex;
+    private final AtomicInteger nextProxyIndex;
 
     /**
      * The version number management strategy.
      */
     private VersionNumberStrategy versionNumberStrategy;
+
+    /**
+     * The nut type factory.
+     */
+    private NutTypeFactory nutTypeFactory;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     */
+    public AbstractNutDao() {
+        nextProxyIndex = new AtomicInteger(0);
+    }
 
     /**
      * <p>
@@ -134,7 +153,6 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         }
 
         proxyUris = proxies == null ? null : Arrays.copyOf(proxies, proxies.length);
-        nextProxyIndex = new AtomicInteger(0);
         setPollingInterval(pollingSeconds);
         Disposer.INSTANCE.register(this);
     }
@@ -153,6 +171,14 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
             @BooleanConfigParam(defaultValue = true, propertyKey = COMPUTE_VERSION_ASYNCHRONOUSLY) final Boolean computeVersionAsynchronously,
             @StringConfigParam(defaultValue = "", propertyKey = FIXED_VERSION_NUMBER) final String fixedVersionNumber) {
         versionNumberStrategy = new VersionNumberStrategy(contentBasedVersionNumber, computeVersionAsynchronously, fixedVersionNumber);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNutTypeFactory(final NutTypeFactory nutTypeFactory) {
+        this.nutTypeFactory = nutTypeFactory;
     }
 
     /**
@@ -283,6 +309,30 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
 
     /**
      * <p>
+     * Creates a new {@link Input} based on the given {@code InputStream}.
+     * </p>
+     *
+     * @param is the input stream
+     * @return the {@link Input}, {@code null} if {@link InputStream} is {@code null}
+     */
+    protected Input newInput(final InputStream is) {
+        return is == null ? null : new DefaultInput(is, getCharset());
+    }
+
+    /**
+     * <p>
+     * Creates a new {@link Input} based on the given {@code Reader}.
+     * </p>
+     *
+     * @param r the reader
+     * @return the {@link Input}, {@code null} if {@link Reader} is {@code null}
+     */
+    protected Input newInput(final Reader r) {
+        return r == null ? null : new DefaultInput(r, getCharset());
+    }
+
+    /**
+     * <p>
      * Computes the absolute path of the given path relative to the DAO's base path.
      * </p>
      *
@@ -325,7 +375,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         final List<Nut> retval = new ArrayList<Nut>(pathNames.size());
 
         for (final String p : pathNames) {
-            final NutType type = NutType.getNutType(p);
+            final NutType type = nutTypeFactory.getNutType(p);
 
             if (type == null) {
                 continue;
@@ -602,6 +652,21 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
         return versionNumberStrategy;
     }
 
+    public NutTypeFactory getNutTypeFactory() {
+        return nutTypeFactory;
+    }
+
+    /**
+     * <p>
+     * Gets the charset used by this DAO to encode/decode text streams.
+     * </p>
+     *
+     * @return the charset
+     */
+    protected String getCharset() {
+        return nutTypeFactory.getCharset();
+    }
+
     /**
      * <p>
      * Lists all the nuts path matching the given pattern.
@@ -618,7 +683,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
      * </p>
      *
      * @param realPath the real path to use to access the nut
-     * @param type     the path's type
+     * @param type the path's type
      * @param processContext the process context
      * @return the {@link Nut}
      * @throws IOException if an I/O error occurs while creating access
@@ -676,7 +741,7 @@ public abstract class AbstractNutDao extends PollingScheduler<NutDaoListener> im
                 InputStream is = null;
 
                 try {
-                    is = newInputStream(path, processContext);
+                    is = newInputStream(path, processContext).inputStream();
                     final MessageDigest md = IOUtils.newMessageDigest();
                     final byte[] buffer = new byte[IOUtils.WUIC_BUFFER_LEN];
                     int offset;

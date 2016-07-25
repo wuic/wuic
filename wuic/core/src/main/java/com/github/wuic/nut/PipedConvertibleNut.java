@@ -41,11 +41,10 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -110,7 +109,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                                  final List<Pipe.OnReady> callbacks)
             throws IOException {
 
-        InputStream is = null;
+        Input is = null;
 
         try {
             if (transformers != null) {
@@ -123,9 +122,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                 pipe.execute(convertibleNut.ignoreCompositeStreamOnTransformation(), callbacks.toArray(new Pipe.OnReady[callbacks.size()]));
             } else {
                 is = convertibleNut.openStream();
-                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                IOUtils.copyStream(is, bos);
-                final Pipe.Execution execution = new Pipe.Execution(bos.toByteArray());
+                final Pipe.Execution execution = is.execution();
 
                 for (final Pipe.OnReady cb : callbacks) {
                     cb.ready(execution);

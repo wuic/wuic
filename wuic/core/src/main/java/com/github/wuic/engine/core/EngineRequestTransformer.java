@@ -40,11 +40,11 @@ package com.github.wuic.engine.core;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * <p>
@@ -71,7 +71,7 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
 
         /**
          * <p>
-         * Matches the {@link com.github.wuic.util.Pipe.Transformer#transform(java.io.InputStream, java.io.OutputStream, Object)}
+         * Matches the {@link com.github.wuic.util.Pipe.Transformer#transform(com.github.wuic.util.Input, com.github.wuic.util.Output, Object)}
          * signature with an additional {@link EngineRequest}.
          * </p>
          *
@@ -82,7 +82,7 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
          * @return {@code true} if the input stream has been read and the output stream used, {@code false} otherwise
          * @throws IOException if an I/O error occurs
          */
-        boolean transform(InputStream is, OutputStream os, ConvertibleNut nut, EngineRequest request) throws IOException;
+        boolean transform(Input is, Output os, ConvertibleNut nut, EngineRequest request) throws IOException;
     }
 
     /**
@@ -142,7 +142,8 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+    public boolean transform(final Input is, final Output os, final ConvertibleNut convertible)
+            throws IOException {
         return requireEngineRequestTransformer.transform(is, os, convertible, engineRequest);
     }
 

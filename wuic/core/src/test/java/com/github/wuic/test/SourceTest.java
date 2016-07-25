@@ -38,7 +38,9 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -51,7 +53,9 @@ import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -61,9 +65,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,6 +80,12 @@ import java.util.List;
  */
 @RunWith(JUnit4.class)
 public class SourceTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Timeout.
@@ -156,7 +165,7 @@ public class SourceTest {
         Mockito.when(f.toString()).thenReturn("f");
         Mockito.when(g.toString()).thenReturn("g");
 
-        final SourceMapNut sourceMapNut = new SourceMapNutImpl(convertibleNut);
+        final SourceMapNut sourceMapNut = new SourceMapNutImpl(convertibleNut, new NutTypeFactory(Charset.defaultCharset().displayName()));
 
         sourceMapNut.addSource(startLineAl1, startColAl1, endLineAl1, endColAl1, a);
         sourceMapNut.addSource(startLineFl13, startColFl13, endLineFl13, endColFl13, f);
@@ -207,9 +216,9 @@ public class SourceTest {
                 final Nut nut = Mockito.mock(Nut.class);
 
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(invocationOnMock.getArguments()[0]));
-                Mockito.when(nut.getInitialNutType()).thenReturn(NutType.getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
+                Mockito.when(nut.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-                Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("content of " + invocationOnMock.getArguments()[0]).getBytes()));
+                Mockito.when(nut.openStream()).thenReturn(new InMemoryInput(("content of " + invocationOnMock.getArguments()[0]), Charset.defaultCharset().displayName()));
 
                 retval.add(nut);
                 return retval;
@@ -221,24 +230,24 @@ public class SourceTest {
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
-        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
-        h.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()), heap);
+        h.checkFiles(processContext.getProcessContext());
 
         final ConvertibleNut convertibleNut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(convertibleNut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(convertibleNut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(convertibleNut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(convertibleNut.getNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(convertibleNut.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         Mockito.when(convertibleNut.getInitialName()).thenReturn("testcode.min.js");
         Mockito.when(convertibleNut.getName()).thenReturn("testcode.min.js");
         Mockito.when(convertibleNut.getSource()).thenReturn(new SourceImpl());
 
         final ConvertibleNut sourceMap = Mockito.mock(ConvertibleNut.class);
         Mockito.when(sourceMap.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(sourceMap.getNutType()).thenReturn(NutType.MAP);
-        Mockito.when(sourceMap.getInitialNutType()).thenReturn(NutType.MAP);
+        Mockito.when(sourceMap.getNutType()).thenReturn(new NutType(EnumNutType.MAP, Charset.defaultCharset().displayName()));
+        Mockito.when(sourceMap.getInitialNutType()).thenReturn(new NutType(EnumNutType.MAP, Charset.defaultCharset().displayName()));
         Mockito.when(sourceMap.getInitialName()).thenReturn("testcode.js.map");
 
-        Mockito.when(sourceMap.openStream()).thenReturn(new ByteArrayInputStream(("{"
+        Mockito.when(sourceMap.openStream()).thenReturn(new InMemoryInput("{"
                 + "  \"version\": 3,"
                 + "  \"file\": \"testcode.js\","
                 + "  \"sections\": ["
@@ -255,13 +264,13 @@ public class SourceTest {
                 + "      }"
                 + "    }"
                 + "  ]"
-                + "}").getBytes()));
+                + "}", Charset.defaultCharset().displayName()));
 
-        final SourceMapNut src = new SourceMapNutImpl(h, convertibleNut, sourceMap, ProcessContext.DEFAULT);
+        final SourceMapNut src = new SourceMapNutImpl(h, convertibleNut, sourceMap, processContext.getProcessContext(), Charset.defaultCharset().displayName());
         Assert.assertEquals(1, src.getOriginalNuts().size());
         Assert.assertNotNull(src.getNutAt(1, 1));
 
         Assert.assertTrue("source map must contain nut name", src.toString().contains("testcode.min.js"));
-        Assert.assertTrue("source map must contain nut name", IOUtils.readString(new InputStreamReader(src.openStream())).contains("testcode.min.js"));
+        Assert.assertTrue("source map must contain nut name", IOUtils.readString(src.openStream().reader()).contains("testcode.min.js"));
     }
 }

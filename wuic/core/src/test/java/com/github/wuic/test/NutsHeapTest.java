@@ -39,6 +39,7 @@
 package com.github.wuic.test;
 
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HeapListener;
@@ -46,7 +47,9 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.Input;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -55,9 +58,9 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,6 +111,7 @@ public class NutsHeapTest {
         MockNutDao(final int pollingSeconds) {
             init("/", null, pollingSeconds);
             init(false, true, null);
+            setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
         }
 
         /**
@@ -142,7 +146,7 @@ public class NutsHeapTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+        public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
             return null;
         }
 
@@ -154,6 +158,12 @@ public class NutsHeapTest {
             return null;
         }
     }
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Timeout.
@@ -172,7 +182,7 @@ public class NutsHeapTest {
     public void illegalAbsoluteNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("/000/hey.js", 1L);
-        new NutsHeap(this, Arrays.asList(".*"), dao, "").checkFiles(ProcessContext.DEFAULT);
+        new NutsHeap(this, Arrays.asList(".*"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName())).checkFiles(processContext.getProcessContext());
     }
 
     /**
@@ -186,7 +196,7 @@ public class NutsHeapTest {
     public void illegalRelativeNutNameTest() throws IOException {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("000/hey.js", 1L);
-        new NutsHeap(this, Arrays.asList(".*"), dao, "").checkFiles(ProcessContext.DEFAULT);
+        new NutsHeap(this, Arrays.asList(".*"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName())).checkFiles(processContext.getProcessContext());
     }
 
     /**
@@ -200,8 +210,8 @@ public class NutsHeapTest {
     public void notificationTest() throws Exception {
         final MockNutDao dao = new MockNutDao(1);
         dao.mockPaths.put("hey.js", 1L);
-        final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "");
-        heap.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        heap.checkFiles(processContext.getProcessContext());
         final AtomicInteger count = new AtomicInteger();
 
         heap.addObserver(new HeapListener() {
@@ -241,18 +251,18 @@ public class NutsHeapTest {
     public void notificationByCompositionTest() throws Exception {
         final MockNutDao firstDao = new MockNutDao(1);
         firstDao.mockPaths.put("1.js", 1L);
-        final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList(".*"), firstDao, "");
-        firstCompo.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList(".*"), firstDao, "", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        firstCompo.checkFiles(processContext.getProcessContext());
         final MockNutDao secondDao = new MockNutDao(1);
         secondDao.mockPaths.put("2.js", 1L);
-        final NutsHeap secondCompo = new NutsHeap(this, Arrays.asList(".*"), secondDao, "");
-        secondCompo.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap secondCompo = new NutsHeap(this, Arrays.asList(".*"), secondDao, "", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        secondCompo.checkFiles(processContext.getProcessContext());
 
         final MockNutDao dao = new MockNutDao(1);
         dao.mockPaths.put("hey.js", 1L);
 
-        final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "", firstCompo, secondCompo);
-        heap.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName()), firstCompo, secondCompo);
+        heap.checkFiles(processContext.getProcessContext());
         final AtomicInteger count = new AtomicInteger();
 
         heap.addObserver(new HeapListener() {
@@ -325,7 +335,7 @@ public class NutsHeapTest {
              * {@inheritDoc}
              */
             @Override
-            public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+            public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
                 return null;
             }
 
@@ -348,10 +358,11 @@ public class NutsHeapTest {
 
         dao.init("/", null, 1);
         dao.init(false, true, null);
+        dao.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
 
         try {
-            final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList("a", "b"), dao, "");
-            firstCompo.checkFiles(ProcessContext.DEFAULT);
+            final NutsHeap firstCompo = new NutsHeap(this, Arrays.asList("a", "b"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName()));
+            firstCompo.checkFiles(processContext.getProcessContext());
             firstCompo.create(firstCompo.getNuts().get(0), "c", NutDao.PathFormat.ANY, null);
             final CountDownLatch latch1 = new CountDownLatch(1);
             final CountDownLatch latch2 = new CountDownLatch(1);
@@ -389,7 +400,7 @@ public class NutsHeapTest {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("hey.js", 1L);
         dao.mockPaths.put("hey.css", 1L);
-        new NutsHeap(this, Arrays.asList(""), dao, "").checkFiles(ProcessContext.DEFAULT);
+        new NutsHeap(this, Arrays.asList(""), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName())).checkFiles(processContext.getProcessContext());
     }
 
     /**
@@ -399,7 +410,7 @@ public class NutsHeapTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void noPathTest() throws IOException {
-        new NutsHeap(this, Arrays.asList(""), new MockNutDao(-1), "").checkFiles(ProcessContext.DEFAULT);
+        new NutsHeap(this, Arrays.asList(""), new MockNutDao(-1), "", new NutTypeFactory(Charset.defaultCharset().displayName())).checkFiles(processContext.getProcessContext());
         Assert.fail();
     }
 
@@ -414,8 +425,8 @@ public class NutsHeapTest {
     public void removesListenerTest() throws Exception {
         final MockNutDao dao = new MockNutDao(-1);
         dao.mockPaths.put("1.js", 1L);
-        NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "");
-        heap.checkFiles(ProcessContext.DEFAULT);
+        NutsHeap heap = new NutsHeap(this, Arrays.asList(".*"), dao, "", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        heap.checkFiles(processContext.getProcessContext());
         final ReferenceQueue queue = new ReferenceQueue();
         final WeakReference ref = new WeakReference(heap, queue);
 

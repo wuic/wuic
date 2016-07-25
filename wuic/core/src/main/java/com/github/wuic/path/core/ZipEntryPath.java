@@ -62,11 +62,12 @@ public class ZipEntryPath extends SimplePath implements Path {
      * must have a parent.
      * </p>
      *
+     * @param charset the charset
      * @param entry the ZIP entry name
      * @param parent the parent
      */
-    public ZipEntryPath(final String entry, final DirectoryPath parent) {
-        super(entry, parent);
+    public ZipEntryPath(final String entry, final DirectoryPath parent, final String charset) {
+        super(entry, parent, charset);
 
         if (parent == null) {
             throw new IllegalArgumentException(String.format("%s is a ZIP entry and must have a non-null parent", entry));

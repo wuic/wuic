@@ -38,7 +38,9 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -61,6 +63,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -159,19 +162,19 @@ public class EngineTest {
     @Test
     public void skipTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
-        final NodeEngine a = new E(NutType.GIF, EngineType.CACHE, count);
-        final NodeEngine b = new E(NutType.GIF, EngineType.INSPECTOR, count);
-        final NodeEngine c = new E(NutType.GIF, EngineType.BINARY_COMPRESSION, count);
+        final NodeEngine a = new E(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.GIF), EngineType.CACHE, count);
+        final NodeEngine b = new E(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.GIF), EngineType.INSPECTOR, count);
+        final NodeEngine c = new E(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.GIF), EngineType.BINARY_COMPRESSION, count);
 
         a.setNext(b);
         b.setNext(c);
 
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         final Nut nut = Mockito.mock(Nut.class);
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.GIF);
+        Mockito.when(nut.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.GIF));
         Mockito.when(nut.getInitialName()).thenReturn("foo.gif");
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
-        final EngineRequestBuilder builder = new EngineRequestBuilder("", heap, null);
+        final EngineRequestBuilder builder = new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()));
         final EngineRequest request = builder.build();
 
         a.parse(request);

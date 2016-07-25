@@ -38,7 +38,8 @@
 
 package com.github.wuic.test.ctx;
 
-import com.github.wuic.NutType;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.config.Config;
 import com.github.wuic.nut.Nut;
@@ -46,10 +47,11 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -93,13 +95,13 @@ public class MockDao implements NutDao {
     public MockDao() throws IOException {
         // Prepare Nut mock
         when(mockNutOne.getInitialName()).thenReturn("foo.js");
-        when(mockNutOne.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutOne.openStream()).thenReturn(new ByteArrayInputStream("var foo;".getBytes()));
+        when(mockNutOne.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT));
+        when(mockNutOne.openStream()).thenReturn(new InMemoryInput("var foo;", Charset.defaultCharset().displayName()));
         when(mockNutOne.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         when(mockNutTwo.getInitialName()).thenReturn("test.js");
-        when(mockNutTwo.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        when(mockNutTwo.openStream()).thenReturn(new ByteArrayInputStream("var test;".getBytes()));
+        when(mockNutTwo.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT));
+        when(mockNutTwo.openStream()).thenReturn(new InMemoryInput("var test;", Charset.defaultCharset().displayName()));
         when(mockNutTwo.getVersionNumber()).thenReturn(new FutureLong(1L));
     }
 
@@ -161,7 +163,7 @@ public class MockDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 

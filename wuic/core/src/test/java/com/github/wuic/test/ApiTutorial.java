@@ -38,6 +38,7 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.WuicFacade;
@@ -63,7 +64,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -210,7 +210,7 @@ public class ApiTutorial {
 
         @Override
         public List<NutType> getNutTypes() {
-            return Arrays.asList(NutType.values());
+            return getNutTypeFactory().getNutType(EnumNutType.values());
         }
 
         @Override

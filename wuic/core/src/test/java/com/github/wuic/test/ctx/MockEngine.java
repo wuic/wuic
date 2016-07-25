@@ -38,7 +38,9 @@
 
 package com.github.wuic.test.ctx;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
@@ -47,6 +49,7 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -64,6 +67,7 @@ public class MockEngine extends NodeEngine {
      */
     @Config
     public MockEngine() {
+        setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
     }
 
     /**
@@ -71,7 +75,7 @@ public class MockEngine extends NodeEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.JAVASCRIPT);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT));
     }
 
     /**

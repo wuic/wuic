@@ -47,9 +47,9 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PrefixedNut;
-import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.SizableNut;
 import com.github.wuic.nut.Source;
 import com.github.wuic.util.NumberUtils;
@@ -161,7 +161,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
                 try {
-                    retval = ByteArrayNut.toByteArrayNut(runBestEffortChain(request));
+                    retval = InMemoryNut.toByteArrayNut(runBestEffortChain(request));
                 } catch (IOException ioe) {
                     WuicException.throwWuicException(ioe);
                     return null;
@@ -405,7 +405,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
 
         for (final ConvertibleNut nut : nuts) {
             final List<ConvertibleNut> referenced;
-            final ConvertibleNut byteArray = ByteArrayNut.toByteArrayNut(nut);
+            final ConvertibleNut byteArray = InMemoryNut.toByteArrayNut(nut);
             referenced = byteArray.getReferencedNuts();
 
             // Nut content is static, cache it entirely

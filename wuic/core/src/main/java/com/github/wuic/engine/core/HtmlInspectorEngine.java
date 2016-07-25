@@ -39,7 +39,9 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
@@ -53,10 +55,10 @@ import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
-import com.github.wuic.nut.ByteArrayNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
@@ -196,7 +198,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.HTML);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.HTML));
     }
 
     /**
@@ -348,7 +350,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          */
         private void newParseInfo() {
             try {
-                new ParseInfo(nutName + (no), paths, proxy, rootPath, request, nutFilters).addTo(parseInfoList);
+                new ParseInfo(nutName + (no), paths, proxy, rootPath, request, nutFilters, request.getNutTypeFactory()).addTo(parseInfoList);
             } catch (WuicException we) {
                 WuicException.throwBadStateException(we);
             } catch (IOException ioe) {
@@ -417,7 +419,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             final AtomicInteger endLine = new AtomicInteger();
             final AtomicInteger endColumn = new AtomicInteger();
             StringUtils.reachEndLineAndColumn(contentMatrix, startLine, startColumn, length, endLine, endColumn);
-            handle(new DefaultParser(new Statement(startLine, startColumn, endLine.get(), endColumn.get(), contentMatrix)));
+            handle(new DefaultParser(new Statement(startLine, startColumn, endLine.get(), endColumn.get(), contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -430,7 +432,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                             final int startColumn,
                                             final int endLine,
                                             final int endColumn) {
-            handle(new ScriptParser(attributes, content, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new ScriptParser(attributes, content, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -443,7 +445,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                      final int startColumn,
                                      final int endLine,
                                      final int endColumn) {
-            handle(new ScriptParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new ScriptParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -456,7 +458,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                final int startColumn,
                                final int endLine,
                                final int endColumn) {
-            handle(new HrefParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new HrefParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -469,7 +471,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                      final int startColumn,
                                      final int endLine,
                                      final int endColumn) {
-            handle(new CssParser(attributes, content, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new CssParser(attributes, content, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -482,7 +484,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                   final int startColumn,
                                   final int endLine,
                                   final int endColumn) {
-            handle(new ImgParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new ImgParser(attributes, link, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
 
         /**
@@ -495,7 +497,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                                  final int startColumn,
                                  final int endLine,
                                  final int endColumn) {
-            handle(new HtmlParser(attributes, workflowId, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix)));
+            handle(new HtmlParser(attributes, workflowId, new Statement(startLine, startColumn, endLine, endColumn, contentMatrix), request.getNutTypeFactory()));
         }
     }
 
@@ -513,6 +515,11 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * Logger.
          */
         private final Logger logger = LoggerFactory.getLogger(getClass());
+
+        /**
+         * The nut type factory.
+         */
+        private final NutTypeFactory nutTypeFactory;
 
         /**
          * The heap generated during collect.
@@ -550,6 +557,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
          * @param rootPath the root path of content
          * @param request the associated request
          * @param nutFilterList the nut filters
+         * @param nutTypeFactory the nut type factory
          * @throws IOException if any I/O error occurs
          * @throws WorkflowNotFoundException if a workflow is described
          */
@@ -558,13 +566,15 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                           final ProxyNutDao proxyNutDao,
                           final String rootPath,
                           final EngineRequest request,
-                          final List<NutFilter> nutFilterList)
+                          final List<NutFilter> nutFilterList,
+                          final NutTypeFactory nutTypeFactory)
                 throws IOException, WorkflowNotFoundException {
             final String[] groupPaths = new String[groups.size()];
             final List<NutsHeap> composition = new ArrayList<NutsHeap>();
             this.capturedStatements = new ArrayList<String>(groups.size());
             this.skipSprites = new HashSet<String>();
             this.nutFilters = nutFilterList;
+            this.nutTypeFactory = nutTypeFactory;
 
             int start = 0;
             int cpt = 0;
@@ -605,7 +615,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                             groupPaths[start + cpt++] = simplified;
 
                             // Any <img> tag should not be converted to a sprite
-                            if (NutType.PNG.equals(nutType)) {
+                            if (nutType.isBasedOn(EnumNutType.PNG)) {
                                 skipSprites.add(simplified);
                             }
                         }
@@ -786,7 +796,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
             }
 
             final String heapId = StringUtils.toHexString(hash);
-            final NutsHeap h = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, composition);
+            final NutsHeap h = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, nutTypeFactory, composition);
             h.checkFiles(request.getProcessContext());
             h.addObserver(request.getHeap());
             NutsHeap.ListenerHolder.INSTANCE.add(h);
@@ -835,7 +845,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), heap.getId() + n.getName()));
                 }
 
-                referenced.add(ByteArrayNut.toByteArrayNut(n));
+                referenced.add(InMemoryNut.toByteArrayNut(n));
 
                 // Some additional attributes
                 final Map<String, String> additionalAttributes =

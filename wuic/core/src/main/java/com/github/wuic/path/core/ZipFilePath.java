@@ -42,15 +42,16 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.util.CloseableZipFileAdapter;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -84,12 +85,13 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * Builds a new instance with the file name as path name.
      * </p>
      *
+     * @param charset the charset
      * @param file the path
      * @param parent the parent
      * @throws java.io.IOException if any I/O error occurs
      */
-    public ZipFilePath(final File file, final DirectoryPath parent) throws IOException {
-        this(file, file.getName(), parent);
+    public ZipFilePath(final File file, final DirectoryPath parent, final String charset) throws IOException {
+        this(file, file.getName(), parent, charset);
     }
 
     /**
@@ -97,14 +99,15 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * Builds a new instance. Throws an {@link IllegalArgumentException} if the given path is not a ZIP archive.
      * </p>
      *
+     * @param charset the charset
      * @param file the path
      * @param name the name
      * @param parent the parent
      * @throws java.io.IOException if any I/O error occurs
      */
-    public ZipFilePath(final File file, final String name, final DirectoryPath parent)
+    public ZipFilePath(final File file, final String name, final DirectoryPath parent, final String charset)
             throws IOException {
-        super(name, parent);
+        super(name, parent, charset);
 
         if (!IOUtils.isArchive(file)) {
             throw new IllegalArgumentException(String.format("%s is not a ZIP archive", file.getAbsolutePath()));
@@ -128,8 +131,8 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return new FileInputStream(zipFile());
+    public Input openStream() throws IOException {
+        return new DefaultInput(new FileReader(zipFile()), getCharset());
     }
 
     /**
@@ -234,6 +237,13 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
         return child;
     }
 
+    /**
+     * <p>
+     * Gets the file containing the zip content. The methods creates a dedicated file is the path is a zip entry.
+     * </p>
+     *
+     * @return the file
+     */
     private File zipFile() {
         if (!zip.exists()) {
             final String absolutePath = getAbsolutePath();

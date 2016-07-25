@@ -53,7 +53,7 @@ import java.util.List;
  * <p>
  * Base class for script inspection. A script contains comments (starting with /* or //) that subclasses can ask to
  * ignore when inspecting the content. Regarding the {@link ScriptMatchCondition} used, the class will call the
- * {@link #doFind(char[], int, int, EngineRequest, CompositeNut.CompositeInputStream, ConvertibleNut, Range.Delimiter)}
+ * {@link #doFind(char[], int, int, EngineRequest, CompositeNut.CompositeInput, ConvertibleNut, Range.Delimiter)}
  * with a char array corresponding to the proper content to inspect. The class relies heavily on char arrays and never
  * create {@code String} object to guarantee a minimal memory footprint.
  * </p>
@@ -167,7 +167,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                         final int begin,
                         final int length,
                         final EngineRequest request,
-                        final CompositeNut.CompositeInputStream cis,
+                        final CompositeNut.CompositeInput cis,
                         final ConvertibleNut originalNut) throws WuicException {
         Range dataRange;
         int start = begin;
@@ -569,7 +569,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                                  int offset,
                                  int length,
                                  EngineRequest request,
-                                 CompositeNut.CompositeInputStream cis,
+                                 CompositeNut.CompositeInput cis,
                                  ConvertibleNut originalNut,
                                  Range.Delimiter delimiter);
 
@@ -593,7 +593,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                                                                          int offset,
                                                                          int length,
                                                                          EngineRequest request,
-                                                                         CompositeNut.CompositeInputStream cis,
+                                                                         CompositeNut.CompositeInput cis,
                                                                          ConvertibleNut originalNut) throws WuicException;
 
     /**
@@ -923,7 +923,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                             final int offset,
                             final int length,
                             final EngineRequest request,
-                            final CompositeNut.CompositeInputStream cis,
+                            final CompositeNut.CompositeInput cis,
                             final ConvertibleNut originalNut,
                             final Range.Delimiter delimiter) {
             return null;
@@ -937,7 +937,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                                                                     final int offset,
                                                                     final int length,
                                                                     final EngineRequest request,
-                                                                    final CompositeNut.CompositeInputStream cis,
+                                                                    final CompositeNut.CompositeInput cis,
                                                                     final ConvertibleNut originalNut)
                 throws WuicException {
             return Collections.emptyList();
@@ -989,7 +989,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                             final int offset,
                             final int length,
                             final EngineRequest request,
-                            final CompositeNut.CompositeInputStream cis,
+                            final CompositeNut.CompositeInput cis,
                             final ConvertibleNut originalNut,
                             final Range.Delimiter delimiter) {
             return new Range(Range.Delimiter.EOF, offset, offset + length);
@@ -1003,7 +1003,7 @@ public abstract class ScriptLineInspector extends LineInspector {
                                                                     final int offset,
                                                                     final int length,
                                                                     final EngineRequest request,
-                                                                    final CompositeNut.CompositeInputStream cis,
+                                                                    final CompositeNut.CompositeInput cis,
                                                                     final ConvertibleNut originalNut)
                 throws WuicException {
             final List<AppendedTransformation> retval = new ArrayList<AppendedTransformation>();

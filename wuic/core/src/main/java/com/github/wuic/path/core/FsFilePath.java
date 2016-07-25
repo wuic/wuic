@@ -41,11 +41,12 @@ package com.github.wuic.path.core;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.FsItem;
+import com.github.wuic.util.DefaultInput;
+import com.github.wuic.util.Input;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>
@@ -68,11 +69,12 @@ public class FsFilePath extends SimplePath implements FilePath, FsItem {
      * path on the path system.
      * </p>
      *
+     * @param charset the charset
      * @param f the path
      * @param parent the parent, {@code null} if this path is a root
      */
-    public FsFilePath(final File f, final DirectoryPath parent) {
-        super(f.getName(), parent);
+    public FsFilePath(final File f, final DirectoryPath parent, final String charset) {
+        super(f.getName(), parent, charset);
 
         if (!f.isFile()) {
             throw new IllegalArgumentException(String.format("%s is not a file on the file system", f.getAbsolutePath()));
@@ -85,8 +87,8 @@ public class FsFilePath extends SimplePath implements FilePath, FsItem {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return new FileInputStream(file);
+    public Input openStream() throws IOException {
+        return new DefaultInput(new FileInputStream(file), getCharset());
     }
 
     /**

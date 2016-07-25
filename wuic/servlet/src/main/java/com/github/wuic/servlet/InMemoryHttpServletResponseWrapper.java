@@ -91,7 +91,7 @@ import java.io.PrintWriter;
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
+public class InMemoryHttpServletResponseWrapper extends OkHttpServletResponseWrapper {
 
     /**
      * <p>
@@ -168,7 +168,7 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      * Builds a new instance.
      * </p>
      */
-    public ByteArrayHttpServletResponseWrapper() {
+    public InMemoryHttpServletResponseWrapper() {
     }
 
     /**
@@ -178,7 +178,7 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      *
      * @param httpServletResponse a response to wrap
      */
-    public ByteArrayHttpServletResponseWrapper(final HttpServletResponse httpServletResponse) {
+    public InMemoryHttpServletResponseWrapper(final HttpServletResponse httpServletResponse) {
         super(httpServletResponse);
     }
 
@@ -219,15 +219,20 @@ public class ByteArrayHttpServletResponseWrapper extends OkHttpServletResponseWr
      * Gets the byte array.
      * </p>
      *
-     * @return the byte array
+     * @return the byte array, {@code null} if nothing has been written to {@link #getOutputStream()}
      */
     public byte[] toByteArray() {
-        if (pw != null) {
-            return charArrayWriter.toString().getBytes();
-        } else if (sos != null) {
-            return baos.toByteArray();
-        } else {
-            return new byte[0];
-        }
+        return baos != null ? baos.toByteArray() : null;
+    }
+
+    /**
+     * <p>
+     * Gets the char array.
+     * </p>
+     *
+     * @return the char array, {@code null} if nothing has been written to {@link #getWriter()}
+     */
+    public char[] toCharArray() {
+        return pw != null ? charArrayWriter.toCharArray() : null;
     }
 }

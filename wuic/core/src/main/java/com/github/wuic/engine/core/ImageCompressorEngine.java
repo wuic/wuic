@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.Config;
@@ -45,10 +46,10 @@ import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream source, final OutputStream target, final ConvertibleNut nut, final EngineRequest request)
+    public boolean transform(final Input source, final Output target, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
         return false;
     }
@@ -97,7 +98,7 @@ public class ImageCompressorEngine extends AbstractCompressorEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.PNG);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.PNG));
     }
 
     /**

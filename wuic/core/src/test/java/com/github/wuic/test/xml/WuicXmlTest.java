@@ -38,7 +38,6 @@
 
 package com.github.wuic.test.xml;
 
-import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
@@ -49,10 +48,12 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -74,6 +75,12 @@ import java.net.URL;
  */
 @RunWith(JUnit4.class)
 public class WuicXmlTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Temporary.
@@ -122,7 +129,7 @@ public class WuicXmlTest {
         // Check new context which contains new workflow
         ctx = builder.build();
         Assert.assertTrue(ctx.isUpToDate());
-        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        ctx.process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
 
         // Remove test file
         tmp.delete();

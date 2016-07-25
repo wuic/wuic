@@ -65,7 +65,7 @@ public abstract class LineMatcherInspector extends LineInspector {
                         final int offset,
                         final int length,
                         final EngineRequest request,
-                        final CompositeNut.CompositeInputStream cis,
+                        final CompositeNut.CompositeInput cis,
                         final ConvertibleNut originalNut) throws WuicException {
         final LineMatcher matcher = lineMatcher(new String(data, offset, length));
 
@@ -96,7 +96,7 @@ public abstract class LineMatcherInspector extends LineInspector {
      */
     protected abstract List<AppendedTransformation> appendTransformation(LineMatcher matcher,
                                                                          EngineRequest request,
-                                                                         CompositeNut.CompositeInputStream cis,
+                                                                         CompositeNut.CompositeInput cis,
                                                                          ConvertibleNut originalNut) throws WuicException;
 
     /**

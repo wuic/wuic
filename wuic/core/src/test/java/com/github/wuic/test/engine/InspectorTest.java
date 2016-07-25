@@ -39,6 +39,8 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
@@ -59,7 +61,7 @@ import com.github.wuic.engine.core.MemoryMapCacheEngine;
 import com.github.wuic.engine.core.ScriptCompressorEngine;
 import com.github.wuic.engine.core.SourceMapLineInspector;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
@@ -68,13 +70,18 @@ import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.test.LIF;
+import com.github.wuic.test.ProcessContextRule;
+import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -84,10 +91,10 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,6 +113,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class InspectorTest {
 
     /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
+
+    /**
      * Called only if ServiceLoader detects the configurator.
      */
     public static boolean called = false;
@@ -113,7 +126,7 @@ public class InspectorTest {
     /**
      * Timeout.
      */
-    //@Rule
+    @Rule
     public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
@@ -164,13 +177,13 @@ public class InspectorTest {
                 final Nut nut = Mockito.mock(Nut.class);
 
                 Mockito.when(nut.getInitialName()).thenReturn(String.valueOf(invocationOnMock.getArguments()[0]));
-                Mockito.when(nut.getInitialNutType()).thenReturn(NutType.getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
+                Mockito.when(nut.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(String.valueOf(invocationOnMock.getArguments()[0])));
                 Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
                 createdPaths.add(nut.getInitialName());
 
-                if (nut.getInitialNutType().equals(NutType.MAP)) {
-                    Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("{"
+                if (nut.getInitialNutType().isBasedOn(EnumNutType.MAP)) {
+                    Mockito.when(nut.openStream()).thenAnswer(WuicTest.openStreamAnswer("{"
                             + "  \"version\": 3,"
                             + "  \"file\": \"testcode.js\","
                             + "  \"sections\": ["
@@ -187,9 +200,9 @@ public class InspectorTest {
                             + "      }"
                             + "    }"
                             + "  ]"
-                            + "}").getBytes()));
+                            + "}"));
                 } else {
-                    Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(("content of " + invocationOnMock.getArguments()[0]).getBytes()));
+                    Mockito.when(nut.openStream()).thenAnswer(WuicTest.openStreamAnswer(("content of " + invocationOnMock.getArguments()[0])));
                 }
 
                 retval.add(nut);
@@ -201,8 +214,8 @@ public class InspectorTest {
         Mockito.when(heap.getId()).thenReturn("heap");
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
-        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
-        h.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()), heap);
+        h.checkFiles(processContext.getProcessContext());
         final List<Nut> nuts = new ArrayList<Nut>();
 
         for (final String[] c : collection) {
@@ -211,7 +224,11 @@ public class InspectorTest {
             builder.append(String.format(rule, path));
         }
 
-        final Nut nut = new PipedConvertibleNut(new ByteArrayNut(builder.toString().getBytes(), "", NutType.JAVASCRIPT, 1L, false)) {
+        final Nut nut = new PipedConvertibleNut(new InMemoryNut(builder.toString().getBytes(),
+                "",
+                new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT),
+                1L,
+                false)) {
             @Override
             public String getName() {
                 final String retval = createdPaths.size() + ".css";
@@ -230,7 +247,7 @@ public class InspectorTest {
         Mockito.when(heap.getNutDao()).thenReturn(dao);
         Mockito.when(heap.findDaoFor(Mockito.mock(Nut.class))).thenReturn(dao);
 
-        final EngineRequest request = new EngineRequestBuilder("wid", h, null).contextPath("cp").build();
+        final EngineRequest request = new EngineRequestBuilder("wid", h, null, new NutTypeFactory(Charset.defaultCharset().displayName())).contextPath("cp").build();
         final List<ConvertibleNut> res = engine.parse(request);
         final StringBuilder sb = new StringBuilder();
 
@@ -251,13 +268,17 @@ public class InspectorTest {
      * @throws Exception the inspector
      */
     @Test
-    public void customInspectorTest() throws Exception{
+    public void customInspectorTest() throws Exception {
+        final Output o = Mockito.mock(Output.class);
+        Mockito.when(o.writer()).thenReturn(new StringWriter());
+
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
         e.init(true, "");
-        e.transform(new ByteArrayInputStream("var i = {};".getBytes()),
-                Mockito.mock(OutputStream.class),
+        e.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        e.transform(new InMemoryInput("var i = {};", Charset.defaultCharset().displayName()),
+                o,
                 Mockito.mock(ConvertibleNut.class),
-                new EngineRequestBuilder("", Mockito.mock(NutsHeap.class), new ContextBuilder().build()).build());
+                new EngineRequestBuilder("", Mockito.mock(NutsHeap.class), new ContextBuilder().build(), new NutTypeFactory(Charset.defaultCharset().displayName())).build());
         Assert.assertTrue(LIF.factoryCalled);
         Assert.assertTrue(LIF.inspectorCalled);
     }
@@ -383,18 +404,18 @@ public class InspectorTest {
 
         final ConvertibleNut n = Mockito.mock(ConvertibleNut.class);
         Mockito.when(n.getName()).thenReturn("foo.js");
-        Mockito.when(n.getNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(n.getNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         Mockito.when(n.getInitialName()).thenReturn("foo.js");
-        Mockito.when(n.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(n.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         Mockito.when(n.getSource()).thenReturn(new SourceImpl());
         Mockito.when(n.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList((Nut) n));
 
-        final NutsHeap h = new NutsHeap(this, Arrays.asList("foo"), dao, "heap");
-        h.checkFiles(ProcessContext.DEFAULT);
-        final EngineRequest r = new EngineRequestBuilder("", h, Mockito.mock(Context.class)).build();
+        final NutsHeap h = new NutsHeap(this, Arrays.asList("foo"), dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        h.checkFiles(processContext.getProcessContext());
+        final EngineRequest r = new EngineRequestBuilder("", h, Mockito.mock(Context.class), new NutTypeFactory(Charset.defaultCharset().displayName())).build();
 
         SourceMapLineInspector.newInstance(Mockito.mock(NodeEngine.class)).inspect(new LineInspectorListener() {
 
@@ -570,20 +591,20 @@ public class InspectorTest {
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
-        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
-        h.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()), heap);
+        h.checkFiles(processContext.getProcessContext());
 
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getSource()).thenReturn(new SourceImpl());
         Mockito.when(nut.getName()).thenReturn("nut.js");
         Mockito.when(nut.getInitialName()).thenReturn("nut.js");
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.getNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(
-                "var i = 0;//foo\nvar j = 0;/**/var k = 'bar'\n\nvar l = `\n\n`;\n\n\r\nvar m = ''".getBytes()));
+        Mockito.when(nut.getNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(nut.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(nut.openStream()).thenAnswer(WuicTest.openStreamAnswer(
+                "var i = 0;//foo\nvar j = 0;/**/var k = 'bar'\n\nvar l = `\n\n`;\n\n\r\nvar m = ''"));
 
-        final EngineRequest req = new EngineRequestBuilder("", h, null).nuts(Arrays.asList(nut)).build();
+        final EngineRequest req = new EngineRequestBuilder("", h, null, new NutTypeFactory(Charset.defaultCharset().displayName())).nuts(Arrays.asList(nut)).build();
         final ScriptCompressorEngine engine = new ScriptCompressorEngine();
         engine.init(true);
 
@@ -616,10 +637,10 @@ public class InspectorTest {
         Mockito.when(heap.hasCreated(Mockito.any(Nut.class))).thenReturn(true);
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         Mockito.when(heap.getNutDao()).thenReturn(dao);
-        final NutsHeap h = new NutsHeap(this, null, dao, "heap", heap);
-        h.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap h = new NutsHeap(this, null, dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()), heap);
+        h.checkFiles(processContext.getProcessContext());
 
-        final EngineRequest req = new EngineRequestBuilder("", h, null).build();
+        final EngineRequest req = new EngineRequestBuilder("", h, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build();
         final ConvertibleNut nut = Mockito.mock(ConvertibleNut.class);
         Mockito.when(nut.getSource()).thenReturn(new SourceImpl());
         Mockito.when(nut.getName()).thenReturn("nut");
@@ -684,14 +705,14 @@ public class InspectorTest {
         final Context ctx = builder.build();
 
         // ../ refers a file inside base directory hierarchy
-        List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        List<ConvertibleNut> group = ctx.process("", "css-inner", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         Assert.assertEquals(2, group.size());
         group.get(0).transform();
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
         Assert.assertEquals(1, group.get(1).getReferencedNuts().size());
 
         // ../ refers a file outside base directory hierarchy
-        group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        group = ctx.process("", "css-outer", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         Assert.assertEquals(1, group.size());
         group.get(0).transform();
         Assert.assertEquals(2, group.get(0).getReferencedNuts().size());
@@ -709,7 +730,7 @@ public class InspectorTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         new FileXmlContextBuilderConfigurator(getClass().getResource("/wuic-deep.xml")).configure(builder);
         final Context ctx = builder.build();
-        ctx.process("", "composite", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        ctx.process("", "composite", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
     }
 
     /**
@@ -844,7 +865,7 @@ public class InspectorTest {
                                 final int offset,
                                 final int length,
                                 final EngineRequest request,
-                                final CompositeNut.CompositeInputStream cis,
+                                final CompositeNut.CompositeInput cis,
                                 final ConvertibleNut originalNut,
                                 final Range.Delimiter delimiter) {
                 return new Range(Range.Delimiter.EOF, offset, offset + length);
@@ -866,7 +887,7 @@ public class InspectorTest {
                                                                         final int offset,
                                                                         final int length,
                                                                         final EngineRequest request,
-                                                                        final CompositeNut.CompositeInputStream cis,
+                                                                        final CompositeNut.CompositeInput cis,
                                                                         final ConvertibleNut originalNut)
                     throws WuicException {
                 return Arrays.asList(new AppendedTransformation(offset, offset + length, null, ""));

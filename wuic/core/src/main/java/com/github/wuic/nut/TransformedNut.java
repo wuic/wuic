@@ -69,7 +69,7 @@ public class TransformedNut extends NutWrapper implements SizableNut {
      *
      * @param w the wrapped nut
      */
-    public TransformedNut(final ByteArrayNut w) {
+    public TransformedNut(final InMemoryNut w) {
         super(w);
     }
 
@@ -95,7 +95,7 @@ public class TransformedNut extends NutWrapper implements SizableNut {
                 merge.addAll(getReadyCallbacks());
             }
 
-            final Pipe.Execution execution = new Pipe.Execution(ByteArrayNut.class.cast(getWrapped()).toByteArray());
+            final Pipe.Execution execution = InMemoryNut.class.cast(getWrapped()).execution(getNutType().getCharset());
 
             for (final Pipe.OnReady cb : merge) {
                 cb.ready(execution);
@@ -126,6 +126,6 @@ public class TransformedNut extends NutWrapper implements SizableNut {
      */
     @Override
     public int size() {
-        return ByteArrayNut.class.cast(getWrapped()).size();
+        return InMemoryNut.class.cast(getWrapped()).size();
     }
 }

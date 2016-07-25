@@ -39,13 +39,14 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -61,7 +62,12 @@ public class StaticSourceMapNut extends SourceMapNutAdapter implements SourceMap
     /**
      * The source map content.
      */
-    private final byte[] byteArray;
+    private final char[] charArray;
+
+    /**
+     * The charset.
+     */
+    private final String charset;
 
     /**
      * The original nuts.
@@ -79,20 +85,26 @@ public class StaticSourceMapNut extends SourceMapNutAdapter implements SourceMap
      * </p>
      *
      * @param o the source map nut
+     * @param charset the charset
      * @throws IOException
      */
-    public StaticSourceMapNut(final SourceMapNut o) throws IOException {
+    public StaticSourceMapNut(final SourceMapNut o, final String charset) throws IOException {
         super(o);
         this.name = o.getName();
         this.originalNuts = new ArrayList<ConvertibleNut>();
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        this.charset = charset;
 
-        InputStream is = null;
+        Input is = null;
 
         try {
             is = o.openStream();
-            IOUtils.copyStream(is, bos);
-            byteArray = bos.toByteArray();
+            final Pipe.Execution e = is.execution();
+
+            if (e.isText())  {
+                charArray = Arrays.copyOf(e.getCharResult(), e.getContentLength());
+            } else {
+                charArray = IOUtils.toChars(Charset.forName(charset), e.getByteResult());
+            }
         } finally {
             IOUtils.close(is);
         }
@@ -120,7 +132,7 @@ public class StaticSourceMapNut extends SourceMapNutAdapter implements SourceMap
     @Override
     public void transform(final Pipe.OnReady... onReady) throws IOException {
         for (final Pipe.OnReady cb : onReady) {
-            cb.ready(new Pipe.Execution(byteArray));
+            cb.ready(new Pipe.Execution(charArray, charset));
         }
     }
 
@@ -128,8 +140,8 @@ public class StaticSourceMapNut extends SourceMapNutAdapter implements SourceMap
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return new ByteArrayInputStream(byteArray);
+    public Input openStream() throws IOException {
+        return new InMemoryInput(charArray, charset);
     }
 
     /**

@@ -79,9 +79,10 @@ public class WebappDirectoryPath extends AbstractDirectoryPath {
      * @param name the name
      * @param parent the parent
      * @param context the servlet context used to create children
+     * @param charset charset to use
      */
-    public WebappDirectoryPath(final String name, final DirectoryPath parent, final ServletContext context) {
-        super(name, parent);
+    public WebappDirectoryPath(final String name, final DirectoryPath parent, final ServletContext context, final String charset) {
+        super(name, parent, charset);
         this.context = context;
     }
 
@@ -99,9 +100,9 @@ public class WebappDirectoryPath extends AbstractDirectoryPath {
             throw new FileNotFoundException();
         // If child is a directory, it will ends with a '/' and won't be match the absolute child path in returned set
         } else if (paths.contains(absoluteChild)) {
-            return new WebappFilePath(child, this, context);
+            return new WebappFilePath(child, this, context, getCharset());
         } else {
-            return new WebappDirectoryPath(child, this, context);
+            return new WebappDirectoryPath(child, this, context, getCharset());
         }
     }
 

@@ -38,7 +38,8 @@
 
 package com.github.wuic.nut;
 
-import com.github.wuic.NutType;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
@@ -48,15 +49,13 @@ import com.github.wuic.nut.sourcemap.SourceMapGeneratorV3;
 import com.github.wuic.nut.sourcemap.SourceMapParseException;
 import com.github.wuic.nut.sourcemap.proto.Mapping;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -78,7 +77,7 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
     /**
      * The extension used for source map.
      */
-    private static final String EXTENSION = NutType.MAP.getExtensions()[0];
+    private static final String EXTENSION = EnumNutType.MAP.getExtensions()[0];
 
     /**
      * Logger.
@@ -121,10 +120,11 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * </p>
      *
      * @param nut the nut owning the source map
+     * @param nutTypeFactory the nut type factory
      * @throws WuicException if source map can't be read
      */
-    public SourceMapNutImpl(final ConvertibleNut nut) throws WuicException {
-        super(nut.getName() + EXTENSION, NutType.MAP, nut.getVersionNumber());
+    public SourceMapNutImpl(final ConvertibleNut nut, final NutTypeFactory nutTypeFactory) throws WuicException {
+        super(nut.getName() + EXTENSION, nutTypeFactory.getNutType(EnumNutType.MAP), nut.getVersionNumber());
         owner = nut;
         sources = new LinkedHashMap<String, ConvertibleNut>();
         generator = new SourceMapGeneratorV3();
@@ -142,13 +142,15 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * @param convertibleNut the convertible nut
      * @param nut the nut that represents this source map
      * @param processContext the process context
+     * @param charset the charset
      * @throws WuicException if source map can't be read
      */
     public SourceMapNutImpl(final NutsHeap heap,
                             final ConvertibleNut convertibleNut,
                             final ConvertibleNut nut,
-                            final ProcessContext processContext) throws WuicException {
-        this(heap, convertibleNut, nut, processContext, true);
+                            final ProcessContext processContext,
+                            final String charset) throws WuicException {
+        this(heap, convertibleNut, nut, processContext, true, charset);
     }
 
     /**
@@ -161,13 +163,15 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * @param nut the nut that represents this source map
      * @param processContext the process context
      * @param resolveSources if sources should be resolved from read content or not
+     * @param charset the charset
      * @throws WuicException if source map can't be read
      */
     public SourceMapNutImpl(final NutsHeap heap,
                             final ConvertibleNut convertibleNut,
                             final ConvertibleNut nut,
                             final ProcessContext processContext,
-                            final boolean resolveSources) throws WuicException {
+                            final boolean resolveSources,
+                            final String charset) throws WuicException {
         super(nut);
 
         this.owner = convertibleNut;
@@ -212,13 +216,13 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
                       final ConvertibleNut sourceMapNut,
                       final boolean resolveSources)
             throws WuicException {
-        InputStream is = null;
+        Input is = null;
         String sourceMap = null;
 
         // Read source map content
         try {
             is = sourceMapNut.openStream();
-            sourceMap = IOUtils.readString(new InputStreamReader(is));
+            sourceMap = IOUtils.readString(is.reader());
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
         } finally {
@@ -282,13 +286,13 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      */
     @Override
     public void addSource(final int startLine, final int startColumn, final int endLine, final int endColumn, final ConvertibleNut nut) {
-        InputStream is = null;
+        Input is = null;
 
         try {
             // Update the generator
             if (nut.getSource() instanceof SourceMapNut) {
                 is = SourceMapNut.class.cast(nut.getSource()).openStream();
-                generator.mergeMapSection(startLine, startColumn, IOUtils.readString(new InputStreamReader(is)));
+                generator.mergeMapSection(startLine, startColumn, IOUtils.readString(is.reader()));
             } else {
                 // First position inside the nut content...
                 final FilePosition start = new FilePosition(startLine, startColumn);
@@ -363,8 +367,8 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return new ByteArrayInputStream(toString().getBytes());
+    public Input openStream() throws IOException {
+        return new InMemoryInput(toString(), getNutType().getCharset());
     }
 
     /**
@@ -394,19 +398,10 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      */
     @Override
     public void transform(final Pipe.OnReady... onReady) throws IOException {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-        InputStream is = null;
-
-        try {
-            is = openStream();
-            IOUtils.copyStream(is, bos);
-        } finally {
-            IOUtils.close(is);
-        }
+        final Pipe.Execution e = openStream().execution();
 
         for (final Pipe.OnReady callback : onReady) {
-            callback.ready(new Pipe.Execution(bos.toByteArray()));
+            callback.ready(e);
         }
     }
 

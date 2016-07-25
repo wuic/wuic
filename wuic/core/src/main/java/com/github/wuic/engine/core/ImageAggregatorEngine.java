@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.Config;
@@ -49,10 +50,11 @@ import com.github.wuic.engine.Region;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.ImageNut;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.Source;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NutUtils;
 
 import java.awt.Dimension;
@@ -66,7 +68,6 @@ import java.awt.image.ImageProducer;
 import java.awt.image.RGBImageFilter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +92,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
     /**
      * The path name when images are aggregated.
      */
-    public static final String AGGREGATION_NAME = AbstractAggregatorEngine.aggregationName(NutType.PNG);
+    public static final String AGGREGATION_NAME = AbstractAggregatorEngine.aggregationName(EnumNutType.PNG.getExtensions());
 
     /**
      * The default packer.
@@ -133,11 +134,11 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
 
             // Merge each image into the final image
             for (final Entry<Region, ConvertibleNut> entry : packed.entrySet()) {
-                InputStream is = null;
+                Input is = null;
 
                 try {
                     is = entry.getValue().openStream();
-                    final BufferedImage buff = ImageIO.read(is);
+                    final BufferedImage buff = ImageIO.read(is.inputStream());
                     final Region r = entry.getKey();
                     transparentImage.createGraphics().drawImage(buff, r.getxPosition(), r.getyPosition(), null);
 
@@ -158,7 +159,10 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
                 WuicException.throwWuicException(ioe);
             }
 
-            final ConvertibleNut res = new ByteArrayNut(bos.toByteArray(), AGGREGATION_NAME, NutType.PNG, source, NutUtils.getVersionNumber(source.getOriginalNuts()));
+            final ConvertibleNut res = new InMemoryNut(bos.toByteArray(),
+                    AGGREGATION_NAME, getNutTypeFactory().getNutType(EnumNutType.PNG),
+                    source,
+                    NutUtils.getVersionNumber(source.getOriginalNuts()));
 
             return Arrays.asList(res);
         }
@@ -220,7 +224,7 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.PNG);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.PNG));
     }
 
     /**
@@ -239,11 +243,11 @@ public class ImageAggregatorEngine extends AbstractAggregatorEngine {
 
         // Load each image, read its dimension and add it to the packer with the ile as data
         for (final ConvertibleNut nut : nuts) {
-            InputStream is = null;
+            Input is = null;
 
             try {
                 is = nut.openStream();
-                final BufferedImage buff = ImageIO.read(is);
+                final BufferedImage buff = ImageIO.read(is.inputStream());
 
                 dimensionPacker.addElement(new Dimension(buff.getWidth(), buff.getHeight()), nut);
             } catch (IOException ioe) {

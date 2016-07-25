@@ -38,8 +38,9 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.nut.ByteArrayNut;
-import com.github.wuic.NutType;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.engine.Region;
 import com.github.wuic.nut.Source;
@@ -80,7 +81,8 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
     public ConvertibleNut getSprite(final String workflowId,
                                     final UrlProvider urlProvider,
                                     final String nutNameSuffix,
-                                    final Source originals)
+                                    final Source originals,
+                                    final NutTypeFactory nutTypeFactory)
             throws IOException {
         final Long versionNumber = NutUtils.getVersionNumber(originals);
         final StringBuilder jsBuilder = new StringBuilder();
@@ -142,6 +144,10 @@ public class JavascriptSpriteProvider extends AbstractSpriteProvider {
         }
 
         // Make a byte array and return nut wrapper
-        return new ByteArrayNut(jsBuilder.toString().getBytes(), nutNameSuffix + "sprites.js", NutType.JAVASCRIPT, originals, versionNumber);
+        return new InMemoryNut(jsBuilder.toString().getBytes(),
+                nutNameSuffix + "sprites.js",
+                nutTypeFactory.getNutType(EnumNutType.JAVASCRIPT),
+                originals,
+                versionNumber);
     }
 }

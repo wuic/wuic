@@ -48,10 +48,10 @@ import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -209,7 +209,8 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
+    public Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext)
+            throws IOException {
         init();
 
         final Path p = baseDirectory.getChild(realPath);
@@ -283,7 +284,7 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         final Path p = resolve(path);
 
         if (!(p instanceof FilePath)) {

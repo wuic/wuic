@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
@@ -50,12 +51,11 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -93,7 +93,7 @@ public class GzipEngine extends NodeEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.values());
+        return getNutTypeFactory().getNutType(EnumNutType.values());
     }
 
     /**
@@ -182,9 +182,9 @@ public class GzipEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut) throws IOException {
-            final GZIPOutputStream gos = new GZIPOutputStream(os);
-            IOUtils.copyStream(is, gos);
+        public boolean transform(final Input is, final Output os, final ConvertibleNut convertibleNut) throws IOException {
+            final GZIPOutputStream gos = new GZIPOutputStream(os.outputStream());
+            IOUtils.copyStream(is.inputStream(), gos);
             gos.close();
 
             // Make sure the nut state is changed in case of this transformer is reused.

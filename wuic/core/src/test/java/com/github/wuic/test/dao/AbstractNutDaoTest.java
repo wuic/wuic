@@ -38,7 +38,9 @@
 
 package com.github.wuic.test.dao;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.CompositeNut;
@@ -46,8 +48,12 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -60,9 +66,8 @@ import org.slf4j.LoggerFactory;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -87,6 +92,12 @@ public class AbstractNutDaoTest {
      * Logger.
      */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * A byte array.
@@ -135,6 +146,7 @@ public class AbstractNutDaoTest {
         private MockNutDaoTest(final int pollingSeconds, final Long updateAfter, final boolean contentBasedVersionNumber, final String fixedVersion) {
             init("/", new String[] { "1", "2", "3", "4", }, pollingSeconds);
             init(contentBasedVersionNumber, true, fixedVersion);
+            setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
             age = BEGIN_AGE;
             updateAfterMs = updateAfter;
         }
@@ -178,8 +190,8 @@ public class AbstractNutDaoTest {
             final ConvertibleNut mock = mock(ConvertibleNut.class);
             when(mock.getName()).thenReturn(realPath);
             when(mock.getInitialName()).thenReturn(realPath);
-            when(mock.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
-            when(mock.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+            when(mock.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+            when(mock.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
 
             try {
                 when(mock.getVersionNumber()).thenReturn(new FutureLong(getVersionNumber(realPath, processContext).get()));
@@ -208,8 +220,8 @@ public class AbstractNutDaoTest {
          * {@inheritDoc}
          */
         @Override
-        public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
-            return new ByteArrayInputStream(BYTES);
+        public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
+            return new InMemoryInput(BYTES, Charset.defaultCharset().displayName());
         }
 
         /**
@@ -239,9 +251,9 @@ public class AbstractNutDaoTest {
         final NutDao third = new MockNutDaoTest(false, null);
         final NutDao fourth = new MockNutDaoTest(false, null);
 
-        Assert.assertEquals(first.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get(), second.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get());
-        Assert.assertNotEquals(second.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get(), third.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get());
-        Assert.assertEquals(third.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get(), fourth.create("", ProcessContext.DEFAULT).get(0).getVersionNumber().get());
+        Assert.assertEquals(first.create("", processContext.getProcessContext()).get(0).getVersionNumber().get(), second.create("", processContext.getProcessContext()).get(0).getVersionNumber().get());
+        Assert.assertNotEquals(second.create("", processContext.getProcessContext()).get(0).getVersionNumber().get(), third.create("", processContext.getProcessContext()).get(0).getVersionNumber().get());
+        Assert.assertEquals(third.create("", processContext.getProcessContext()).get(0).getVersionNumber().get(), fourth.create("", processContext.getProcessContext()).get(0).getVersionNumber().get());
     }
 
     /**
@@ -266,7 +278,7 @@ public class AbstractNutDaoTest {
         final Long version = 19860606L;
         final NutDao dao = new MockNutDaoTest(true, version.toString());
 
-        Assert.assertEquals(version, new CompositeNut("UTF-8",
+        Assert.assertEquals(version, new CompositeNut(Charset.defaultCharset().displayName(),
                 false,
                 "composite.js",
                 null,
@@ -293,7 +305,7 @@ public class AbstractNutDaoTest {
     public void pollSchedulingTest() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final NutDao dao = new MockNutDaoTest(1);
-        dao.create("", ProcessContext.DEFAULT);
+        dao.create("", processContext.getProcessContext());
 
         try {
             final long start = System.currentTimeMillis();
@@ -355,7 +367,7 @@ public class AbstractNutDaoTest {
         final MockNutDaoTest dao = new MockNutDaoTest(1);
 
         try {
-            dao.create("", ProcessContext.DEFAULT);
+            dao.create("", processContext.getProcessContext());
             dao.observe("", new NutDaoListener() {
                 @Override
                 public boolean polling(final String p, final Set<String> paths) {
@@ -405,8 +417,8 @@ public class AbstractNutDaoTest {
         final MockNutDaoTest dao = new MockNutDaoTest(1);
 
         try {
-            dao.create("1", ProcessContext.DEFAULT);
-            dao.create("2", ProcessContext.DEFAULT);
+            dao.create("1", processContext.getProcessContext());
+            dao.create("2", processContext.getProcessContext());
 
             final NutDaoListener listener = new NutDaoListener() {
                 @Override
@@ -521,7 +533,7 @@ public class AbstractNutDaoTest {
                     @Override
                     public void run() {
                         try {
-                            a.create("a", ProcessContext.DEFAULT);
+                            a.create("a", processContext.getProcessContext());
                             a.observe("a", new NutDaoListener() {
                                 @Override
                                 public boolean polling(final String p, final Set<String> paths) {
@@ -543,7 +555,7 @@ public class AbstractNutDaoTest {
                                     return this;
                                 }
                             });
-                            b.create("b", ProcessContext.DEFAULT);
+                            b.create("b", processContext.getProcessContext());
                             b.observe("b", new NutDaoListener() {
                                 @Override
                                 public boolean polling(final String p, final Set<String> paths) {

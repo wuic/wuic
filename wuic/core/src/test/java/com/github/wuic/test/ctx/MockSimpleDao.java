@@ -45,9 +45,9 @@ import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -120,7 +120,7 @@ public class MockSimpleDao implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return null;
     }
 

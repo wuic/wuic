@@ -39,9 +39,10 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.util.DefaultInput;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.Future;
 
@@ -75,11 +76,11 @@ public class HttpNut extends AbstractNut {
         nutUrl = url;
     }
 
-    /**
+    /**               
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return nutUrl.openStream();
+    public Input openStream() throws IOException {
+        return new DefaultInput(nutUrl.openStream(), getInitialNutType().getCharset());
     }
 }

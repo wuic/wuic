@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
@@ -50,8 +51,8 @@ import com.github.wuic.nut.ConvertibleNut;
 
 import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,6 +64,8 @@ import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.SourceMapNut;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 
 import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
 
@@ -112,7 +115,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      * @return the composition
      */
     public CompositeNut newCompositeNut(final EngineRequest request) {
-        final String name = aggregationName(request.getNuts().get(0).getInitialNutType());
+        final String name = aggregationName(request.getNuts().get(0).getInitialNutType().getExtensions());
         return new CompositeNut(request.getCharset(),
                 canReadNutAsynchronously,
                 request.getPrefixCreatedNut().isEmpty() ? name : IOUtils.mergePath(request.getPrefixCreatedNut(), name),
@@ -125,12 +128,13 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
-        os.write(removeSourceMap(is, request, convertible));
+    public boolean transform(final Input is, final Output os, final ConvertibleNut convertible, final EngineRequest request) throws IOException {
+        final Writer writer = os.writer();
+        writer.append(removeSourceMap(is.reader(), request, convertible));
 
         // We are able to compute the source map
-        if (is instanceof CompositeNut.CompositeInputStream) {
-            final CompositeNut.CompositeInputStream cis = CompositeNut.CompositeInputStream.class.cast(is);
+        if (is instanceof CompositeNut.CompositeInput) {
+            final CompositeNut.CompositeInput cis = CompositeNut.CompositeInput.class.cast(is);
             final List<ConvertibleNut> composition = cis.getCompositeNut().getCompositionList();
 
             try {
@@ -141,9 +145,9 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 // Try to reuse the source map of the first nut if it already exists
                 if (first.getSource() instanceof SourceMapNutImpl) {
                     sourceMapNut = SourceMapNutImpl.class.cast(first.getSource());
-                    sourceMapNut.setNutName(convertible.getName() + NutType.MAP.getExtensions()[0]);
+                    sourceMapNut.setNutName(convertible.getName() + EnumNutType.MAP.getExtensions()[0]);
                 } else {
-                    sourceMapNut = new SourceMapNutImpl(convertible);
+                    sourceMapNut = new SourceMapNutImpl(convertible, getNutTypeFactory());
                     addToSource(sourceMapNut, first, cis);
                 }
 
@@ -165,7 +169,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                 // Set the aggregated source map
                 convertible.setSource(sourceMapNut);
 
-                SourceMapLineInspector.writeSourceMapComment(request, os, sourceMapNut.getName());
+                SourceMapLineInspector.writeSourceMapComment(request, writer, sourceMapNut.getName());
             } catch (WuicException ex) {
                 throw new IOException("Unable to build aggregated source map.", ex);
             }
@@ -201,7 +205,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.CSS, NutType.JAVASCRIPT);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.CSS), getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT));
     }
 
     /**
@@ -211,12 +215,12 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      *
      * @param sourceMapNut the source to populate
      * @param convertibleNut the mapped nut
-     * @param cis the {@link com.github.wuic.nut.CompositeNut.CompositeInputStream} indicating where mapping starts and ends
+     * @param cis the {@link com.github.wuic.nut.CompositeNut.CompositeInput} indicating where mapping starts and ends
      */
-    private void addToSource(final SourceMapNut sourceMapNut, final ConvertibleNut convertibleNut, final CompositeNut.CompositeInputStream cis) {
+    private void addToSource(final SourceMapNut sourceMapNut, final ConvertibleNut convertibleNut, final CompositeNut.CompositeInput cis) {
         // Get the start and end positions covered form the composite stream
-        final CompositeNut.CompositeInputStream.Position lastPosition = cis.position(convertibleNut);
-        final CompositeNut.CompositeInputStream.Position startPosition = lastPosition.startPosition();
+        final CompositeNut.CompositeInput.Position lastPosition = cis.position(convertibleNut);
+        final CompositeNut.CompositeInput.Position startPosition = lastPosition.startPosition();
 
         // Add the source mapping for the entire content
         sourceMapNut.addSource(startPosition.getLine(),
@@ -234,14 +238,14 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
      * @param is the stream to read
      * @param request the request initiating this process
      * @param convertible the nut to transform
-     * @return a byte array containing the content without sourcemap comments
+     * @return a {@code StringBuilder} containing the content without sourcemap comments
      * @throws IOException if any I/O error occurs
      */
-    private byte[] removeSourceMap(final InputStream is, final EngineRequest request, final ConvertibleNut convertible)
+    private StringBuilder removeSourceMap(final Reader is, final EngineRequest request, final ConvertibleNut convertible)
             throws IOException {
         // First read the stream and collect the single line comment ranges
         final CharArrayWriter charArrayWriter = new CharArrayWriter();
-        IOUtils.copyStreamToWriterIoe(is, charArrayWriter);
+        IOUtils.copyStream(is, charArrayWriter);
         final char[] chars = charArrayWriter.toCharArray();
 
         final List<LineInspector.IndexRange> ranges = new ArrayList<LineInspector.IndexRange>();
@@ -253,7 +257,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
                                 final int offset,
                                 final int length,
                                 final EngineRequest request,
-                                final CompositeNut.CompositeInputStream cis,
+                                final CompositeNut.CompositeInput cis,
                                 final ConvertibleNut originalNut,
                                 final Range.Delimiter delimiter) {
                 ranges.add(new IndexRange(offset, offset + length));
@@ -261,7 +265,7 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
             }
 
             @Override
-            protected List<AppendedTransformation> appendTransformation(final char[] buffer, final int offset, final int length, final EngineRequest request, final CompositeNut.CompositeInputStream cis, final ConvertibleNut originalNut) throws WuicException {
+            protected List<AppendedTransformation> appendTransformation(final char[] buffer, final int offset, final int length, final EngineRequest request, final CompositeNut.CompositeInput cis, final ConvertibleNut originalNut) throws WuicException {
                 return Collections.emptyList();
             }
 
@@ -306,6 +310,6 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
             builder.append(chars, offset, chars.length - offset);
         }
 
-        return builder.toString().getBytes();
+        return builder;
     }
 }

@@ -35,9 +35,12 @@
  * licenses."
  */
 
+
 package com.github.wuic.test.engine;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -52,10 +55,14 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.SizableNut;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.test.ProcessContextRule;
+import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -65,7 +72,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -84,6 +92,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MemoryMapCacheEngineTest {
 
     /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
+
+    /**
      * Timeout.
      */
     @Rule
@@ -96,12 +110,14 @@ public class MemoryMapCacheEngineTest {
      *
      * @param name the name
      * @return the nut
+     * @throws if any I/O error occurs
      */
-    private Nut newNut(final String name) {
+    private Nut newNut(final String name) throws IOException {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
         Mockito.when(nut.getInitialName()).thenReturn(name + ".js");
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
+        Mockito.when(nut.openStream()).thenReturn(new InMemoryInput("", Charset.defaultCharset().displayName()));
         return nut;
     }
 
@@ -122,7 +138,7 @@ public class MemoryMapCacheEngineTest {
         Mockito.when(nut1.openStream()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return new ByteArrayInputStream(("var c = " + counter1.getAndIncrement() + ';').getBytes());
+                return new InMemoryInput(("var c = " + counter1.getAndIncrement() + ';'), Charset.defaultCharset().displayName());
             }
         });
 
@@ -132,14 +148,14 @@ public class MemoryMapCacheEngineTest {
         Mockito.when(nut2.openStream()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(final InvocationOnMock invocationOnMock) throws Throwable {
-                return new ByteArrayInputStream(("var c = " + counter2.getAndIncrement() + ';').getBytes());
+                return new InMemoryInput(("var c = " + counter2.getAndIncrement() + ';'), Charset.defaultCharset().displayName());
             }
         });
 
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(nut1, nut2));
-        final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
-        heap.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        heap.checkFiles(processContext.getProcessContext());
 
         final Pipe.Transformer[] transformers = new Pipe.Transformer[3];
 
@@ -149,33 +165,34 @@ public class MemoryMapCacheEngineTest {
 
         for (int i = 0; i < transformers.length; i++) {
             final Pipe.Transformer transformer = transformers[i];
-            final List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, null).chain(NutType.JAVASCRIPT, new NodeEngine() {
-                @Override
-                public List<NutType> getNutTypes() {
-                    return Arrays.asList(NutType.JAVASCRIPT);
-                }
-
-                @Override
-                public EngineType getEngineType() {
-                    return EngineType.INSPECTOR;
-                }
-
-                @Override
-                protected List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException {
-                    for (final ConvertibleNut convertibleNut : request.getNuts()) {
-                        if (convertibleNut.isDynamic()) {
-                            convertibleNut.addTransformer(transformer);
+            final List<ConvertibleNut> nuts = engine.parse(new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                    .chain(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), new NodeEngine() {
+                        @Override
+                        public List<NutType> getNutTypes() {
+                            return Arrays.asList(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
                         }
-                    }
 
-                    return request.getNuts();
-                }
+                        @Override
+                        public EngineType getEngineType() {
+                            return EngineType.INSPECTOR;
+                        }
 
-                @Override
-                public Boolean works() {
-                    return true;
-                }
-            }).build());
+                        @Override
+                        protected List<ConvertibleNut> internalParse(EngineRequest request) throws WuicException {
+                            for (final ConvertibleNut convertibleNut : request.getNuts()) {
+                                if (convertibleNut.isDynamic()) {
+                                    convertibleNut.addTransformer(transformer);
+                                }
+                            }
+
+                            return request.getNuts();
+                        }
+
+                        @Override
+                        public Boolean works() {
+                            return true;
+                        }
+                    }).build());
 
             for (final ConvertibleNut n : nuts) {
                 final String s = NutUtils.readTransform(n);
@@ -221,17 +238,17 @@ public class MemoryMapCacheEngineTest {
         engine.init(true, -1, false, "10MB");
 
         final Nut nut = newNut("foo");
-        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(nut.openStream()).thenAnswer(WuicTest.openStreamAnswer(""));
 
         final NutDao dao = Mockito.mock(NutDao.class);
         Mockito.when(dao.create(Mockito.anyString(), Mockito.any(ProcessContext.class))).thenReturn(Arrays.asList(nut));
 
-        final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap");
-        heap.checkFiles(ProcessContext.DEFAULT);
+        final NutsHeap heap = new NutsHeap(this, Arrays.asList(""), dao, "heap", new NutTypeFactory(Charset.defaultCharset().displayName()));
+        heap.checkFiles(processContext.getProcessContext());
 
         // Registers the InvalidateCache multiple time
         for (int i = 0; i < 3; i++) {
-            engine.parse(new EngineRequestBuilder("", heap, null).build());
+            engine.parse(new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build());
         }
 
         // Call listeners

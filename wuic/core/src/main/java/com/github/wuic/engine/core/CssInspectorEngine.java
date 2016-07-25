@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
@@ -79,7 +80,7 @@ public class CssInspectorEngine extends TextInspectorEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.CSS);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.CSS));
     }
 
     /**

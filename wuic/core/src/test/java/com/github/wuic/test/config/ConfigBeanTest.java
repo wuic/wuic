@@ -38,7 +38,6 @@
 
 package com.github.wuic.test.config;
 
-import com.github.wuic.ProcessContext;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.config.bean.BuilderBean;
 import com.github.wuic.config.bean.HeapBean;
@@ -65,6 +64,7 @@ import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.test.xml.MockDao;
 import com.github.wuic.test.xml.MockDao2;
 import com.github.wuic.test.xml.MockEngine;
@@ -74,6 +74,7 @@ import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.util.PropertyResolver;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
@@ -101,6 +102,12 @@ import java.util.List;
  */
 @RunWith(Theories.class)
 public class ConfigBeanTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * To assert exception.
@@ -197,7 +204,7 @@ public class ConfigBeanTest {
     @DataPoints("basic-reader")
     public static BeanContextBuilderConfigurator[] basic() throws Exception {
         return new BeanContextBuilderConfigurator[] {
-                new ReaderXmlContextBuilderConfigurator.Simple(new FileReader(new File(ConfigBeanTest.class.getResource("/wuic-basic.xml").getFile())), "tag", true, ProcessContext.DEFAULT),
+                new ReaderXmlContextBuilderConfigurator.Simple(new FileReader(new File(ConfigBeanTest.class.getResource("/wuic-basic.xml").getFile())), "tag", true, processContext.getProcessContext()),
                 new ReaderJsonContextBuilderConfigurator.Simple(new FileReader(new File(ConfigBeanTest.class.getResource("/wuic-basic.json").getFile())), "tag")
         };
     }
@@ -317,7 +324,7 @@ public class ConfigBeanTest {
 
         Context ctx = builder.build();
         Assert.assertEquals(NumberUtils.TWO, ctx.workflowIds().size());
-        List<ConvertibleNut> res = ctx.process("", "defaultWorkflowdefaultHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        List<ConvertibleNut> res = ctx.process("", "defaultWorkflowdefaultHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         Assert.assertNotNull(res);
         Assert.assertEquals(1, res.size());
         Assert.assertEquals("foo.css", res.get(0).getName());
@@ -326,7 +333,7 @@ public class ConfigBeanTest {
         builder.disableProfile("bar").enableProfile("foo");
         ctx = builder.build();
         Assert.assertEquals(1, ctx.workflowIds().size());
-        res = ctx.process("", "workflowdefaultHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        res = ctx.process("", "workflowdefaultHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         Assert.assertNotNull(res);
         Assert.assertEquals(NumberUtils.THREE, res.size());
         Assert.assertEquals("/foo/foo.css", res.get(0).getName());
@@ -350,7 +357,7 @@ public class ConfigBeanTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         contextBuilderConfigurator.configure(builder);
         final Context ctx = builder.build();
-        ctx.process("", "composite", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        ctx.process("", "composite", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
     }
 
     /**
@@ -538,7 +545,7 @@ public class ConfigBeanTest {
         final ContextBuilder builder = new ContextBuilder().configureDefault();
 
         contextBuilderConfigurator.configure(builder);
-        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
     }
 
     /**
@@ -621,7 +628,7 @@ public class ConfigBeanTest {
         final ContextBuilder builder = new ContextBuilder();
         contextBuilderConfigurator.configure(builder);
 
-        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, builder.build().process("", "wf-simpleHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext()).size());
     }
 
     /**
@@ -638,9 +645,9 @@ public class ConfigBeanTest {
         // Add custom DAO and engine required
         final ContextBuilder builder = new ContextBuilder().configureDefault();
         contextBuilderConfigurator.configure(builder);
-        builder.tag(this).processContext(ProcessContext.DEFAULT).heap("heap", "defaultDao", new String[] {"images/reject-block.png"}).releaseTag();
+        builder.tag(this).processContext(processContext.getProcessContext()).heap("heap", "defaultDao", new String[] {"images/reject-block.png"}).releaseTag();
 
-        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        final List<ConvertibleNut> nuts = builder.build().process("", "wf-refHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
 
         // Keep only css, remove JS files
         Assert.assertEquals(1, nuts.size());
@@ -729,7 +736,7 @@ public class ConfigBeanTest {
 
         // Load configuration
         contextBuilderConfigurator.configure(builder);
-        final List<ConvertibleNut> res = builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        final List<ConvertibleNut> res = builder.build().process("", "simpleWorkflowsimpleHeap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
         Assert.assertNotNull(res);
         Assert.assertEquals(1, res.size());
         final ConvertibleNut n = res.get(0);

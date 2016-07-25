@@ -39,6 +39,7 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.ClassPathResourceResolver;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
@@ -57,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,6 +90,7 @@ public class StaticEngineTest {
     @Test
     public void staticExistingWorkflowTest() throws WuicException, IOException {
         final StaticEngine engine = new StaticEngine();
+        engine.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
         engine.setClasspathResourceResolver(new ClassPathResourceResolver() {
             @Override
             public URL getResource(String resourcePath) throws MalformedURLException {
@@ -104,7 +107,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         // Three lines in /wuic-static/workflow
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("workflow", heap, null).build());
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("workflow", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build());
         Assert.assertEquals(res.size(), 3);
 
         try {
@@ -115,7 +118,7 @@ public class StaticEngineTest {
         }
 
         // Test cache
-        res = engine.parse(new EngineRequestBuilder("workflow", heap, null).build());
+        res = engine.parse(new EngineRequestBuilder("workflow", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build());
         Assert.assertEquals(res.size(), 3);
     }
 
@@ -142,7 +145,7 @@ public class StaticEngineTest {
         Mockito.when(heap.getNuts()).thenReturn(new ArrayList<Nut>());
 
         try {
-            engine.parse(new EngineRequestBuilder("foo", heap, null).build());
+            engine.parse(new EngineRequestBuilder("foo", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).build());
             Assert.fail();
         } catch (WuicException we) {
             // Normal behavior

@@ -50,13 +50,14 @@ import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HttpNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDaoService;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
@@ -162,8 +163,8 @@ public class HttpNutDao extends AbstractNutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
-        return new URL(path).openStream();
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
+        return newInput(new URL(path).openStream());
     }
 
     /**

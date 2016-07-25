@@ -38,6 +38,7 @@
 
 package com.github.wuic.test;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
@@ -75,7 +76,7 @@ public class LIF extends LineInspector implements LineInspectorFactory {
     @Override
     public List<LineInspector> create(final NutType nutType) {
         factoryCalled = true;
-        return NutType.JAVASCRIPT.equals(nutType) ? Arrays.asList((LineInspector) this) : null;
+        return nutType.isBasedOn(EnumNutType.JAVASCRIPT) ? Arrays.asList((LineInspector) this) : null;
     }
 
     /**
@@ -94,7 +95,7 @@ public class LIF extends LineInspector implements LineInspectorFactory {
                         final int offset,
                         final int length,
                         final EngineRequest request,
-                        final CompositeNut.CompositeInputStream cis,
+                        final CompositeNut.CompositeInput cis,
                         final ConvertibleNut originalNut)
             throws WuicException {
         inspectorCalled = true;

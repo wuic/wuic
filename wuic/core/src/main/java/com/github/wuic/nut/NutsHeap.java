@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDao;
@@ -144,6 +145,11 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     private final Object factory;
 
     /**
+     * The nut type factory.
+     */
+    private final NutTypeFactory nutTypeFactory;
+
+    /**
      * <p>
      * Builds a heap by copy.
      * </p>
@@ -160,6 +166,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.created = other.created != null ? other.created : new HashMap<String, Set<String>>();
         this.disposable = other.disposable;
         this.factory = other.factory;
+        this.nutTypeFactory = other.nutTypeFactory;
 
         if (other.composition != null) {
             this.composition = new NutsHeap[other.composition.length];
@@ -186,6 +193,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param pathsList the paths
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
+     * @param nutTypeFactory the nut type factory
      * @param heaps some other heaps that compose this heap
      * @throws java.io.IOException if the HEAP could not be created
      */
@@ -194,6 +202,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                     final boolean isDisposable,
                     final NutDao theNutDao,
                     final String heapId,
+                    final NutTypeFactory nutTypeFactory,
                     final NutsHeap ... heaps) throws IOException {
         this.factory = factoryObject;
         this.id = heapId;
@@ -204,6 +213,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nutTypes = new HashSet<NutType>();
         this.created = new HashMap<String, Set<String>>();
         this.disposable = isDisposable;
+        this.nutTypeFactory = nutTypeFactory;
     }
 
     /**
@@ -216,14 +226,16 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * @param theNutDao the {@link NutDao}
      * @param heapId the heap ID
      * @param heaps some other heaps that compose this heap
+     * @param nutTypeFactory the nut type factory
      * @throws java.io.IOException if the HEAP could not be created
      */
     public NutsHeap(final Object factoryObject,
             final List<String> pathsList,
             final NutDao theNutDao,
             final String heapId,
+            final NutTypeFactory nutTypeFactory,
             final NutsHeap ... heaps) throws IOException {
-        this(factoryObject, pathsList, false, theNutDao, heapId, heaps);
+        this(factoryObject, pathsList, false, theNutDao, heapId, nutTypeFactory, heaps);
     }
 
     /**
@@ -403,7 +415,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Checks that the {@link com.github.wuic.NutType} and the paths list of this heap are not
      * null. If they are, this methods will throw an {@link IllegalArgumentException}.
      * This exception could also be thrown if one path of the list does have a name
-     * which ends with one of the possible {@link com.github.wuic.NutType#extensions extensions}.
+     * which ends with one of the possible {@link com.github.wuic.EnumNutType#extensions extensions}.
      * </p>
      *
      * @param processContext the process context
@@ -450,7 +462,7 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         }
 
         // Check the extension of each path : all of them must share the same nut type
-        checkExtension(nuts);
+        checkExtension(nuts, nutTypeFactory);
 
         // Also check other heaps and observe them
         for (final NutsHeap heap : getComposition()) {
@@ -465,11 +477,12 @@ public class NutsHeap implements NutDaoListener, HeapListener {
      * Checks the extension of the given set. Makes sure that all nuts share the same type.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param toCheck set to check
      */
-    private void checkExtension(final Collection<Nut> toCheck) {
+    private void checkExtension(final Collection<Nut> toCheck, final NutTypeFactory nutTypeFactory) {
         for (final Nut nut : toCheck) {
-            nutTypes.add(NutType.getNutTypeForExtension(nut.getInitialName().substring(nut.getInitialName().lastIndexOf('.'))));
+            nutTypes.add(nutTypeFactory.getNutTypeForExtension(nut.getInitialName().substring(nut.getInitialName().lastIndexOf('.'))));
         }
     }
 

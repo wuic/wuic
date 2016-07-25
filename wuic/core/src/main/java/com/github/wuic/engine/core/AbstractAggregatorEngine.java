@@ -39,7 +39,6 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.NutType;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -50,11 +49,14 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.Pipe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -65,6 +67,11 @@ import com.github.wuic.util.Pipe;
  * @since 0.4.1
  */
 public abstract class AbstractAggregatorEngine extends NodeEngine {
+
+    /**
+     * Logger.
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * Activate aggregation or not.
@@ -87,18 +94,19 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     public void init(@BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate) {
         this.doAggregation = aggregate;
         this.transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
+        this.log.info("Aggregator initialized with activation={}", aggregate);
     }
 
     /**
      * <p>
-     * Computes the name of an aggregated set of nuts for a given type.
+     * Computes the name of an aggregated set of nuts for a given type's extensions.
      * </p>
      *
-     * @param nutType the type
+     * @param nutTypeExtensions the type extensions
      * @return the aggregation name
      */
-    public static String aggregationName(final NutType nutType) {
-        return "aggregate" + nutType.getExtensions()[0];
+    public static String aggregationName(final String[] nutTypeExtensions) {
+        return "aggregate" + nutTypeExtensions[0];
     }
 
     /**
@@ -119,6 +127,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
             }
         }
 
+        log.info("Aggregating nuts {}", Arrays.toString(staticNuts.toArray()));
         retval.addAll(aggregationParse(new EngineRequestBuilder(request).nuts(staticNuts).build()));
 
         // Compute proxy URIs and add transformers

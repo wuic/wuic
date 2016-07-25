@@ -38,6 +38,7 @@
 
 package com.github.wuic.test.ctx;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
@@ -96,7 +97,7 @@ public abstract class AbstractMethodEngine extends NodeEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.JAVASCRIPT);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT));
     }
 
     /**

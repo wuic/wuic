@@ -91,7 +91,7 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      */
     @Override
     protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath());
+        final Path file = IOUtils.buildPath(getBasePath(), getCharset());
 
         if (!(file instanceof DirectoryPath)) {
             WuicException.throwBadArgumentException(

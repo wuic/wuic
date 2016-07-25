@@ -52,9 +52,25 @@ import com.github.wuic.path.DirectoryPathFactory;
 public class FsDirectoryPathFactory implements DirectoryPathFactory {
 
     /**
+     * The charset.
+     */
+    private final String charset;
+
+    /**
+     * <p>
+     * Builds a new instance.
+     * </p>
+     *
+     * @param charset the charset
+     */
+    public FsDirectoryPathFactory(final String charset) {
+        this.charset = charset;
+    }
+
+    /**
      * {@inheritDoc}
      */
-    public DirectoryPath create(String path) {
-        return new FsDirectoryPath(path, null);
+    public DirectoryPath create(final String path) {
+        return new FsDirectoryPath(path, null, charset);
     }
 }

@@ -41,9 +41,13 @@ package com.github.wuic.nut.dao.servlet;
 import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
-import com.github.wuic.config.*;
+import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
+import com.github.wuic.config.IntegerConfigParam;
+import com.github.wuic.config.ObjectConfigParam;
+import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.servlet.InMemoryHttpServletResponseWrapper;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.servlet.WuicServletContextListener;
 import com.github.wuic.nut.AbstractNut;
@@ -51,10 +55,12 @@ import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
-import com.github.wuic.servlet.ByteArrayHttpServletResponseWrapper;
 import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.servlet.HttpServletRequestAdapter;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +71,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -201,10 +206,10 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      *
      * @param path the path
      * @param exceptionWhenNullStream {@code true} when a {@link IOException} is thrown if the resource stream if {@code null}
-     * @return the wrapper
+     * @return the execution result providing the content, {@code null} if nothing has been read
      * @throws IOException if include fails
      */
-    private byte[] readContent(final String path, final ProcessContext processContext, final boolean exceptionWhenNullStream)
+    private Pipe.Execution readContent(final String path, final ProcessContext processContext, final boolean exceptionWhenNullStream)
             throws IOException  {
         if (servletContext == null) {
             throw new IllegalArgumentException(
@@ -213,9 +218,18 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
         }
 
         if (callInclude(path)) {
-            final ByteArrayHttpServletResponseWrapper wrapper = new ByteArrayHttpServletResponseWrapper();
+            final InMemoryHttpServletResponseWrapper wrapper = new InMemoryHttpServletResponseWrapper();
             include(path, getRequest(path, processContext), wrapper);
-            return wrapper.toByteArray();
+            final byte[] bytes = wrapper.toByteArray();
+
+            // Create an execution based on char or byte array
+            if (bytes != null && bytes.length > 0) {
+                return new Pipe.Execution(bytes, getCharset());
+            } else {
+                final char[] chars = wrapper.toCharArray();
+                return chars != null && chars.length > 0
+                        ? new Pipe.Execution(wrapper.toCharArray(), getCharset()) : null;
+            }
         } else {
             InputStream is = null;
 
@@ -230,12 +244,12 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
                     if (exceptionWhenNullStream) {
                         throw new IOException("Unable to retrieve the stream for the resource associated to the path " + path);
                     } else {
-                        return new byte[0];
+                        return null;
                     }
                 } else {
                     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     IOUtils.copyStream(is, bos);
-                    return bos.toByteArray();
+                    return new Pipe.Execution(bos.toByteArray(), getCharset());
                 }
             } finally {
                 IOUtils.close(is);
@@ -328,7 +342,8 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext) throws IOException {
+    protected Nut accessFor(final String realPath, final NutType type, final ProcessContext processContext)
+            throws IOException {
         logger.info("Building {} in process context {}", getClass().getSimpleName(), processContext);
         return new RequestDispatcherNut(realPath, type, getVersionNumber(realPath, processContext), processContext);
     }
@@ -337,8 +352,14 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
-        return new ByteArrayInputStream(readContent(path, processContext, true));
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
+        final Pipe.Execution e = readContent(path, processContext, true);
+
+        if (e == null) {
+            return null;
+        } else {
+            return e.isText() ? new InMemoryInput(e.getCharResult(), getCharset()) : new InMemoryInput(e.getByteResult(), getCharset());
+        }
     }
 
     /**
@@ -346,7 +367,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
      */
     @Override
     public Boolean exists(final String path, final ProcessContext processContext) throws IOException {
-        return readContent(path, processContext, false).length > 0;
+        return readContent(path, processContext, false) != null;
     }
 
     /**
@@ -386,7 +407,7 @@ public class RequestDispatcherNutDao extends AbstractNutDao implements ServletCo
          * {@inheritDoc}
          */
         @Override
-        public InputStream openStream() throws IOException {
+        public Input openStream() throws IOException {
             return newInputStream(getInitialName(), processContext);
         }
 

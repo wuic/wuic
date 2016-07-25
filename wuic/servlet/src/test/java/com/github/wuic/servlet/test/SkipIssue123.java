@@ -38,7 +38,7 @@
 
 package com.github.wuic.servlet.test;
 
-import com.github.wuic.NutType;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.servlet.HtmlParserFilter;
 import com.github.wuic.util.NumberUtils;
 
@@ -74,7 +74,7 @@ public class SkipIssue123 extends HtmlParserFilter {
              */
             @Override
             public String getContentType() {
-                return NutType.HTML.getMimeType();
+                return EnumNutType.HTML.getMimeType();
             }
         }, chain);
     }

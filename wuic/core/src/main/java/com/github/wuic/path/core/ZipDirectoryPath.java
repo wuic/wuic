@@ -67,11 +67,12 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
      * Builds a new instance.
      * </p>
      *
+     * @param charset the charset
      * @param name the name
      * @param parent the parent
      */
-    public ZipDirectoryPath(final String name, final DirectoryPath parent) {
-        super(name, parent);
+    public ZipDirectoryPath(final String name, final DirectoryPath parent, final String charset) {
+        super(name, parent, charset);
     }
 
     /**
@@ -96,18 +97,18 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
 
             // Entry is a directory
             if (entry.isDirectory()) {
-                return new ZipEntryDirectoryPath(child, this);
+                return new ZipEntryDirectoryPath(child, this, getCharset());
                 // If the entry is a ZIP archive itself, copy it on the disk to be able to read it
             } else if (IOUtils.isArchive(is == null ? archive.getInputStream(entry) : is)) {
                 final File entryArchiveDisk = File.createTempFile("entryArchive", ".zip");
                 is = archive.getInputStream(entry);
                 os = new FileOutputStream(entryArchiveDisk);
                 IOUtils.copyStream(is, os);
-                return new ZipFilePath(entryArchiveDisk, child, this);
+                return new ZipFilePath(entryArchiveDisk, child, this, getCharset());
             } else {
 
                 // Entry is a path
-                return new ZipEntryFilePath(child, this);
+                return new ZipEntryFilePath(child, this, getCharset());
             }
         } finally {
             IOUtils.close(os, is, new CloseableZipFileAdapter(archive));

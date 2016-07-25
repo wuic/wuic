@@ -38,6 +38,7 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.nut.ConvertibleNut;
 
 import java.io.IOException;
@@ -120,22 +121,16 @@ public final class HtmlUtil {
         final StringBuilder sb = new StringBuilder();
         final int insertIndex;
 
-        switch (nut.getNutType()) {
-            case CSS :
-                insertIndex = cssImport(nut, urlProvider, sb, attributes);
-                break;
-            case JAVASCRIPT :
-                insertIndex = javascriptImport(nut, urlProvider, sb, attributes);
-                break;
-            case JPG:
-            case PNG :
-                insertIndex = imgImport(nut, urlProvider, sb);
-                break;
-            case ICO :
-                insertIndex = iconImport(nut, urlProvider, sb, attributes);
-                break;
-            default :
-                return "";
+        if (nut.getNutType().isBasedOn(EnumNutType.CSS)) {
+            insertIndex = cssImport(nut, urlProvider, sb, attributes);
+        } else if (nut.getNutType().isBasedOn(EnumNutType.JAVASCRIPT)) {
+            insertIndex = javascriptImport(nut, urlProvider, sb, attributes);
+        } else if (nut.getNutType().isBasedOn(EnumNutType.JPG) || nut.getNutType().isBasedOn(EnumNutType.PNG)) {
+            insertIndex = imgImport(nut, urlProvider, sb);
+        } else if (nut.getNutType().isBasedOn(EnumNutType.ICO)) {
+            insertIndex = iconImport(nut, urlProvider, sb, attributes);
+        } else {
+            return "";
         }
 
         for (final Map.Entry<String, String> attr : attributes.entrySet()) {

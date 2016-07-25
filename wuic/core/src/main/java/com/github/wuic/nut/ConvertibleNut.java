@@ -137,12 +137,12 @@ public interface ConvertibleNut extends Nut {
     /**
      * <p>
      * When {@link #transform(com.github.wuic.util.Pipe.OnReady...)} is called execute the list of {@link Transformer transformers},
-     * the {@code InputStream} can be a {@link com.github.wuic.nut.CompositeNut.CompositeInputStream} that should be treated
+     * the {@code InputStream} can be a {@link com.github.wuic.nut.CompositeNut.CompositeInput} that should be treated
      * specifically by default. In fact, this type of stream is an aggregation of different streams that should be separately
      * transformed. This method tells the nut to not do this if it returns {@code false}.
      * </p>
      *
-     * @return {@code true} to ignores the {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}, {@code false} otherwise
+     * @return {@code true} to ignores the {@link com.github.wuic.nut.CompositeNut.CompositeInput}, {@code false} otherwise
      */
     boolean ignoreCompositeStreamOnTransformation();
 

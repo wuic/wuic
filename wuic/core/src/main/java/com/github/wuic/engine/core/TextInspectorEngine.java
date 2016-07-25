@@ -38,7 +38,9 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.LineInspector;
@@ -53,14 +55,11 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -105,12 +104,6 @@ public abstract class TextInspectorEngine
         doInspection = inspect;
 
         addInspector(Arrays.asList(inspectors));
-
-        for (final LineInspectorFactory factory : ServiceLoader.load(LineInspectorFactory.class)) {
-            for (final NutType nutType : getNutTypes()) {
-                addInspector(factory.create(nutType));
-            }
-        }
     }
 
     /**
@@ -146,6 +139,20 @@ public abstract class TextInspectorEngine
             lineInspectors.add(ScriptLineInspector.wrap(inspector, annotation.condition()));
         } else {
             lineInspectors.add(inspector);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNutTypeFactory(final NutTypeFactory nutTypeFactory) {
+        super.setNutTypeFactory(nutTypeFactory);
+
+        for (final LineInspectorFactory factory : ServiceLoader.load(LineInspectorFactory.class)) {
+            for (final NutType nutType : getNutTypes()) {
+                addInspector(factory.create(nutType));
+            }
         }
     }
 
@@ -284,18 +291,18 @@ public abstract class TextInspectorEngine
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertibleNut, final EngineRequest request)
+    public boolean transform(final Input is, final Output os, final ConvertibleNut convertibleNut, final EngineRequest request)
             throws IOException {
         // Make sure that replacement are iterated in the right order
         final Set<LineInspector.ReplacementInfo> replacements = new TreeSet<LineInspector.ReplacementInfo>();
 
         // Read the content and compute the position in case of aggregation
-        final CompositeNut.CompositeInputStream cis = (is instanceof CompositeNut.CompositeInputStream) ?
-                CompositeNut.CompositeInputStream.class.cast(is) : null;
+        final CompositeNut.CompositeInput cis = (is instanceof CompositeNut.CompositeInput) ?
+                CompositeNut.CompositeInput.class.cast(is) : null;
 
         // Read the character stream
         final StringBuilder stringBuilder = new StringBuilder();
-        IOUtils.read(new InputStreamReader(is, request.getCharset()), stringBuilder);
+        IOUtils.read(is.reader(), stringBuilder);
         final char[] chars = new char[stringBuilder.length()];
         stringBuilder.getChars(0, stringBuilder.length(), chars, 0);
 
@@ -330,7 +337,7 @@ public abstract class TextInspectorEngine
                              final StringBuilder lineBuilder,
                              final EngineRequest request,
                              final ConvertibleNut convertibleNut,
-                             final OutputStream os) throws IOException{
+                             final Output os) throws IOException{
         // Perform replacements
         if (!replacements.isEmpty()) {
 
@@ -348,15 +355,10 @@ public abstract class TextInspectorEngine
             }
         }
 
-        // Convert to a char array
-        final char[] chars = new char[lineBuilder.length()];
-        lineBuilder.getChars(0, lineBuilder.length(), chars, 0);
-
-        // Write the char array as a byte array
-        final CharBuffer cbuf = CharBuffer.wrap(chars);
-        final ByteBuffer bbuf = Charset.forName(request.getCharset()).encode(cbuf);
-        os.write(bbuf.array());
-        os.write(IOUtils.NEW_LINE.getBytes());
+        // Write the char array
+        final Writer writer = os.writer();
+        writer.append(lineBuilder);
+        writer.write(IOUtils.NEW_LINE);
     }
 
     /**
@@ -427,7 +429,7 @@ public abstract class TextInspectorEngine
             // Add the nut and inspect it recursively if it's a CSS path
             if (extracted != null) {
                 for (final ConvertibleNut c : extracted) {
-                    if (c.getInitialNutType().equals(NutType.CSS)) {
+                    if (c.getInitialNutType().isBasedOn(EnumNutType.CSS)) {
                         inspect(c, new EngineRequestBuilder(request).nuts(extracted).build());
                     }
                 }

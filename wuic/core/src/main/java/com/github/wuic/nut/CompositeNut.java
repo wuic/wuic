@@ -40,19 +40,22 @@ package com.github.wuic.nut;
 
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.AbstractInput;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.SequenceReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.SequenceInputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,8 +68,8 @@ import java.util.concurrent.Callable;
 
 /**
  * <p>
- * A composite {@link Nut} is able to chain all the stream provided by each element of the composition. We consider that
- * all the {@link Nut nuts} of the composition should have the same state (name, etc).
+ * A composite {@link Nut} is able to chain all the streams provided by each element of the composition.
+ * We consider that all the {@link Nut nuts} of the composition should have the same state (name, etc).
  * </p>
  *
  * @author Guillaume DROUET
@@ -118,8 +121,7 @@ public class CompositeNut extends PipedConvertibleNut {
         asynchronousVersionNumber = avn;
 
         if (separator != null) {
-            streamSeparator = new byte[separator.length];
-            System.arraycopy(separator, 0, streamSeparator, 0, streamSeparator.length);
+            streamSeparator = Arrays.copyOf(separator, separator.length);
         }
 
         // Populate composition
@@ -171,14 +173,14 @@ public class CompositeNut extends PipedConvertibleNut {
         if (CompositeNut.class.isAssignableFrom(nut.getClass())) {
             compositionList.addAll(CompositeNut.class.cast(nut).compositionList);
         } else {
-            InputStream is = null;
+            Input is = null;
 
             try {
                 // Try to detect a composition through the InputStream
                 is = nut.openStream();
 
-                if (CompositeInputStream.class.isAssignableFrom(is.getClass())) {
-                    compositionList.addAll(CompositeInputStream.class.cast(is).getCompositeNut().getCompositionList());
+                if (CompositeInput.class.isAssignableFrom(is.getClass())) {
+                    compositionList.addAll(CompositeInput.class.cast(is).getCompositeNut().getCompositionList());
                 } else {
                     // Does not seems to be a composition
                     compositionList.add(nut);
@@ -255,38 +257,38 @@ public class CompositeNut extends PipedConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public Input openStream() throws IOException {
         return openStream(null);
     }
 
     /**
      * <p>
-     * Returns a {@link CompositeInputStream} that uses the given streams for each nut inside the composition.
+     * Returns a {@link CompositeInput} that uses the given streams for each nut inside the composition.
      * </p>
      *
      * @param inputStreams the streams, {@code null} if the streams should be created from the nuts inside the composition
-     * @return the new {@link CompositeInputStream}
+     * @return the new {@link CompositeInput}
      * @throws IOException if any I/O error occurs
      */
-    public CompositeInputStream openStream(final List<InputStream> inputStreams) throws IOException {
-        return new CompositeInputStream(inputStreams);
+    public CompositeInput openStream(final List<Input> inputStreams) throws IOException {
+        return new CompositeInput(inputStreams);
     }
 
     /**
      * <p>
      * This class use the position of each nut in the read content to update the source map.
      * When this stream has been entirely read, it's possible to use the source map to retrieve the nut containing the
-     * byte at a specified position.
+     * char at a specified position.
      * </p>
      *
      * @author Guillaume DROUET
      * @since 0.5.0
      */
-    public final class CompositeInputStream extends InputStream {
+    public final class CompositeInput extends AbstractInput {
 
         /**
          * <p>
-         * This class gives information about the starting position of a particular nut inside the {@link CompositeInputStream}.
+         * This class gives information about the starting position of a particular nut inside the {@link CompositeInput}.
          * </p>
          *
          * @author Guillaume DROUET
@@ -393,29 +395,14 @@ public class CompositeNut extends PipedConvertibleNut {
         private final Position[] positions;
 
         /**
-         * The sequence containing each steam of this composition and their separator.
+         * All the inputs.
          */
-        private InputStream sequence;
-
-        /**
-         * In case of text stream, the reader used to count read characters.
-         */
-        private InputStreamReader sequenceReader;
-
-        /**
-         * The byte array corresponding to the character currently read if the stream is text.
-         */
-        private byte[] charBuffer;
-
-        /**
-         * Current byte in the {@link #charBuffer}.
-         */
-        private int charOffset;
+        private final List<Input> inputs;
 
         /**
          * The total length.
          */
-        private long length;
+        private int length;
 
         /**
          * Number of detected lines.
@@ -442,13 +429,14 @@ public class CompositeNut extends PipedConvertibleNut {
          * @param streams the stream for each {@link Nut} of the composition, {@code null} if nut's input stream should be used
          * @throws IOException if a stream could not be opened
          */
-        private CompositeInputStream(final List<InputStream> streams) throws IOException {
-            final List<InputStream> is = new ArrayList<InputStream>(compositionList.size() * NumberUtils.TWO);
+        private CompositeInput(final List<Input> streams) throws IOException {
+            super(charset);
+            inputs = new ArrayList<Input>(compositionList.size() * NumberUtils.TWO);
 
             // Use nut streams
             if (streams == null) {
                 for (final Nut n : compositionList) {
-                    addStream(is, n.openStream());
+                    addStream(inputs, n.openStream());
                 }
             } else {
                 // Check assertion
@@ -458,48 +446,43 @@ public class CompositeNut extends PipedConvertibleNut {
                 }
 
                 // Use specific streams
-                for (final InputStream inputStream : streams) {
-                    addStream(is, inputStream);
+                for (final Input inputStream : streams) {
+                    addStream(inputs, inputStream);
                 }
             }
 
             positions = new Position[compositionList.size()];
-            sequence = new SequenceInputStream(Collections.enumeration(is));
-
-            if (CompositeNut.this.getNutType().isText()) {
-                sequenceReader = new InputStreamReader(sequence);
-            }
         }
 
         /**
          * <p>
-         * Adds the given {@link InputStream} to the list specified in parameter. A second {@link InputStream} is used
+         * Adds the given {@link Input} to the list specified in parameter. A second {@link Input} is used
          * to mark the separation between all the objects added to the list.
          * </p>
          *
          * @param targetList the list to populated
          * @param is the stream
          */
-        private void addStream(final List<InputStream> targetList, final InputStream is) {
+        private void addStream(final List<Input> targetList, final Input is) {
             targetList.add(is);
 
             if (streamSeparator != null) {
                 // Keep the separation position when stream is closed
-                targetList.add(new ByteArrayInputStream(streamSeparator) {
+                targetList.add(new DefaultInput(new ByteArrayInputStream(streamSeparator) {
                     @Override
                     public void close() throws IOException {
                         positions[currentIndex++] = new Position(lines, columns, length);
                     }
-                });
+                }, charset));
             } else {
                 // No separator stream, just add a marker
-                targetList.add(new InputStream() {
+                targetList.add(new DefaultInput(new InputStream() {
                     @Override
                     public int read() throws IOException {
                         positions[currentIndex++] = new Position(lines, columns, length);
                         return -1;
                     }
-                });
+                }, getNutType().getCharset()));
             }
         }
 
@@ -523,6 +506,10 @@ public class CompositeNut extends PipedConvertibleNut {
          * @return the {@link Position} object, {@code null} if the nut is not part of the composition
          */
         public Position position(final ConvertibleNut convertibleNut) {
+            if (!getNutType().isText()) {
+                throw new UnsupportedOperationException("Can't call position(ConvertibleNut) in a binary content.");
+            }
+
             final int nutPos = compositionList.indexOf(convertibleNut);
 
             if (nutPos != -1) {
@@ -534,13 +521,19 @@ public class CompositeNut extends PipedConvertibleNut {
 
         /**
          * <p>
-         * Retrieves the nut owning the byte at the given position/
+         * Retrieves the nut owning the char at the given position. This method should be used only when
+         * {@link #getNutType()} returns a {@link com.github.wuic.NutType} whose {@link com.github.wuic.NutType#isText()}
+         * method returns {@code true} because positions are based on char count.
          * </p>
          *
          * @param position the position
          * @return the nut, {@code null} if the given position is not in the interval [0, length - 1]
          */
         public ConvertibleNut nutAt(final int position) {
+            if (!getNutType().isText()) {
+                throw new UnsupportedOperationException("Can't call nutAt(int) in a binary content.");
+            }
+
             for (int i = 0; i < positions.length; i++) {
                 if (position < positions[i].getIndex()) {
                     return compositionList.get(i);
@@ -551,58 +544,247 @@ public class CompositeNut extends PipedConvertibleNut {
         }
 
         /**
-         * {@inheritDoc}
+         * <p>
+         * Reads the portion of the given char array and increment the {@link #lines}, {@link #columns} and {@link #length}.
+         * </p>
+         *
+         * @param cbuf the char array to read
+         * @param off the index where start reading
+         * @param len the number of characters to read
          */
-        @Override
-        public String toString() {
-            return String.format("separatorPositions: %s%sisText: %b", Arrays.toString(positions), IOUtils.NEW_LINE, sequenceReader != null);
+        private void updateCoordinates(final char[] cbuf, final int off, final int len) {
+            for (int i = off; i < len; i++) {
+                length++;
+                columns++;
+
+                if (cbuf[i] == '\n') {
+                    lines++;
+                    columns = 0;
+                }
+            }
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public int read() throws IOException {
+        public String toString() {
+            return String.format("separatorPositions: %s", Arrays.toString(positions));
+        }
 
-            // Reading an array of bytes corresponding to a character
-            if (charBuffer != null) {
-
-                // End of character reached
-                if (charOffset == charBuffer.length) {
-                    charBuffer = null;
-                    charOffset = 0;
-                } else {
-                    // Read the next byte
-                    return charBuffer[charOffset++];
-                }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Pipe.Execution execution() throws IOException {
+            if (isClosed()) {
+                WuicException.throwBadStateException(new IllegalStateException("Input is closed."));
             }
 
-            // Read a byte or a character
-            final int retval = sequenceReader != null ? sequenceReader.read() : sequence.read();
+            try {
+                final List<Pipe.Execution> executions = new ArrayList<Pipe.Execution>(inputs.size());
+                final Charset cs = Charset.forName(charset);
 
-            // Count stream
-            if (retval != -1) {
-                length++;
-                columns++;
+                for (final Input input : inputs) {
+                    final Pipe.Execution e = input.execution();
+                    final char[] chars;
 
-                if (sequenceReader != null) {
-                    final char[] chars = Character.toChars(retval);
-
-                    // Count new lines only for character streams.
-                    if (chars[0] == '\n') {
-                        lines++;
-                        columns = 0;
+                    if (e.isText()) {
+                        chars = e.getCharResult();
+                    } else {
+                        chars = IOUtils.toChars(cs, e.getByteResult());
                     }
 
-                    // Just read a character, convert it to a byte array
-                    final CharBuffer cbuf = CharBuffer.wrap(chars);
-                    final ByteBuffer bbuf = Charset.forName(charset).encode(cbuf);
-                    charBuffer = bbuf.array();
-                    return charBuffer[charOffset++];
+                    // We update the positions
+                    updateCoordinates(chars, 0, chars.length);
+
+                    executions.add(e);
+                }
+
+                return new Pipe.Execution(executions);
+            } finally {
+                close();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected InputStream internalInputStream(final String charset) throws IOException {
+            final List<InputStream> is = new ArrayList<InputStream>(inputs.size());
+
+            for (final Input i : inputs) {
+                is.add(i.inputStream());
+            }
+
+            final InputStream seq = new SequenceInputStream(Collections.enumeration(is));
+            return !getNutType().isText() ? new InternalInputStream(seq) : new InternalInputStream(new InternalReader(new InputStreamReader(seq, charset)));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Reader internalReader(final String charset) throws IOException {
+            final List<Reader> readers = new ArrayList<Reader>(inputs.size());
+
+            for (final Input i : inputs) {
+                readers.add(i.reader());
+            }
+
+            return new InternalReader(new SequenceReader(readers));
+        }
+
+        /**
+         * <p>
+         * An {@code InputStream} wrapper that tracks data positions.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @since 0.5.3
+         */
+        private class InternalInputStream extends InputStream {
+
+            /**
+             * The input stream.
+             */
+            private InputStream sequence;
+
+            /**
+             * The stream reader.
+             */
+            private Reader sequenceReader;
+
+            /**
+             * Buffer used to read chars.
+             */
+            private byte[] buffer;
+
+            /**
+             * Next byte to read from the buffer.
+             */
+            private int bufferOffset;
+
+            /**
+             * Charset object used for char encoding.
+             */
+            private Charset charsetInstance;
+
+            /**
+             * <p>
+             * Builds a new instance based on a stream.
+             * </p>
+             *
+             * @param inputStream the input stream
+             */
+            private InternalInputStream(final InputStream inputStream) {
+                this.sequence = inputStream;
+            }
+
+            /**
+             * <p>
+             * Builds a new instance based on a reader.
+             * </p>
+             *
+             * @param reader the reader
+             */
+            private InternalInputStream(final Reader reader) {
+                this.sequenceReader = reader;
+                this.charsetInstance = Charset.forName(charset);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int read() throws IOException {
+                if (sequence == null) {
+                    int c;
+
+                    // Read the next sequence of data
+                    if (buffer == null) {
+                        c = sequenceReader.read();
+
+                        // Nothing to read anymore
+                        if (c == -1) {
+                            return -1;
+                        }
+
+                        buffer = IOUtils.toBytes(charsetInstance, (char) c);
+                        bufferOffset = 0;
+                    }
+
+                    // Read next byte from the buffer
+                    c = buffer[bufferOffset++];
+
+                    // End of buffer reached
+                    if (bufferOffset == buffer.length) {
+                        buffer = null;
+                    }
+
+                    return c;
+                } else {
+                    return sequence.read();
                 }
             }
 
-            return retval;
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void close() throws IOException {
+                IOUtils.close(sequence, sequenceReader);
+            }
+        }
+
+        /**
+         * <p>
+         * An {@code Reader} wrapper that tracks data positions.
+         * </p>
+         *
+         * @author Guillaume DROUET
+         * @since 0.5.3
+         */
+        private class InternalReader extends Reader {
+
+            /**
+             * The reader.
+             */
+            private final Reader sequence;
+
+            /**
+             * <p>
+             * Builds a new instance.
+             * </p>
+             *
+             * @param reader the reader
+             */
+            private InternalReader(final Reader reader) {
+                this.sequence = reader;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void close() throws IOException {
+                sequence.close();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int read(final char[] cbuf, final int off, final int len) throws IOException {
+                final int retval = sequence.read(cbuf, off, len);
+
+                if (retval != -1) {
+                    updateCoordinates(cbuf, off, retval);
+                }
+
+                return retval;
+            }
         }
     }
 

@@ -40,9 +40,9 @@ package com.github.wuic.nut.dao;
 
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.Nut;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -134,7 +134,7 @@ public class NutDaoWrapper implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         return dao.newInputStream(path, processContext);
     }
 

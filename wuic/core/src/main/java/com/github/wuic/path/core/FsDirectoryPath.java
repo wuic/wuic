@@ -76,11 +76,12 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
      * directory on the path system.
      * </p>
      *
+     * @param charset the charset
      * @param file the directory
      * @param parent the parent, {@code null} if this path is a root
      */
-    public FsDirectoryPath(final File file, final DirectoryPath parent) {
-        super(file.getName().isEmpty() ? file.getPath() : file.getName(), parent);
+    public FsDirectoryPath(final File file, final DirectoryPath parent, final String charset) {
+        super(file.getName().isEmpty() ? file.getPath() : file.getName(), parent, charset);
 
         if (!file.isDirectory()) {
             throw new IllegalArgumentException(String.format("%s is not a directory on the file system", file.getAbsolutePath()));
@@ -95,11 +96,12 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
      * directory on the path system.
      * </p>
      *
+     * @param charset the charset
      * @param path the directory
      * @param parent the parent, {@code null} if this path is a root
      */
-    public FsDirectoryPath(final String path, final DirectoryPath parent) {
-        this(new File(path), parent);
+    public FsDirectoryPath(final String path, final DirectoryPath parent, final String charset) {
+        this(new File(path), parent, charset);
     }
 
     /**
@@ -119,9 +121,9 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
         if (!file.exists()) {
             throw new FileNotFoundException(String.format("%s is not an existing file", file.getAbsolutePath()));
         } else if (file.isDirectory()) {
-            return new FsDirectoryPath(file, this);
+            return new FsDirectoryPath(file, this, getCharset());
         } else {
-            return IOUtils.isArchive(file) ? new ZipFilePath(file, this) : new FsFilePath(file, this);
+            return IOUtils.isArchive(file) ? new ZipFilePath(file, this, getCharset()) : new FsFilePath(file, this, getCharset());
         }
     }
 

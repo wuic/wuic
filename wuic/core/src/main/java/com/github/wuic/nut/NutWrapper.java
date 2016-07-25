@@ -39,10 +39,10 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -97,7 +97,7 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public Input openStream() throws IOException {
         return wrapped.openStream();
     }
 

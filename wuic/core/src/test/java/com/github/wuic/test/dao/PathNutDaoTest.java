@@ -39,7 +39,8 @@
 package com.github.wuic.test.dao;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.ProcessContext;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.nut.dao.NutDao;
@@ -48,8 +49,10 @@ import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 import com.github.wuic.nut.dao.core.PathNutDao;
 import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -64,6 +67,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 
 /**
  * <p>
@@ -75,6 +79,12 @@ import java.net.URLClassLoader;
  */
 @RunWith(JUnit4.class)
 public class PathNutDaoTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Temporary folder factory.
@@ -146,9 +156,10 @@ public class PathNutDaoTest {
         final ClasspathNutDao dao = new ClasspathNutDao();
         dao.init("/classpathScanningTest", null, -1, false, true);
         dao.init(false, true, null);
-        Assert.assertEquals(2, dao.create("*.css", ProcessContext.DEFAULT).size());
-        Assert.assertEquals(1, dao.create("1/*.css", ProcessContext.DEFAULT).size());
-        Assert.assertEquals(1, dao.create("2/*.css", ProcessContext.DEFAULT).size());
+        dao.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        Assert.assertEquals(2, dao.create("*.css", processContext.getProcessContext()).size());
+        Assert.assertEquals(1, dao.create("1/*.css", processContext.getProcessContext()).size());
+        Assert.assertEquals(1, dao.create("2/*.css", processContext.getProcessContext()).size());
     }
 
     /**
@@ -171,7 +182,8 @@ public class PathNutDaoTest {
         final ClasspathNutDao dao = new ClasspathNutDao();
         dao.init("/classpathScanningTest", null, -1, true, false);
         dao.init(false, true, null);
-        Assert.assertEquals(2, dao.create(".*.css", ProcessContext.DEFAULT).size());
+        dao.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        Assert.assertEquals(2, dao.create(".*.css", processContext.getProcessContext()).size());
     }
 
     /**
@@ -191,7 +203,8 @@ public class PathNutDaoTest {
         final ClasspathNutDao dao = new ClasspathNutDao();
         dao.init("/scanning", null, -1, false, false);
         dao.init(false, false, null);
-        Assert.assertEquals(1, dao.create("test/foo.css", ProcessContext.DEFAULT).size());
+        dao.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        Assert.assertEquals(1, dao.create("test/foo.css", processContext.getProcessContext()).size());
     }
 
     /**
@@ -206,8 +219,9 @@ public class PathNutDaoTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
+        NutTypeFactoryHolder.class.cast(dao).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
         Assert.assertTrue(dao.exists("reject-block.png", null));
-        Assert.assertFalse(dao.exists("unknown.png", ProcessContext.DEFAULT));
+        Assert.assertFalse(dao.exists("unknown.png", processContext.getProcessContext()));
     }
 
     /**
@@ -222,8 +236,9 @@ public class PathNutDaoTest {
         final ObjectBuilderFactory<NutDao> factory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, ClasspathNutDao.class);
         final ObjectBuilder<NutDao> builder = factory.create(ClasspathNutDao.class.getSimpleName() + "Builder");
         final NutDao dao = builder.property(ApplicationConfig.BASE_PATH, "/images").build();
-        Assert.assertTrue(dao.exists("reject-block.png", ProcessContext.DEFAULT));
-        final InputStream is = dao.create("reject-block.png", ProcessContext.DEFAULT).get(0).openStream();
+        NutTypeFactoryHolder.class.cast(dao).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        Assert.assertTrue(dao.exists("reject-block.png", processContext.getProcessContext()));
+        final InputStream is = dao.create("reject-block.png", processContext.getProcessContext()).get(0).openStream().inputStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }
@@ -241,8 +256,9 @@ public class PathNutDaoTest {
         final ObjectBuilder<NutDao> builder = factory.create(DiskNutDao.class.getSimpleName() + "Builder");
         builder.property(ApplicationConfig.BASE_PATH, getClass().getResource("/images").toURI().getPath());
         final NutDao dao = builder.build();
-        Assert.assertTrue(dao.exists("reject-block.png", ProcessContext.DEFAULT));
-        final InputStream is = dao.create("reject-block.png", ProcessContext.DEFAULT).get(0).openStream();
+        NutTypeFactoryHolder.class.cast(dao).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        Assert.assertTrue(dao.exists("reject-block.png", processContext.getProcessContext()));
+        final InputStream is = dao.create("reject-block.png", processContext.getProcessContext()).get(0).openStream().inputStream();
         IOUtils.copyStream(is, new ByteArrayOutputStream());
         is.close();
     }

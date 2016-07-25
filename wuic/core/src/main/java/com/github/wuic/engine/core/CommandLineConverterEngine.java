@@ -39,7 +39,9 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
@@ -47,12 +49,14 @@ import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NutDiskStore;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
@@ -270,6 +274,16 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     private Boolean resolvedFileDirectoryAsWorkingDirectory;
 
     /**
+     * The configured input type.
+     */
+    private String inputNutType;
+
+    /**
+     * The configured output type.
+     */
+    private String outputNutType;
+
+    /**
      * <p>
      * Initializes a new instance.
      * </p>
@@ -292,7 +306,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                      @StringConfigParam(propertyKey = LIBRARIES, defaultValue = "") final String libs,
                      @BooleanConfigParam(propertyKey = RESOLVED_FILE_DIRECTORY_AS_WORKING_DIR, defaultValue = true) final Boolean srdaws)
             throws WuicException, IOException {
-        resolvedFileDirectoryAsWorkingDirectory = srdaws;
+        this.resolvedFileDirectoryAsWorkingDirectory = srdaws;
 
         // Engine won't be associated to any chain
         if (inputNutType.isEmpty() || outputNutType.isEmpty()) {
@@ -302,14 +316,8 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                     ApplicationConfig.OUTPUT_NUT_TYPE,
                     getClass().getSimpleName());
         } else {
-            try {
-                inputNutTypeList = Arrays.asList(NutType.valueOf(inputNutType));
-                targetNutType = NutType.valueOf(outputNutType);
-            } catch (IllegalArgumentException iae) {
-                WuicException.throwBadArgumentException(new IllegalArgumentException(
-                        String.format("Supported NutType are: %s", Arrays.toString(NutType.values()))));
-            }
-
+            this.inputNutType = inputNutType;
+            this.outputNutType = outputNutType;
             setCommandAndLibs(command, libs);
             pathSeparator = separator;
         }
@@ -317,7 +325,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
     /**
      * <p>
-     * Executes the conversion of a given {@code InputStream} represented by the specified {@link ConvertibleNut} thanks
+     * Executes the conversion of a given {@code Input} represented by the specified {@link ConvertibleNut} thanks
      * to a {@link com.github.wuic.util.TerFunction} that can run the transformation. The function takes as first parameter
      * a list of input files, as second parameter the working directory and as third parameter the result file. The returned
      * {@code Boolean} indicates if the conversion has worked or not.
@@ -326,27 +334,29 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * @param is the source input stream
      * @param nut the corresponding nut
      * @param request the request that initiated conversion
+     * @param nutTypeFactory the nut type factory
      * @param executor the function that will execute the command line
      * @param resolvedFileDirectoryAsWorkingDirectory if the content should be generated in the source file directory
      * @throws IOException if any I/O error occurs
      */
-    public static InputStream execute(final InputStream is,
-                                      final ConvertibleNut nut,
-                                      final EngineRequest request,
-                                      final BiFunction<CommandLineInfo, EngineRequest, Boolean> executor,
-                                      final Boolean resolvedFileDirectoryAsWorkingDirectory)
+    public static Input execute(final Input is,
+                                final ConvertibleNut nut,
+                                final EngineRequest request,
+                                final NutTypeFactory nutTypeFactory,
+                                final BiFunction<CommandLineInfo, EngineRequest, Boolean> executor,
+                                final Boolean resolvedFileDirectoryAsWorkingDirectory)
             throws IOException {
         // Do not generate source map if we are in best effort
         final boolean be = request.isBestEffort();
         final List<ConvertibleNut> compositionList;
 
-        if (is instanceof CompositeNut.CompositeInputStream) {
-            compositionList = CompositeNut.CompositeInputStream.class.cast(is).getCompositeNut().getCompositionList();
+        if (is instanceof CompositeNut.CompositeInput) {
+            compositionList = CompositeNut.CompositeInput.class.cast(is).getCompositeNut().getCompositionList();
         } else if (nut instanceof CompositeNut) {
             compositionList = CompositeNut.class.cast(nut).getCompositionList();
         } else {
             final String m = "Nut must be a %s or it's InputStream must be an instance of %s";
-            throw new IllegalArgumentException(String.format(m, CompositeNut.class.getName(), CompositeNut.CompositeInputStream.class.getName()));
+            throw new IllegalArgumentException(String.format(m, CompositeNut.class.getName(), CompositeNut.CompositeInput.class.getName()));
         }
 
         final List<String> pathsToCompile = new ArrayList<String>(compositionList.size());
@@ -373,7 +383,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
         // Resources to clean
         InputStream sourceMapInputStream = null;
-        final File compilationResult = new File(workingDir, TextAggregatorEngine.aggregationName(NutType.JAVASCRIPT));
+        final File compilationResult = new File(workingDir, TextAggregatorEngine.aggregationName(EnumNutType.JAVASCRIPT.getExtensions()));
         final File sourceMapFile = new File(compilationResult.getAbsolutePath() + ".map");
 
         final AtomicReference<OutputStream> out = new AtomicReference<OutputStream>();
@@ -399,11 +409,12 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                 final String sourceMapName = sourceMapFile.getName();
                 final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 IOUtils.copyStream(sourceMapInputStream, bos);
-                final ConvertibleNut sourceMapNut = new ByteArrayNut(bos.toByteArray(), sourceMapName, NutType.MAP, 0L, false);
-                nut.setSource(new SourceMapNutImpl(request.getHeap(), nut, sourceMapNut, request.getProcessContext()));
+                final NutType nutType = nutTypeFactory.getNutType(EnumNutType.MAP);
+                final ConvertibleNut sourceMapNut = new InMemoryNut(bos.toByteArray(), sourceMapName, nutType, 0L, false);
+                nut.setSource(new SourceMapNutImpl(request.getHeap(), nut, sourceMapNut, request.getProcessContext(), request.getCharset()));
             }
 
-            return new FileInputStream(compilationResult);
+            return new DefaultInput(new FileInputStream(compilationResult), nutTypeFactory.getCharset());
         } catch (final WuicException e) {
             throw new IOException(e);
         } finally {
@@ -438,7 +449,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                     final File file = NutDiskStore.INSTANCE.store(n);
 
                     if (!file.exists()) {
-                        isNut = n.openStream();
+                        isNut = n.openStream().inputStream();
                         osNut = new FileOutputStream(file);
                         IOUtils.copyStream(isNut, osNut);
                     }
@@ -638,7 +649,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
         for (final String path : pathsToCompile) {
             if (basePath != null) {
                 final String p = path.substring(basePath.length());
-                pathsBuilder.append((p.startsWith("/") ? "." : "./") + p).append(pathSeparator);
+                pathsBuilder.append((p.startsWith("/") ? "." : "./")).append(p).append(pathSeparator);
             } else {
                 pathsBuilder.append(path).append(pathSeparator);
             }
@@ -719,6 +730,24 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * {@inheritDoc}
      */
     @Override
+    public void setNutTypeFactory(final NutTypeFactory nutTypeFactory) {
+        super.setNutTypeFactory(nutTypeFactory);
+
+        if (inputNutType != null && outputNutType != null) {
+            try {
+                inputNutTypeList = Arrays.asList(nutTypeFactory.getNutType(EnumNutType.valueOf(inputNutType)));
+                targetNutType = nutTypeFactory.getNutType(EnumNutType.valueOf(outputNutType));
+            } catch (IllegalArgumentException iae) {
+                WuicException.throwBadArgumentException(new IllegalArgumentException(
+                        String.format("Supported NutType are: %s", Arrays.toString(EnumNutType.values())), iae));
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected NutType targetNutType() {
         return targetNutType;
     }
@@ -735,9 +764,9 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
      * {@inheritDoc}
      */
     @Override
-    public InputStream transform(final InputStream is, final ConvertibleNut nut, final EngineRequest request)
+    public Input transform(final Input is, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
-        return execute(is, nut, request, executor, resolvedFileDirectoryAsWorkingDirectory);
+        return execute(is, nut, request, getNutTypeFactory(), executor, resolvedFileDirectoryAsWorkingDirectory);
     }
 
     /**

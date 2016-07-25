@@ -38,10 +38,13 @@
 
 package com.github.wuic.test.nut;
 
-import com.github.wuic.NutType;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.TransformedNut;
+import com.github.wuic.util.InMemoryOutput;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -51,8 +54,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * <p>
@@ -78,10 +81,11 @@ public class TransformedNutTest {
      */
     @Test
     public void transformTest() throws IOException {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final TransformedNut nut = new TransformedNut(
+                new InMemoryNut(".foo{}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false));
+        final Output bos = new InMemoryOutput(Charset.defaultCharset().displayName());
         nut.transform(new Pipe.DefaultOnReady(bos));
-        Assert.assertEquals(new String(bos.toByteArray()), ".foo{}");
+        Assert.assertEquals(bos.execution().toString(), ".foo{}");
     }
 
     /**
@@ -89,7 +93,8 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void setNutNameTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
+        final TransformedNut nut = new TransformedNut(
+                new InMemoryNut(".foo{}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false));
         nut.setNutName("");
     }
 
@@ -98,7 +103,8 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void addTransformerTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
+        final TransformedNut nut = new TransformedNut(
+                new InMemoryNut(".foo{}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false));
         nut.addTransformer(Mockito.mock(Pipe.Transformer.class));
     }
 
@@ -107,7 +113,8 @@ public class TransformedNutTest {
      */
     @Test(expected = IllegalStateException.class)
     public void addReferencedNutTest() {
-        final TransformedNut nut = new TransformedNut(new ByteArrayNut(".foo{}".getBytes(), "foo.css", NutType.CSS, 1L, false));
+        final TransformedNut nut = new TransformedNut(
+                new InMemoryNut(".foo{}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false));
         nut.addReferencedNut(Mockito.mock(ConvertibleNut.class));
     }
 }

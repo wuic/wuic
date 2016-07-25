@@ -56,23 +56,30 @@ public class WebappDirectoryPathFactory implements DirectoryPathFactory {
     /**
      * The servlet context used by any created {@link WebappDirectoryPath}.
      */
-    private ServletContext context;
+    private final ServletContext context;
+
+    /**
+     * The charset.
+     */
+    private final String charset;
 
     /**
      * <p>
      * Creates a new instance.
      * </p>
      *
+     * @param cs the charset
      * @param ctx the servlet context used to create {@link WebappDirectoryPath}
      */
-    public WebappDirectoryPathFactory(final ServletContext ctx) {
+    public WebappDirectoryPathFactory(final ServletContext ctx, final String cs) {
         context = ctx;
+        charset = cs;
     }
 
     /**
      * {@inheritDoc}
      */
     public DirectoryPath create(final String path) {
-        return new WebappDirectoryPath(path, null, context);
+        return new WebappDirectoryPath(path, null, context, charset);
     }
 }

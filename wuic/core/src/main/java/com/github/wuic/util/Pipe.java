@@ -38,18 +38,21 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutWrapper;
 import com.github.wuic.nut.Source;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
@@ -72,7 +75,7 @@ public final class Pipe<T extends ConvertibleNut> {
 
     /**
      * <p>
-     * Executes the given pipe and writes the result into the given {@link OutputStream}.
+     * Executes the given pipe and writes the result into the given {@link Output}.
      * </p>
      *
      * @param pipe the pipe to execute
@@ -80,7 +83,7 @@ public final class Pipe<T extends ConvertibleNut> {
      * @param <T>  the type of object converted by the piped transformers
      * @throws IOException if transformation fails
      */
-    public static <T extends ConvertibleNut> void executeAndWriteTo(final Pipe<T> pipe, final List<OnReady> callbacks, final OutputStream os)
+    public static <T extends ConvertibleNut> void executeAndWriteTo(final Pipe<T> pipe, final List<OnReady> callbacks, final Output os)
             throws IOException {
         final OnReady onReady = new DefaultOnReady(os);
 
@@ -97,12 +100,12 @@ public final class Pipe<T extends ConvertibleNut> {
      * This interface describes an object which is able to write into an {@link OutputStream} some transformed bytes
      * read from {@link InputStream}.
      * </p>
-     * <p/>
+     *
      * <p>
      * When registered with the {@link Pipe}, the close method is invoked transparently.
      * </p>
-     * <p/>
-     * <p>
+     *
+     *  <p>
      * That transformer is also able to change the state of on 'convertible' object identified as the origin of the
      * source input stream.
      * </p>
@@ -124,11 +127,11 @@ public final class Pipe<T extends ConvertibleNut> {
          * @return {@code true} if the input stream has been read and the output stream used, {@code false} otherwise
          * @throws IOException if an I/O error occurs
          */
-        boolean transform(InputStream is, OutputStream os, T convertible) throws IOException;
+        boolean transform(Input is, Output os, T convertible) throws IOException;
 
         /**
          * <p>
-         * Indicates if the content generated when {@link #transform(InputStream, OutputStream, Object)} is called can
+         * Indicates if the content generated when {@link #transform(Input, Output, Object)} is called can
          * be aggregated to an other one. This is usually the case but won't be possible for instance when a magic
          * number should appears only at the beginning of the composite stream and not in each stream of the aggregation.
          * </p>
@@ -237,23 +240,7 @@ public final class Pipe<T extends ConvertibleNut> {
         /**
          * The output stream.
          */
-        private OutputStream outputStream;
-
-        /**
-         * The charset.
-         */
-        private String charset;
-
-        /**
-         * <p>
-         * Builds a new instance for binary copy.
-         * </p>
-         *
-         * @param os the stream to write
-         */
-        public DefaultOnReady(final OutputStream os) {
-            this(os, null);
-        }
+        private Output output;
 
         /**
          * <p>
@@ -261,11 +248,9 @@ public final class Pipe<T extends ConvertibleNut> {
          * </p>
          *
          * @param os the stream to write
-         * @param cs the charset for character stream
          */
-        public DefaultOnReady(final OutputStream os, final String cs) {
-            this.outputStream = os;
-            this.charset = cs;
+        public DefaultOnReady(final Output os) {
+            this.output = os;
         }
 
         /**
@@ -274,9 +259,13 @@ public final class Pipe<T extends ConvertibleNut> {
         @Override
         public void ready(final Pipe.Execution e) throws IOException {
             try {
-                e.writeResultTo(outputStream, charset);
+                if (e.isText()) {
+                    e.writeResultTo(output.writer());
+                } else {
+                    e.writeResultTo(output.outputStream());
+                }
             } finally {
-                IOUtils.close(outputStream);
+                IOUtils.close(output);
             }
         }
     }
@@ -297,7 +286,7 @@ public final class Pipe<T extends ConvertibleNut> {
          * {@inheritDoc}
          */
         @Override
-        public boolean transform(final InputStream is, final OutputStream os, final T convertible) throws IOException {
+        public boolean transform(final Input is, final Output os, final T convertible) throws IOException {
             return false;
         }
 
@@ -348,20 +337,135 @@ public final class Pipe<T extends ConvertibleNut> {
     public static final class Execution {
 
         /**
-         * The result.
+         * The result in bytes.
          */
-        private byte[] result;
+        private byte[] byteResult;
+
+        /**
+         * The result in chars.
+         */
+        private char[] charResult;
+
+        /**
+         * The charset for {@code String} conversion.
+         */
+        private Charset charset;
+
+        /**
+         * Indicates if the base stream is in byte (binary) or char (text).
+         */
+        private final boolean text;
+
+        /**
+         * <p>
+         * Builds a new instance. All execution must provide the charset.
+         * </p>
+         *
+         * @param e the executions
+         */
+        public Execution(final List<Execution> e) {
+            if (e.isEmpty()) {
+                WuicException.throwBadArgumentException(new IllegalArgumentException("Executions list can't be empty."));
+            }
+
+            char[][] charArray = null;
+            byte[][] byteArray = null;
+            int length = 0;
+
+            // Collect the byte or char array from each execution
+            for (int i = 0; i < e.size(); i++) {
+                final Execution execution = e.get(i);
+
+                if (i == 0) {
+                    charset = execution.charset;
+
+                    if (execution.isText()) {
+                        charArray = new char[e.size()][];
+                        charArray[i] = execution.charResult;
+                        length += execution.charResult.length;
+                    } else {
+                        byteArray = new byte[e.size()][];
+                        byteArray[i] = execution.byteResult;
+                        length += execution.byteResult.length;
+                    }
+                } else {
+                    if (!charset.equals(execution.charset)) {
+                        WuicException.throwBadArgumentException(new IllegalArgumentException(
+                                String.format("Executions don't share the same charset: %s != %s", execution.charset, charset)));
+                    }
+
+                    if (charArray != null) {
+                        final char[] array = execution.isText() ? execution.charResult : IOUtils.toChars(charset, execution.byteResult);
+
+                        charArray[i] = array;
+                        length += array.length;
+                    } else {
+                        final byte[] array = execution.isText()
+                                ? IOUtils.toBytes(charset, execution.getCharResult()) : execution.byteResult;
+
+                        byteArray[i] = array;
+                        length += array.length;
+                    }
+                }
+            }
+
+            // Aggregate byte stream
+            if (byteArray != null) {
+                byteResult = new byte[length];
+                int offset = 0;
+
+                for (final byte[] b : byteArray) {
+                    System.arraycopy(b, 0, byteResult, offset, b.length);
+                    offset += b.length;
+                }
+            } else if (charArray != null) {
+                // Aggregate char stream
+                charResult = new char[length];
+                int offset = 0;
+
+                for (final char[] c : charArray) {
+                    System.arraycopy(c, 0, charResult, offset, c.length);
+                    offset += c.length;
+                }
+            }
+
+            text = charResult != null;
+        }
 
         /**
          * <p>
          * Builds a new instance.
          * </p>
          *
-         * @param r the result
+         * @param charset the charset
+         * @param b the result in bytes
          */
-        public Execution(final byte[] r) {
-            this.result = new byte[r.length];
-            System.arraycopy(r, 0, result, 0, r.length);
+        public Execution(final byte[] b, final String charset) {
+            if (b == null) {
+                throw new IllegalArgumentException("Given byte array is null.");
+            }
+
+            this.byteResult = Arrays.copyOf(b, b.length);
+            this.charset = Charset.forName(charset);
+            this.text = false;
+        }
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param charset the charset
+         * @param c the result in chars
+         */
+        public Execution(final char[] c, final String charset) {
+            if (c == null) {
+                throw new IllegalArgumentException("Given char array is null.");
+            }
+
+            this.charResult = Arrays.copyOf(c, c.length);
+            this.charset = Charset.forName(charset);
+            this.text = true;
         }
 
         /**
@@ -372,7 +476,50 @@ public final class Pipe<T extends ConvertibleNut> {
          * @return the result
          */
         public int getContentLength() {
-            return result.length;
+            return charResult == null ? byteResult.length : charResult.length;
+        }
+
+        /**
+         * <p>
+         * Gets the byte array.
+         * </p>
+         *
+         * @return the byte array
+         */
+        public byte[] getByteResult() {
+            if (byteResult == null) {
+                byteResult = IOUtils.toBytes(charset, charResult);
+            }
+
+            return byteResult;
+        }
+
+        /**
+         * <p>
+         * Gets the char array.
+         * </p>
+         *
+         * @return the char array
+         */
+        public char[] getCharResult() {
+            if (charResult == null) {
+                charResult = IOUtils.toChars(charset, byteResult);
+            }
+
+            return charResult;
+        }
+
+        /**
+         * <p>
+         * Indicates if this executions writes chars or bytes.
+         * If {@code true}, {@link #writeResultTo(java.io.Writer)} should be used.
+         * Otherwise use {@link #writeResultTo(java.io.OutputStream)}.
+         * </p>
+         *
+         * @return {@code true} in case of text data (chars), {@code false} in case of binary data (bytes)
+         */
+        public boolean isText() {
+            return text;
         }
 
         /**
@@ -384,39 +531,40 @@ public final class Pipe<T extends ConvertibleNut> {
          * @throws IOException if copy fails
          */
         public void writeResultTo(final OutputStream os) throws IOException {
-            writeResultTo(os, null);
+            os.write(getByteResult());
+            os.flush();
         }
 
         /**
          * <p>
-         * Writes the result to the given output stream. Charset could be specified for char stream.
+         * Writes the result to the given writer.
          * </p>
          *
-         * @param os      the output stream
-         * @param charset the charset for character stream ({@code null} for binary stream)
+         * @param writer the writer
          * @throws IOException if copy fails
          */
-        public void writeResultTo(final OutputStream os, final String charset) throws IOException {
-            InputStream is = null;
+        public void writeResultTo(final Writer writer) throws IOException {
+            writer.write(getCharResult());
+            writer.flush();
+        }
 
-            try {
-                is = new ByteArrayInputStream(result);
-
-                if (charset == null) {
-                    IOUtils.copyStream(is, os);
-                } else {
-                    IOUtils.copyStreamToWriterIoe(is, new OutputStreamWriter(os, charset));
-                }
-            } finally {
-                IOUtils.close(is);
-            }
+        /**
+         * <p>
+         * Creates a {@code String} from this execution.
+         * </p>
+         *
+         * @return the {@code String} representation of execution's content
+         */
+        @Override
+        public String toString() {
+            return isText() ? new String(getCharResult()) : new String(getByteResult(), charset);
         }
     }
 
     /**
      * Input stream of the pipe.
      */
-    private InputStream inputStream;
+    private Input inputStream;
 
     /**
      * Nodes that wrap registered {@link Transformer transformers}.
@@ -430,15 +578,43 @@ public final class Pipe<T extends ConvertibleNut> {
 
     /**
      * <p>
-     * Creates a new instance with an input.
+     * Creates a new instance with a byte stream input.
+     * </p>
+     *
+     * @param charset the charset for encoding/decoding text stream
+     * @param c  the convertible bound to the input stream
+     * @param is the {@link InputStream}
+     */
+    public Pipe(final T c, final InputStream is, final String charset) {
+        this(c, new DefaultInput(is, charset));
+    }
+
+    /**
+     * <p>
+     * Creates a new instance with an input stream.
      * </p>
      *
      * @param c  the convertible bound to the input stream
      * @param is the {@link InputStream}
      */
-    public Pipe(final T c, final InputStream is) {
+    public Pipe(final T c, final Input is) {
         convertible = c;
         inputStream = is;
+        transformers = new LinkedList<Transformer<T>>();
+    }
+
+    /**
+     * <p>
+     * Creates a new instance with a char stream input.
+     * </p>
+     *
+     * @param charset the charset for encoding/decoding text stream
+     * @param c  the convertible bound to the input stream
+     * @param r {@link Reader}
+     */
+    public Pipe(final T c, final Reader r, final String charset) {
+        convertible = c;
+        inputStream = new DefaultInput(r, charset);
         transformers = new LinkedList<Transformer<T>>();
     }
 
@@ -484,34 +660,34 @@ public final class Pipe<T extends ConvertibleNut> {
      * </p>
      *
      * <p>
-     * If the given {@code InputStream} is a {@link com.github.wuic.nut.CompositeNut.CompositeInputStream} that should not
-     * be ignored, each nut of the composition is transformed and the result is aggregated and is used as an input for the
+     * If the given {@code InputStream} is a {@link com.github.wuic.nut.CompositeNut.CompositeInput} that should not be
+     * ignored, each nut of the composition is transformed and the result is aggregated and is used as an input for the
      * transformers that support transformation of aggregated streams only.
      * </p>
      *
-     * @param ignoreCompositeStream ignores the fact that the {@code InputStream} is a {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}
+     * @param ignoreCompositeStream ignores the fact that the {@code InputStream} is a {@link CompositeNut.CompositeInput}
      * @param onReady callback
      * @throws IOException if an I/O error occurs
      */
     public void execute(final boolean ignoreCompositeStream, final OnReady... onReady)
             throws IOException {
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+        final Output os = new InMemoryOutput(inputStream.getCharset());
 
-        if (!ignoreCompositeStream && (inputStream instanceof CompositeNut.CompositeInputStream)) {
-            transform(convertible, CompositeNut.CompositeInputStream.class.cast(inputStream)).execute(true, onReady);
+        if (!ignoreCompositeStream && (inputStream instanceof CompositeNut.CompositeInput)) {
+            transform(convertible, CompositeNut.CompositeInput.class.cast(inputStream)).execute(true, onReady);
         } else {
             boolean written = false;
-            InputStream is = inputStream;
+            Input is = inputStream;
 
             // Make transformation
             for (final Transformer<T> t : transformers) {
 
                 // Pipe transformers with in memory byte arrays
                 if (!t.equals(transformers.getLast())) {
-                    final OutputStream out;
+                    final InMemoryOutput out;
 
                     // Keep the composition information
-                    out = new ByteArrayOutputStream();
+                    out = new InMemoryOutput(inputStream.getCharset());
 
                     try {
                         written = t.transform(is, out, convertible);
@@ -521,9 +697,9 @@ public final class Pipe<T extends ConvertibleNut> {
                         }
                     }
 
-                    // Retrieve the new CompositeInputStream
+                    // Retrieve the new CompositeInput
                     if (written) {
-                        is = new ByteArrayInputStream(ByteArrayOutputStream.class.cast(out).toByteArray());
+                        is = new InMemoryInput(out, is.getCharset());
                     }
                 } else {
                     try {
@@ -537,19 +713,21 @@ public final class Pipe<T extends ConvertibleNut> {
                 }
             }
 
+            final Execution e;
+
             if (!written) {
                 if (is == null) {
                     is = inputStream;
                 }
 
                 try {
-                    IOUtils.copyStream(is, os);
+                    e = is.execution();
                 } finally {
                     IOUtils.close(is, os);
                 }
+            } else {
+                e = os.execution();
             }
-
-            final Execution e = new Execution(os.toByteArray());
 
             // Notify callbacks
             for (final OnReady callback : onReady) {
@@ -560,17 +738,17 @@ public final class Pipe<T extends ConvertibleNut> {
 
     /**
      * <p>
-     * Executes the transformation for the given {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}.
+     * Executes the transformation for the given {@link com.github.wuic.nut.CompositeNut.CompositeInput}.
      * The method isolate the transformation of each nut inside the composition and then returns a {@code Pipe} with
      * the remaining transformers that should be applied on the aggregated stream.
      * </p>
      *
      * @param nut the {@link ConvertibleNut}
-     * @param cis the opened {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}
+     * @param cis the opened {@link com.github.wuic.nut.CompositeNut.CompositeInput}
      * @return the pipe with remaining transformations
      * @throws IOException if transformation fails
      */
-    private Pipe<ConvertibleNut> transform(final ConvertibleNut nut, final CompositeNut.CompositeInputStream cis)
+    private Pipe<ConvertibleNut> transform(final ConvertibleNut nut, final CompositeNut.CompositeInput cis)
             throws IOException {
         final Pipe<ConvertibleNut> finalPipe;
         final boolean hasTransformers = (convertible.getTransformers() != null && !convertible.getTransformers().isEmpty())
@@ -585,8 +763,8 @@ public final class Pipe<T extends ConvertibleNut> {
             populateTransformers(convertible.getTransformers(), aggregatedStream, nuts, composite.getCompositionList());
 
             // First: transform each nut
-            final CompositeNut.CompositeInputStream is = composite.openStream(
-                    transformBeforeAggregate(nuts, composite.getCompositionList(), nut));
+            final CompositeNut.CompositeInput is =
+                    composite.openStream(transformBeforeAggregate(nuts, composite.getCompositionList(), nut));
 
             // Aggregate the results
             finalPipe = new Pipe<ConvertibleNut>(nut, is);
@@ -623,8 +801,8 @@ public final class Pipe<T extends ConvertibleNut> {
     /**
      * <p>
      * Transforms each nut with transformers producing content which could be aggregated.
-     * The transformation result of each nut is returned as a list of {@link InputStream} that should be used to create
-     * a {@link com.github.wuic.nut.CompositeNut.CompositeInputStream}.
+     * The transformation result of each nut is returned as a list of {@link Input} that should be used to create
+     * a {@link com.github.wuic.nut.CompositeNut.CompositeInput}.
      * </p>
      *
      * @param nuts the nuts to transform with their transformers
@@ -633,14 +811,14 @@ public final class Pipe<T extends ConvertibleNut> {
      * @return the input streams of corresponding to the composition where transformed content is accessible
      * @throws IOException if transformation fails
      */
-    private List<InputStream> transformBeforeAggregate(final List<PerNutTransformation> nuts,
-                                                       final List<ConvertibleNut> compositionList,
-                                                       final ConvertibleNut convertibleNut)
+    private List<Input> transformBeforeAggregate(final List<PerNutTransformation> nuts,
+                                                 final List<ConvertibleNut> compositionList,
+                                                 final ConvertibleNut convertibleNut)
             throws IOException {
-        final List<InputStream> is = new ArrayList<InputStream>(compositionList.size());
+        final List<Input> is = new ArrayList<Input>(compositionList.size());
 
         for (final PerNutTransformation perNutTransformation : nuts) {
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final Output bos = new InMemoryOutput(inputStream.getCharset());
 
             if (!perNutTransformation.getTransformers().isEmpty()) {
 
@@ -677,7 +855,7 @@ public final class Pipe<T extends ConvertibleNut> {
                 }
 
                 Pipe.executeAndWriteTo(pipe, perNutTransformation.getConvertibleNut().getReadyCallbacks(), bos);
-                is.add(new ByteArrayInputStream(bos.toByteArray()));
+                is.add(bos.input(perNutTransformation.getConvertibleNut().getNutType().getCharset()));
             } else {
                 is.add(perNutTransformation.getConvertibleNut().openStream());
             }

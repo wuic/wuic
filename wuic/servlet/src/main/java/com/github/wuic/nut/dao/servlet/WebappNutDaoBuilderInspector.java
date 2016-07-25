@@ -125,6 +125,7 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                 dao.init(webappNutDao.getVersionNumberStrategy().getContentBasedVersionNumber(),
                         webappNutDao.getVersionNumberStrategy().getComputeVersionAsynchronously(),
                         fixedVersionNumber == null ? null : fixedVersionNumber.toString());
+                dao.setNutTypeFactory(webappNutDao.getNutTypeFactory());
                 return (T) dao;
             }
         }

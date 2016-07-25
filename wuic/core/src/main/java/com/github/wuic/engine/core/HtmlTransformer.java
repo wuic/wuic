@@ -38,30 +38,30 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProvider;
 import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -85,7 +85,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
 
     /**
      * The request. This transformer should not be serialized before a first call to
-     * {@link #transform(java.io.InputStream, java.io.OutputStream, ConvertibleNut)} is performed.
+     * {@link #transform(Input, Output, ConvertibleNut)} is performed.
      */
     private final transient EngineRequest request;
 
@@ -141,10 +141,12 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible)
+    public boolean transform(final Input is, final Output os, final ConvertibleNut convertible)
             throws IOException {
         final long now = System.currentTimeMillis();
-        final String content = IOUtils.readString(new InputStreamReader(is, charset));
+        final Pipe.Execution e = is.execution();
+        final String content = e.isText()
+                ? new String(e.getCharResult()) : new String(IOUtils.toChars(Charset.forName(charset), e.getByteResult()));
         final StringBuilder transform = new StringBuilder(content);
 
         // Normalize linefeed
@@ -188,18 +190,21 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
 
             // Modify the content to give more information to the client directly inside the page
             if (!request.isStaticsServedByWuicServlet()) {
+                final ConvertibleNut appCache = applicationCache(convertible, urlProvider, transform);
+
+                if (appCache != null) {
+                    referenced.add(appCache);
+                }
 
                 // The hint resource
                 if (serverHint) {
                     hintResources(urlProvider, transform, referenced);
                 }
 
-                applicationCache(convertible, urlProvider, transform);
             }
         }
 
-        IOUtils.copyStream(new ByteArrayInputStream(transform.toString().getBytes()), os);
-
+        os.writer().write(transform.toString());
         Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
 
         return true;
@@ -230,14 +235,16 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
      * @param nut the nut representing the HTML page
      * @param urlProvider the URL provider
      * @param content the page content
+     * @return  the created {@code appcache} nut, {@code null} if no {@code html} tag exists in the content
      */
-    private void applicationCache(final ConvertibleNut nut,
-                                  final UrlProvider urlProvider,
-                                  final StringBuilder content) {
+    private ConvertibleNut applicationCache(final ConvertibleNut nut,
+                                            final UrlProvider urlProvider,
+                                            final StringBuilder content) {
         int index = content.indexOf("<html");
 
         if (index == -1) {
             logger.warn("Filtered HTML does not have any <html>. Application cache file won't be inserted.");
+            return null;
         } else {
             // Compute content
             final StringBuilder sb = new StringBuilder();
@@ -250,7 +257,8 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             // Create the nut
             final String name = nut.getName().concat(".appcache");
             final byte[] bytes = sb.toString().getBytes();
-            final ConvertibleNut appCache = new ByteArrayNut(bytes, name, NutType.APP_CACHE, versionNumber, false);
+            final NutType nutType = request.getNutTypeFactory().getNutType(EnumNutType.APP_CACHE);
+            final ConvertibleNut appCache = new InMemoryNut(bytes, name, nutType, versionNumber, false);
             nut.addReferencedNut(appCache);
 
             // Modify the HTML content
@@ -258,6 +266,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             final String replacement = String.format(" manifest=\"%s\"", urlProvider.getUrl(appCache));
             content.insert(index, replacement);
             this.replacements.put(index, Arrays.asList(replacement));
+            return appCache;
         }
     }
 

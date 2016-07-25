@@ -63,16 +63,23 @@ public abstract class SimplePath implements Path {
     private DirectoryPath parent;
 
     /**
+     * The charset used to read text stream.
+     */
+    private String charset;
+
+    /**
      * <p>
      * Builds a new instance based on a given name and a parent directory.
      * </p>
      *
+     * @param cs the charset
      * @param n the name
      * @param dp the parent
      */
-    public SimplePath(final String n, final DirectoryPath dp) {
+    public SimplePath(final String n, final DirectoryPath dp, final String cs) {
         name = n;
         parent = dp;
+        charset = cs;
     }
 
     /**
@@ -117,5 +124,16 @@ public abstract class SimplePath implements Path {
     @Override
     public String toString() {
         return getName();
+    }
+
+    /**
+     * <p>
+     * Gets the charset of this file path.
+     * </p>
+     *
+     * @return the charset
+     */
+    public String getCharset() {
+        return charset;
     }
 }

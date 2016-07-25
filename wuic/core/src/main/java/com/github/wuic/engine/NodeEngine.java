@@ -39,6 +39,8 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 
@@ -62,7 +64,7 @@ import java.util.ListIterator;
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public abstract class NodeEngine extends Engine {
+public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder {
 
     /**
      * The next engine.
@@ -73,6 +75,11 @@ public abstract class NodeEngine extends Engine {
      * Previous engine.
      */
     private NodeEngine previousEngine;
+
+    /**
+     * Nut type factory.
+     */
+    private NutTypeFactory nutTypeFactory;
 
     /**
      * <p>
@@ -170,6 +177,14 @@ public abstract class NodeEngine extends Engine {
      * {@inheritDoc}
      */
     @Override
+    public void setNutTypeFactory(final NutTypeFactory nutTypeFactory) {
+        this.nutTypeFactory = nutTypeFactory;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
         if (request.shouldSkip(getEngineType())) {
             // Call next engine in chain
@@ -237,5 +252,16 @@ public abstract class NodeEngine extends Engine {
      */
     protected boolean callNextEngine() {
         return true;
+    }
+
+    /**
+     * <p>
+     * Gets the nut type factory.
+     * </p>
+     *
+     * @return the factory
+     */
+    protected NutTypeFactory getNutTypeFactory() {
+        return nutTypeFactory;
     }
 }

@@ -38,18 +38,20 @@
 
 package com.github.wuic.test.xml;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.InMemoryInput;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -84,14 +86,14 @@ public class MockEngine2 extends MockEngine {
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>();
         retval.addAll(request.getNuts());
         final ConvertibleNut nut = mock(ConvertibleNut.class);
-        when(nut.getInitialNutType()).thenReturn(NutType.CSS);
-        when(nut.getNutType()).thenReturn(NutType.CSS);
+        when(nut.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS));
+        when(nut.getNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS));
         when(nut.getName()).thenReturn("bar.css");
         when(nut.getInitialName()).thenReturn("bar.css");
         when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
 
         try {
-            when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+            when(nut.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
         }
@@ -106,6 +108,6 @@ public class MockEngine2 extends MockEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.values());
+        return getNutTypeFactory().getNutType(EnumNutType.values());
     }
 }

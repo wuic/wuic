@@ -41,6 +41,8 @@ package com.github.wuic.servlet.path;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.core.SimplePath;
+import com.github.wuic.util.DefaultInput;
+import com.github.wuic.util.Input;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
@@ -66,12 +68,13 @@ public class WebappFilePath extends SimplePath implements FilePath {
      * Creates a new instance.
      * </p>
      *
+     * @param cs the charset
      * @param n the name
      * @param dp the parent
      * @param context the servlet context used to access nut's stream
      */
-    public WebappFilePath(final String n, final DirectoryPath dp, final ServletContext context) {
-        super(n, dp);
+    public WebappFilePath(final String n, final DirectoryPath dp, final ServletContext context, final String cs) {
+        super(n, dp, cs);
         this.context = context;
     }
 
@@ -88,7 +91,8 @@ public class WebappFilePath extends SimplePath implements FilePath {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return context.getResourceAsStream(getAbsolutePath());
+    public Input openStream() throws IOException {
+        final InputStream is = context.getResourceAsStream(getAbsolutePath());
+        return is == null ? null : new DefaultInput(is, getCharset());
     }
 }

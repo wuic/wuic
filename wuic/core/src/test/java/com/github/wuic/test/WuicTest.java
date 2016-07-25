@@ -40,9 +40,13 @@ package com.github.wuic.test;
 
 import com.github.wuic.nut.Nut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.Charset;
 
 /**
  * <p>
@@ -68,7 +72,25 @@ public class WuicTest {
         final String dir = System.getProperty("wuic.test.storeTo");
 
         if (dir != null) {
-            IOUtils.copyStream(nut.openStream(), new FileOutputStream(new File(dir, name)));
+            IOUtils.copyStream(nut.openStream().inputStream(), new FileOutputStream(new File(dir, name)));
         }
+    }
+
+    /**
+     * <p>
+     * Returns an answer to mock {@link com.github.wuic.nut.Nut#openStream()} that produces an {@link com.github.wuic.util.Input}
+     * reading the given {@code String}.
+     * </p>
+     *
+     * @param content the {@code String} read by the input
+     * @return the answer
+     */
+    public static Answer<Object> openStreamAnswer(final String content) {
+        return new Answer<Object>() {
+            @Override
+            public Object answer(final InvocationOnMock invocation) throws Throwable {
+                return new InMemoryInput(content, Charset.defaultCharset().displayName());
+            }
+        };
     }
 }

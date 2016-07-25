@@ -50,15 +50,14 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutWrapper;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,7 +88,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
     /**
      * <p>
      * This {@link com.github.wuic.util.Pipe.Transformer} is an adapter that calls
-     * {@link #transform(InputStream, OutputStream, ConvertibleNut, EngineRequest)}
+     * {@link #transform(Input, Output, ConvertibleNut, EngineRequest)}
      * from the enclosing instance.
      * </p>
      *
@@ -127,9 +126,9 @@ public abstract class AbstractConverterEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut nut, final EngineRequest request)
+        public boolean transform(final Input is, final Output os, final ConvertibleNut nut, final EngineRequest request)
                 throws IOException {
-            InputStream result = null;
+            Input result = null;
 
             try {
                 result = AbstractConverterEngine.this.transform(is, nut, request);
@@ -138,9 +137,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
                     IOUtils.copyStream(result, os);
                 } else {
                     // Continue transformation of conversion result
-                    final ByteArrayOutputStream conversionOs = new ByteArrayOutputStream();
-                    IOUtils.copyStream(result, conversionOs);
-                    final Pipe<ConvertibleNut> finalPipe = new Pipe<ConvertibleNut>(nut, new ByteArrayInputStream(conversionOs.toByteArray()));
+                    final Pipe<ConvertibleNut> finalPipe = new Pipe<ConvertibleNut>(nut, result);
 
                     for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
                         finalPipe.register(t);
@@ -159,7 +156,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+        public boolean transform(final Input is, final Output os, final ConvertibleNut convertible) throws IOException {
            return engineRequestTransformer.transform(is, os, convertible);
         }
 
@@ -384,7 +381,8 @@ public abstract class AbstractConverterEngine extends NodeEngine {
      * @param is the input stream
      * @param nut the nut corresponding to the stream
      * @param request the request that initiated transformation
+     * @return the result of transformed stream
      * @throws IOException if transformation fails
      */
-    protected abstract InputStream transform(InputStream is, ConvertibleNut nut, EngineRequest request) throws IOException;
+    protected abstract Input transform(Input is, ConvertibleNut nut, EngineRequest request) throws IOException;
 }

@@ -174,3 +174,4 @@ Breaking changes:
 - Duplicated registrations (heap, DAO, filter, engine, workflow and template) with the same ID are no longer tolerated
 - static-helper-maven-plugin and ant task now package the result in JAR file by default (turn off by setting packageAsJar to false)
 - Default builder ID are is based on @Alias value. If no @Alias is defined on the component, previous mechanism is applied
+- Transformer API has changed and now abstracts I/O to chose between byte and char stream

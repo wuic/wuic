@@ -38,7 +38,6 @@
 
 package com.github.wuic.context;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.Profile;
@@ -47,7 +46,6 @@ import com.github.wuic.WorkflowTemplate;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
@@ -59,7 +57,6 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.Consumer;
-import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,18 +94,12 @@ public class TaggedSettings extends ContextInterceptorAdapter {
     private final Map<Object, ContextSetting> taggedSettings;
 
     /**
-     * Charset applied in requests.
-     */
-    private String charset;
-
-    /**
      * <p>
      * Builds a new instance.
      * </p>
      */
     TaggedSettings() {
         taggedSettings = new HashMap<Object, ContextSetting>();
-        charset = "";
     }
 
     /**
@@ -411,8 +402,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             interceptors.addAll(setting.getInterceptorsList());
         }
 
-        interceptors.add(new SettingsContextInterceptor(IOUtils.checkCharset(charset)));
-
         return interceptors;
     }
 
@@ -641,7 +630,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * </p>
      *
      * @param configureDefault {@code true} if default configuration for engine should be injected to workflow, {@code false} otherwise
-     * @param daoMap the map of known DAO
      * @param heapMap the map of known heaps
      * @param knownTypes the known engine builder type
      * @param profiles the active profiles
@@ -649,7 +637,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
      * @throws com.github.wuic.exception.DuplicatedRegistrationException if duplicated registrations have been found
      */
     Map<String, Workflow> getWorkflowMap(final boolean configureDefault,
-                                         final Map<String, NutDao> daoMap,
                                          final Map<String, NutsHeap> heapMap,
                                          final List<ObjectBuilderFactory<Engine>.KnownType> knownTypes,
                                          final Collection<String> profiles)
@@ -665,7 +652,7 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
             // Generate the set of workflow for each registration and check for duplicates
             for (final Map.Entry<ContextBuilder.RegistrationId, ContextBuilder.WorkflowRegistration> entry : setting.getWorkflowMap().entrySet()) {
-                final Map<String, Workflow> res = entry.getValue().getWorkflowMap(entry.getKey().getId(), daoMap, heapMap, setting, profiles);
+                final Map<String, Workflow> res = entry.getValue().getWorkflowMap(entry.getKey().getId(), heapMap, setting, profiles);
                 final Set<String> a = res.keySet();
                 final Set<String> b = workflowMap.keySet();
                 checkDuplicate(a, b, profiles);
@@ -856,22 +843,18 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
-     * Applies the given property object to all registered components.
+     * Applies the given {@link PropertyResolver} to the registered {@link NutFilter}, {@link Engine} and {@link NutDao}.
      * </p>
      *
-     * @param properties the property resolver object
-     * @see TaggedSettings#internalApplyProperties(com.github.wuic.util.PropertyResolver)
+     * @param propertyResolver the property resolver
+     * @see TaggedSettings#applyProperties(java.util.Map, com.github.wuic.util.PropertyResolver)
      */
-    void applyProperties(final PropertyResolver properties) {
-
-        // Captures the charset to use in requests
-        final String cs = properties.resolveProperty(ApplicationConfig.CHARSET);
-
-        if (cs != null) {
-            charset = cs;
+    void applyProperties(final PropertyResolver propertyResolver) {
+        for (final ContextSetting ctx : taggedSettings.values()) {
+            applyProperties(ctx.getEngineMap(),propertyResolver);
+            applyProperties(ctx.getNutDaoMap(), propertyResolver);
+            applyProperties(ctx.getNutFilterMap(), propertyResolver);
         }
-
-        internalApplyProperties(properties);
     }
 
     /**
@@ -1156,22 +1139,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
-     * Applies the given {@link PropertyResolver} to the registered {@link NutFilter}, {@link Engine} and {@link NutDao}.
-     * </p>
-     *
-     * @param propertyResolver the property resolver
-     * @see TaggedSettings#applyProperties(java.util.Map, com.github.wuic.util.PropertyResolver)
-     */
-    private void internalApplyProperties(final PropertyResolver propertyResolver) {
-        for (final ContextSetting ctx : taggedSettings.values()) {
-            applyProperties(ctx.getEngineMap(),propertyResolver);
-            applyProperties(ctx.getNutDaoMap(), propertyResolver);
-            applyProperties(ctx.getNutFilterMap(), propertyResolver);
-        }
-    }
-
-    /**
-     * <p>
      * Retrieve all supported properties by the given map of builders from the {@link PropertyResolver} specified in parameter
      * and apply the value if not {@code null}.
      * </p>
@@ -1185,49 +1152,6 @@ public class TaggedSettings extends ContextInterceptorAdapter {
             for (final ObjectBuilder component : builders.values()) {
                 component.configure(propertyResolver);
             }
-        }
-    }
-
-    /**
-     * <p>
-     * Interceptor setting the charset in created requests.
-     * </p>
-     *
-     * @author Guillaume DROUET
-     * @since 0.5.3
-     */
-    private static class SettingsContextInterceptor extends ContextInterceptorAdapter {
-
-        /**
-         * Charset.
-         */
-        private final String charset;
-
-        /**
-         * <p>
-         * Builds a new instance.
-         * </p>
-         *
-         * @param charset the charset
-         */
-        private SettingsContextInterceptor(final String charset) {
-            this.charset = charset;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
-            return request.charset(charset);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request, final String path) {
-            return request.charset(charset);
         }
     }
 }

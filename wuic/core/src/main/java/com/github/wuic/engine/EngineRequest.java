@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -314,7 +315,18 @@ public final class EngineRequest {
      * @return the charset
      */
     public String getCharset() {
-        return getBuilder().getCharset();
+        return getNutTypeFactory().getCharset();
+    }
+
+    /**
+     * <p>
+     * Gets the nut type factory.
+     * </p>
+     *
+     * @return the nut type factory
+     */
+    public NutTypeFactory getNutTypeFactory() {
+        return getBuilder().getNutTypeFactory();
     }
 
     /**

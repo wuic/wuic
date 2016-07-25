@@ -119,7 +119,7 @@ public class WebappNutDao extends PathNutDao implements ServletContextHandler {
                                     WuicServletContextListener.class.getName())));
         }
 
-        final Path file = IOUtils.buildPath(getBasePath(), new WebappDirectoryPathFactory(context));
+        final Path file = IOUtils.buildPath(getBasePath(), new WebappDirectoryPathFactory(context, getCharset()));
 
         if (!(file instanceof DirectoryPath)) {
             WuicException.throwBadStateException(

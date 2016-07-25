@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineService;
@@ -49,11 +50,12 @@ import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
+import com.github.wuic.util.Pipe;
 
-import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
@@ -76,25 +78,21 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
      * Copies the the given char array to the output stream specified in parameter ignoring the blank lines.
      * </p>
      *
-     * @param target the output stream
+     * @param target the writer
      * @param buffer the buffer to read
      * @param offset the buffer offset
      * @param length the content length
-     * @param request the engine request that initiates compression
      * @param previousDelimiter the delimiter that lead to the given chunk of data creation
      */
-    private void compress(final OutputStream target,
+    private void compress(final Writer target,
                           final char[] buffer,
                           final int offset,
                           final int length,
-                          final EngineRequest request,
                           final ScriptLineInspector.Range.Delimiter previousDelimiter) {
         try {
-            final Charset cs = Charset.forName(request.getCharset());
-
             // String literal detecting, we don't remove blank lines
             if (buffer[offset] == '`') {
-                target.write(new String(buffer, offset, length).getBytes(cs));
+                target.write(buffer, offset, length);
                 return;
             }
 
@@ -102,7 +100,7 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
 
             // Safe operation: makes sure a new line follows removed comment
             if (ScriptLineInspector.Range.Delimiter.START_SINGLE_LINE_OF_COMMENT.equals(previousDelimiter)) {
-                target.write(IOUtils.NEW_LINE.getBytes(cs));
+                target.write(IOUtils.NEW_LINE);
                 blankLine = true;
             } else {
                 blankLine = false;
@@ -116,7 +114,7 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
                 // To remove blank lines, do not copy tabs and white spaces
                 if (c == '\t' || c == ' ') {
                     if (!blankLine) {
-                        target.write(String.valueOf(c).getBytes(cs));
+                        target.write(c);
                     }
                 } else if (c == '\n') {
                     // Won't copy the new line if it's blank
@@ -129,10 +127,10 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
                 } else if (blankLine) {
                     // Not a blank line, copy all the skipped tabs and white spaces
                     blankLine = false;
-                    target.write(new String(buffer, mark, i - mark + 1).getBytes(cs));
+                    target.write(buffer, mark, i - mark + 1);
                 } else {
                     // We already know that we are not on a blank line
-                    target.write(String.valueOf(c).getBytes(cs));
+                    target.write(c);
                 }
             }
         } catch (IOException ioe) {
@@ -144,16 +142,17 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
      * {@inheritDoc}
      */
     @Override
-    public boolean transform(final InputStream source, final OutputStream target, final ConvertibleNut convertibleNut, final EngineRequest request)
+    public boolean transform(final Input source, final Output target, final ConvertibleNut convertibleNut, final EngineRequest request)
             throws IOException {
+        final Writer writer = target.writer();
+
         // Source map is broken
         convertibleNut.setSource(new SourceImpl(convertibleNut.getSource()));
 
         // First read the stream
-        final CharArrayWriter charArrayWriter = new CharArrayWriter();
-        IOUtils.copyStreamToWriterIoe(source, charArrayWriter);
-        final char[] chars = charArrayWriter.toCharArray();
+        final Pipe.Execution e = source.execution();
         final AtomicReference<ScriptLineInspector.Range.Delimiter> previousDelimiter = new AtomicReference<ScriptLineInspector.Range.Delimiter>();
+        final char[] chars = e.isText() ? e.getCharResult() : IOUtils.toChars(Charset.forName(request.getCharset()), e.getByteResult());
 
         // This inspector just matches everything that is not a comment
         final ScriptLineInspector lineInspector = new ScriptLineInspector.Adapter(ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS) {
@@ -162,10 +161,10 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
                                 final int offset,
                                 final int length,
                                 final EngineRequest request,
-                                final CompositeNut.CompositeInputStream cis,
+                                final CompositeNut.CompositeInput cis,
                                 final ConvertibleNut originalNut,
                                 final Range.Delimiter delimiter) {
-                compress(target, buffer, offset, length, request, previousDelimiter.get());
+                compress(writer, buffer, offset, length, previousDelimiter.get());
                 previousDelimiter.set(delimiter);
                 return null;
             }
@@ -186,7 +185,7 @@ public class ScriptCompressorEngine extends AbstractCompressorEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.JAVASCRIPT, NutType.CSS);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT), getNutTypeFactory().getNutType(EnumNutType.CSS));
     }
 
     /**

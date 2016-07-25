@@ -39,8 +39,9 @@
 package com.github.wuic.test.engine;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.NutType;
-import com.github.wuic.ProcessContext;
+import com.github.wuic.EnumNutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.engine.Engine;
@@ -51,10 +52,15 @@ import com.github.wuic.engine.core.CommandLineConverterEngine;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.test.ProcessContextRule;
+import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryOutput;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -63,11 +69,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -79,6 +84,12 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(JUnit4.class)
 public class CommandLineConverterEngineTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Temporary folder.
@@ -130,15 +141,17 @@ public class CommandLineConverterEngineTest {
         NutsHeap heap = mockHeap(parent);
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
         final ObjectBuilder<Engine> builder = factory.create("CommandLineConverterEngineBuilder");
-        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, command)
                 .build();
 
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null).processContext(ProcessContext.DEFAULT).contextPath("cp").build());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        NutTypeFactoryHolder.class.cast(engine).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                .processContext(processContext.getProcessContext()).contextPath("cp").build());
+        InMemoryOutput bos = new InMemoryOutput(Charset.defaultCharset().displayName());
         res.get(0).transform(new Pipe.DefaultOnReady(bos));
-        final String content = IOUtils.readString(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray())));
+        final String content = bos.execution().toString();
         Assert.assertTrue(content, content.contains("foo.less"));
         Assert.assertTrue(content, content.contains("bar.less"));
     }
@@ -154,15 +167,15 @@ public class CommandLineConverterEngineTest {
         NutsHeap heap = mockHeap(parent);
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
         final ObjectBuilder<Engine> builder = factory.create("CommandLineConverterEngineBuilder");
-        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, String.format("dir . > %s & echo %s > %s", CommandLineConverterEngine.OUT_PATH_TOKEN, SOURCEMAP, CommandLineConverterEngine.SOURCE_MAP_TOKEN))
                 .property(ApplicationConfig.LIBRARIES, "/paths;/outPath;/sourceMap;/foo")
                 .build();
+        NutTypeFactoryHolder.class.cast(engine).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
 
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null).processContext(ProcessContext.DEFAULT).contextPath("cp").build());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        res.get(0).transform(new Pipe.DefaultOnReady(bos));
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName())).processContext(processContext.getProcessContext()).contextPath("cp").build());
+        res.get(0).transform(new Pipe.DefaultOnReady(new InMemoryOutput(Charset.defaultCharset().displayName())));
     }
 
     /**
@@ -181,13 +194,15 @@ public class CommandLineConverterEngineTest {
         NutsHeap heap = mockHeap(parent);
         final ObjectBuilderFactory<Engine> factory = new ObjectBuilderFactory<Engine>(EngineService.class, CommandLineConverterEngine.class);
         final ObjectBuilder<Engine> builder = factory.create("CommandLineConverterEngineBuilder");
-        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+        final Engine engine = builder.property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, command)
                 .build();
+        NutTypeFactoryHolder.class.cast(engine).setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
 
-        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null).processContext(ProcessContext.DEFAULT).contextPath("cp").build());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        List<ConvertibleNut> res = engine.parse(new EngineRequestBuilder("wid", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                .processContext(processContext.getProcessContext()).contextPath("cp").build());
+        Output bos = new InMemoryOutput(Charset.defaultCharset().displayName());
         res.get(0).transform(new Pipe.DefaultOnReady(bos));
     }
 
@@ -200,46 +215,45 @@ public class CommandLineConverterEngineTest {
 
         // No token
         Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, "unknown")
                 .build());
 
         // Only path token
         Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, String.format("unknown %s", CommandLineConverterEngine.PATH_TOKEN))
                 .build());
 
         // Only path and out path token
         Assert.assertNull(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .property(ApplicationConfig.COMMAND, String.format("unknown %s %s", CommandLineConverterEngine.PATH_TOKEN, CommandLineConverterEngine.OUT_PATH_TOKEN))
                 .build());
 
         // Missing input type
         Assert.assertTrue(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.LESS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, EnumNutType.LESS.name())
                 .build()).getNutTypes().isEmpty());
 
         // Missing output type
         Assert.assertTrue(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+                .property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
                 .build()).getNutTypes().isEmpty());
 
         // Bad nut type
         Assert.assertNull(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
-                .property(ApplicationConfig.INPUT_NUT_TYPE, NutType.LESS.name())
+                .property(ApplicationConfig.INPUT_NUT_TYPE, EnumNutType.LESS.name())
                 .property(ApplicationConfig.OUTPUT_NUT_TYPE, "bar")
                 .build()));
 
         Assert.assertNull(NodeEngine.class.cast(factory.create("CommandLineConverterEngineBuilder")
                 .property(ApplicationConfig.INPUT_NUT_TYPE, "foo")
-                .property(ApplicationConfig.OUTPUT_NUT_TYPE, NutType.CSS.name())
+                .property(ApplicationConfig.OUTPUT_NUT_TYPE, new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS).name())
                 .build()));
-
     }
 
     /**
@@ -254,19 +268,19 @@ public class CommandLineConverterEngineTest {
     private NutsHeap mockHeap(final File parent) throws Exception {
         final Nut nut1 = mock(Nut.class);
         when(nut1.getInitialName()).thenReturn("foo.less");
-        when(nut1.openStream()).thenReturn(new ByteArrayInputStream("foo".getBytes()));
+        when(nut1.openStream()).thenAnswer(WuicTest.openStreamAnswer("foo"));
 
         // Value must be different for each test
         when(nut1.getVersionNumber()).thenReturn(new FutureLong(0L));
-        when(nut1.getInitialNutType()).thenReturn(NutType.LESS);
+        when(nut1.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.LESS));
 
         IOUtils.copyStream(new ByteArrayInputStream("bar".getBytes()), new FileOutputStream(new File(parent, "bar.less")));
         final Nut nut2 = mock(Nut.class);
         when(nut2.getParentFile()).thenReturn(parent.getAbsolutePath());
         when(nut2.getInitialName()).thenReturn("bar.less");
-        when(nut2.openStream()).thenReturn(new ByteArrayInputStream("bar".getBytes()));
+        when(nut2.openStream()).thenAnswer(WuicTest.openStreamAnswer("bar"));
         when(nut2.getVersionNumber()).thenReturn(new FutureLong(0L));
-        when(nut2.getInitialNutType()).thenReturn(NutType.LESS);
+        when(nut2.getInitialNutType()).thenReturn(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.LESS));
 
         final NutsHeap heap = mock(NutsHeap.class);
         when(heap.getNuts()).thenReturn(Arrays.asList(nut1, nut2));

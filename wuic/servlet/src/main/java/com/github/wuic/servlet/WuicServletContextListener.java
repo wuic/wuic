@@ -183,7 +183,8 @@ public class WuicServletContextListener implements ServletContextListener {
             // Register the mapping for each URL
             for (final String workflow : workflowList) {
                 final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(workflow);
-                final List<ConvertibleNut> result = StaticEngine.getNuts(classpathResourceResolver, workflow);
+                final List<ConvertibleNut> result = StaticEngine.getNuts(
+                        classpathResourceResolver, workflow, builder.contextBuilder().getNutTypeFactory());
 
                 // Recursive call on referenced nuts
                 addFilterMapping(result, filterRegistration, urlProvider);

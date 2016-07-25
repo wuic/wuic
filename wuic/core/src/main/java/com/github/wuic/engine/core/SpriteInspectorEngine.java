@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
 import com.github.wuic.config.BooleanConfigParam;
@@ -58,12 +59,12 @@ import com.github.wuic.nut.ImageNut;
 import com.github.wuic.nut.Source;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProvider;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -203,11 +204,11 @@ public class SpriteInspectorEngine extends NodeEngine {
             }
         } else {
             // Aggregation is not activated
-            InputStream is = null;
+            Input is = null;
 
             try {
                 is = nut.openStream();
-                final ImageInputStream iis = ImageIO.createImageInputStream(is);
+                final ImageInputStream iis = ImageIO.createImageInputStream(is.inputStream());
 
                 ImageReader reader = ImageIO.getImageReaders(iis).next();
                 reader.setInput(iis);
@@ -303,7 +304,7 @@ public class SpriteInspectorEngine extends NodeEngine {
                 final UrlProvider urlProvider = request.getUrlProviderFactory().create(basePath);
                 final Source source = new SourceImpl();
 
-                nut = sp.getSprite(group, urlProvider, suffix, source);
+                nut = sp.getSprite(group, urlProvider, suffix, source, getNutTypeFactory());
                 nut.addReferencedNut(n);
             } catch (IOException ioe) {
                 WuicException.throwWuicException(ioe);
@@ -345,7 +346,7 @@ public class SpriteInspectorEngine extends NodeEngine {
      */
     @Override
     public List<NutType> getNutTypes() {
-        return Arrays.asList(NutType.PNG);
+        return Arrays.asList(getNutTypeFactory().getNutType(EnumNutType.PNG));
     }
 
     /**
@@ -375,7 +376,7 @@ public class SpriteInspectorEngine extends NodeEngine {
     /**
      * <p>
      * This class adds a specified nut as a referenced nut when the
-     * {@link com.github.wuic.util.Pipe.Transformer#transform(java.io.InputStream, java.io.OutputStream, Object)}
+     * {@link com.github.wuic.util.Pipe.Transformer#transform(com.github.wuic.util.Input, com.github.wuic.util.Output, Object)}
      * method is invoked.
      * </p>
      *
@@ -404,7 +405,7 @@ public class SpriteInspectorEngine extends NodeEngine {
          * {@inheritDoc}
          */
         @Override
-        public boolean transform(final InputStream is, final OutputStream os, final ConvertibleNut convertible) throws IOException {
+        public boolean transform(final Input is, final Output os, final ConvertibleNut convertible) throws IOException {
             convertible.addReferencedNut(ref);
             return super.transform(is, os, convertible);
         }

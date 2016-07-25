@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.LineInspector;
 import com.github.wuic.engine.RegexLineInspector;
@@ -112,7 +113,7 @@ public class AngularTemplateInspector extends RegexLineInspector {
     @Override
     public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
                                                              final EngineRequest request,
-                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final CompositeNut.CompositeInput cis,
                                                              final ConvertibleNut originalNut)
             throws WuicException {
         final StringBuilder replacement = new StringBuilder();
@@ -173,14 +174,13 @@ public class AngularTemplateInspector extends RegexLineInspector {
      */
     @Override
     protected String toString(final ConvertibleNut convertibleNut) throws IOException {
-        switch (convertibleNut.getNutType()) {
-            case HTML:
-                return String.format("template:'%s'", NutUtils.readTransform(convertibleNut)
-                        .replace("'", "\\'")
-                        .replace("\r\n", "'+'\\r\\n'+'")
-                        .replace("\n", "'+'\\n'+'"));
-            default:
-                return null;
+        if (convertibleNut.getNutType().isBasedOn(EnumNutType.HTML)) {
+            return String.format("template:'%s'", NutUtils.readTransform(convertibleNut)
+                    .replace("'", "\\'")
+                    .replace("\r\n", "'+'\\r\\n'+'")
+                    .replace("\n", "'+'\\n'+'"));
         }
+
+        return null;
     }
 }

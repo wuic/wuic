@@ -41,11 +41,12 @@ package com.github.wuic.nut;
 import com.github.wuic.NutType;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.InMemoryOutput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -67,7 +68,7 @@ import java.util.List;
  * @author Guillaume DROUET
  * @since 0.2.0
  */
-public class ByteArrayNut extends PipedConvertibleNut implements Serializable, SizableNut {
+public class InMemoryNut extends PipedConvertibleNut implements Serializable, SizableNut {
 
     /**
      * Serial version UID.
@@ -85,6 +86,11 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
     private byte[] byteArray;
 
     /**
+     * The chars.
+     */
+    private char[] charArray;
+
+    /**
      * <p>
      * Builds a new {@code Nut} transformed nut based on a specified byte array. Content will be static and call to
      * {@link #setByteArray(byte[])} will be avoided.
@@ -95,15 +101,37 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
      * @param nt the {@link NutType}
      * @param version the version number
      */
-    public ByteArrayNut(final byte[] bytes,
-                        final String name,
-                        final NutType nt,
-                        final Source source,
-                        final Long version) {
+    public InMemoryNut(final byte[] bytes,
+                       final String name,
+                       final NutType nt,
+                       final Source source,
+                       final Long version) {
         super(name, nt, new FutureLong(version), Boolean.FALSE);
         dynamicContent = false;
         setSource(source);
         setByteArray(bytes, false);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@code Nut} transformed nut based on a specified char array. Content will be static and call to
+     * {@link #setCharArray(char[], boolean)} will be avoided.
+     * </p>
+     *
+     * @param chars the char array
+     * @param name the nut name
+     * @param nt the {@link NutType}
+     * @param version the version number
+     */
+    public InMemoryNut(final char[] chars,
+                       final String name,
+                       final NutType nt,
+                       final Source source,
+                       final Long version) {
+        super(name, nt, new FutureLong(version), Boolean.FALSE);
+        dynamicContent = false;
+        setSource(source);
+        setCharArray(chars, false);
     }
 
     /**
@@ -117,7 +145,7 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
      * @param version the version number
      * @param dynamicContent {@code true} if you will call {@link #setByteArray(byte[])} in the future
      */
-    public ByteArrayNut(final byte[] bytes, final String name, final NutType nt, final Long version, final boolean dynamicContent) {
+    public InMemoryNut(final byte[] bytes, final String name, final NutType nt, final Long version, final boolean dynamicContent) {
         super(name, nt, new FutureLong(version), Boolean.FALSE);
         this.dynamicContent = dynamicContent;
         setByteArray(bytes, false);
@@ -125,9 +153,55 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
 
     /**
      * <p>
+     * Builds a new {@code Nut} original nut based on a given char array.
+     * </p>
+     *                    char
+     * @param chars the char array
+     * @param name the nut name
+     * @param nt the {@link NutType}
+     * @param version the version number
+     * @param dynamicContent {@code true} if you will call {@link #setCharArray(char[], boolean)} in the future
+     */
+    public InMemoryNut(final char[] chars, final String name, final NutType nt, final Long version, final boolean dynamicContent) {
+        super(name, nt, new FutureLong(version), Boolean.FALSE);
+        this.dynamicContent = dynamicContent;
+        setCharArray(chars, false);
+    }
+
+    /**
+     * <p>
+     * Builds a new {@link InMemoryNut}.
+     * </p>
+     *
+     * @param e the execution providing char or byte stream
+     * @param name the nut name
+     * @param nutType the nut type
+     * @param source the source, {@code isDynamic} is ignored if not {@code null}
+     * @param versionNumber the version number
+     * @param isDynamic if nut is dynamic or not, ignored if {@code source} is not {@code null}
+     * @return the new nut
+     */
+    private static InMemoryNut newNut(final Pipe.Execution e,
+                                       final String name,
+                                       final NutType nutType,
+                                       final Source source,
+                                       final Long versionNumber,
+                                       final boolean isDynamic) {
+        if (source == null) {
+            return e.isText() ? new InMemoryNut(e.getCharResult(), name, nutType, versionNumber, isDynamic)
+                    : new InMemoryNut(e.getByteResult(), name, nutType, versionNumber, isDynamic);
+        } else {
+            return e.isText() ? new InMemoryNut(e.getCharResult(), name, nutType, source, versionNumber)
+                    : new InMemoryNut(e.getByteResult(), name, nutType, source, versionNumber);
+        }
+    }
+
+    /**
+     * <p>
      * Converts the given nuts list and its referenced nuts into nuts wrapping an in memory byte array.
      * </p>
      *
+     * @param nuts the nuts to convert
      * @return the byte array nut
      * @throws IOException if any I/O error occurs
      */
@@ -154,37 +228,37 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
         InputStream is = null;
 
         try {
-            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            final InMemoryOutput os = new InMemoryOutput(nut.getNutType().getCharset());
             nut.transform(new Pipe.DefaultOnReady(os));
 
-            final ByteArrayNut bytes;
+            final Pipe.Execution e = os.execution();
+            final InMemoryNut bytes;
             final String name = nut.getName();
 
             // This is an original nut
             if (nut.getSource().getOriginalNuts().isEmpty()) {
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), NutUtils.getVersionNumber(nut), nut.isDynamic());
+                bytes = newNut(e, name, nut.getNutType(), null, NutUtils.getVersionNumber(nut), nut.isDynamic());
             } else {
                 final Source s = nut.getSource();
 
                 // Make sure to produce a serializable ource instance
-                final Source src = s instanceof SourceMapNut ? new StaticSourceMapNut(SourceMapNut.class.cast(s)) : new SourceImpl();
+                final Source src = s instanceof SourceMapNut ?
+                        new StaticSourceMapNut(SourceMapNut.class.cast(s), nut.getNutType().getCharset()) : new SourceImpl();
 
                 // Converts the sources to their byte array version
                 for (final ConvertibleNut sourceNut : s.getOriginalNuts()) {
                     // Do nothing if source is already a byte array
-                    if (!(sourceNut instanceof ByteArrayNut)) {
-                        // Convert the source to byte array
-                        final ByteArrayOutputStream sourceOs = new ByteArrayOutputStream();
-                        IOUtils.copyStream(sourceNut.openStream(), sourceOs);
+                    if (!(sourceNut instanceof InMemoryNut)) {
+                        // Convert the source to byte/char array
                         final Long v = NutUtils.getVersionNumber(sourceNut);
-                        src.addOriginalNut(new ByteArrayNut(sourceOs.toByteArray(), sourceNut.getInitialName(), sourceNut.getNutType(), v, false));
+                        src.addOriginalNut(newNut(sourceNut.openStream().execution(), sourceNut.getName(), sourceNut.getNutType(), null, v, false));
                     } else {
                         src.addOriginalNut(sourceNut);
                     }
                 }
 
                 final Long version = NutUtils.getVersionNumber(src.getOriginalNuts());
-                bytes = new ByteArrayNut(os.toByteArray(), name, nut.getNutType(), src, version);
+                bytes = newNut(e, name, nut.getNutType(), src, version, false);
             }
 
             bytes.setIsCompressed(nut.isCompressed());
@@ -223,13 +297,42 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
 
     /**
      * <p>
-     * Gets a copy of the content.
+     * Sets the content.
      * </p>
      *
-     * @return the byte array content
+     * @param chars the new content
      */
-    public byte[] toByteArray() {
-        return Arrays.copyOf(byteArray, byteArray.length);
+    public void setCharArray(final char[] chars) {
+        setCharArray(chars, true);
+    }
+
+    /**
+     * <p>
+     * Gets an execution based on the content.
+     * </p>
+     *
+     * @param charset the charset to use
+     * @return the execution
+     */
+    public Pipe.Execution execution(final String charset) {
+        return byteArray == null ? new Pipe.Execution(charArray, charset) : new Pipe.Execution(byteArray, charset);
+    }
+
+    /**
+     * <p>
+     * Sets the content.
+     * </p>
+     *
+     * @param checkDynamic {@code true} if we make sure this nut is dynamic to allow this method call
+     * @param chars the new content
+     */
+    private void setCharArray(final char[] chars, final boolean checkDynamic) {
+        if (checkDynamic && !isDynamic()) {
+            throw new IllegalStateException("isDynamic() returns false, which means that setByteArray(byte[]) can't be called.");
+        }
+
+        byteArray = null;
+        charArray = Arrays.copyOf(chars, chars.length);
     }
 
     /**
@@ -245,6 +348,7 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
             throw new IllegalStateException("isDynamic() returns false, which means that setByteArray(byte[]) can't be called.");
         }
 
+        charArray = null;
         byteArray = Arrays.copyOf(bytes, bytes.length);
     }
 
@@ -252,8 +356,9 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() {
-        return new ByteArrayInputStream(byteArray);
+    public Input openStream() {
+        return byteArray == null ?
+                new InMemoryInput(charArray, getNutType().getCharset()) : new InMemoryInput(byteArray, getNutType().getCharset());
     }
 
     /**
@@ -269,6 +374,6 @@ public class ByteArrayNut extends PipedConvertibleNut implements Serializable, S
      */
     @Override
     public int size() {
-        return byteArray.length;
+        return byteArray == null ? charArray.length : byteArray.length;
     }
 }

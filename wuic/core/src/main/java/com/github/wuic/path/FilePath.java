@@ -38,8 +38,9 @@
 
 package com.github.wuic.path;
 
+import com.github.wuic.util.Input;
+
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <p>
@@ -59,5 +60,5 @@ public interface FilePath extends Path {
      * @return the stream
      * @throws IOException if stream can't be opened
      */
-    InputStream openStream() throws IOException;
+    Input openStream() throws IOException;
 }

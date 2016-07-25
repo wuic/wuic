@@ -35,15 +35,16 @@
  * licenses."
  */
 
+
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.path.FilePath;
 import com.github.wuic.path.FsItem;
+import com.github.wuic.util.Input;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Future;
 
 /**
@@ -81,7 +82,7 @@ public class FilePathNut extends AbstractNut {
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public Input openStream() throws IOException {
         return path.openStream();
     }
 

@@ -44,9 +44,9 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.nut.dao.NutDaoWrapper;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -178,7 +178,7 @@ public class ProxyNutDao extends NutDaoWrapper implements NutDao {
      * {@inheritDoc}
      */
     @Override
-    public InputStream newInputStream(final String path, final ProcessContext processContext) throws IOException {
+    public Input newInputStream(final String path, final ProcessContext processContext) throws IOException {
         final Nut nut = proxyNut.get(path);
 
         // Path not mapped, call delegate

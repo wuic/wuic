@@ -54,6 +54,7 @@ import com.github.wuic.util.MapPropertyResolver;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -77,6 +78,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @RunWith(JUnit4.class)
 public class WuicFacadeBuilderTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Timeout.
@@ -177,7 +184,7 @@ public class WuicFacadeBuilderTest {
             public String resolveProperty(final String first) {
                 return ApplicationConfig.WUIC_DEFAULT_NUT_DAO_CLASS.equals(first) ? HttpNutDao.class.getName() : null;
             }
-        }).wuicConfigurationPath(getClass().getResource("/wuic-conventions.json")).build().runWorkflow("wf-heap", ProcessContext.DEFAULT);
+        }).wuicConfigurationPath(getClass().getResource("/wuic-conventions.json")).build().runWorkflow("wf-heap", processContext.getProcessContext());
     }
 
     /**
@@ -263,7 +270,7 @@ public class WuicFacadeBuilderTest {
         WuicFacade wuicFacade = new WuicFacadeBuilder()
                 .contextBuilder()
                 .tag("internal")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextEngineBuilder(TextAggregatorEngine.class)
                 .property(ApplicationConfig.AGGREGATE, false)
                 .toContext()
@@ -275,8 +282,8 @@ public class WuicFacadeBuilderTest {
                 .toFacade()
                 .build();
 
-        Assert.assertEquals(1, wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).size());
-        Assert.assertNotEquals(wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).get(0).getName(), "aggregate.js");
+        Assert.assertEquals(1, wuicFacade.runWorkflow("heap", processContext.getProcessContext()).size());
+        Assert.assertNotEquals(wuicFacade.runWorkflow("heap", processContext.getProcessContext()).get(0).getName(), "aggregate.js");
 
         wuicFacade = new WuicFacadeBuilder()
                 .objectBuilderInspector(new ObjectBuilderInspector() {
@@ -287,7 +294,7 @@ public class WuicFacadeBuilderTest {
                 })
                 .contextBuilder()
                 .tag("internal")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextEngineBuilder(TextAggregatorEngine.class)
                 .property(ApplicationConfig.AGGREGATE, false)
                 .toContext()
@@ -299,8 +306,8 @@ public class WuicFacadeBuilderTest {
                 .toFacade()
                 .build();
 
-        Assert.assertEquals(1, wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).size());
-        Assert.assertNotEquals(wuicFacade.runWorkflow("heap", ProcessContext.DEFAULT).get(0).getName(), "aggregate.js");
+        Assert.assertEquals(1, wuicFacade.runWorkflow("heap", processContext.getProcessContext()).size());
+        Assert.assertNotEquals(wuicFacade.runWorkflow("heap", processContext.getProcessContext()).get(0).getName(), "aggregate.js");
     }
 
     /**

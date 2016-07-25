@@ -67,6 +67,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,11 +155,6 @@ public class WuicTask {
     private String properties;
 
     /**
-     * Charset to use when writing to the disk.
-     */
-    private String charset;
-
-    /**
      * The profiles to enable.
      */
     private String profiles;
@@ -196,7 +192,6 @@ public class WuicTask {
     public WuicTask() {
         this.relocateTransformedXmlTo = null;
         this.contextPath = "/";
-        this.charset = "UTF-8";
         this.useRegex = false;
         this.taskName = "wuic-task";
         this.packageAsJar = true;
@@ -421,7 +416,7 @@ public class WuicTask {
                     final List<ConvertibleNut> nuts = facade.runWorkflow(wId, ProcessContext.DEFAULT);
 
                     for (final ConvertibleNut nut : nuts) {
-                        write(nut, wId, pw, jarOutputStream, 0);
+                        write(nut, wId, pw, jarOutputStream, 0, facade.getNutTypeFactory().getCharset());
                     }
                 } finally {
                     // Don't close the writer if it's pointing to a JarEntry
@@ -480,6 +475,7 @@ public class WuicTask {
      * @param nut    the nut to be written
      * @param wId    the workflow ID
      * @param depth  the depth computed from referenced nuts chain
+     * @param charset the charset
      * @param jarOutputStream if not {@code null}, the nut will be written as a jar entry
      * @throws WuicException if WUIC fails
      * @throws IOException   if output directory can't be reached or if transformation fails
@@ -488,7 +484,8 @@ public class WuicTask {
                       final String wId,
                       final PrintWriter workflowWriter,
                       final JarOutputStream jarOutputStream,
-                      final int depth)
+                      final int depth,
+                      final String charset)
             throws WuicException, IOException {
         final String path = nut.getProxyUri() == null ? IOUtils.mergePath(String.valueOf(NutUtils.getVersionNumber(nut)), nut.getName()) : nut.getProxyUri();
 
@@ -536,22 +533,29 @@ public class WuicTask {
 
             jarOutputStream.putNextEntry(new JarEntry(IOUtils.mergePath("META-INF", "resources", name)));
         }
-
-        if (!nut.getNutType().isText()) {
-            nut.transform(new Pipe.DefaultOnReady(os));
-        } else {
-            nut.transform(new Pipe.DefaultOnReady(os, charset));
-        }
+        
+        nut.transform(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                if (e.isText()) {
+                    e.writeResultTo(new PrintWriter(new OutputStreamWriter(os, charset)));
+                } else {
+                   e.writeResultTo(os);
+                }
+            }
+        });
 
         // Close the entry if needed
         if (jarOutputStream != null) {
             jarOutputStream.closeEntry();
+        } else  {
+            IOUtils.close(os);
         }
 
         // Recursive call on referenced nuts
         if (nut.getReferencedNuts() != null) {
             for (final ConvertibleNut ref : nut.getReferencedNuts()) {
-                write(ref, wId, workflowWriter, jarOutputStream, depth + 1);
+                write(ref, wId, workflowWriter, jarOutputStream, depth + 1, charset);
             }
         }
     }
@@ -609,13 +613,6 @@ public class WuicTask {
      */
     public void setContextPath(final String contextPath) {
         this.contextPath = contextPath;
-    }
-
-    /**
-     * Charset to use when writing to the disk.
-     */
-    public void setCharset(final String charset) {
-        this.charset = charset;
     }
 
     /**

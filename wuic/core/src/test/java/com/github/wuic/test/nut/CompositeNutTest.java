@@ -38,29 +38,36 @@
 
 package com.github.wuic.test.nut;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.CompositeNut;
+import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.InMemoryOutput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
@@ -82,17 +89,23 @@ public class CompositeNutTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
+     * Expected exception.
+     */
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    /**
      * Nominal test.
      *
      * @throws IOException if test fails
      */
     @Test
     public void compositeTest() throws IOException {
-        final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
-        final ConvertibleNut n2 = newNut("n2", NutType.CSS, "some css rules");
-        final Nut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
+        final ConvertibleNut n1 = newNut("n1", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), "some css rules");
+        final ConvertibleNut n2 = newNut("n2", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), "some css rules");
+        final Nut composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
-        IOUtils.copyStream(composite.openStream(), new ByteArrayOutputStream());
+        IOUtils.copyStream(composite.openStream().inputStream(), new ByteArrayOutputStream());
     }
 
     /**
@@ -112,45 +125,68 @@ public class CompositeNutTest {
             content += character;
         }
 
-        final int bytesLen = content.getBytes().length;
+        ConvertibleNut n1 = newNut("n1", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), content);
+        ConvertibleNut n2 = newNut("n2", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), content);
 
-        ConvertibleNut n1 = newNut("n1", NutType.CSS, content);
-        ConvertibleNut n2 = newNut("n2", NutType.CSS, content);
-
-        Nut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
+        Nut composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
-        CompositeNut.CompositeInputStream is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
-        IOUtils.copyStream(is, new ByteArrayOutputStream());
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        CompositeNut.CompositeInput is = CompositeNut.CompositeInput.class.cast(composite.openStream());
+        IOUtils.copyStream(is.inputStream(), bos);
+        String message = String.format("Info: %s\nContent: %s\n", is.toString(), new String(bos.toByteArray()));
 
         for (int i = 0; i < content.length(); i++) {
-            Assert.assertEquals(is.toString(), n1, is.nutAt(i));
+            Assert.assertEquals(message + "Index: " + i + "\n", n1, is.nutAt(i));
         }
 
         for (int i = content.length(); i < content.length() * 2; i++) {
-            Assert.assertEquals(is.toString(), n2, is.nutAt(i));
+            Assert.assertEquals(message + "Index: " + i + "\n", n2, is.nutAt(i));
         }
 
         Assert.assertNull(is.toString(), is.nutAt(content.length() * 2));
 
-        n1 = newNut("n1", NutType.PNG, content);
-        n2 = newNut("n2", NutType.PNG, content);
+        CharArrayWriter caw = new CharArrayWriter();
+        is = CompositeNut.CompositeInput.class.cast(composite.openStream());
+        IOUtils.copyStream(is.reader(), caw);
+        message = String.format("Info: %s\nContent: %s\n", is.toString(), caw.toString());
 
-        composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
+        for (int i = 0; i < content.length(); i++) {
+            Assert.assertEquals(message + "Index: " + i + "\n", n1, is.nutAt(i));
+        }
+
+        for (int i = content.length(); i < content.length() * 2; i++) {
+            Assert.assertEquals(message + "Index: " + i + "\n", n2, is.nutAt(i));
+        }
+
+        Assert.assertNull(is.toString(), is.nutAt(content.length() * 2));
+
+        InMemoryOutput inMemoryOutput = new InMemoryOutput(Charset.defaultCharset().displayName());
+        is = CompositeNut.CompositeInput.class.cast(composite.openStream());
+        IOUtils.copyStream(is, inMemoryOutput);
+        message = String.format("Info: %s\nContent: %s\n", is.toString(), inMemoryOutput.execution().toString());
+
+        for (int i = 0; i < content.length(); i++) {
+            Assert.assertEquals(message + "Index: " + i + "\n", n1, is.nutAt(i));
+        }
+
+        for (int i = content.length(); i < content.length() * 2; i++) {
+            Assert.assertEquals(message + "Index: " + i + "\n", n2, is.nutAt(i));
+        }
+
+        Assert.assertNull(is.toString(), is.nutAt(content.length() * 2));
+
+        n1 = newNut("n1", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.PNG), content);
+        n2 = newNut("n2", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.PNG), content);
+
+        composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
-        is = CompositeNut.CompositeInputStream.class.cast(composite.openStream());
-        IOUtils.copyStream(is, new ByteArrayOutputStream());
+        is = CompositeNut.CompositeInput.class.cast(composite.openStream());
 
-        for (int i = 0; i < bytesLen; i++) {
-            Assert.assertEquals(is.toString(), n1, is.nutAt(i));
-        }
-
-        for (int i = bytesLen; i < bytesLen * 2; i++) {
-            Assert.assertEquals(is.toString(), n2, is.nutAt(i));
-        }
-
-        Assert.assertNull(is.toString(), is.nutAt(bytesLen * 2));
+        IOUtils.copyStream(is, new InMemoryOutput(Charset.defaultCharset().displayName()));
+        expectedException.expect(UnsupportedOperationException.class);
+        is.nutAt(0);
     }
 
     /**
@@ -164,27 +200,24 @@ public class CompositeNutTest {
     public void aggregationTransformTest() throws IOException {
         final Pipe.Transformer<ConvertibleNut> t1 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
-            public boolean transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
-                IOUtils.copyStream(is, os);
-                os.write(" t1".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut convertible) throws IOException {
+                Writer.class.cast(IOUtils.copyStream(is, os)).write(" t1");
                 return true;
             }
         };
 
         final Pipe.Transformer<ConvertibleNut> t2 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
-            public boolean transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
-                IOUtils.copyStream(is, os);
-                os.write(" t2".getBytes());
+            public boolean transform(final Input is, final Output os, final ConvertibleNut convertible) throws IOException {
+                Writer.class.cast(IOUtils.copyStream(is, os)).write(" t2");
                 return true;
             }
         };
 
         final Pipe.Transformer<ConvertibleNut> t3 = new Pipe.DefaultTransformer<ConvertibleNut>() {
             @Override
-            public boolean transform(InputStream is, OutputStream os, ConvertibleNut convertible) throws IOException {
-                IOUtils.copyStream(is, os);
-                os.write(" this is the end".getBytes());
+            public boolean transform(Input is, Output os, ConvertibleNut convertible) throws IOException {
+                Writer.class.cast(IOUtils.copyStream(is, os)).write(" this is the end");
                 return true;
             }
 
@@ -194,13 +227,13 @@ public class CompositeNutTest {
             }
         };
 
-        final ConvertibleNut n1 = newNut("n1", NutType.CSS, "some css rules");
+        final ConvertibleNut n1 = newNut("n1", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), "some css rules");
         Mockito.when(n1.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t1, t3)));
 
-        final ConvertibleNut n2 = newNut("n2", NutType.CSS, "other css rules");
+        final ConvertibleNut n2 = newNut("n2", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), "other css rules");
         Mockito.when(n2.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
 
-        final ConvertibleNut composite = new CompositeNut("UTF-8", true, "composite", null, Mockito.mock(ProcessContext.class),
+        final ConvertibleNut composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, Mockito.mock(ProcessContext.class),
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         Assert.assertEquals("some css rules t1other css rules t2 this is the end", NutUtils.readTransform(composite));
@@ -218,7 +251,7 @@ public class CompositeNutTest {
      */
     private ConvertibleNut newNut(final String name, final NutType nutType, final String content) throws IOException {
         final ConvertibleNut n = Mockito.mock(ConvertibleNut.class);
-        Mockito.when(n.openStream()).thenReturn(new ByteArrayInputStream(content.getBytes()));
+        Mockito.when(n.openStream()).thenAnswer(WuicTest.openStreamAnswer(content));
         Mockito.when(n.getInitialNutType()).thenReturn(nutType);
         Mockito.when(n.getNutType()).thenReturn(nutType);
         Mockito.when(n.getName()).thenReturn(name + nutType.getExtensions()[0]);

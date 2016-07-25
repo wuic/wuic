@@ -38,7 +38,10 @@
 
 package com.github.wuic.context;
 
+import com.github.wuic.ApplicationConfig;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.Profile;
 import com.github.wuic.Workflow;
@@ -66,6 +69,7 @@ import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.EnhancedPropertyResolver;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
 import com.github.wuic.util.StringUtils;
@@ -240,8 +244,8 @@ public class ContextBuilder extends Observable {
         this.nutFilterBuilderFactory = nutFilterBuilderFactory == null ?
                 new ObjectBuilderFactory<NutFilter>(NutFilterService.class, NutFilterService.DEFAULT_SCAN_PACKAGE) : nutFilterBuilderFactory;
 
-        final ObjectBuilderInspector inspector = new NutFilterHolderInspector();
-        inspector(inspector);
+        inspector(new NutFilterHolderInspector());
+        inspector(new NutTypeFactoryHolderInspector());
 
         for (final ObjectBuilderInspector i : inspectors) {
             inspector(i);
@@ -342,7 +346,27 @@ public class ContextBuilder extends Observable {
         @Override
         public <T> T inspect(final T object) {
             NutFilterHolder.class.cast(object).setNutFilter(getFilters());
+            return object;
+        }
+    }
 
+    /**
+     * <p>
+     * Sets the {@link com.github.wuic.NutTypeFactory} configured in the given instance if it's a {@link NutTypeFactoryHolder}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    @ObjectBuilderInspector.InspectedType(NutTypeFactoryHolder.class)
+    final class NutTypeFactoryHolderInspector implements ObjectBuilderInspector {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public <T> T inspect(final T object) {
+            NutTypeFactoryHolder.class.cast(object).setNutTypeFactory(getNutTypeFactory());
             return object;
         }
     }
@@ -682,9 +706,9 @@ public class ContextBuilder extends Observable {
                     }
                 }
 
-                heap = new NutsHeap(factory, pathList, disposable, dao, id, composition.toArray(new NutsHeap[composition.size()]));
+                heap = new NutsHeap(factory, pathList, disposable, dao, id, getNutTypeFactory(), composition.toArray(new NutsHeap[composition.size()]));
             } else {
-                heap = new NutsHeap(factory, pathList, disposable, dao, id);
+                heap = new NutsHeap(factory, pathList, disposable, dao, id, getNutTypeFactory());
             }
 
             heap.checkFiles(contextSetting.getProcessContext());
@@ -864,7 +888,6 @@ public class ContextBuilder extends Observable {
          * </p>
          *
          * @param identifier the workflow ID
-         * @param daoCollection a collection of DAO for template creation
          * @param heapCollection a collection of heap for workflow creation
          * @param contextSetting the setting this registration belongs to
          * @param profiles the profiles to accept
@@ -874,7 +897,6 @@ public class ContextBuilder extends Observable {
          * @throws IOException if heap creation fails
          */
         Map<String, Workflow> getWorkflowMap(final String identifier,
-                                             final Map<String, NutDao> daoCollection,
                                              final Map<String, NutsHeap> heapCollection,
                                              final ContextSetting contextSetting,
                                              final Collection<String> profiles)
@@ -916,7 +938,7 @@ public class ContextBuilder extends Observable {
                     array[cpt++] = heapCollection.get(heap.getKey());
                 }
 
-                final NutsHeap heap = new NutsHeap(factory, null, null, heapIdPattern, array);
+                final NutsHeap heap = new NutsHeap(factory, null, null, heapIdPattern, getNutTypeFactory(), array);
                 heap.checkFiles(contextSetting.getProcessContext());
                 retval.put(id, new Workflow(template.getHead(), chains, heap));
             }
@@ -2391,6 +2413,18 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Gets a new {@code NutTypeFactory} using the charset configured with {@link ApplicationConfig#CHARSET} property.
+     * </p>
+     *
+     * @return the new instance
+     */
+    public NutTypeFactory getNutTypeFactory() {
+        final String cs = propertyResolver.resolveProperty(ApplicationConfig.CHARSET);
+        return new NutTypeFactory(IOUtils.checkCharset(cs == null ? "" : cs));
+    }
+
+    /**
+     * <p>
      * Merges all the {@link ContextSetting settings} of the given {@link ContextBuilder} to the current setting of
      * this object.
      * </p>
@@ -2433,7 +2467,7 @@ public class ContextBuilder extends Observable {
             final Map<String, NutDao> daoMap = taggedSettings.getNutDaoMap(profiles);
             final Map<String, NutsHeap> heapMap = taggedSettings.getNutsHeapMap(daoMap, filterMap, profiles);
             final Map<String, Workflow> workflowMap =
-                    taggedSettings.getWorkflowMap(configureDefault, daoMap, heapMap, engineBuilderFactory.knownTypes(), profiles);
+                    taggedSettings.getWorkflowMap(configureDefault, heapMap, engineBuilderFactory.knownTypes(), profiles);
 
             return new Context(this, workflowMap, taggedSettings.getInspectors());
         } catch (IOException ioe) {

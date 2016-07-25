@@ -45,14 +45,14 @@ import com.github.wuic.nut.Nut;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.github.wuic.nut.Source;
-import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.util.NutUtils;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -71,6 +71,12 @@ import org.mockito.Mockito;
  */
 @RunWith(JUnit4.class)
 public class NutUtilTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Timeout.
@@ -102,17 +108,17 @@ public class NutUtilTest {
         proxy.addRule("nut", proxyNut);
         proxy.addRule("dao", proxyDao);
 
-        Assert.assertNotNull(proxy.create("delegate", null, ProcessContext.DEFAULT));
-        Assert.assertEquals(1, proxy.create("delegate", null, ProcessContext.DEFAULT).size());
-        Assert.assertEquals("delegate", proxy.create("delegate", null, ProcessContext.DEFAULT).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("delegate", null, processContext.getProcessContext()));
+        Assert.assertEquals(1, proxy.create("delegate", null, processContext.getProcessContext()).size());
+        Assert.assertEquals("delegate", proxy.create("delegate", null, processContext.getProcessContext()).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("dao", null, ProcessContext.DEFAULT));
-        Assert.assertEquals(1, proxy.create("dao", null, ProcessContext.DEFAULT).size());
-        Assert.assertEquals("dao", proxy.create("dao", null, ProcessContext.DEFAULT).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("dao", null, processContext.getProcessContext()));
+        Assert.assertEquals(1, proxy.create("dao", null, processContext.getProcessContext()).size());
+        Assert.assertEquals("dao", proxy.create("dao", null, processContext.getProcessContext()).get(0).getInitialName());
 
-        Assert.assertNotNull(proxy.create("nut", null, ProcessContext.DEFAULT));
-        Assert.assertEquals(1, proxy.create("nut", null, ProcessContext.DEFAULT).size());
-        Assert.assertEquals("nut", proxy.create("nut", null, ProcessContext.DEFAULT).get(0).getInitialName());
+        Assert.assertNotNull(proxy.create("nut", null, processContext.getProcessContext()));
+        Assert.assertEquals(1, proxy.create("nut", null, processContext.getProcessContext()).size());
+        Assert.assertEquals("nut", proxy.create("nut", null, processContext.getProcessContext()).get(0).getInitialName());
     }
 
     /**

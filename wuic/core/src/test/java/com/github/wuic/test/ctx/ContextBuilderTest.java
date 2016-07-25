@@ -39,6 +39,7 @@
 package com.github.wuic.test.ctx;
 
 import com.github.wuic.ApplicationConfig;
+import com.github.wuic.EnumNutType;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.Profile;
 import com.github.wuic.config.Config;
@@ -76,10 +77,13 @@ import com.github.wuic.nut.dao.core.ClasspathNutDao;
 import com.github.wuic.nut.filter.NutFilter;
 import com.github.wuic.nut.filter.NutFilterService;
 import com.github.wuic.nut.filter.core.RegexRemoveNutFilter;
+import com.github.wuic.test.ProcessContextRule;
 import com.github.wuic.util.FutureLong;
+import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -88,8 +92,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -132,6 +136,12 @@ public class ContextBuilderTest {
     private static ObjectBuilderFactory<NutFilter> nutFilterBuilderFactory;
 
     /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
+
+    /**
      * Timeout.
      */
     @Rule
@@ -164,7 +174,7 @@ public class ContextBuilderTest {
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
                 .toContext()
                 .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
@@ -176,7 +186,7 @@ public class ContextBuilderTest {
                 .build();
 
         // Should be aggregated now
-        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() == 1);
+        Assert.assertEquals(1, context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), processContext.getProcessContext()).size());
     }
 
     /**
@@ -277,7 +287,7 @@ public class ContextBuilderTest {
              */
             @Override
             public List<NutType> getNutTypes() {
-                return Arrays.asList(NutType.JAVASCRIPT);
+                return Arrays.asList(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
             }
 
             /**
@@ -324,7 +334,7 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.getWorkflow("workflow-heap").getChains().get(NutType.JAVASCRIPT) instanceof E);
+        Assert.assertTrue(context.getWorkflow("workflow-heap").getChains().get(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName())) instanceof E);
     }
 
     /**
@@ -543,7 +553,7 @@ public class ContextBuilderTest {
         final Context context = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
                 .tag("test")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextNutDaoBuilder("dao", "MockDaoBuilder")
                 .toContext()
                 .heap("heap-one", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
@@ -556,9 +566,12 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
-        Assert.assertEquals(1, context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
-        Assert.assertEquals(2, context.getWorkflow("composite").getHeap().getComposition().length);
+        List<ConvertibleNut> nuts = context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
+        Assert.assertEquals(Arrays.toString(nuts.toArray()), 1, nuts.size());
+        nuts = context.process("", "workflow-heap-two", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
+        Assert.assertEquals(Arrays.toString(nuts.toArray()), 1, nuts.size());
+        NutsHeap[] h = context.getWorkflow("composite").getHeap().getComposition();
+        Assert.assertEquals(Arrays.toString(h), 2, h.length);
     }
 
     /**
@@ -603,12 +616,12 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
-        Assert.assertEquals(1, context.process("", "heap-two", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size());
+        Assert.assertEquals(1, context.process("", "workflow-heap-one", UrlUtils.urlProviderFactory(), processContext.getProcessContext()).size());
+        Assert.assertEquals(1, context.process("", "heap-two", UrlUtils.urlProviderFactory(), processContext.getProcessContext()).size());
     }
 
     /**
-     * Tests with an empry chain.
+     * Tests with an empty chain.
      *
      * @throws Exception if test fails
      */
@@ -625,7 +638,7 @@ public class ContextBuilderTest {
                 .releaseTag()
                 .build();
 
-        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT).size() > 1);
+        Assert.assertTrue(context.process("", "workflow-heap", UrlUtils.urlProviderFactory(), processContext.getProcessContext()).size() > 1);
     }
 
     /**
@@ -661,10 +674,10 @@ public class ContextBuilderTest {
                 .template("tpl", new String[]{"engine"})
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag();
-        builder.build().process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        builder.build().process("", "workflow-heap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
 
         try {
-            builder.clearTag("tag").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+            builder.clearTag("tag").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
@@ -675,10 +688,10 @@ public class ContextBuilderTest {
                 .workflow("workflow-", true, "heap", "tpl")
                 .releaseTag()
                 .build()
-                .process("", "workflow-heap", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+                .process("", "workflow-heap", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
 
         try {
-            builder.clearTag("test").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+            builder.clearTag("test").build().process("workflow-heap", "", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
             Assert.fail();
         } catch (WorkflowNotFoundException wnfe) {
             // Exception normally raised
@@ -714,13 +727,13 @@ public class ContextBuilderTest {
                 public void run() {
                     try {
                         builder.tag("test")
-                            .contextNutDaoBuilder("dao", "MockDaoBuilder")
+                            .contextNutDaoBuilder("dao1", "MockDaoBuilder")
                             .toContext()
-                            .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
-                            .contextEngineBuilder("engine", "MockEngineBuilder")
+                            .heap("heap1", "dao1", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
+                            .contextEngineBuilder("engine1", "MockEngineBuilder")
                             .toContext()
-                            .template("tpl", new String[]{"engine"})
-                            .workflow("workflow", true, "heap", "tpl")
+                            .template("tpl1", new String[]{"engine1"})
+                            .workflow("workflow1", true, "heap1", "tpl1")
                             .releaseTag()
                             .build();
                     } catch (Exception e) {
@@ -736,16 +749,18 @@ public class ContextBuilderTest {
                 public void run() {
                     try {
                         builder.tag("foo")
-                                .contextNutDaoBuilder("dao", "MockDaoBuilder")
+                                .contextNutDaoBuilder("dao2", "MockDaoBuilder")
                                 .toContext()
-                                .heap("heap", "dao", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
-                                .contextEngineBuilder("engine", "MockEngineBuilder")
+                                .heap("heap2", "dao2", new String[] {NUT_NAME_ONE, NUT_NAME_TWO, })
+                                .contextEngineBuilder("engine2", "MockEngineBuilder")
                                 .toContext()
-                                .template("tpl", new String[]{"engine"})
-                                .workflow("workflow", true, "heap", "tpl")
+                                .template("tpl2", new String[]{"engine2"})
+                                .workflow("workflow2", true, "heap2", "tpl2")
                                 .releaseTag()
                                 .build();
                     } catch (Exception e) {
+                        System.out.println(Thread.currentThread().toString());
+                        e.printStackTrace(System.out);
                         Assert.fail();
                     }
                 }
@@ -798,9 +813,9 @@ public class ContextBuilderTest {
     public void proxyTest() throws Exception {
         final Nut nut = Mockito.mock(Nut.class);
         Mockito.when(nut.getInitialName()).thenReturn("nut.js");
-        Mockito.when(nut.getInitialNutType()).thenReturn(NutType.JAVASCRIPT);
+        Mockito.when(nut.getInitialNutType()).thenReturn(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         Mockito.when(nut.getVersionNumber()).thenReturn(new FutureLong(1L));
-        Mockito.when(nut.openStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        Mockito.when(nut.openStream()).thenReturn(new InMemoryInput(new byte[0], Charset.defaultCharset().displayName()));
 
         final Context proxy = new ContextBuilder(engineBuilderFactory, nutDaoBuilderFactory, nutFilterBuilderFactory)
                 .configureDefault()
@@ -847,7 +862,7 @@ public class ContextBuilderTest {
 
         new ContextBuilder(engine, dao, filter)
                 .tag("test")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextNutDaoBuilder(null, ClasspathNutDao.class)
                 .toContext()
                 .heap("heap", null, new String[] { "images/template-img.png" })
@@ -875,12 +890,12 @@ public class ContextBuilderTest {
 
         final ContextBuilder b = new ContextBuilder(engine, dao, filter)
                 .tag("test")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .contextNutDaoBuilder("dao", ClasspathNutDao.class)
                 .toContext()
                 .releaseTag()
                 .tag("test2")
-                .processContext(ProcessContext.DEFAULT)
+                .processContext(processContext.getProcessContext())
                 .heap("heap", "dao", new String[]{"images/template-img.png"}, new HeapListener() {
                     @Override
                     public void nutUpdated(NutsHeap heap) {

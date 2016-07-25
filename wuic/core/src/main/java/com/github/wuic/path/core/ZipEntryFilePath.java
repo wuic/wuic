@@ -40,6 +40,8 @@ package com.github.wuic.path.core;
 
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FilePath;
+import com.github.wuic.util.DefaultInput;
+import com.github.wuic.util.Input;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,18 +63,19 @@ public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
      * Builds a new instance.
      * </p>
      *
+     * @param charset the charset
      * @param entry the ZIP entry name
      * @param parent the parent
      */
-    public ZipEntryFilePath(final String entry, final DirectoryPath parent) {
-        super(entry, parent);
+    public ZipEntryFilePath(final String entry, final DirectoryPath parent, final String charset) {
+        super(entry, parent, charset);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public Input openStream() throws IOException {
         final ArchiveWithParentEntry wrapper = findZipArchive("");
         final File file = wrapper.getArchive().getRawFile();
 
@@ -87,7 +90,7 @@ public class ZipEntryFilePath extends ZipEntryPath implements FilePath {
 
         final InputStream is = zipFile.getInputStream(zipFile.getEntry(wrapper.getEntryPath()));
 
-        return new ZipFileInputStream(file, zipFile, is);
+        return new DefaultInput(new ZipFileInputStream(file, zipFile, is), getCharset());
     }
 
     /**

@@ -39,9 +39,9 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.util.Input;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Future;
 
 /**
@@ -61,13 +61,13 @@ public interface Nut {
 
     /**
      * <p>
-     * Opens and returns an {@code InputStream} pointing to the nut.
+     * Opens and returns an {@link com.github.wuic.util.Input} pointing to the nut.
      * </p>
      *
      * @return the opened input stream
      * @throws IOException if an I/O error occurs
      */
-    InputStream openStream() throws IOException;
+    Input openStream() throws IOException;
 
     /**
      * <p>

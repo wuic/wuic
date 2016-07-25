@@ -68,11 +68,12 @@ public abstract class AbstractDirectoryPath extends SimplePath implements Direct
      * Builds a new instance.
      * </p>
      *
+     * @param charset charset
      * @param name the name
      * @param parent the parent
      */
-    public AbstractDirectoryPath(final String name, final DirectoryPath parent) {
-        super(name, parent);
+    public AbstractDirectoryPath(final String name, final DirectoryPath parent, final String charset) {
+        super(name, parent, charset);
     }
 
     /**

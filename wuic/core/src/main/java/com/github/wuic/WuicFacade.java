@@ -153,6 +153,11 @@ public final class WuicFacade implements ObjectBuilderInspector {
     private final ContextBuilder builder;
 
     /**
+     * The nut type factory.
+     */
+    private NutTypeFactory nutTypeFactory;
+
+    /**
      * Context.
      */
     private Context context;
@@ -416,6 +421,17 @@ public final class WuicFacade implements ObjectBuilderInspector {
 
     /**
      * <p>
+     * Gets the nut type factory.
+     * </p>
+     *
+     * @return the nut type factory
+     */
+    public NutTypeFactory getNutTypeFactory() {
+        return nutTypeFactory;
+    }
+
+    /**
+     * <p>
      * Indicates to view templates if multiple configurations are allowed.
      * </p>
      *
@@ -444,6 +460,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
      */
     private void buildContext() throws WuicException {
         context = builder.build();
+        nutTypeFactory = builder.getNutTypeFactory();
 
         switch (config.getWarmUpStrategy()) {
             case NONE:

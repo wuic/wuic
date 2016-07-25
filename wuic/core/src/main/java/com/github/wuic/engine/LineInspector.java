@@ -185,7 +185,7 @@ public abstract class LineInspector {
      */
     public static NutsHeap getHeap(final EngineRequest request,
                                    final ConvertibleNut originalNut,
-                                   final CompositeNut.CompositeInputStream cis,
+                                   final CompositeNut.CompositeInput cis,
                                    final int position) {
         final NutsHeap heap = new NutsHeap(request.getHeap());
         final String name;
@@ -271,7 +271,7 @@ public abstract class LineInspector {
      */
     public void inspect(final char[] data,
                         final EngineRequest request,
-                        final CompositeNut.CompositeInputStream cis,
+                        final CompositeNut.CompositeInput cis,
                         final ConvertibleNut originalNut) throws WuicException {
         inspect(new LineInspectorListener() {
             @Override
@@ -301,7 +301,7 @@ public abstract class LineInspector {
     public void inspect(final LineInspectorListener listener,
                         final char[] data,
                         final EngineRequest request,
-                        final CompositeNut.CompositeInputStream cis,
+                        final CompositeNut.CompositeInput cis,
                         final ConvertibleNut originalNut) throws WuicException {
         inspect(listener, data, 0, data.length, request, cis, originalNut);
     }
@@ -336,7 +336,7 @@ public abstract class LineInspector {
                                  int offset,
                                  int length,
                                  EngineRequest request,
-                                 CompositeNut.CompositeInputStream cis,
+                                 CompositeNut.CompositeInput cis,
                                  ConvertibleNut originalNut) throws WuicException;
 
     /**

@@ -40,10 +40,10 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -331,7 +331,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
+    public Input openStream() throws IOException {
         return wrap.openStream();
     }
 

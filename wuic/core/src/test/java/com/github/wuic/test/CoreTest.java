@@ -38,7 +38,6 @@
 
 package com.github.wuic.test;
 
-import com.github.wuic.ProcessContext;
 import com.github.wuic.WuicTask;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
@@ -63,6 +62,7 @@ import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -83,6 +83,12 @@ import org.slf4j.LoggerFactory;
  */
 @RunWith(JUnit4.class)
 public class CoreTest extends WuicTest {
+
+    /**
+     * Process context.
+     */
+    @ClassRule
+    public static ProcessContextRule processContext = new ProcessContextRule();
 
     /**
      * Temporary.
@@ -114,21 +120,18 @@ public class CoreTest extends WuicTest {
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         startTime = System.currentTimeMillis();
-        List<ConvertibleNut> group = facade.runWorkflow("util-js", ProcessContext.DEFAULT);
+        List<ConvertibleNut> group = facade.runWorkflow("util-js", processContext.getProcessContext());
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
         Assert.assertFalse(group.isEmpty());
-        InputStream is;
 
         for (Nut res : group) {
-            is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
+            Assert.assertTrue(res.openStream().execution().toString().length() > 0);
         }
 
         startTime = System.currentTimeMillis();
-        group = facade.runWorkflow("util-js", ProcessContext.DEFAULT);
+        group = facade.runWorkflow("util-js", processContext.getProcessContext());
         loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
 
@@ -136,9 +139,7 @@ public class CoreTest extends WuicTest {
         int i = 0;
 
         for (Nut res : group) {
-            is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
+            Assert.assertTrue(res.openStream().execution().toString().length() > 0);
             writeToDisk(res, i++ + "test.js");
         }
     }
@@ -155,20 +156,15 @@ public class CoreTest extends WuicTest {
         final WuicFacade facade = new WuicFacadeBuilder().build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        InputStream is;
-        final Nut nut = facade.runWorkflow("css-image", "aggregate.css", ProcessContext.DEFAULT);
-        is = nut.openStream();
-        Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-        is.close();
+        final Nut nut = facade.runWorkflow("css-image", "aggregate.css", processContext.getProcessContext());
+        Assert.assertTrue(nut.openStream().execution().toString().length() > 0);
         writeToDisk(nut, "sprite.css");
 
-        List<ConvertibleNut> group = facade.runWorkflow("css-scripts", ProcessContext.DEFAULT);
+        List<ConvertibleNut> group = facade.runWorkflow("css-scripts", processContext.getProcessContext());
         int i = 0;
 
         for (Nut res : group) {
-            is = res.openStream();
-            Assert.assertTrue(IOUtils.readString(new InputStreamReader(is)).length() > 0);
-            is.close();
+            Assert.assertTrue(res.openStream().execution().toString().length() > 0);
             writeToDisk(res, i++ + "css-script.css");
         }
     }
@@ -186,7 +182,7 @@ public class CoreTest extends WuicTest {
         final Context facade = builder.build();
         Long loadTime = System.currentTimeMillis() - startTime;
         log.info(String.valueOf(((float) loadTime / 1000)));
-        List<ConvertibleNut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory(), ProcessContext.DEFAULT);
+        List<ConvertibleNut> group = facade.process("", "js-image", UrlUtils.urlProviderFactory(), processContext.getProcessContext());
 
         Assert.assertEquals(1, group.size());
         Assert.assertEquals(1, group.get(0).getReferencedNuts().size());
@@ -202,7 +198,7 @@ public class CoreTest extends WuicTest {
                 Nut next = it.next();
                 writeToDisk(next, name + ".js");
 
-                fis = next.openStream();
+                fis = next.openStream().inputStream();
                 final File file = temporaryFolder.newFile(name + ".js");
                 IOUtils.copyStream(fis, new FileOutputStream(file));
                 final String content = IOUtils.readString(new InputStreamReader(new FileInputStream(file)));

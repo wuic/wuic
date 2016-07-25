@@ -38,10 +38,10 @@
 
 package com.github.wuic.servlet.test;
 
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.servlet.ServletProcessContext;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
-import com.github.wuic.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,8 +60,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -130,6 +130,7 @@ public class RequestDispatcherNutDaoTest {
         dao = new RequestDispatcherNutDao();
         dao.init("/", null, -1, "foo.*");
         dao.init(null, false, null);
+        dao.setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
         dao.setServletContext(sc);
     }
 
@@ -157,9 +158,7 @@ public class RequestDispatcherNutDaoTest {
      */
     @Test
     public void resourceAsStreamTest() throws Exception {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        IOUtils.copyStream(dao.create("bar.js", ProcessContext.DEFAULT).get(0).openStream(), bos);
-        Assert.assertEquals("var bar;", new String(bos.toByteArray()));
+        Assert.assertEquals("var bar;", dao.create("bar.js", ProcessContext.DEFAULT).get(0).openStream().execution().toString());
     }
 
     /**

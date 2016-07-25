@@ -58,6 +58,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -134,6 +135,38 @@ public final class IOUtils {
 
     /**
      * <p>
+     * Converts the given char array to a byte array using the {@code Charset} specified in parameter.
+     * </p>
+     *
+     * @param chars the chars to encode
+     * @return the encoded bytes
+     */
+    public static byte[] toBytes(final Charset charset, final char ... chars) {
+        final CharBuffer cbuf = CharBuffer.wrap(chars);
+        final ByteBuffer bbuf = charset.encode(cbuf);
+        final byte[] b = new byte[bbuf.remaining()];
+        bbuf.get(b);
+        return b;
+    }
+
+    /**
+     * <p>
+     * Converts the given byte array to a char array using the {@code Charset} specified in parameter.
+     * </p>
+     *
+     * @param bytes the chars to decode
+     * @return the decoded chars
+     */
+    public static char[] toChars(final Charset charset, final byte ... bytes) {
+        final ByteBuffer bbuf = ByteBuffer.wrap(bytes);
+        final CharBuffer cbuf = charset.decode(bbuf);
+        final char[] c = new char[cbuf.remaining()];
+        cbuf.get(c);
+        return c;
+    }
+
+    /**
+     * <p>
      * Returns a new {@link MessageDigest} based on CRC algorithm.
      * </p>
      *
@@ -178,7 +211,6 @@ public final class IOUtils {
 
         return md.digest();
     }
-
 
     /**
      * <p>
@@ -293,21 +325,6 @@ public final class IOUtils {
         writer.flush();
     }
 
-
-    /**
-     * <p>
-     * Copies the data from the given input stream into the given writer and does not wrap the {@link IOException}.
-     * </p>
-     *
-     * @param is the {@code InputStream}
-     * @param writer the {@code Writer}
-     * @throws IOException in an I/O error occurs
-     */
-    public static void copyStreamToWriterIoe(final InputStream is, final Writer writer)
-            throws IOException {
-        copyStreamToWriterIoe(is, writer, null);
-    }
-
     /**
      * <p>
      * Copies the data from the given input stream into the given output stream and doesn't wrap any {@code IOException}.
@@ -326,6 +343,55 @@ public final class IOUtils {
 
         while ((offset = is.read(buffer)) != -1) {
             os.write(buffer, 0, offset);
+            retval += offset - 1;
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
+     * Copies the stream read from the input to the given output.
+     * If the input is a text, data will be copied to the output's writer, otherwise to the output's stream.
+     * </p>
+     *
+     * @param input the input
+     * @param output the output
+     * @return the opened {@code Writer} in case of text, or the opened {@code OutputStream} otherwise
+     * @throws IOException if copy fails
+     */
+    public static Object copyStream(final Input input, final Output output) throws IOException {
+        final Pipe.Execution execution = input.execution();
+
+        if (execution.isText()) {
+            final Writer writer = output.writer();
+            execution.writeResultTo(writer);
+            return writer;
+        }  else {
+            final OutputStream outputStream = output.outputStream();
+            execution.writeResultTo(outputStream);
+            return outputStream;
+        }
+    }
+
+    /**
+     * <p>
+     * Copies the data from the given reader into the given writer and doesn't wrap any {@code IOException}.
+     * </p>
+     *
+     * @param reader the {@code Reader}
+     * @param writer the {@code Writer}
+     * @return the content length
+     * @throws IOException in an I/O error occurs
+     */
+    public static int copyStream(final Reader reader, final Writer writer)
+            throws IOException {
+        int retval = 0;
+        int offset;
+        final char[] buffer = new char[WUIC_BUFFER_LEN];
+
+        while ((offset = reader.read(buffer)) != -1) {
+            writer.write(buffer, 0, offset);
             retval += offset - 1;
         }
 
@@ -533,12 +599,13 @@ public final class IOUtils {
      * Uses a {@link FsDirectoryPathFactory} to create instances.
      * </p>
      *
+     * @param charset the charset
      * @param path the path hierarchy
      * @return the last {@link Path} of the hierarchy with its parent
      * @throws IOException if any I/O error occurs
      */
-    public static Path buildPath(final String path) throws IOException {
-        return buildPath(path, new FsDirectoryPathFactory());
+    public static Path buildPath(final String path, final String charset) throws IOException {
+        return buildPath(path, new FsDirectoryPathFactory(charset));
     }
 
     /**

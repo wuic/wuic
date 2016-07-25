@@ -35,14 +35,16 @@
  * licenses."
  */
 
+
 package com.github.wuic.nut.dao.servlet;
 
 import com.github.wuic.NutType;
 import com.github.wuic.nut.AbstractNut;
+import com.github.wuic.util.DefaultInput;
+import com.github.wuic.util.Input;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Future;
 
 /**
@@ -72,6 +74,11 @@ public class WebappNut extends AbstractNut {
     private String path;
 
     /**
+     * The charset.
+     */
+    private final String charset;
+
+    /**
      * <p>
      * Builds a new {@code Nut} based on a context and path.
      * </p>
@@ -81,18 +88,25 @@ public class WebappNut extends AbstractNut {
      * @param name the nut name
      * @param ft the path type
      * @param versionNumber the nuts's version number
+     * @param cs the charset
      */
-    public WebappNut(final ServletContext ctx, final String p, final String name, final NutType ft, final Future<Long> versionNumber) {
+    public WebappNut(final ServletContext ctx,
+                     final String p,
+                     final String name,
+                     final NutType ft,
+                     final Future<Long> versionNumber,
+                     final String cs) {
         super(name, ft, versionNumber);
         context = ctx;
         path = p;
+        charset = cs;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public InputStream openStream() throws IOException {
-        return context.getResourceAsStream(path);
+    public Input openStream() throws IOException {
+        return new DefaultInput(context.getResourceAsStream(path), charset);
     }
 }

@@ -38,6 +38,7 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.engine.LineInspector;
@@ -180,7 +181,7 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
     @Override
     public List<AppendedTransformation> appendTransformation(final LineMatcher matcher,
                                                              final EngineRequest request,
-                                                             final CompositeNut.CompositeInputStream cis,
+                                                             final CompositeNut.CompositeInput cis,
                                                              final ConvertibleNut originalNut) throws WuicException {
         // Search the right group
         int i = 0;
@@ -241,12 +242,7 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
      */
     @Override
     protected String toString(final ConvertibleNut convertibleNut) throws IOException {
-        switch (convertibleNut.getNutType()) {
-            case CSS:
-                return NutUtils.readTransform(convertibleNut);
-            default:
-                return null;
-        }
+        return convertibleNut.getNutType().isBasedOn(EnumNutType.CSS) ? NutUtils.readTransform(convertibleNut) : null;
     }
 
     /**

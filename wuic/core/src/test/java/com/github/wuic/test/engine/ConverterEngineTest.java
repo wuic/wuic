@@ -38,7 +38,9 @@
 
 package com.github.wuic.test.engine;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
@@ -46,11 +48,14 @@ import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.engine.core.AbstractCompressorEngine;
 import com.github.wuic.engine.core.AbstractConverterEngine;
 import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
+import com.github.wuic.util.InMemoryInput;
+import com.github.wuic.util.Input;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Output;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,10 +64,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -83,7 +86,7 @@ public class ConverterEngineTest {
 
         @Override
         public List<NutType> getNutTypes() {
-            return Arrays.asList(NutType.JAVASCRIPT);
+            return Arrays.asList(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()));
         }
 
         @Override
@@ -92,8 +95,8 @@ public class ConverterEngineTest {
         }
 
         @Override
-        public boolean transform(InputStream is, OutputStream os, ConvertibleNut convertible, EngineRequest request) throws IOException {
-            os.write("function myReplacedFunctionSetsCssStyle() {}".getBytes());
+        public boolean transform(final Input is, final Output os, final ConvertibleNut convertible, EngineRequest request) throws IOException {
+            os.writer().write("function myReplacedFunctionSetsCssStyle() {}");
             return true;
         }
     }
@@ -112,6 +115,7 @@ public class ConverterEngineTest {
          */
         public C(final Boolean convert) {
             init(convert, false);
+            setNutTypeFactory(new NutTypeFactory(Charset.defaultCharset().displayName()));
         }
 
         /**
@@ -119,7 +123,7 @@ public class ConverterEngineTest {
          */
         @Override
         public List<NutType> getNutTypes() {
-            return Arrays.asList(NutType.CSS);
+            return Arrays.asList(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()));
         }
 
         /**
@@ -127,18 +131,18 @@ public class ConverterEngineTest {
          */
         @Override
         protected NutType targetNutType() {
-            return NutType.JAVASCRIPT;
+            return getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public InputStream transform(final InputStream is,
-                                     final ConvertibleNut convertible,
-                                     final EngineRequest e)
+        public Input transform(final Input is,
+                               final ConvertibleNut convertible,
+                               final EngineRequest e)
                 throws IOException {
-            return new ByteArrayInputStream("function myFunctionSetsCssStyle() {}".getBytes());
+            return new InMemoryInput("function myFunctionSetsCssStyle() {}", Charset.defaultCharset().displayName());
         }
     }
 
@@ -158,19 +162,19 @@ public class ConverterEngineTest {
      */
     @Test(expected = IllegalStateException.class)
     public void nutTypeNotChangedTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
+        final Nut nut = new InMemoryNut(".myClass {}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true) {
             @Override
             protected NutType targetNutType() {
-                return NutType.CSS;
+                return getNutTypeFactory().getNutType(EnumNutType.CSS);
             }
         };
 
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
-                .chain(NutType.CSS, converter)
-                .chain(NutType.JAVASCRIPT, new I())
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                .chain(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), converter)
+                .chain(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), new I())
                 .build());
         Assert.assertEquals(1, nuts.size());
         NutUtils.readTransform(nuts.get(0));
@@ -186,18 +190,18 @@ public class ConverterEngineTest {
      */
     @Test
     public void enableConversionTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
+        final Nut nut = new InMemoryNut(".myClass {}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(true);
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
-                .chain(NutType.CSS, converter)
-                .chain(NutType.JAVASCRIPT, new I())
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                .chain(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), converter)
+                .chain(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), new I())
                 .build());
         Assert.assertEquals(1, nuts.size());
         final String content = NutUtils.readTransform(nuts.get(0));
-        Assert.assertEquals(NutType.JAVASCRIPT, nuts.get(0).getNutType());
-        Assert.assertEquals(NutType.CSS, nuts.get(0).getInitialNutType());
+        Assert.assertEquals(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), nuts.get(0).getNutType());
+        Assert.assertEquals(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), nuts.get(0).getInitialNutType());
         Assert.assertEquals("aggregate.css.js", nuts.get(0).getName());
         Assert.assertEquals("foo.css", nuts.get(0).getInitialName());
         Assert.assertEquals("function myReplacedFunctionSetsCssStyle() {}", content);
@@ -213,18 +217,18 @@ public class ConverterEngineTest {
      */
     @Test
     public void disableConversionTest() throws WuicException, IOException {
-        final Nut nut = new ByteArrayNut(".myClass {}".getBytes(), "foo.css", NutType.CSS, 1L, false);
+        final Nut nut = new InMemoryNut(".myClass {}".getBytes(), "foo.css", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
         Mockito.when(heap.getNuts()).thenReturn(Arrays.asList(nut));
         final NodeEngine converter = new C(false);
-        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null)
-                .chain(NutType.CSS, converter)
-                .chain(NutType.JAVASCRIPT, new I())
+        final List<ConvertibleNut> nuts = converter.parse(new EngineRequestBuilder("", heap, null, new NutTypeFactory(Charset.defaultCharset().displayName()))
+                .chain(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), converter)
+                .chain(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), new I())
                 .build());
         Assert.assertEquals(1, nuts.size());
         final String content = NutUtils.readTransform(nuts.get(0));
-        Assert.assertEquals(NutType.CSS, nuts.get(0).getNutType());
-        Assert.assertEquals(NutType.CSS, nuts.get(0).getInitialNutType());
+        Assert.assertEquals(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), nuts.get(0).getNutType());
+        Assert.assertEquals(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), nuts.get(0).getInitialNutType());
         Assert.assertEquals("foo.css", nuts.get(0).getName());
         Assert.assertEquals("foo.css", nuts.get(0).getInitialName());
         Assert.assertEquals(".myClass {}", content);

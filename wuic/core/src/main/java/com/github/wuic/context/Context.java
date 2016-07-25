@@ -221,7 +221,7 @@ public class Context implements Observer {
                                      final UrlProviderFactory urlProviderFactory,
                                      final ProcessContext processContext,
                                      final EngineType ... skip) {
-        EngineRequestBuilder request = new EngineRequestBuilder(wId, workflow.getHeap(), this)
+        EngineRequestBuilder request = new EngineRequestBuilder(wId, workflow.getHeap(), this, contextBuilder.getNutTypeFactory())
                 .contextPath(contextPath)
                 .chains(workflow.getChains())
                 .urlProviderFactory(urlProviderFactory)

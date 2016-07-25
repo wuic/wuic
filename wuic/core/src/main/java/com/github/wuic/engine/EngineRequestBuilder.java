@@ -39,6 +39,7 @@
 package com.github.wuic.engine;
 
 import com.github.wuic.NutType;
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
 import com.github.wuic.nut.ConvertibleNut;
@@ -133,14 +134,14 @@ public final class EngineRequestBuilder {
     private boolean staticsServedByWuicServlet;
 
     /**
-     * Charset.
-     */
-    private String charset;
-
-    /**
      * The nut that has created this builder.
      */
     private ConvertibleNut origin;
+
+    /**
+     * Nut type factory.
+     */
+    private NutTypeFactory nutTypeFactory;
 
     /**
      * The context that created this builder.
@@ -154,8 +155,10 @@ public final class EngineRequestBuilder {
      *
      * @param wId the workflow id
      * @param h the heap
+     * @param ctx the context
+     * @param ntf the nut type factory
      */
-    public EngineRequestBuilder(final String wId, final NutsHeap h, final Context ctx) {
+    public EngineRequestBuilder(final String wId, final NutsHeap h, final Context ctx, final NutTypeFactory ntf) {
         workflowId(wId);
         heap(h);
         prefixCreatedNut("");
@@ -163,7 +166,7 @@ public final class EngineRequestBuilder {
         bestEffort = false;
         context = ctx;
         staticsServedByWuicServlet = false;
-        charset = "UTF-8";
+        nutTypeFactory = ntf;
     }
 
     /**
@@ -188,8 +191,8 @@ public final class EngineRequestBuilder {
         context = other.context;
         excludeFromSprite = other.excludeFromSprite;
         staticsServedByWuicServlet = other.staticsServedByWuicServlet;
-        charset = other.charset;
         origin = other.origin;
+        nutTypeFactory = other.nutTypeFactory;
     }
 
     /**
@@ -328,19 +331,6 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
-     * Sets the charset.
-     * </p>
-     *
-     * @param cs the charset
-     * @return this
-     */
-    public EngineRequestBuilder charset(final String cs) {
-        charset = cs;
-        return this;
-    }
-
-    /**
-     * <p>
      * Sets the chains of {@link NodeEngine engines} for each {@link NutType type}.
      * </p>
      *
@@ -405,6 +395,7 @@ public final class EngineRequestBuilder {
      * </p>
      *
      * @param origin the origin
+     * @return this
      */
     public EngineRequestBuilder origin(final ConvertibleNut origin) {
         this.origin = origin;
@@ -613,12 +604,12 @@ public final class EngineRequestBuilder {
 
     /**
      * <p>
-     * Gets the charset.
+     * Gets the nut type factory.
      * </p>
      *
-     * @return the charset
+     * @return the nut type factory
      */
-    String getCharset() {
-        return charset;
+    NutTypeFactory getNutTypeFactory() {
+        return nutTypeFactory;
     }
 }

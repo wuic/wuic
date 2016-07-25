@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
@@ -56,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -267,12 +269,36 @@ public final class NutUtils {
      * @throws IOException if transformation fails
      */
     public static String readTransform(final ConvertibleNut n) throws IOException {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        n.transform(new Pipe.DefaultOnReady(bos));
+        final AtomicReference<String> retval = new AtomicReference<String>();
 
-        final byte[] b = bos.toByteArray();
-        return n.isCompressed() ?
-                IOUtils.readString(new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(b)))) : new String(b);
+        n.transform(new Pipe.OnReady() {
+            @Override
+            public void ready(final Pipe.Execution e) throws IOException {
+                if (e.isText()) {
+                    final CharArrayWriter writer = new CharArrayWriter();
+
+                    try {
+                        e.writeResultTo(writer);
+                        retval.set(writer.toString());
+                    } finally {
+                        IOUtils.close(writer);
+                    }
+                } else {
+                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+                    try {
+                        e.writeResultTo(bos);
+                        final byte[] b = bos.toByteArray();
+                        retval.set(n.isCompressed() ?
+                                IOUtils.readString(new InputStreamReader(new GZIPInputStream(new ByteArrayInputStream(b)))) : new String(b));
+                    } finally {
+                        IOUtils.close(bos);
+                    }
+                }
+            }
+        });
+
+        return retval.get();
     }
 
     /**

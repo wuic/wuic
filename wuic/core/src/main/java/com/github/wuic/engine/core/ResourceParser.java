@@ -38,8 +38,10 @@
 
 package com.github.wuic.engine.core;
 
+import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
-import com.github.wuic.nut.ByteArrayNut;
+import com.github.wuic.NutTypeFactory;
+import com.github.wuic.nut.InMemoryNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.dao.core.ProxyNutDao;
 import com.github.wuic.util.IOUtils;
@@ -89,10 +91,16 @@ public abstract class ResourceParser {
     private final Statement statement;
 
     /**
+     * The nut type factory.
+     */
+    private final NutTypeFactory nutTypeFactory;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param url the url
      * @param content the content
@@ -101,10 +109,12 @@ public abstract class ResourceParser {
     protected ResourceParser(final Map<String, String> attributes,
                              final String url,
                              final char[] content,
-                             final Statement stmt) {
+                             final Statement stmt,
+                             final NutTypeFactory nutTypeFactory) {
         this.attributes = attributes;
         this.url = url;
         this.statement = stmt;
+        this.nutTypeFactory = nutTypeFactory;
 
         if (content != null) {
             this.content = new char[content.length];
@@ -120,6 +130,17 @@ public abstract class ResourceParser {
      * @return {@code true} if inline content needs to be read, {@code false} otherwise
      */
     protected abstract Boolean readInlineIfTokenNotFound();
+
+    /**
+     * <p>
+     * Gets the nut type factory.
+     * </p>
+     *
+     * @return the nut type factory
+     */
+    protected NutTypeFactory getNutTypeFactory() {
+        return nutTypeFactory;
+    }
 
     /**
      * <p>
@@ -146,7 +167,7 @@ public abstract class ResourceParser {
         }
 
         try {
-            return NutType.getNutType(getUrlPath());
+            return nutTypeFactory.getNutType(getUrlPath());
         } catch (IllegalArgumentException iae) {
             logger.debug("Unable to parse NutType.", iae);
             return null;
@@ -225,7 +246,7 @@ public abstract class ResourceParser {
         md.update(bos.toByteArray());
 
         // Create nut
-        return new ByteArrayNut(bos.toByteArray(), path, getNutType(), ByteBuffer.wrap(md.digest()).getLong(), false);
+        return new InMemoryNut(bos.toByteArray(), path, getNutType(), ByteBuffer.wrap(md.digest()).getLong(), false);
     }
 
     /**
@@ -310,7 +331,7 @@ class ScriptParser extends ResourceParser {
      */
     @Override
     public NutType getNutType() {
-        return hasUrl() ? super.getNutType() : NutType.JAVASCRIPT;
+        return hasUrl() ? super.getNutType() : getNutTypeFactory().getNutType(EnumNutType.JAVASCRIPT);
     }
 
     /**
@@ -318,12 +339,13 @@ class ScriptParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param content the content
      * @param statement the statement declaring the resource
      */
-    ScriptParser(final Map<String, String> attributes, final char[] content, final Statement statement) {
-        super(attributes, null, content, statement);
+    ScriptParser(final Map<String, String> attributes, final char[] content, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, null, content, statement, nutTypeFactory);
     }
 
     /**
@@ -331,12 +353,13 @@ class ScriptParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param url the resource URL
      * @param statement the statement declaring the resource
      */
-    ScriptParser(final Map<String, String> attributes, final String url, final Statement statement) {
-        super(attributes, url, null, statement);
+    ScriptParser(final Map<String, String> attributes, final String url, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, url, null, statement, nutTypeFactory);
     }
 }
 
@@ -355,12 +378,13 @@ class HrefParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param url the resource URL
      * @param statement the statement declaring the resource
      */
-    HrefParser(final Map<String, String> attributes, final String url, final Statement statement) {
-        super(attributes, url, null, statement);
+    HrefParser(final Map<String, String> attributes, final String url, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, url, null, statement, nutTypeFactory);
     }
 
     /**
@@ -387,12 +411,13 @@ class ImgParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param url the resource URL
      * @param statement the statement declaring the resource
      */
-    ImgParser(final Map<String, String> attributes, final String url, final Statement statement) {
-        super(attributes, url, null, statement);
+    ImgParser(final Map<String, String> attributes, final String url, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, url, null, statement, nutTypeFactory);
     }
 
     /**
@@ -419,12 +444,13 @@ class HtmlParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param url the resource URL
      * @param statement the statement declaring the resource
      */
-    HtmlParser(final Map<String, String> attributes, final String url, final Statement statement) {
-        super(attributes, url, null, statement);
+    HtmlParser(final Map<String, String> attributes, final String url, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, url, null, statement, nutTypeFactory);
     }
 
     /**
@@ -440,7 +466,7 @@ class HtmlParser extends ResourceParser {
      */
     @Override
     public NutType getNutType() {
-        return NutType.HTML;
+        return getNutTypeFactory().getNutType(EnumNutType.HTML);
     }
 }
 
@@ -459,12 +485,13 @@ class CssParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param attributes the attributes
      * @param content the content
      * @param statement the statement declaring the resource
      */
-    CssParser(final Map<String, String> attributes, final char[] content, final Statement statement) {
-        super(attributes, null, content, statement);
+    CssParser(final Map<String, String> attributes, final char[] content, final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(attributes, null, content, statement, nutTypeFactory);
     }
 
     /**
@@ -480,7 +507,7 @@ class CssParser extends ResourceParser {
      */
     @Override
     public NutType getNutType() {
-        return NutType.CSS;
+        return getNutTypeFactory().getNutType(EnumNutType.CSS);
     }
 }
 
@@ -499,10 +526,11 @@ class DefaultParser extends ResourceParser {
      * Builds a new instance.
      * </p>
      *
+     * @param nutTypeFactory the nut type factory
      * @param statement the statement declaring the resource
      */
-    DefaultParser(final Statement statement) {
-        super(Collections.<String, String>emptyMap(), null, null, statement);
+    DefaultParser(final Statement statement, final NutTypeFactory nutTypeFactory) {
+        super(Collections.<String, String>emptyMap(), null, null, statement, nutTypeFactory);
     }
 
     /**

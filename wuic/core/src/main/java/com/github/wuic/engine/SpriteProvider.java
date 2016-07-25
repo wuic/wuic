@@ -37,6 +37,7 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.NutTypeFactory;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Source;
 import com.github.wuic.util.UrlProvider;
@@ -88,10 +89,11 @@ public interface SpriteProvider {
      * @param urlProvider the {@link UrlProvider}
      * @param nutNamePrefix the prefix to append to the sprite nut name
      * @param source the original nuts
+     * @param nutTypeFactory the nut type factory
      * @return a nut representing the sprite path
      * @throws java.io.IOException if an I/O error occurs while aggregating images
      */
-    ConvertibleNut getSprite(String workflowId, UrlProvider urlProvider, String nutNamePrefix, Source source)
+    ConvertibleNut getSprite(String workflowId, UrlProvider urlProvider, String nutNamePrefix, Source source, NutTypeFactory nutTypeFactory)
             throws IOException;
 
     /**

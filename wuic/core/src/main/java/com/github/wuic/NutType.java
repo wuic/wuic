@@ -38,180 +38,50 @@
 
 package com.github.wuic;
 
-import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * <p>
- * Enumeration of the possible types to be compressed and / or aggregated in WUIC.
+ * Represents a possible type to be compressed and / or aggregated in WUIC.
  * </p>
  * 
  * @author Guillaume DROUET
  * @since 0.1.0
  */
-public enum NutType {
+public class NutType implements Serializable {
 
     /**
-     * HTML files support. Keep this as first enum to improve {@link #getNutTypeForMimeType(String)} often use for HTML.
+     * Logger.
      */
-    HTML(new String[] { ".html" }, "text/html", NutType.HTML_PAGE, true),
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * EOT path support.
+     * The built-in type.
      */
-    EOT(new String[] {".eot", ".EOT"}, "application/vnd.ms-fontobject", NutType.FONT, false),
+    private final EnumNutType enumNutType;
 
     /**
-     * EOT path support.
+     * The charset.
      */
-    OTF(new String[] {".otf", ".OTF"}, "font/opentype", NutType.FONT, false),
-
-    /**
-     * TTF path support.
-     */
-    TTF(new String[] {".ttf", ".TTF"}, "application/octet-stream", NutType.FONT, false),
-
-    /**
-     * WOFF path support.
-     */
-    WOFF(new String[] {".woff", ".WOFF"}, "application/x-font-woff", NutType.FONT, false),
-
-    /**
-     * WOFF2 path support.
-     */
-    WOFF2(new String[] {".woff2", ".WOFF2"}, "application/font-woff2", NutType.FONT, false),
-
-    /**
-     * SVG path support.
-     */
-    SVG(new String[] {".svg", ".SVG"}, "image/svg+xml", NutType.IMAGE, true),
-
-    /**
-     * ICO file.
-     */
-    ICO(new String[] {".ico", ".ICO"}, "image/x-icon", NutType.IMAGE, false),
-
-    /**
-     * PNG path support.
-     */
-    PNG(new String[] {".png", ".PNG"}, "image/png", NutType.IMAGE, false),
-
-    /**
-     * JPG path support.
-     */
-    JPG(new String[] {".jpg", ".JPG", ".jpeg", ".JPEG"}, "image/jpeg", NutType.IMAGE, false),
-
-    /**
-     * GIF path support.
-     */
-    GIF(new String[] {".gif", ".GIF"}, "image/gif", NutType.IMAGE, false),
-
-    /**
-     * Javascript files support.
-     */
-    JAVASCRIPT(new String[] { ".js" }, "text/javascript", NutType.SCRIPT, true),
-    
-    /**
-     * CSS files support.
-     */
-    CSS(new String[] { ".css" }, "text/css", NutType.STYLESHEET, true),
-
-    /**
-     * Typescript files support.
-     */
-    TYPESCRIPT(new String[] { ".ts" }, "text/x.typescript", null, true),
-
-    /**
-     * JSX files support.
-     */
-    JSX(new String[] { ".jsx" }, "text/jsx", null, true),
-
-
-    /**
-     * LESS files support.
-     */
-    LESS(new String[] { ".less" }, "text/css", null, true),
-
-    /**
-     * MAP files support.
-     */
-    MAP(new String[] { ".map" }, "application/json", null, true),
-
-    /**
-     * Application cache files support.
-     */
-    APP_CACHE(new String[] { ".appcache" }, "text/cache-manifest", null, true);
-
-    /**
-     * The logger.
-     */
-    private static final Logger LOG = LoggerFactory.getLogger(NutType.class);
-
-    /**
-     * Constant to hint images.
-     */
-    private static final String IMAGE = "image";
-
-    /**
-     * Constant to hint fonts.
-     */
-    private static final String FONT = "font";
-
-    /**
-     * Constant to hint scripts.
-     */
-    private static final String SCRIPT = "script";
-
-    /**
-     * Constant to hint CSS.
-     */
-    private static final String STYLESHEET = "stylesheet";
-
-    /**
-     * Constant to hint HTML pages.
-     */
-    private static final String HTML_PAGE = "html";
-
-    /**
-     * Possible extensions.
-     */
-    private final String[] extensions;
-    
-    /**
-     * MIME type.
-     */
-    private final String mimeType;
-
-    /**
-     * Server hint information.
-     */
-    private final String hintInfo;
-
-    /**
-     * Type is text or not.
-     */
-    private final boolean text;
+    private final String charset;
 
     /**
      * <p>
-     * Builds a new {@link NutType} according to the given extensions and the
-     * given MIME type.
+     * Builds a new {@link NutType}.
      * </p>
      * 
-     * @param exts the extensions
-     * @param mime the MIME type
-     * @param hint the hint information
-     * @param isText nut is binary or text
+     * @param enumNutType the built-in type
+     * @param charset the charset to use for encoding/decoding text streams
      */
-    private NutType(final String[] exts, final String mime, final String hint, final boolean isText) {
-        extensions = Arrays.copyOf(exts, exts.length);
-        mimeType = mime;
-        hintInfo = hint;
-        text = isText;
+    public NutType(final EnumNutType enumNutType, final String charset) {
+        this.enumNutType = enumNutType;
+        this.charset = charset;
+        log.info("Creating nut type with charset {}", charset);
     }
     
     /**
@@ -222,7 +92,7 @@ public enum NutType {
      * @return the possible extensions
      */
     public String[] getExtensions() {
-        return extensions;
+        return enumNutType.getExtensions();
     }
     
     /**
@@ -233,7 +103,7 @@ public enum NutType {
      * @return the MIME type
      */
     public String getMimeType() {
-        return mimeType;
+        return enumNutType.getMimeType();
     }
 
     /**
@@ -244,7 +114,18 @@ public enum NutType {
      * @return the information, {@code null} if none
      */
     public String getHintInfo() {
-        return hintInfo;
+        return enumNutType.getHintInfo();
+    }
+
+    /**
+     * <p>
+     * Gets the name.
+     * </p>
+     *
+     * @return the name
+     */
+    public String name() {
+        return enumNutType.name();
     }
 
     /**
@@ -255,7 +136,30 @@ public enum NutType {
      * @return {@code true} if text, {@code false} if binary
      */
     public boolean isText() {
-        return text;
+        return enumNutType.isText();
+    }
+
+    /**
+     * <p>
+     * Indicates if this type is based on the given built-in type.
+     * </p>
+     *
+     * @param enumNutType the built-in type to compare
+     * @return {@code true} if {@code enumNutType} equals to {@link #enumNutType}
+     */
+    public boolean isBasedOn(final EnumNutType enumNutType) {
+        return enumNutType.equals(this.enumNutType);
+    }
+
+    /**
+     * <p>
+     * Gets the charset.
+     * </p>
+     *
+     * @return the charset
+     */
+    public String getCharset() {
+        return charset;
     }
 
     /**
@@ -263,73 +167,39 @@ public enum NutType {
      */
     @Override
     public String toString() {
-        return String.format("%s with extension %s", name(), StringUtils.merge(extensions, ", "));
+        return String.format("%s with extension %s", enumNutType.name(), StringUtils.merge(getExtensions(), ", "));
     }
 
     /**
-     * <p>
-     * Returns the {@link NutType} which the given extension belongs to.
-     * </p>
-     *
-     * <p>
-     * Throws an {@code BadArgumentException} if the extension does not belongs to any path type.
-     * </p>
-     *
-     * @param ext the extension
-     * @return the nut type
+     * {@inheritDoc}
      */
-    public static NutType getNutTypeForExtension(final String ext) {
-        for (final NutType nutType : NutType.values()) {
-            for (String e : nutType.getExtensions()) {
-                if (e.equals(ext)) {
-                    return nutType;
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof NutType) {
+            final NutType other = NutType.class.cast(obj);
+
+            if (enumNutType.equals(other.enumNutType)) {
+                if (!charset.equals(other.charset)) {
+                    log.warn("Different charset detected!", new IllegalArgumentException(
+                            String.format("%s != %s", charset, other.charset)));
+                } else {
+                    return true;
                 }
             }
         }
 
-        WuicException.throwBadArgumentException(new IllegalArgumentException(String.format("%s is not associated to any NutType", ext)));
-        return null;
+        return false;
     }
 
     /**
-     * <p>
-     * Returns the {@link NutType} which the given mime type belongs to.
-     * </p>
-     *
-     * @param mimeType the mime type
-     * @return the nut type, {@code null} if nothing match
+     * {@inheritDoc}
      */
-    public static NutType getNutTypeForMimeType(final String mimeType) {
-        final String[] split = mimeType.split(";");
-
-        for (final NutType nutType : NutType.values()) {
-            for (final String s : split) {
-                if (nutType.getMimeType().equals(s)) {
-                    return nutType;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * <p>
-     * Computes the {@link NutType} for the given path.
-     * </p>
-     *
-     * @param path the path
-     * @return the {@link NutType}, {@code null} if no extension exists
-     */
-    public static NutType getNutType(final String path) {
-        final int index = path.lastIndexOf('.');
-
-        if (index < 0) {
-            LOG.warn(String.format("'%s' does not contains any extension, ignoring nut", path));
-            return null;
-        }
-
-        final String ext = path.substring(index);
-        return getNutTypeForExtension(ext);
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(new Object[] { enumNutType, charset, });
     }
 }
