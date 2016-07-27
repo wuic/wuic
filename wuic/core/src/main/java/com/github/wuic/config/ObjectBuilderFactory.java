@@ -392,7 +392,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
 
         /**
          * <p>
-         * Inspects the object specified in parameter with given list of inspectors.
+         * Inspects the object specified in parameter with given map of inspectors.
          * </p>
          *
          * @param inspectors the inspectors to apply
@@ -403,10 +403,10 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
             T retval = object;
 
             for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
-                // Case 1: apply inspectors declared for any class
-                // Case 2: apply inspectors explicitly declared for this class
-                if (entry.getKey() == null || entry.getKey().isAssignableFrom(getType())) {
-                    for (final ObjectBuilderInspector i : entry.getValue()) {
+                for (final ObjectBuilderInspector i : entry.getValue()) {
+                    // Case 1: apply inspectors declared for any class
+                    // Case 2: apply inspectors explicitly declared for this class
+                    if (entry.getKey() == null || entry.getKey().isAssignableFrom(retval == null ? getType() : retval.getClass())) {
                         retval = i.inspect(retval);
                     }
                 }
