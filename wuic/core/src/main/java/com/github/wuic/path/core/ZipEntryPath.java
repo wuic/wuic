@@ -145,7 +145,7 @@ public class ZipEntryPath extends SimplePath implements Path {
          * @param zfp the archive
          * @param entry the entry path inside the archive
          */
-        ArchiveWithParentEntry(final ZipFilePath zfp, String entry) {
+        ArchiveWithParentEntry(final ZipFilePath zfp, final String entry) {
             archive = zfp;
             entryPath = entry;
         }

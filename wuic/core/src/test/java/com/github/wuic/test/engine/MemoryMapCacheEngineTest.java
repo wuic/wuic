@@ -56,11 +56,13 @@ import com.github.wuic.nut.SizableNut;
 import com.github.wuic.nut.SourceImpl;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.test.ProcessContextRule;
+import com.github.wuic.test.TemporaryFileManagerRule;
 import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TemporaryFileManager;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -96,6 +98,12 @@ public class MemoryMapCacheEngineTest {
      */
     @ClassRule
     public static ProcessContextRule processContext = new ProcessContextRule();
+
+    /**
+     * Temporary file manager.
+     */
+    @ClassRule
+    public static TemporaryFileManagerRule temporaryFileManager = new TemporaryFileManagerRule();
 
     /**
      * Timeout.
@@ -334,6 +342,7 @@ public class MemoryMapCacheEngineTest {
     public void testDiskStore() {
         final MemoryMapCacheEngine engine = new MemoryMapCacheEngine();
         engine.init(true, -1, false, "16");
+        engine.setTemporaryFileManager(temporaryFileManager.getTemporaryFileManager());
 
         final SizableNut r = Mockito.mock(SizableNut.class, Mockito.withSettings().serializable());
         Mockito.when(r.size()).thenReturn(4);

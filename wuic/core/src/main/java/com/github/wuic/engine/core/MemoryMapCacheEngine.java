@@ -49,6 +49,8 @@ import com.github.wuic.engine.EngineService;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.TemporaryFileManager;
+import com.github.wuic.util.TemporaryFileManagerHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +77,7 @@ import java.util.HashMap;
  */
 @EngineService(injectDefaultToWorkflow = true, isCoreEngine = true)
 @Alias("defaultCache")
-public class MemoryMapCacheEngine extends ScheduledCacheEngine {
+public class MemoryMapCacheEngine extends ScheduledCacheEngine implements TemporaryFileManagerHolder {
 
     /**
      * Exception message when {@link ApplicationConfig#MAX_SIZE_IN_MEMORY} setting is not correct.
@@ -102,6 +104,11 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      * Memory currently used.
      */
     private long used;
+
+    /**
+     * The temporary file manager.
+     */
+    private TemporaryFileManager temporaryFileManager;
 
     /**
      * <p>
@@ -175,6 +182,14 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
      */
     public long getMemoryInUse() {
         return used;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final void setTemporaryFileManager(final TemporaryFileManager temporaryFileManager) {
+        this.temporaryFileManager = temporaryFileManager;
     }
 
     /**
@@ -367,7 +382,7 @@ public class MemoryMapCacheEngine extends ScheduledCacheEngine {
 
             try {
                 // Store on temporary directory
-                file = File.createTempFile("wuic-default-cache", ".cache");
+                file = temporaryFileManager.createTempFile(getClass().getSimpleName(), "wuic-default-cache", ".cache", -1);
                 oos = new ObjectOutputStream(new FileOutputStream(file));
                 oos.writeObject(cacheResult);
             } catch (IOException ioe) {

@@ -44,6 +44,7 @@ import com.github.wuic.path.Path;
 import com.github.wuic.util.CloseableZipFileAdapter;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.TemporaryFileManager;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
@@ -63,6 +64,11 @@ import java.util.zip.ZipFile;
 public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements DirectoryPath {
 
     /**
+     * The temporary file manager.
+     */
+    private final TemporaryFileManager temporaryFileManager;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
@@ -70,9 +76,11 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
      * @param charset the charset
      * @param name the name
      * @param parent the parent
+     * @param temporaryFileManager the temporary file manager
      */
-    public ZipDirectoryPath(final String name, final DirectoryPath parent, final String charset) {
+    public ZipDirectoryPath(final String name, final DirectoryPath parent, final String charset, final TemporaryFileManager temporaryFileManager) {
         super(name, parent, charset);
+        this.temporaryFileManager = temporaryFileManager;
     }
 
     /**
@@ -97,14 +105,14 @@ public abstract class ZipDirectoryPath extends AbstractDirectoryPath implements 
 
             // Entry is a directory
             if (entry.isDirectory()) {
-                return new ZipEntryDirectoryPath(child, this, getCharset());
+                return new ZipEntryDirectoryPath(temporaryFileManager, child, this, getCharset());
                 // If the entry is a ZIP archive itself, copy it on the disk to be able to read it
             } else if (IOUtils.isArchive(is == null ? archive.getInputStream(entry) : is)) {
-                final File entryArchiveDisk = File.createTempFile("entryArchive", ".zip");
+                final File entryArchiveDisk = temporaryFileManager.createTempFile(getClass().getSimpleName(), "entryArchive", ".zip");
                 is = archive.getInputStream(entry);
                 os = new FileOutputStream(entryArchiveDisk);
                 IOUtils.copyStream(is, os);
-                return new ZipFilePath(entryArchiveDisk, child, this, getCharset());
+                return new ZipFilePath(temporaryFileManager, entryArchiveDisk, child, this, getCharset());
             } else {
 
                 // Entry is a path

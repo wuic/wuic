@@ -73,9 +73,12 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.PropertyResolver;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.TemporaryFileManager;
+import com.github.wuic.util.TemporaryFileManagerHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,10 +117,22 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@link #enableProfile(String...)} method.
  * </p>
  *
+ * <p>
+ * Note that all instances of {@link ContextBuilder} share the same {@link TemporaryFileManager} instance as it's
+ * supposed to be a singleton that manages the same directory. To avoid complicated temporary file management, it's
+ * strongly recommended that {@link ApplicationConfig#TEMPORARY_DIRECTORY} configuration across the different
+ * {@link ContextBuilder} instances remains the same in order to always deal with the same directory.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @since 0.4.0
  */
 public class ContextBuilder extends Observable {
+
+    /**
+     * The temporary file manager.
+     */
+    private static TemporaryFileManager temporaryFileManager;
 
     /**
      * The logger.
@@ -246,6 +261,7 @@ public class ContextBuilder extends Observable {
 
         inspector(new NutFilterHolderInspector());
         inspector(new NutTypeFactoryHolderInspector());
+        inspector(new TemporaryFileManagerHolderInspector());
 
         for (final ObjectBuilderInspector i : inspectors) {
             inspector(i);
@@ -367,6 +383,55 @@ public class ContextBuilder extends Observable {
         @Override
         public <T> T inspect(final T object) {
             NutTypeFactoryHolder.class.cast(object).setNutTypeFactory(getNutTypeFactory());
+            return object;
+        }
+    }
+
+    /**
+     * <p>
+     * Sets the {@link TemporaryFileManager} configured in the given instance if it's a {@link TemporaryFileManagerHolder}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    @ObjectBuilderInspector.InspectedType(TemporaryFileManagerHolder.class)
+    final class TemporaryFileManagerHolderInspector implements ObjectBuilderInspector {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public <T> T inspect(final T object) {
+            synchronized (ContextBuilder.class) {
+                if (temporaryFileManager == null) {
+                    final String ttl = propertyResolver.resolveProperty(ApplicationConfig.TIME_TO_LIVE);
+                    final int ttlSeconds;
+
+                    if (ttl == null) {
+                        // 50 minutes
+                        ttlSeconds = NumberUtils.ONE_THOUSAND * NumberUtils.THREE;
+                    } else {
+
+                        // Check that ttl is a valid number
+                        if (!NumberUtils.isNumber(ttl)) {
+                            WuicException.throwBadArgumentException(new IllegalArgumentException(String.format(
+                                    "%s property must be a number. Actual value is: %s", ApplicationConfig.TIME_TO_LIVE, ttl)));
+
+                        }
+
+                        // Parse custom value
+                        ttlSeconds = Integer.parseInt(ttl);
+                    }
+
+                    final String tmpDir = propertyResolver.resolveProperty(ApplicationConfig.TEMPORARY_DIRECTORY);
+                    final File file = new File(tmpDir == null ? System.getProperty("java.io.tmpdir") : injectPlaceholder(tmpDir), "wuic");
+
+                    temporaryFileManager = new TemporaryFileManager(file, ttlSeconds);
+                }
+            }
+
+            TemporaryFileManagerHolder.class.cast(object).setTemporaryFileManager(temporaryFileManager);
             return object;
         }
     }

@@ -80,6 +80,17 @@ public interface ApplicationConfig {
     String FACADE_PREFIX = PREFIX + "facade.";
 
     /**
+     * Temporary directory used by WUIC.
+     * Can contain the placeholder ${java.io.tmpdir} to be replaced by the corresponding system property.
+     */
+    String TEMPORARY_DIRECTORY = PREFIX + "tmpDir";
+
+    /**
+     * Temporary file duration in seconds used by WUIC.
+     */
+    String TEMPORARY_FILE_TTL = PREFIX + "tmpFileTimeToLiveSeconds";
+
+    /**
      * The fixed version number.
      */
     String FIXED_VERSION_NUMBER = PREFIX + "fixedVersionNumber";

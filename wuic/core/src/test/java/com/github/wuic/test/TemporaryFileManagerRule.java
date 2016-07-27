@@ -36,76 +36,71 @@
  */
 
 
-package com.github.wuic.path.core;
+package com.github.wuic.test;
 
-import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.ProcessContext;
+import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.TemporaryFileManager;
+import com.github.wuic.util.WuicScheduledThreadPool;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import java.io.IOException;
-import java.util.zip.ZipFile;
+import java.io.File;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * <p>
- * This {@link com.github.wuic.path.DirectoryPath} represents an entry inside a ZIP archive identified as a directory.
+ * This rule produces standalone {@link com.github.wuic.util.TemporaryFileManager}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.3.4
+ * @since 0.5.3
  */
-public class ZipEntryDirectoryPath extends ZipDirectoryPath implements DirectoryPath {
+public class TemporaryFileManagerRule implements TestRule {
 
     /**
-     * Entry path.
+     * The temporary file manager
      */
-    private ZipEntryPath entryPath;
+    private final TemporaryFileManager temporaryFileManager;
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
+     */
+    public TemporaryFileManagerRule() {
+        this.temporaryFileManager = new TemporaryFileManager(new File(System.getProperty("java.io.tmpdir"), getClass().getSimpleName()), 50);
+    }
+
+    /**
+     * <p>
+     * Gets the temporary file manager.
+     * </p>
      *
-     * @param manager the temporary file manager
-     * @param charset the charset
-     * @param entry the ZIP entry name
-     * @param parent the parent
+     * @return the temporary file manager
      */
-    public ZipEntryDirectoryPath(final TemporaryFileManager manager, final String entry, final DirectoryPath parent, final String charset) {
-        super(entry, parent, charset, manager);
-        entryPath = new ZipEntryPath(entry, parent, charset);
+    public TemporaryFileManager getTemporaryFileManager() {
+        return temporaryFileManager;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String[] list() throws IOException {
-        final ZipEntryPath.ArchiveWithParentEntry zip = entryPath.findZipArchive("");
-        final ZipFilePath archive = zip.getArchive();
-        return archive.list(zip.getEntryPath());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected ZipFile getZipFile() throws IOException {
-        final ZipEntryPath.ArchiveWithParentEntry zip = entryPath.findZipArchive("");
-        return new ZipFile(zip.getArchive().getRawFile());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String absoluteEntryOf(final String child) throws IOException {
-        return entryPath.findZipArchive(child).getEntryPath();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getLastUpdate() throws IOException {
-        return entryPath.getLastUpdate();
+    public Statement apply(final Statement base, final Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                try {
+                    base.evaluate();
+                } finally {
+                    temporaryFileManager.start();
+                }
+            }
+        };
     }
 }

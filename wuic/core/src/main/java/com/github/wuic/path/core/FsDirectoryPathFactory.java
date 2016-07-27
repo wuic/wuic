@@ -40,6 +40,7 @@ package com.github.wuic.path.core;
 
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.DirectoryPathFactory;
+import com.github.wuic.util.TemporaryFileManager;
 
 /**
  * <p>
@@ -57,20 +58,28 @@ public class FsDirectoryPathFactory implements DirectoryPathFactory {
     private final String charset;
 
     /**
+     * The temporary file manager.
+     */
+    private final TemporaryFileManager temporaryFileManager;
+
+    /**
      * <p>
      * Builds a new instance.
      * </p>
      *
      * @param charset the charset
+     * @param manager the temporary file manager
      */
-    public FsDirectoryPathFactory(final String charset) {
+    public FsDirectoryPathFactory(final String charset, final TemporaryFileManager manager) {
         this.charset = charset;
+        this.temporaryFileManager = manager;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public DirectoryPath create(final String path) {
-        return new FsDirectoryPath(path, null, charset);
+        return new FsDirectoryPath(temporaryFileManager, path, null, charset);
     }
 }

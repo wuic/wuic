@@ -601,11 +601,12 @@ public final class IOUtils {
      *
      * @param charset the charset
      * @param path the path hierarchy
+     * @param manager the temporary file manager
      * @return the last {@link Path} of the hierarchy with its parent
      * @throws IOException if any I/O error occurs
      */
-    public static Path buildPath(final String path, final String charset) throws IOException {
-        return buildPath(path, new FsDirectoryPathFactory(charset));
+    public static Path buildPath(final String path, final String charset, final TemporaryFileManager manager) throws IOException {
+        return buildPath(path, new FsDirectoryPathFactory(charset, manager));
     }
 
     /**

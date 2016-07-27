@@ -36,76 +36,24 @@
  */
 
 
-package com.github.wuic.path.core;
-
-import com.github.wuic.path.DirectoryPath;
-import com.github.wuic.util.TemporaryFileManager;
-
-import java.io.IOException;
-import java.util.zip.ZipFile;
+package com.github.wuic.util;
 
 /**
  * <p>
- * This {@link com.github.wuic.path.DirectoryPath} represents an entry inside a ZIP archive identified as a directory.
+ * This interface can be implemented by classes that needs to be configured with a {@link TemporaryFileManager}.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.3.4
+ * @since 0.5.3
  */
-public class ZipEntryDirectoryPath extends ZipDirectoryPath implements DirectoryPath {
-
-    /**
-     * Entry path.
-     */
-    private ZipEntryPath entryPath;
+public interface TemporaryFileManagerHolder {
 
     /**
      * <p>
-     * Builds a new instance.
+     * Sets the given {@code TemporaryFileManager}.
      * </p>
      *
-     * @param manager the temporary file manager
-     * @param charset the charset
-     * @param entry the ZIP entry name
-     * @param parent the parent
+     * @param temporaryFileManager the new manager
      */
-    public ZipEntryDirectoryPath(final TemporaryFileManager manager, final String entry, final DirectoryPath parent, final String charset) {
-        super(entry, parent, charset, manager);
-        entryPath = new ZipEntryPath(entry, parent, charset);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String[] list() throws IOException {
-        final ZipEntryPath.ArchiveWithParentEntry zip = entryPath.findZipArchive("");
-        final ZipFilePath archive = zip.getArchive();
-        return archive.list(zip.getEntryPath());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected ZipFile getZipFile() throws IOException {
-        final ZipEntryPath.ArchiveWithParentEntry zip = entryPath.findZipArchive("");
-        return new ZipFile(zip.getArchive().getRawFile());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String absoluteEntryOf(final String child) throws IOException {
-        return entryPath.findZipArchive(child).getEntryPath();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getLastUpdate() throws IOException {
-        return entryPath.getLastUpdate();
-    }
+    void setTemporaryFileManager(TemporaryFileManager temporaryFileManager);
 }

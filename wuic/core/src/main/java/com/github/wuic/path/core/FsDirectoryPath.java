@@ -43,6 +43,7 @@ import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.path.FsItem;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.TemporaryFileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,16 +72,22 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
     private File directory;
 
     /**
+     * The temporary file manager.
+     */
+    private final TemporaryFileManager temporaryFileManager;
+
+    /**
      * <p>
      * Builds a new instance. Throws a {@link IllegalArgumentException} if the specified path does not represents a
      * directory on the path system.
      * </p>
      *
+     * @param manager the temporary file manager
      * @param charset the charset
      * @param file the directory
      * @param parent the parent, {@code null} if this path is a root
      */
-    public FsDirectoryPath(final File file, final DirectoryPath parent, final String charset) {
+    public FsDirectoryPath(final TemporaryFileManager manager, final File file, final DirectoryPath parent, final String charset) {
         super(file.getName().isEmpty() ? file.getPath() : file.getName(), parent, charset);
 
         if (!file.isDirectory()) {
@@ -88,6 +95,7 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
         }
 
         directory = file;
+        temporaryFileManager = manager;
     }
 
     /**
@@ -96,12 +104,13 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
      * directory on the path system.
      * </p>
      *
+     * @param manager the temporary file manager
      * @param charset the charset
      * @param path the directory
      * @param parent the parent, {@code null} if this path is a root
      */
-    public FsDirectoryPath(final String path, final DirectoryPath parent, final String charset) {
-        this(new File(path), parent, charset);
+    public FsDirectoryPath(final TemporaryFileManager manager, final String path, final DirectoryPath parent, final String charset) {
+        this(manager, new File(path), parent, charset);
     }
 
     /**
@@ -121,9 +130,9 @@ public class FsDirectoryPath extends AbstractDirectoryPath implements DirectoryP
         if (!file.exists()) {
             throw new FileNotFoundException(String.format("%s is not an existing file", file.getAbsolutePath()));
         } else if (file.isDirectory()) {
-            return new FsDirectoryPath(file, this, getCharset());
+            return new FsDirectoryPath(temporaryFileManager, file, this, getCharset());
         } else {
-            return IOUtils.isArchive(file) ? new ZipFilePath(file, this, getCharset()) : new FsFilePath(file, this, getCharset());
+            return IOUtils.isArchive(file) ? new ZipFilePath(temporaryFileManager, file, this, getCharset()) : new FsFilePath(file, this, getCharset());
         }
     }
 

@@ -91,6 +91,19 @@ public enum WuicScheduledThreadPool {
 
     /**
      * <p>
+     * Executes the given job in the given delay in seconds.
+     * </p>
+     *
+     * @param job the job
+     * @param seconds the delay in seconds
+     * @return the future result
+     */
+    public synchronized ScheduledFuture<?> execute(final Runnable job, final int seconds) {
+        return pool.schedule(new ExceptionLogger(job), seconds, TimeUnit.SECONDS);
+    }
+
+    /**
+     * <p>
      * Schedules an execution in a specified delay of a given job. Once the job is executed, its execution will
      * be repeated in the initial delay, and so on.
      * </p>

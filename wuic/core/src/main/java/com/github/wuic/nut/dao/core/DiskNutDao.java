@@ -39,8 +39,12 @@
 package com.github.wuic.nut.dao.core;
 
 import com.github.wuic.ApplicationConfig;
-import com.github.wuic.config.*;
+import com.github.wuic.config.Alias;
+import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
+import com.github.wuic.config.IntegerConfigParam;
+import com.github.wuic.config.ObjectConfigParam;
+import com.github.wuic.config.StringConfigParam;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.dao.NutDaoService;
 import com.github.wuic.nut.setter.ProxyUrisPropertySetter;
@@ -91,7 +95,7 @@ public class DiskNutDao extends PathNutDao implements ApplicationConfig {
      */
     @Override
     protected DirectoryPath createBaseDirectory() throws IOException {
-        final Path file = IOUtils.buildPath(getBasePath(), getCharset());
+        final Path file = IOUtils.buildPath(getBasePath(), getCharset(), getTemporaryFileManager());
 
         if (!(file instanceof DirectoryPath)) {
             WuicException.throwBadArgumentException(

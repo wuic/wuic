@@ -46,6 +46,7 @@ import com.github.wuic.util.DefaultInput;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.TemporaryFileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,8 +91,9 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * @param parent the parent
      * @throws java.io.IOException if any I/O error occurs
      */
-    public ZipFilePath(final File file, final DirectoryPath parent, final String charset) throws IOException {
-        this(file, file.getName(), parent, charset);
+    public ZipFilePath(final TemporaryFileManager manager, final File file, final DirectoryPath parent, final String charset)
+            throws IOException {
+        this(manager, file, file.getName(), parent, charset);
     }
 
     /**
@@ -99,15 +101,16 @@ public class ZipFilePath extends ZipDirectoryPath implements FilePath, Directory
      * Builds a new instance. Throws an {@link IllegalArgumentException} if the given path is not a ZIP archive.
      * </p>
      *
+     * @param manager the temporary file manager
      * @param charset the charset
      * @param file the path
      * @param name the name
      * @param parent the parent
      * @throws java.io.IOException if any I/O error occurs
      */
-    public ZipFilePath(final File file, final String name, final DirectoryPath parent, final String charset)
+    public ZipFilePath(final TemporaryFileManager manager, final File file, final String name, final DirectoryPath parent, final String charset)
             throws IOException {
-        super(name, parent, charset);
+        super(name, parent, charset, manager);
 
         if (!IOUtils.isArchive(file)) {
             throw new IllegalArgumentException(String.format("%s is not a ZIP archive", file.getAbsolutePath()));

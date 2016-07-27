@@ -49,6 +49,8 @@ import com.github.wuic.path.FilePath;
 import com.github.wuic.path.Path;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Input;
+import com.github.wuic.util.TemporaryFileManager;
+import com.github.wuic.util.TemporaryFileManagerHolder;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,7 +71,7 @@ import java.util.regex.Pattern;
  * @author Guillaume DROUET
  * @since 0.4.2
  */
-public abstract class PathNutDao extends AbstractNutDao {
+public abstract class PathNutDao extends AbstractNutDao implements TemporaryFileManagerHolder {
 
     /**
      * Base directory where the protocol has to look up.
@@ -85,6 +87,11 @@ public abstract class PathNutDao extends AbstractNutDao {
      * {@code true} if the path is a wildcard, {@code false} otherwise.
      */
     private Boolean wildcardExpression;
+
+    /**
+     * The temporary file manager.
+     */
+    private TemporaryFileManager temporaryFileManager;
 
     /**
      * <p>
@@ -132,6 +139,25 @@ public abstract class PathNutDao extends AbstractNutDao {
      */
     public Boolean getWildcardExpression() {
         return wildcardExpression;
+    }
+
+    /**
+     * <p>
+     * Gets the temporary file manager.
+     * </p>
+     *
+     * @return the {@code TemporaryFileManager}
+     */
+    public final TemporaryFileManager getTemporaryFileManager() {
+        return temporaryFileManager;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final void setTemporaryFileManager(final TemporaryFileManager temporaryFileManager) {
+        this.temporaryFileManager = temporaryFileManager;
     }
 
     /**

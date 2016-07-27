@@ -112,7 +112,7 @@ public class ClasspathNutDao extends DiskNutDao {
                 sub = p.substring(pathIndex);
             }
             
-            final Path path = IOUtils.buildPath(sub, getCharset());
+            final Path path = IOUtils.buildPath(sub, getCharset(), getTemporaryFileManager());
 
             if (DirectoryPath.class.isAssignableFrom(path.getClass())) {
                 paths.add(DirectoryPath.class.cast(path));

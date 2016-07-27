@@ -66,11 +66,14 @@ import com.github.wuic.util.Pipe;
 import com.github.wuic.util.SequenceReader;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
+import com.github.wuic.util.TemporaryFileManager;
 import com.github.wuic.util.UrlMatcher;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -78,8 +81,10 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -109,11 +114,23 @@ import java.util.regex.Pattern;
 public class UtilityTest extends WuicTest {
 
     /**
+     * Temporary file manager.
+     */
+    @ClassRule
+    public static TemporaryFileManagerRule temporaryFileManager = new TemporaryFileManagerRule();
+
+    /**
      * Timeout.
      */
     @Rule
     public Timeout globalTimeout = Timeout.seconds(60);
-    
+
+    /**
+     * Temporary folder.
+     */
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     /**
      * <p>
      * Test the nut research feature.
@@ -286,17 +303,17 @@ public class UtilityTest extends WuicTest {
      */
     @Test
     public void mergeTest() {
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", "oof", }, ":"), "foo:oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo", "oof",}, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[]{"foo:", "oof",}, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[]{"foo:", ":oof",}, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[]{"foo", ":oof",}, ":"), "foo:oof");
         Assert.assertEquals(StringUtils.merge(new String[]{"foo", ":oof", "foo",}, ":"), "foo:oof:foo");
-        Assert.assertEquals(StringUtils.merge(new String[] {"foo", ":oof", "foo", }, null), "foo:ooffoo");
-        Assert.assertEquals(StringUtils.merge(new String[] {":", "oof", }, ":"), ":oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {":", ":foo:", ":oof", }, ":"), ":foo:oof");
-        Assert.assertEquals(StringUtils.merge(new String[] {":", "foo:", ":oof:", }, ":"), ":foo:oof:");
-        Assert.assertEquals(StringUtils.merge(new String[] {"/opt", "data", }, "/"), "/opt/data");
-        Assert.assertEquals(StringUtils.merge(new String[] {"http://", "server:80", "", "root" }, "/"), "http://server:80/root");
+        Assert.assertEquals(StringUtils.merge(new String[]{"foo", ":oof", "foo",}, null), "foo:ooffoo");
+        Assert.assertEquals(StringUtils.merge(new String[]{":", "oof",}, ":"), ":oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{":", ":foo:", ":oof",}, ":"), ":foo:oof");
+        Assert.assertEquals(StringUtils.merge(new String[]{":", "foo:", ":oof:",}, ":"), ":foo:oof:");
+        Assert.assertEquals(StringUtils.merge(new String[]{"/opt", "data",}, "/"), "/opt/data");
+        Assert.assertEquals(StringUtils.merge(new String[]{"http://", "server:80", "", "root"}, "/"), "http://server:80/root");
     }
 
     /**
@@ -346,7 +363,9 @@ public class UtilityTest extends WuicTest {
 
         final File file = File.createTempFile("file", ".js", basePath);
 
-        final DirectoryPath parent = DirectoryPath.class.cast(IOUtils.buildPath(IOUtils.mergePath(tmp, nanoTime), Charset.defaultCharset().displayName()));
+        final DirectoryPath parent = DirectoryPath.class.cast(IOUtils.buildPath(IOUtils.mergePath(tmp, nanoTime),
+                Charset.defaultCharset().displayName(),
+                temporaryFileManager.getTemporaryFileManager()));
         List<String> list = IOUtils.listFile(parent, Pattern.compile(".*js"));
 
         Assert.assertEquals(list.size(), 1);
@@ -355,7 +374,9 @@ public class UtilityTest extends WuicTest {
         // Part 2
         final String str = getClass().getResource("/images").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir,
+                Charset.defaultCharset().displayName(),
+                temporaryFileManager.getTemporaryFileManager()));
         final List<String> listFiles = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
         Assert.assertEquals(40, listFiles.size());
 
@@ -377,7 +398,9 @@ public class UtilityTest extends WuicTest {
         String str = IOUtils.normalizePathSeparator(getClass().getResource(resolve).toString());
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir,
+                Charset.defaultCharset().displayName(),
+                temporaryFileManager.getTemporaryFileManager()));
         IOUtils.listFile(directoryPath, Pattern.compile(".*.js"));
     }
 
@@ -393,7 +416,9 @@ public class UtilityTest extends WuicTest {
         String str = IOUtils.normalizePathSeparator(getClass().getResource("/zip").toString());
 
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir,
+                Charset.defaultCharset().displayName(),
+                temporaryFileManager.getTemporaryFileManager()));
         final List<String> list = IOUtils.listFile(directoryPath, Pattern.compile(".*.png"));
         ZipEntryFilePath.ZipFileInputStream is;
 
@@ -430,7 +455,9 @@ public class UtilityTest extends WuicTest {
     public void fileSearchSkipStartWith() throws IOException {
         final String str = getClass().getResource("/skipped").toString();
         final String baseDir = str.substring(str.indexOf(":/") + 1);
-        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir, Charset.defaultCharset().displayName()));
+        final DirectoryPath directoryPath = DirectoryPath.class.cast(IOUtils.buildPath(baseDir,
+                Charset.defaultCharset().displayName(),
+                temporaryFileManager.getTemporaryFileManager()));
         final List<String> res = IOUtils.listFile(directoryPath, Pattern.compile(".*.js"), Arrays.asList("ignore"));
         Assert.assertEquals(2, res.size());
     }
@@ -1194,5 +1221,89 @@ public class UtilityTest extends WuicTest {
         final Reader seq = new SequenceReader(Arrays.asList(r1, r2, r3));
         Assert.assertEquals("abc", IOUtils.readString(seq));
         seq.close();
+    }
+
+    /**
+     * <p>
+     * Nominal test for {@link TemporaryFileManager}.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws InterruptedException if a thread fails
+     */
+    @Test
+    public void temporaryFileTest() throws IOException, InterruptedException {
+        final TemporaryFileManager temporaryFileManager = new TemporaryFileManager(temporaryFolder.newFolder(), 1);
+        final File file = temporaryFileManager.createTempFile(getClass().getSimpleName(), "temporaryFileTest", ".test");
+        Assert.assertTrue(file.exists());
+        Thread.sleep(1500L);
+        Assert.assertFalse(file.exists());
+    }
+
+    /**
+     * <p>
+     * Test eternal file with {@link TemporaryFileManager}.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws InterruptedException if a thread fails
+     */
+    @Test
+    public void eternalTemporaryFileTest() throws IOException, InterruptedException {
+        final TemporaryFileManager temporaryFileManager = new TemporaryFileManager(temporaryFolder.newFolder(), 1);
+        final File file = temporaryFileManager.createTempFile(getClass().getSimpleName(), "temporaryFileTest", ".test", -1);
+        Assert.assertTrue(file.exists());
+        Thread.sleep(1500L);
+        Assert.assertTrue(file.exists());
+    }
+
+    /**
+     * <p>
+     * Tests when test directory is already cleans.
+     * </p>
+     *
+     * @throws IOException if test fails
+     * @throws InterruptedException if a thread issue occurs
+     */
+    @Test
+    public void temporaryFileAlreadyDeletedTest() throws IOException, InterruptedException {
+        final TemporaryFileManager temporaryFileManager = new TemporaryFileManager(temporaryFolder.newFolder(), 1);
+        final File file = temporaryFileManager.createTempFile(getClass().getSimpleName(), "temporaryFileTest", ".test");
+        Assert.assertTrue(file.exists());
+        Assert.assertTrue(file.delete());
+        Thread.sleep(1500L);
+    }
+
+    /**
+     * <p>
+     * Tests when temporary directory is a file.
+     * </p>
+     *
+     * @throws IOException if test fails
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void badTemporaryFileTest() throws IOException {
+        new TemporaryFileManager(temporaryFolder.newFile(), 1);
+    }
+
+    /**
+     * <p>
+     * Tests when temporary file can't be deleted.
+     * </p>
+     *
+     * @throws IOException if any I/O error occurs
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void temporaryFileOpenTest() throws IOException {
+        final File d = temporaryFolder.newFolder();
+        final File f = new File(d, "t");
+        OutputStream os = null;
+
+        try {
+            os = new FileOutputStream(f);
+            new TemporaryFileManager(d, 1);
+        } finally {
+            IOUtils.close(os);
+        }
     }
 }
