@@ -50,11 +50,11 @@ import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.UrlProviderFactory;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Set;
 
 /**
@@ -70,7 +70,7 @@ import java.util.Set;
  * @author Guillaume DROUET
  * @since 0.4.0
  */
-public class Context implements Observer {
+public class Context implements PropertyChangeListener {
 
     /**
      * All possible workflow mapped to their ID.
@@ -105,7 +105,7 @@ public class Context implements Observer {
             final Map<String, Workflow> wm,
             final List<ContextInterceptor> interceptorsList) {
         contextBuilder = cb;
-        contextBuilder.addObserver(this);
+        contextBuilder.addPropertyChangeListener(this);
         workflowMap = wm;
         upToDate = true;
         interceptors = interceptorsList;
@@ -322,10 +322,9 @@ public class Context implements Observer {
      * {@inheritDoc}
      */
     @Override
-    public void update(final Observable o, final Object arg) {
-
+    public void propertyChange(final PropertyChangeEvent evt) {
         // This context is not usable anymore, stop observing to not still referenced anymore
-        contextBuilder.deleteObserver(this);
+        contextBuilder.removePropertyChangeListener(this);
         upToDate = false;
     }
 

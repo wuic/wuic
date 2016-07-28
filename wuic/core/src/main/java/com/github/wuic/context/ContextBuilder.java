@@ -78,6 +78,8 @@ import com.github.wuic.util.TemporaryFileManagerHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,7 +90,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
@@ -127,7 +128,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Guillaume DROUET
  * @since 0.4.0
  */
-public class ContextBuilder extends Observable {
+public class ContextBuilder {
 
     /**
      * The temporary file manager.
@@ -138,6 +139,11 @@ public class ContextBuilder extends Observable {
      * The logger.
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
+     * Property change support.
+     */
+    private final PropertyChangeSupport propertyChangeSupport;
 
     /**
      * The internal lock for tags.
@@ -209,6 +215,10 @@ public class ContextBuilder extends Observable {
         childrenTags = new HashMap<Object, List<Object>>();
         profiles = new ArrayList<String>(b.profiles);
         defaultNutDaoClass = b.defaultNutDaoClass;
+
+        for (final PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners(getClass().getName())) {
+            propertyChangeSupport.addPropertyChangeListener(getClass().getName(), listener);
+        }
     }
 
     /**
@@ -251,6 +261,7 @@ public class ContextBuilder extends Observable {
         this.profiles = new ArrayList<String>();
         this.defaultNutDaoClass = ClasspathNutDao.class;
         this.childrenTags = new HashMap<Object, List<Object>>();
+        this.propertyChangeSupport = new PropertyChangeSupport(this);
 
         this.engineBuilderFactory = engineBuilderFactory == null ?
                 new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE) : engineBuilderFactory;
@@ -1307,6 +1318,28 @@ public class ContextBuilder extends Observable {
 
     /**
      * <p>
+     * Adds a new {@code PropertyChangeListener} to this instance.
+     * </p>
+     *
+     * @param propertyChangeListener the listener to add
+     */
+    public void addPropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
+        propertyChangeSupport.addPropertyChangeListener(getClass().getName(), propertyChangeListener);
+    }
+
+    /**
+     * <p>
+     * Removes an existing {@code PropertyChangeListener} from this instance.
+     * </p>
+     *
+     * @param propertyChangeListener the listener to remove
+     */
+    public void removePropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
+        propertyChangeSupport.removePropertyChangeListener(getClass().getName(), propertyChangeListener);
+    }
+
+    /**
+     * <p>
      * Registers this builder with the given {@link ContextBuilderConfigurator configurators}.
      * </p>
      *
@@ -1451,8 +1484,8 @@ public class ContextBuilder extends Observable {
 
         currentTag = tag;
         getSetting().getRequiredProfiles().addAll(Arrays.asList(profiles));
-        setChanged();
-        notifyObservers(tag);
+        notifyListeners();
+        
         return this;
     }
 
@@ -1483,8 +1516,7 @@ public class ContextBuilder extends Observable {
                 children.add(children);
             }
 
-            setChanged();
-            notifyObservers(parentTag);
+            notifyListeners();
         }
     }
 
@@ -1500,8 +1532,8 @@ public class ContextBuilder extends Observable {
     public ContextBuilder processContext(final ProcessContext processContext) {
         taggedSettings.setProcessContext(processContext);
         getSetting().setProcessContext(processContext);
-        setChanged();
-        notifyObservers();
+        notifyListeners();
+        
         return this;
     }
 
@@ -1527,8 +1559,7 @@ public class ContextBuilder extends Observable {
                 taggedSettings.remove(tag);
             }
 
-            setChanged();
-            notifyObservers(tag);
+            notifyListeners();
 
             // Clear child tags
             if (childrenTags.containsKey(tag)) {
@@ -1562,8 +1593,7 @@ public class ContextBuilder extends Observable {
             // Check that a tag exists
             getSetting();
             currentTag = null;
-            setChanged();
-            notifyObservers();
+            notifyListeners();
 
             return this;
         } finally {
@@ -2000,8 +2030,8 @@ public class ContextBuilder extends Observable {
         final ContextSetting setting = getSetting();
         setting.getInterceptorsList().add(interceptor);
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers();
+        notifyListeners();
+
         return this;
     }
 
@@ -2038,8 +2068,7 @@ public class ContextBuilder extends Observable {
 
         setting.getNutDaoMap().put(id, registration);
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2061,8 +2090,7 @@ public class ContextBuilder extends Observable {
 
         setting.getNutFilterMap().put(id, filter);
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2084,8 +2112,7 @@ public class ContextBuilder extends Observable {
 
         setting.getEngineMap().put(id, engine);
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2119,8 +2146,7 @@ public class ContextBuilder extends Observable {
 
         setting.getNutDaoMap().put(regId, daoRegistration.configure(properties));
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2192,8 +2218,7 @@ public class ContextBuilder extends Observable {
 
         setting.getNutFilterMap().put(regId, configure(filterBuilder, properties));
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2275,8 +2300,7 @@ public class ContextBuilder extends Observable {
         setting.getNutsHeaps().put(regId, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
 
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2343,8 +2367,7 @@ public class ContextBuilder extends Observable {
 
         setting.getEngineMap().put(regId, configure(engineBuilder, properties));
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2406,8 +2429,7 @@ public class ContextBuilder extends Observable {
         setting.getTemplateMap().put(new RegistrationId(id, getSetting().getRequiredProfiles()),
                 new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines));
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(id);
+        notifyListeners();
 
         return this;
     }
@@ -2457,8 +2479,7 @@ public class ContextBuilder extends Observable {
 
         setting.getWorkflowMap().put(regId, new WorkflowRegistration(forEachHeap, heapIdPattern, workflowTemplateId));
         taggedSettings.put(currentTag, setting);
-        setChanged();
-        notifyObservers(identifier);
+        notifyListeners();
 
         return this;
     }
@@ -2499,8 +2520,7 @@ public class ContextBuilder extends Observable {
      */
     public ContextBuilder mergeSettings(final ContextBuilder other) {
         taggedSettings.mergeSettings(this, other.taggedSettings, currentTag);
-        setChanged();
-        notifyObservers(getSetting());
+        notifyListeners();
         return this;
     }
 
@@ -2599,5 +2619,14 @@ public class ContextBuilder extends Observable {
         }
 
         return builder;
+    }
+
+    /**
+     * <p>
+     * Notifies all the listeners with a simple event.
+     * </p>
+     */
+    private void notifyListeners() {
+        this.propertyChangeSupport.firePropertyChange(getClass().getName(), null, null);
     }
 }
