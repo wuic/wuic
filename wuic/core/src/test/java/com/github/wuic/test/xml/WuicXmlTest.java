@@ -61,9 +61,13 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -122,8 +126,17 @@ public class WuicXmlTest {
         final URL wwdb = getClass().getResource("/wuic-simple.xml");
         IOUtils.copyStream(wwdb.openStream(), new FileOutputStream(tmp));
 
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        builder.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                latch.countDown();
+            }
+        });
+
         // Polling is done every seconds
-        Thread.sleep(1300L);
+        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
         Assert.assertFalse(ctx.isUpToDate());
 
         // Check new context which contains new workflow
