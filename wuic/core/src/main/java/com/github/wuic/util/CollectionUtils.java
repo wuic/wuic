@@ -52,12 +52,6 @@ import java.util.*;
 public final class CollectionUtils {
 
     /**
-     * Empty {@link List} typed with {@code String}.
-     */
-    @SuppressWarnings("unchecked")
-    public static final List<String> EMPTY_STRING_LIST = Collections.EMPTY_LIST;
-
-    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>

@@ -310,7 +310,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
 
         // Engine won't be associated to any chain
         if (inputNutType.isEmpty() || outputNutType.isEmpty()) {
-            inputNutTypeList = Collections.EMPTY_LIST;
+            inputNutTypeList = Collections.emptyList();
             log.info("Properties '{}' and/or '{}' not defined, engine '{}' won't be used",
                     ApplicationConfig.INPUT_NUT_TYPE,
                     ApplicationConfig.OUTPUT_NUT_TYPE,

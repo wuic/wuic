@@ -720,7 +720,7 @@ public class ContextBuilder {
          * @return the heap IDs of the composition
          */
         List<String> getHeapsIds() {
-            return heapIds == null ? Collections.EMPTY_LIST : Arrays.asList(heapIds);
+            return heapIds == null ? Collections.<String>emptyList() : Arrays.asList(heapIds);
         }
 
         /**

@@ -753,7 +753,7 @@ public class InspectorTest {
                 Arrays.asList("// /*bar*/\n", "// comment3\n", "//comment4"),
                 ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
         check("/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4",
-                Collections.EMPTY_LIST,
+                Collections.<String>emptyList(),
                 ScriptLineInspector.ScriptMatchCondition.SINGLE_LINE_COMMENT);
     }
 
@@ -768,7 +768,7 @@ public class InspectorTest {
                 Arrays.asList("/* */"),
                 ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
         check("foo // comment1\n// comment2\n// bar\n// comment3\nbaz//comment4",
-                Collections.EMPTY_LIST,
+                Collections.<String>emptyList(),
                 ScriptLineInspector.ScriptMatchCondition.MULTI_LINE_COMMENT);
         check("/*foo*/ // comment1\n/*// comment2\n*/// /*bar*/\n// comment3\nbaz//comment4",
                 Arrays.asList("/*foo*/", "/*// comment2\n*/"),
@@ -800,7 +800,7 @@ public class InspectorTest {
                 Arrays.asList("var zzz = `zzz`;var y = '\\\\\\'';        var j = \"// comment1\";\nvar i = 'hello';                var z = '\"';                       var k = '\\'';baz"),
                 ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
         final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
-        check(c, Collections.EMPTY_LIST, ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
+        check(c, Collections.<String>emptyList(), ScriptLineInspector.ScriptMatchCondition.NO_COMMENT);
     }
 
     /**
@@ -823,7 +823,7 @@ public class InspectorTest {
                 Arrays.asList("var zzz = ", "`zzz`", ";var y = ", "'\\\\\\''", ";", " var j = ", "\"// comment1\"", ";\nvar i = ", "'hello'", ";", "var z = ", "'\"'", ";", "var k = ", "'\\''", ";baz"),
                 ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
         final String c = "/*var y = '\\\\\\'';/*foo* var j = \"// comment1\";\nvar i = 'hello';* // comment2\n*var z = '\"';// /*bar/\n// comment3\nvar k = '\\'';baz//comment4";
-        check(c, Collections.EMPTY_LIST, ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
+        check(c, Collections.<String>emptyList(), ScriptLineInspector.ScriptMatchCondition.NO_COMMENT_SPLIT_LITERALS);
     }
 
     /**

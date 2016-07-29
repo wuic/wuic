@@ -61,7 +61,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -120,6 +119,17 @@ public abstract class AbstractConverterEngine extends NodeEngine {
                                     final List<Pipe.Transformer<ConvertibleNut>> transformerList) {
             transformers = transformerList;
             engineRequestTransformer = new EngineRequestTransformer(request, this, getEngineType().ordinal());
+        }
+
+        /**
+         * <p>
+         * Builds a new instance with an empty list of transformers.
+         * </p>
+         *
+         * @param request the request
+         */
+        public ConverterTransformer(final EngineRequest request) {
+            this(request, Collections.<Pipe.Transformer<ConvertibleNut>>emptyList());
         }
 
         /**
@@ -267,8 +277,6 @@ public abstract class AbstractConverterEngine extends NodeEngine {
             NodeEngine chain = request.getChainFor(nut.getNutType());
 
             if (chain != null) {
-                final Set<Pipe.Transformer<ConvertibleNut>> initialTransformers = nut.getTransformers() != null ?
-                        new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(nut.getTransformers()) : Collections.EMPTY_SET;
                 final List<ConvertibleNut> res = chain.parse(new EngineRequestBuilder(request)
                         .skip(request.alsoSkip(EngineType.CACHE, EngineType.AGGREGATOR, EngineType.INSPECTOR))
                         .nuts(Arrays.asList(nut))
@@ -276,12 +284,12 @@ public abstract class AbstractConverterEngine extends NodeEngine {
 
                 if (res.isEmpty()) {
                     log.warn("No result found after parsing the nut '{}'.", nut.getName());
-                    nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
+                    nut.addTransformer(new ConverterTransformer(request));
                 } else {
-                    nut = adapt(initialTransformers, request, res.get(0));
+                    nut = adapt(request, res.get(0));
                 }
             } else {
-                nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
+                nut.addTransformer(new ConverterTransformer(request));
             }
 
             // Also convert referenced nuts
@@ -308,9 +316,7 @@ public abstract class AbstractConverterEngine extends NodeEngine {
      * @param convertibleNut the convertible nut
      * @return the adapted nut
      */
-    private ConvertibleNut adapt(final Set<Pipe.Transformer<ConvertibleNut>> initialTransformers,
-                                 final EngineRequest request,
-                                 final ConvertibleNut convertibleNut) {
+    private ConvertibleNut adapt(final EngineRequest request, final ConvertibleNut convertibleNut) {
         // Let our transformer deal with aggregation stuffs
         final ConvertibleNut nut = new NutWrapper(convertibleNut) {
 
@@ -325,18 +331,8 @@ public abstract class AbstractConverterEngine extends NodeEngine {
 
         final Set<Pipe.Transformer<ConvertibleNut>> finalTransformers = nut.getTransformers();
 
-        // No initial transformer, just execute the final transformer on the aggregated content
-        if (initialTransformers == null) {
-            if (finalTransformers != null) {
-                final List<Pipe.Transformer<ConvertibleNut>> transformers =
-                        new ArrayList<Pipe.Transformer<ConvertibleNut>>(finalTransformers);
-                finalTransformers.removeAll(finalTransformers);
-                nut.addTransformer(new ConverterTransformer(request, transformers));
-            } else {
-                nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
-            }
-        } else if (finalTransformers == null) {
-            nut.addTransformer(new ConverterTransformer(request, Collections.EMPTY_LIST));
+        if (finalTransformers == null) {
+            nut.addTransformer(new ConverterTransformer(request));
         } else {
             // Move post conversion transformers execution to our own transformer
             final List<Pipe.Transformer<ConvertibleNut>> postConversionTransformers =

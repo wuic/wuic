@@ -63,6 +63,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
@@ -423,7 +424,7 @@ public final class IOUtils {
      * @throws IOException if any I/O error occurs
      */
     public static List<String> listFile(final DirectoryPath parent, final Pattern pattern) throws IOException {
-        return listFile(parent, "", pattern, CollectionUtils.EMPTY_STRING_LIST);
+        return listFile(parent, "", pattern, Collections.<String>emptyList());
     }
 
     /**

@@ -197,7 +197,7 @@ public abstract class PathNutDao extends AbstractNutDao implements TemporaryFile
         // Checks if single path is skipped
         for (final String skipStartsWith : skipStartsWith()) {
             if (pattern.startsWith(skipStartsWith)) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
         }
 
@@ -221,14 +221,14 @@ public abstract class PathNutDao extends AbstractNutDao implements TemporaryFile
                 parent = DirectoryPath.class.cast(p);
             } else if (i != lookup.length - 1) {
                 // Child is not a directory and is not the end of the path: no match
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             } else {
                 // Other cases like null child: no match
                 return Arrays.asList(pattern);
             }
         }
 
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     /**
