@@ -411,7 +411,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
                 IOUtils.copyStream(sourceMapInputStream, bos);
                 final NutType nutType = nutTypeFactory.getNutType(EnumNutType.MAP);
                 final ConvertibleNut sourceMapNut = new InMemoryNut(bos.toByteArray(), sourceMapName, nutType, 0L, false);
-                nut.setSource(new SourceMapNutImpl(request.getHeap(), nut, sourceMapNut, request.getProcessContext(), request.getCharset()));
+                nut.setSource(new SourceMapNutImpl(request.getHeap(), nut, sourceMapNut, request.getProcessContext()));
             }
 
             return new DefaultInput(new FileInputStream(compilationResult), nutTypeFactory.getCharset());

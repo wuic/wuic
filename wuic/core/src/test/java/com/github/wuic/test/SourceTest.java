@@ -266,7 +266,7 @@ public class SourceTest {
                 + "  ]"
                 + "}", Charset.defaultCharset().displayName()));
 
-        final SourceMapNut src = new SourceMapNutImpl(h, convertibleNut, sourceMap, processContext.getProcessContext(), Charset.defaultCharset().displayName());
+        final SourceMapNut src = new SourceMapNutImpl(h, convertibleNut, sourceMap, processContext.getProcessContext());
         Assert.assertEquals(1, src.getOriginalNuts().size());
         Assert.assertNotNull(src.getNutAt(1, 1));
 

@@ -142,15 +142,13 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * @param convertibleNut the convertible nut
      * @param nut the nut that represents this source map
      * @param processContext the process context
-     * @param charset the charset
      * @throws WuicException if source map can't be read
      */
     public SourceMapNutImpl(final NutsHeap heap,
                             final ConvertibleNut convertibleNut,
                             final ConvertibleNut nut,
-                            final ProcessContext processContext,
-                            final String charset) throws WuicException {
-        this(heap, convertibleNut, nut, processContext, true, charset);
+                            final ProcessContext processContext) throws WuicException {
+        this(heap, convertibleNut, nut, processContext, true);
     }
 
     /**
@@ -163,15 +161,13 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * @param nut the nut that represents this source map
      * @param processContext the process context
      * @param resolveSources if sources should be resolved from read content or not
-     * @param charset the charset
      * @throws WuicException if source map can't be read
      */
     public SourceMapNutImpl(final NutsHeap heap,
                             final ConvertibleNut convertibleNut,
                             final ConvertibleNut nut,
                             final ProcessContext processContext,
-                            final boolean resolveSources,
-                            final String charset) throws WuicException {
+                            final boolean resolveSources) throws WuicException {
         super(nut);
 
         this.owner = convertibleNut;

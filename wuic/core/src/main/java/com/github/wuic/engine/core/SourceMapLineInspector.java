@@ -189,7 +189,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
             // Should have only one nut
             for (final ConvertibleNut nut : res) {
                 nut.setIsSubResource(false);
-                originalNut.setSource(new SourceMapNutImpl(heap, originalNut, nut, request.getProcessContext(), request.getCharset()));
+                originalNut.setSource(new SourceMapNutImpl(heap, originalNut, nut, request.getProcessContext()));
             }
         } else {
             // .map will be broken in case of minification or aggregation
