@@ -64,7 +64,12 @@ public enum Logging {
     /**
      * Timer logger. Name is, 'com.github.wuic.Logging.TIMER', you can see its logs by assigning the TRACE level.
      */
-    TIMER;
+    TIMER,
+
+    /**
+     * Properties logger. Name is, 'com.github.wuic.Logging.PROPERTIES', you can see its logs by assigning the TRACE level.
+     */
+    PROPERTIES;
 
     /**
      * The special logger.

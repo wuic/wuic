@@ -81,7 +81,7 @@ public class NutType implements Serializable {
     public NutType(final EnumNutType enumNutType, final String charset) {
         this.enumNutType = enumNutType;
         this.charset = charset;
-        log.info("Creating nut type with charset {}", charset);
+        Logging.PROPERTIES.log("Creating nut type with charset {}", charset);
     }
     
     /**

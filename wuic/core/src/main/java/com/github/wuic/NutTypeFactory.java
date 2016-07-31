@@ -73,7 +73,7 @@ public class NutTypeFactory {
      * @param charset the charset
      */
     public NutTypeFactory(final String charset) {
-        log.info("NutType factory produces instances with charset {}", charset);
+        Logging.PROPERTIES.log("NutType factory produces instances with charset {}", charset);
         this.charset = charset;
     }
 
