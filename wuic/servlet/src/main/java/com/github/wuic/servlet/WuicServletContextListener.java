@@ -48,11 +48,6 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.servlet.WebappNutDaoBuilderInspector;
 import com.github.wuic.servlet.jetty.PathMap;
-import com.github.wuic.mbean.FacadeStats;
-import com.github.wuic.mbean.HeapResolution;
-import com.github.wuic.mbean.HeapStat;
-import com.github.wuic.mbean.NutResolution;
-import com.github.wuic.mbean.PathResolution;
 import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.Consumer;
 import com.github.wuic.util.IOUtils;
@@ -63,12 +58,6 @@ import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.Registration;
@@ -79,11 +68,9 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.annotation.WebListener;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -258,59 +245,6 @@ public class WuicServletContextListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
-        ObjectName name = null;
-        try {
-            name = new ObjectName("com.jmdoudoux.tests.jmx:type=PremierMBean");
-
-            FacadeStats mbean = new FacadeStats();
-            mbean.setRefreshCount(2);
-            PathResolution p1 = new PathResolution();
-            p1.setDaoId("dao");
-            p1.setPath("foo.css");
-            PathResolution p2 = new PathResolution();
-            p2.setDaoId("dao");
-            p2.setPath("bar.css");
-            PathResolution p3 = new PathResolution();
-            p3.setDaoId("dao");
-            p3.setPath("foo.js");
-            PathResolution p4 = new PathResolution();
-            p4.setDaoId("dao");
-            p4.setPath("bar.js");
-
-            NutResolution n1 = new NutResolution();
-            n1.setDuration(1000L);
-            n1.setPath("*.css");
-            n1.setResolutions(Arrays.asList(p1, p2));
-            NutResolution n2 = new NutResolution();
-            n2.setDuration(2000L);
-            n2.setPath("*.js");
-            n2.setResolutions(Arrays.asList(p3, p4));
-
-            HeapResolution h1 = new HeapResolution();
-            h1.setDuration(2500L);
-            h1.setResolutions(Arrays.asList(n1, n2));
-
-            HeapStat s = new HeapStat();
-            s.setAverageDuration(2500L);
-            s.setId("heap");
-            s.setResolutions(Arrays.asList(h1));
-
-            mbean.setHeapStats(Arrays.asList(s));
-
-            mbs.registerMBean(mbean, new ObjectName("com.github.wuic.jmx:type=FacadeStats"));
-
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        } catch (InstanceAlreadyExistsException e) {
-            e.printStackTrace();
-        } catch (MBeanRegistrationException e) {
-            e.printStackTrace();
-        } catch (NotCompliantMBeanException e) {
-            e.printStackTrace();
-        }
-
         final ServletContext sc = sce.getServletContext();
         detectFilter(sc);
 
