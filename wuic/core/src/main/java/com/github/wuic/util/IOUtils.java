@@ -106,6 +106,11 @@ public final class IOUtils {
     public static final String NEW_LINE = System.getProperty("wuic.useSystemLineSeparator") != null ? System.getProperty("line.separator") : "\n";
 
     /**
+     * A boolean indicating if a warning message has been already logged to notify a charset incorrectly configured.
+     */
+    private static boolean alreadyWarnCharset = false;
+
+    /**
      * <p>
      * Prevent instantiation of this class which provides only static methods.
      * </p>
@@ -125,9 +130,14 @@ public final class IOUtils {
     public static String checkCharset(final String charset) {
         if (charset.isEmpty()) {
             final String retval = Charset.defaultCharset().name();
-            LOG.warn("Charset is not defined, did you configured {} property? Applying platform charset '{}'.",
-                    ApplicationConfig.CHARSET,
-                    retval);
+
+            if (!alreadyWarnCharset) {
+                alreadyWarnCharset = true;
+                LOG.warn("Charset is not defined, did you configured {} property? Applying platform charset '{}'.",
+                        ApplicationConfig.CHARSET,
+                        retval);
+            }
+
             return retval;
         } else {
             return charset;
