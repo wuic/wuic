@@ -54,6 +54,7 @@ import com.github.wuic.test.WuicTest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.InMemoryOutput;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -128,7 +129,10 @@ public class TextAggregatorEngineTest {
         Assert.assertTrue(nut instanceof CompositeNut);
 
         final InMemoryOutput bos = new InMemoryOutput(Charset.defaultCharset().displayName());
-        PipedConvertibleNut.transform((CompositeNut) nut, CompositeNut.class.cast(nut).getCompositionList().get(0).getTransformers(), Arrays.asList((Pipe.OnReady) new Pipe.DefaultOnReady(bos)));
+        PipedConvertibleNut.transform(new TimerTreeFactory(),
+                (CompositeNut) nut,
+                CompositeNut.class.cast(nut).getCompositionList().get(0).getTransformers(),
+                Arrays.asList((Pipe.OnReady) new Pipe.DefaultOnReady(bos)));
 
         final String content = bos.execution().toString();
         Assert.assertEquals("var foo = '';//# \n"

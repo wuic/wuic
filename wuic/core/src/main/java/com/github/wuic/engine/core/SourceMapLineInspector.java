@@ -55,6 +55,7 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -141,7 +142,7 @@ public class SourceMapLineInspector extends RegexLineInspector {
      * {@inheritDoc}
      */
     @Override
-    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+    protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
         // Source map could only be referenced with an URL
         return null;
     }

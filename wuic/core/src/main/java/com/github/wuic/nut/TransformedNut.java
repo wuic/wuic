@@ -38,14 +38,19 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -85,7 +90,16 @@ public class TransformedNut extends NutWrapper implements SizableNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady ... onReady) throws IOException {
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady... onReady)
+            throws IOException {
+        return transform(onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady ... onReady) throws IOException {
         InputStream is = null;
 
         try {
@@ -96,13 +110,12 @@ public class TransformedNut extends NutWrapper implements SizableNut {
             }
 
             final Pipe.Execution execution = InMemoryNut.class.cast(getWrapped()).execution(getNutType().getCharset());
-
-            for (final Pipe.OnReady cb : merge) {
-                cb.ready(execution);
-            }
+            NutUtils.invokeCallbacks(execution, merge);
         } finally {
             IOUtils.close(is);
         }
+
+        return Collections.emptyMap();
     }
 
     /**

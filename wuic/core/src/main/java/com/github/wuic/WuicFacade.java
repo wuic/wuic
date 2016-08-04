@@ -43,37 +43,50 @@ import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.context.Context;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.context.ContextBuilderConfigurator;
+import com.github.wuic.context.HeapResolutionEvent;
+import com.github.wuic.context.WorkflowExecutionEvent;
 import com.github.wuic.engine.EngineType;
 import com.github.wuic.exception.WuicException;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import com.github.wuic.mbean.FacadeStats;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.Timer;
 import com.github.wuic.util.UrlProviderFactory;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.util.WuicScheduledThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 import javax.xml.bind.JAXBException;
 
 /**
  * <p>
- * This class is a facade which exposes the WUIC features by simplifying
- * them within some exposed methods.
+ * This class is a facade which exposes the WUIC features by simplifying them within some exposed methods.
  * </p>
  *
  * @author Guillaume DROUET
  * @since 0.1.0
  */
 @ObjectBuilderInspector.InspectedType(ClassPathResourceResolverHandler.class)
-public final class WuicFacade implements ObjectBuilderInspector {
+public final class WuicFacade implements ObjectBuilderInspector, PropertyChangeListener {
 
     /**
      * <p>
@@ -153,6 +166,11 @@ public final class WuicFacade implements ObjectBuilderInspector {
     private final ContextBuilder builder;
 
     /**
+     * Facade statistics.
+     */
+    private FacadeStats facadeStats;
+
+    /**
      * The nut type factory.
      */
     private NutTypeFactory nutTypeFactory;
@@ -164,7 +182,8 @@ public final class WuicFacade implements ObjectBuilderInspector {
 
     /**
      * <p>
-     * Builds a new {@link WuicFacade}
+     * Builds a new {@link WuicFacade}.
+     * A {@link com.github.wuic.mbean.FacadeStatsMXBean} bean is published to JMX in order to provide statistics.
      * </p>
      *
      * @param b the builder that contains settings in its state
@@ -179,10 +198,34 @@ public final class WuicFacade implements ObjectBuilderInspector {
                     b.addConfigurator(path);
                 }
             }
+
+            // Build and expose statistic bean via JMX
+            final String maxExecutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_WORKFLOW_EXECUTION_STATS);
+            final String maxResolutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_HEAP_RESOLUTION_STATS);
+            facadeStats = new FacadeStats(maxExecutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxExecutions),
+                    maxResolutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxResolutions));
+            final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            final ObjectName name = new ObjectName("com.github.wuic.jmx:type=FacadeStats");
+
+            if (mbs.isRegistered(name)) {
+                mbs.unregisterMBean(name);
+            }
+
+            mbs.registerMBean(facadeStats, name);
         } catch (JAXBException je) {
             WuicException.throwWuicXmlReadException(je) ;
+        }catch (InstanceNotFoundException infe) {
+            WuicException.throwWuicException(infe);
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
+        } catch (InstanceAlreadyExistsException iaee) {
+            WuicException.throwWuicException(iaee);
+        } catch (MBeanRegistrationException mbre) {
+            WuicException.throwWuicException(mbre);
+        } catch (NotCompliantMBeanException ncmbe) {
+            WuicException.throwWuicException(ncmbe);
+        } catch (MalformedObjectNameException mone) {
+            WuicException.throwWuicException(mone);
         }
 
         final List<ObjectBuilderInspector> inspectors = b.getObjectBuilderInspectors();
@@ -192,7 +235,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
 
         builder = new ContextBuilder(b.contextBuilder(), b.getPropertyResolver(),
                 inspectors.toArray(new ObjectBuilderInspector[inspectors.size()]));
-
+        builder.addHeapResolutionListener(this);
         final ContextBuilderConfigurator[] array = new ContextBuilderConfigurator[config.getConfigurators().size()];
         configure(b.getUseDefaultContextBuilderConfigurator(), b.getConfigurators().toArray(array));
 
@@ -286,9 +329,9 @@ public final class WuicFacade implements ObjectBuilderInspector {
                                                    final EngineType ... skip)
             throws WuicException {
         try {
-            final long start = beforeRunWorkflow(id);
+            final Timer timer = beforeRunWorkflow(id);
             final ConvertibleNut retval = context.process(config.getContextPath(), id, path, urlProviderFactory, processContext, skip);
-            Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+            Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (timer.end()) / (float) NumberUtils.ONE_THOUSAND);
             return retval;
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
@@ -338,9 +381,9 @@ public final class WuicFacade implements ObjectBuilderInspector {
                                                          final ProcessContext processContext,
                                                          final EngineType ... skip)
             throws WuicException {
-        final long start = beforeRunWorkflow(id);
+        final Timer timer = beforeRunWorkflow(id);
         final List<ConvertibleNut> retval = context.process(config.getContextPath(), id, urlProviderFactory, processContext, skip);
-        Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
+        Logging.TIMER.log("Workflow retrieved in {} seconds", (float) (timer.end()) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }
@@ -378,16 +421,17 @@ public final class WuicFacade implements ObjectBuilderInspector {
      * </p>
      *
      * @param id the workflow to be run
-     * @return the timestamp as start time
+     * @return the timer started at the beginning of the call
      * @throws WuicException if context can't be built
      */
-    private long beforeRunWorkflow(final String id) throws WuicException {
-        final long start = System.currentTimeMillis();
+    private Timer beforeRunWorkflow(final String id) throws WuicException {
+        final Timer retval = new Timer();
+        retval.start();
 
         log.info("Getting nuts for workflow : {}", id);
         refreshContext();
 
-        return start;
+        return retval;
     }
 
     /**
@@ -402,6 +446,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
         // Update context if necessary
         if (context != null && !context.isUpToDate()) {
             buildContext();
+            facadeStats.addRefreshCount();
             return true;
         } else {
             return false;
@@ -445,6 +490,20 @@ public final class WuicFacade implements ObjectBuilderInspector {
      * {@inheritDoc}
      */
     @Override
+    public void propertyChange(final PropertyChangeEvent evt) {
+        if (evt.getNewValue() instanceof WorkflowExecutionEvent) {
+            final WorkflowExecutionEvent e = WorkflowExecutionEvent.class.cast(evt.getNewValue());
+            facadeStats.addWorkflowExecution(e.getExecution(), e.getId());
+        } else if (evt.getNewValue() instanceof HeapResolutionEvent) {
+            final HeapResolutionEvent e = HeapResolutionEvent.class.cast(evt.getNewValue());
+            facadeStats.addHeapResolution(e.getResolution(), e.getId());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T> T inspect(final T object) {
         ClassPathResourceResolverHandler.class.cast(object).setClasspathResourceResolver(config.getClasspathResourceResolver());
 
@@ -460,6 +519,7 @@ public final class WuicFacade implements ObjectBuilderInspector {
      */
     private void buildContext() throws WuicException {
         context = builder.build();
+        context.addPropertyChangeListener(this);
         nutTypeFactory = builder.getNutTypeFactory();
 
         switch (config.getWarmUpStrategy()) {

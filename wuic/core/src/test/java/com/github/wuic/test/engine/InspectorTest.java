@@ -78,6 +78,7 @@ import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Output;
+import com.github.wuic.util.TimerTreeFactory;
 import com.github.wuic.util.UrlUtils;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import org.junit.Assert;
@@ -875,7 +876,7 @@ public class InspectorTest {
              * {@inheritDoc}
              */
             @Override
-            protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+            protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
                 return null;
             }
 

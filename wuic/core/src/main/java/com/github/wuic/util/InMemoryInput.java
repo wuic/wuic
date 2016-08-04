@@ -168,4 +168,12 @@ public class InMemoryInput extends AbstractInput {
     public Reader internalReader(final String charset) throws IOException {
         return chars == null ? new InputStreamReader(new ByteArrayInputStream(bytes), charset) : new CharArrayReader(chars);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSourceAsByte() {
+        return bytes != null;
+    }
 }

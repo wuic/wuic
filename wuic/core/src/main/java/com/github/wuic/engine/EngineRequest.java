@@ -41,13 +41,23 @@ package com.github.wuic.engine;
 import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.context.Event;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.exception.WorkflowNotFoundException;
+import com.github.wuic.mbean.HeapResolution;
+import com.github.wuic.mbean.TransformationStat;
+import com.github.wuic.mbean.TransformerStat;
+import com.github.wuic.mbean.WorkflowExecution;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.Timer;
+import com.github.wuic.util.TimerTreeFactory;
 import com.github.wuic.util.UrlProviderFactory;
 
+import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -55,6 +65,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * <p>
@@ -66,10 +77,15 @@ import java.util.Arrays;
  * to be parsed and the context path to use to expose the generated nuts.
  * </p>
  *
+ * <p>
+ * This request should be used as {@code HeapListener} of any heap created during the process initiated by this object
+ * to report the heap resolution statistics.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @since 0.3.0
  */
-public final class EngineRequest {
+public final class EngineRequest implements HeapListener {
 
     /**
      * The key generated for the request.
@@ -104,8 +120,101 @@ public final class EngineRequest {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void nutUpdated(final NutsHeap heap) {
+        // ignore
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void heapResolved(final HeapResolutionEvent event) {
+        final List<HeapResolution> list = new LinkedList<HeapResolution>();
+        list.add(event.getResolution());
+        CollectionUtils.merge(event.getId(), list, engineRequestBuilder.getHeapResolutionStats());
+    }
+
+    /**
      * <p>
-     * Returns the prefix created nut
+     * Reports a transformer statistics.
+     * </p>
+     *
+     * @param transformationStats the transformation statistics grouped by transformer
+     */
+    public void reportTransformerStat(final Map<String, List<TransformationStat>> transformationStats) {
+        CollectionUtils.merge(transformationStats, engineRequestBuilder.getTransformationStats());
+    }
+
+    /**
+     * <p>
+     * Reports a parse engine.
+     * </p>
+     *
+     * @param elapsed the time elapsed during parse operation
+     */
+    public void reportParseEngine(final long elapsed) {
+        engineRequestBuilder.incrementParseEngines(elapsed);
+    }
+
+    /**
+     * <p>
+     * Gets a new timer from this request.
+     * </p>
+     *
+     * @return the new timer
+     */
+    public Timer createTimer() {
+        return engineRequestBuilder.getTimerTreeFactory().getTimerTree();
+    }
+
+    /**
+     * <p>
+     * Notifies the statistics related to heap resolutions reported to this request thanks to the given
+     * {@code PropertyChangeSupport}.
+     * </p>
+     *
+     * @param propertyChangeSupport the observable
+     */
+    public void notifyHeapResolutionsTo(final PropertyChangeSupport propertyChangeSupport) {
+        for (final Map.Entry<String, List<HeapResolution>> resolutions : getBuilder().getHeapResolutionStats().entrySet()) {
+            for (final HeapResolution heapResolution : resolutions.getValue()) {
+                final HeapResolutionEvent evt = new HeapResolutionEvent(resolutions.getKey(), heapResolution);
+                propertyChangeSupport.firePropertyChange(Event.HEAP_RESOLUTION.name(), null, evt);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * Get the statistics reported to this request objects considered as the result of a workflow execution.
+     * </p>
+     *
+     * @return the statistics
+     */
+    public WorkflowExecution getWorkflowStatistics() {
+        long elapsed = 0;
+
+        final List<TransformerStat> transformerStats = new ArrayList<TransformerStat>(getBuilder().getTransformationStats().size());
+
+        for (final Map.Entry<String, List<TransformationStat>> t : getBuilder().getTransformationStats().entrySet()) {
+            final TransformerStat s = new TransformerStat(t.getKey(), new LinkedList<TransformationStat>());
+            transformerStats.add(s);
+
+            for (final TransformationStat transformationStat : t.getValue()) {
+                elapsed += transformationStat.getDuration();
+                s.getTransformations().add(transformationStat);
+            }
+        }
+
+        return new WorkflowExecution(transformerStats, getBuilder().getParseEngines(), elapsed);
+    }
+
+    /**
+     * <p>
+     * Returns the prefix created nut.
      * </p>
      *
      * @return the created nut
@@ -338,6 +447,17 @@ public final class EngineRequest {
      */
     public ConvertibleNut getOrigin() {
         return getBuilder().getOrigin();
+    }
+
+    /**
+     * <p>
+     * Gets the {@code TimerTreeFactory}.
+     * </p>
+     *
+     * @return the factory
+     */
+    public TimerTreeFactory getTimerTreeFactory() {
+        return getBuilder().getTimerTreeFactory();
     }
 
     /**

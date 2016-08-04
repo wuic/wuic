@@ -38,7 +38,15 @@
 
 package com.github.wuic.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -141,6 +149,45 @@ public final class CollectionUtils {
 
     /**
      * <p>
+     * Merges the given source to the target specified in parameter by creating new entries when the key in the target
+     * does not exists or in the other case by adding all the element of the list associated to the key to the existing
+     * value.
+     * </p>
+     *
+     * @param source the source
+     * @param target the target
+     * @param <E> list element type
+     * @param <K> the key type
+     */
+    public static <E, K> void merge(final Map<K, List<E>> source, final Map<K, List<E>> target) {
+        for (final Map.Entry<K, List<E>> entry : source.entrySet()) {
+            merge(entry.getKey(), entry.getValue(), target);
+        }
+    }
+
+    /**
+     * <p>
+     * Adds the given key/value pair to the given {@code Map} as a new entry if it does not already contain the key.
+     * In the other case, the all the elements of the given value are added to the {@code List} associated to the current
+     * value.
+     * </p>
+     *
+     * @param key the key
+     * @param value the value
+     * @param target the target
+     * @param <E> list element type
+     * @param <K> the key type
+     */
+    public static <E, K> void merge(final K key, List<E> value, final Map<K, List<E>> target) {
+        if (target.containsKey(key)) {
+            target.get(key).addAll(value);
+        } else {
+            target.put(key, value);
+        }
+    }
+
+    /**
+     * <p>
      * Just the varargs version of {@link Arrays#deepHashCode(Object[])}
      * </p>
      *
@@ -169,4 +216,6 @@ public final class CollectionUtils {
 
         return -1;
     }
+
+
 }

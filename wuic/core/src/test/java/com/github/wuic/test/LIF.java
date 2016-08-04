@@ -47,6 +47,7 @@ import com.github.wuic.engine.LineInspectorListener;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -105,7 +106,7 @@ public class LIF extends LineInspector implements LineInspectorFactory {
      * {@inheritDoc}
      */
     @Override
-    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+    protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
         return null;
     }
 }

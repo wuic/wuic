@@ -139,6 +139,17 @@ public class EngineRequestTransformer extends Pipe.DefaultTransformer<Convertibl
     }
 
     /**
+     * <p>
+     * Returns the internal {@code RequireEngineRequestTransformer}.
+     * </p>
+     *
+     * @return the wrapped object
+     */
+    public RequireEngineRequestTransformer getRequireEngineRequestTransformer() {
+        return requireEngineRequestTransformer;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

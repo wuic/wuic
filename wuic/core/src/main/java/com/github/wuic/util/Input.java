@@ -93,4 +93,23 @@ public interface Input extends Closeable {
      * @return the charset
      */
     String getCharset();
+
+    /**
+     * <p>
+     * Indicates if the input has been read as a byte stream by calling {@link #inputStream()} or as a char stream by
+     * calling {@link #reader()}. This method will return {@code false} if the input has not been read.
+     * </p>
+     *
+     * @return {@code true} if {@link #inputStream()} has been called, {@code false} otherwise
+     */
+    boolean isReadAsByte();
+
+    /**
+     * <p>
+     * Indicates if the input source is a byte stream a char stream.
+     * </p>
+     *
+     * @return {@code true} if input source is a byte stream, {@code false} if it's a char stream
+     */
+    boolean isSourceAsByte();
 }

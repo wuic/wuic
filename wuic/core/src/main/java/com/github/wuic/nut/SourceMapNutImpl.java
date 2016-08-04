@@ -42,6 +42,7 @@ import com.github.wuic.EnumNutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.sourcemap.FilePosition;
 import com.github.wuic.nut.sourcemap.SourceMapConsumerV3;
@@ -52,12 +53,14 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -393,12 +396,24 @@ public class SourceMapNutImpl extends SourceMapNutAdapter implements SourceMapNu
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady... onReady)
+            throws IOException {
+        return transform(onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady... onReady) throws IOException {
         final Pipe.Execution e = openStream().execution();
 
+        // Notify callbacks
         for (final Pipe.OnReady callback : onReady) {
             callback.ready(e);
         }
+
+        return Collections.emptyMap();
     }
 
     /**

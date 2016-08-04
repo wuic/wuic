@@ -38,11 +38,14 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.NotReachableNut;
+import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.Timer;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -70,7 +73,16 @@ public abstract class HeadEngine extends Engine {
     @Override
     public List<ConvertibleNut> parse(final EngineRequest request) throws WuicException {
         if (works()) {
-            return internalParse(request);
+            final Timer timer = request.createTimer();
+            timer.start();
+
+            try {
+                return internalParse(request);
+            } finally {
+                final long elapsed = timer.end();
+                Logging.TIMER.log("Parse operation by head engine executed in {}s", (float) (elapsed) / (float) NumberUtils.ONE_THOUSAND);
+                request.reportParseEngine(elapsed);
+            }
         } else {
             return runChains(request);
         }

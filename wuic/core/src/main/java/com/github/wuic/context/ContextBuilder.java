@@ -128,7 +128,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Guillaume DROUET
  * @since 0.4.0
  */
-public class ContextBuilder {
+public class ContextBuilder implements HeapListener {
 
     /**
      * The temporary file manager.
@@ -216,8 +216,10 @@ public class ContextBuilder {
         profiles = new ArrayList<String>(b.profiles);
         defaultNutDaoClass = b.defaultNutDaoClass;
 
-        for (final PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners(getClass().getName())) {
-            propertyChangeSupport.addPropertyChangeListener(getClass().getName(), listener);
+        for (final Event e : Event.values()) {
+            for (final PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners(e.name())) {
+                propertyChangeSupport.addPropertyChangeListener(e.name(), listener);
+            }
         }
     }
 
@@ -787,6 +789,7 @@ public class ContextBuilder {
                 heap = new NutsHeap(factory, pathList, disposable, dao, id, getNutTypeFactory());
             }
 
+            heap.addObserver(ContextBuilder.this);
             heap.checkFiles(contextSetting.getProcessContext());
 
             for (final HeapListener l : listeners) {
@@ -1015,6 +1018,7 @@ public class ContextBuilder {
                 }
 
                 final NutsHeap heap = new NutsHeap(factory, null, null, heapIdPattern, getNutTypeFactory(), array);
+                heap.addObserver(ContextBuilder.this);
                 heap.checkFiles(contextSetting.getProcessContext());
                 retval.put(id, new Workflow(template.getHead(), chains, heap));
             }
@@ -1317,14 +1321,43 @@ public class ContextBuilder {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void nutUpdated(final NutsHeap heap) {
+        // ignore event
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void heapResolved(final HeapResolutionEvent event) {
+        notifyHeapResolution(event);
+    }
+
+    /**
      * <p>
-     * Adds a new {@code PropertyChangeListener} to this instance.
+     * Adds a new {@code PropertyChangeListener} to this instance notified when a context has expired.
+     * Events are notified with {@code Event.EXPIRATION.name()} as value returned {@code getPropertyName()}.
      * </p>
      *
      * @param propertyChangeListener the listener to add
      */
-    public void addPropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
-        propertyChangeSupport.addPropertyChangeListener(getClass().getName(), propertyChangeListener);
+    public void addExpirationListener(final PropertyChangeListener propertyChangeListener) {
+        propertyChangeSupport.addPropertyChangeListener(Event.EXPIRATION.name(), propertyChangeListener);
+    }
+
+    /**
+     * <p>
+     * Adds a new {@link PropertyChangeListener} to this instance notified when a heap resolution has been done.
+     * Events are notified with {@code Event.HEAP_RESOLUTION.name()} as value returned {@code getPropertyName()}.
+     * </p>
+     *
+     * @param propertyChangeListener the listener to add
+     */
+    public void addHeapResolutionListener(final PropertyChangeListener propertyChangeListener) {
+        propertyChangeSupport.addPropertyChangeListener(Event.HEAP_RESOLUTION.name(), propertyChangeListener);
     }
 
     /**
@@ -1335,7 +1368,8 @@ public class ContextBuilder {
      * @param propertyChangeListener the listener to remove
      */
     public void removePropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
-        propertyChangeSupport.removePropertyChangeListener(getClass().getName(), propertyChangeListener);
+        propertyChangeSupport.removePropertyChangeListener(Event.EXPIRATION.name(), propertyChangeListener);
+        propertyChangeSupport.removePropertyChangeListener(Event.HEAP_RESOLUTION.name(), propertyChangeListener);
     }
 
     /**
@@ -1484,7 +1518,7 @@ public class ContextBuilder {
 
         currentTag = tag;
         getSetting().getRequiredProfiles().addAll(Arrays.asList(profiles));
-        notifyListeners();
+        notifyExpiration();
         
         return this;
     }
@@ -1516,7 +1550,7 @@ public class ContextBuilder {
                 children.add(children);
             }
 
-            notifyListeners();
+            notifyExpiration();
         }
     }
 
@@ -1532,7 +1566,7 @@ public class ContextBuilder {
     public ContextBuilder processContext(final ProcessContext processContext) {
         taggedSettings.setProcessContext(processContext);
         getSetting().setProcessContext(processContext);
-        notifyListeners();
+        notifyExpiration();
         
         return this;
     }
@@ -1559,7 +1593,7 @@ public class ContextBuilder {
                 taggedSettings.remove(tag);
             }
 
-            notifyListeners();
+            notifyExpiration();
 
             // Clear child tags
             if (childrenTags.containsKey(tag)) {
@@ -1593,7 +1627,7 @@ public class ContextBuilder {
             // Check that a tag exists
             getSetting();
             currentTag = null;
-            notifyListeners();
+            notifyExpiration();
 
             return this;
         } finally {
@@ -2030,7 +2064,7 @@ public class ContextBuilder {
         final ContextSetting setting = getSetting();
         setting.getInterceptorsList().add(interceptor);
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2068,7 +2102,7 @@ public class ContextBuilder {
 
         setting.getNutDaoMap().put(id, registration);
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2090,7 +2124,7 @@ public class ContextBuilder {
 
         setting.getNutFilterMap().put(id, filter);
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2112,7 +2146,7 @@ public class ContextBuilder {
 
         setting.getEngineMap().put(id, engine);
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2146,7 +2180,7 @@ public class ContextBuilder {
 
         setting.getNutDaoMap().put(regId, daoRegistration.configure(properties));
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2218,7 +2252,7 @@ public class ContextBuilder {
 
         setting.getNutFilterMap().put(regId, configure(filterBuilder, properties));
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2300,7 +2334,7 @@ public class ContextBuilder {
         setting.getNutsHeaps().put(regId, new HeapRegistration(disposable, ndbId, heapIds, path, listeners));
 
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2367,7 +2401,7 @@ public class ContextBuilder {
 
         setting.getEngineMap().put(regId, configure(engineBuilder, properties));
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2429,7 +2463,7 @@ public class ContextBuilder {
         setting.getTemplateMap().put(new RegistrationId(id, getSetting().getRequiredProfiles()),
                 new WorkflowTemplateRegistration(ebIds, ebTypesExclusion, includeDefaultEngines));
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2479,7 +2513,7 @@ public class ContextBuilder {
 
         setting.getWorkflowMap().put(regId, new WorkflowRegistration(forEachHeap, heapIdPattern, workflowTemplateId));
         taggedSettings.put(currentTag, setting);
-        notifyListeners();
+        notifyExpiration();
 
         return this;
     }
@@ -2520,7 +2554,7 @@ public class ContextBuilder {
      */
     public ContextBuilder mergeSettings(final ContextBuilder other) {
         taggedSettings.mergeSettings(this, other.taggedSettings, currentTag);
-        notifyListeners();
+        notifyExpiration();
         return this;
     }
 
@@ -2623,10 +2657,21 @@ public class ContextBuilder {
 
     /**
      * <p>
-     * Notifies all the listeners with a simple event.
+     * Notifies all the listeners with a heap resolution event.
+     * </p>
+     *
+     * @param event the event
+     */
+    private void notifyHeapResolution(final HeapResolutionEvent event) {
+        this.propertyChangeSupport.firePropertyChange(Event.HEAP_RESOLUTION.name(), null, event);
+    }
+
+    /**
+     * <p>
+     * Notifies all the listeners with an expiration event.
      * </p>
      */
-    private void notifyListeners() {
-        this.propertyChangeSupport.firePropertyChange(getClass().getName(), null, null);
+    private void notifyExpiration() {
+        this.propertyChangeSupport.firePropertyChange(Event.EXPIRATION.name(), null, null);
     }
 }

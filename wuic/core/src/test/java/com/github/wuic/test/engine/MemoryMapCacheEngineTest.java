@@ -108,8 +108,8 @@ public class MemoryMapCacheEngineTest {
     /**
      * Timeout.
      */
-    @Rule
-    public Timeout globalTimeout = Timeout.seconds(60);
+    //@Rule
+    //public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>

@@ -39,13 +39,18 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Input;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -99,34 +104,39 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      * Apply transformers by chaining each transformer specified in the given list.
      * </p>
      *
+     * @param timerTreeFactory the {@code TimerTreeFactory} to use
      * @param convertibleNut nut to transform
      * @param transformers the transformers chain
      * @param callbacks callbacks to call
+     * @return all generated statistics
      * @throws IOException if transformation fails
      */
-    public static void transform(final ConvertibleNut convertibleNut,
-                                 final Set<Pipe.Transformer<ConvertibleNut>> transformers,
-                                 final List<Pipe.OnReady> callbacks)
+    public static Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory,
+                                                                  final ConvertibleNut convertibleNut,
+                                                                  final Set<Pipe.Transformer<ConvertibleNut>> transformers,
+                                                                  final List<Pipe.OnReady> callbacks)
             throws IOException {
 
         Input is = null;
 
         try {
             if (transformers != null) {
-                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(convertibleNut, convertibleNut.openStream());
+                final Pipe<ConvertibleNut> pipe = new Pipe<ConvertibleNut>(convertibleNut, convertibleNut.openStream(), timerTreeFactory);
 
                 for (final Pipe.Transformer<ConvertibleNut> transformer : transformers) {
                     pipe.register(transformer);
                 }
 
                 pipe.execute(convertibleNut.ignoreCompositeStreamOnTransformation(), callbacks.toArray(new Pipe.OnReady[callbacks.size()]));
+
+                return pipe.getStatistics();
             } else {
                 is = convertibleNut.openStream();
                 final Pipe.Execution execution = is.execution();
 
-                for (final Pipe.OnReady cb : callbacks) {
-                    cb.ready(execution);
-                }
+                // Notify callbacks
+                NutUtils.invokeCallbacks(execution, callbacks);
+                return Collections.emptyMap();
             }
         } finally {
             IOUtils.close(is);
@@ -145,7 +155,16 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady ... onReady) throws IOException {
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady ... onReady) throws IOException {
+        return transform(new TimerTreeFactory(), onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady ... onReady)
+            throws IOException {
         if (isTransformed()) {
             throw new IllegalStateException("Could not call transform(Pipe.OnReady...) method twice.");
         }
@@ -157,7 +176,7 @@ public class PipedConvertibleNut extends AbstractConvertibleNut {
                 merge.addAll(getReadyCallbacks());
             }
 
-            transform(this, getTransformers(), merge);
+            return transform(timerTreeFactory, this, getTransformers(), merge);
         } finally {
             setTransformed(true);
         }

@@ -57,6 +57,7 @@ import com.github.wuic.nut.filter.NutFilterHolder;
 import com.github.wuic.util.CollectionUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.TimerTreeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,8 +242,8 @@ public class CssUrlLineInspector extends RegexLineInspector implements NutFilter
      * {@inheritDoc}
      */
     @Override
-    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
-        return convertibleNut.getNutType().isBasedOn(EnumNutType.CSS) ? NutUtils.readTransform(convertibleNut) : null;
+    protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
+        return convertibleNut.getNutType().isBasedOn(EnumNutType.CSS) ? NutUtils.readTransform(timerTreeFactory, convertibleNut) : null;
     }
 
     /**

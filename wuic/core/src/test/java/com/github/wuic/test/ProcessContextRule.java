@@ -86,7 +86,7 @@ public class ProcessContextRule implements TestRule {
 
     /**
      * <p>
-     * Gets the process context
+     * Gets the process context.
      * </p>
      *
      * @return the process context

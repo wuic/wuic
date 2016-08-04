@@ -42,7 +42,6 @@ import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.nut.dao.core.DiskNutDao;
 
 import javax.servlet.ServletContext;
-import java.util.List;
 
 /**
  * <p>
@@ -107,15 +106,7 @@ public class WebappNutDaoBuilderInspector implements ObjectBuilderInspector {
                 final Long fixedVersionNumber = webappNutDao.getVersionNumberStrategy().getFixedVersionNumber();
 
                 // We pre compute specifically base path so we pass false to indicate that base path is not a system property
-                final DiskNutDao dao =  new DiskNutDao()  {
-
-                    /**
-                     * {@inheritDoc}
-                     */
-                    protected List<String> skipStartsWith() {
-                        return webappNutDao.skipStartsWith();
-                    }
-                };
+                final DiskNutDao dao =  new WebappDiskNutDao(webappNutDao);
 
                 dao.init(WAR_BASE_PATH.equals(basePath) ? EXPLODED_BASE_PATH : basePath,
                         webappNutDao.getProxyUris(),

@@ -128,7 +128,7 @@ public class WuicXmlTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        builder.addPropertyChangeListener(new PropertyChangeListener() {
+        builder.addExpirationListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 latch.countDown();

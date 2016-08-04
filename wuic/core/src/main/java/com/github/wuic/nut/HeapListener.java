@@ -38,6 +38,8 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.context.HeapResolutionEvent;
+
 /**
  * <p>
  * This interface represents a listener which expects to be notified of changes when they occur on a particular
@@ -59,6 +61,17 @@ public interface HeapListener {
      * Called when a nut has been updated in the heap.
      * </p>
      *
+     * @param heap the updated heap
      */
     void nutUpdated(NutsHeap heap);
+
+    /**
+     * <p>
+     * Called when a heap has been resolved at the end of {@link NutsHeap#checkFiles(com.github.wuic.ProcessContext)}
+     * execution.
+     * </p>
+     *
+     * @param event the heap resolution event
+     */
+    void heapResolved(HeapResolutionEvent event);
 }

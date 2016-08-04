@@ -39,6 +39,7 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.Logging;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineType;
@@ -52,7 +53,6 @@ import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PrefixedNut;
 import com.github.wuic.nut.SizableNut;
 import com.github.wuic.nut.Source;
-import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
@@ -101,6 +101,11 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
+     * The default parsing done asynchronously.
+     */
+    private final Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
+
+    /**
      * If cache or not.
      */
     private Boolean doCache;
@@ -111,9 +116,13 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     private Boolean bestEffort;
 
     /**
-     * The default parsing done asynchronously.
+     * <p>
+     * Builds a new instance.
+     * </p>
      */
-    private Map<EngineRequest.Key, Future<Map<String, ConvertibleNut>>> parsingDefault;
+    protected AbstractCacheEngine() {
+        parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, ConvertibleNut>>>();
+    }
 
     /**
      * <p>
@@ -126,7 +135,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     public void init(final Boolean work, final Boolean be) {
         doCache = work;
         bestEffort = be;
-        parsingDefault = new HashMap<EngineRequest.Key, Future<Map<String, ConvertibleNut>>>();
     }
 
     /**
@@ -135,8 +143,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
     @Override
     @SuppressWarnings("unchecked")
     public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        // Log duration
-        final Long start = System.currentTimeMillis();
         List<ConvertibleNut> retval;
 
         final EngineRequest.Key key = request.getKey();
@@ -161,7 +167,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             // We are in best effort, do the minimal of operations and return the resulting nut
             if (bestEffort) {
                 try {
-                    retval = InMemoryNut.toByteArrayNut(runBestEffortChain(request));
+                    retval = InMemoryNut.toMemoryNut(runBestEffortChain(request), request);
                 } catch (IOException ioe) {
                     WuicException.throwWuicException(ioe);
                     return null;
@@ -174,8 +180,6 @@ public abstract class AbstractCacheEngine extends HeadEngine {
                 retval = new ArrayList<ConvertibleNut>(toCache.values());
             }
         }
-
-        Logging.TIMER.log("Cache engine run in {} seconds", (float) (System.currentTimeMillis() - start) / (float) NumberUtils.ONE_THOUSAND);
 
         return retval;
     }
@@ -250,7 +254,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
         try {
             final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(bestEffortResult.size());
             final List<ConvertibleNut> nuts = new ArrayList<ConvertibleNut>(bestEffortResult.values());
-            final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
+            final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval, request);
 
             log.debug("Caching nut with key '{}'", request);
             final CacheResult result = new CacheResult(toCache, null);
@@ -395,17 +399,19 @@ public abstract class AbstractCacheEngine extends HeadEngine {
      *
      * @param nuts the nut to serialize
      * @param processed the map where serialized and static nuts will be stored
+     * @param request the request that initiated the transformation
      * @return the map of processed nuts
      * @throws IOException if an I/O error occurs
      */
     private Map<String, CacheResult.Entry> prepareCacheableNuts(final List<ConvertibleNut> nuts,
-                                                                final Map<String, ConvertibleNut> processed)
+                                                                final Map<String, ConvertibleNut> processed,
+                                                                final EngineRequest request)
             throws IOException {
         final Map<String, CacheResult.Entry> retval = new LinkedHashMap<String, CacheResult.Entry>();
 
         for (final ConvertibleNut nut : nuts) {
             final List<ConvertibleNut> referenced;
-            final ConvertibleNut byteArray = InMemoryNut.toByteArrayNut(nut);
+            final ConvertibleNut byteArray = InMemoryNut.toMemoryNut(nut, request);
             referenced = byteArray.getReferencedNuts();
 
             // Nut content is static, cache it entirely
@@ -520,6 +526,14 @@ public abstract class AbstractCacheEngine extends HeadEngine {
          * {@inheritDoc}
          */
         @Override
+        public void heapResolved(final HeapResolutionEvent event) {
+            // ignore event
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public boolean equals(final Object obj) {
             return obj instanceof InvalidateCache && key.equals(InvalidateCache.class.cast(obj).key);
         }
@@ -567,7 +581,7 @@ public abstract class AbstractCacheEngine extends HeadEngine {
             try {
                 final List<ConvertibleNut> nuts = runChains(new EngineRequestBuilder(request).disableBestEffort().build());
                 final Map<String, ConvertibleNut> retval = new LinkedHashMap<String, ConvertibleNut>(nuts.size());
-                final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval);
+                final Map<String, CacheResult.Entry> toCache = prepareCacheableNuts(nuts, retval, request);
                 CacheResult cached = getFromCache(request.getKey());
 
                 // Not in best effort mode

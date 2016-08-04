@@ -42,6 +42,7 @@ import com.github.wuic.EnumNutType;
 import com.github.wuic.context.ContextBuilder;
 import com.github.wuic.NutType;
 import com.github.wuic.WuicFacade;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -557,6 +558,11 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
                             synchronized (filterDataMap) {
                                 filterDataMap.remove(workflowId);
                             }
+                        }
+
+                        @Override
+                        public void heapResolved(final HeapResolutionEvent event) {
+                            // ignore
                         }
                     });
             } finally {

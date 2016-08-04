@@ -260,8 +260,40 @@ public final class NutUtils {
 
     /**
      * <p>
-     * Reads the result of the transformation process configured on the {@link Nut}. If the {@link Nut} is compressed,
-     * then the result if uncompressed to return a readable string.
+     * Invokes the given {@code OnReady} callbacks with the given execution as parameter.
+     * </p>
+     *
+     * @param execution the execution
+     * @param onReady the callbacks
+     * @throws IOException if a callback invocation fails
+     */
+    public static void invokeCallbacks(final Pipe.Execution execution, final List<Pipe.OnReady> onReady)
+            throws IOException {
+        for (final Pipe.OnReady cb : onReady) {
+            cb.ready(execution);
+        }
+    }
+
+    /**
+     * <p>
+     * Invokes the given {@code OnReady} callbacks with the given execution as parameter.
+     * </p>
+     *
+     * @param execution the execution
+     * @param onReady the callbacks
+     * @throws IOException if a callback invocation fails
+     */
+    public static void invokeCallbacks(final Pipe.Execution execution, final Pipe.OnReady ... onReady)
+            throws IOException {
+        for (final Pipe.OnReady cb : onReady) {
+            cb.ready(execution);
+        }
+    }
+
+    /**
+     * <p>
+     * Reads the result of the transformation process configured on the {@link Nut} as specified by
+     * {@link #readTransform(TimerTreeFactory, com.github.wuic.nut.ConvertibleNut)}.
      * </p>
      *
      * @param n the nut
@@ -269,9 +301,24 @@ public final class NutUtils {
      * @throws IOException if transformation fails
      */
     public static String readTransform(final ConvertibleNut n) throws IOException {
+        return readTransform(new TimerTreeFactory(), n);
+    }
+
+    /**
+     * <p>
+     * Reads the result of the transformation process configured on the {@link Nut}. If the {@link Nut} is compressed,
+     * then the result if uncompressed to return a readable string.
+     * </p>
+     *
+     * @param timerTreeFactory the {@code TimerTreeFactory} to use
+     * @param n the nut
+     * @return the result of transformation
+     * @throws IOException if transformation fails
+     */
+    public static String readTransform(final TimerTreeFactory timerTreeFactory, final ConvertibleNut n) throws IOException {
         final AtomicReference<String> retval = new AtomicReference<String>();
 
-        n.transform(new Pipe.OnReady() {
+        n.transform(timerTreeFactory, new Pipe.OnReady() {
             @Override
             public void ready(final Pipe.Execution e) throws IOException {
                 if (e.isText()) {

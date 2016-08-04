@@ -45,6 +45,7 @@ import com.github.wuic.util.Pipe;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -89,7 +90,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     /**
      * Callbacks.
      */
-    private List<Pipe.OnReady> onReady;
+    private transient List<Pipe.OnReady> onReady;
 
     /**
      * Compressed or not.
@@ -125,7 +126,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
         if (ConvertibleNut.class.isAssignableFrom(o.getClass())) {
             final ConvertibleNut c = ConvertibleNut.class.cast(o);
             transformers = c.getTransformers() != null ? new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(c.getTransformers()) : null;
-            onReady = c.getReadyCallbacks();
+            onReady = new ArrayList<Pipe.OnReady>(c.getReadyCallbacks());
             source = c.getSource();
             ignoreCompositeStreamOnTransformation = c.ignoreCompositeStreamOnTransformation();
             setNutName(c.getName());
@@ -192,7 +193,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      */
     @Override
     public List<Pipe.OnReady> getReadyCallbacks() {
-        return onReady;
+        return onReady == null ? Collections.<Pipe.OnReady>emptyList() : Collections.unmodifiableList(new ArrayList<Pipe.OnReady>(onReady));
     }
 
     /**
@@ -256,12 +257,12 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
-    public void onReady(final Pipe.OnReady callback) {
+    public void onReady(final Pipe.OnReady callback, final boolean removeAfterInvocation) {
         if (onReady == null) {
             onReady = new ArrayList<Pipe.OnReady>();
         }
 
-        onReady.add(callback);
+        onReady.add(removeAfterInvocation ? new RemoveCallBackOnInvocation(callback) : callback);
     }
 
     /**
@@ -377,5 +378,41 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public int hashCode() {
         return getName().hashCode();
+    }
+
+    /**
+     * <p>
+     * Removes the this callback from {@link #onReady} when invoked.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class RemoveCallBackOnInvocation implements Pipe.OnReady {
+
+        /**
+         * Wrapped callback.
+         */
+        private final Pipe.OnReady wrapped;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param onReady the callback
+         */
+        private RemoveCallBackOnInvocation(final Pipe.OnReady onReady) {
+            this.wrapped = onReady;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void ready(final Pipe.Execution e) throws IOException {
+            wrapped.ready(e);
+            onReady.remove(this);
+        }
     }
 }

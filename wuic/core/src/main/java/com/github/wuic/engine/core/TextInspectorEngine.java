@@ -423,7 +423,8 @@ public abstract class TextInspectorEngine
                 throws WuicException {
             // Create replacement to perform later
             if (!replacement.equals(new String(data, offset, length))) {
-                replacementInfoSet.add(inspector.replacementInfo(offset, offset + length, originalNut, extracted, replacement));
+                replacementInfoSet.add(inspector.replacementInfo(
+                        offset, offset + length, originalNut, extracted, replacement, request.getTimerTreeFactory()));
             }
 
             // Add the nut and inspect it recursively if it's a CSS path

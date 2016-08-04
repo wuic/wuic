@@ -202,6 +202,9 @@ public enum HttpUtil {
         if (ifNoneMatch != null && ifNoneMatch.equals(tag)) {
             logger.info("Content of nut '{}' matches client cache. Sending {} status.", nut.getName(), HttpServletResponse.SC_NOT_MODIFIED);
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+
+            // Since we don't perform transformation, we notify the callbacks manually with an empty execution
+            NutUtils.invokeCallbacks(new Pipe.Execution(new byte[0], charset), nut.getReadyCallbacks());
         } else {
             logger.info("Writing to the response the content read from nut '{}'", nut.getName());
             response.setCharacterEncoding(charset);

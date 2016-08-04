@@ -38,11 +38,14 @@
 
 package com.github.wuic.engine;
 
+import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.NumberUtils;
+import com.github.wuic.util.Timer;
 
 import java.util.Collections;
 import java.util.Deque;
@@ -194,11 +197,18 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder 
                 return request.getNuts();
             }
         } else {
+            final Timer timer = request.createTimer();
+            timer.start();
+            final List<ConvertibleNut> nuts = internalParse(request);
+            final long elapsed = timer.end();
+            Logging.TIMER.log("Parse operation by node engine executed in {}s", (float) (elapsed) / (float) NumberUtils.ONE_THOUSAND);
+            request.reportParseEngine(elapsed);
+
             // Call next engine in chain
             if (getNext() != null && callNextEngine()) {
-                return getNext().parse(new EngineRequestBuilder(request).nuts(internalParse(request)).build());
+                return getNext().parse(new EngineRequestBuilder(request).nuts(nuts).build());
             } else {
-                return internalParse(request);
+                return nuts;
             }
         }
     }

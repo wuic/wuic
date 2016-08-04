@@ -41,6 +41,7 @@ package com.github.wuic.test;
 import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.nut.AbstractNutDao;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.Nut;
@@ -223,6 +224,10 @@ public class NutsHeapTest {
             public void nutUpdated(final NutsHeap heap) {
                 count.incrementAndGet();
             }
+
+            @Override
+            public void heapResolved(final HeapResolutionEvent event) {
+            }
         });
 
         Thread.sleep(1500L);
@@ -273,6 +278,10 @@ public class NutsHeapTest {
             @Override
             public void nutUpdated(final NutsHeap heap) {
                 count.incrementAndGet();
+            }
+
+            @Override
+            public void heapResolved(final HeapResolutionEvent event) {
             }
         });
 
@@ -380,6 +389,10 @@ public class NutsHeapTest {
                     } else {
                         latch1.countDown();
                     }
+                }
+
+                @Override
+                public void heapResolved(final HeapResolutionEvent event) {
                 }
             });
 

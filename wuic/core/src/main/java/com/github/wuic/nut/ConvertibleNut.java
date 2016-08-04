@@ -39,11 +39,14 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.Pipe.Transformer;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -129,10 +132,23 @@ public interface ConvertibleNut extends Nut {
      * to callbacks previously registered. The method also writes the result to the given output stream.
      * </p>
      *
+     * @param timerTreeFactory a timer tree factory to use when reporting elapsed time
      * @param onReady the callback
+     * @return all the transformation statistics
      * @throws java.io.IOException if an I/O error occurs
      */
-    void transform(Pipe.OnReady ... onReady) throws IOException;
+    Map<String, List<TransformationStat>> transform(TimerTreeFactory timerTreeFactory, Pipe.OnReady ... onReady) throws IOException;
+
+    /**
+     * <p>
+     * Transforms the source stream as specified by {@link #transform(TimerTreeFactory, com.github.wuic.util.Pipe.OnReady...)}.
+     * </p>
+     *
+     * @param onReady the callback
+     * @return all the transformation statistics
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    Map<String, List<TransformationStat>> transform(Pipe.OnReady ... onReady) throws IOException;
 
     /**
      * <p>
@@ -152,12 +168,14 @@ public interface ConvertibleNut extends Nut {
      * </p>
      *
      * @param onReady the callback to add
+     * @param removeAfterInvocation {@code true} if the callback should be invoke one time and remove after transformation
      */
-    void onReady(Pipe.OnReady onReady);
+    void onReady(Pipe.OnReady onReady, boolean removeAfterInvocation);
 
     /**
      * <p>
      * Gets the callbacks notified when transformation has been done.
+     * The map should never be {@code null} and must be immutable.
      * </p>
      *
      * @return the callbacks

@@ -53,6 +53,7 @@ import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.NutType;
 import com.github.wuic.Workflow;
 import com.github.wuic.config.ObjectBuilderFactory;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.Engine;
 import com.github.wuic.engine.EngineRequest;
@@ -901,6 +902,10 @@ public class ContextBuilderTest {
                     public void nutUpdated(NutsHeap heap) {
                         count.incrementAndGet();
                     }
+
+                    @Override
+                    public void heapResolved(final HeapResolutionEvent event) {
+                    }
                 })
                 .releaseTag();
 
@@ -939,6 +944,10 @@ public class ContextBuilderTest {
                     public void nutUpdated(NutsHeap heap) {
                         count.incrementAndGet();
                     }
+
+                    @Override
+                    public void heapResolved(final HeapResolutionEvent event) {
+                    }
                 });
                 return -1;
             }
@@ -951,6 +960,10 @@ public class ContextBuilderTest {
                     @Override
                     public void nutUpdated(NutsHeap heap) {
                         count.incrementAndGet();
+                    }
+
+                    @Override
+                    public void heapResolved(final HeapResolutionEvent event) {
                     }
                 });
                 return -1;
@@ -1018,6 +1031,10 @@ public class ContextBuilderTest {
                     public void nutUpdated(NutsHeap heap) {
                         count.incrementAndGet();
                     }
+
+                    @Override
+                    public void heapResolved(final HeapResolutionEvent event) {
+                    }
                     });
                 return -1;
             }
@@ -1058,6 +1075,10 @@ public class ContextBuilderTest {
                     @Override
                     public void nutUpdated(NutsHeap heap) {
                         count.incrementAndGet();
+                    }
+
+                    @Override
+                    public void heapResolved(final HeapResolutionEvent event) {
                     }
                 });
 

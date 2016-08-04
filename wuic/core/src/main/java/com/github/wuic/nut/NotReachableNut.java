@@ -40,11 +40,15 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -90,8 +94,19 @@ public class NotReachableNut extends AbstractConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady... onReady) throws IOException {
         WuicException.throwNutNotFoundException(getInitialName(), workflow);
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady... onReady)
+            throws IOException {
+        WuicException.throwNutNotFoundException(getInitialName(), workflow);
+        return null;
     }
 
     /**

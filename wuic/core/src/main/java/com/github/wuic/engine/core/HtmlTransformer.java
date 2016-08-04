@@ -39,7 +39,6 @@
 package com.github.wuic.engine.core;
 
 import com.github.wuic.EnumNutType;
-import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineType;
@@ -143,7 +142,6 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
     @Override
     public boolean transform(final Input is, final Output os, final ConvertibleNut convertible)
             throws IOException {
-        final long now = System.currentTimeMillis();
         final Pipe.Execution e = is.execution();
         final String content = e.isText()
                 ? new String(e.getCharResult()) : new String(IOUtils.toChars(Charset.forName(charset), e.getByteResult()));
@@ -200,12 +198,10 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
                 if (serverHint) {
                     hintResources(urlProvider, transform, referenced);
                 }
-
             }
         }
 
         os.writer().write(transform.toString());
-        Logging.TIMER.log("HTML transformation in {}ms", System.currentTimeMillis() - now);
 
         return true;
     }

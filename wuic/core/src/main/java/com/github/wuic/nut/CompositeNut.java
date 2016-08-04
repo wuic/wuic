@@ -576,6 +576,14 @@ public class CompositeNut extends PipedConvertibleNut {
          * {@inheritDoc}
          */
         @Override
+        public boolean isSourceAsByte() {
+            return inputs.get(0).isSourceAsByte();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public Pipe.Execution execution() throws IOException {
             if (isClosed()) {
                 WuicException.throwBadStateException(new IllegalStateException("Input is closed."));

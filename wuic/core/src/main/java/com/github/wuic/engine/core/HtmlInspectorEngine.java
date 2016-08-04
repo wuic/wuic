@@ -797,6 +797,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
 
             final String heapId = StringUtils.toHexString(hash);
             final NutsHeap h = new NutsHeap(request.getHeap().getFactory(), filteredPath, true, dao, heapId, nutTypeFactory, composition);
+            h.addObserver(request);
             h.checkFiles(request.getProcessContext());
             h.addObserver(request.getHeap());
             NutsHeap.ListenerHolder.INSTANCE.add(h);
@@ -845,7 +846,7 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                     n.setNutName(IOUtils.mergePath(request.getPrefixCreatedNut(), heap.getId() + n.getName()));
                 }
 
-                referenced.add(InMemoryNut.toByteArrayNut(n));
+                referenced.add(InMemoryNut.toMemoryNut(n, request));
 
                 // Some additional attributes
                 final Map<String, String> additionalAttributes =

@@ -38,7 +38,10 @@
 
 package com.github.wuic.util;
 
+import com.github.wuic.Logging;
+import com.github.wuic.engine.core.EngineRequestTransformer;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.NutWrapper;
@@ -48,7 +51,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -58,7 +60,9 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -88,8 +92,9 @@ public final class Pipe<T extends ConvertibleNut> {
         final OnReady onReady = new DefaultOnReady(os);
 
         if (callbacks != null) {
-            callbacks.add(onReady);
-            pipe.execute(callbacks.toArray(new OnReady[callbacks.size()]));
+            final OnReady[] cb = callbacks.toArray(new OnReady[callbacks.size() + 1]);
+            cb[callbacks.size()] = onReady;
+            pipe.execute(cb);
         } else {
             pipe.execute(onReady);
         }
@@ -562,6 +567,11 @@ public final class Pipe<T extends ConvertibleNut> {
     }
 
     /**
+     * The timer tree factory.
+     */
+    private TimerTreeFactory timerTreeFactory;
+
+    /**
      * Input stream of the pipe.
      */
     private Input inputStream;
@@ -577,17 +587,9 @@ public final class Pipe<T extends ConvertibleNut> {
     private T convertible;
 
     /**
-     * <p>
-     * Creates a new instance with a byte stream input.
-     * </p>
-     *
-     * @param charset the charset for encoding/decoding text stream
-     * @param c  the convertible bound to the input stream
-     * @param is the {@link InputStream}
+     * Execution statistics grouped by transformer.
      */
-    public Pipe(final T c, final InputStream is, final String charset) {
-        this(c, new DefaultInput(is, charset));
-    }
+    private Map<String, List<TransformationStat>> statistics;
 
     /**
      * <p>
@@ -598,25 +600,26 @@ public final class Pipe<T extends ConvertibleNut> {
      * @param is the {@link InputStream}
      */
     public Pipe(final T c, final Input is) {
-        convertible = c;
-        inputStream = is;
-        transformers = new LinkedList<Transformer<T>>();
+        this(c, is, new TimerTreeFactory());
     }
 
     /**
      * <p>
-     * Creates a new instance with a char stream input.
+     * Creates a new instance with an input stream.
      * </p>
      *
-     * @param charset the charset for encoding/decoding text stream
      * @param c  the convertible bound to the input stream
-     * @param r {@link Reader}
+     * @param is the {@link InputStream}
+     * @param ttf an existing {@code TimerTreeFactory}
      */
-    public Pipe(final T c, final Reader r, final String charset) {
+    public Pipe(final T c, final Input is, final TimerTreeFactory ttf) {
         convertible = c;
-        inputStream = new DefaultInput(r, charset);
+        inputStream = is;
         transformers = new LinkedList<Transformer<T>>();
+        statistics = new TreeMap<String, List<TransformationStat>>();
+        timerTreeFactory = ttf;
     }
+
 
     /**
      * <p>
@@ -674,13 +677,17 @@ public final class Pipe<T extends ConvertibleNut> {
         final Output os = new InMemoryOutput(inputStream.getCharset());
 
         if (!ignoreCompositeStream && (inputStream instanceof CompositeNut.CompositeInput)) {
-            transform(convertible, CompositeNut.CompositeInput.class.cast(inputStream)).execute(true, onReady);
+            final Pipe<ConvertibleNut>  p = transform(convertible, CompositeNut.CompositeInput.class.cast(inputStream));
+            p.execute(true, onReady);
+            CollectionUtils.merge(p.statistics, statistics);
         } else {
             boolean written = false;
             Input is = inputStream;
 
             // Make transformation
             for (final Transformer<T> t : transformers) {
+                final Timer timer = timerTreeFactory.getTimerTree();
+                timer.start();
 
                 // Pipe transformers with in memory byte arrays
                 if (!t.equals(transformers.getLast())) {
@@ -711,6 +718,12 @@ public final class Pipe<T extends ConvertibleNut> {
                         }
                     }
                 }
+
+                final long elapsed = timer.end();
+                Logging.TIMER.log("Transformer {} executed in {}ms", t.getClass().getName(), elapsed);
+
+                // Report the stat
+                report(written, is, elapsed, t);
             }
 
             final Execution e;
@@ -730,10 +743,39 @@ public final class Pipe<T extends ConvertibleNut> {
             }
 
             // Notify callbacks
-            for (final OnReady callback : onReady) {
-                callback.ready(e);
-            }
+            NutUtils.invokeCallbacks(e, onReady);
         }
+    }
+
+    /**
+     * <p>
+     * Reports a new transformation statistic according to the given parameters.
+     * </p>
+     *
+     * @param written if something has been actually transformed
+     * @param is the input source of the transformer
+     * @param elapsed the time spent by the transformer
+     * @param t teh transformer itself
+     */
+    private void report(final boolean written, final Input is, final long elapsed, final Transformer t) {
+        final String transformerClass;
+
+        // Ignore EngineRequestTransformer which wrap the really interesting transformer
+        if (EngineRequestTransformer.class.isAssignableFrom(t.getClass())) {
+            transformerClass = EngineRequestTransformer.class.cast(t).getRequireEngineRequestTransformer().getClass().getName();
+        } else {
+            transformerClass = t.getClass().getName();
+        }
+
+        List<TransformationStat> transformationStats = statistics.get(transformerClass);
+
+        // New transformer
+        if (transformationStats == null) {
+            transformationStats = new LinkedList<TransformationStat>();
+            statistics.put(transformerClass, transformationStats);
+        }
+
+        transformationStats.add(new TransformationStat(written, is, elapsed, convertible.toString()));
     }
 
     /**
@@ -767,14 +809,14 @@ public final class Pipe<T extends ConvertibleNut> {
                     composite.openStream(transformBeforeAggregate(nuts, composite.getCompositionList(), nut));
 
             // Aggregate the results
-            finalPipe = new Pipe<ConvertibleNut>(nut, is);
+            finalPipe = new Pipe<ConvertibleNut>(nut, is, timerTreeFactory);
 
             // Transform the aggregated results
             for (final Pipe.Transformer<ConvertibleNut> transformer : aggregatedStream) {
                 finalPipe.register(transformer);
             }
         } else {
-            finalPipe = new Pipe<ConvertibleNut>(nut, nut.openStream());
+            finalPipe = new Pipe<ConvertibleNut>(nut, nut.openStream(), timerTreeFactory);
         }
 
         return finalPipe;
@@ -796,6 +838,17 @@ public final class Pipe<T extends ConvertibleNut> {
         }
 
         return false;
+    }
+
+    /**
+     * <p>
+     * Returns the generated transformation statistics.
+     * </p>
+     *
+     * @return the stats
+     */
+    public Map<String, List<TransformationStat>> getStatistics() {
+        return statistics;
     }
 
     /**
@@ -848,13 +901,14 @@ public final class Pipe<T extends ConvertibleNut> {
                     public void setSource(final Source source) {
                         perNutTransformation.getConvertibleNut().setSource(source);
                     }
-                }, perNutTransformation.getConvertibleNut().openStream());
+                }, perNutTransformation.getConvertibleNut().openStream(), timerTreeFactory);
 
                 for (final Pipe.Transformer<ConvertibleNut> transformer : perNutTransformation.getTransformers()) {
                     pipe.register(transformer);
                 }
 
                 Pipe.executeAndWriteTo(pipe, perNutTransformation.getConvertibleNut().getReadyCallbacks(), bos);
+                CollectionUtils.merge(pipe.statistics, statistics);
                 is.add(bos.input(perNutTransformation.getConvertibleNut().getNutType().getCharset()));
             } else {
                 is.add(perNutTransformation.getConvertibleNut().openStream());

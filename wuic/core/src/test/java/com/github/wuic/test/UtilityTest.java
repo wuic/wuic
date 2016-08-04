@@ -67,6 +67,8 @@ import com.github.wuic.util.SequenceReader;
 import com.github.wuic.util.StringUtils;
 import com.github.wuic.path.DirectoryPath;
 import com.github.wuic.util.TemporaryFileManager;
+import com.github.wuic.util.Timer;
+import com.github.wuic.util.TimerTreeFactory;
 import com.github.wuic.util.UrlMatcher;
 import com.github.wuic.util.UrlUtils;
 import org.junit.Assert;
@@ -1305,5 +1307,33 @@ public class UtilityTest extends WuicTest {
         } finally {
             IOUtils.close(os);
         }
+    }
+
+    /**
+     * <p>
+     * Test for {@link com.github.wuic.util.TimerTreeFactory.TimerTree} class.
+     * </p>
+     *
+     * @throws InterruptedException if test fails
+     */
+    @Test
+    public void timerTreeTest() throws InterruptedException {
+        final TimerTreeFactory timerTreeFactory = new TimerTreeFactory();
+
+        final Timer t1 = timerTreeFactory.getTimerTree();
+        t1.start();
+        Thread.sleep(100L);
+
+        final Timer t2 = timerTreeFactory.getTimerTree();
+        t2.start();
+        Thread.sleep(100L);
+
+        final Timer t3 = timerTreeFactory.getTimerTree();
+        t3.start();
+        Thread.sleep(100L);
+
+        Assert.assertTrue(t3.end() < 200);
+        Assert.assertTrue(t2.end() < 200);
+        Assert.assertTrue(t1.end() < 200);
     }
 }

@@ -43,6 +43,7 @@ import com.github.wuic.nut.CompositeNut;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -947,7 +948,7 @@ public abstract class ScriptLineInspector extends LineInspector {
          * {@inheritDoc}
          */
         @Override
-        protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+        protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
             return null;
         }
     }
@@ -1032,8 +1033,8 @@ public abstract class ScriptLineInspector extends LineInspector {
          * {@inheritDoc}
          */
         @Override
-        protected String toString(final ConvertibleNut convertibleNut) throws IOException {
-            return wrap.toString(convertibleNut);
+        protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
+            return wrap.toString(timerTreeFactory, convertibleNut);
         }
     }
 }

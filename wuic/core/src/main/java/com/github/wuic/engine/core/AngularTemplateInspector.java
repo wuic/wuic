@@ -53,6 +53,7 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -173,9 +174,9 @@ public class AngularTemplateInspector extends RegexLineInspector {
      *{@inheritDoc}
      */
     @Override
-    protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+    protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut) throws IOException {
         if (convertibleNut.getNutType().isBasedOn(EnumNutType.HTML)) {
-            return String.format("template:'%s'", NutUtils.readTransform(convertibleNut)
+            return String.format("template:'%s'", NutUtils.readTransform(timerTreeFactory, convertibleNut)
                     .replace("'", "\\'")
                     .replace("\r\n", "'+'\\r\\n'+'")
                     .replace("\n", "'+'\\n'+'"));

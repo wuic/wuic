@@ -48,6 +48,7 @@ import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoWrapper;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.TimerTreeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,14 +249,16 @@ public abstract class LineInspector {
      * @param referencer the referencer
      * @param convertibleNuts the nuts
      * @param string the {@code String} to use as replacement
+     * @param timerTreeFactory the {@code TimerTreeFactory} to use
      * @return the new instance
      */
     public ReplacementInfo replacementInfo(final int startIndex,
                                            final int endIndex,
                                            final Nut referencer,
                                            final List<? extends ConvertibleNut> convertibleNuts,
-                                           final String string) {
-        return new ReplacementInfo(startIndex, endIndex, referencer, convertibleNuts, string);
+                                           final String string,
+                                           final TimerTreeFactory timerTreeFactory) {
+        return new ReplacementInfo(startIndex, endIndex, referencer, convertibleNuts, string, timerTreeFactory);
     }
 
     /**
@@ -345,11 +348,12 @@ public abstract class LineInspector {
      * to the referencer. This could be used as an alternative to URL statements.
      * </p>
      *
+     * @param timerTreeFactory the {@code TimerTreeFactory} to use
      * @param convertibleNut the convertible nut to convert
      * @return the {@code String} representation, {@code null} if no inclusion is possible
      * @throws IOException if the transformation fails
      */
-    protected abstract String toString(ConvertibleNut convertibleNut) throws IOException;
+    protected abstract String toString(TimerTreeFactory timerTreeFactory, ConvertibleNut convertibleNut) throws IOException;
 
     /**
      * <p>
@@ -392,6 +396,11 @@ public abstract class LineInspector {
         private final String string;
 
         /**
+         * The {@code TimerTreeFactory} to use.
+         */
+        private final TimerTreeFactory timerTreeFactory;
+
+        /**
          * <p>
          * Builds a new instance.
          * </p>
@@ -400,18 +409,21 @@ public abstract class LineInspector {
          * @param endIndex the end index
          * @param referencer the referencer
          * @param convertibleNuts the nuts
-         * @param string the {@code String} to use for replacement.
+         * @param string the {@code String} to use for replacement
+         * @param timerTreeFactory the {@code TimerTreeFactory} to use
          */
         private ReplacementInfo(final int startIndex,
                                 final int endIndex,
                                 final Nut referencer,
                                 final List<? extends ConvertibleNut> convertibleNuts,
-                                final String string) {
+                                final String string,
+                                final TimerTreeFactory timerTreeFactory) {
             this.startIndex = startIndex;
             this.convertibleNuts = convertibleNuts;
             this.referencer = referencer;
             this.endIndex = endIndex;
             this.string = string;
+            this.timerTreeFactory = timerTreeFactory;
             LOGGER.debug("Statement between position {} and {} is referenced for replacement in referencer '{}'",
                     startIndex, endIndex, referencer.getInitialName());
         }
@@ -482,7 +494,7 @@ public abstract class LineInspector {
             final StringBuilder stringBuilder = new StringBuilder();
 
             for (final ConvertibleNut convertibleNut : getConvertibleNuts()) {
-                final String str = LineInspector.this.toString(convertibleNut);
+                final String str = LineInspector.this.toString(timerTreeFactory, convertibleNut);
 
                 if (str == null) {
                     return str;

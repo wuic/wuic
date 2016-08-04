@@ -233,7 +233,7 @@ public class CompositeNutTest {
         final ConvertibleNut n2 = newNut("n2", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.CSS), "other css rules");
         Mockito.when(n2.getTransformers()).thenReturn(new LinkedHashSet<Pipe.Transformer<ConvertibleNut>>(Arrays.asList(t2, t3)));
 
-        final ConvertibleNut composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, Mockito.mock(ProcessContext.class),
+        final ConvertibleNut composite = new CompositeNut(Charset.defaultCharset().displayName(), true, "composite", null, ProcessContext.DEFAULT,
                 ConvertibleNut[].class.cast(Arrays.asList(n1, n2).toArray()));
 
         Assert.assertEquals("some css rules t1other css rules t2 this is the end", NutUtils.readTransform(composite));

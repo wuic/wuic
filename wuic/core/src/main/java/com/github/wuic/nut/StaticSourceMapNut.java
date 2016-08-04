@@ -38,16 +38,21 @@
 
 package com.github.wuic.nut;
 
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.Input;
+import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -130,10 +135,21 @@ public class StaticSourceMapNut extends SourceMapNutAdapter implements SourceMap
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
-        for (final Pipe.OnReady cb : onReady) {
-            cb.ready(new Pipe.Execution(charArray, charset));
-        }
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady... onReady)
+            throws IOException {
+        return transform(onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady... onReady) throws IOException {
+
+        // Notify callbacks
+        NutUtils.invokeCallbacks(new Pipe.Execution(charArray, charset), onReady);
+
+        return Collections.emptyMap();
     }
 
     /**

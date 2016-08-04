@@ -39,6 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.InMemoryInput;
@@ -182,11 +183,11 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
      * @return the new nut
      */
     private static InMemoryNut newNut(final Pipe.Execution e,
-                                       final String name,
-                                       final NutType nutType,
-                                       final Source source,
-                                       final Long versionNumber,
-                                       final boolean isDynamic) {
+                                      final String name,
+                                      final NutType nutType,
+                                      final Source source,
+                                      final Long versionNumber,
+                                      final boolean isDynamic) {
         if (source == null) {
             return e.isText() ? new InMemoryNut(e.getCharResult(), name, nutType, versionNumber, isDynamic)
                     : new InMemoryNut(e.getByteResult(), name, nutType, versionNumber, isDynamic);
@@ -202,14 +203,16 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
      * </p>
      *
      * @param nuts the nuts to convert
+     * @param engineRequest the engine request that initiated the transformation where statistics can be reported
      * @return the byte array nut
      * @throws IOException if any I/O error occurs
      */
-    public static List<ConvertibleNut> toByteArrayNut(final List<ConvertibleNut> nuts) throws IOException {
+    public static List<ConvertibleNut> toMemoryNut(final List<ConvertibleNut> nuts, final EngineRequest engineRequest)
+            throws IOException {
         final List<ConvertibleNut> retval = new ArrayList<ConvertibleNut>(nuts.size());
 
         for (final ConvertibleNut nut : nuts) {
-            retval.add(toByteArrayNut(nut));
+            retval.add(toMemoryNut(nut, engineRequest));
         }
 
         return retval;
@@ -221,15 +224,16 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
      * </p>
      *
      * @param nut the nut to convert
+     * @param engineRequest the engine request that initiated the transformation where statistics can be reported
      * @return the byte array nut
      * @throws IOException if any I/O error occurs
      */
-    public static ConvertibleNut toByteArrayNut(final ConvertibleNut nut) throws IOException {
+    public static ConvertibleNut toMemoryNut(final ConvertibleNut nut, final EngineRequest engineRequest) throws IOException {
         InputStream is = null;
 
         try {
             final InMemoryOutput os = new InMemoryOutput(nut.getNutType().getCharset());
-            nut.transform(new Pipe.DefaultOnReady(os));
+            engineRequest.reportTransformerStat(nut.transform(engineRequest.getTimerTreeFactory(), new Pipe.DefaultOnReady(os)));
 
             final Pipe.Execution e = os.execution();
             final InMemoryNut bytes;
@@ -241,7 +245,7 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
             } else {
                 final Source s = nut.getSource();
 
-                // Make sure to produce a serializable ource instance
+                // Make sure to produce a serializable source instance
                 final Source src = s instanceof SourceMapNut ?
                         new StaticSourceMapNut(SourceMapNut.class.cast(s), nut.getNutType().getCharset()) : new SourceImpl();
 
@@ -273,7 +277,7 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
                     if (index != -1)  {
                         bytes.addReferencedNut(o.get(index));
                     } else {
-                        bytes.addReferencedNut(toByteArrayNut(ref));
+                        bytes.addReferencedNut(toMemoryNut(ref, engineRequest));
                     }
                 }
             }

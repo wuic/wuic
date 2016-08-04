@@ -66,6 +66,7 @@ import com.github.wuic.nut.SourceMapNutImpl;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Output;
+import com.github.wuic.util.TimerTreeFactory;
 
 import static com.github.wuic.ApplicationConfig.COMPUTE_VERSION_ASYNCHRONOUSLY;
 
@@ -265,12 +266,19 @@ public class TextAggregatorEngine extends AbstractAggregatorEngine implements En
             }
 
             @Override
-            protected List<AppendedTransformation> appendTransformation(final char[] buffer, final int offset, final int length, final EngineRequest request, final CompositeNut.CompositeInput cis, final ConvertibleNut originalNut) throws WuicException {
+            protected List<AppendedTransformation> appendTransformation(final char[] buffer,
+                                                                        final int offset,
+                                                                        final int length,
+                                                                        final EngineRequest request,
+                                                                        final CompositeNut.CompositeInput cis,
+                                                                        final ConvertibleNut originalNut)
+                    throws WuicException {
                 return Collections.emptyList();
             }
 
             @Override
-            protected String toString(final ConvertibleNut convertibleNut) throws IOException {
+            protected String toString(final TimerTreeFactory timerTreeFactory, final ConvertibleNut convertibleNut)
+                    throws IOException {
                 return null;
             }
         };

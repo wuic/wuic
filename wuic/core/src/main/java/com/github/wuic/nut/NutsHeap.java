@@ -42,7 +42,10 @@ import com.github.wuic.Logging;
 import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
+import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.mbean.HeapResolution;
+import com.github.wuic.mbean.NutResolution;
 import com.github.wuic.nut.dao.NutDao;
 import com.github.wuic.nut.dao.NutDaoListener;
 import com.github.wuic.util.CollectionUtils;
@@ -50,6 +53,7 @@ import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.StringUtils;
+import com.github.wuic.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -426,10 +430,22 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         this.nuts = new ArrayList<Nut>();
 
         log.info("Checking files for heap '{}'", id);
-        final long start = System.currentTimeMillis();
 
         if (paths != null) {
+
+            // Track global resolution time
+            final List<NutResolution> nutResolutions = new ArrayList<NutResolution>();
+            final Timer timer = new Timer();
+            timer.start();
+
+            // Resolve each path
             for (final String path : paths) {
+
+                // Track each resolution time
+                final Timer t = new Timer();
+                t.start();
+
+                // Refer created nuts
                 created.remove(path);
                 final List<Nut> res = nutDao.create(path, processContext);
                 nuts.addAll(res);
@@ -447,7 +463,15 @@ public class NutsHeap implements NutDaoListener, HeapListener {
                                         nut.getInitialName())));
                     }
                 }
+
+                // Report resolution
+                nutResolutions.add(new NutResolution(path, nutDao.getClass(), t.end()));
             }
+
+            // Report statistics
+            final long duration = timer.end();
+            notifyListeners(new HeapResolution(nutResolutions, duration));
+            Logging.TIMER.log("Files checked for heap '{}' in {}ms", id, duration);
         }
 
         // Non null assertion
@@ -468,8 +492,6 @@ public class NutsHeap implements NutDaoListener, HeapListener {
         for (final NutsHeap heap : getComposition()) {
             heap.addObserver(this);
         }
-
-        Logging.TIMER.log("Files checked for heap '{}' in {}ms", id, System.currentTimeMillis() - start);
     }
 
     /**
@@ -690,11 +712,46 @@ public class NutsHeap implements NutDaoListener, HeapListener {
     }
 
     /**
+     * <p>
+     * Notifies the listeners that this heap has performed a resolution process.
+     * </p>
+     *
+     * @param resolution the resolution information
+     */
+    public void notifyListeners(final HeapResolution resolution) {
+        notifyListeners(new HeapResolutionEvent(id, resolution));
+    }
+
+    /**
+     * <p>
+     * Notifies the listeners that the heap identified by the ID provided by the given event has performed a resolution
+     * process.
+     * </p>
+     *
+     * @param event the heap resolution event
+     */
+    public void notifyListeners(final HeapResolutionEvent event) {
+        synchronized (listeners) {
+            for (final HeapListener l : listeners) {
+                l.heapResolved(event);
+            }
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void nutUpdated(final NutsHeap heap) {
         notifyListeners(heap);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void heapResolved(final HeapResolutionEvent event) {
+        notifyListeners(event);
     }
 
     /**

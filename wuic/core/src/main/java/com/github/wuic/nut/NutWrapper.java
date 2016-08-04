@@ -39,11 +39,14 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.TimerTreeFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -161,16 +164,25 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
      * {@inheritDoc}
      */
     @Override
-    public void transform(final Pipe.OnReady... onReady) throws IOException {
-        wrapped.transform(onReady);
+    public Map<String, List<TransformationStat>> transform(final Pipe.OnReady... onReady) throws IOException {
+        return wrapped.transform(onReady);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void onReady(final Pipe.OnReady onReady) {
-        wrapped.onReady(onReady);
+    public Map<String, List<TransformationStat>> transform(final TimerTreeFactory timerTreeFactory, final Pipe.OnReady... onReady)
+            throws IOException {
+        return wrapped.transform(timerTreeFactory, onReady);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onReady(final Pipe.OnReady onReady, final  boolean removeOnInvocation) {
+        wrapped.onReady(onReady, removeOnInvocation);
     }
 
     /**

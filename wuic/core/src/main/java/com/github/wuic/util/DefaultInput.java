@@ -149,4 +149,12 @@ public class DefaultInput extends AbstractInput {
     public Reader internalReader(final String charset) throws IOException {
         return reader == null ? new InputStreamReader(inputStream, charset) : reader;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSourceAsByte() {
+        return inputStream != null;
+    }
 }

@@ -47,11 +47,14 @@ import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.exception.WorkflowNotFoundException;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.nut.Source;
 import com.github.wuic.util.NutUtils;
+import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProviderFactory;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +91,11 @@ public class Context implements PropertyChangeListener {
     private final ContextBuilder contextBuilder;
 
     /**
+     * Property change support used to notify new workflow execution statistic report.
+     */
+    private final PropertyChangeSupport propertyChangeSupport;
+
+    /**
      * Indicates if this context is up to date or not.
      */
     private Boolean upToDate;
@@ -105,10 +113,11 @@ public class Context implements PropertyChangeListener {
             final Map<String, Workflow> wm,
             final List<ContextInterceptor> interceptorsList) {
         contextBuilder = cb;
-        contextBuilder.addPropertyChangeListener(this);
+        contextBuilder.addExpirationListener(this);
         workflowMap = wm;
         upToDate = true;
         interceptors = interceptorsList;
+        propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
     /**
@@ -157,6 +166,19 @@ public class Context implements PropertyChangeListener {
                                   final EngineType ... skip)
             throws WuicException, IOException {
         return process(contextPath, wId, getWorkflow(wId), path, urlProviderFactory, processContext, skip);
+    }
+
+    /**
+     * <p>
+     * Adds a property listener notified when a new {@link com.github.wuic.mbean.WorkflowExecution} is available.
+     * The {@code PropertyChangeEvent} passed to the listener provides a {@link WorkflowExecutionEvent} through
+     * {@code getNewValue()}.
+     * </p>
+     *
+     * @param propertyChangeListener the property change listener
+     */
+    public void addPropertyChangeListener(final PropertyChangeListener propertyChangeListener) {
+        propertyChangeSupport.addPropertyChangeListener(Event.WORKFLOW_EXECUTION.name(), propertyChangeListener);
     }
 
     /**
@@ -276,6 +298,9 @@ public class Context implements PropertyChangeListener {
 
         if (retval == null) {
             WuicException.throwNutNotFoundException(path, wId);
+        } else {
+            request.notifyHeapResolutionsTo(propertyChangeSupport);
+            registerStatsReporter(retval, new ReportStatsOnReady(wId, request));
         }
 
         return retval;
@@ -315,6 +340,14 @@ public class Context implements PropertyChangeListener {
             retval = interceptor.afterProcess(retval);
         }
 
+        final ReportStatsOnReady onReady =  new ReportStatsOnReady(wId, request);
+
+        for (final ConvertibleNut convertibleNut : retval) {
+            registerStatsReporter(convertibleNut, onReady);
+        }
+
+        request.notifyHeapResolutionsTo(propertyChangeSupport);
+
         return retval;
     }
 
@@ -323,9 +356,9 @@ public class Context implements PropertyChangeListener {
      */
     @Override
     public void propertyChange(final PropertyChangeEvent evt) {
-        // This context is not usable anymore, stop observing to not still referenced anymore
-        contextBuilder.removePropertyChangeListener(this);
-        upToDate = false;
+         // This context is not usable anymore, stop observing to not still referenced anymore
+         contextBuilder.removePropertyChangeListener(this);
+         upToDate = false;
     }
 
     /**
@@ -337,5 +370,69 @@ public class Context implements PropertyChangeListener {
      */
     public Set<String> workflowIds() {
         return workflowMap.keySet();
+    }
+
+    /**
+     * <p>
+     * Registers the given {@link ReportStatsOnReady} to be notified when the given nut is transformed.
+     * </p>
+     *
+     * @param convertibleNut the convertible nut
+     * @param onReady the callback
+     */
+    private void registerStatsReporter(final ConvertibleNut convertibleNut, final ReportStatsOnReady onReady) {
+        // Source objects are never transformed
+        if (!(convertibleNut instanceof Source)) {
+            convertibleNut.onReady(onReady, true);
+        }
+
+        if (convertibleNut.getReferencedNuts() != null) {
+            for (final ConvertibleNut ref : convertibleNut.getReferencedNuts()) {
+                registerStatsReporter(ref, onReady);
+            }
+        }
+    }
+
+    /**
+     * <p>
+     * This {@code OnReady} reports the workflow statistics to the context's listeners once the nut is transformed.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class ReportStatsOnReady implements Pipe.OnReady {
+
+        /**
+         * The workflow ID.
+         */
+        private final String workflowId;
+
+        /**
+         * The request initiating the transformation
+         */
+        private final EngineRequest engineRequest;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param workflowId the workflow ID
+         * @param engineRequest the request
+         */
+        private ReportStatsOnReady(final String workflowId, final EngineRequest engineRequest) {
+            this.workflowId = workflowId;
+            this.engineRequest = engineRequest;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void ready(final Pipe.Execution e) throws IOException {
+            final WorkflowExecutionEvent evt = new WorkflowExecutionEvent(workflowId, engineRequest.getWorkflowStatistics());
+            propertyChangeSupport.firePropertyChange(Event.WORKFLOW_EXECUTION.name(), null, evt);
+        }
     }
 }

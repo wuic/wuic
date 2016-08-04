@@ -42,11 +42,14 @@ import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
 import com.github.wuic.ProcessContext;
 import com.github.wuic.context.Context;
+import com.github.wuic.mbean.HeapResolution;
+import com.github.wuic.mbean.TransformationStat;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.Nut;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.CollectionUtils;
+import com.github.wuic.util.TimerTreeFactory;
 import com.github.wuic.util.UrlProviderFactory;
 import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
@@ -57,6 +60,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * <p>
@@ -144,6 +148,26 @@ public final class EngineRequestBuilder {
     private NutTypeFactory nutTypeFactory;
 
     /**
+     * All reported transformation statistics.
+     */
+    private Map<String, List<TransformationStat>> transformationStats;
+
+    /**
+     * All reported heap resolution statistics.
+     */
+    private Map<String, List<HeapResolution>> heapResolutionStats;
+
+    /**
+     * All reported parse operation duration.
+     */
+    private long parseEngines;
+
+    /**
+     * The timer tree factory.
+     */
+    private TimerTreeFactory timerTreeFactory;
+
+    /**
      * The context that created this builder.
      */
     private final Context context;
@@ -167,6 +191,10 @@ public final class EngineRequestBuilder {
         context = ctx;
         staticsServedByWuicServlet = false;
         nutTypeFactory = ntf;
+        transformationStats = new TreeMap<String, List<TransformationStat>>();
+        heapResolutionStats = new TreeMap<String, List<HeapResolution>>();
+        parseEngines = 0;
+        timerTreeFactory = new TimerTreeFactory();
     }
 
     /**
@@ -193,6 +221,10 @@ public final class EngineRequestBuilder {
         staticsServedByWuicServlet = other.staticsServedByWuicServlet;
         origin = other.origin;
         nutTypeFactory = other.nutTypeFactory;
+        transformationStats = other.transformationStats;
+        heapResolutionStats = other.heapResolutionStats;
+        parseEngines = other.parseEngines;
+        timerTreeFactory = other.timerTreeFactory;
     }
 
     /**
@@ -611,5 +643,60 @@ public final class EngineRequestBuilder {
      */
     NutTypeFactory getNutTypeFactory() {
         return nutTypeFactory;
+    }
+
+    /**
+     * <p>
+     * Gets the transformation statistics.
+     * </p>
+     *
+     * @return the statistics
+     */
+    Map<String, List<TransformationStat>> getTransformationStats() {
+        return transformationStats;
+    }
+
+    /**
+     * <p>
+     * Gets the heap resolution statistics.
+     * </p>
+     *
+     * @return the statistics
+     */
+    Map<String, List<HeapResolution>> getHeapResolutionStats() {
+        return heapResolutionStats;
+    }
+
+    /**
+     * <p>
+     * Gets the time elapsed during request parsing.
+     * </p>
+     *
+     * @return the parse engines
+     */
+    long getParseEngines() {
+        return parseEngines;
+    }
+
+    /**
+     * <p>
+     * Increment the time spent during engine parsing.
+     * </p>
+     *
+     * @param elapse the elapsed time
+     */
+    void incrementParseEngines(final long elapse) {
+        parseEngines += elapse;
+    }
+
+    /**
+     * <p>
+     * Gets the timer tree factory.
+     * </p>
+     *
+     * @return the timer tree factory
+     */
+    TimerTreeFactory getTimerTreeFactory() {
+        return timerTreeFactory;
     }
 }

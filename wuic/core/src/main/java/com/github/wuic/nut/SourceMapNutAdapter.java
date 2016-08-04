@@ -43,6 +43,7 @@ import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -118,7 +119,7 @@ public abstract class SourceMapNutAdapter extends AbstractNut implements SourceM
      * {@inheritDoc}
      */
     @Override
-    public final void onReady(final Pipe.OnReady onReady) {
+    public final void onReady(final Pipe.OnReady onReady, final boolean removeOnInvocation) {
         throw new UnsupportedOperationException("Source is not supposed to be transformed.");
     }
 
@@ -127,7 +128,7 @@ public abstract class SourceMapNutAdapter extends AbstractNut implements SourceM
      */
     @Override
     public final List<Pipe.OnReady> getReadyCallbacks() {
-        return null;
+        return Collections.emptyList();
     }
 
     /**

@@ -431,10 +431,20 @@ public interface ApplicationConfig {
     String ENABLE = FILTER_PREFIX + "enable";
 
     /**
+     * Maximum number of workflow execution element per statistic.
+     */
+    String MAX_WORKFLOW_EXECUTION_STATS = FACADE_PREFIX + "maxWorkflowExecutionStats";
+
+    /**
+     * Maximum number of heap resolution element per statistic.
+     */
+    String MAX_HEAP_RESOLUTION_STATS = FACADE_PREFIX + "maxHeapResolutionStats";
+
+    /**
      * Init parameter which indicates if configurations injected by tag supports (JSP, Thymeleaf, etc) should be done
      * each time a page is processed or not.
      */
-    String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = PREFIX + "facade.multipleConfigInTagSupport";
+    String WUIC_SERVLET_MULTIPLE_CONG_IN_TAG_SUPPORT = FACADE_PREFIX + "multipleConfigInTagSupport";
 
     /**
      * Init parameter which indicates the WUIC context path.

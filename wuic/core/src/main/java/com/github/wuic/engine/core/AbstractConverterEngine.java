@@ -147,13 +147,14 @@ public abstract class AbstractConverterEngine extends NodeEngine {
                     IOUtils.copyStream(result, os);
                 } else {
                     // Continue transformation of conversion result
-                    final Pipe<ConvertibleNut> finalPipe = new Pipe<ConvertibleNut>(nut, result);
+                    final Pipe<ConvertibleNut> finalPipe = new Pipe<ConvertibleNut>(nut, result, request.getTimerTreeFactory());
 
                     for (final Pipe.Transformer<ConvertibleNut> t : transformers) {
                         finalPipe.register(t);
                     }
 
                     Pipe.executeAndWriteTo(finalPipe, null, os);
+                    request.reportTransformerStat(finalPipe.getStatistics());
                 }
             } finally {
                 IOUtils.close(result);

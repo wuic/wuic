@@ -136,6 +136,14 @@ public abstract class AbstractInput implements Input {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isReadAsByte() {
+        return isRead() && !text;
+    }
+
+    /**
      * <p>
      * Indicates if this input is closed.
      * </p>
