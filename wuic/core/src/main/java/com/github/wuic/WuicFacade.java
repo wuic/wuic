@@ -60,6 +60,7 @@ import java.util.concurrent.Callable;
 import com.github.wuic.mbean.FacadeStats;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.dao.NutDao;
+import com.github.wuic.util.JmxPropertyResolver;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.Timer;
 import com.github.wuic.util.UrlProviderFactory;
@@ -198,34 +199,10 @@ public final class WuicFacade implements ObjectBuilderInspector, PropertyChangeL
                     b.addConfigurator(path);
                 }
             }
-
-            // Build and expose statistic bean via JMX
-            final String maxExecutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_WORKFLOW_EXECUTION_STATS);
-            final String maxResolutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_HEAP_RESOLUTION_STATS);
-            facadeStats = new FacadeStats(maxExecutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxExecutions),
-                    maxResolutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxResolutions));
-            final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            final ObjectName name = new ObjectName("com.github.wuic.jmx:type=FacadeStats");
-
-            if (mbs.isRegistered(name)) {
-                mbs.unregisterMBean(name);
-            }
-
-            mbs.registerMBean(facadeStats, name);
         } catch (JAXBException je) {
             WuicException.throwWuicXmlReadException(je) ;
-        }catch (InstanceNotFoundException infe) {
-            WuicException.throwWuicException(infe);
         } catch (IOException ioe) {
             WuicException.throwWuicException(ioe);
-        } catch (InstanceAlreadyExistsException iaee) {
-            WuicException.throwWuicException(iaee);
-        } catch (MBeanRegistrationException mbre) {
-            WuicException.throwWuicException(mbre);
-        } catch (NotCompliantMBeanException ncmbe) {
-            WuicException.throwWuicException(ncmbe);
-        } catch (MalformedObjectNameException mone) {
-            WuicException.throwWuicException(mone);
         }
 
         final List<ObjectBuilderInspector> inspectors = b.getObjectBuilderInspectors();
@@ -242,6 +219,7 @@ public final class WuicFacade implements ObjectBuilderInspector, PropertyChangeL
         // finally merge all settings
         builder.tag(getClass().getName()).mergeSettings(b.contextBuilder()).releaseTag();
 
+        configureJmx(b);
         buildContext();
     }
 
@@ -470,8 +448,10 @@ public final class WuicFacade implements ObjectBuilderInspector, PropertyChangeL
      * </p>
      *
      * @return the nut type factory
+     * @throws WuicException if any refresh operation fails
      */
-    public NutTypeFactory getNutTypeFactory() {
+    public NutTypeFactory getNutTypeFactory() throws WuicException {
+        refreshContext();
         return nutTypeFactory;
     }
 
@@ -508,6 +488,63 @@ public final class WuicFacade implements ObjectBuilderInspector, PropertyChangeL
         ClassPathResourceResolverHandler.class.cast(object).setClasspathResourceResolver(config.getClasspathResourceResolver());
 
         return object;
+    }
+
+    /**
+     * <p>
+     * Configures JMX.
+     * </p>
+     *
+     * @param b the facade builder
+     * @throws WuicException if configuration fails
+     */
+    private void configureJmx(final WuicFacadeBuilder b) throws WuicException {
+        try {
+            // Build and expose statistic bean via JMX
+            final String maxExecutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_WORKFLOW_EXECUTION_STATS);
+            final String maxResolutions = b.getPropertyResolver().resolveProperty(ApplicationConfig.MAX_HEAP_RESOLUTION_STATS);
+            facadeStats = new FacadeStats(maxExecutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxExecutions),
+                    maxResolutions == null ? NumberUtils.ONE_THOUSAND : Integer.parseInt(maxResolutions));
+            final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            final ObjectName statName = new ObjectName("com.github.wuic.jmx:type=FacadeStats");
+
+            if (mbs.isRegistered(statName)) {
+                mbs.unregisterMBean(statName);
+            }
+
+            mbs.registerMBean(facadeStats, statName);
+
+            // Exposes JMX bean to change global properties
+            final ObjectName propertyName = new ObjectName("com.github.wuic.jmx:type=PropertyResolver");
+            final WuicFacade capture = this;
+            final JmxPropertyResolver jmxPropertyResolver = new JmxPropertyResolver() {
+                @Override
+                public void addProperty(final String key, final String value) {
+                    super.addProperty(key, value);
+                    log.info("Setting property {} with value {} via JMX. All cached configurations are going to be evicted.", key, value);
+
+                    // Notify the context to refresh it before the next call
+                    capture.builder.forceRefresh();
+                }
+            };
+
+            if (mbs.isRegistered(propertyName)) {
+                mbs.unregisterMBean(propertyName);
+            }
+
+            mbs.registerMBean(jmxPropertyResolver, propertyName);
+            b.addPropertyResolver(jmxPropertyResolver);
+        } catch (InstanceNotFoundException infe) {
+            WuicException.throwWuicException(infe);
+        } catch (InstanceAlreadyExistsException iaee) {
+            WuicException.throwWuicException(iaee);
+        } catch (MBeanRegistrationException mbre) {
+            WuicException.throwWuicException(mbre);
+        } catch (NotCompliantMBeanException ncmbe) {
+            WuicException.throwWuicException(ncmbe);
+        } catch (MalformedObjectNameException mone) {
+            WuicException.throwWuicException(mone);
+        }
     }
 
     /**

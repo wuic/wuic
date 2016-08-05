@@ -452,8 +452,9 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
      * @param request the request
      * @param response the response
      * @return the nut path
+     * @throws WuicException if {@code NutTypeFactory} can't be retrieved
      */
-    private String buildPath(final HttpServletRequest request, final HttpServletResponse response) {
+    private String buildPath(final HttpServletRequest request, final HttpServletResponse response) throws WuicException {
         final StringBuilder workflowBuilder = new StringBuilder();
         workflowBuilder.append(request.getServletPath().substring(1));
 

@@ -62,7 +62,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -346,5 +350,38 @@ public class WuicFacadeBuilderTest {
         WuicFacadeBuilder b = new WuicFacadeBuilder();
         b.contextBuilder().enableProfile("configurationProfileTest").toFacade();
         Assert.assertEquals(9, b.build().workflowIds().size());
+    }
+
+    /**
+     * <p>
+     * Tests JMX operations.
+     * </p>
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void jmxTest() throws Exception {
+        final Map<Object, Object> map = new HashMap<Object, Object>();
+        String charset = null;
+
+        for (final Map.Entry<String, Charset> cs : Charset.availableCharsets().entrySet()) {
+            if (!Charset.defaultCharset().equals(cs.getValue())) {
+                charset = cs.getKey();
+            }
+        }
+
+        map.put(ApplicationConfig.CHARSET, charset);
+        final WuicFacadeBuilder b = new WuicFacadeBuilder(new MapPropertyResolver(map)).noConfigurationPath();
+        final WuicFacade f = b.build();
+        Assert.assertEquals(f.getNutTypeFactory().getCharset(), charset);
+
+        // Exposes JMX bean to change global properties
+        final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        final ObjectName propertyName = new ObjectName("com.github.wuic.jmx:type=PropertyResolver");
+        mbs.invoke(propertyName,
+                "addProperty",
+                new Object[] { ApplicationConfig.CHARSET, Charset.defaultCharset().name() },
+                new String[] {"java.lang.String", "java.lang.String"} );
+        Assert.assertEquals(f.getNutTypeFactory().getCharset(), Charset.defaultCharset().name());
     }
 }

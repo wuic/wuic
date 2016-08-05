@@ -1388,6 +1388,17 @@ public class ContextBuilder implements HeapListener {
 
     /**
      * <p>
+     * Refreshes all the components already initialized internally and make sure they will be re-created when
+     * {@link #build()} will be called.
+     * </p>
+     */
+    public void forceRefresh() {
+        taggedSettings.refreshAll();
+        notifyExpiration();
+    }
+
+    /**
+     * <p>
      * Gets the array of active profiles.
      * </p>
      *

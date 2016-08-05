@@ -859,6 +859,24 @@ public class TaggedSettings extends ContextInterceptorAdapter {
 
     /**
      * <p>
+     * Refresh all heaps and DAOs initialized in the internal settings and free all their resources.
+     * </p>
+     */
+    void refreshAll() {
+        for (final ContextSetting setting : taggedSettings.values()) {
+            for (final ContextBuilder.NutDaoRegistration dao : setting.getNutDaoMap().values()) {
+                dao.free();
+            }
+
+            // Notifies any listeners to clear any cache
+            for (final ContextBuilder.HeapRegistration heap : setting.getNutsHeaps().values()) {
+                heap.free();
+            }
+        }
+    }
+
+    /**
+     * <p>
      * This method refreshes the given {@link ContextSetting} and its dependent {@link ContextSetting settings}.
      * A setting is dependent from any other if:
      * <ul>
