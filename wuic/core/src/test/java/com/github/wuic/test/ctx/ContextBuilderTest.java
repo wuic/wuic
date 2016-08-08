@@ -314,6 +314,14 @@ public class ContextBuilderTest {
             public Boolean works() {
                 return null;
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Long apply(final ConvertibleNut first, final Long second) {
+                return second;
+            }
         }
 
         final ObjectBuilderInspector i = new ObjectBuilderInspector() {

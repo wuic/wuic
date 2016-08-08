@@ -44,6 +44,7 @@ import com.github.wuic.NutTypeFactory;
 import com.github.wuic.NutTypeFactoryHolder;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
+import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.Timer;
 
@@ -64,10 +65,16 @@ import java.util.ListIterator;
  * in charge of the execution of the next engine and could decide not to execute it.
  * </p>
  *
+ * <p>
+ * The {@link BiFunction} interface is implemented by this class in order to register it to any parsed nut via the
+ * method {@link ConvertibleNut#addVersionNumberCallback(BiFunction)} which allows the subclass to transform the version
+ * number.
+ * </p>
+ *
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder {
+public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder, BiFunction<ConvertibleNut, Long, Long> {
 
     /**
      * The next engine.
@@ -200,6 +207,7 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder 
             final Timer timer = request.createTimer();
             timer.start();
             final List<ConvertibleNut> nuts = internalParse(request);
+            registerVersionNumberCallback(nuts);
             final long elapsed = timer.end();
             Logging.TIMER.log("Parse operation by node engine executed in {}s", (float) (elapsed) / (float) NumberUtils.ONE_THOUSAND);
             request.reportParseEngine(elapsed);
@@ -226,6 +234,23 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder 
 
         if (nextEngine != null) {
             nextEngine.previousEngine = this;
+        }
+    }
+
+    /**
+     * <p>
+     * Registers this instance as a version number callback to each nut of the given list.
+     * Recursive call is made on the referenced nuts.
+     * </p>
+     *
+     * @param convertibleNuts the nuts
+     */
+    private void registerVersionNumberCallback(final List<ConvertibleNut> convertibleNuts) {
+        if (convertibleNuts != null) {
+            for (final ConvertibleNut convertibleNut : convertibleNuts) {
+                convertibleNut.addVersionNumberCallback(this);
+                registerVersionNumberCallback(convertibleNut.getReferencedNuts());
+            }
         }
     }
 

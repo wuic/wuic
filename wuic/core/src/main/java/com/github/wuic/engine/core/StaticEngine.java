@@ -213,6 +213,14 @@ public class StaticEngine extends NodeEngine implements ClassPathResourceResolve
      * {@inheritDoc}
      */
     @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<NutType> getNutTypes() {
         return getNutTypeFactory().getNutType(EnumNutType.values());
     }

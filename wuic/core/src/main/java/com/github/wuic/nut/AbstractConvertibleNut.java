@@ -40,6 +40,8 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.exception.WuicException;
+import com.github.wuic.util.BiFunction;
+import com.github.wuic.util.FutureWrapper;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 
@@ -49,7 +51,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * <p>
@@ -108,6 +113,11 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     private boolean ignoreCompositeStreamOnTransformation;
 
     /**
+     * The callbacks invoked to modify the version number.
+     */
+    private List<BiFunction<ConvertibleNut, Long, Long>> versionNumberCallbacks;
+
+    /**
      * Converted nut.
      */
     private Nut wrap;
@@ -134,6 +144,12 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
             referencedNuts = c.getReferencedNuts();
             setIsCompressed(c.isCompressed());
             setIsSubResource(c.isSubResource());
+            versionNumberCallbacks = getVersionNumberCallbacks();
+
+            // Copy the list
+            if (versionNumberCallbacks != null) {
+                versionNumberCallbacks = new ArrayList<BiFunction<ConvertibleNut, Long, Long>>(versionNumberCallbacks);
+            }
         } else {
             setNutName(o.getInitialName());
             setNutType(o.getInitialNutType());
@@ -364,6 +380,34 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
      * {@inheritDoc}
      */
     @Override
+    public List<BiFunction<ConvertibleNut, Long, Long>> getVersionNumberCallbacks() {
+        return versionNumberCallbacks == null ? null : Collections.unmodifiableList(versionNumberCallbacks);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addVersionNumberCallback(final BiFunction<ConvertibleNut, Long, Long> callback) {
+        if (versionNumberCallbacks == null) {
+            versionNumberCallbacks = new ArrayList<BiFunction<ConvertibleNut, Long, Long>>();
+        }
+
+        versionNumberCallbacks.add(callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Future<Long> getVersionNumber() {
+       return new VersionNumberAdapter(super.getVersionNumber());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean equals(final Object other) {
         if (other instanceof ConvertibleNut) {
             return ((ConvertibleNut) other).getName().equals(getName());
@@ -378,6 +422,64 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
     @Override
     public int hashCode() {
         return getName().hashCode();
+    }
+
+    /**
+     * <p>
+     * A {@code Future} that applies the callbacks {@link #versionNumberCallbacks} to alter the returned {@code Long}.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class VersionNumberAdapter extends FutureWrapper<Long> {
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param delegate the delegated future
+         */
+        private VersionNumberAdapter(final Future<Long> delegate) {
+            super(delegate);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Long get() throws InterruptedException, ExecutionException {
+            return adapt(super.get());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Long get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return adapt(super.get(timeout, unit));
+        }
+
+        /**
+         * <p>
+         * Adapts the given version number by calling each {@code BiFunction} in the {@link #versionNumberCallbacks} list.
+         * </p>
+         *
+         * @param versionNumber the version number
+         * @return the modified version number if {@link #versionNumberCallbacks} is not {@code null}, the unchanged value otherwise
+         */
+        private Long adapt(final Long versionNumber) {
+            Long retval = versionNumber;
+
+            if (versionNumberCallbacks != null) {
+                for (final BiFunction<ConvertibleNut, Long, Long> cb : versionNumberCallbacks) {
+                    retval = cb.apply(AbstractConvertibleNut.this, retval);
+                }
+            }
+
+            return retval;
+        }
     }
 
     /**

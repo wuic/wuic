@@ -36,80 +36,83 @@
  */
 
 
-package com.github.wuic.test.xml;
+package com.github.wuic.util;
 
-import com.github.wuic.NutType;
-import com.github.wuic.config.Config;
-import com.github.wuic.config.StringConfigParam;
-import com.github.wuic.engine.EngineRequest;
-import com.github.wuic.engine.EngineService;
-import com.github.wuic.engine.EngineType;
-import com.github.wuic.engine.NodeEngine;
-import com.github.wuic.exception.WuicException;
-import com.github.wuic.nut.ConvertibleNut;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * <p>
- * Mocked engine builder.
+ * This {@code Future} wraps another {@code Future} and delegate implemented methods to it.
+ * This class is handy when we need to specialized the behavior of a particular {@code Future}.
+ * In fact, a subclass of {@code FutureWrapper} can be created and override the desired method.
+ * </p>
+ *
+ * <p>
+ * An instance of this class can be serialized if the wrapped {@code Future} is serializable.
  * </p>
  *
  * @author Guillaume DROUET
- * @since 0.4.0
+ * @since 0.5.0
  */
-@EngineService(injectDefaultToWorkflow = false)
-public class MockEngine extends NodeEngine {
+public class FutureWrapper<T> implements Serializable, Future<T> {
+
+    /**
+     * The delegated future.
+     */
+    private final Future<T> delegate;
 
     /**
      * <p>
      * Builds a new instance.
      * </p>
      *
-     * @param foo custom property
+     * @param delegate the delegated instance
      */
-    @Config
-    public MockEngine(@StringConfigParam(propertyKey = "c.g.engine.foo", defaultValue = "") String foo) {
+    public FutureWrapper(final Future<T> delegate) {
+        this.delegate = delegate;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<NutType> getNutTypes() {
-        return new ArrayList<NutType>();
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+        return delegate.cancel(mayInterruptIfRunning);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public EngineType getEngineType() {
-        return EngineType.INSPECTOR;
+    public boolean isCancelled() {
+        return delegate.isCancelled();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
-        return request.getNuts();
+    public boolean isDone() {
+        return delegate.isDone();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Boolean works() {
-        return true;
+    public T get() throws InterruptedException, ExecutionException {
+        return delegate.get();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version;
+    public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return delegate.get(timeout, unit);
     }
 }

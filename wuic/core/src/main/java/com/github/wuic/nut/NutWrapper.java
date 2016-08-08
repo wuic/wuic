@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.mbean.TransformationStat;
+import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.Input;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.TimerTreeFactory;
@@ -263,5 +264,21 @@ public class NutWrapper extends AbstractNut implements ConvertibleNut {
     @Override
     public boolean ignoreCompositeStreamOnTransformation() {
         return wrapped.ignoreCompositeStreamOnTransformation();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addVersionNumberCallback(final BiFunction<ConvertibleNut, Long, Long> callback) {
+        wrapped.addVersionNumberCallback(callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<BiFunction<ConvertibleNut, Long, Long>> getVersionNumberCallbacks() {
+        return wrapped.getVersionNumberCallbacks();
     }
 }

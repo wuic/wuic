@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.config.BooleanConfigParam;
 import com.github.wuic.config.Config;
 import com.github.wuic.engine.EngineRequestBuilder;
@@ -57,6 +56,8 @@ import com.github.wuic.nut.PipedConvertibleNut;
 import com.github.wuic.util.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.github.wuic.ApplicationConfig.AGGREGATE;
 
 /**
  * <p>
@@ -91,7 +92,7 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
      * @param aggregate if aggregation should be activated or not
      */
     @Config
-    public void init(@BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.AGGREGATE) final Boolean aggregate) {
+    public void init(@BooleanConfigParam(defaultValue = true, propertyKey = AGGREGATE) final Boolean aggregate) {
         this.doAggregation = aggregate;
         this.transformers = new ArrayList<Pipe.Transformer<ConvertibleNut>>();
         this.log.info("Aggregator initialized with activation={}", aggregate);
@@ -159,6 +160,14 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     @Override
     public final EngineType getEngineType() {
         return EngineType.AGGREGATOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version + String.format("%s:%s=%s", getClass().getName(), AGGREGATE, String.valueOf(doAggregation)).hashCode();
     }
 
     /**

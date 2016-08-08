@@ -138,8 +138,7 @@ import static com.github.wuic.ApplicationConfig.RESOLVED_FILE_DIRECTORY_AS_WORKI
  */
 @EngineService(injectDefaultToWorkflow = true)
 @Alias("cli")
-public class CommandLineConverterEngine extends AbstractConverterEngine
-        implements BiFunction<CommandLineConverterEngine.CommandLineInfo, EngineRequest, Boolean> {
+public class CommandLineConverterEngine extends AbstractConverterEngine {
 
     /**
      * <p>
@@ -194,6 +193,62 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
          */
         public File getCompilationResult() {
             return compilationResult;
+        }
+    }
+
+    /**
+     * <p>
+     * Internal executor.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class Executor implements BiFunction<CommandLineInfo, EngineRequest, Boolean> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Boolean apply(final CommandLineInfo commandLineInfo, final EngineRequest request) {
+            try {
+                final File workingDirectory = commandLineInfo.getCompilationResult().getParentFile();
+                final StringBuilder commandLine = new StringBuilder(command);
+
+                // Handle base path
+                final String basePath;
+
+                if (!command.contains(BASE_PATH_TOKEN)) {
+                    basePath = null;
+                } else {
+                    basePath = StringUtils.computeCommonPathBeginning(commandLineInfo.getPathsToCompile());
+                    StringUtils.replaceAll(BASE_PATH_TOKEN, basePath, commandLine);
+                }
+
+                // Path
+                final String paths = buildPaths(commandLineInfo.getPathsToCompile(), basePath);
+                StringUtils.replaceAll(PATH_TOKEN, paths, commandLine);
+
+                // Source map
+                final File sourceMapFile = new File(commandLineInfo.getCompilationResult().getAbsolutePath() + ".map");
+                final String sourceMapPath = IOUtils.normalizePathSeparator(sourceMapFile.getAbsolutePath());
+                StringUtils.replaceAll(SOURCE_MAP_TOKEN, sourceMapPath, commandLine);
+
+                // Output
+                final String outPath = IOUtils.normalizePathSeparator(commandLineInfo.getCompilationResult().getAbsolutePath());
+                StringUtils.replaceAll(OUT_PATH_TOKEN, outPath, commandLine);
+
+                // Install libraries
+                installLibraries(commandLineInfo.getPathsToCompile(), basePath, paths, outPath, sourceMapPath, workingDirectory);
+
+                return process(commandLine.toString(), workingDirectory, commandLineInfo.getCompilationResult());
+            } catch (IOException ioe) {
+                WuicException.throwBadStateException(ioe);
+            } catch (InterruptedException ie) {
+                WuicException.throwBadStateException(ie);
+            }
+
+            return Boolean.TRUE;
         }
     }
 
@@ -266,7 +321,7 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     /**
      * Executor.
      */
-    private BiFunction<CommandLineInfo, EngineRequest, Boolean> executor = this;
+    private BiFunction<CommandLineInfo, EngineRequest, Boolean> executor = new Executor();
 
     /**
      * Try to use the directory containing source files as parent directory for generated content.
@@ -767,51 +822,6 @@ public class CommandLineConverterEngine extends AbstractConverterEngine
     public Input transform(final Input is, final ConvertibleNut nut, final EngineRequest request)
             throws IOException {
         return execute(is, nut, request, getNutTypeFactory(), executor, resolvedFileDirectoryAsWorkingDirectory);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean apply(final CommandLineInfo commandLineInfo, final EngineRequest request) {
-        try {
-            final File workingDirectory = commandLineInfo.getCompilationResult().getParentFile();
-            final StringBuilder commandLine = new StringBuilder(command);
-
-            // Handle base path
-            final String basePath;
-
-            if (!command.contains(BASE_PATH_TOKEN)) {
-                basePath = null;
-            } else {
-                basePath = StringUtils.computeCommonPathBeginning(commandLineInfo.getPathsToCompile());
-                StringUtils.replaceAll(BASE_PATH_TOKEN, basePath, commandLine);
-            }
-
-            // Path
-            final String paths = buildPaths(commandLineInfo.getPathsToCompile(), basePath);
-            StringUtils.replaceAll(PATH_TOKEN, paths, commandLine);
-
-            // Source map
-            final File sourceMapFile = new File(commandLineInfo.getCompilationResult().getAbsolutePath() + ".map");
-            final String sourceMapPath = IOUtils.normalizePathSeparator(sourceMapFile.getAbsolutePath());
-            StringUtils.replaceAll(SOURCE_MAP_TOKEN, sourceMapPath, commandLine);
-
-            // Output
-            final String outPath = IOUtils.normalizePathSeparator(commandLineInfo.getCompilationResult().getAbsolutePath());
-            StringUtils.replaceAll(OUT_PATH_TOKEN, outPath, commandLine);
-
-            // Install libraries
-            installLibraries(commandLineInfo.getPathsToCompile(), basePath, paths, outPath, sourceMapPath, workingDirectory);
-
-            return process(commandLine.toString(), workingDirectory, commandLineInfo.getCompilationResult());
-        } catch (IOException ioe) {
-            WuicException.throwBadStateException(ioe);
-        } catch (InterruptedException ie) {
-            WuicException.throwBadStateException(ie);
-        }
-
-        return Boolean.TRUE;
     }
 
     /**

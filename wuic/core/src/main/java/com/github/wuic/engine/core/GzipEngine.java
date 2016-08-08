@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
@@ -58,6 +57,8 @@ import com.github.wuic.util.Pipe;
 import java.io.IOException;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
+
+import static com.github.wuic.ApplicationConfig.COMPRESS;
 
 /**
  * <p>
@@ -84,7 +85,7 @@ public class GzipEngine extends NodeEngine {
      * @param compress compress or not
      */
     @Config
-    public void init(@BooleanConfigParam(propertyKey = ApplicationConfig.COMPRESS, defaultValue = true) Boolean compress) {
+    public void init(@BooleanConfigParam(propertyKey = COMPRESS, defaultValue = true) Boolean compress) {
         works = compress;
     }
 
@@ -142,6 +143,14 @@ public class GzipEngine extends NodeEngine {
                 compress(ref);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version + String.format("%s:%s=%s", getClass().getName(), COMPRESS, String.valueOf(works)).hashCode();
     }
 
     /**

@@ -200,6 +200,11 @@ public class MemoryMapCacheEngineTest {
                         public Boolean works() {
                             return true;
                         }
+
+                        @Override
+                        public Long apply(final ConvertibleNut first, final Long second) {
+                            return second;
+                        }
                     }).build());
 
             for (final ConvertibleNut n : nuts) {

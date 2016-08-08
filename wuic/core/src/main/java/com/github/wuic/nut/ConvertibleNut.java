@@ -40,6 +40,7 @@ package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
 import com.github.wuic.mbean.TransformationStat;
+import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.Pipe.Transformer;
 import com.github.wuic.util.TimerTreeFactory;
@@ -48,6 +49,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * <p>
@@ -263,4 +265,30 @@ public interface ConvertibleNut extends Nut {
      * @param subResource {@code true} if the nut is a sub resource, {@code false} otherwise
      */
     void setIsSubResource(boolean subResource);
+
+    /**
+     * <p>
+     * Adds a {@code BiFunction} invoked by the {@code Future} returned by {@link #getVersionNumber()} as soon as
+     * the {@code Long} value is available in order to have a chance to modify it. This is handy when we want to
+     * decorate the way version number is computed.
+     * </p>
+     *
+     * <p>
+     * The {@link BiFunction} will take as first parameter this {@code ConvertibleNut} and the version number as second
+     * parameter. The functions has to return a {@code Long} representing the new version number. Multiple callback can
+     * be added via this method to make a chain that will alter the version number.
+     * </p>
+     *
+     * @param callback the function to invoke
+     */
+    void addVersionNumberCallback(BiFunction<ConvertibleNut, Long, Long> callback);
+
+    /**
+     * <p>
+     * Returns an unmodifiable view of the {@link BiFunction callbacks} added via {@link #addVersionNumberCallback(BiFunction)}.
+     * </p>
+     *
+     * @return the list, {@code null} if no callback has been registered
+     */
+    List<BiFunction<ConvertibleNut, Long, Long>> getVersionNumberCallbacks();
 }

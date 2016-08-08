@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.config.Alias;
@@ -72,6 +71,9 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+
+import static com.github.wuic.ApplicationConfig.INSPECT;
+import static com.github.wuic.ApplicationConfig.SPRITE_PROVIDER_CLASS_NAME;
 
 /**
  * <p>
@@ -108,11 +110,11 @@ public class SpriteInspectorEngine extends NodeEngine {
     public void init(
             @BooleanConfigParam(
                     defaultValue = true,
-                    propertyKey = ApplicationConfig.INSPECT)
+                    propertyKey = INSPECT)
             final Boolean inspect,
             @ObjectConfigParam(
                     defaultValue = "css",
-                    propertyKey = ApplicationConfig.SPRITE_PROVIDER_CLASS_NAME,
+                    propertyKey = SPRITE_PROVIDER_CLASS_NAME,
                     setter = SpriteProviderPropertySetter.class)
             final SpriteProvider[] sp) {
         spriteProviders = Arrays.copyOf(sp, sp.length);
@@ -129,6 +131,14 @@ public class SpriteInspectorEngine extends NodeEngine {
          * then we return the given request nuts
          */
         return !works() || spriteProviders.length == 0 ? request.getNuts() : process(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version + String.format("%s:%s=%s", getClass().getName(), INSPECT, String.valueOf(doInspection)).hashCode();
     }
 
     /**

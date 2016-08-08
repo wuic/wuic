@@ -123,7 +123,7 @@ public class WuicFacadeBuilderTest {
         Assert.assertEquals(NumberUtils.TWO, res.size());
 
         for (final ConvertibleNut c : res) {
-            Assert.assertEquals(1L, c.getVersionNumber().get().longValue());
+            Assert.assertEquals("UTF-16", c.getNutType().getCharset());
         }
     }
 

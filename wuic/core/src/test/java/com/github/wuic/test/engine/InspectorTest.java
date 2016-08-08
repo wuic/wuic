@@ -560,10 +560,10 @@ public class InspectorTest {
         e.init(true, "");
         final String value = assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", 0, e, false);
 
-        Assert.assertTrue(value.contains("template.html?versionNumber=1"));
-        Assert.assertTrue(value.contains("template2.html?foo&versionNumber=1"));
-        Assert.assertTrue(value.contains("template3.html?foo&versionNumber=1"));
-        Assert.assertTrue(value.contains("template4.html?foo&versionNumber=1"));
+        Assert.assertTrue(value.contains("template.html?versionNumber="));
+        Assert.assertTrue(value.contains("template2.html?foo&versionNumber="));
+        Assert.assertTrue(value.contains("template3.html?foo&versionNumber="));
+        Assert.assertTrue(value.contains("template4.html?foo&versionNumber="));
 
         int index = 0;
         int count = 0;

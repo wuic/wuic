@@ -39,6 +39,7 @@
 package com.github.wuic.nut;
 
 import com.github.wuic.NutType;
+import com.github.wuic.util.BiFunction;
 import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
@@ -209,5 +210,21 @@ public abstract class SourceMapNutAdapter extends AbstractNut implements SourceM
     @Override
     public final boolean ignoreCompositeStreamOnTransformation() {
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addVersionNumberCallback(final BiFunction<ConvertibleNut, Long, Long> callback) {
+        // source map version number not supposed to be transformed
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<BiFunction<ConvertibleNut, Long, Long>> getVersionNumberCallbacks() {
+        return null;
     }
 }

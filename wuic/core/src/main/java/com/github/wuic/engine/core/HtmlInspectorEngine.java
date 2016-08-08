@@ -38,7 +38,6 @@
 
 package com.github.wuic.engine.core;
 
-import com.github.wuic.ApplicationConfig;
 import com.github.wuic.EnumNutType;
 import com.github.wuic.NutType;
 import com.github.wuic.NutTypeFactory;
@@ -83,6 +82,9 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.wuic.ApplicationConfig.INSPECT;
+import static com.github.wuic.ApplicationConfig.SERVER_HINT;
 
 /**
  * <p>
@@ -147,8 +149,8 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      */
     @Config
     public void init(
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.INSPECT) final Boolean inspect,
-            @BooleanConfigParam(defaultValue = true, propertyKey = ApplicationConfig.SERVER_HINT) final Boolean sh) {
+            @BooleanConfigParam(defaultValue = true, propertyKey = INSPECT) final Boolean inspect,
+            @BooleanConfigParam(defaultValue = true, propertyKey = SERVER_HINT) final Boolean sh) {
         doInspection = inspect;
         serverHint = sh;
 
@@ -170,6 +172,14 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
                 doInspection = false;
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version + String.format("%s:%s=%s", getClass().getName(), INSPECT, String.valueOf(doInspection)).hashCode();
     }
 
     /**

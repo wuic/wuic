@@ -349,6 +349,14 @@ public abstract class AbstractConverterEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
+    public Long apply(final ConvertibleNut nut, final Long version) {
+        return version + String.format("%s:%s=%s", getClass().getName(), CONVERT, String.valueOf(doConversion)).hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final EngineType getEngineType() {
         return EngineType.CONVERTER;
     }
