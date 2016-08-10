@@ -248,8 +248,11 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder,
     private void registerVersionNumberCallback(final List<ConvertibleNut> convertibleNuts) {
         if (convertibleNuts != null) {
             for (final ConvertibleNut convertibleNut : convertibleNuts) {
-                convertibleNut.addVersionNumberCallback(this);
-                registerVersionNumberCallback(convertibleNut.getReferencedNuts());
+                // Register callback only for types that belong to that chain
+                if (getNutTypes().contains(convertibleNut.getNutType())) {
+                    convertibleNut.addVersionNumberCallback(this);
+                    registerVersionNumberCallback(convertibleNut.getReferencedNuts());
+                }
             }
         }
     }
