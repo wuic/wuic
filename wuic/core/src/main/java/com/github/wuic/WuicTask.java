@@ -46,7 +46,9 @@ import com.github.wuic.config.bean.WuicBean;
 import com.github.wuic.config.bean.json.BeanContextBuilderConfigurator;
 import com.github.wuic.config.bean.xml.FileXmlContextBuilderConfigurator;
 import com.github.wuic.context.ContextBuilder;
+import com.github.wuic.context.ContextInterceptorAdapter;
 import com.github.wuic.context.SimpleContextBuilderConfigurator;
+import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.core.StaticEngine;
 import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
@@ -55,6 +57,9 @@ import com.github.wuic.nut.dao.core.UnreachableNutDao;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
+import com.github.wuic.util.UrlProvider;
+import com.github.wuic.util.UrlProviderFactory;
+import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +110,7 @@ import java.util.jar.JarOutputStream;
  * @author Guillaume DROUET
  * @since 0.5.2
  */
-public class WuicTask {
+public class WuicTask extends ContextInterceptorAdapter implements UrlProviderFactory {
 
     /**
      * Information file generated at build time that help to configure the servlet container at runtime.
@@ -195,6 +200,22 @@ public class WuicTask {
         this.useRegex = false;
         this.taskName = "wuic-task";
         this.packageAsJar = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EngineRequestBuilder beforeProcess(final EngineRequestBuilder request) {
+        return request.urlProviderFactory(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UrlProvider create(final String workflowId) {
+        return new TaskUrlProvider(workflowId);
     }
 
     /**
@@ -319,6 +340,7 @@ public class WuicTask {
 
         // Create facade
         final WuicFacadeBuilder facadeBuilder = new WuicFacadeBuilder().contextPath(contextPath);
+
         final WuicBean wuicBean;
 
         if (xml == null) {
@@ -696,6 +718,43 @@ public class WuicTask {
 
     /**
      * <p>
+     * This particular {@code UrlProvider} checks if the resource will be located on top of the website thanks to
+     * {@link #locateOnTop(String)} and, in that case simply use the nut name as URL. Otherwise the default URL
+     * construction mechanism is used.
+     * </p>
+     *
+     * @author Guillaume DROUET
+     * @since 0.5.3
+     */
+    private class TaskUrlProvider implements UrlProvider {
+
+        /**
+         * The default {@code UrlProvider} to apply when the nut is not located on top of the website.
+         */
+        private UrlProvider defaultUrlProvider;
+
+        /**
+         * <p>
+         * Builds a new instance.
+         * </p>
+         *
+         * @param wcp the workflow ID
+         */
+        private TaskUrlProvider(final String wcp) {
+            defaultUrlProvider = UrlUtils.urlProviderFactory().create(wcp);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getUrl(final ConvertibleNut nut) {
+            return locateOnTop(nut.getInitialName()) ? nut.getName() : defaultUrlProvider.getUrl(nut);
+        }
+    }
+
+    /**
+     * <p>
      * This configurator defines the DAO (disk) and heap based on {@link #baseDir} (DAO base path), {@link #path} (heap path),
      * {@link #useRegex} (regex or wildcard resolution) and {@link #taskName} (heap ID) properties.
      * </p>
@@ -710,7 +769,8 @@ public class WuicTask {
          */
         @Override
         public int internalConfigure(final ContextBuilder ctxBuilder) {
-            ctxBuilder.contextNutDaoBuilder(DiskNutDao.class)
+            ctxBuilder.interceptor(WuicTask.this)
+                    .contextNutDaoBuilder(DiskNutDao.class)
                     .property(ApplicationConfig.REGEX, useRegex)
                     .property(ApplicationConfig.WILDCARD, !useRegex)
                     .property(ApplicationConfig.BASE_PATH, baseDir)
