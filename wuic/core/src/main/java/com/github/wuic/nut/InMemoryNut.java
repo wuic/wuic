@@ -238,10 +238,11 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
             final Pipe.Execution e = os.execution();
             final InMemoryNut bytes;
             final String name = nut.getName();
+            final Long version = NutUtils.getVersionNumber(nut);
 
             // This is an original nut
             if (nut.getSource().getOriginalNuts().isEmpty()) {
-                bytes = newNut(e, name, nut.getNutType(), null, NutUtils.getVersionNumber(nut), nut.isDynamic());
+                bytes = newNut(e, name, nut.getNutType(), null, version, nut.isDynamic());
             } else {
                 final Source s = nut.getSource();
 
@@ -261,7 +262,6 @@ public class InMemoryNut extends PipedConvertibleNut implements Serializable, Si
                     }
                 }
 
-                final Long version = NutUtils.getVersionNumber(src.getOriginalNuts());
                 bytes = newNut(e, name, nut.getNutType(), src, version, false);
             }
 
