@@ -54,7 +54,6 @@ import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Output;
 import com.github.wuic.util.Pipe;
 import com.github.wuic.util.UrlProvider;
-import com.github.wuic.util.UrlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,7 +171,7 @@ public final class HtmlTransformer implements Serializable, Pipe.Transformer<Con
             final List<ConvertibleNut> referenced = new ArrayList<ConvertibleNut>();
 
             final String prefix = IOUtils.mergePath(request.getContextPath(), request.getWorkflowId());
-            final UrlProvider urlProvider = UrlUtils.urlProviderFactory().create(prefix);
+            final UrlProvider urlProvider = request.getUrlProviderFactory().create(prefix);
 
             // A workflow have been created for each heap
             for (final HtmlInspectorEngine.ParseInfo parseInfo : parseInfoList) {
