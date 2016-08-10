@@ -478,7 +478,7 @@ public abstract class AbstractConvertibleNut extends AbstractNut implements Conv
                 }
             }
 
-            return retval;
+            return retval < 0 ? retval * -1 : retval;
         }
     }
 
