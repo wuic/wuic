@@ -48,8 +48,10 @@ import com.github.wuic.exception.WuicException;
 import com.github.wuic.nut.ConvertibleNut;
 import com.github.wuic.nut.HeapListener;
 import com.github.wuic.nut.InMemoryNut;
+import com.github.wuic.nut.NutWrapper;
 import com.github.wuic.nut.NutsHeap;
 import com.github.wuic.nut.dao.servlet.RequestDispatcherNutDao;
+import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.IOUtils;
 import com.github.wuic.util.NumberUtils;
 import com.github.wuic.util.NutUtils;
@@ -77,6 +79,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.Future;
 
 /**
  * <p>
@@ -283,6 +286,7 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
 
                 if (htmlNut == null) {
                     WuicException.throwBadStateException(new IllegalStateException("The filtered page has not been found in parsed result."));
+                    return;
                 }
 
                 final HttpServletResponse httpResponse = HttpServletResponse.class.cast(response);
@@ -295,7 +299,22 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
                     hint(collectedNut, httpResponse);
                 }
 
-                HttpUtil.INSTANCE.write(htmlNut, httpRequest, httpResponse, false);
+                final ConvertibleNut writeNut;
+
+                // If the content is dynamic, we force the version number to be computed on fresh content in order to not match ETag
+                if (htmlNut.isDynamic()) {
+                    final FutureLong versionNumber = new FutureLong(getVersionNumber(chars, bytes));
+                    writeNut = new NutWrapper(htmlNut) {
+                        @Override
+                        public Future<Long> getVersionNumber() {
+                            return versionNumber;
+                        }
+                    };
+                } else {
+                    writeNut = htmlNut;
+                }
+
+                HttpUtil.INSTANCE.write(writeNut, httpRequest, httpResponse, false);
             } catch (WuicException we) {
                 logger.error("Unable to parse HTML", we);
                 response.getOutputStream().print(bytes != null && bytes.length > 0 ? new String(bytes) : new String(chars));
@@ -482,6 +501,21 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
 
     /**
      * <p>
+     * Creates a {@code Long} value representing a version number computed from the given byte array if not {@code null}
+     * and not empty. If it's the case, the char array specified in parameter will be used.
+     * </p>
+     *
+     * @param chars the chars
+     * @param bytes the bytes
+     * @return the version number compute from the correct array
+     */
+    private Long getVersionNumber(final char[] chars, final byte[] bytes) {
+        return ByteBuffer.wrap(bytes != null && bytes.length > 0 ?
+                IOUtils.digest(bytes) : IOUtils.digest(IOUtils.toBytes(Charset.defaultCharset(), chars))).getLong();
+    }
+
+    /**
+     * <p>
      * Indicates if the content returned for the given request is dynamic or not according to the filter configuration
      * and the request state.
      * </p>
@@ -534,14 +568,12 @@ public class HtmlParserFilter extends SimpleContextBuilderConfigurator implement
                                             final byte[] bytes,
                                             final char[] chars)
             throws IOException, WuicException {
-        final Long versionNumber;
+        final Long versionNumber = getVersionNumber(chars, bytes);
         final InMemoryNut retval;
 
         if (bytes != null && bytes.length > 0) {
-            versionNumber = ByteBuffer.wrap(IOUtils.digest(bytes)).getLong();
             retval = new InMemoryNut(bytes, path, wuicFacade.getNutTypeFactory().getNutType(EnumNutType.HTML), versionNumber, isDynamic(request));
         } else {
-            versionNumber = ByteBuffer.wrap(IOUtils.digest(IOUtils.toBytes(Charset.defaultCharset(), chars))).getLong();
             retval = new InMemoryNut(chars, path, wuicFacade.getNutTypeFactory().getNutType(EnumNutType.HTML), versionNumber, isDynamic(request));
         }
 
