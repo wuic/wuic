@@ -138,7 +138,7 @@ import static com.github.wuic.ApplicationConfig.RESOLVED_FILE_DIRECTORY_AS_WORKI
  */
 @EngineService(injectDefaultToWorkflow = true)
 @Alias("cli")
-public class CommandLineConverterEngine extends AbstractConverterEngine {
+public class CommandLineConverterEngine extends AbstractConverterEngine implements ExecutorHolder {
 
     /**
      * <p>
@@ -825,23 +825,17 @@ public class CommandLineConverterEngine extends AbstractConverterEngine {
     }
 
     /**
-     * <p>
-     * Gets the executor.
-     * </p>
-     *
-     * @return the executor
+     * {@inheritDoc}
      */
+    @Override
     public BiFunction<CommandLineInfo, EngineRequest, Boolean> getExecutor() {
         return executor;
     }
 
     /**
-     * <p>
-     * Sets the executor.
-     * </p>
-     *
-     * @param executor the new executor
+     * {@inheritDoc}
      */
+    @Override
     public void setExecutor(final BiFunction<CommandLineInfo, EngineRequest, Boolean> executor) {
         this.executor = executor;
     }
