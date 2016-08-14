@@ -225,6 +225,7 @@ public class HtmlInspectorEngineTest {
                 .processContext(processContext.getProcessContext()).build();
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
         e.init(true, true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -266,17 +267,20 @@ public class HtmlInspectorEngineTest {
         final TextAggregatorEngine css = new TextAggregatorEngine();
         css.init(true);
         css.async(true);
+        css.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), css);
 
         final TextAggregatorEngine jse = new TextAggregatorEngine();
         jse.init(true);
         jse.async(true);
+        jse.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), jse);
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx, new NutTypeFactory(Charset.defaultCharset().displayName())).chains(chains)
                 .processContext(processContext.getProcessContext()).build();
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
         e.init(true, true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -318,12 +322,14 @@ public class HtmlInspectorEngineTest {
         final TextAggregatorEngine jse = new TextAggregatorEngine();
         jse.init(true);
         jse.async(true);
+        jse.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), jse);
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, ctx, new NutTypeFactory(Charset.defaultCharset().displayName())).chains(chains)
                 .processContext(processContext.getProcessContext()).build();
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
         e.init(true, true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         final List<ConvertibleNut> nuts = e.parse(request);
 
         Assert.assertEquals(1, nuts.size());
@@ -365,6 +371,7 @@ public class HtmlInspectorEngineTest {
 
         final HtmlInspectorEngine engine = new HtmlInspectorEngine();
         engine.init(true, true);
+        engine.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         engine.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -488,6 +495,7 @@ public class HtmlInspectorEngineTest {
         };
 
         e.init(true, true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         e.setParser(new AssetsMarkupParser() {
             @Override
             public void parse(final Reader reader, final AssetsMarkupHandler handler) {
@@ -541,11 +549,13 @@ public class HtmlInspectorEngineTest {
         final TextAggregatorEngine css = new TextAggregatorEngine();
         css.init(true);
         css.async(true);
+        css.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), css);
 
         final TextAggregatorEngine jse = new TextAggregatorEngine();
         jse.init(true);
         jse.async(true);
+        jse.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), jse);
 
         chains.put(new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.TYPESCRIPT), new NodeEngine() {
@@ -630,6 +640,7 @@ public class HtmlInspectorEngineTest {
 
         final HtmlInspectorEngine e = new HtmlInspectorEngine();
         e.init(true, true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.HTML, Charset.defaultCharset().displayName()), e);
 
         for (long i = countDownLatch.getCount(); i > 0; i--) {
@@ -671,17 +682,20 @@ public class HtmlInspectorEngineTest {
         final TextAggregatorEngine css = new TextAggregatorEngine();
         css.init(true);
         css.async(true);
+        css.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.CSS, Charset.defaultCharset().displayName()), css);
 
         final TextAggregatorEngine jse = new TextAggregatorEngine();
         jse.init(true);
         jse.async(true);
+        jse.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         chains.put(new NutType(EnumNutType.JAVASCRIPT, Charset.defaultCharset().displayName()), jse);
 
         final EngineRequest request = new EngineRequestBuilder("workflow", heap, newContext(), new NutTypeFactory(Charset.defaultCharset().displayName()))
                 .processContext(processContext.getProcessContext()).chains(chains).build();
         final HtmlInspectorEngine h = new HtmlInspectorEngine();
         h.init(true, true);
+        h.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         final List<ConvertibleNut> nuts = h.parse(request);
         Assert.assertEquals(1, nuts.size());
         final ConvertibleNut nut = nuts.get(0);

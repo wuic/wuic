@@ -90,6 +90,7 @@ public class GzipEngineTest {
     public void enableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(true);
+        gzipEngine.setNutTypeFactory(new NutTypeFactory("UTF-8"));
 
         final Nut nut = new InMemoryNut("var foo = 1;".getBytes(), "foo.js", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);
@@ -119,6 +120,7 @@ public class GzipEngineTest {
     public void disableGzipTest() throws Exception {
         final GzipEngine gzipEngine = new GzipEngine();
         gzipEngine.init(false);
+        gzipEngine.setNutTypeFactory(new NutTypeFactory("UTF-8"));
 
         final Nut nut = new InMemoryNut("var foo = 1;".getBytes(), "foo.js", new NutTypeFactory(Charset.defaultCharset().displayName()).getNutType(EnumNutType.JAVASCRIPT), 1L, false);
         final NutsHeap heap = Mockito.mock(NutsHeap.class);

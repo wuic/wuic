@@ -317,6 +317,7 @@ public class InspectorTest {
         builder.append("/*background:\n url('sprite6.png');*/");
         final CssInspectorEngine e = new CssInspectorEngine();
         e.init(true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         Assert.assertNotEquals(-1, assertInspection(collection, builder, null, collection.length, e, true));
     }
 
@@ -352,6 +353,7 @@ public class InspectorTest {
 
         final CssInspectorEngine e = new CssInspectorEngine();
         e.init(true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         assertInspection(collection, sb, "Must handle font URLs.", collection.length, e, true);
     }
 
@@ -374,6 +376,7 @@ public class InspectorTest {
 
         final CssInspectorEngine e = new CssInspectorEngine();
         e.init(true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         assertInspection(collection, new StringBuilder(), "Should create nuts for sourceMap urls.", collection.length * 2, e, true);
     }
 
@@ -464,7 +467,7 @@ public class InspectorTest {
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
         e.init(true, "");
-
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         assertInspection(collection,
                 new StringBuilder(),
                 "Should create nuts for templateUrl urls.",
@@ -517,6 +520,7 @@ public class InspectorTest {
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
         e.init(true, "fn(%s)");
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", collection.length, e, true);
     }
 
@@ -558,6 +562,7 @@ public class InspectorTest {
 
         final JavascriptInspectorEngine e = new JavascriptInspectorEngine();
         e.init(true, "");
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         final String value = assertInspection(collection, new StringBuilder(), "Should create nuts for templateUrl urls.", 0, e, false);
 
         Assert.assertTrue(value.contains("template.html?versionNumber="));
@@ -608,6 +613,7 @@ public class InspectorTest {
         final EngineRequest req = new EngineRequestBuilder("", h, null, new NutTypeFactory(Charset.defaultCharset().displayName())).nuts(Arrays.asList(nut)).build();
         final ScriptCompressorEngine engine = new ScriptCompressorEngine();
         engine.init(true);
+        engine.setNutTypeFactory(new NutTypeFactory("UTF-8"));
 
         List<ConvertibleNut> res = engine.parse(req);
         Assert.assertNotNull(res);
@@ -688,6 +694,7 @@ public class InspectorTest {
 
         final CssInspectorEngine e = new CssInspectorEngine();
         e.init(true);
+        e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
         assertInspection(collection, new StringBuilder(), "Shouldn't create nuts for 'data:' urls.", 0, e, true);
     }
 

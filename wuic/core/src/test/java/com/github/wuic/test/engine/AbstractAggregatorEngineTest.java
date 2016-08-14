@@ -93,6 +93,7 @@ public class AbstractAggregatorEngineTest {
          */
         A() {
             init(Boolean.TRUE);
+            setNutTypeFactory(new NutTypeFactory("UTF-8"));
         }
 
         /**
