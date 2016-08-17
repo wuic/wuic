@@ -74,7 +74,7 @@ import java.util.ListIterator;
  * @author Guillaume DROUET
  * @since 0.4.4
  */
-public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder, BiFunction<ConvertibleNut, Long, Long> {
+public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder {
 
     /**
      * The next engine.
@@ -90,6 +90,11 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder,
      * Nut type factory.
      */
     private NutTypeFactory nutTypeFactory;
+
+    /**
+     * Callback to add to any parsed nut.
+     */
+    private BiFunction<ConvertibleNut, Long, Long> versionNumberCallback;
 
     /**
      * <p>
@@ -184,6 +189,17 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder,
     public abstract List<NutType> getNutTypes();
 
     /**
+     * <p>
+     * Sets the version number callback to this engine.
+     * </p>
+     *
+     * @param callback the callback
+     */
+    public void setVersionNumberCallback(final BiFunction<ConvertibleNut, Long, Long> callback) {
+        versionNumberCallback = callback;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -246,11 +262,11 @@ public abstract class NodeEngine extends Engine implements NutTypeFactoryHolder,
      * @param convertibleNuts the nuts
      */
     private void registerVersionNumberCallback(final List<ConvertibleNut> convertibleNuts) {
-        if (convertibleNuts != null) {
+        if (convertibleNuts != null && versionNumberCallback != null) {
             for (final ConvertibleNut convertibleNut : convertibleNuts) {
                 // Register callback only for types that belong to that chain
                 if (getNutTypes().contains(convertibleNut.getNutType())) {
-                    convertibleNut.addVersionNumberCallback(this);
+                    convertibleNut.addVersionNumberCallback(versionNumberCallback);
                     registerVersionNumberCallback(convertibleNut.getReferencedNuts());
                 }
             }

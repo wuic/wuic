@@ -119,12 +119,4 @@ public class InheritMethodEngine extends AbstractMethodEngine {
     public Boolean works() {
         return null;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut first, final Long second) {
-        return second;
-    }
 }

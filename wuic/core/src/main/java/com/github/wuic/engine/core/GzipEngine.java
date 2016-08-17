@@ -149,14 +149,6 @@ public class GzipEngine extends NodeEngine {
      * {@inheritDoc}
      */
     @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), COMPRESS, String.valueOf(works)).hashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Boolean works() {
         return works;
     }

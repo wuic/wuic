@@ -62,7 +62,6 @@ import com.github.wuic.util.FutureLong;
 import com.github.wuic.util.InMemoryInput;
 import com.github.wuic.util.NutUtils;
 import com.github.wuic.util.Pipe;
-import com.github.wuic.util.TemporaryFileManager;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -108,8 +107,8 @@ public class MemoryMapCacheEngineTest {
     /**
      * Timeout.
      */
-    //@Rule
-    //public Timeout globalTimeout = Timeout.seconds(60);
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * <p>
@@ -199,11 +198,6 @@ public class MemoryMapCacheEngineTest {
                         @Override
                         public Boolean works() {
                             return true;
-                        }
-
-                        @Override
-                        public Long apply(final ConvertibleNut first, final Long second) {
-                            return second;
                         }
                     }).build());
 

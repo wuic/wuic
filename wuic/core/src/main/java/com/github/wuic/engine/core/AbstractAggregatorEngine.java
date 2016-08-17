@@ -163,14 +163,6 @@ public abstract class AbstractAggregatorEngine extends NodeEngine {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), AGGREGATE, String.valueOf(doAggregation)).hashCode();
-    }
-
-    /**
      * <p>
      * Adds some transformers this engine should add to the parsed nuts.
      * </p>

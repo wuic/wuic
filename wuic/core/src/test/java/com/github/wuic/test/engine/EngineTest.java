@@ -146,14 +146,6 @@ public class EngineTest {
         public Boolean works() {
             return true;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Long apply(final ConvertibleNut first, final Long second) {
-            return second;
-        }
     }
 
     /**

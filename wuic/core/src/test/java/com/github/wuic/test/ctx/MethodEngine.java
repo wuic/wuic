@@ -127,14 +127,6 @@ public class MethodEngine extends NodeEngine {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut first, final Long second) {
-        return second;
-    }
-
-    /**
      * <p>
      * Gets the calls.
      * </p>

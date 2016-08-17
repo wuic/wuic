@@ -227,11 +227,6 @@ public class ApiTutorial {
         public Boolean works() {
             return true;
         }
-
-        @Override
-        public Long apply(final ConvertibleNut first, final Long second) {
-            return second;
-        }
     }
     // end::EngineService[]
 

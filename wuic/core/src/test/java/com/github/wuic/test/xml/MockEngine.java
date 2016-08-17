@@ -104,12 +104,4 @@ public class MockEngine extends NodeEngine {
     public Boolean works() {
         return true;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version;
-    }
 }

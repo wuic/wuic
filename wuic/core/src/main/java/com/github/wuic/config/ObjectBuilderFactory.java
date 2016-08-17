@@ -168,6 +168,19 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
 
     /**
      * <p>
+     * Creates a new instance by copy.
+     * </p>
+     *
+     * @param other the other {@code ObjectBuilderFactory} to copy
+     */
+    public ObjectBuilderFactory(final ObjectBuilderFactory<T> other) {
+        this.annotationToScan = other.annotationToScan;
+        this.knownTypes = other.knownTypes;
+        this.inspectors = other.inspectors;
+    }
+
+    /**
+     * <p>
      * Builds a new instance.
      * </p>
      *
@@ -348,6 +361,34 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
 
     /**
      * <p>
+     * Inspects the object specified in parameter with given map of inspectors.
+     * This method is invoked when the internal {@link com.github.wuic.config.ObjectBuilderFactory.Builder#build()}
+     * method is invoked and can be overridden in order to customize the build process.
+     * </p>
+     *
+     * @param builder the builder
+     * @param inspectors the inspectors to apply
+     * @param object the object to inspect
+     * @return the inspected object
+     */
+    protected T inspect(final ObjectBuilder<T> builder, final Map<Class, List<ObjectBuilderInspector>> inspectors, final T object) {
+        T retval = object;
+
+        for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
+            for (final ObjectBuilderInspector i : entry.getValue()) {
+                // Case 1: apply inspectors declared for any class
+                // Case 2: apply inspectors explicitly declared for this class
+                if (entry.getKey() == null || entry.getKey().isAssignableFrom(retval == null ? builder.getType() : retval.getClass())) {
+                    retval = i.inspect(retval);
+                }
+            }
+        }
+
+        return retval;
+    }
+
+    /**
+     * <p>
      * This builder creates a new instance from a specified constructor and the arguments
      * retrieved from the property setters.
      * </p>
@@ -391,31 +432,6 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
         }
 
         /**
-         * <p>
-         * Inspects the object specified in parameter with given map of inspectors.
-         * </p>
-         *
-         * @param inspectors the inspectors to apply
-         * @param object the object to inspect
-         * @return the inspected object
-         */
-        private T inspect(final Map<Class, List<ObjectBuilderInspector>> inspectors, final T object) {
-            T retval = object;
-
-            for (final Map.Entry<Class, List<ObjectBuilderInspector>> entry : inspectors.entrySet()) {
-                for (final ObjectBuilderInspector i : entry.getValue()) {
-                    // Case 1: apply inspectors declared for any class
-                    // Case 2: apply inspectors explicitly declared for this class
-                    if (entry.getKey() == null || entry.getKey().isAssignableFrom(retval == null ? getType() : retval.getClass())) {
-                        retval = i.inspect(retval);
-                    }
-                }
-            }
-
-            return retval;
-        }
-
-        /**
          * {@inheritDoc}
          */
         public Class<T> getType() {
@@ -432,7 +448,7 @@ public class ObjectBuilderFactory<T> implements AnnotationProcessor {
 
             try {
                 // Apply internal inspectors first, global inspectors then
-                return inspect(inspectors, inspect(internalInspectors, constructor.newInstance(params)));
+                return inspect(this, inspectors, inspect(this, internalInspectors, constructor.newInstance(params)));
             } catch (IllegalAccessException iae) {
                  logger.error("", iae);
             } catch (InstantiationException ie) {

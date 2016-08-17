@@ -115,14 +115,6 @@ public abstract class AbstractCompressorEngine extends NodeEngine implements Eng
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), COMPRESS, String.valueOf(doCompression)).hashCode();
-    }
-
-    /**
      * <p>
      * Indicates if the transformed stream can be aggregate.
      * </p>

@@ -487,12 +487,7 @@ public class HtmlInspectorEngineTest {
         Mockito.when(heap.findDaoFor(Mockito.any(Nut.class))).thenReturn(dao);
         final Map<NutType, NodeEngine> chains = new HashMap<NutType, NodeEngine>();
 
-        final HtmlInspectorEngine e = new HtmlInspectorEngine() {
-            @Override
-            public Long apply(final ConvertibleNut nut, final Long version) {
-                return 1L;
-            }
-        };
+        final HtmlInspectorEngine e = new HtmlInspectorEngine();
 
         e.init(true, true);
         e.setNutTypeFactory(new NutTypeFactory("UTF-8"));
@@ -578,11 +573,6 @@ public class HtmlInspectorEngineTest {
             @Override
             public Boolean works() {
                 return true;
-            }
-
-            @Override
-            public Long apply(final ConvertibleNut first, final Long second) {
-                return second;
             }
         });
 

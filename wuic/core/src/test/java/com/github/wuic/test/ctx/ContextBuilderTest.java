@@ -56,6 +56,7 @@ import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.context.HeapResolutionEvent;
 import com.github.wuic.context.SimpleContextBuilderConfigurator;
 import com.github.wuic.engine.Engine;
+import com.github.wuic.engine.EngineObjectBuilderFactory;
 import com.github.wuic.engine.EngineRequest;
 import com.github.wuic.engine.EngineRequestBuilder;
 import com.github.wuic.engine.EngineService;
@@ -159,7 +160,7 @@ public class ContextBuilderTest {
      */
     @BeforeClass
     public static void prepareMocks() throws Exception {
-        engineBuilderFactory = new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class, TextAggregatorEngine.class);
+        engineBuilderFactory = new EngineObjectBuilderFactory(new ObjectBuilderFactory<Engine>(EngineService.class, MockEngine.class, TextAggregatorEngine.class));
         nutDaoBuilderFactory = new ObjectBuilderFactory<NutDao>(NutDaoService.class, MockDao.class, MockSimpleDao.class);
         nutFilterBuilderFactory = new ObjectBuilderFactory<NutFilter>(NutFilterService.class, NutFilterService.DEFAULT_SCAN_PACKAGE);
     }
@@ -313,14 +314,6 @@ public class ContextBuilderTest {
             @Override
             public Boolean works() {
                 return null;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Long apply(final ConvertibleNut first, final Long second) {
-                return second;
             }
         }
 

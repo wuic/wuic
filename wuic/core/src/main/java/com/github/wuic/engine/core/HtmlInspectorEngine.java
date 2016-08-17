@@ -178,14 +178,6 @@ public class HtmlInspectorEngine extends NodeEngine implements NutFilterHolder {
      * {@inheritDoc}
      */
     @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), INSPECT, String.valueOf(doInspection)).hashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public List<ConvertibleNut> internalParse(final EngineRequest request) throws WuicException {
         if (works()) {
             // Will contains both heap's nuts eventually modified or extracted nuts.

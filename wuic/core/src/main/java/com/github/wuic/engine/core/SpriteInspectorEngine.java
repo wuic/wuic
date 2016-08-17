@@ -134,14 +134,6 @@ public class SpriteInspectorEngine extends NodeEngine {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), INSPECT, String.valueOf(doInspection)).hashCode();
-    }
-
-    /**
      * <p>
      * Process the given request.
      * </p>

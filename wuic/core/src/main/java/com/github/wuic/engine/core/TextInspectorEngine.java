@@ -67,8 +67,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static com.github.wuic.ApplicationConfig.INSPECT;
-
 /**
  * <p>
  * Basic inspector engine for text nuts processing text line per line. This kind of engine inspects
@@ -267,14 +265,6 @@ public abstract class TextInspectorEngine
                 addReferenceNutNotTransformed(convertibleNut, r);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Long apply(final ConvertibleNut nut, final Long version) {
-        return version + String.format("%s:%s=%s", getClass().getName(), INSPECT, String.valueOf(doInspection)).hashCode();
     }
 
     /**

@@ -51,7 +51,7 @@ import com.github.wuic.config.ObjectBuilder;
 import com.github.wuic.config.ObjectBuilderFactory;
 import com.github.wuic.config.ObjectBuilderInspector;
 import com.github.wuic.engine.Engine;
-import com.github.wuic.engine.EngineService;
+import com.github.wuic.engine.EngineObjectBuilderFactory;
 import com.github.wuic.engine.HeadEngine;
 import com.github.wuic.engine.NodeEngine;
 import com.github.wuic.exception.DuplicatedRegistrationException;
@@ -266,7 +266,7 @@ public class ContextBuilder implements HeapListener {
         this.propertyChangeSupport = new PropertyChangeSupport(this);
 
         this.engineBuilderFactory = engineBuilderFactory == null ?
-                new ObjectBuilderFactory<Engine>(EngineService.class, EngineService.DEFAULT_SCAN_PACKAGE) : engineBuilderFactory;
+                new EngineObjectBuilderFactory() : new EngineObjectBuilderFactory(engineBuilderFactory);
         this.nutDaoBuilderFactory = nutDaoBuilderFactory == null ?
                 new ObjectBuilderFactory<NutDao>(NutDaoService.class, NutDaoService.DEFAULT_SCAN_PACKAGE) : nutDaoBuilderFactory;
         this.nutFilterBuilderFactory = nutFilterBuilderFactory == null ?
