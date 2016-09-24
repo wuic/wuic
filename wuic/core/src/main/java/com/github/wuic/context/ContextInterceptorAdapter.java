@@ -8,12 +8,8 @@
  * propagate free of charge, final anywhere in the world, final all or part of the Software
  * subject to the following mandatory conditions:
  *
- * -   The above copyright notice and this permission notice shall be included in
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
- * Any failure to comply with the above shall automatically terminate the license
- * and be construed as a breach of these Terms of Use causing significant harm to
- * Capgemini.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", final WITHOUT WARRANTY OF ANY KIND, final EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, final PEACEFUL ENJOYMENT,
@@ -24,15 +20,7 @@
  *
  * Except as contained in this notice, final the name of Capgemini shall not be used in
  * advertising or otherwise to promote the use or other dealings in this Software
- * without prior written authorization from Capgemini.
- *
- * These Terms of Use are subject to French law.
- *
- * IMPORTANT NOTICE: The WUIC software implements software components governed by
  * open source software licenses (final BSD and Apache) of which CAPGEMINI is not the
- * author or the editor. The rights granted on the said software components are
- * governed by the specific terms and conditions specified by Apache 2.0 and BSD
- * licenses."
  */
 
 
