@@ -1320,4 +1320,14 @@ public class UtilityTest extends WuicTest {
         Assert.assertTrue(t2.end() < 200);
         Assert.assertTrue(t1.end() < 200);
     }
+
+    /**
+     * <p>
+     * Tests {@link NumberUtils#remainingLength(int, int, int)}.
+     * </p>
+     */
+    @Test
+    public void remainingLengthTest() {
+        Assert.assertEquals(5, NumberUtils.remainingLength(10, 10, 15));
+    }
 }

@@ -117,4 +117,18 @@ public final class NumberUtils {
     public static Boolean isNumber(final String candidate) {
         return !candidate.isEmpty() && candidate.replaceAll("-?\\d+", "").length() == 0;
     }
+
+    /**
+     * <p>
+     * Computes the remaining length for a given offset based on an original offset and its associated length.
+     * </p>
+     *
+     * @param originalOffset the original offset
+     * @param originalLength the original length
+     * @param actualOffset the actual offset
+     * @return the actual length
+     */
+    public static int remainingLength(final int originalOffset, final int originalLength, final int actualOffset) {
+        return originalLength - (actualOffset - originalOffset);
+    }
 }
